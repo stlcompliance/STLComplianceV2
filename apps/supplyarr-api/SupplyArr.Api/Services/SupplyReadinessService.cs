@@ -27,16 +27,25 @@ public sealed class SupplyReadinessService(
 
     public const string ProcurementPathSnapshotKind = "procurement_path_supply_readiness";
 
-    private static readonly HashSet<string> OpenPurchaseRequestStatuses =
+    private static readonly string[] OpenPurchaseRequestStatuses =
     [
         PurchaseRequestStatuses.Draft,
         PurchaseRequestStatuses.Submitted,
     ];
 
-    private static readonly HashSet<string> OpenPurchaseOrderStatuses =
+    private static readonly string[] OpenPurchaseOrderStatuses =
     [
         PurchaseOrderStatuses.Draft,
         PurchaseOrderStatuses.Approved,
+    ];
+
+    private static readonly string[] ActiveProcurementExceptionStatuses =
+    [
+        ProcurementExceptionStatuses.Open,
+        ProcurementExceptionStatuses.Investigating,
+        ProcurementExceptionStatuses.Resolved,
+        ProcurementExceptionStatuses.WaivePending,
+        ProcurementExceptionStatuses.Waived,
     ];
 
     public async Task<SupplyReadinessDashboardResponse> GetDashboardAsync(
@@ -164,7 +173,7 @@ public sealed class SupplyReadinessService(
 
         var procurementExceptions = await db.ProcurementExceptions
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && ProcurementExceptionStatuses.Active.Contains(x.Status))
+            .Where(x => x.TenantId == tenantId && ActiveProcurementExceptionStatuses.Contains(x.Status))
             .Select(x => new DocumentRow(
                 x.Id,
                 x.ExceptionKey,

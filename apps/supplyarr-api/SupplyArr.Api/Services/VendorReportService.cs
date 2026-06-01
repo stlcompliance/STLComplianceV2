@@ -10,6 +10,20 @@ namespace SupplyArr.Api.Services;
 public sealed class VendorReportService(SupplyArrDbContext db)
 {
     private const int DetailListLimit = 25;
+    private static readonly string[] PostedReceivingStatuses =
+    [
+        ReceivingReceiptStatuses.Posted,
+        ReceivingReceiptStatuses.Received,
+        ReceivingReceiptStatuses.PartiallyReceived,
+        ReceivingReceiptStatuses.Overreceived,
+        ReceivingReceiptStatuses.Underreceived,
+        ReceivingReceiptStatuses.Damaged,
+        ReceivingReceiptStatuses.WrongItem,
+        ReceivingReceiptStatuses.PendingInspection,
+        ReceivingReceiptStatuses.Quarantined,
+        ReceivingReceiptStatuses.Returned,
+        ReceivingReceiptStatuses.Closed,
+    ];
 
     public async Task<VendorReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,
@@ -90,7 +104,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             join purchaseOrder in db.PurchaseOrders.AsNoTracking()
                 on receipt.PurchaseOrderId equals purchaseOrder.Id
             where receipt.TenantId == tenantId
-                && ReceivingReceiptStatuses.PostedLike.Contains(receipt.Status)
+                && PostedReceivingStatuses.Contains(receipt.Status)
                 && vendorIds.Contains(purchaseOrder.VendorPartyId)
             select new
             {

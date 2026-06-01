@@ -31,8 +31,8 @@ public static class ReceivingReceiptStatuses
         Draft
     };
 
-    public static readonly IReadOnlySet<string> PostedLike = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    public static readonly string[] PostedLike =
+    [
         Posted,
         Received,
         PartiallyReceived,
@@ -44,7 +44,8 @@ public static class ReceivingReceiptStatuses
         Quarantined,
         Returned,
         Closed
-    };
+    ];
 
-    public static bool IsPostedLike(string status) => PostedLike.Contains(status ?? string.Empty);
+    public static bool IsPostedLike(string status) =>
+        PostedLike.Contains(status ?? string.Empty, StringComparer.OrdinalIgnoreCase);
 }

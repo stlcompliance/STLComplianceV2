@@ -296,6 +296,12 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.True(staffarr.IsCurrent);
         Assert.NotEmpty(staffarr.Surfaces);
         Assert.Contains(staffarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
+
+        var sharedWorker = navigation.Products.First(p =>
+            p.ProductKey.Equals("shared-worker", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("worker", sharedWorker.ProductStatus);
+        Assert.Contains(sharedWorker.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
+        Assert.DoesNotContain(sharedWorker.Surfaces, s => s.SurfaceKey == "launch");
     }
 
     [Fact]

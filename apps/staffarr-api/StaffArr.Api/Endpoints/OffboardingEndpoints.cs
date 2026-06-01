@@ -27,7 +27,7 @@ public static class OffboardingEndpoints
             }
 
             var offboarding = await service.GetActiveForPersonAsync(tenantId, personId, cancellationToken);
-            return offboarding is null ? Results.NotFound() : Results.Ok(offboarding);
+            return Results.Ok(offboarding);
         })
         .WithTags("Offboarding")
         .RequireAuthorization()

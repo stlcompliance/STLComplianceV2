@@ -262,7 +262,7 @@ public sealed class ScheduledRuleEvaluationService(
             .Where(x => x.TenantId == tenantId)
             .Where(x => x.IsActive)
             .Where(x => x.Status == RulePackStatuses.Published)
-            .Where(x => x.RuleContentJson != null && x.RuleContentJson != "")
+            .Where(x => x.RuleContentJson != null)
             .OrderBy(x => x.PackKey)
             .ThenByDescending(x => x.VersionNumber)
             .Select(x => new
@@ -279,6 +279,7 @@ public sealed class ScheduledRuleEvaluationService(
             .ToListAsync(cancellationToken);
 
         return candidates
+            .Where(x => !string.IsNullOrWhiteSpace(x.RuleContentJson))
             .GroupBy(x => x.PackKey)
             .Select(group => group.First())
             .Where(x => ScheduledRuleEvaluationRules.IsEligibleForScheduledEvaluation(x.Status, x.RuleContentJson))
@@ -303,7 +304,7 @@ public sealed class ScheduledRuleEvaluationService(
         var query = db.RulePacks.AsNoTracking()
             .Where(x => x.IsActive)
             .Where(x => x.Status == RulePackStatuses.Published)
-            .Where(x => x.RuleContentJson != null && x.RuleContentJson != "");
+            .Where(x => x.RuleContentJson != null);
 
         if (tenantId is Guid scopedTenantId)
         {
@@ -328,6 +329,7 @@ public sealed class ScheduledRuleEvaluationService(
             .ToListAsync(cancellationToken);
 
         var latestPublished = candidates
+            .Where(x => !string.IsNullOrWhiteSpace(x.RuleContentJson))
             .GroupBy(x => new { x.TenantId, x.PackKey })
             .Select(group => group.First())
             .Where(x => ScheduledRuleEvaluationRules.IsEligibleForScheduledEvaluation(x.Status, x.RuleContentJson))

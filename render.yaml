@@ -69,7 +69,7 @@ envVarGroups:
       - key: COMPLIANCECORE_FRONTEND_URL
         value: https://compliancecore-frontend.onrender.com
       - key: COMPANION_FRONTEND_URL
-        value: https://companion-frontend-b2nm.onrender.com
+        value: https://companion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
         value: https://stlcompliancesite.onrender.com
 
@@ -89,7 +89,7 @@ envVarGroups:
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
         value: https://compliancecore-frontend.onrender.com
       - key: VITE_COMPANION_FRONTEND_BASE
-        value: https://companion-frontend-b2nm.onrender.com
+        value: https://companion-frontend-vf7o.onrender.com
 
   - name: stl-public-api-urls
     envVars:
@@ -169,7 +169,7 @@ services:
       - key: Cors__SuiteFrontendOrigin
         value: https://suite-frontend.onrender.com
       - key: Cors__CompanionFrontendOrigin
-        value: https://companion-frontend-b2nm.onrender.com
+        value: https://companion-frontend-vf7o.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
         value: https://suite-frontend.onrender.com
       - key: Launch__Products__staffarr__BaseUrl
@@ -197,7 +197,7 @@ services:
       - key: Launch__Products__compliancecore__LaunchPath
         value: /launch
       - key: Launch__Products__companion__BaseUrl
-        value: https://companion-frontend-b2nm.onrender.com
+        value: https://companion-frontend-vf7o.onrender.com
       - key: Launch__Products__companion__LaunchPath
         value: /launch
       - key: CompanionWebPush__Subject

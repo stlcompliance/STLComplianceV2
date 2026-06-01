@@ -10,15 +10,15 @@ public sealed class ExecutiveReportService(
     AssetDowntimeService downtimeService,
     DowntimeTrackingSettingsService downtimeSettingsService)
 {
-    private static readonly IReadOnlySet<string> OpenDefectStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly string[] OpenDefectStatuses =
+    [
         DefectStatuses.Open,
         DefectStatuses.Acknowledged,
         DefectStatuses.InRepair,
-    };
+    ];
 
-    private static readonly IReadOnlySet<string> OpenProcurementStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly string[] OpenProcurementStatuses =
+    [
         WorkOrderPartsDemandProcurementStatuses.AwaitingProcurement,
         WorkOrderPartsDemandProcurementStatuses.PrDrafted,
         WorkOrderPartsDemandProcurementStatuses.PrSubmitted,
@@ -26,7 +26,7 @@ public sealed class ExecutiveReportService(
         WorkOrderPartsDemandProcurementStatuses.PoCreated,
         WorkOrderPartsDemandProcurementStatuses.PoIssued,
         WorkOrderPartsDemandProcurementStatuses.PartiallyReceived,
-    };
+    ];
 
     public async Task<ExecutiveReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,

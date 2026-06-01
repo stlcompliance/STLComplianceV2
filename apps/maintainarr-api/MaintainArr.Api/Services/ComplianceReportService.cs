@@ -11,12 +11,12 @@ public sealed class ComplianceReportService(MaintainArrDbContext db)
     private const int AttentionLimit = 50;
     private const int TemplateSummaryLimit = 100;
 
-    private static readonly IReadOnlySet<string> OpenDefectStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly string[] OpenDefectStatuses =
+    [
         DefectStatuses.Open,
         DefectStatuses.Acknowledged,
         DefectStatuses.InRepair,
-    };
+    ];
 
     public async Task<ComplianceReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,

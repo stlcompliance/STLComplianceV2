@@ -122,9 +122,9 @@ function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWo
   return { ...base, ...overrides }
 }
 
-function renderPeopleSection(state: StaffArrWorkspaceState) {
+function renderPeopleSection(state: StaffArrWorkspaceState, initialPath = '/people') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialPath]}>
       <PeopleSection state={state} />
     </MemoryRouter>,
   )
@@ -351,5 +351,44 @@ describe('PeopleSection quick filter', () => {
 
     fireEvent.keyDown(screen.getByTestId('workspace-people-directory-filter'), { key: 'Enter' })
     expect(setSelectedPersonId).toHaveBeenCalledWith('person-2')
+  })
+
+  it('shows details content groups behind tabs', () => {
+    const profile = {
+      personId: 'person-1',
+      externalUserId: null,
+      givenName: 'Alex',
+      familyName: 'Rivera',
+      displayName: 'Alex Rivera',
+      primaryEmail: 'alex.rivera@example.com',
+      employmentStatus: 'active',
+      primaryOrgUnitId: null,
+      primaryOrgUnitName: 'Ops',
+      managerPersonId: null,
+      jobTitle: 'Operator',
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    }
+
+    renderPeopleSection(
+      buildState({
+        profile,
+        personProfileQuery: { isLoading: false, data: profile } as any,
+        selectedPerson: {
+          personId: 'person-1',
+          displayName: 'Alex Rivera',
+          primaryEmail: 'alex.rivera@example.com',
+          employmentStatus: 'active',
+          primaryOrgUnitName: 'Ops',
+          jobTitle: 'Operator',
+        } as any,
+      }),
+      '/people/details',
+    )
+
+    expect(screen.getByText('Selected person')).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Overview' }).getAttribute('aria-selected')).toBe('true')
+    fireEvent.click(screen.getByRole('tab', { name: 'Records' }))
+    expect(screen.getByRole('tab', { name: 'Records' }).getAttribute('aria-selected')).toBe('true')
   })
 })

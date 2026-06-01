@@ -14,11 +14,13 @@ public static class ProductSurfaceCatalog
 
     public static IReadOnlyList<NavigationSurfaceItem> BuildSurfaces(
         string productKey,
+        string productStatus,
         bool hasProductEntitlement,
         bool isPlatformAdmin)
     {
         var normalized = productKey.Trim().ToLowerInvariant();
-        var definitions = GetDefinitions(normalized);
+        var isLaunchable = !string.Equals(productStatus.Trim(), "worker", StringComparison.OrdinalIgnoreCase);
+        var definitions = GetDefinitions(normalized, isLaunchable);
         var surfaces = new List<NavigationSurfaceItem>(definitions.Count);
 
         foreach (var definition in definitions)
@@ -57,7 +59,9 @@ public static class ProductSurfaceCatalog
     public static bool IsInSuiteProduct(string productKey) =>
         InSuiteProducts.Contains(productKey.Trim());
 
-    private static IReadOnlyList<SurfaceDefinition> GetDefinitions(string productKey) =>
+    private static IReadOnlyList<SurfaceDefinition> GetDefinitions(
+        string productKey,
+        bool isLaunchable) =>
         productKey switch
         {
             "nexarr" =>
@@ -108,10 +112,14 @@ public static class ProductSurfaceCatalog
                 new("rules", "Rule packs", "rules", "complianceCore", 20),
                 new("launch", "Open Compliance Core app", "launch", "complianceCore", 90, LaunchExternal: true),
             ],
-            _ =>
+            _ when isLaunchable =>
             [
                 new("overview", "Overview", "", "dashboard", 0),
                 new("launch", "Open product app", "launch", "dashboard", 90, LaunchExternal: true),
+            ],
+            _ =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
             ],
         };
 

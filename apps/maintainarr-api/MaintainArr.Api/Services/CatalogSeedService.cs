@@ -402,9 +402,9 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new CatalogSeed("operationalStatus", "Operational Status", ["operational", "degraded", "non_operational", "unknown"]),
             new CatalogSeed("availabilityStatus", "Availability Status", ["available", "assigned", "in_shop", "down", "reserved", "unavailable"]),
 
-            new CatalogSeed("make", "Make", ["Ford", "Chevrolet", "GMC", "Ram", "Freightliner", "International", "Kenworth", "Peterbilt", "Volvo", "Mack", "Western Star", "Isuzu", "Hino", "Toyota", "Great Dane", "Wabash", "Utility", "Hyundai Translead", "Stoughton", "Vanguard", "Fontaine", "Reitnouer", "MAC Trailer", "Wilson", "East", "Heil", "Polar", "Toyota Material Handling", "Hyster", "Yale", "Crown", "Raymond", "Mitsubishi Logisnext", "Clark", "Caterpillar", "John Deere", "Komatsu", "JLG", "Genie", "Skyjack", "Bobcat", "Case", "Kubota"]),
-            new CatalogSeed("manufacturer", "Manufacturer", ["Ford", "Chevrolet", "GMC", "Ram", "Freightliner", "International", "Kenworth", "Peterbilt", "Volvo", "Mack", "Western Star", "Isuzu", "Hino", "Toyota", "Great Dane", "Wabash", "Utility", "Hyundai Translead", "Stoughton", "Vanguard", "Fontaine", "Reitnouer", "MAC Trailer", "Wilson", "East", "Heil", "Polar", "Toyota Material Handling", "Hyster", "Yale", "Crown", "Raymond", "Mitsubishi Logisnext", "Clark", "Caterpillar", "John Deere", "Komatsu", "JLG", "Genie", "Skyjack", "Bobcat", "Case", "Kubota"]),
-            new CatalogSeed("model", "Model", ["F-150", "F-250", "F-350", "Silverado 1500", "Silverado 2500HD", "Silverado 3500HD", "Sierra 1500", "Sierra 2500HD", "Sierra 3500HD", "Ram 1500", "Ram 2500", "Ram 3500", "Cascadia", "M2", "108SD", "114SD", "LT Series", "RH Series", "MV Series", "T680", "T880", "579", "VNL", "Anthem", "Pinnacle", "N-Series"]),
+            new CatalogSeed("make", "Make", GetMakeOptions()),
+            new CatalogSeed("manufacturer", "Manufacturer", GetMakeOptions()),
+            new CatalogSeed("model", "Model", GetVehicleModelOptions()),
             new CatalogSeed("modelYear", "Model Year", ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"]),
             new CatalogSeed("trim", "Trim", ["base", "xl", "xlt", "lt", "ltz", "limited", "custom"]),
             new CatalogSeed("series", "Series", ["standard", "hd", "lt_series", "rh_series", "mv_series", "custom"]),
@@ -664,59 +664,237 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             rows.Add(new DependencySeed("assetType", pair.Key, "assetClass", pair.Value));
         }
 
-        var vehicleMakes = new[] { "ford", "chevrolet", "gmc", "ram", "freightliner", "international", "kenworth", "peterbilt", "volvo", "mack", "western_star", "isuzu", "hino", "toyota" };
-        var trailerMakes = new[] { "great_dane", "wabash", "utility", "hyundai_translead", "stoughton", "vanguard", "fontaine", "reitnouer", "mac_trailer", "wilson", "east", "heil", "polar" };
-        var equipmentMakes = new[] { "toyota_material_handling", "hyster", "yale", "crown", "raymond", "mitsubishi_logisnext", "clark", "caterpillar", "john_deere", "komatsu", "jlg", "genie", "skyjack", "bobcat", "case", "kubota" };
-
-        foreach (var make in vehicleMakes)
+        foreach (var make in GetVehicleMakeOptions().Select(NormalizeOptionKey))
         {
             rows.Add(new DependencySeed("make", make, "assetClass", "vehicle"));
         }
-        foreach (var make in trailerMakes)
+        foreach (var make in GetTrailerMakeOptions().Select(NormalizeOptionKey))
         {
             rows.Add(new DependencySeed("make", make, "assetClass", "trailer"));
         }
-        foreach (var make in equipmentMakes)
+        foreach (var make in GetEquipmentMakeOptions().Select(NormalizeOptionKey))
         {
             rows.Add(new DependencySeed("make", make, "assetClass", "heavy_equipment"));
         }
 
-        var modelToMake = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        foreach (var seed in GetVehicleModelSeeds())
         {
-            ["f_150"] = "ford",
-            ["f_250"] = "ford",
-            ["f_350"] = "ford",
-            ["silverado_1500"] = "chevrolet",
-            ["silverado_2500hd"] = "chevrolet",
-            ["silverado_3500hd"] = "chevrolet",
-            ["sierra_1500"] = "gmc",
-            ["sierra_2500hd"] = "gmc",
-            ["sierra_3500hd"] = "gmc",
-            ["ram_1500"] = "ram",
-            ["ram_2500"] = "ram",
-            ["ram_3500"] = "ram",
-            ["cascadia"] = "freightliner",
-            ["m2"] = "freightliner",
-            ["108sd"] = "freightliner",
-            ["114sd"] = "freightliner",
-            ["lt_series"] = "international",
-            ["rh_series"] = "international",
-            ["mv_series"] = "international",
-            ["t680"] = "kenworth",
-            ["t880"] = "kenworth",
-            ["579"] = "peterbilt",
-            ["vnl"] = "volvo",
-            ["anthem"] = "mack",
-            ["pinnacle"] = "mack",
-            ["n_series"] = "isuzu",
-        };
-
-        foreach (var pair in modelToMake)
-        {
-            rows.Add(new DependencySeed("model", pair.Key, "make", pair.Value));
+            rows.Add(new DependencySeed(
+                "model",
+                NormalizeOptionKey(seed.Model),
+                "make",
+                NormalizeOptionKey(seed.Make)));
         }
 
         return rows;
+    }
+
+    private static IReadOnlyList<string> GetMakeOptions()
+    {
+        return GetVehicleMakeOptions()
+            .Concat(GetTrailerMakeOptions())
+            .Concat(GetEquipmentMakeOptions())
+            .ToList();
+    }
+
+    private static IReadOnlyList<string> GetVehicleMakeOptions()
+    {
+        return
+        [
+            "Ford",
+            "Chevrolet",
+            "GMC",
+            "Ram",
+            "Freightliner",
+            "International",
+            "Kenworth",
+            "Peterbilt",
+            "Volvo",
+            "Mack",
+            "Western Star",
+            "Isuzu",
+            "Hino",
+            "Toyota",
+            "Nissan",
+            "Mercedes-Benz",
+            "Workhorse",
+        ];
+    }
+
+    private static IReadOnlyList<string> GetTrailerMakeOptions()
+    {
+        return
+        [
+            "Great Dane",
+            "Wabash",
+            "Utility",
+            "Hyundai Translead",
+            "Stoughton",
+            "Vanguard",
+            "Fontaine",
+            "Reitnouer",
+            "MAC Trailer",
+            "Wilson",
+            "East",
+            "Heil",
+            "Polar",
+        ];
+    }
+
+    private static IReadOnlyList<string> GetEquipmentMakeOptions()
+    {
+        return
+        [
+            "Toyota Material Handling",
+            "Hyster",
+            "Yale",
+            "Crown",
+            "Raymond",
+            "Mitsubishi Logisnext",
+            "Clark",
+            "Caterpillar",
+            "John Deere",
+            "Komatsu",
+            "JLG",
+            "Genie",
+            "Skyjack",
+            "Bobcat",
+            "Case",
+            "Kubota",
+        ];
+    }
+
+    private static IReadOnlyList<string> GetVehicleModelOptions()
+    {
+        return GetVehicleModelSeeds().Select(x => x.Model).ToList();
+    }
+
+    private static IReadOnlyList<VehicleModelSeed> GetVehicleModelSeeds()
+    {
+        return
+        [
+            new VehicleModelSeed("F-150", "Ford"),
+            new VehicleModelSeed("F-250", "Ford"),
+            new VehicleModelSeed("F-350", "Ford"),
+            new VehicleModelSeed("F-450", "Ford"),
+            new VehicleModelSeed("F-550", "Ford"),
+            new VehicleModelSeed("F-650", "Ford"),
+            new VehicleModelSeed("F-750", "Ford"),
+            new VehicleModelSeed("Transit", "Ford"),
+            new VehicleModelSeed("Transit Connect", "Ford"),
+            new VehicleModelSeed("E-Series", "Ford"),
+            new VehicleModelSeed("E-Transit", "Ford"),
+            new VehicleModelSeed("Maverick", "Ford"),
+            new VehicleModelSeed("Ranger", "Ford"),
+
+            new VehicleModelSeed("Silverado 1500", "Chevrolet"),
+            new VehicleModelSeed("Silverado 2500HD", "Chevrolet"),
+            new VehicleModelSeed("Silverado 3500HD", "Chevrolet"),
+            new VehicleModelSeed("Silverado 4500HD", "Chevrolet"),
+            new VehicleModelSeed("Silverado 5500HD", "Chevrolet"),
+            new VehicleModelSeed("Silverado 6500HD", "Chevrolet"),
+            new VehicleModelSeed("Express", "Chevrolet"),
+            new VehicleModelSeed("Colorado", "Chevrolet"),
+
+            new VehicleModelSeed("Sierra 1500", "GMC"),
+            new VehicleModelSeed("Sierra 2500HD", "GMC"),
+            new VehicleModelSeed("Sierra 3500HD", "GMC"),
+            new VehicleModelSeed("Savana", "GMC"),
+            new VehicleModelSeed("Canyon", "GMC"),
+
+            new VehicleModelSeed("Ram 1500", "Ram"),
+            new VehicleModelSeed("Ram 2500", "Ram"),
+            new VehicleModelSeed("Ram 3500", "Ram"),
+            new VehicleModelSeed("Ram 4500", "Ram"),
+            new VehicleModelSeed("Ram 5500", "Ram"),
+            new VehicleModelSeed("ProMaster", "Ram"),
+            new VehicleModelSeed("ProMaster City", "Ram"),
+
+            new VehicleModelSeed("Cascadia", "Freightliner"),
+            new VehicleModelSeed("eCascadia", "Freightliner"),
+            new VehicleModelSeed("M2", "Freightliner"),
+            new VehicleModelSeed("108SD", "Freightliner"),
+            new VehicleModelSeed("114SD", "Freightliner"),
+            new VehicleModelSeed("122SD", "Freightliner"),
+            new VehicleModelSeed("Business Class M2", "Freightliner"),
+            new VehicleModelSeed("MT45", "Freightliner"),
+            new VehicleModelSeed("MT55", "Freightliner"),
+
+            new VehicleModelSeed("LT Series", "International"),
+            new VehicleModelSeed("RH Series", "International"),
+            new VehicleModelSeed("MV Series", "International"),
+            new VehicleModelSeed("HV Series", "International"),
+            new VehicleModelSeed("HX Series", "International"),
+            new VehicleModelSeed("CV Series", "International"),
+            new VehicleModelSeed("eMV Series", "International"),
+
+            new VehicleModelSeed("T680", "Kenworth"),
+            new VehicleModelSeed("T880", "Kenworth"),
+            new VehicleModelSeed("T800", "Kenworth"),
+            new VehicleModelSeed("W900", "Kenworth"),
+            new VehicleModelSeed("T370", "Kenworth"),
+            new VehicleModelSeed("T380", "Kenworth"),
+            new VehicleModelSeed("T480", "Kenworth"),
+            new VehicleModelSeed("K270", "Kenworth"),
+            new VehicleModelSeed("K370", "Kenworth"),
+            new VehicleModelSeed("K270E", "Kenworth"),
+            new VehicleModelSeed("K370E", "Kenworth"),
+
+            new VehicleModelSeed("579", "Peterbilt"),
+            new VehicleModelSeed("567", "Peterbilt"),
+            new VehicleModelSeed("389", "Peterbilt"),
+            new VehicleModelSeed("548", "Peterbilt"),
+            new VehicleModelSeed("537", "Peterbilt"),
+            new VehicleModelSeed("536", "Peterbilt"),
+            new VehicleModelSeed("220", "Peterbilt"),
+            new VehicleModelSeed("520", "Peterbilt"),
+
+            new VehicleModelSeed("VNL", "Volvo"),
+            new VehicleModelSeed("VNR", "Volvo"),
+            new VehicleModelSeed("VHD", "Volvo"),
+            new VehicleModelSeed("VAH", "Volvo"),
+            new VehicleModelSeed("VNR Electric", "Volvo"),
+
+            new VehicleModelSeed("Anthem", "Mack"),
+            new VehicleModelSeed("Pinnacle", "Mack"),
+            new VehicleModelSeed("Granite", "Mack"),
+            new VehicleModelSeed("LR", "Mack"),
+            new VehicleModelSeed("MD Series", "Mack"),
+            new VehicleModelSeed("MD Electric", "Mack"),
+
+            new VehicleModelSeed("47X", "Western Star"),
+            new VehicleModelSeed("49X", "Western Star"),
+            new VehicleModelSeed("57X", "Western Star"),
+            new VehicleModelSeed("4700", "Western Star"),
+            new VehicleModelSeed("4900", "Western Star"),
+
+            new VehicleModelSeed("N-Series", "Isuzu"),
+            new VehicleModelSeed("F-Series", "Isuzu"),
+            new VehicleModelSeed("NPR", "Isuzu"),
+            new VehicleModelSeed("NPR-HD", "Isuzu"),
+            new VehicleModelSeed("NQR", "Isuzu"),
+            new VehicleModelSeed("NRR", "Isuzu"),
+            new VehicleModelSeed("FTR", "Isuzu"),
+            new VehicleModelSeed("FVR", "Isuzu"),
+
+            new VehicleModelSeed("L Series", "Hino"),
+            new VehicleModelSeed("XL Series", "Hino"),
+            new VehicleModelSeed("M Series", "Hino"),
+
+            new VehicleModelSeed("Tacoma", "Toyota"),
+            new VehicleModelSeed("Tundra", "Toyota"),
+
+            new VehicleModelSeed("Frontier", "Nissan"),
+            new VehicleModelSeed("Titan", "Nissan"),
+            new VehicleModelSeed("NV Cargo", "Nissan"),
+            new VehicleModelSeed("NV Passenger", "Nissan"),
+
+            new VehicleModelSeed("Sprinter", "Mercedes-Benz"),
+            new VehicleModelSeed("Metris", "Mercedes-Benz"),
+
+            new VehicleModelSeed("W4 CC", "Workhorse"),
+            new VehicleModelSeed("W56", "Workhorse"),
+        ];
     }
 
     private static string NormalizeOptionKey(string value)
@@ -778,6 +956,8 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         string OptionKey,
         string DependsOnCatalogKey,
         string DependsOnOptionKey);
+
+    private sealed record VehicleModelSeed(string Model, string Make);
 
     private sealed record FieldSeed(
         string Key,

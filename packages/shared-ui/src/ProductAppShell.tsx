@@ -121,6 +121,14 @@ export function ProductAppShell({
   const routeIsActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(`${to}/`)
 
+  const mobileNavLinkClassName = (to: string) =>
+    [
+      'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+      routeIsActive(to)
+        ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
+        : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+    ].join(' ')
+
   const routeSection = (to: string) => {
     const parts = to.split('/').filter(Boolean)
     return parts.length > 0 ? `/${parts[0]}` : to
@@ -130,6 +138,13 @@ export function ProductAppShell({
     const section = routeSection(to)
     return location.pathname === section || location.pathname.startsWith(`${section}/`)
   }
+
+  const mobileNavItems = navItems.flatMap((item) => {
+    if (item.children?.length && routeSectionIsActive(item.to)) {
+      return [item, ...item.children]
+    }
+    return [item]
+  })
 
   if (!showSidebar) {
     return (
@@ -155,7 +170,7 @@ export function ProductAppShell({
 
   return (
     <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
-      <aside className="flex w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4">
+      <aside className="hidden w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4 lg:flex">
         <div className="mb-6 shrink-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-400">STL Compliance</p>
           <h1 className="text-lg font-semibold text-white">{productName}</h1>
@@ -213,7 +228,20 @@ export function ProductAppShell({
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
         />
-        <main className="min-h-0 flex-1 overflow-auto p-6">{children}</main>
+        <nav aria-label={`${productName} mobile navigation`} className="border-b border-slate-700/70 bg-[#0a101c] px-4 py-2 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {mobileNavItems.map((item) => {
+              const Icon = item.icon ?? ProductIcon
+              return (
+                <NavLink key={item.to} to={item.to} end={item.to === '/'} className={mobileNavLinkClassName(item.to)}>
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
+            })}
+          </div>
+        </nav>
+        <main className="min-h-0 flex-1 overflow-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   )

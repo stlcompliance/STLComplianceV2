@@ -1,0 +1,30 @@
+{
+  "runId": "20260601-110824-dm9lf",
+  "baseUrl": "https://suite-frontend.onrender.com",
+  "apiUrl": "https://nexarr-api-3zlb.onrender.com",
+  "generatedAt": "2026-06-01T11:12:45.960Z",
+  "routeCount": 62,
+  "errorCount": 0,
+  "consoleLogCount": 0,
+  "createdDataCount": 5,
+  "dataErrorCount": 0,
+  "me": {
+    "email": "admin@demo.stl",
+    "displayName": "Demo Platform Admin",
+    "tenantId": "11111111-1111-1111-1111-111111111101",
+    "tenantSlug": "demo-stl",
+    "isPlatformAdmin": true,
+    "entitlements": [
+      "companion",
+      "compliancecore",
+      "maintainarr",
+      "nexarr",
+      "nexarr-worker",
+      "routarr",
+      "shared-worker",
+      "staffarr",
+      "supplyarr",
+      "trainarr"
+    ]
+  }
+}

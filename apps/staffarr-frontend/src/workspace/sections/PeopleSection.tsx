@@ -16,6 +16,7 @@ import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 type Props = { state: StaffArrWorkspaceState }
 type PeopleViewMode = 'drawer' | 'details' | 'create'
 type DrawerColumnKey = 'name' | 'email' | 'jobTitle' | 'orgUnit' | 'status' | 'manager'
+type DetailsTabKey = 'overview' | 'profile' | 'records' | 'lifecycle' | 'activity'
 
 const PEOPLE_DRAWER_COLUMN_STORAGE_KEY = 'staffarr.people.drawer.columns.v1'
 
@@ -30,10 +31,39 @@ const ALL_DRAWER_COLUMNS: Array<{ key: DrawerColumnKey; label: string }> = [
 
 const DEFAULT_DRAWER_COLUMNS: DrawerColumnKey[] = ['name', 'email', 'jobTitle', 'orgUnit', 'status']
 
+const DETAIL_TABS: Array<{ key: DetailsTabKey; label: string }> = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'profile', label: 'Profile' },
+  { key: 'records', label: 'Records' },
+  { key: 'lifecycle', label: 'Lifecycle' },
+  { key: 'activity', label: 'Activity' },
+]
+
+function formatStatus(status: string | null | undefined) {
+  return status ? status.replaceAll('_', ' ') : 'Unavailable'
+}
+
+function statusBadgeClass(status: string | null | undefined) {
+  switch (status) {
+    case 'complete':
+    case 'active':
+      return 'border-emerald-700/60 bg-emerald-950/30 text-emerald-200'
+    case 'blocked':
+    case 'terminated':
+    case 'inactive':
+      return 'border-rose-700/60 bg-rose-950/30 text-rose-200'
+    case 'in_progress':
+      return 'border-sky-700/60 bg-sky-950/30 text-sky-200'
+    default:
+      return 'border-slate-700 bg-slate-900 text-slate-300'
+  }
+}
+
 export function PeopleSection({ state }: Props) {
   const s = state
   const location = useLocation()
   const [selectedColumns, setSelectedColumns] = useState<DrawerColumnKey[]>(DEFAULT_DRAWER_COLUMNS)
+  const [activeDetailsTab, setActiveDetailsTab] = useState<DetailsTabKey>('overview')
   const managerDisplayName = s.profile?.managerPersonId
     ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
     : 'None'
@@ -73,6 +103,12 @@ export function PeopleSection({ state }: Props) {
   useEffect(() => {
     window.localStorage.setItem(PEOPLE_DRAWER_COLUMN_STORAGE_KEY, JSON.stringify(selectedColumns))
   }, [selectedColumns])
+
+  useEffect(() => {
+    if (mode !== 'details') {
+      setActiveDetailsTab('overview')
+    }
+  }, [mode])
 
   const visibleColumns = useMemo(() => {
     const picked = selectedColumns
@@ -117,6 +153,728 @@ export function PeopleSection({ state }: Props) {
     }
   }
 
+  const detailPersonId = s.selectedPerson?.personId ?? s.profile?.personId ?? s.effectivePersonId ?? null
+  const detailPersonDisplayName = s.profile?.displayName ?? s.selectedPerson?.displayName ?? 'No profile selected'
+  const detailPersonEmail = s.profile?.primaryEmail ?? s.selectedPerson?.primaryEmail ?? null
+  const detailPersonStatus = s.profile?.employmentStatus ?? s.selectedPerson?.employmentStatus ?? null
+  const detailPersonOrgUnit = s.profile?.primaryOrgUnitName ?? s.selectedPerson?.primaryOrgUnitName ?? 'Unassigned'
+  const lookup = s.personLookupQuery.data
+  const journey = s.workforceOnboardingJourneyQuery.data
+  const historySummary = s.personHistorySummaryQuery.data
+  const completedJourneyStepCount = journey?.steps.filter((step) => step.status === 'complete').length ?? 0
+  const blockedJourneyStepCount = journey?.steps.filter((step) => step.status === 'blocked').length ?? 0
+
+  const emptyDetailsState = (
+    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
+      <h2 className="text-sm font-medium text-slate-300">No profile selected</h2>
+      <p className="mt-2 text-sm text-slate-400">Choose a person from the directory to view these details.</p>
+    </section>
+  )
+
+  const renderDirectorySection = () => (
+    <section className={mode === 'details' ? '' : 'mt-8'}>
+      <div
+        className={[
+          'border border-slate-700 bg-slate-900/60',
+          mode === 'details' ? 'rounded-lg p-4' : 'rounded-xl p-6',
+        ].join(' ')}
+      >
+        <h2 className="text-sm font-medium text-slate-300">People directory</h2>
+        <div className="mt-3 space-y-2">
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400" htmlFor="workspace-directory-filter">
+            Quick filter
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="workspace-directory-filter"
+              type="search"
+              aria-label="People quick filter"
+              data-testid="workspace-people-directory-filter"
+              value={s.peopleDirectoryQuery}
+              onChange={(event) => s.setPeopleDirectoryQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' && s.peopleDirectoryQuery) {
+                  event.preventDefault()
+                  s.setPeopleDirectoryQuery('')
+                  return
+                }
+                if (
+                  (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
+                  s.peopleDirectoryQuery.trim() &&
+                  s.filteredPeople.length > 0
+                ) {
+                  event.preventDefault()
+                  const anchorId = activeFilteredPersonId ?? s.filteredPeople[0]!.personId
+                  const currentIndex = s.filteredPeople.findIndex((person) => person.personId === anchorId)
+                  const startIndex = currentIndex >= 0 ? currentIndex : 0
+                  const nextIndex =
+                    event.key === 'ArrowDown'
+                      ? (startIndex + 1) % s.filteredPeople.length
+                      : (startIndex - 1 + s.filteredPeople.length) % s.filteredPeople.length
+                  s.setActiveDirectoryPersonId(s.filteredPeople[nextIndex]!.personId)
+                  return
+                }
+                if (event.key === 'Enter' && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0) {
+                  event.preventDefault()
+                  s.setSelectedPersonId(activeFilteredPersonId ?? s.filteredPeople[0]!.personId)
+                }
+              }}
+              placeholder="Search by name, email, title, org unit, or status"
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+            />
+            {s.peopleDirectoryQuery ? (
+              <button
+                type="button"
+                onClick={() => s.setPeopleDirectoryQuery('')}
+                className="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+          {!s.peopleQuery.isLoading && s.people.length > 0 ? (
+            <p className="text-xs text-slate-500" aria-live="polite">
+              Showing {s.filteredPeople.length} of {s.people.length} people
+            </p>
+          ) : null}
+          {!s.peopleQuery.isLoading && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0 ? (
+            <p className="text-xs text-slate-500">Use ↑/↓ to move through results, then press Enter to select.</p>
+          ) : null}
+          {s.selectedPersonHiddenByFilter ? (
+            <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
+              The selected person is hidden by the current filter.
+              <button
+                type="button"
+                onClick={() => s.setPeopleDirectoryQuery('')}
+                className="ml-2 underline decoration-amber-400/70 underline-offset-2 hover:text-amber-100"
+              >
+                Clear filter to show selection
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {s.peopleQuery.isLoading ? (
+          <p className="mt-4 text-sm text-slate-400">Loading people…</p>
+        ) : s.people.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-400">No people have been added yet for this tenant.</p>
+        ) : s.filteredPeople.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-400" aria-live="polite">
+            No people match the current filter. Try a different name, email, or status.
+          </p>
+        ) : mode === 'drawer' ? (
+          <div className="mt-4 space-y-3">
+            <div className="rounded-md border border-slate-700 p-2">
+              <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {ALL_DRAWER_COLUMNS.map((column) => (
+                  <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns.includes(column.key)}
+                      onChange={() => toggleColumn(column.key)}
+                    />
+                    {column.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-md border border-slate-700">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-950/70">
+                  <tr>
+                    {visibleColumns.map((column) => (
+                      <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                        {ALL_DRAWER_COLUMNS.find((item) => item.key === column)?.label}
+                      </th>
+                    ))}
+                    <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.filteredPeople.map((person) => (
+                    <tr key={person.personId} className="border-t border-slate-800">
+                      {visibleColumns.map((column) => (
+                        <td key={`${person.personId}-${column}`} className="px-3 py-2 text-slate-200">
+                          {cellValue(person, column)}
+                        </td>
+                      ))}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Link
+                            to="/people/details"
+                            onClick={() => s.setSelectedPersonId(person.personId)}
+                            className="text-sky-300 hover:text-sky-200 hover:underline"
+                          >
+                            View
+                          </Link>
+                          <Link
+                            to="/people/create"
+                            onClick={() => s.setSelectedPersonId(person.personId)}
+                            className="text-emerald-300 hover:text-emerald-200 hover:underline"
+                          >
+                            Edit
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <ul className="mt-4 divide-y divide-slate-700">
+            {s.filteredPeople.map((person) => {
+              const isSelected = s.effectivePersonId === person.personId
+              const isActive =
+                Boolean(s.peopleDirectoryQuery.trim()) && activeFilteredPersonId === person.personId
+              const buttonClass = isSelected
+                ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
+                : isActive
+                  ? 'w-full rounded-md px-1 py-1 text-left text-slate-100 ring-1 ring-sky-500/70'
+                  : 'w-full rounded-md px-1 py-1 text-left'
+
+              return (
+                <li key={person.personId} className="flex items-center justify-between gap-4 py-3">
+                  <button
+                    type="button"
+                    onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
+                    onClick={() => {
+                      s.setActiveDirectoryPersonId(person.personId)
+                      s.setSelectedPersonId(person.personId)
+                    }}
+                    className={buttonClass}
+                  >
+                    <p className="text-sm text-white">{person.displayName}</p>
+                    <p className="text-xs text-slate-400">
+                      {person.jobTitle ?? 'No title'} · {person.primaryEmail}
+                    </p>
+                  </button>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
+  )
+
+  const selectedProfilePanel = (
+    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
+      <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
+      {s.personProfileQuery.isLoading ? (
+        <p className="mt-4 text-sm text-slate-400">Loading selected profile…</p>
+      ) : !s.profile ? (
+        <p className="mt-4 text-sm text-slate-400">No profile selected.</p>
+      ) : (
+        <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Name</dt>
+            <dd className="text-right text-white">{s.profile.displayName}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Email</dt>
+            <dd className="text-right text-white">{s.profile.primaryEmail}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Org unit</dt>
+            <dd className="text-right text-white">{s.profile.primaryOrgUnitName ?? 'Unassigned'}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Manager</dt>
+            <dd className="text-right text-white">{managerDisplayName}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Created</dt>
+            <dd className="text-right text-slate-200">{new Date(s.profile.createdAt).toLocaleDateString()}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Updated</dt>
+            <dd className="text-right text-slate-200">{new Date(s.profile.updatedAt).toLocaleDateString()}</dd>
+          </div>
+        </dl>
+      )}
+    </section>
+  )
+
+  const overviewStatusCards = (
+    <div className="mt-6 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Employment</p>
+        <p className="mt-2 text-sm font-medium capitalize text-slate-100">{formatStatus(detailPersonStatus)}</p>
+      </div>
+      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Placement</p>
+        <p className="mt-2 truncate text-sm font-medium text-slate-100">{detailPersonOrgUnit}</p>
+      </div>
+      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Onboarding</p>
+        <p className="mt-2 text-sm font-medium capitalize text-slate-100">
+          {s.workforceOnboardingJourneyQuery.isLoading ? 'Loading' : formatStatus(journey?.overallStatus)}
+        </p>
+      </div>
+      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Activity</p>
+        <p className="mt-2 text-sm font-medium text-slate-100">
+          {historySummary ? `${historySummary.eventCount} events` : 'No rollup yet'}
+        </p>
+      </div>
+    </div>
+  )
+
+  const overviewWorkflowCard = (
+    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-medium text-slate-300">Readiness and onboarding</h2>
+          {journey ? (
+            <p className="mt-2 text-sm text-slate-400">{journey.overallSummary}</p>
+          ) : (
+            <p className="mt-2 text-sm text-slate-400">
+              {s.workforceOnboardingJourneyQuery.isLoading
+                ? 'Loading onboarding summary…'
+                : 'No onboarding summary is available for this person.'}
+            </p>
+          )}
+        </div>
+        <span className={`rounded-md border px-2 py-1 text-xs font-medium capitalize ${statusBadgeClass(journey?.overallStatus)}`}>
+          {formatStatus(journey?.overallStatus)}
+        </span>
+      </div>
+      {journey ? (
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
+            <dt className="text-xs uppercase tracking-wide text-slate-500">Complete</dt>
+            <dd className="mt-1 text-lg font-semibold text-white">{completedJourneyStepCount}</dd>
+          </div>
+          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
+            <dt className="text-xs uppercase tracking-wide text-slate-500">Blocked</dt>
+            <dd className="mt-1 text-lg font-semibold text-white">{blockedJourneyStepCount}</dd>
+          </div>
+          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
+            <dt className="text-xs uppercase tracking-wide text-slate-500">Total steps</dt>
+            <dd className="mt-1 text-lg font-semibold text-white">{journey.steps.length}</dd>
+          </div>
+        </dl>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setActiveDetailsTab('lifecycle')}
+        className="mt-4 rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:border-sky-500 hover:text-white"
+      >
+        Review lifecycle
+      </button>
+    </section>
+  )
+
+  const detailsTabs = (
+    <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-2">
+      <div
+        className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="tablist"
+        aria-label="People detail views"
+      >
+        {DETAIL_TABS.map((tab) => {
+          const isActive = activeDetailsTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              id={`people-details-${tab.key}-tab`}
+              aria-selected={isActive}
+              aria-controls={`people-details-${tab.key}-panel`}
+              onClick={() => setActiveDetailsTab(tab.key)}
+              className={[
+                'shrink-0 rounded-md px-3 py-2 text-sm font-medium transition',
+                isActive
+                  ? 'bg-sky-600 text-white shadow-sm shadow-sky-950/40'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white',
+              ].join(' ')}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  const profileEditorPanel = s.profile ? (
+    <PersonProfileEditorPanel
+      profile={s.profile}
+      orgUnits={s.orgUnits}
+      peopleOptions={s.people.map((person) => ({
+        personId: person.personId,
+        displayName: person.displayName,
+      }))}
+      canManage={s.canManagePeopleProfiles}
+      isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
+      errorMessage={
+        s.personProfileMutationError
+          ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
+          : null
+      }
+      onUpdate={async (request) => {
+        await s.updatePersonMutation.mutateAsync({
+          personId: s.profile!.personId,
+          ...request,
+        })
+      }}
+      onEmploymentStatusChange={async (request) => {
+        await s.updateEmploymentStatusMutation.mutateAsync({
+          personId: s.profile!.personId,
+          ...request,
+        })
+      }}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const personnelNotesPanel = detailPersonId ? (
+    <PersonnelNotesPanel
+      personId={detailPersonId}
+      personDisplayName={detailPersonDisplayName}
+      notes={s.personNotes}
+      selectedNoteId={s.selectedNoteId}
+      selectedNote={s.noteDetailQuery.data ?? null}
+      isLoading={s.personNotesQuery.isLoading}
+      isError={s.personNotesQuery.isError}
+      readErrorMessage={
+        s.personNotesQuery.isError
+          ? getErrorMessage(
+              s.personNotesQuery.error,
+              'Failed to load personnel notes.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personNotesQuery.refetch()}
+      isLoadingDetail={s.noteDetailQuery.isLoading}
+      isDetailError={s.noteDetailQuery.isError}
+      detailErrorMessage={
+        s.noteDetailQuery.isError
+          ? getErrorMessage(
+              s.noteDetailQuery.error,
+              'Failed to load note detail.',
+            )
+          : null
+      }
+      onRetryDetail={() => void s.noteDetailQuery.refetch()}
+      canManage={s.canManagePersonNotes}
+      isSubmitting={s.createNoteMutation.isPending}
+      actionErrorMessage={
+        s.noteMutationError
+          ? getErrorMessage(s.noteMutationError, 'Failed to save personnel note.')
+          : null
+      }
+      onSelectNote={s.setSelectedNoteId}
+      onCreateNote={async (payload) => {
+        await s.createNoteMutation.mutateAsync(payload)
+      }}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const personnelDocumentsPanel = detailPersonId ? (
+    <PersonnelDocumentsPanel
+      personId={detailPersonId}
+      personDisplayName={detailPersonDisplayName}
+      accessToken={s.accessToken}
+      documents={s.personDocuments}
+      selectedDocumentId={s.selectedDocumentId}
+      selectedDocument={s.documentDetailQuery.data ?? null}
+      isLoading={s.personDocumentsQuery.isLoading}
+      isError={s.personDocumentsQuery.isError}
+      readErrorMessage={
+        s.personDocumentsQuery.isError
+          ? getErrorMessage(
+              s.personDocumentsQuery.error,
+              'Failed to load personnel documents.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personDocumentsQuery.refetch()}
+      isLoadingDetail={s.documentDetailQuery.isLoading}
+      isDetailError={s.documentDetailQuery.isError}
+      detailErrorMessage={
+        s.documentDetailQuery.isError
+          ? getErrorMessage(
+              s.documentDetailQuery.error,
+              'Failed to load document detail.',
+            )
+          : null
+      }
+      onRetryDetail={() => void s.documentDetailQuery.refetch()}
+      canManage={s.canManagePersonDocuments}
+      isSubmitting={s.uploadDocumentMutation.isPending}
+      actionErrorMessage={
+        s.documentMutationError
+          ? getErrorMessage(s.documentMutationError, 'Failed to upload personnel document.')
+          : null
+      }
+      onSelectDocument={s.setSelectedDocumentId}
+      onUploadDocument={async (payload) => {
+        await s.uploadDocumentMutation.mutateAsync(payload)
+      }}
+      contentUrlFor={(documentId) =>
+        s.personnelDocumentContentUrl(detailPersonId, documentId)
+      }
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const workforceOnboardingPanel = detailPersonId ? (
+    <WorkforceOnboardingJourneyPanel
+      accessToken={s.accessToken}
+      personDisplayName={detailPersonDisplayName}
+      journey={s.workforceOnboardingJourneyQuery.data ?? null}
+      isLoading={s.workforceOnboardingJourneyQuery.isLoading}
+      isError={s.workforceOnboardingJourneyQuery.isError}
+      readErrorMessage={
+        s.workforceOnboardingJourneyQuery.isError
+          ? getErrorMessage(
+              s.workforceOnboardingJourneyQuery.error,
+              'Failed to load workforce onboarding journey.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.workforceOnboardingJourneyQuery.refetch()}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const offboardingPanel = detailPersonId ? (
+    <PersonOffboardingPanel
+      personId={detailPersonId}
+      personDisplayName={detailPersonDisplayName}
+      peopleOptions={s.people.map((person) => ({
+        personId: person.personId,
+        displayName: person.displayName,
+      }))}
+      offboarding={s.personOffboardingQuery.data ?? null}
+      isLoading={s.personOffboardingQuery.isLoading}
+      isError={s.personOffboardingQuery.isError}
+      readErrorMessage={
+        s.personOffboardingQuery.isError
+          ? getErrorMessage(
+              s.personOffboardingQuery.error,
+              'Failed to load offboarding workflow state.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personOffboardingQuery.refetch()}
+      canManage={s.canManagePeopleProfiles}
+      isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
+      actionErrorMessage={
+        s.offboardingMutationError
+          ? getErrorMessage(s.offboardingMutationError, 'Failed to update offboarding workflow.')
+          : null
+      }
+      onStart={async (request) => {
+        await s.startOffboardingMutation.mutateAsync({
+          personId: detailPersonId,
+          ...request,
+        })
+      }}
+      onExecute={async (request) => {
+        const offboarding = s.personOffboardingQuery.data
+        if (!offboarding) {
+          return
+        }
+
+        await s.executeOffboardingMutation.mutateAsync({
+          personId: detailPersonId,
+          offboardingId: offboarding.offboardingId,
+          ...request,
+        })
+      }}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const personLookupPanel = detailPersonId ? (
+    <PersonLookupPanel
+      personId={detailPersonId}
+      personDisplayName={detailPersonDisplayName}
+      lookup={s.personLookupQuery.data ?? null}
+      isLoading={s.personLookupQuery.isLoading}
+      isError={s.personLookupQuery.isError}
+      readErrorMessage={
+        s.personLookupQuery.isError
+          ? getErrorMessage(
+              s.personLookupQuery.error,
+              'Failed to load person identity and placement details.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personLookupQuery.refetch()}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const personHistorySummaryPanel = detailPersonId ? (
+    <PersonHistorySummaryPanel
+      personDisplayName={detailPersonDisplayName}
+      summary={s.personHistorySummaryQuery.data ?? null}
+      isLoading={s.personHistorySummaryQuery.isLoading}
+      isError={s.personHistorySummaryQuery.isError}
+      readErrorMessage={
+        s.personHistorySummaryQuery.isError
+          ? getErrorMessage(
+              s.personHistorySummaryQuery.error,
+              'Failed to load personnel history summary.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personHistorySummaryQuery.refetch()}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const personTimelinePanel = detailPersonId ? (
+    <PersonTimelinePanel
+      personDisplayName={detailPersonDisplayName}
+      entries={s.personTimelineEntries}
+      totalCount={s.personTimelineTotalCount}
+      page={s.personTimelinePage}
+      pageSize={s.personTimelinePageSize}
+      hasNextPage={s.personTimelineHasNextPage}
+      categoryFilter={s.personTimelineCategoryFilter}
+      isLoading={s.personTimelineQuery.isLoading}
+      isError={s.personTimelineQuery.isError}
+      readErrorMessage={
+        s.personTimelineQuery.isError
+          ? getErrorMessage(
+              s.personTimelineQuery.error,
+              'Failed to load person timeline events.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personTimelineQuery.refetch()}
+      onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
+      onPageChange={s.setPersonTimelinePage}
+      onPageSizeChange={s.setPersonTimelinePageSize}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const trainarrHistoryPanel = detailPersonId ? (
+    <PersonTrainarrTrainingHistoryPanel
+      personDisplayName={detailPersonDisplayName}
+      history={s.trainarrTrainingHistoryQuery.data ?? null}
+      isLoading={s.trainarrTrainingHistoryQuery.isLoading}
+      isError={s.trainarrTrainingHistoryQuery.isError}
+      readErrorMessage={
+        s.trainarrTrainingHistoryQuery.isError
+          ? getErrorMessage(
+              s.trainarrTrainingHistoryQuery.error,
+              'Failed to load TrainArr training history.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.trainarrTrainingHistoryQuery.refetch()}
+    />
+  ) : (
+    emptyDetailsState
+  )
+
+  const renderDetailsTabPanel = () => {
+    switch (activeDetailsTab) {
+      case 'profile':
+        return <div>{profileEditorPanel}</div>
+      case 'records':
+        return (
+          <div className="2xl:grid 2xl:grid-cols-2 2xl:gap-6">
+            {personnelNotesPanel}
+            {personnelDocumentsPanel}
+          </div>
+        )
+      case 'lifecycle':
+        return (
+          <div className="2xl:grid 2xl:grid-cols-2 2xl:gap-6">
+            {workforceOnboardingPanel}
+            {offboardingPanel}
+          </div>
+        )
+      case 'activity':
+        return (
+          <div className="2xl:grid 2xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 2xl:gap-6">
+            <div>
+              {personHistorySummaryPanel}
+              {trainarrHistoryPanel}
+            </div>
+            {personTimelinePanel}
+          </div>
+        )
+      default:
+        return (
+          <>
+            {overviewStatusCards}
+            <div className="2xl:grid 2xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.85fr)] 2xl:gap-6">
+              <div>
+                {selectedProfilePanel}
+                {personLookupPanel}
+              </div>
+              <div>{overviewWorkflowCard}</div>
+            </div>
+          </>
+        )
+    }
+  }
+
+  if (mode === 'details') {
+    return (
+      <div className="xl:-mx-4 2xl:-mx-10">
+        <div className="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
+          <aside className="space-y-4 xl:sticky xl:top-0 xl:max-h-[calc(100vh-2rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
+            <section className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Selected person</p>
+              <h2 className="mt-2 text-lg font-semibold text-white">{detailPersonDisplayName}</h2>
+              {detailPersonEmail ? (
+                <p className="mt-1 break-all text-xs text-slate-400">{detailPersonEmail}</p>
+              ) : null}
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Status</dt>
+                  <dd className="text-right capitalize text-slate-100">{formatStatus(detailPersonStatus)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Org</dt>
+                  <dd className="text-right text-slate-100">{detailPersonOrgUnit}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Manager</dt>
+                  <dd className="text-right text-slate-100">{lookup?.placement.managerDisplayName ?? managerDisplayName}</dd>
+                </div>
+              </dl>
+            </section>
+            <div className="hidden xl:block">{renderDirectorySection()}</div>
+          </aside>
+          <div className="min-w-0">
+            {detailsTabs}
+            <div className="mt-4 xl:hidden">{renderDirectorySection()}</div>
+            <section
+              role="tabpanel"
+              id={`people-details-${activeDetailsTab}-panel`}
+              aria-labelledby={`people-details-${activeDetailsTab}-tab`}
+            >
+              {renderDetailsTabPanel()}
+            </section>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {mode === 'create' ? (
@@ -129,192 +887,8 @@ export function PeopleSection({ state }: Props) {
           </ol>
         </div>
       ) : null}
-      {mode === 'details' ? (
-        <div className="rounded-xl border border-sky-700/50 bg-sky-950/20 p-4 text-sm text-sky-100">
-          People details view centers on the selected person and their profile context.
-        </div>
-      ) : null}
-      <section className="mt-8">
-        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-medium text-slate-300">People directory</h2>
-          <div className="mt-3 space-y-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400" htmlFor="workspace-directory-filter">
-              Quick filter
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="workspace-directory-filter"
-                type="search"
-                aria-label="People quick filter"
-                data-testid="workspace-people-directory-filter"
-                value={s.peopleDirectoryQuery}
-                onChange={(event) => s.setPeopleDirectoryQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape' && s.peopleDirectoryQuery) {
-                    event.preventDefault()
-                    s.setPeopleDirectoryQuery('')
-                    return
-                  }
-                  if (
-                    (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
-                    s.peopleDirectoryQuery.trim() &&
-                    s.filteredPeople.length > 0
-                  ) {
-                    event.preventDefault()
-                    const anchorId = activeFilteredPersonId ?? s.filteredPeople[0]!.personId
-                    const currentIndex = s.filteredPeople.findIndex((person) => person.personId === anchorId)
-                    const startIndex = currentIndex >= 0 ? currentIndex : 0
-                    const nextIndex =
-                      event.key === 'ArrowDown'
-                        ? (startIndex + 1) % s.filteredPeople.length
-                        : (startIndex - 1 + s.filteredPeople.length) % s.filteredPeople.length
-                    s.setActiveDirectoryPersonId(s.filteredPeople[nextIndex]!.personId)
-                    return
-                  }
-                  if (event.key === 'Enter' && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0) {
-                    event.preventDefault()
-                    s.setSelectedPersonId(activeFilteredPersonId ?? s.filteredPeople[0]!.personId)
-                  }
-                }}
-                placeholder="Search by name, email, title, org unit, or status"
-                className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
-              />
-              {s.peopleDirectoryQuery ? (
-                <button
-                  type="button"
-                  onClick={() => s.setPeopleDirectoryQuery('')}
-                  className="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
-                >
-                  Clear
-                </button>
-              ) : null}
-            </div>
-            {!s.peopleQuery.isLoading && s.people.length > 0 ? (
-              <p className="text-xs text-slate-500" aria-live="polite">
-                Showing {s.filteredPeople.length} of {s.people.length} people
-              </p>
-            ) : null}
-            {!s.peopleQuery.isLoading && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0 ? (
-              <p className="text-xs text-slate-500">Use ↑/↓ to move through results, then press Enter to select.</p>
-            ) : null}
-            {s.selectedPersonHiddenByFilter ? (
-              <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
-                The selected person is hidden by the current filter.
-                <button
-                  type="button"
-                  onClick={() => s.setPeopleDirectoryQuery('')}
-                  className="ml-2 underline decoration-amber-400/70 underline-offset-2 hover:text-amber-100"
-                >
-                  Clear filter to show selection
-                </button>
-              </div>
-            ) : null}
-          </div>
-          {s.peopleQuery.isLoading ? (
-            <p className="mt-4 text-sm text-slate-400">Loading people…</p>
-          ) : s.people.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-400">No people have been added yet for this tenant.</p>
-          ) : s.filteredPeople.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-400" aria-live="polite">
-              No people match the current filter. Try a different name, email, or status.
-            </p>
-          ) : mode === 'drawer' ? (
-            <div className="mt-4 space-y-3">
-              <div className="rounded-md border border-slate-700 p-2">
-                <p className="text-xs text-slate-400">Visible columns (max 5)</p>
-                <div className="mt-2 flex flex-wrap gap-3">
-                  {ALL_DRAWER_COLUMNS.map((column) => (
-                    <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns.includes(column.key)}
-                        onChange={() => toggleColumn(column.key)}
-                      />
-                      {column.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="overflow-x-auto rounded-md border border-slate-700">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-slate-950/70">
-                    <tr>
-                      {visibleColumns.map((column) => (
-                        <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-                          {ALL_DRAWER_COLUMNS.find((item) => item.key === column)?.label}
-                        </th>
-                      ))}
-                      <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {s.filteredPeople.map((person) => (
-                      <tr key={person.personId} className="border-t border-slate-800">
-                        {visibleColumns.map((column) => (
-                          <td key={`${person.personId}-${column}`} className="px-3 py-2 text-slate-200">
-                            {cellValue(person, column)}
-                          </td>
-                        ))}
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2 text-xs">
-                            <Link
-                              to="/people/details"
-                              onClick={() => s.setSelectedPersonId(person.personId)}
-                              className="text-sky-300 hover:text-sky-200 hover:underline"
-                            >
-                              View
-                            </Link>
-                            <Link
-                              to="/people/create"
-                              onClick={() => s.setSelectedPersonId(person.personId)}
-                              className="text-emerald-300 hover:text-emerald-200 hover:underline"
-                            >
-                              Edit
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <ul className="mt-4 divide-y divide-slate-700">
-              {s.filteredPeople.map((person) => {
-                const isSelected = s.effectivePersonId === person.personId
-                const isActive =
-                  Boolean(s.peopleDirectoryQuery.trim()) && activeFilteredPersonId === person.personId
-                const buttonClass = isSelected
-                  ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
-                  : isActive
-                    ? 'w-full rounded-md px-1 py-1 text-left text-slate-100 ring-1 ring-sky-500/70'
-                    : 'w-full rounded-md px-1 py-1 text-left'
 
-                return (
-                  <li key={person.personId} className="flex items-center justify-between gap-4 py-3">
-                    <button
-                      type="button"
-                      onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
-                      onClick={() => {
-                        s.setActiveDirectoryPersonId(person.personId)
-                        s.setSelectedPersonId(person.personId)
-                      }}
-                      className={buttonClass}
-                    >
-                      <p className="text-sm text-white">{person.displayName}</p>
-                      <p className="text-xs text-slate-400">
-                        {person.jobTitle ?? 'No title'} · {person.primaryEmail}
-                      </p>
-                    </button>
-                    <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
-      </section>
+      {renderDirectorySection()}
 
       {mode === 'create' ? (
         <CreatePersonPanel
@@ -333,314 +907,6 @@ export function PeopleSection({ state }: Props) {
           onCreate={async (request) => {
             await s.createPersonMutation.mutateAsync(request)
           }}
-        />
-      ) : null}
-
-      {mode === 'details' ? (
-      <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
-        {s.personProfileQuery.isLoading ? (
-          <p className="mt-4 text-sm text-slate-400">Loading selected profile…</p>
-        ) : !s.profile ? (
-          <p className="mt-4 text-sm text-slate-400">No profile selected.</p>
-        ) : (
-          <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Name</dt>
-              <dd className="text-right text-white">{s.profile.displayName}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Email</dt>
-              <dd className="text-right text-white">{s.profile.primaryEmail}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Org unit</dt>
-              <dd className="text-right text-white">{s.profile.primaryOrgUnitName ?? 'Unassigned'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Manager</dt>
-              <dd className="text-right text-white">{managerDisplayName}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Created</dt>
-              <dd className="text-right text-slate-200">{new Date(s.profile.createdAt).toLocaleDateString()}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Updated</dt>
-              <dd className="text-right text-slate-200">{new Date(s.profile.updatedAt).toLocaleDateString()}</dd>
-            </div>
-          </dl>
-        )}
-      </section>
-      ) : null}
-
-      {s.profile && mode === 'details' ? (
-        <PersonProfileEditorPanel
-          profile={s.profile}
-          orgUnits={s.orgUnits}
-          peopleOptions={s.people.map((person) => ({
-            personId: person.personId,
-            displayName: person.displayName,
-          }))}
-          canManage={s.canManagePeopleProfiles}
-          isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
-          errorMessage={
-            s.personProfileMutationError
-              ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
-              : null
-          }
-          onUpdate={async (request) => {
-            await s.updatePersonMutation.mutateAsync({
-              personId: s.profile!.personId,
-              ...request,
-            })
-          }}
-          onEmploymentStatusChange={async (request) => {
-            await s.updateEmploymentStatusMutation.mutateAsync({
-              personId: s.profile!.personId,
-              ...request,
-            })
-          }}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonnelNotesPanel
-          personId={s.selectedPerson.personId}
-          personDisplayName={s.selectedPerson.displayName}
-          notes={s.personNotes}
-          selectedNoteId={s.selectedNoteId}
-          selectedNote={s.noteDetailQuery.data ?? null}
-          isLoading={s.personNotesQuery.isLoading}
-          isError={s.personNotesQuery.isError}
-          readErrorMessage={
-            s.personNotesQuery.isError
-              ? getErrorMessage(
-                  s.personNotesQuery.error,
-                  'Failed to load personnel notes.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personNotesQuery.refetch()}
-          isLoadingDetail={s.noteDetailQuery.isLoading}
-          isDetailError={s.noteDetailQuery.isError}
-          detailErrorMessage={
-            s.noteDetailQuery.isError
-              ? getErrorMessage(
-                  s.noteDetailQuery.error,
-                  'Failed to load note detail.',
-                )
-              : null
-          }
-          onRetryDetail={() => void s.noteDetailQuery.refetch()}
-          canManage={s.canManagePersonNotes}
-          isSubmitting={s.createNoteMutation.isPending}
-          actionErrorMessage={
-            s.noteMutationError
-              ? getErrorMessage(s.noteMutationError, 'Failed to save personnel note.')
-              : null
-          }
-          onSelectNote={s.setSelectedNoteId}
-          onCreateNote={async (payload) => {
-            await s.createNoteMutation.mutateAsync(payload)
-          }}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonnelDocumentsPanel
-          personId={s.selectedPerson.personId}
-          personDisplayName={s.selectedPerson.displayName}
-          accessToken={s.accessToken}
-          documents={s.personDocuments}
-          selectedDocumentId={s.selectedDocumentId}
-          selectedDocument={s.documentDetailQuery.data ?? null}
-          isLoading={s.personDocumentsQuery.isLoading}
-          isError={s.personDocumentsQuery.isError}
-          readErrorMessage={
-            s.personDocumentsQuery.isError
-              ? getErrorMessage(
-                  s.personDocumentsQuery.error,
-                  'Failed to load personnel documents.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personDocumentsQuery.refetch()}
-          isLoadingDetail={s.documentDetailQuery.isLoading}
-          isDetailError={s.documentDetailQuery.isError}
-          detailErrorMessage={
-            s.documentDetailQuery.isError
-              ? getErrorMessage(
-                  s.documentDetailQuery.error,
-                  'Failed to load document detail.',
-                )
-              : null
-          }
-          onRetryDetail={() => void s.documentDetailQuery.refetch()}
-          canManage={s.canManagePersonDocuments}
-          isSubmitting={s.uploadDocumentMutation.isPending}
-          actionErrorMessage={
-            s.documentMutationError
-              ? getErrorMessage(s.documentMutationError, 'Failed to upload personnel document.')
-              : null
-          }
-          onSelectDocument={s.setSelectedDocumentId}
-          onUploadDocument={async (payload) => {
-            await s.uploadDocumentMutation.mutateAsync(payload)
-          }}
-          contentUrlFor={(documentId) =>
-            s.personnelDocumentContentUrl(s.selectedPerson!.personId, documentId)
-          }
-        />
-      ) : null}
-
-      {mode === 'details' && s.effectivePersonId && (s.selectedPerson ?? s.personProfileQuery.data) ? (
-        <WorkforceOnboardingJourneyPanel
-          accessToken={s.accessToken}
-          personDisplayName={
-            s.selectedPerson?.displayName ?? s.personProfileQuery.data!.displayName
-          }
-          journey={s.workforceOnboardingJourneyQuery.data ?? null}
-          isLoading={s.workforceOnboardingJourneyQuery.isLoading}
-          isError={s.workforceOnboardingJourneyQuery.isError}
-          readErrorMessage={
-            s.workforceOnboardingJourneyQuery.isError
-              ? getErrorMessage(
-                  s.workforceOnboardingJourneyQuery.error,
-                  'Failed to load workforce onboarding journey.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.workforceOnboardingJourneyQuery.refetch()}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonOffboardingPanel
-          personId={s.selectedPerson.personId}
-          personDisplayName={s.selectedPerson.displayName}
-          peopleOptions={s.people.map((person) => ({
-            personId: person.personId,
-            displayName: person.displayName,
-          }))}
-          offboarding={s.personOffboardingQuery.data ?? null}
-          isLoading={s.personOffboardingQuery.isLoading}
-          isError={s.personOffboardingQuery.isError}
-          readErrorMessage={
-            s.personOffboardingQuery.isError
-              ? getErrorMessage(
-                  s.personOffboardingQuery.error,
-                  'Failed to load offboarding workflow state.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personOffboardingQuery.refetch()}
-          canManage={s.canManagePeopleProfiles}
-          isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
-          actionErrorMessage={
-            s.offboardingMutationError
-              ? getErrorMessage(s.offboardingMutationError, 'Failed to update offboarding workflow.')
-              : null
-          }
-          onStart={async (request) => {
-            await s.startOffboardingMutation.mutateAsync({
-              personId: s.selectedPerson!.personId,
-              ...request,
-            })
-          }}
-          onExecute={async (request) => {
-            const offboarding = s.personOffboardingQuery.data
-            if (!offboarding) {
-              return
-            }
-
-            await s.executeOffboardingMutation.mutateAsync({
-              personId: s.selectedPerson!.personId,
-              offboardingId: offboarding.offboardingId,
-              ...request,
-            })
-          }}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonLookupPanel
-          personId={s.selectedPerson.personId}
-          personDisplayName={s.selectedPerson.displayName}
-          lookup={s.personLookupQuery.data ?? null}
-          isLoading={s.personLookupQuery.isLoading}
-          isError={s.personLookupQuery.isError}
-          readErrorMessage={
-            s.personLookupQuery.isError
-              ? getErrorMessage(
-                  s.personLookupQuery.error,
-                  'Failed to load person identity and placement details.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personLookupQuery.refetch()}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonHistorySummaryPanel
-          personDisplayName={s.selectedPerson.displayName}
-          summary={s.personHistorySummaryQuery.data ?? null}
-          isLoading={s.personHistorySummaryQuery.isLoading}
-          isError={s.personHistorySummaryQuery.isError}
-          readErrorMessage={
-            s.personHistorySummaryQuery.isError
-              ? getErrorMessage(
-                  s.personHistorySummaryQuery.error,
-                  'Failed to load personnel history summary.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personHistorySummaryQuery.refetch()}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonTimelinePanel
-          personDisplayName={s.selectedPerson.displayName}
-          entries={s.personTimelineEntries}
-          totalCount={s.personTimelineTotalCount}
-          page={s.personTimelinePage}
-          pageSize={s.personTimelinePageSize}
-          hasNextPage={s.personTimelineHasNextPage}
-          categoryFilter={s.personTimelineCategoryFilter}
-          isLoading={s.personTimelineQuery.isLoading}
-          isError={s.personTimelineQuery.isError}
-          readErrorMessage={
-            s.personTimelineQuery.isError
-              ? getErrorMessage(
-                  s.personTimelineQuery.error,
-                  'Failed to load person timeline events.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.personTimelineQuery.refetch()}
-          onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
-          onPageChange={s.setPersonTimelinePage}
-          onPageSizeChange={s.setPersonTimelinePageSize}
-        />
-      ) : null}
-
-      {s.selectedPerson && mode === 'details' ? (
-        <PersonTrainarrTrainingHistoryPanel
-          personDisplayName={s.selectedPerson.displayName}
-          history={s.trainarrTrainingHistoryQuery.data ?? null}
-          isLoading={s.trainarrTrainingHistoryQuery.isLoading}
-          isError={s.trainarrTrainingHistoryQuery.isError}
-          readErrorMessage={
-            s.trainarrTrainingHistoryQuery.isError
-              ? getErrorMessage(
-                  s.trainarrTrainingHistoryQuery.error,
-                  'Failed to load TrainArr training history.',
-                )
-              : null
-          }
-          onRetryRead={() => void s.trainarrTrainingHistoryQuery.refetch()}
         />
       ) : null}
     </>

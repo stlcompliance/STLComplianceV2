@@ -24,38 +24,23 @@ public sealed class MePortalService(
         var personId = principal.GetPersonId();
         var actorUserId = principal.GetUserId();
 
-        var sessionTask = meService.GetMeAsync(principal, cancellationToken);
-        var profileTask = personLookupService.GetByPersonIdAsync(tenantId, personId, cancellationToken);
-        var readinessTask = readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken);
-        var certificationsTask = certificationService.ListPersonCertificationsAsync(
+        var session = await meService.GetMeAsync(principal, cancellationToken);
+        var profile = await personLookupService.GetByPersonIdAsync(tenantId, personId, cancellationToken);
+        var readiness = await readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken);
+        var certifications = await certificationService.ListPersonCertificationsAsync(
             tenantId,
             personId,
             cancellationToken);
-        var permissionsTask = permissionProjectionService.GetEffectivePermissionProjectionAsync(
+        var permissions = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
             tenantId,
             personId,
             cancellationToken);
-        var subordinatesTask = managerHierarchyService.GetSubordinatesAsync(
+        var subordinates = await managerHierarchyService.GetSubordinatesAsync(
             tenantId,
             personId,
             includeIndirect: false,
             limit: 5,
             cancellationToken);
-
-        await Task.WhenAll(
-            sessionTask,
-            profileTask,
-            readinessTask,
-            certificationsTask,
-            permissionsTask,
-            subordinatesTask);
-
-        var session = await sessionTask;
-        var profile = await profileTask;
-        var readiness = await readinessTask;
-        var certifications = await certificationsTask;
-        var permissions = await permissionsTask;
-        var subordinates = await subordinatesTask;
 
         MePortalOnboardingSummaryResponse? onboarding = null;
         try

@@ -20,9 +20,9 @@ public static class PurchaseOrderStatuses
         Draft
     };
 
-    public static readonly HashSet<string> Open = new(StringComparer.OrdinalIgnoreCase)
-    {
+    public static readonly string[] Open =
+    [
         Draft,
         Approved
-    };
+    ];
 }

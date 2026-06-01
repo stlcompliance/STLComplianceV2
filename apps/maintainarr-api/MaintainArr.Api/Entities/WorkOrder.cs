@@ -73,11 +73,11 @@ public static class WorkOrderStatuses
         Cancelled,
     };
 
-    public static readonly IReadOnlySet<string> Active = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    public static readonly string[] Active =
+    [
         Open,
         InProgress,
-    };
+    ];
 }
 
 public static class WorkOrderPriorities

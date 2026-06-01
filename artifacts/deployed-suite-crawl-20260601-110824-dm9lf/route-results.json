@@ -1,0 +1,1041 @@
+[
+  {
+    "group": "public",
+    "label": "Root redirect unauthenticated",
+    "path": "/",
+    "started": "2026-06-01T11:08:25.287Z",
+    "finalUrl": "https://suite-frontend.onrender.com/login",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Sign in"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/01-public-root.png",
+    "navError": null
+  },
+  {
+    "group": "public",
+    "label": "Login",
+    "path": "/login",
+    "started": "2026-06-01T11:08:29.952Z",
+    "finalUrl": "https://suite-frontend.onrender.com/login",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Sign in"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/02-public-login.png",
+    "navError": null
+  },
+  {
+    "group": "public",
+    "label": "Forgot password",
+    "path": "/forgot-password",
+    "started": "2026-06-01T11:08:31.614Z",
+    "finalUrl": "https://suite-frontend.onrender.com/forgot-password",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Reset password"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/03-public-forgot-password.png",
+    "navError": null
+  },
+  {
+    "group": "public",
+    "label": "Reset password",
+    "path": "/reset-password",
+    "started": "2026-06-01T11:08:33.265Z",
+    "finalUrl": "https://suite-frontend.onrender.com/reset-password",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Choose a new password"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/04-public-reset-password.png",
+    "navError": null
+  },
+  {
+    "group": "public",
+    "label": "App redirect unauthenticated",
+    "path": "/app",
+    "started": "2026-06-01T11:08:34.982Z",
+    "finalUrl": "https://suite-frontend.onrender.com/login",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Sign in"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/05-public-app.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Login before sign-in",
+    "path": "/login",
+    "started": "2026-06-01T11:08:36.706Z",
+    "finalUrl": "https://suite-frontend.onrender.com/login",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Sign in"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/06-auth-login.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Suite dashboard after sign-in",
+    "path": "/app",
+    "started": "2026-06-01T11:08:40.264Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Suite dashboard",
+      "Welcome, Demo Platform Admin"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/07-auth-app.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Platform admin dashboard",
+    "path": "/app/platform-admin",
+    "started": "2026-06-01T11:08:42.489Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/08-auth-app-platform-admin.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Launch diagnostics",
+    "path": "/app/platform-admin/launch",
+    "started": "2026-06-01T11:08:44.620Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/09-auth-app-platform-admin-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Tenants",
+    "path": "/app/platform-admin/tenants",
+    "started": "2026-06-01T11:08:47.296Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/tenants",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Tenant administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/10-auth-app-platform-admin-tenants.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Products",
+    "path": "/app/platform-admin/products",
+    "started": "2026-06-01T11:08:49.602Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/products",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Product catalog administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/11-auth-app-platform-admin-products.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Data plane",
+    "path": "/app/platform-admin/data-plane",
+    "started": "2026-06-01T11:08:51.913Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/data-plane",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Hybrid data-plane metadata",
+      "Configure product data plane"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/12-auth-app-platform-admin-data-plane.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Audit search and export",
+    "path": "/app/platform-admin/audit-export",
+    "started": "2026-06-01T11:08:54.020Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/audit-export",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Platform audit search & export",
+      "Package sectionsv2",
+      "Export filters",
+      "Export summary",
+      "Audit timeline preview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/13-auth-app-platform-admin-audit-export.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Lifecycle workers",
+    "path": "/app/platform-admin/lifecycle",
+    "started": "2026-06-01T11:08:56.368Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/lifecycle",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/14-auth-app-platform-admin-lifecycle.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Event outbox",
+    "path": "/app/platform-admin/platform-outbox",
+    "started": "2026-06-01T11:08:58.540Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/platform-outbox",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Platform event outbox",
+      "Recent outbox events",
+      "Recent publish runs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/15-auth-app-platform-admin-platform-outbox.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Worker health",
+    "path": "/app/platform-admin/orchestration",
+    "started": "2026-06-01T11:09:01.113Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/orchestration",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Service token & worker health",
+      "Product health",
+      "Service token inventory",
+      "Service token cleanup",
+      "Entitlement reconciliation"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/16-auth-app-platform-admin-orchestration.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Service tokens",
+    "path": "/app/platform-admin/service-tokens",
+    "started": "2026-06-01T11:09:03.543Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/service-tokens",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Service token administration",
+      "Register service client",
+      "Issue service token",
+      "Registered clients",
+      "Issued tokens"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/17-auth-app-platform-admin-service-tokens.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Entitlements",
+    "path": "/app/platform-admin/entitlements",
+    "started": "2026-06-01T11:09:05.812Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/entitlements",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Entitlement administration",
+      "Current entitlements",
+      "Entitlement reconciliation",
+      "Recent reconciliation runs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/18-auth-app-platform-admin-entitlements.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Tenant lifecycle",
+    "path": "/app/platform-admin/tenant-lifecycle",
+    "started": "2026-06-01T11:09:07.955Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/tenant-lifecycle",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Tenant lifecycle",
+      "Recent lifecycle runs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/19-auth-app-platform-admin-tenant-lifecycle.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "STL Shared Worker / Overview",
+    "path": "/app/shared-worker",
+    "started": "2026-06-01T11:09:10.053Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/shared-worker",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Shared-worker",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/20-auth-app-shared-worker.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "STL Shared Worker / Open product app",
+    "path": "/app/shared-worker/launch",
+    "started": "2026-06-01T11:09:12.081Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/shared-worker/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Shared-worker",
+      "Open product app"
+    ],
+    "visibleErrorText": [
+      "Launch profile missingCannot launch STL Shared Worker. NexArr does not have an active launch profile for this product.Platform administrators can configure the product launch URL and callback allowlist.Reason code: profile_missingOpen launch diagnosticsReview launch surface"
+    ],
+    "screenshot": "screenshots/21-auth-app-shared-worker-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "NexArr Worker / Overview",
+    "path": "/app/nexarr-worker",
+    "started": "2026-06-01T11:09:14.283Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/nexarr-worker",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Nexarr-worker",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/22-auth-app-nexarr-worker.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "NexArr Worker / Open product app",
+    "path": "/app/nexarr-worker/launch",
+    "started": "2026-06-01T11:09:16.248Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/nexarr-worker/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Nexarr-worker",
+      "Open product app"
+    ],
+    "visibleErrorText": [
+      "Launch profile missingCannot launch NexArr Worker. NexArr does not have an active launch profile for this product.Platform administrators can configure the product launch URL and callback allowlist.Reason code: profile_missingOpen launch diagnosticsReview launch surface"
+    ],
+    "screenshot": "screenshots/23-auth-app-nexarr-worker-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "NexArr / Overview",
+    "path": "/app/nexarr",
+    "started": "2026-06-01T11:09:18.200Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/nexarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Nexarr",
+      "Platform overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/24-auth-app-nexarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "NexArr / Identity & access",
+    "path": "/app/nexarr/identity",
+    "started": "2026-06-01T11:09:20.525Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/nexarr/identity",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Nexarr",
+      "Profile",
+      "Active sessions"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/25-auth-app-nexarr-identity.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "NexArr / Tenants",
+    "path": "/app/nexarr/tenants",
+    "started": "2026-06-01T11:09:22.588Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/nexarr/tenants",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Nexarr",
+      "Tenant registry"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/26-auth-app-nexarr-tenants.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "StaffArr / Overview",
+    "path": "/app/staffarr",
+    "started": "2026-06-01T11:09:24.684Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/staffarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Staffarr",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/27-auth-app-staffarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "StaffArr / People directory",
+    "path": "/app/staffarr/people",
+    "started": "2026-06-01T11:09:26.785Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/staffarr/people",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Staffarr",
+      "People directory"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/28-auth-app-staffarr-people.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "StaffArr / Readiness",
+    "path": "/app/staffarr/readiness",
+    "started": "2026-06-01T11:09:28.631Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/staffarr/readiness",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Staffarr",
+      "Readiness"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/29-auth-app-staffarr-readiness.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "StaffArr / Open StaffArr app",
+    "path": "/app/staffarr/launch",
+    "started": "2026-06-01T11:09:30.499Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/staffarr/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Staffarr",
+      "Open StaffArr app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/30-auth-app-staffarr-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "TrainArr / Overview",
+    "path": "/app/trainarr",
+    "started": "2026-06-01T11:09:32.765Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/trainarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Trainarr",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/31-auth-app-trainarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "TrainArr / Assignments",
+    "path": "/app/trainarr/assignments",
+    "started": "2026-06-01T11:09:34.730Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/trainarr/assignments",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Trainarr",
+      "Assignments"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/32-auth-app-trainarr-assignments.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "TrainArr / Qualifications",
+    "path": "/app/trainarr/qualifications",
+    "started": "2026-06-01T11:09:36.581Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/trainarr/qualifications",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Trainarr",
+      "Qualifications"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/33-auth-app-trainarr-qualifications.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "TrainArr / Open TrainArr app",
+    "path": "/app/trainarr/launch",
+    "started": "2026-06-01T11:09:38.665Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/trainarr/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Trainarr",
+      "Open TrainArr app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/34-auth-app-trainarr-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "MaintainArr / Overview",
+    "path": "/app/maintainarr",
+    "started": "2026-06-01T11:09:40.798Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/maintainarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Maintainarr",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/35-auth-app-maintainarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "MaintainArr / Assets",
+    "path": "/app/maintainarr/assets",
+    "started": "2026-06-01T11:09:42.730Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/maintainarr/assets",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Maintainarr",
+      "Assets"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/36-auth-app-maintainarr-assets.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "MaintainArr / Work orders",
+    "path": "/app/maintainarr/work-orders",
+    "started": "2026-06-01T11:09:44.781Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/maintainarr/work-orders",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Maintainarr",
+      "Work orders"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/37-auth-app-maintainarr-work-orders.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "MaintainArr / Open MaintainArr app",
+    "path": "/app/maintainarr/launch",
+    "started": "2026-06-01T11:09:46.614Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/maintainarr/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Maintainarr",
+      "Open MaintainArr app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/38-auth-app-maintainarr-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "RoutArr / Overview",
+    "path": "/app/routarr",
+    "started": "2026-06-01T11:09:48.700Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/routarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Routarr",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/39-auth-app-routarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "RoutArr / Dispatch",
+    "path": "/app/routarr/dispatch",
+    "started": "2026-06-01T11:09:50.732Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/routarr/dispatch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Routarr",
+      "Dispatch"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/40-auth-app-routarr-dispatch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "RoutArr / Routes",
+    "path": "/app/routarr/routes",
+    "started": "2026-06-01T11:09:52.647Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/routarr/routes",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Routarr",
+      "Routes"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/41-auth-app-routarr-routes.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "RoutArr / Open RoutArr app",
+    "path": "/app/routarr/launch",
+    "started": "2026-06-01T11:09:54.485Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/routarr/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Routarr",
+      "Open RoutArr app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/42-auth-app-routarr-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "SupplyArr / Overview",
+    "path": "/app/supplyarr",
+    "started": "2026-06-01T11:09:56.731Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/supplyarr",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Supplyarr",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/43-auth-app-supplyarr.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "SupplyArr / Inventory",
+    "path": "/app/supplyarr/inventory",
+    "started": "2026-06-01T11:09:58.713Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/supplyarr/inventory",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Supplyarr",
+      "Inventory"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/44-auth-app-supplyarr-inventory.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "SupplyArr / Procurement",
+    "path": "/app/supplyarr/procurement",
+    "started": "2026-06-01T11:10:00.630Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/supplyarr/procurement",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Supplyarr",
+      "Procurement"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/45-auth-app-supplyarr-procurement.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "SupplyArr / Open SupplyArr app",
+    "path": "/app/supplyarr/launch",
+    "started": "2026-06-01T11:10:02.796Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/supplyarr/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Supplyarr",
+      "Open SupplyArr app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/46-auth-app-supplyarr-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Compliance Core / Overview",
+    "path": "/app/compliancecore",
+    "started": "2026-06-01T11:10:04.881Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/compliancecore",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Compliancecore",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/47-auth-app-compliancecore.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Compliance Core / Vocabulary",
+    "path": "/app/compliancecore/vocabulary",
+    "started": "2026-06-01T11:10:06.864Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/compliancecore/vocabulary",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Compliancecore",
+      "Vocabulary"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/48-auth-app-compliancecore-vocabulary.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Compliance Core / Rule packs",
+    "path": "/app/compliancecore/rules",
+    "started": "2026-06-01T11:10:08.947Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/compliancecore/rules",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Compliancecore",
+      "Rule packs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/49-auth-app-compliancecore-rules.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Compliance Core / Open Compliance Core app",
+    "path": "/app/compliancecore/launch",
+    "started": "2026-06-01T11:10:10.797Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/compliancecore/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Compliancecore",
+      "Open Compliance Core app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/50-auth-app-compliancecore-launch.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Companion App / Overview",
+    "path": "/app/companion",
+    "started": "2026-06-01T11:10:12.881Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/companion",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Companion",
+      "Overview"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/51-auth-app-companion.png",
+    "navError": null
+  },
+  {
+    "group": "auth",
+    "label": "Companion App / Open product app",
+    "path": "/app/companion/launch",
+    "started": "2026-06-01T11:10:14.961Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/companion/launch",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Companion",
+      "Open product app"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/52-auth-app-companion-launch.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Tenants before create",
+    "path": "/app/platform-admin/tenants",
+    "started": "2026-06-01T11:10:16.964Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/tenants",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Tenant administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/53-data-app-platform-admin-tenants.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Tenants after create",
+    "path": "/app/platform-admin/tenants",
+    "started": "2026-06-01T11:10:20.190Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/tenants",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Tenant administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/54-data-app-platform-admin-tenants.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Products before create",
+    "path": "/app/platform-admin/products",
+    "started": "2026-06-01T11:10:22.190Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/products",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Product catalog administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/55-data-app-platform-admin-products.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Products after create",
+    "path": "/app/platform-admin/products",
+    "started": "2026-06-01T11:10:25.472Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/products",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Product catalog administration"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/56-data-app-platform-admin-products.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Entitlements before grant",
+    "path": "/app/platform-admin/entitlements",
+    "started": "2026-06-01T11:10:27.481Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/entitlements",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Entitlement administration",
+      "Current entitlements",
+      "Entitlement reconciliation",
+      "Recent reconciliation runs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/57-data-app-platform-admin-entitlements.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Entitlements after grant",
+    "path": "/app/platform-admin/entitlements",
+    "started": "2026-06-01T11:10:30.558Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/entitlements",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Entitlement administration",
+      "Current entitlements",
+      "Entitlement reconciliation",
+      "Recent reconciliation runs"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/58-data-app-platform-admin-entitlements.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Data plane before upsert",
+    "path": "/app/platform-admin/data-plane",
+    "started": "2026-06-01T11:10:32.285Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/data-plane",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Hybrid data-plane metadata",
+      "Configure product data plane"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/59-data-app-platform-admin-data-plane.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Data plane after upsert",
+    "path": "/app/platform-admin/data-plane",
+    "started": "2026-06-01T11:10:35.462Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/data-plane",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Hybrid data-plane metadata",
+      "Configure product data plane"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/60-data-app-platform-admin-data-plane.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Service tokens before client create",
+    "path": "/app/platform-admin/service-tokens",
+    "started": "2026-06-01T11:10:37.300Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/service-tokens",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Service token administration",
+      "Register service client",
+      "Issue service token",
+      "Registered clients",
+      "Issued tokens"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/61-data-app-platform-admin-service-tokens.png",
+    "navError": null
+  },
+  {
+    "group": "data",
+    "label": "Service tokens after client create",
+    "path": "/app/platform-admin/service-tokens",
+    "started": "2026-06-01T11:12:45.908Z",
+    "finalUrl": "https://suite-frontend.onrender.com/app/platform-admin/service-tokens",
+    "title": "STL Compliance Suite",
+    "headings": [
+      "Suite",
+      "Platform administration",
+      "Platform administration",
+      "Service token administration",
+      "Register service client",
+      "Issue service token",
+      "Registered clients",
+      "Issued tokens"
+    ],
+    "visibleErrorText": [],
+    "screenshot": "screenshots/62-data-app-platform-admin-service-tokens-after-client-create.png",
+    "navError": null
+  }
+]

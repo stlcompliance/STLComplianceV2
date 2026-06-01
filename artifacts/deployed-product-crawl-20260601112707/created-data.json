@@ -1,0 +1,58 @@
+[
+  {
+    "type": "staffarr-person",
+    "productKey": "staffarr",
+    "personId": "55d4c4a2-f3d9-4f84-bf89-bb94c74ee136",
+    "displayName": "Route Crawl crawl-1780313228876"
+  },
+  {
+    "type": "maintainarr-asset-class",
+    "productKey": "maintainarr",
+    "assetClassId": "cec20cdf-3ad6-444d-8979-9337f8c6c491"
+  },
+  {
+    "type": "maintainarr-asset-type",
+    "productKey": "maintainarr",
+    "assetTypeId": "5b8387db-30e7-4848-8939-36fb42797d4d"
+  },
+  {
+    "type": "maintainarr-asset",
+    "productKey": "maintainarr",
+    "assetId": "a0751ec2-e9e1-45f3-9886-dcf4ebf9955f"
+  },
+  {
+    "type": "maintainarr-work-order",
+    "productKey": "maintainarr",
+    "workOrderId": "658ffab0-1b72-4fca-9106-9a429d9a26cc",
+    "workOrderNumber": "WO-20260601-49170C4A"
+  },
+  {
+    "type": "routarr-journey-seed",
+    "productKey": "routarr",
+    "subjectPersonId": "22222222-2222-2222-2222-222222222201",
+    "tripId": "a918704b-27a3-44e5-ba78-15166240ad18",
+    "tripCreated": true,
+    "scheduledStartAt": "2026-06-01T13:27:15.3814676+00:00",
+    "scheduledEndAt": "2026-06-01T17:27:15.3814676+00:00"
+  },
+  {
+    "type": "compliancecore-journey-seed",
+    "productKey": "compliancecore",
+    "rulePackKey": "driver_qualification",
+    "rulePackId": "8264f270-e62b-4f72-a4f5-da77434b442a",
+    "rulePackCreated": true,
+    "ruleContentEnsured": true,
+    "driverLicenseFactEnsured": true,
+    "dispatchGatesCreated": 3,
+    "dispatchGateKeys": [
+      "dispatch_driver_qualification",
+      "dispatch_hazmat",
+      "dispatch_hours_of_service"
+    ]
+  },
+  {
+    "type": "data-create-skipped",
+    "productKey": "companion",
+    "reason": "No direct product API seed path configured for this crawler"
+  }
+]

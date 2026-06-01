@@ -25,6 +25,28 @@ public static class StlProductLaunchEndpoints
             return Results.Content(body, "application/json", statusCode: statusCode);
         }
 
+        static async Task<IResult> GetLaunchCatalogAsync(
+            string? currentProductKey,
+            HttpContext context,
+            StlNexArrLaunchClient client,
+            CancellationToken cancellationToken)
+        {
+            var path = "/api/launch/catalog";
+            if (!string.IsNullOrWhiteSpace(currentProductKey))
+            {
+                path += $"?currentProductKey={Uri.EscapeDataString(currentProductKey)}";
+            }
+
+            var (statusCode, body, contentType) = await client.ForwardAsync(
+                HttpMethod.Get,
+                path,
+                context.Request.Headers.Authorization.ToString(),
+                null,
+                cancellationToken);
+
+            return Results.Content(body, contentType, statusCode: statusCode);
+        }
+
         static async Task<IResult> CreateLaunchHandoffAsync(
             HttpContext context,
             StlNexArrLaunchClient client,
@@ -48,6 +70,9 @@ public static class StlProductLaunchEndpoints
         group.MapGet("/context", GetLaunchContextAsync)
         .WithName("GetProductLaunchContext");
 
+        group.MapGet("/catalog", GetLaunchCatalogAsync)
+            .WithName("GetProductLaunchCatalog");
+
         group.MapPost("/handoff", CreateLaunchHandoffAsync)
         .WithName("CreateProductLaunchHandoff");
 
@@ -55,6 +80,9 @@ public static class StlProductLaunchEndpoints
 
         v1Group.MapGet("/context", GetLaunchContextAsync)
             .WithName("GetProductLaunchContextV1");
+
+        v1Group.MapGet("/catalog", GetLaunchCatalogAsync)
+            .WithName("GetProductLaunchCatalogV1");
 
         v1Group.MapPost("/handoff", CreateLaunchHandoffAsync)
             .WithName("CreateProductLaunchHandoffV1");

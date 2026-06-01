@@ -278,24 +278,23 @@ public sealed class ControlEffectivenessService(
                     && x.PackKey == normalized
                     && x.IsActive
                     && x.Status == RulePackStatuses.Published
-                    && x.RuleContentJson != null
-                    && x.RuleContentJson != "")
+                    && x.RuleContentJson != null)
                 .OrderByDescending(x => x.VersionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return pack is null ? [] : [pack];
+            return pack is null || string.IsNullOrWhiteSpace(pack.RuleContentJson) ? [] : [pack];
         }
 
         var packs = await db.RulePacks
             .Where(x => x.TenantId == tenantId
                 && x.IsActive
                 && x.Status == RulePackStatuses.Published
-                && x.RuleContentJson != null
-                && x.RuleContentJson != "")
+                && x.RuleContentJson != null)
             .OrderByDescending(x => x.VersionNumber)
             .ToListAsync(cancellationToken);
 
         return packs
+            .Where(x => !string.IsNullOrWhiteSpace(x.RuleContentJson))
             .GroupBy(x => x.PackKey, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .Take(ControlEffectivenessRules.MaxPacksPerEvaluate)

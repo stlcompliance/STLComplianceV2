@@ -25,6 +25,7 @@ export interface QuickLaunchProduct {
   sortOrder: number
   inSuite: boolean
   entitled: boolean
+  launchable: boolean
 }
 
 export interface SessionSummary {
@@ -39,6 +40,15 @@ export interface SessionSummary {
 
 const ACTIVE_TENANT_STATUS = 'active'
 const ACCESS_EXPIRY_WARN_MINUTES = 15
+
+function hasEnabledLaunchSurface(product: NavigationItem): boolean {
+  return product.surfaces.some(
+    (surface) =>
+      surface.isEnabled &&
+      (surface.surfaceKey.trim().toLowerCase() === 'launch' ||
+        surface.relativePath.trim().toLowerCase() === 'launch'),
+  )
+}
 
 export function findCurrentTenant(
   tenants: readonly TenantSummary[],
@@ -64,6 +74,7 @@ export function buildQuickLaunchProducts(
       sortOrder: product.sortOrder,
       inSuite: isInSuiteProduct(product.productKey),
       entitled: hasProductEntitlement(entitlements, product.productKey),
+      launchable: hasEnabledLaunchSurface(product),
     }))
 }
 
@@ -138,11 +149,14 @@ export function buildWhatINeedActions(input: {
       continue
     }
 
+    const launchable = hasEnabledLaunchSurface(product)
     actions.push({
-      id: `launch-${normalized}`,
+      id: `${launchable ? 'launch' : 'open'}-${normalized}`,
       kind: 'action',
-      title: `Launch ${product.displayName}`,
-      description: 'Opens the product app via NexArr handoff when launch is permitted.',
+      title: `${launchable ? 'Launch' : 'Open'} ${product.displayName}`,
+      description: launchable
+        ? 'Opens the product app via NexArr handoff when launch is permitted.'
+        : 'Opens the suite overview for this product.',
       href: product.routePath,
       productKey: normalized,
     })

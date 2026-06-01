@@ -1,0 +1,41 @@
+{
+  "createdData": [
+    {
+      "type": "tenant",
+      "slug": "qa-route-1110824dm9lf",
+      "displayName": "QA Route Crawl 1110824dm9lf",
+      "tenantId": "fe0ceaa3-b36f-4a57-888e-ef777256010b"
+    },
+    {
+      "type": "product",
+      "productKey": "product.catalog.qarouteproduct1110824dm9lf",
+      "displayName": "QA Route Product 1110824dm9lf",
+      "sortOrder": 987
+    },
+    {
+      "type": "entitlement",
+      "tenantId": "fe0ceaa3-b36f-4a57-888e-ef777256010b",
+      "productKey": "product.catalog.qarouteproduct1110824dm9lf",
+      "entitlementId": "3153d89d-ffea-48cf-bd82-681dfe60015e",
+      "status": "Active"
+    },
+    {
+      "type": "data-plane-profile",
+      "tenantId": "fe0ceaa3-b36f-4a57-888e-ef777256010b",
+      "productKey": "product.catalog.qarouteproduct1110824dm9lf",
+      "deploymentMode": "hosted",
+      "trustStatus": "trusted"
+    },
+    {
+      "type": "service-client",
+      "serviceClientId": "a2ab8c18-9002-4310-893d-6237fa12cc3a",
+      "clientKey": "product.serviceclient.qarouteclient1110824dm9lfretry",
+      "displayName": "QA Route Client 1110824dm9lf retry",
+      "sourceProductKey": "product.catalog.qarouteproduct1110824dm9lf",
+      "allowedProductKeys": [
+        "product.catalog.qarouteproduct1110824dm9lf"
+      ]
+    }
+  ],
+  "dataErrors": []
+}

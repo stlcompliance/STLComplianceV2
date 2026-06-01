@@ -341,7 +341,11 @@ public sealed class AuthService(
             .Select(p =>
             {
                 var entitled = entitlements.Contains(p.ProductKey, StringComparer.OrdinalIgnoreCase);
-                var surfaces = ProductSurfaceCatalog.BuildSurfaces(p.ProductKey, entitled, isPlatformAdmin);
+                var surfaces = ProductSurfaceCatalog.BuildSurfaces(
+                    p.ProductKey,
+                    p.ProductStatus,
+                    entitled,
+                    isPlatformAdmin);
                 return new NavigationItem(
                     p.ProductKey,
                     p.DisplayName,

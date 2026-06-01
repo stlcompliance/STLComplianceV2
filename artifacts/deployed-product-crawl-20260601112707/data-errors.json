@@ -1,0 +1,12 @@
+[
+  {
+    "at": "2026-06-01T11:27:11.632Z",
+    "productKey": "trainarr",
+    "message": "TrainArr assignment create failed with HTTP 400: {\"errorId\":\"3b98bcbb-4bf0-4240-86b1-755297ae8a91\",\"code\":\"assignments.qualification_check_required\",\"message\":\"Run an authorization qualification check before creating this assignment.\",\"details\":null,\"correlationId\":\"15d91302-d715-4cd8-9969-3372d8f71ee6\"}"
+  },
+  {
+    "at": "2026-06-01T11:27:18.263Z",
+    "productKey": "supplyarr",
+    "message": "SupplyArr purchase request create failed with HTTP 400: {\"errorId\":\"9afd5e52-0d0d-4656-951c-06efa58b7a0f\",\"code\":\"purchase_requests.quantity.invalid\",\"message\":\"Quantity must be greater than zero.\",\"details\":null,\"correlationId\":\"7c25ac12-3751-4901-87cf-172304bc7e40\"}"
+  }
+]

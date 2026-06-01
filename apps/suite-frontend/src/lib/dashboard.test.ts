@@ -96,13 +96,55 @@ describe('buildQuickLaunchProducts', () => {
         displayName: 'StaffArr',
         routePath: '/app/staffarr',
         sortOrder: 1,
-        surfaces: [],
+        surfaces: [
+          {
+            surfaceKey: 'launch',
+            label: 'Open StaffArr app',
+            relativePath: 'launch',
+            iconKey: 'staffarr',
+            sortOrder: 90,
+            isEnabled: true,
+            permissionHint: null,
+          },
+        ],
       },
     ]
     const products = buildQuickLaunchProducts(nav, ['nexarr', 'staffarr'])
     expect(products).toHaveLength(2)
     expect(products[0]).toMatchObject({ productKey: 'nexarr', inSuite: true, entitled: true })
-    expect(products[1]).toMatchObject({ productKey: 'staffarr', inSuite: false, entitled: true })
+    expect(products[1]).toMatchObject({
+      productKey: 'staffarr',
+      inSuite: false,
+      entitled: true,
+      launchable: true,
+    })
+  })
+
+  it('marks products without an enabled launch surface as not launchable', () => {
+    const products = buildQuickLaunchProducts(
+      [
+        {
+          productKey: 'shared-worker',
+          displayName: 'STL Shared Worker',
+          routePath: '/app/shared-worker',
+          sortOrder: 0,
+          surfaces: [
+            {
+              surfaceKey: 'overview',
+              label: 'Overview',
+              relativePath: '',
+              iconKey: 'dashboard',
+              sortOrder: 0,
+              isEnabled: true,
+              permissionHint: null,
+            },
+          ],
+        },
+      ],
+      ['shared-worker'],
+    )
+
+    expect(products[0]).toMatchObject({ launchable: false })
   })
 })
 
@@ -152,7 +194,17 @@ describe('buildWhatINeedActions', () => {
       displayName: 'StaffArr',
       routePath: '/app/staffarr',
       sortOrder: 1,
-      surfaces: [],
+      surfaces: [
+        {
+          surfaceKey: 'launch',
+          label: 'Open StaffArr app',
+          relativePath: 'launch',
+          iconKey: 'staffarr',
+          sortOrder: 90,
+          isEnabled: true,
+          permissionHint: null,
+        },
+      ],
     },
   ]
 

@@ -182,17 +182,17 @@ export function useRoutArrWorkspaceState() {
     },
   })
 
-  const me = meQuery.data!
-  const roleKey = me.tenantRoleKey ?? 'tenant_member'
-  const isPlatformAdmin = me.isPlatformAdmin ?? false
-  const ready = Boolean(session && meQuery.data)
+  const me = meQuery.data
+  const roleKey = me?.tenantRoleKey ?? 'tenant_member'
+  const isPlatformAdmin = me?.isPlatformAdmin ?? false
+  const ready = Boolean(session && me)
   const loadingMessage = 'Loading dispatch workspace…'
 
   return {
     handoffRedirect,
     ready,
     loadingMessage,
-    me,
+    me: me!,
     session: session!,
     accessToken,
     apiError,

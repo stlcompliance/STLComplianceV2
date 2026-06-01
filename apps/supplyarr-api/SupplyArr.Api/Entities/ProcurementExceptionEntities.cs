@@ -144,14 +144,14 @@ public static class ProcurementExceptionStatuses
 
     public const string Cancelled = "cancelled";
 
-    public static readonly IReadOnlySet<string> Active = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    public static readonly string[] Active =
+    [
         Open,
         Investigating,
         Resolved,
         WaivePending,
         Waived,
-    };
+    ];
 
     public static readonly IReadOnlySet<string> Editable = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {

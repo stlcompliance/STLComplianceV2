@@ -11,12 +11,12 @@ public sealed class MaintenanceReportService(MaintainArrDbContext db)
 {
     private const int DetailListLimit = 25;
 
-    private static readonly IReadOnlySet<string> OpenDefectStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly string[] OpenDefectStatuses =
+    [
         DefectStatuses.Open,
         DefectStatuses.Acknowledged,
         DefectStatuses.InRepair,
-    };
+    ];
 
     public async Task<MaintenanceReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,

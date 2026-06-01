@@ -41,7 +41,7 @@ export function QuickLaunchWidget({
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="truncate">{product.displayName}</span>
               </Link>
-              {!product.inSuite && (
+              {!product.inSuite && product.launchable && (
                 <button
                   type="button"
                   disabled={launch.isPending}

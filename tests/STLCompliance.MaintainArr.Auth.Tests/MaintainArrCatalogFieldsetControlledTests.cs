@@ -34,6 +34,31 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
     }
 
     [Fact]
+    public async Task Seeded_vehicle_make_model_taxonomy_includes_common_fleet_models_and_dependencies()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var service = BuildCatalogService(db, seed);
+        var catalogs = await service.ListAsync(tenantId, ["make", "model"], CancellationToken.None);
+        var make = Assert.Single(catalogs, x => x.Key == "make");
+        var model = Assert.Single(catalogs, x => x.Key == "model");
+
+        AssertCatalogOptionDependency(make, "ford", "assetClass", "vehicle");
+        AssertCatalogOptionDependency(make, "mercedes_benz", "assetClass", "vehicle");
+        AssertCatalogOptionDependency(make, "workhorse", "assetClass", "vehicle");
+
+        AssertCatalogOptionDependency(model, "transit", "make", "ford");
+        AssertCatalogOptionDependency(model, "e_transit", "make", "ford");
+        AssertCatalogOptionDependency(model, "sprinter", "make", "mercedes_benz");
+        AssertCatalogOptionDependency(model, "promaster", "make", "ram");
+        AssertCatalogOptionDependency(model, "vnr_electric", "make", "volvo");
+        AssertCatalogOptionDependency(model, "w56", "make", "workhorse");
+    }
+
+    [Fact]
     public async Task Seeding_deactivates_duplicate_catalog_options_before_dependency_mapping()
     {
         await using var db = CreateDbContext();
@@ -403,6 +428,18 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
             new StaffArrReferenceAdapter(db),
             new SupplyArrReferenceAdapter(db),
         ];
+    }
+
+    private static void AssertCatalogOptionDependency(
+        CatalogResponse catalog,
+        string optionKey,
+        string parentCatalogKey,
+        string parentOptionKey)
+    {
+        var option = Assert.Single(catalog.Options, x => x.Key == optionKey);
+        Assert.NotNull(option.Dependency);
+        Assert.True(option.Dependency!.TryGetValue(parentCatalogKey, out var actualParentOptionKey));
+        Assert.Equal(parentOptionKey, actualParentOptionKey);
     }
 
     private static Dictionary<string, object?> BaseRequiredValues()

@@ -1,0 +1,82 @@
+{
+  "artifactRoot": "F:\\STLComplianceV2\\artifacts\\deployed-product-crawl-20260601112707",
+  "suiteBaseUrl": "https://suite-frontend.onrender.com",
+  "screenshots": 117,
+  "routeResults": 127,
+  "networkConsoleErrors": 407,
+  "consoleWarnings": 0,
+  "createdRecords": 7,
+  "dataErrors": 2,
+  "products": [
+    {
+      "productKey": "staffarr",
+      "name": "StaffArr",
+      "routes": 15,
+      "ok": 15,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 0,
+      "networkConsoleErrors": 75
+    },
+    {
+      "productKey": "trainarr",
+      "name": "TrainArr",
+      "routes": 20,
+      "ok": 18,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 2,
+      "networkConsoleErrors": 36
+    },
+    {
+      "productKey": "maintainarr",
+      "name": "MaintainArr",
+      "routes": 39,
+      "ok": 39,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 0,
+      "networkConsoleErrors": 155
+    },
+    {
+      "productKey": "routarr",
+      "name": "RoutArr",
+      "routes": 16,
+      "ok": 16,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 0,
+      "networkConsoleErrors": 47
+    },
+    {
+      "productKey": "supplyarr",
+      "name": "SupplyArr",
+      "routes": 18,
+      "ok": 17,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 1,
+      "networkConsoleErrors": 46
+    },
+    {
+      "productKey": "compliancecore",
+      "name": "Compliance Core",
+      "routes": 12,
+      "ok": 12,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 0,
+      "networkConsoleErrors": 30
+    },
+    {
+      "productKey": "companion",
+      "name": "Companion",
+      "routes": 0,
+      "ok": 0,
+      "visibleErrors": 0,
+      "navigationErrors": 0,
+      "skipped": 0,
+      "networkConsoleErrors": 0
+    }
+  ]
+}
