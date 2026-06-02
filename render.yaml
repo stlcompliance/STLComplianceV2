@@ -52,48 +52,53 @@ envVarGroups:
         value: https://compliancecore-api-w7e5.onrender.com
       - key: LoadArr__BaseUrl
         value: https://loadarr-api.onrender.com
-
-  # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
+  # Public bundled frontend URLs for browser builds and CORS.
+  # These point at the stable app domain and product paths.
   - name: stl-public-frontend-urls
     envVars:
+      - key: APP_PUBLIC_BASE_URL
+        value: https://app.stlcompliance.com
       - key: SUITE_FRONTEND_URL
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: STAFFARR_FRONTEND_URL
-        value: https://staffarr-api-oyrj.onrender.com
+        value: https://app.stlcompliance.com/staffarr
       - key: TRAINARR_FRONTEND_URL
-        value: https://trainarr-api-nsiw.onrender.com
+        value: https://app.stlcompliance.com/trainarr
       - key: MAINTAINARR_FRONTEND_URL
-        value: https://maintainarr-api-z39r.onrender.com
+        value: https://app.stlcompliance.com/maintainarr
       - key: ROUTARR_FRONTEND_URL
-        value: https://routarr-api-l9uj.onrender.com
+        value: https://app.stlcompliance.com/routarr
       - key: SUPPLYARR_FRONTEND_URL
-        value: https://supplyarr-api-dn8u.onrender.com
+        value: https://app.stlcompliance.com/supplyarr
       - key: COMPLIANCECORE_FRONTEND_URL
-        value: https://compliancecore-api-w7e5.onrender.com
+        value: https://app.stlcompliance.com/compliancecore
       - key: LOADARR_FRONTEND_URL
-        value: https://loadarr-api.onrender.com
+        value: https://app.stlcompliance.com/loadarr
       - key: COMPANION_FRONTEND_URL
         value: https://companion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
         value: https://stlcompliancesite.onrender.com
 
   # Vite build-time product frontend bases for topbar ProductSwitcher launch URLs.
+  # VITE_APP_PUBLIC_BASE_URL takes precedence and emits /{product}/launch targets.
   - name: stl-vite-product-frontend-urls
     envVars:
+      - key: VITE_APP_PUBLIC_BASE_URL
+        value: https://app.stlcompliance.com
       - key: VITE_STAFFARR_FRONTEND_BASE
-        value: https://staffarr-api-oyrj.onrender.com
+        value: https://app.stlcompliance.com/staffarr
       - key: VITE_TRAINARR_FRONTEND_BASE
-        value: https://trainarr-api-nsiw.onrender.com
+        value: https://app.stlcompliance.com/trainarr
       - key: VITE_MAINTAINARR_FRONTEND_BASE
-        value: https://maintainarr-api-z39r.onrender.com
+        value: https://app.stlcompliance.com/maintainarr
       - key: VITE_ROUTARR_FRONTEND_BASE
-        value: https://routarr-api-l9uj.onrender.com
+        value: https://app.stlcompliance.com/routarr
       - key: VITE_SUPPLYARR_FRONTEND_BASE
-        value: https://supplyarr-api-dn8u.onrender.com
+        value: https://app.stlcompliance.com/supplyarr
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
-        value: https://compliancecore-api-w7e5.onrender.com
+        value: https://app.stlcompliance.com/compliancecore
       - key: VITE_LOADARR_FRONTEND_BASE
-        value: https://loadarr-api.onrender.com
+        value: https://app.stlcompliance.com/loadarr
       - key: VITE_COMPANION_FRONTEND_BASE
         value: https://companion-frontend-vf7o.onrender.com
 
@@ -115,7 +120,6 @@ envVarGroups:
         value: https://compliancecore-api-w7e5.onrender.com
       - key: LOADARR_PUBLIC_API_URL
         value: https://loadarr-api.onrender.com
-
 databases:
   - name: nexarr-db
     plan: basic-256mb
@@ -179,25 +183,25 @@ services:
           type: keyvalue
           property: connectionString
       - key: Cors__SuiteFrontendOrigin
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: Cors__CompanionFrontendOrigin
         value: https://companion-frontend-vf7o.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: Launch__Products__staffarr__BaseUrl
-        value: https://staffarr-api-oyrj.onrender.com
+        value: https://app.stlcompliance.com/staffarr
       - key: Launch__Products__trainarr__BaseUrl
-        value: https://trainarr-api-nsiw.onrender.com
+        value: https://app.stlcompliance.com/trainarr
       - key: Launch__Products__maintainarr__BaseUrl
-        value: https://maintainarr-api-z39r.onrender.com
+        value: https://app.stlcompliance.com/maintainarr
       - key: Launch__Products__routarr__BaseUrl
-        value: https://routarr-api-l9uj.onrender.com
+        value: https://app.stlcompliance.com/routarr
       - key: Launch__Products__supplyarr__BaseUrl
-        value: https://supplyarr-api-dn8u.onrender.com
+        value: https://app.stlcompliance.com/supplyarr
       - key: Launch__Products__compliancecore__BaseUrl
-        value: https://compliancecore-api-w7e5.onrender.com
+        value: https://app.stlcompliance.com/compliancecore
       - key: Launch__Products__loadarr__BaseUrl
-        value: https://loadarr-api.onrender.com
+        value: https://app.stlcompliance.com/loadarr
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -243,7 +247,7 @@ services:
           name: staffarr-db
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
-        value: https://staffarr-api-oyrj.onrender.com
+        value: https://app.stlcompliance.com/staffarr
       - key: Handoff__ServiceToken
         sync: false
       - key: NexArr__ServiceToken
@@ -279,9 +283,9 @@ services:
           name: trainarr-db
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
-        value: https://trainarr-api-nsiw.onrender.com
+        value: https://app.stlcompliance.com/trainarr
       - key: TrainArr__FrontendBaseUrl
-        value: https://trainarr-api-nsiw.onrender.com
+        value: https://app.stlcompliance.com/trainarr
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
       - key: Handoff__ServiceToken
@@ -317,9 +321,9 @@ services:
           name: maintainarr-db
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
-        value: https://maintainarr-api-z39r.onrender.com
+        value: https://app.stlcompliance.com/maintainarr
       - key: MaintainArr__FrontendBaseUrl
-        value: https://maintainarr-api-z39r.onrender.com
+        value: https://app.stlcompliance.com/maintainarr
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
       - key: Handoff__ServiceToken
@@ -349,9 +353,9 @@ services:
           name: routarr-db
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
-        value: https://routarr-api-l9uj.onrender.com
+        value: https://app.stlcompliance.com/routarr
       - key: RoutArr__FrontendBaseUrl
-        value: https://routarr-api-l9uj.onrender.com
+        value: https://app.stlcompliance.com/routarr
       - key: Handoff__ServiceToken
         sync: false
       - key: TrainArr__ServiceToken
@@ -385,9 +389,9 @@ services:
           name: supplyarr-db
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
-        value: https://supplyarr-api-dn8u.onrender.com
+        value: https://app.stlcompliance.com/supplyarr
       - key: SupplyArr__FrontendBaseUrl
-        value: https://supplyarr-api-dn8u.onrender.com
+        value: https://app.stlcompliance.com/supplyarr
       - key: Handoff__ServiceToken
         sync: false
       - key: MaintainArr__ServiceToken
@@ -421,7 +425,7 @@ services:
           name: compliancecore-db
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
-        value: https://compliancecore-api-w7e5.onrender.com
+        value: https://app.stlcompliance.com/compliancecore
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -447,7 +451,7 @@ services:
           name: loadarr-db
           property: connectionString
       - key: Cors__LoadArrFrontendOrigin
-        value: https://loadarr-api.onrender.com
+        value: https://app.stlcompliance.com/loadarr
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -661,23 +665,23 @@ services:
       - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
         sync: false
       - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrCompanionNotificationDispatch__ServiceToken
         sync: false
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrPlatformAuditPackageGeneration__ServiceToken
         sync: false
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrServiceTokenCleanup__ServiceToken
         sync: false
       - key: NexArrEntitlementReconciliation__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrEntitlementReconciliation__ServiceToken
         sync: false
       - key: NexArrTenantLifecycle__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrTenantLifecycle__ServiceToken
         sync: false
 
@@ -701,7 +705,7 @@ services:
           name: nexarr-db
           property: connectionString
       - key: NexArrPlatformOutboxPublisher__NexArrBaseUrl
-        value: https://nexarr-api-w9pl.onrender.com
+        value: https://app.stlcompliance.com
       - key: NexArrPlatformOutboxPublisher__ServiceToken
         sync: false
 

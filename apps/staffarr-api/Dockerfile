@@ -1,6 +1,7 @@
 FROM node:22-bookworm-slim AS frontend-build
 WORKDIR /src
-ARG VITE_SUITE_URL=https://nexarr-api-w9pl.onrender.com
+ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
+ARG VITE_SUITE_URL=https://app.stlcompliance.com
 ARG VITE_STAFFARR_FRONTEND_BASE=https://staffarr-api-oyrj.onrender.com
 ARG VITE_TRAINARR_FRONTEND_BASE=https://trainarr-api-nsiw.onrender.com
 ARG VITE_MAINTAINARR_FRONTEND_BASE=https://maintainarr-api-z39r.onrender.com
@@ -9,7 +10,8 @@ ARG VITE_SUPPLYARR_FRONTEND_BASE=https://supplyarr-api-dn8u.onrender.com
 ARG VITE_COMPLIANCECORE_FRONTEND_BASE=https://compliancecore-api-w7e5.onrender.com
 ARG VITE_LOADARR_FRONTEND_BASE=https://loadarr-api.onrender.com
 ARG VITE_COMPANION_FRONTEND_BASE=https://companion-frontend-vf7o.onrender.com
-ENV VITE_SUITE_URL=${VITE_SUITE_URL} \
+ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
+    VITE_SUITE_URL=${VITE_SUITE_URL} \
     VITE_STAFFARR_FRONTEND_BASE=${VITE_STAFFARR_FRONTEND_BASE} \
     VITE_TRAINARR_FRONTEND_BASE=${VITE_TRAINARR_FRONTEND_BASE} \
     VITE_MAINTAINARR_FRONTEND_BASE=${VITE_MAINTAINARR_FRONTEND_BASE} \

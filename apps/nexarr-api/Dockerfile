@@ -1,5 +1,7 @@
 FROM node:22-bookworm-slim AS frontend-build
 WORKDIR /src
+ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
+ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL}
 COPY packages/shared-ui/package.json packages/shared-ui/package-lock.json packages/shared-ui/
 RUN npm ci --prefix packages/shared-ui
 COPY apps/suite-frontend/package.json apps/suite-frontend/package-lock.json apps/suite-frontend/

@@ -38,13 +38,23 @@ function readFrontendBase(
   return LOCAL_FRONTEND_BASES[productKey]
 }
 
+function readAppPublicBaseUrl(env: Record<string, string | undefined>): string | undefined {
+  const trimmed = env.VITE_APP_PUBLIC_BASE_URL?.trim()
+  return trimmed ? trimmed.replace(/\/$/, '') : undefined
+}
+
 /** Build direct `/launch` URLs for entitled product frontends from Vite env (with local defaults). */
 export function buildProductLaunchUrlMap(
   env: Record<string, string | undefined>,
 ): Record<string, string> {
   const map: Record<string, string> = {}
+  const appBase = readAppPublicBaseUrl(env)
   for (const entry of SUITE_PRODUCT_CATALOG) {
     if (entry.productKey === 'nexarr') {
+      continue
+    }
+    if (appBase) {
+      map[entry.productKey] = `${appBase}/${entry.productKey}/launch`
       continue
     }
     const base = readFrontendBase(env, entry.productKey)
