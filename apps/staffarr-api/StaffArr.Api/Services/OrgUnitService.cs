@@ -3,6 +3,7 @@ using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api.Services;
 
@@ -26,6 +27,50 @@ public sealed class OrgUnitService(
                 x.ParentOrgUnitId,
                 x.Status))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StaffArrSiteLookupResponse>> ListActiveSitesAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return await db.OrgUnits
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.UnitType == "site"
+                && x.Status == "active")
+            .OrderBy(x => x.Name)
+            .Select(x => new StaffArrSiteLookupResponse(
+                x.Id,
+                x.Name,
+                x.ParentOrgUnitId,
+                x.Status))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<StaffArrSiteLookupResponse> GetActiveSiteAsync(
+        Guid tenantId,
+        Guid orgUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var site = await db.OrgUnits
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.Id == orgUnitId
+                && x.UnitType == "site"
+                && x.Status == "active")
+            .Select(x => new StaffArrSiteLookupResponse(
+                x.Id,
+                x.Name,
+                x.ParentOrgUnitId,
+                x.Status))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return site ?? throw new StlApiException(
+            "staffarr.sites.not_found",
+            "Active StaffArr site was not found.",
+            404);
     }
 
     public async Task<OrgUnitResponse> CreateAsync(

@@ -9,6 +9,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   supplyarr: 'http://localhost:5179',
   routarr: 'http://localhost:5180',
   companion: 'http://localhost:5181',
+  loadarr: 'http://localhost:5182',
 }
 
 function resolveSuiteHomeUrl(suiteHomeUrl: string): string {

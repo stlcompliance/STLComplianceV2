@@ -798,6 +798,16 @@ namespace RoutArr.Api.Migrations
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StaffarrSiteNameSnapshot")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("StaffarrSiteOrgUnitId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("StopKey")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -826,6 +836,8 @@ namespace RoutArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "RouteId");
+
+                    b.HasIndex("TenantId", "StaffarrSiteOrgUnitId");
 
                     b.HasIndex("TenantId", "RouteId", "SequenceNumber")
                         .IsUnique();
@@ -874,6 +886,97 @@ namespace RoutArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("routarr_staffarr_person_refs", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.SupplyArrShipmentIntent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DestinationAddressSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("DestinationName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("RouteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ShipmentKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("SupplyarrShipmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "SupplyarrShipmentId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status", "UpdatedAt");
+
+                    b.ToTable("routarr_supplyarr_shipment_intents", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.SupplyArrShipmentIntentLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PartDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid>("ShipmentIntentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SupplyarrShipmentLineId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentIntentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ShipmentIntentId");
+
+                    b.ToTable("routarr_supplyarr_shipment_intent_lines", (string)null);
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.TenantAttachmentRetentionSettings", b =>
@@ -1968,6 +2071,17 @@ namespace RoutArr.Api.Migrations
                     b.Navigation("Route");
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.SupplyArrShipmentIntentLine", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.SupplyArrShipmentIntent", "ShipmentIntent")
+                        .WithMany("Lines")
+                        .HasForeignKey("ShipmentIntentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShipmentIntent");
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.TripCaptureAttachment", b =>
                 {
                     b.HasOne("RoutArr.Api.Entities.Trip", "Trip")
@@ -2048,6 +2162,11 @@ namespace RoutArr.Api.Migrations
             modelBuilder.Entity("RoutArr.Api.Entities.DispatchRoute", b =>
                 {
                     b.Navigation("Stops");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.SupplyArrShipmentIntent", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.Trip", b =>

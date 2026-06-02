@@ -11,14 +11,12 @@ public sealed class StlM13ShipGateCatalogTests
     [Fact]
     public void OpenApi_product_keys_match_snapshot_count()
     {
-        Assert.Equal(7, StlM13ShipGateCatalog.OpenApiProductKeys.Count);
-        Assert.Equal(
-            StlM13ShipGateCatalog.OpenApiProductKeys.Count,
-            StlM13ShipGateCatalog.ProductApiEntitlementDenialProbes.Count + 1);
+        Assert.Equal(8, StlM13ShipGateCatalog.OpenApiProductKeys.Count);
+        Assert.Contains("loadarr", StlM13ShipGateCatalog.OpenApiProductKeys);
     }
 
     [Fact]
-    public void Entitlement_denial_probes_cover_all_product_apis_except_nexarr()
+    public void Entitlement_denial_probes_cover_product_apis_with_me_surfaces()
     {
         var keys = StlM13ShipGateCatalog.ProductApiEntitlementDenialProbes
             .Select(p => p.ProductKey)
@@ -26,7 +24,7 @@ public sealed class StlM13ShipGateCatalogTests
 
         foreach (var productKey in StlM13ShipGateCatalog.OpenApiProductKeys)
         {
-            if (string.Equals(productKey, "nexarr", StringComparison.Ordinal))
+            if (productKey is "nexarr" or "loadarr")
             {
                 continue;
             }

@@ -8,6 +8,7 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class HazComReferenceService(
     ComplianceCoreDbContext db,
+    StaffArrSiteReferenceService staffArrSites,
     IComplianceCoreAuditService auditService)
 {
     public async Task<IReadOnlyList<HazComReferenceResponse>> ListAsync(
@@ -55,6 +56,10 @@ public sealed class HazComReferenceService(
         }
 
         await ValidateLinkedSdsKeyAsync(tenantId, request.LinkedSdsKey, cancellationToken);
+        var staffArrSite = await staffArrSites.RequireActiveSiteAsync(
+            tenantId,
+            request.StaffarrSiteOrgUnitId,
+            cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var entity = new HazComReference
         {
@@ -64,6 +69,8 @@ public sealed class HazComReferenceService(
             Title = NormalizeRequired(request.Title, "Title"),
             Description = NormalizeOptional(request.Description),
             LinkedSdsKey = NormalizeOptionalKey(request.LinkedSdsKey),
+            StaffarrSiteOrgUnitId = staffArrSite.OrgUnitId,
+            StaffarrSiteNameSnapshot = staffArrSite.Name,
             LocationRef = NormalizeOptional(request.LocationRef),
             DocumentUrl = NormalizeOptional(request.DocumentUrl),
             IsActive = request.IsActive,
@@ -112,6 +119,13 @@ public sealed class HazComReferenceService(
         if (request.LocationRef is not null)
         {
             entity.LocationRef = NormalizeOptional(request.LocationRef);
+        }
+
+        if (request.StaffarrSiteOrgUnitId is Guid siteId)
+        {
+            var staffArrSite = await staffArrSites.RequireActiveSiteAsync(tenantId, siteId, cancellationToken);
+            entity.StaffarrSiteOrgUnitId = staffArrSite.OrgUnitId;
+            entity.StaffarrSiteNameSnapshot = staffArrSite.Name;
         }
 
         if (request.DocumentUrl is not null)
@@ -181,6 +195,8 @@ public sealed class HazComReferenceService(
             entity.Title,
             entity.Description,
             entity.LinkedSdsKey,
+            entity.StaffarrSiteOrgUnitId,
+            entity.StaffarrSiteNameSnapshot,
             entity.LocationRef,
             entity.DocumentUrl,
             entity.IsActive,

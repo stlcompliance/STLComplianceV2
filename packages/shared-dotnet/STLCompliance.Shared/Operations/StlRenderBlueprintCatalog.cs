@@ -42,6 +42,7 @@ public static class StlRenderBlueprintCatalog
         new("routarr-api", "./apps/routarr-api/Dockerfile"),
         new("supplyarr-api", "./apps/supplyarr-api/Dockerfile"),
         new("compliancecore-api", "./apps/compliancecore-api/Dockerfile"),
+        new("loadarr-api", "./apps/loadarr-api/Dockerfile"),
     ];
 
     public static readonly IReadOnlyList<StlRenderStaticSite> StaticSites =
@@ -54,6 +55,7 @@ public static class StlRenderBlueprintCatalog
         new("routarr-frontend", "apps/routarr-frontend"),
         new("supplyarr-frontend", "apps/supplyarr-frontend"),
         new("compliancecore-frontend", "apps/compliancecore-frontend"),
+        new("loadarr-frontend", "apps/loadarr-frontend"),
         new("companion-frontend", "apps/companion-frontend"),
     ];
 
@@ -78,6 +80,7 @@ public static class StlRenderBlueprintCatalog
         new("routarr-db", "routarr"),
         new("supplyarr-db", "supplyarr"),
         new("compliancecore-db", "compliancecore"),
+        new("loadarr-db", "loadarr"),
     ];
 
     public static readonly IReadOnlyList<StlRenderEvidenceDisk> EvidenceDisks =
@@ -103,6 +106,7 @@ public static class StlRenderBlueprintCatalog
         ("RoutArr__BaseUrl", "routarr-api", "https://routarr-api-nmwr.onrender.com"),
         ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-gavo.onrender.com"),
         ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-h69n.onrender.com"),
+        ("LoadArr__BaseUrl", "loadarr-api", "https://loadarr-api.onrender.com"),
     ];
 
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> SyncFalseEnvKeysByConsumer() =>

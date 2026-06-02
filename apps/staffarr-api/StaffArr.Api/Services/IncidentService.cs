@@ -323,7 +323,8 @@ public sealed class IncidentService(
                 sourceProduct,
                 request.SourceIncidentId,
                 existing.Status,
-                IdempotentReplay: true);
+                IdempotentReplay: true,
+                BuildSourceSnapshot(existing));
         }
 
         var personExists = await db.People.AnyAsync(
@@ -379,7 +380,8 @@ public sealed class IncidentService(
             sourceProduct,
             request.SourceIncidentId,
             entity.Status,
-            IdempotentReplay: false);
+            IdempotentReplay: false,
+            BuildSourceSnapshot(entity));
     }
 
     public async Task<PersonnelIncidentDetailResponse> CreateSelfReportAsync(
@@ -793,7 +795,8 @@ public sealed class IncidentService(
             entity.SourceProduct,
             entity.SourceIncidentId,
             entity.SourceEventKind,
-            entity.SourceReferenceKey);
+            entity.SourceReferenceKey,
+            BuildSourceSnapshot(entity));
 
     private static PersonnelIncidentDetailResponse MapDetail(
         PersonnelIncident entity,
@@ -850,5 +853,25 @@ public sealed class IncidentService(
             entity.SourceProduct,
             entity.SourceIncidentId,
             entity.SourceEventKind,
-            entity.SourceReferenceKey);
+            entity.SourceReferenceKey,
+            BuildSourceSnapshot(entity));
+
+    private static ProductSourceReferenceSnapshotResponse? BuildSourceSnapshot(PersonnelIncident entity)
+    {
+        if (string.IsNullOrWhiteSpace(entity.SourceProduct) || entity.SourceIncidentId is not Guid sourceIncidentId)
+        {
+            return null;
+        }
+
+        return new ProductSourceReferenceSnapshotResponse(
+            entity.SourceProduct,
+            entity.SourceEventKind ?? "product_incident",
+            sourceIncidentId.ToString(),
+            entity.SourceReferenceKey ?? entity.Title,
+            entity.Status,
+            entity.ReportedAt,
+            entity.UpdatedAt,
+            entity.UpdatedAt,
+            IsAuthoritative: false);
+    }
 }

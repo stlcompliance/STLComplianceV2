@@ -2,6 +2,7 @@ using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api.Endpoints;
 
@@ -16,6 +17,8 @@ public static class IntegrationEndpoints
     public const string RoutarrReadinessDispatchActionScope = "staffarr.readiness.dispatch_gate";
 
     public const string ProductIncidentIngestActionScope = "staffarr.product_incidents.write";
+
+    public const string ProductPermissionCatalogSyncActionScope = ProductPermissionCatalogService.SyncActionScope;
 
     public const string TrainarrPersonLookupActionScope = "staffarr.person.lookup";
 
@@ -34,6 +37,7 @@ public static class IntegrationEndpoints
     public const string PermissionCheckReadActionScope = "staffarr.permission_check.read";
     public const string ReadinessRollupReadActionScope = "staffarr.readiness_rollups.read";
     public const string EventFeedReadActionScope = StaffArrEventFeedService.IntegrationReadActionScope;
+    public const string SitesReadActionScope = StaffArrSiteIntegrationScopes.SitesRead;
 
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
@@ -287,6 +291,29 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.CreateProductIncidentAsync(request, cancellationToken));
         })
         .WithName("IngestProductIncidentV1");
+
+        integrations.MapPost("/product-permission-catalog", async (
+            SyncProductPermissionCatalogRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            ProductPermissionCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            var validated = ValidateProductPermissionCatalogServiceToken(tokenValidator, context, request);
+            return Results.Ok(await service.SyncAsync(request, validated.TokenId, cancellationToken));
+        })
+        .WithName("SyncProductPermissionCatalog");
+        integrationsV1.MapPost("/product-permission-catalog", async (
+            SyncProductPermissionCatalogRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            ProductPermissionCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            var validated = ValidateProductPermissionCatalogServiceToken(tokenValidator, context, request);
+            return Results.Ok(await service.SyncAsync(request, validated.TokenId, cancellationToken));
+        })
+        .WithName("SyncProductPermissionCatalogV1");
 
         integrations.MapGet("/person-lookup", async (
             Guid tenantId,
@@ -754,6 +781,56 @@ public static class IntegrationEndpoints
         integrationsV1.MapGet("/event-feed", ListEventFeedAsync)
         .WithName("IntegrationEventFeedV1");
 
+        integrations.MapGet("/sites", async (
+            Guid tenantId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListActiveSitesAsync(tenantId, cancellationToken));
+        })
+        .WithName("IntegrationListSites");
+
+        integrationsV1.MapGet("/sites", async (
+            Guid tenantId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListActiveSitesAsync(tenantId, cancellationToken));
+        })
+        .WithName("IntegrationListSitesV1");
+
+        integrations.MapGet("/sites/{orgUnitId:guid}", async (
+            Guid tenantId,
+            Guid orgUnitId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetActiveSiteAsync(tenantId, orgUnitId, cancellationToken));
+        })
+        .WithName("IntegrationGetSite");
+
+        integrationsV1.MapGet("/sites/{orgUnitId:guid}", async (
+            Guid tenantId,
+            Guid orgUnitId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetActiveSiteAsync(tenantId, orgUnitId, cancellationToken));
+        })
+        .WithName("IntegrationGetSiteV1");
+
         integrations.MapGet("/readiness-rollups/teams", async (
             Guid tenantId,
             Guid? siteOrgUnitId,
@@ -957,6 +1034,48 @@ public static class IntegrationEndpoints
             });
     }
 
+    private static ValidatedServiceToken ValidateProductPermissionCatalogServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        SyncProductPermissionCatalogRequest request)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var tokenSource = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        var requestSource = (request.ProductKey ?? string.Empty).Trim().ToLowerInvariant();
+        if (tokenSource is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for product permission catalog sync.",
+                403);
+        }
+
+        if (!string.Equals(tokenSource, requestSource, StringComparison.Ordinal))
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product must match the permission catalog product.",
+                403);
+        }
+
+        return tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = tokenSource,
+                RequiredTargetProduct = "staffarr",
+                TenantId = request.TenantId,
+                RequiredActionScope = ProductPermissionCatalogSyncActionScope
+            });
+    }
+
     private static void ValidatePermissionCheckServiceToken(
         StlServiceTokenValidator tokenValidator,
         HttpContext context,
@@ -1053,6 +1172,44 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "staffarr",
                 TenantId = tenantId,
                 RequiredActionScope = EventFeedReadActionScope
+            });
+    }
+
+    private static void ValidateSiteReadServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr"
+            and not "routarr"
+            and not "supplyarr"
+            and not "trainarr"
+            and not "compliancecore"
+            and not "loadarr")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for StaffArr site reads.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "staffarr",
+                TenantId = tenantId,
+                RequiredActionScope = SitesReadActionScope
             });
     }
 }

@@ -13,8 +13,14 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.Configure<ProductApiIntegrationOptions>(builder.Configuration.GetSection(ProductApiIntegrationOptions.SectionName));
+        builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.AddHttpClient(nameof(ProductFactApiFetcher));
+        builder.Services.AddHttpClient<StaffArrSiteLookupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -26,6 +32,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<ComplianceKeyService>();
         builder.Services.AddScoped<MaterialKeyService>();
         builder.Services.AddScoped<SdsReferenceService>();
+        builder.Services.AddScoped<StaffArrSiteReferenceService>();
         builder.Services.AddScoped<HazComReferenceService>();
         builder.Services.AddScoped<RuleVersionService>();
         builder.Services.AddScoped<GoverningBodyService>();

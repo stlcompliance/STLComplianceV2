@@ -1,7 +1,9 @@
 using STLCompliance.Shared.Integration;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,7 @@ using AssetTypeResponse = MaintainArr.Api.Contracts.AssetTypeResponse;
 using CreateAssetTypeRequest = MaintainArr.Api.Contracts.CreateAssetTypeRequest;
 using AssetResponse = MaintainArr.Api.Contracts.AssetResponse;
 using CreateAssetRequest = MaintainArr.Api.Contracts.CreateAssetRequest;
+using AssetUpsertV1Request = MaintainArr.Api.Contracts.AssetUpsertV1Request;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Services;
 using NexArr.Api.Contracts;
@@ -33,6 +36,8 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _serviceToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("5f0b49a9-7c67-4ce1-a0e9-3e7e226d3992");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -68,6 +73,8 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         _serviceToken = await IssueServiceTokenAsync(adminToken, "maintainarr");
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
+        ClearTenantSeedReady(PlatformSeeder.DemoTenantId);
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -77,6 +84,8 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", _serviceToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "maintainarr-to-staffarr-sites");
             builder.ConfigureServices(services =>
             {
                 var descriptors = services
@@ -95,6 +104,8 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StlNexArrLaunchClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -211,12 +222,15 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             "EX-1001",
             "Excavator 1001",
             "Primary yard excavator",
-            "site-yard-a"));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
         Assert.Equal("EX-1001", asset.AssetTag);
         Assert.Equal("active", asset.LifecycleStatus);
+        Assert.Equal(_staffarrSiteOrgUnitId, asset.StaffarrSiteOrgUnitId);
+        Assert.Equal("Central Maintenance Site", asset.StaffarrSiteNameSnapshot);
+        Assert.Equal(_staffarrSiteOrgUnitId.ToString("D"), asset.SiteRef);
 
         var listAssetsRequest = Authorized(HttpMethod.Get, "/api/assets", token);
         var listAssetsResponse = await _maintainarrClient.SendAsync(listAssetsRequest);
@@ -257,15 +271,21 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         var assetType = (await createTypeResponse.Content.ReadFromJsonAsync<AssetTypeResponse>())!;
 
         var createAssetRequest = Authorized(HttpMethod.Post, "/api/v1/assets", token);
-        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
-            assetType.AssetTypeId,
+        createAssetRequest.Content = JsonContent.Create(new AssetUpsertV1Request(
             "LD-2001",
             "Loader 2001",
             "Primary loader",
-            "site-yard-b"));
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["assetClass"] = "vehicle",
+                ["assetType"] = "pickup",
+                ["siteId"] = _staffarrSiteOrgUnitId.ToString("D"),
+                ["lifecycleStatus"] = "active",
+            }));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
-        createAssetResponse.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(createAssetResponse);
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+        Assert.Equal(_staffarrSiteOrgUnitId, asset.StaffarrSiteOrgUnitId);
 
         var listAssetsRequest = Authorized(HttpMethod.Get, "/api/v1/assets", token);
         var listAssetsResponse = await _maintainarrClient.SendAsync(listAssetsRequest);
@@ -277,8 +297,44 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         var getAssetResponse = await _maintainarrClient.SendAsync(getAssetRequest);
         getAssetResponse.EnsureSuccessStatusCode();
         var fetched = (await getAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
-        Assert.Equal("loader", fetched.TypeKey);
-        Assert.Equal("yard-equipment", fetched.ClassKey);
+        Assert.Equal("pickup", fetched.TypeKey);
+        Assert.Equal("vehicle", fetched.ClassKey);
+    }
+
+    [Fact]
+    public async Task Asset_create_rejects_free_text_internal_site_alias()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+
+        var createClassRequest = Authorized(HttpMethod.Post, "/api/asset-classes", token);
+        createClassRequest.Content = JsonContent.Create(new CreateAssetClassRequest(
+            "site-validation",
+            "Site Validation",
+            "Assets used for StaffArr site validation"));
+        var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
+        createClassResponse.EnsureSuccessStatusCode();
+        var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
+
+        var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
+        createTypeRequest.Content = JsonContent.Create(new CreateAssetTypeRequest(
+            assetClass.AssetClassId,
+            "test-asset",
+            "Test asset",
+            "Validation asset type"));
+        var createTypeResponse = await _maintainarrClient.SendAsync(createTypeRequest);
+        createTypeResponse.EnsureSuccessStatusCode();
+        var assetType = (await createTypeResponse.Content.ReadFromJsonAsync<AssetTypeResponse>())!;
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetType.AssetTypeId,
+            "SITE-TEXT-1",
+            "Free Text Site Asset",
+            "Should be rejected",
+            "yard-a"));
+
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, createAssetResponse.StatusCode);
     }
 
     [Fact]
@@ -397,5 +453,61 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private static async Task AssertSuccessAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Fail($"Expected success but received {(int)response.StatusCode} {response.StatusCode}: {body}");
+    }
+
+    private static void ClearTenantSeedReady(Guid tenantId)
+    {
+        var readyField = typeof(CatalogSeedService).GetField("TenantSeedReady", BindingFlags.NonPublic | BindingFlags.Static);
+        var ready = Assert.IsType<ConcurrentDictionary<Guid, byte>>(readyField?.GetValue(null));
+        ready.TryRemove(tenantId, out _);
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Maintenance Site",
+                null,
+                "active");
+
+            if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new[] { response })
+                });
+            }
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

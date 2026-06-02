@@ -155,8 +155,12 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PermissionScope).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Sensitivity).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PermissionKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey, x.PermissionKey }).IsUnique();
         });
 
         modelBuilder.Entity<RoleTemplatePermission>(entity =>

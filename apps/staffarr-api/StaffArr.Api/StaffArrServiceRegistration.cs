@@ -43,6 +43,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<OrgUnitService>();
         builder.Services.AddScoped<OrgUnitAssignmentService>();
         builder.Services.AddScoped<RoleTemplateService>();
+        builder.Services.AddScoped<ProductPermissionCatalogService>();
         builder.Services.AddScoped<CertificationService>();
         builder.Services.AddScoped<ReadinessOverrideService>();
         builder.Services.AddScoped<ReadinessService>();

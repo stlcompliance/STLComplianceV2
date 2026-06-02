@@ -179,9 +179,11 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.LifecycleStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SiteRef).HasMaxLength(128);
+            entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.AssetTag }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.AssetTypeId });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrSiteOrgUnitId });
             entity.HasOne(x => x.AssetType)
                 .WithMany()
                 .HasForeignKey(x => x.AssetTypeId)
@@ -1040,6 +1042,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.ToTable("maintainarr_asset_location_history");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.SiteId).HasMaxLength(128);
+            entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256);
             entity.Property(x => x.HomeLocationId).HasMaxLength(128);
             entity.Property(x => x.CurrentLocationId).HasMaxLength(128);
             entity.Property(x => x.Yard).HasMaxLength(128);
@@ -1047,6 +1050,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ParkingSpot).HasMaxLength(128);
             entity.Property(x => x.ChangedByPersonId).HasMaxLength(128);
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.EffectiveAt });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrSiteOrgUnitId });
         });
 
         modelBuilder.Entity<AssetAssignmentHistory>(entity =>

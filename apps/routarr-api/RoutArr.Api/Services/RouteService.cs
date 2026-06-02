@@ -10,7 +10,8 @@ public sealed class RouteService(
     RoutArrDbContext db,
     IRoutArrAuditService audit,
     IntegrationOutboxEnqueueService integrationOutbox,
-    DispatchNotificationEnqueueService notificationEnqueueService)
+    DispatchNotificationEnqueueService notificationEnqueueService,
+    StaffArrSiteReferenceService staffArrSites)
 {
     public async Task<IReadOnlyList<RouteSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -174,7 +175,7 @@ public sealed class RouteService(
         {
             foreach (var stopRequest in request.Stops.OrderBy(x => x.SequenceNumber))
             {
-                entity.Stops.Add(CreateStopEntity(tenantId, entity.Id, stopRequest, now));
+                entity.Stops.Add(await CreateStopEntityAsync(tenantId, entity.Id, stopRequest, now, cancellationToken));
             }
         }
 
@@ -349,7 +350,7 @@ public sealed class RouteService(
         }
 
         var now = DateTimeOffset.UtcNow;
-        route.Stops.Add(CreateStopEntity(
+        route.Stops.Add(await CreateStopEntityAsync(
             tenantId,
             route.Id,
             new CreateRouteStopRequest(
@@ -358,8 +359,10 @@ public sealed class RouteService(
                 request.AddressLabel,
                 request.StopType,
                 request.SequenceNumber,
-                request.ScheduledArrivalAt),
-            now));
+                request.ScheduledArrivalAt,
+                request.StaffarrSiteOrgUnitId),
+            now,
+            cancellationToken));
         route.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -702,14 +705,19 @@ public sealed class RouteService(
         return route;
     }
 
-    private static RouteStop CreateStopEntity(
+    private async Task<RouteStop> CreateStopEntityAsync(
         Guid tenantId,
         Guid routeId,
         CreateRouteStopRequest request,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
     {
         ValidateStopKey(request.StopKey);
         ValidateStopType(request.StopType);
+        var site = await staffArrSites.ResolveOptionalSiteAsync(
+            tenantId,
+            request.StaffarrSiteOrgUnitId,
+            cancellationToken);
 
         return new RouteStop
         {
@@ -719,6 +727,8 @@ public sealed class RouteService(
             StopKey = request.StopKey.Trim(),
             Label = request.Label?.Trim() ?? string.Empty,
             AddressLabel = request.AddressLabel?.Trim() ?? string.Empty,
+            StaffarrSiteOrgUnitId = site?.OrgUnitId,
+            StaffarrSiteNameSnapshot = site?.Name ?? string.Empty,
             StopType = NormalizeStopType(request.StopType),
             StopStatus = RouteStopStatuses.Pending,
             SequenceNumber = request.SequenceNumber,
@@ -822,6 +832,8 @@ public sealed class RouteService(
             stop.StopKey,
             stop.Label,
             stop.AddressLabel,
+            stop.StaffarrSiteOrgUnitId,
+            stop.StaffarrSiteNameSnapshot,
             stop.StopType,
             stop.StopStatus,
             stop.SequenceNumber,

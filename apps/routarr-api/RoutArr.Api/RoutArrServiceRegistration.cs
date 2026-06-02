@@ -46,6 +46,11 @@ public static class RoutArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<StaffArrSiteLookupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
 
         builder.Services.AddHttpClient<MaintainArrAssetReadinessClient>((sp, client) =>
         {
@@ -84,12 +89,14 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DriverEligibilityService>();
         builder.Services.AddScoped<AssetDispatchabilityService>();
         builder.Services.AddScoped<DispatchWorkflowGateService>();
+        builder.Services.AddScoped<StaffArrSiteReferenceService>();
         builder.Services.AddScoped<DispatchAssignmentService>();
         builder.Services.AddScoped<BulkDispatchService>();
         builder.Services.AddScoped<DispatchCloseoutService>();
         builder.Services.AddScoped<TripService>();
         builder.Services.AddScoped<TripPartsDemandService>();
         builder.Services.AddScoped<TripPartsDemandStatusIngestionService>();
+        builder.Services.AddScoped<SupplyArrShipmentIntentService>();
         builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<RouteService>();
         builder.Services.AddScoped<DispatchBoardService>();

@@ -9,7 +9,8 @@ public interface ITokenService
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements);
+        IReadOnlyList<string> entitlements,
+        int? accessTokenMinutes = null);
 
     (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
         PlatformUser user,
@@ -17,7 +18,8 @@ public interface ITokenService
         Guid sessionId,
         IReadOnlyList<string> entitlements,
         string tenantRoleKey,
-        Guid personId);
+        Guid personId,
+        int? accessTokenMinutes = null);
 
     string GenerateRefreshToken();
 

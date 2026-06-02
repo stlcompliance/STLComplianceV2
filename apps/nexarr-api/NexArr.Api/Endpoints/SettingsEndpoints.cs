@@ -28,6 +28,7 @@ public static class SettingsEndpoints
 
                 var response = new NexArrSettingsManifestResponse(
                 [
+                    new("platform_session_settings", "/api/platform-admin/session-settings", "Access-token and refresh-session lifetime settings."),
                     new("platform_service_token_cleanup_settings", "/api/platform/service-token-cleanup/settings", "Service-token cleanup worker cadence and retention settings."),
                     new("platform_outbox_publisher_settings", "/api/platform/outbox-publisher/settings", "Platform outbox publishing worker settings."),
                     new("platform_entitlement_reconciliation_settings", "/api/platform/entitlement-reconciliation/settings", "Entitlement reconciliation worker settings."),
@@ -40,4 +41,3 @@ public static class SettingsEndpoints
         }
     }
 }
-

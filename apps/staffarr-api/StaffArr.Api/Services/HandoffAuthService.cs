@@ -55,7 +55,8 @@ public sealed class HandoffAuthService(
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.Entitlements,
-            redeemed.IsPlatformAdmin);
+            redeemed.IsPlatformAdmin,
+            redeemed.AccessTokenMinutes);
 
         return new HandoffSessionResponse(
             accessToken,

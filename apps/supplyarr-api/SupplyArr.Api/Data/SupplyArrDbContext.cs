@@ -44,6 +44,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<PartStockReservation> PartStockReservations => Set<PartStockReservation>();
 
+    public DbSet<WmsStockLedgerEntry> WmsStockLedgerEntries => Set<WmsStockLedgerEntry>();
+
+    public DbSet<WmsOutboundShipment> WmsOutboundShipments => Set<WmsOutboundShipment>();
+
+    public DbSet<WmsOutboundShipmentLine> WmsOutboundShipmentLines => Set<WmsOutboundShipmentLine>();
+
     public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
 
     public DbSet<PurchaseRequestLine> PurchaseRequestLines => Set<PurchaseRequestLine>();
@@ -445,10 +451,13 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.Name).HasMaxLength(256).IsRequired();
             entity.Property(x => x.LocationType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.AddressLine).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.StaffarrSiteResolutionStatus).HasMaxLength(32).HasDefaultValue("unassigned").IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.LocationKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.LocationType, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrSiteOrgUnitId });
         });
 
         modelBuilder.Entity<InventoryBin>(entity =>
@@ -828,6 +837,78 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasOne(x => x.VendorParty)
                 .WithMany()
                 .HasForeignKey(x => x.VendorPartyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<WmsStockLedgerEntry>(entity =>
+        {
+            entity.ToTable("supplyarr_wms_stock_ledger");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MovementType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.QuantityOnHandDelta).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReservedDelta).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityOnHandAfter).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReservedAfter).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey });
+            entity.HasIndex(x => new { x.TenantId, x.MovementGroupId });
+            entity.HasIndex(x => new { x.TenantId, x.PartId, x.InventoryBinId, x.CreatedAt });
+            entity.HasOne(x => x.Part)
+                .WithMany()
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.InventoryBin)
+                .WithMany()
+                .HasForeignKey(x => x.InventoryBinId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.RelatedInventoryBin)
+                .WithMany()
+                .HasForeignKey(x => x.RelatedInventoryBinId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<WmsOutboundShipment>(entity =>
+        {
+            entity.ToTable("supplyarr_wms_outbound_shipments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ShipmentKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ShipVia).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DestinationName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DestinationAddressSnapshot).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.RoutarrStatus).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ShipmentKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<WmsOutboundShipmentLine>(entity =>
+        {
+            entity.ToTable("supplyarr_wms_outbound_shipment_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.QuantityRequested).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReserved).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityPicked).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityShipped).HasPrecision(18, 4);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.OutboundShipmentId });
+            entity.HasOne(x => x.OutboundShipment)
+                .WithMany(x => x.Lines)
+                .HasForeignKey(x => x.OutboundShipmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Part)
+                .WithMany()
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.FromInventoryBin)
+                .WithMany()
+                .HasForeignKey(x => x.FromInventoryBinId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

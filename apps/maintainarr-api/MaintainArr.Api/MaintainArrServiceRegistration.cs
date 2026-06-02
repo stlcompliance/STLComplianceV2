@@ -29,6 +29,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<ComplianceCoreReferenceAdapter>();
         builder.Services.AddScoped<StaffArrReferenceAdapter>();
         builder.Services.AddScoped<SupplyArrReferenceAdapter>();
+        builder.Services.AddScoped<StaffArrSiteReferenceService>();
         builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<ComplianceCoreReferenceAdapter>());
         builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<StaffArrReferenceAdapter>());
         builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<SupplyArrReferenceAdapter>());
@@ -52,6 +53,11 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<TechnicianRefSyncService>();
         builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
         builder.Services.AddHttpClient<StaffArrPersonLookupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<StaffArrSiteLookupClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");

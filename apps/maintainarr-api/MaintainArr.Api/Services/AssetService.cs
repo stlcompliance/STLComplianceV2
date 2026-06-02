@@ -12,7 +12,8 @@ public sealed class AssetService(
     AssetTypeService assetTypeService,
     IMaintainArrAuditService audit,
     FieldsetService fieldsetService,
-    ControlledValueValidationService controlledValueValidationService)
+    ControlledValueValidationService controlledValueValidationService,
+    StaffArrSiteReferenceService staffArrSites)
 {
     private static readonly HashSet<string> SpecFieldKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -89,18 +90,19 @@ public sealed class AssetService(
         CancellationToken cancellationToken = default)
     {
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", cancellationToken);
+        var values = BuildAssetUpsertValues(request);
         await controlledValueValidationService.ValidateFieldsetValuesAsync(
             tenantId,
             fieldset.Fields,
-            request.Values,
+            values,
             actorPersonId,
             "asset",
             "new",
             createPendingValues: true,
             cancellationToken);
 
-        var assetTypeKey = request.Values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
-        var assetClassKey = request.Values.TryGetValue("assetClass", out var rawClass) ? rawClass?.ToString() : null;
+        var assetTypeKey = values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
+        var assetClassKey = values.TryGetValue("assetClass", out var rawClass) ? rawClass?.ToString() : null;
         if (string.IsNullOrWhiteSpace(assetTypeKey))
         {
             throw new StlApiException("assets.validation", "assetType is required.", 400);
@@ -112,9 +114,9 @@ public sealed class AssetService(
             assetTypeKey,
             cancellationToken);
 
-        var assetTag = NormalizeAssetTag(ExtractFirst(request.Values, "unitNumber") ?? ExtractFirst(request.Values, "assetNumber") ?? request.AssetTag);
-        var name = NormalizeNameOrFallback(ExtractFirst(request.Values, "displayName") ?? request.Name, assetTag);
-        var description = NormalizeDescription(ExtractFirst(request.Values, "description") ?? request.Description);
+        var assetTag = NormalizeAssetTag(ExtractFirst(values, "unitNumber") ?? ExtractFirst(values, "assetNumber") ?? request.AssetTag);
+        var name = NormalizeNameOrFallback(ExtractFirst(values, "displayName") ?? request.Name, assetTag);
+        var description = NormalizeDescription(ExtractFirst(values, "description") ?? request.Description);
 
         var exists = await db.Assets.AnyAsync(x => x.TenantId == tenantId && x.AssetTag == assetTag, cancellationToken);
         if (exists)
@@ -123,6 +125,11 @@ public sealed class AssetService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var site = await ResolveAssetSiteAsync(
+            tenantId,
+            null,
+            values.TryGetValue("siteId", out var siteIdRaw) ? siteIdRaw?.ToString() : null,
+            cancellationToken);
         var asset = new Asset
         {
             Id = Guid.NewGuid(),
@@ -131,11 +138,13 @@ public sealed class AssetService(
             AssetTag = assetTag,
             Name = name,
             Description = description,
-            LifecycleStatus = request.Values.TryGetValue("lifecycleStatus", out var lifecycleRaw)
+            LifecycleStatus = values.TryGetValue("lifecycleStatus", out var lifecycleRaw)
                 && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString())
                 ? NormalizeLifecycleStatus(lifecycleRaw!.ToString()!)
                 : "active",
-            SiteRef = request.Values.TryGetValue("siteId", out var siteIdRaw) ? NormalizeSiteRef(siteIdRaw?.ToString()) : null,
+            SiteRef = site?.OrgUnitId.ToString("D"),
+            StaffarrSiteOrgUnitId = site?.OrgUnitId,
+            StaffarrSiteNameSnapshot = site?.Name ?? string.Empty,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -143,7 +152,7 @@ public sealed class AssetService(
         db.Assets.Add(asset);
         await db.SaveChangesAsync(cancellationToken);
 
-        await UpsertControlledFieldStoresAsync(tenantId, asset.Id, request.Values, now, cancellationToken);
+        await UpsertControlledFieldStoresAsync(tenantId, asset.Id, values, now, cancellationToken);
 
         await audit.WriteAsync(
             "asset.create",
@@ -166,10 +175,11 @@ public sealed class AssetService(
         CancellationToken cancellationToken = default)
     {
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "edit", cancellationToken);
+        var values = BuildAssetUpsertValues(request);
         await controlledValueValidationService.ValidateFieldsetValuesAsync(
             tenantId,
             fieldset.Fields,
-            request.Values,
+            values,
             actorPersonId,
             "asset",
             assetId.ToString(),
@@ -182,8 +192,8 @@ public sealed class AssetService(
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken)
             ?? throw new StlApiException("assets.not_found", "Asset was not found.", 404);
 
-        var assetTypeKey = request.Values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
-        var assetClassKey = request.Values.TryGetValue("assetClass", out var rawClass) ? rawClass?.ToString() : null;
+        var assetTypeKey = values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
+        var assetClassKey = values.TryGetValue("assetClass", out var rawClass) ? rawClass?.ToString() : null;
         if (!string.IsNullOrWhiteSpace(assetTypeKey))
         {
             var projectedType = await ResolveOrCreateAssetTypeProjectionAsync(
@@ -194,7 +204,7 @@ public sealed class AssetService(
             asset.AssetTypeId = projectedType.Id;
         }
 
-        var nextAssetTag = NormalizeAssetTag(ExtractFirst(request.Values, "unitNumber") ?? ExtractFirst(request.Values, "assetNumber") ?? request.AssetTag);
+        var nextAssetTag = NormalizeAssetTag(ExtractFirst(values, "unitNumber") ?? ExtractFirst(values, "assetNumber") ?? request.AssetTag);
         if (!string.Equals(asset.AssetTag, nextAssetTag, StringComparison.OrdinalIgnoreCase))
         {
             var duplicate = await db.Assets.AnyAsync(
@@ -208,10 +218,16 @@ public sealed class AssetService(
             asset.AssetTag = nextAssetTag;
         }
 
-        asset.Name = NormalizeNameOrFallback(ExtractFirst(request.Values, "displayName") ?? request.Name, asset.Name);
-        asset.Description = NormalizeDescription(ExtractFirst(request.Values, "description") ?? request.Description);
-        asset.SiteRef = request.Values.TryGetValue("siteId", out var siteIdRaw) ? NormalizeSiteRef(siteIdRaw?.ToString()) : asset.SiteRef;
-        if (request.Values.TryGetValue("lifecycleStatus", out var lifecycleRaw) && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString()))
+        asset.Name = NormalizeNameOrFallback(ExtractFirst(values, "displayName") ?? request.Name, asset.Name);
+        asset.Description = NormalizeDescription(ExtractFirst(values, "description") ?? request.Description);
+        if (values.TryGetValue("siteId", out var siteIdRaw))
+        {
+            var site = await ResolveAssetSiteAsync(tenantId, null, siteIdRaw?.ToString(), cancellationToken);
+            asset.SiteRef = site?.OrgUnitId.ToString("D");
+            asset.StaffarrSiteOrgUnitId = site?.OrgUnitId;
+            asset.StaffarrSiteNameSnapshot = site?.Name ?? string.Empty;
+        }
+        if (values.TryGetValue("lifecycleStatus", out var lifecycleRaw) && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString()))
         {
             asset.LifecycleStatus = NormalizeLifecycleStatus(lifecycleRaw!.ToString()!);
         }
@@ -219,7 +235,7 @@ public sealed class AssetService(
         await db.SaveChangesAsync(cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        await UpsertControlledFieldStoresAsync(tenantId, assetId, request.Values, now, cancellationToken);
+        await UpsertControlledFieldStoresAsync(tenantId, assetId, values, now, cancellationToken);
 
         await audit.WriteAsync(
             "asset.update",
@@ -323,7 +339,8 @@ public sealed class AssetService(
         var assetTag = NormalizeAssetTag(request.AssetTag);
         var name = NormalizeName(request.Name, "Asset name");
         var description = NormalizeDescription(request.Description);
-        var siteRef = NormalizeSiteRef(request.SiteRef);
+        var site = await ResolveAssetSiteAsync(tenantId, request.StaffarrSiteOrgUnitId, request.SiteRef, cancellationToken);
+        var siteRef = site?.OrgUnitId.ToString("D");
 
         var exists = await db.Assets.AnyAsync(
             x => x.TenantId == tenantId && x.AssetTag == assetTag,
@@ -347,6 +364,8 @@ public sealed class AssetService(
             Description = description,
             LifecycleStatus = "active",
             SiteRef = siteRef,
+            StaffarrSiteOrgUnitId = site?.OrgUnitId,
+            StaffarrSiteNameSnapshot = site?.Name ?? string.Empty,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -383,7 +402,10 @@ public sealed class AssetService(
 
         entity.Name = NormalizeName(request.Name, "Asset name");
         entity.Description = NormalizeDescription(request.Description);
-        entity.SiteRef = NormalizeSiteRef(request.SiteRef);
+        var site = await ResolveAssetSiteAsync(tenantId, request.StaffarrSiteOrgUnitId, request.SiteRef, cancellationToken);
+        entity.SiteRef = site?.OrgUnitId.ToString("D");
+        entity.StaffarrSiteOrgUnitId = site?.OrgUnitId;
+        entity.StaffarrSiteNameSnapshot = site?.Name ?? string.Empty;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -445,8 +467,67 @@ public sealed class AssetService(
             entity.Description,
             entity.LifecycleStatus,
             entity.SiteRef,
+            entity.StaffarrSiteOrgUnitId,
+            entity.StaffarrSiteNameSnapshot,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private async Task<MaintainArrStaffArrSite?> ResolveAssetSiteAsync(
+        Guid tenantId,
+        Guid? staffarrSiteOrgUnitId,
+        string? legacySiteAlias,
+        CancellationToken cancellationToken)
+    {
+        if (staffarrSiteOrgUnitId is Guid siteId)
+        {
+            return await staffArrSites.RequireActiveSiteAsync(tenantId, siteId, cancellationToken);
+        }
+
+        return await staffArrSites.ResolveOptionalSiteAsync(tenantId, NormalizeSiteRef(legacySiteAlias), cancellationToken);
+    }
+
+    private static IReadOnlyDictionary<string, object?> BuildAssetUpsertValues(AssetUpsertV1Request request)
+    {
+        var values = new Dictionary<string, object?>(request.Values, StringComparer.OrdinalIgnoreCase);
+        if (!values.ContainsKey("unitNumber") && !string.IsNullOrWhiteSpace(request.AssetTag))
+        {
+            values["unitNumber"] = request.AssetTag.Trim();
+        }
+
+        if (!values.ContainsKey("displayName") && !string.IsNullOrWhiteSpace(request.Name))
+        {
+            values["displayName"] = request.Name.Trim();
+        }
+
+        if (!values.ContainsKey("description") && !string.IsNullOrWhiteSpace(request.Description))
+        {
+            values["description"] = request.Description.Trim();
+        }
+
+        if (!values.ContainsKey("assetStatus"))
+        {
+            values["assetStatus"] = "active";
+        }
+
+        if (!values.ContainsKey("criticality"))
+        {
+            values["criticality"] = "medium";
+        }
+
+        if (values.TryGetValue("lifecycleStatus", out var lifecycleRaw)
+            && lifecycleRaw?.ToString() is { } lifecycleStatus)
+        {
+            var normalized = lifecycleStatus.Trim().ToLowerInvariant();
+            values["lifecycleStatus"] = normalized switch
+            {
+                "active" => "in_service",
+                "inactive" => "temporarily_inactive",
+                _ => normalized
+            };
+        }
+
+        return values;
+    }
 
     private static string NormalizeAssetTag(string value)
     {
@@ -723,6 +804,7 @@ public sealed class AssetService(
             TenantId = tenantId,
             AssetId = assetId,
             SiteId = siteId,
+            StaffarrSiteOrgUnitId = Guid.TryParse(siteId, out var staffarrSiteOrgUnitId) ? staffarrSiteOrgUnitId : null,
             HomeLocationId = homeLocationId,
             CurrentLocationId = currentLocationId,
             Yard = yard,

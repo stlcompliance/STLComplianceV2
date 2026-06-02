@@ -33,6 +33,12 @@ public sealed record DispatchWorkflowGateAuditSnapshotResponse(
     string Result,
     string? ReasonCode);
 
+public sealed record DispatchReleaseReadinessSnapshotResponse(
+    string SnapshotKind,
+    DateTimeOffset CapturedAt,
+    IReadOnlyDictionary<string, string> Context,
+    IReadOnlyList<DispatchWorkflowGateResultSummary> Gates);
+
 public sealed record DispatchWorkflowGateCheckResponse(
     Guid TripId,
     string Outcome,
@@ -43,7 +49,8 @@ public sealed record DispatchWorkflowGateCheckResponse(
     Guid? BatchId = null,
     DateTimeOffset? CheckedAt = null,
     IReadOnlyDictionary<string, string>? ContextSnapshot = null,
-    DispatchWorkflowGateAuditSnapshotResponse? AuditSnapshot = null);
+    DispatchWorkflowGateAuditSnapshotResponse? AuditSnapshot = null,
+    DispatchReleaseReadinessSnapshotResponse? ReleaseSnapshot = null);
 
 public sealed record DispatchAssignmentWorkflowGateSummary(
     string Outcome,
@@ -54,7 +61,8 @@ public sealed record DispatchAssignmentWorkflowGateSummary(
     Guid? BatchId = null,
     DateTimeOffset? CheckedAt = null,
     IReadOnlyDictionary<string, string>? ContextSnapshot = null,
-    DispatchWorkflowGateAuditSnapshotResponse? AuditSnapshot = null);
+    DispatchWorkflowGateAuditSnapshotResponse? AuditSnapshot = null,
+    DispatchReleaseReadinessSnapshotResponse? ReleaseSnapshot = null);
 
 public static class DispatchWorkflowGateOutcomes
 {

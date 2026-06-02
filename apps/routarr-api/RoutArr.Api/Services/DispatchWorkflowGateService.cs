@@ -132,7 +132,12 @@ public sealed class DispatchWorkflowGateService(
             batch.BatchId,
             checkedAt,
             context,
-            auditSnapshot);
+            auditSnapshot,
+            new DispatchReleaseReadinessSnapshotResponse(
+                "dispatch_release_readiness",
+                checkedAt,
+                context,
+                gateSummaries));
     }
 
     public async Task<DispatchWorkflowGateCheckResponse> CheckAsync(

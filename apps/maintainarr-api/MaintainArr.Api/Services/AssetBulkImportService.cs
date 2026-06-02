@@ -309,6 +309,12 @@ public sealed class AssetBulkImportService(
 
     private static string NormalizeValue(string fieldKey, string value)
     {
+        if (string.Equals(fieldKey, "siteId", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(fieldKey, "staffarrSiteOrgUnitId", StringComparison.OrdinalIgnoreCase))
+        {
+            return value.Trim();
+        }
+
         var lowered = value.Trim().ToLowerInvariant();
         if (GlobalAliases.TryGetValue(lowered, out var mapped))
         {

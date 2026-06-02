@@ -12,6 +12,7 @@ public static class StlLoadTestApiEndpoints
     public const string RoutArr = "http://localhost:5105";
     public const string SupplyArr = "http://localhost:5106";
     public const string ComplianceCore = "http://localhost:5107";
+    public const string LoadArr = "http://localhost:5108";
 
     public static readonly IReadOnlyList<(string ProductKey, string BaseUrl)> All =
     [
@@ -22,5 +23,6 @@ public static class StlLoadTestApiEndpoints
         ("routarr", RoutArr),
         ("supplyarr", SupplyArr),
         ("compliancecore", ComplianceCore),
+        ("loadarr", LoadArr),
     ];
 }

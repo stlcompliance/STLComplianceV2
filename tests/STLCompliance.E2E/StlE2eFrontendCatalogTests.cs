@@ -6,7 +6,7 @@ namespace STLCompliance.E2E;
 public sealed class StlE2eFrontendCatalogTests
 {
     [Fact]
-    public void Product_handoff_frontends_cover_six_arr_products_excluding_nexarr()
+    public void Product_handoff_frontends_cover_arr_products_excluding_nexarr()
     {
         var keys = StlE2eFrontendCatalog.ProductHandoffFrontends
             .Select(e => e.ProductKey)
@@ -14,7 +14,7 @@ public sealed class StlE2eFrontendCatalogTests
             .ToArray();
 
         Assert.Equal(
-            ["compliancecore", "maintainarr", "routarr", "staffarr", "supplyarr", "trainarr"],
+            ["compliancecore", "loadarr", "maintainarr", "routarr", "staffarr", "supplyarr", "trainarr"],
             keys);
     }
 
@@ -25,6 +25,7 @@ public sealed class StlE2eFrontendCatalogTests
     [InlineData("maintainarr", 5178)]
     [InlineData("supplyarr", 5179)]
     [InlineData("routarr", 5180)]
+    [InlineData("loadarr", 5182)]
     public void Handoff_frontend_ports_match_vite_defaults(string productKey, int expectedPort)
     {
         var endpoint = StlE2eFrontendCatalog.TryGetHandoffFrontend(productKey);

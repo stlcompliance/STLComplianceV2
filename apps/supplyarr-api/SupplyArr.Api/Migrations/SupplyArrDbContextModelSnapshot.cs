@@ -744,6 +744,23 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("StaffarrSiteNameSnapshot")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("StaffarrSiteOrgUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StaffarrSiteResolutionStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("unassigned");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -761,6 +778,8 @@ namespace SupplyArr.Api.Migrations
 
                     b.HasIndex("TenantId", "LocationKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "StaffarrSiteOrgUnitId");
 
                     b.HasIndex("TenantId", "LocationType", "Status");
 
@@ -4750,6 +4769,219 @@ namespace SupplyArr.Api.Migrations
                     b.ToTable("supplyarr_warranty_claims", (string)null);
                 });
 
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsOutboundShipment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DestinationAddressSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("DestinationName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("RoutarrRouteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RoutarrShipmentIntentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RoutarrStatus")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ShipVia")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ShipmentKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "ShipmentKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status", "UpdatedAt");
+
+                    b.ToTable("supplyarr_wms_outbound_shipments", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsOutboundShipmentLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FromInventoryBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OutboundShipmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("QuantityPicked")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityRequested")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityReserved")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityShipped")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromInventoryBinId");
+
+                    b.HasIndex("OutboundShipmentId");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "OutboundShipmentId");
+
+                    b.ToTable("supplyarr_wms_outbound_shipment_lines", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsStockLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("InventoryBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MovementGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("QuantityOnHandAfter")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityOnHandDelta")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityReservedAfter")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityReservedDelta")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid?>("RelatedInventoryBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SourceReferenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryBinId");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("RelatedInventoryBinId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IdempotencyKey");
+
+                    b.HasIndex("TenantId", "MovementGroupId");
+
+                    b.HasIndex("TenantId", "PartId", "InventoryBinId", "CreatedAt");
+
+                    b.ToTable("supplyarr_wms_stock_ledger", (string)null);
+                });
+
             modelBuilder.Entity("SupplyArr.Api.Entities.Backorder", b =>
                 {
                     b.HasOne("SupplyArr.Api.Entities.Part", "Part")
@@ -5459,6 +5691,59 @@ namespace SupplyArr.Api.Migrations
                     b.Navigation("VendorParty");
                 });
 
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsOutboundShipmentLine", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.InventoryBin", "FromInventoryBin")
+                        .WithMany()
+                        .HasForeignKey("FromInventoryBinId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.WmsOutboundShipment", "OutboundShipment")
+                        .WithMany("Lines")
+                        .HasForeignKey("OutboundShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromInventoryBin");
+
+                    b.Navigation("OutboundShipment");
+
+                    b.Navigation("Part");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsStockLedgerEntry", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.InventoryBin", "InventoryBin")
+                        .WithMany()
+                        .HasForeignKey("InventoryBinId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.InventoryBin", "RelatedInventoryBin")
+                        .WithMany()
+                        .HasForeignKey("RelatedInventoryBinId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("InventoryBin");
+
+                    b.Navigation("Part");
+
+                    b.Navigation("RelatedInventoryBin");
+                });
+
             modelBuilder.Entity("SupplyArr.Api.Entities.ExternalParty", b =>
                 {
                     b.Navigation("Contacts");
@@ -5546,6 +5831,11 @@ namespace SupplyArr.Api.Migrations
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.VendorReturn", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.WmsOutboundShipment", b =>
                 {
                     b.Navigation("Lines");
                 });

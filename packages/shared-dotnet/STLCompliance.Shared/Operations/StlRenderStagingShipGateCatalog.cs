@@ -34,6 +34,7 @@ public static class StlRenderStagingShipGateCatalog
         new(StlProductDatabaseCatalog.RoutArr, "routarr-api", "RENDER_STAGING_ROUTARR_API_URL", "E2E_ROUTARR_URL"),
         new(StlProductDatabaseCatalog.SupplyArr, "supplyarr-api", "RENDER_STAGING_SUPPLYARR_API_URL", "E2E_SUPPLYARR_URL"),
         new(StlProductDatabaseCatalog.ComplianceCore, "compliancecore-api", "RENDER_STAGING_COMPLIANCECORE_API_URL", "E2E_COMPLIANCECORE_URL"),
+        new(StlProductDatabaseCatalog.LoadArr, "loadarr-api", "RENDER_STAGING_LOADARR_API_URL", "E2E_LOADARR_URL"),
     ];
 
     public static readonly IReadOnlyList<StaticSiteProbeEntry> OptionalStaticSiteProbes =
@@ -46,6 +47,7 @@ public static class StlRenderStagingShipGateCatalog
         new("routarr-frontend", "RENDER_STAGING_ROUTARR_FRONTEND_URL"),
         new("supplyarr-frontend", "RENDER_STAGING_SUPPLYARR_FRONTEND_URL"),
         new("compliancecore-frontend", "RENDER_STAGING_COMPLIANCECORE_FRONTEND_URL"),
+        new("loadarr-frontend", "RENDER_STAGING_LOADARR_FRONTEND_URL"),
         new("companion-frontend", "RENDER_STAGING_COMPANION_FRONTEND_URL"),
     ];
 

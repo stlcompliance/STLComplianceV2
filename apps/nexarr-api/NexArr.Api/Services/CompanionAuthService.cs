@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
@@ -14,7 +13,7 @@ public sealed class CompanionAuthService(
     ITokenService tokenService,
     IPlatformAuditService audit,
     CompanionNotificationEnqueueService notificationEnqueueService,
-    IOptions<StlJwtOptions> jwtOptions)
+    PlatformSessionSettingsService sessionSettingsService)
 {
     private const string ProductKey = "companion";
 
@@ -90,9 +89,10 @@ public sealed class CompanionAuthService(
             ? membershipRoleKey
             : (record.User.IsPlatformAdmin ? "platform_admin" : "tenant_member");
 
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
         var sessionId = Guid.NewGuid();
         var refreshToken = tokenService.GenerateRefreshToken();
-        var refreshExpires = DateTimeOffset.UtcNow.AddDays(jwtOptions.Value.RefreshTokenDays);
+        var refreshExpires = DateTimeOffset.UtcNow.AddDays(settings.RefreshTokenDays);
 
         db.UserSessions.Add(new UserSession
         {
@@ -112,7 +112,8 @@ public sealed class CompanionAuthService(
             sessionId,
             entitlements,
             tenantRoleKey,
-            record.UserId);
+            record.UserId,
+            settings.AccessTokenMinutes);
 
         await audit.WriteAsync(
             "companion.handoff.redeem",

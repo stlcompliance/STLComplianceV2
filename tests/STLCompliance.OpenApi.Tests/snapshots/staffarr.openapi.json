@@ -1160,6 +1160,29 @@
         }
       }
     },
+    "/api/integrations/product-permission-catalog": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SyncProductPermissionCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncProductPermissionCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/readiness-rollups/departments": {
       "get": {
         "tags": [
@@ -1267,6 +1290,63 @@
           {
             "name": "personId",
             "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/sites": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationListSites",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/sites/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationGetSite",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
@@ -3837,6 +3917,28 @@
         }
       }
     },
+    "/api/permissions/product-catalog": {
+      "get": {
+        "tags": [
+          "PermissionTemplates"
+        ],
+        "operationId": "ListProductPermissionCatalog",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/person-history": {
       "get": {
         "tags": [
@@ -5965,6 +6067,29 @@
         }
       }
     },
+    "/api/v1/integrations/product-permission-catalog": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SyncProductPermissionCatalogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncProductPermissionCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/readiness-rollups/departments": {
       "get": {
         "tags": [
@@ -6072,6 +6197,63 @@
           {
             "name": "personId",
             "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/sites": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationListSitesV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/sites/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationGetSiteV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
@@ -8808,6 +8990,225 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discoveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "siteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "departmentOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "locationDetail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reporterPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "managerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "witnessPersonIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "additionalInvolvedPersonIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "employeeSelfReport": {
+            "type": "boolean",
+            "default": false
+          },
+          "immediateActionsTaken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rootCause": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoryKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "readinessDecision": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workRestriction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "returnToWorkNeeded": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ppeConcern": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "medicalAttention": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "outOfServiceRemoveFromDuty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "followUpRequired": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trainingReviewRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "trainingReviewReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedAssetReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedWorkOrderReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedRouteReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedSupplierReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedDocumentReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedPolicyReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidencePackageRequested": {
+            "type": "boolean",
+            "default": false
+          },
+          "notifyManager": {
+            "type": "boolean",
+            "default": true
+          },
+          "notifySafetyCompliance": {
+            "type": "boolean",
+            "default": true
+          },
+          "notifyHr": {
+            "type": "boolean",
+            "default": false
+          },
+          "createFollowUpTask": {
+            "type": "boolean",
+            "default": false
+          },
+          "followUpDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -9572,6 +9973,40 @@
           }
         }
       },
+      "ProductPermissionCatalogItemRequest": {
+        "required": [
+          "permissionKey",
+          "label",
+          "description",
+          "scope",
+          "sensitivity"
+        ],
+        "type": "object",
+        "properties": {
+          "permissionKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scope": {
+            "type": "string"
+          },
+          "sensitivity": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "default": "active"
+          }
+        }
+      },
       "PublishIncidentSupplyDemandRequest": {
         "required": [
           "createPurchaseRequestDraft"
@@ -9759,6 +10194,29 @@
           "trainarrAcknowledgementRequestId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "SyncProductPermissionCatalogRequest": {
+        "required": [
+          "tenantId",
+          "productKey",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductPermissionCatalogItemRequest"
+            }
           }
         }
       },

@@ -14,4 +14,5 @@ public sealed record StlNexArrHandoffRedeemedResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    int? AccessTokenMinutes,
     string? CallbackUrl);

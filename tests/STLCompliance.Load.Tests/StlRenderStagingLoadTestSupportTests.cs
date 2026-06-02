@@ -7,9 +7,9 @@ namespace STLCompliance.Load.Tests;
 public sealed class StlRenderStagingLoadTestSupportTests
 {
     [Fact]
-    public void Catalog_includes_seven_render_api_entries()
+    public void Catalog_includes_render_api_entries()
     {
-        Assert.Equal(7, StlRenderStagingLoadTestCatalog.All.Count);
+        Assert.Equal(8, StlRenderStagingLoadTestCatalog.All.Count);
         Assert.Contains(
             StlRenderStagingLoadTestCatalog.All,
             entry => entry.ProductKey == StlProductDatabaseCatalog.NexArr
@@ -72,9 +72,9 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
-    public void Schedule_catalog_lists_seven_required_staging_api_url_env_vars()
+    public void Schedule_catalog_lists_required_staging_api_url_env_vars()
     {
-        Assert.Equal(7, StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);
+        Assert.Equal(8, StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);
         Assert.Equal(
             StlRenderStagingLoadTestCatalog.All.Count,
             StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);
@@ -150,7 +150,7 @@ public sealed class StlRenderStagingLoadTestSupportTests
             }
 
             var targets = StlRenderStagingLoadTestSupport.ResolveEndpointsFromEnvironment();
-            Assert.Equal(7, targets.Count);
+            Assert.Equal(8, targets.Count);
 
             var nexarr = targets.Single(t => t.ProductKey == StlProductDatabaseCatalog.NexArr);
             Assert.Equal("https://nexarr-api.onrender.com", nexarr.BaseUrl);

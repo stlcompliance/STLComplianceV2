@@ -1710,6 +1710,16 @@ namespace ComplianceCore.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("StaffarrSiteNameSnapshot")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("StaffarrSiteOrgUnitId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -1727,6 +1737,8 @@ namespace ComplianceCore.Api.Migrations
 
                     b.HasIndex("TenantId", "HazComKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "StaffarrSiteOrgUnitId");
 
                     b.ToTable("compliancecore_hazcom_references", (string)null);
                 });

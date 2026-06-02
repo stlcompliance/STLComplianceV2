@@ -2207,6 +2207,29 @@
         }
       }
     },
+    "/api/integrations/routarr-shipment-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRoutArrShipmentStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutArrShipmentStatusUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/staffarr-demand": {
       "post": {
         "tags": [
@@ -12485,6 +12508,29 @@
         }
       }
     },
+    "/api/v1/integrations/routarr-shipment-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRoutArrShipmentStatusV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutArrShipmentStatusUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/staffarr-demand": {
       "post": {
         "tags": [
@@ -20839,6 +20885,183 @@
         }
       }
     },
+    "/api/v1/wms/cancel": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "CancelWmsStockV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelStockMovementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/outbound-shipments": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "CreateWmsOutboundShipmentV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOutboundShipmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/pick": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "PickWmsStockV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/reserve": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ReserveWmsStockV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReserveStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/ship": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ShipWmsStockV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/stock-ledger": {
+      "get": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ListWmsStockLedgerV1",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "binId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/wms/transfer": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "TransferWmsStockV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/vendor-documents": {
       "get": {
         "tags": [
@@ -21529,6 +21752,183 @@
         }
       }
     },
+    "/api/wms/cancel": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "CancelWmsStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelStockMovementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/outbound-shipments": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "CreateWmsOutboundShipment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOutboundShipmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/pick": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "PickWmsStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/reserve": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ReserveWmsStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReserveStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/ship": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ShipWmsStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/stock-ledger": {
+      "get": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ListWmsStockLedger",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "binId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wms/transfer": {
+      "post": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "TransferWmsStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -21729,6 +22129,42 @@
         "properties": {
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "CancelStockMovementRequest": {
+        "required": [
+          "idempotencyKey",
+          "partId",
+          "binId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -22062,6 +22498,13 @@
           },
           "addressLine": {
             "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -22109,6 +22552,66 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateOutboundShipmentLineRequest": {
+        "required": [
+          "partId",
+          "fromBinId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "CreateOutboundShipmentRequest": {
+        "required": [
+          "idempotencyKey",
+          "shipmentKey",
+          "shipVia",
+          "destinationName",
+          "destinationAddressSnapshot",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "shipmentKey": {
+            "type": "string"
+          },
+          "shipVia": {
+            "type": "string"
+          },
+          "destinationName": {
+            "type": "string"
+          },
+          "destinationAddressSnapshot": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateOutboundShipmentLineRequest"
+            }
           }
         }
       },
@@ -24107,6 +24610,49 @@
           }
         }
       },
+      "PickStockRequest": {
+        "required": [
+          "idempotencyKey",
+          "partId",
+          "binId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "outboundShipmentLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PriceListCsvImportRequest": {
         "required": [
           "csv"
@@ -24758,6 +25304,55 @@
           }
         }
       },
+      "ReserveStockRequest": {
+        "required": [
+          "idempotencyKey",
+          "partId",
+          "binId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sourceType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceReferenceId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ResolveProcurementExceptionRequest": {
         "required": [
           "resolutionNotes"
@@ -24786,6 +25381,47 @@
           }
         }
       },
+      "RoutArrShipmentStatusUpdateRequest": {
+        "required": [
+          "tenantId",
+          "supplyarrShipmentId",
+          "status",
+          "routarrRouteId",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrShipmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "routarrRouteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "SelectVendorQuoteRequest": {
         "required": [
           "vendorQuoteId"
@@ -24795,6 +25431,49 @@
           "vendorQuoteId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "ShipStockRequest": {
+        "required": [
+          "idempotencyKey",
+          "partId",
+          "binId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "outboundShipmentLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -24852,6 +25531,47 @@
         "type": "object",
         "properties": {
           "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TransferStockRequest": {
+        "required": [
+          "idempotencyKey",
+          "partId",
+          "fromBinId",
+          "toBinId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
             "type": [
               "null",
               "string"
@@ -24945,6 +25665,13 @@
           },
           "addressLine": {
             "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -26037,6 +26764,12 @@
       "name": "StockReservations"
     },
     {
+      "name": "WMS"
+    },
+    {
+      "name": "Integrations"
+    },
+    {
       "name": "Rfqs"
     },
     {
@@ -26089,9 +26822,6 @@
     },
     {
       "name": "Internal"
-    },
-    {
-      "name": "Integrations"
     },
     {
       "name": "DemandRefs"

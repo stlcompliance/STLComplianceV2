@@ -8,11 +8,16 @@ namespace SupplyArr.Api.Services;
 
 public sealed class InventoryLocationService(
     SupplyArrDbContext db,
+    StaffArrSiteReferenceService staffArrSites,
     ISupplyArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedLocationTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "warehouse",
+        "parts_room",
+        "dock",
+        "yard",
+        "service_truck",
         "site"
     };
 
@@ -64,6 +69,10 @@ public sealed class InventoryLocationService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var staffArrSite = await staffArrSites.RequireActiveSiteAsync(
+            tenantId,
+            request.StaffarrSiteOrgUnitId,
+            cancellationToken);
         var entity = new InventoryLocation
         {
             Id = Guid.NewGuid(),
@@ -72,6 +81,9 @@ public sealed class InventoryLocationService(
             Name = NormalizeName(request.Name),
             LocationType = NormalizeLocationType(request.LocationType),
             AddressLine = NormalizeAddressLine(request.AddressLine),
+            StaffarrSiteOrgUnitId = staffArrSite.OrgUnitId,
+            StaffarrSiteNameSnapshot = staffArrSite.Name,
+            StaffarrSiteResolutionStatus = staffArrSite.ResolutionStatus,
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now
@@ -109,6 +121,27 @@ public sealed class InventoryLocationService(
         entity.Name = NormalizeName(request.Name);
         entity.LocationType = NormalizeLocationType(request.LocationType);
         entity.AddressLine = NormalizeAddressLine(request.AddressLine);
+        if (request.StaffarrSiteOrgUnitId.HasValue
+            && request.StaffarrSiteOrgUnitId != entity.StaffarrSiteOrgUnitId)
+        {
+            var staffArrSite = await staffArrSites.RequireActiveSiteAsync(
+                tenantId,
+                request.StaffarrSiteOrgUnitId,
+                cancellationToken);
+            entity.StaffarrSiteOrgUnitId = staffArrSite.OrgUnitId;
+            entity.StaffarrSiteNameSnapshot = staffArrSite.Name;
+            entity.StaffarrSiteResolutionStatus = staffArrSite.ResolutionStatus;
+        }
+        else if (entity.StaffarrSiteOrgUnitId is Guid existingSiteId
+            && !string.Equals(entity.StaffarrSiteResolutionStatus, InventoryLocationSiteResolutionStatuses.Active, StringComparison.OrdinalIgnoreCase))
+        {
+            var staffArrSite = await staffArrSites.RequireActiveSiteAsync(
+                tenantId,
+                existingSiteId,
+                cancellationToken);
+            entity.StaffarrSiteNameSnapshot = staffArrSite.Name;
+            entity.StaffarrSiteResolutionStatus = staffArrSite.ResolutionStatus;
+        }
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -342,6 +375,9 @@ public sealed class InventoryLocationService(
             entity.Name,
             entity.LocationType,
             entity.AddressLine,
+            entity.StaffarrSiteOrgUnitId,
+            entity.StaffarrSiteNameSnapshot,
+            entity.StaffarrSiteResolutionStatus,
             entity.Status,
             entity.Bins?.Count ?? 0,
             entity.CreatedAt,
@@ -407,11 +443,11 @@ public sealed class InventoryLocationService(
         {
             throw new StlApiException(
                 "inventory.locations.invalid_type",
-                "Location type must be warehouse or site.",
+                "Location type must be warehouse, parts_room, dock, yard, service_truck, or legacy site.",
                 400);
         }
 
-        return normalized;
+        return normalized == "site" ? "parts_room" : normalized;
     }
 
     private static string NormalizeAddressLine(string value) =>

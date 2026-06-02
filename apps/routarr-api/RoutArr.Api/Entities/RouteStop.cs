@@ -16,6 +16,10 @@ public sealed class RouteStop : IHasTenant
 
     public string AddressLabel { get; set; } = string.Empty;
 
+    public Guid? StaffarrSiteOrgUnitId { get; set; }
+
+    public string StaffarrSiteNameSnapshot { get; set; } = string.Empty;
+
     public string StopType { get; set; } = RouteStopTypes.Waypoint;
 
     public string StopStatus { get; set; } = RouteStopStatuses.Pending;

@@ -11,6 +11,7 @@ using NexArr.Api.Services;
 using TrainArr.Api.Contracts;
 using TrainArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -20,6 +21,8 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
     private WebApplicationFactory<global::TrainArr.Api.Program> _trainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _trainarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("3b37a137-90f5-43b6-98d4-542a70f8f99c");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -43,6 +46,7 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
 
         _nexarrClient = _nexarrFactory.CreateClient();
         await SeedNexArrAsync();
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
 
         _trainarrFactory = new WebApplicationFactory<global::TrainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -51,11 +55,15 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "trainarr-to-staffarr-sites");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<TrainArr.Api.Data.TrainArrDbContext>(services);
                 services.AddDbContext<TrainArr.Api.Data.TrainArrDbContext>(options =>
                     options.UseInMemoryDatabase(trainArrDbName));
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -224,6 +232,48 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NoContent, deleteProfileResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Site_applicability_profiles_validate_staffarr_site_scope_keys()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var validCreate = Authorized(HttpMethod.Post, "/api/applicability-profiles", adminToken);
+        validCreate.Content = JsonContent.Create(new CreateTrainingApplicabilityProfileRequest(
+            "Central Site Training",
+            TrainingApplicabilityScopeTypes.Site,
+            _staffarrSiteOrgUnitId.ToString("D"),
+            "Site-scoped training",
+            "StaffArr",
+            null));
+        var validResponse = await _trainarrClient.SendAsync(validCreate);
+        validResponse.EnsureSuccessStatusCode();
+        var profile = (await validResponse.Content.ReadFromJsonAsync<TrainingApplicabilityProfileResponse>())!;
+        Assert.Equal(TrainingApplicabilityScopeTypes.Site, profile.ScopeType);
+        Assert.Equal(_staffarrSiteOrgUnitId.ToString("D"), profile.ScopeKey);
+
+        var freeTextCreate = Authorized(HttpMethod.Post, "/api/applicability-profiles", adminToken);
+        freeTextCreate.Content = JsonContent.Create(new CreateTrainingApplicabilityProfileRequest(
+            "Free Text Site Training",
+            TrainingApplicabilityScopeTypes.Site,
+            "main-plant",
+            "Should be rejected",
+            "StaffArr",
+            null));
+        var freeTextResponse = await _trainarrClient.SendAsync(freeTextCreate);
+        Assert.Equal(HttpStatusCode.BadRequest, freeTextResponse.StatusCode);
+
+        var unknownCreate = Authorized(HttpMethod.Post, "/api/applicability-profiles", adminToken);
+        unknownCreate.Content = JsonContent.Create(new CreateTrainingApplicabilityProfileRequest(
+            "Unknown Site Training",
+            TrainingApplicabilityScopeTypes.Site,
+            Guid.NewGuid().ToString("D"),
+            "Should be rejected",
+            "StaffArr",
+            null));
+        var unknownResponse = await _trainarrClient.SendAsync(unknownCreate);
+        Assert.Equal(HttpStatusCode.NotFound, unknownResponse.StatusCode);
+    }
+
     private async Task<Guid> CreateTrainingDefinitionAsync(string accessToken)
     {
         var request = Authorized(HttpMethod.Post, "/api/training-definitions", accessToken);
@@ -290,6 +340,36 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
         foreach (var descriptor in contextDescriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Training Site",
+                null,
+                "active");
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
         }
     }
 }

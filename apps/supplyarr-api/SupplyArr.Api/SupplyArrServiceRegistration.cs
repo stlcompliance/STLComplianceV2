@@ -33,9 +33,11 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ContactsCsvImportService>();
         builder.Services.AddScoped<OpenPurchaseOrdersCsvImportService>();
         builder.Services.AddScoped<PurchaseHistoryCsvImportService>();
+        builder.Services.AddScoped<StaffArrSiteReferenceService>();
         builder.Services.AddScoped<InventoryLocationService>();
         builder.Services.AddScoped<PartStockService>();
         builder.Services.AddScoped<StockReservationService>();
+        builder.Services.AddScoped<WmsMovementService>();
         builder.Services.AddScoped<PurchaseRequestService>();
         builder.Services.AddScoped<PurchaseOrderService>();
         builder.Services.AddScoped<ReceivingService>();
@@ -123,6 +125,11 @@ public static class SupplyArrServiceRegistration
         builder.Services.Configure<RoutArrClientOptions>(builder.Configuration.GetSection(RoutArrClientOptions.SectionName));
         builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
         builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
+        builder.Services.AddHttpClient<StaffArrSiteLookupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
         builder.Services.AddHttpClient<ComplianceCoreFactPublicationClient>((sp, client) =>
         {
@@ -141,6 +148,11 @@ public static class SupplyArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddHttpClient<RoutArrDemandStatusClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<RoutArrShipmentClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");

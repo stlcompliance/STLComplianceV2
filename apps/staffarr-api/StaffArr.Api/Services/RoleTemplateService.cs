@@ -32,7 +32,11 @@ public sealed class RoleTemplateService(
                 x.PermissionKey,
                 x.Name,
                 x.Description,
-                x.Status))
+                x.Status,
+                x.ProductKey,
+                x.PermissionScope,
+                x.Sensitivity,
+                x.LastSyncedAt))
             .ToListAsync(cancellationToken);
     }
 
@@ -60,6 +64,10 @@ public sealed class RoleTemplateService(
                 Name = normalizedName,
                 Description = normalizedDescription,
                 Status = "active",
+                ProductKey = "staffarr",
+                PermissionScope = "tenant",
+                Sensitivity = "standard",
+                LastSyncedAt = DateTimeOffset.UtcNow,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
             };
@@ -70,6 +78,10 @@ public sealed class RoleTemplateService(
             entity.Name = normalizedName;
             entity.Description = normalizedDescription;
             entity.Status = "active";
+            entity.ProductKey = string.IsNullOrWhiteSpace(entity.ProductKey) ? "staffarr" : entity.ProductKey;
+            entity.PermissionScope = string.IsNullOrWhiteSpace(entity.PermissionScope) ? "tenant" : entity.PermissionScope;
+            entity.Sensitivity = string.IsNullOrWhiteSpace(entity.Sensitivity) ? "standard" : entity.Sensitivity;
+            entity.LastSyncedAt ??= DateTimeOffset.UtcNow;
             entity.UpdatedAt = DateTimeOffset.UtcNow;
         }
 
@@ -88,7 +100,11 @@ public sealed class RoleTemplateService(
             entity.PermissionKey,
             entity.Name,
             entity.Description,
-            entity.Status);
+            entity.Status,
+            entity.ProductKey,
+            entity.PermissionScope,
+            entity.Sensitivity,
+            entity.LastSyncedAt);
     }
 
     public async Task<IReadOnlyList<RoleTemplateResponse>> ListRoleTemplatesAsync(
@@ -134,7 +150,10 @@ public sealed class RoleTemplateService(
                             permission?.PermissionKey ?? mapping.PermissionTemplateId.ToString(),
                             permission?.Name ?? "Unknown permission",
                             mapping.ScopeType,
-                            mapping.ScopeValue);
+                            mapping.ScopeValue,
+                            permission?.ProductKey ?? "unknown",
+                            permission?.Sensitivity ?? "unknown",
+                            permission?.LastSyncedAt);
                     })
                     .ToList();
 

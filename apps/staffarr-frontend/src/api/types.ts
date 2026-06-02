@@ -515,6 +515,10 @@ export interface PermissionTemplateSummaryResponse {
   name: string
   description: string | null
   status: 'active' | 'inactive'
+  productKey?: string
+  permissionScope?: string
+  sensitivity?: string
+  lastSyncedAt?: string | null
 }
 
 export interface RoleTemplatePermissionResponse {
@@ -524,6 +528,21 @@ export interface RoleTemplatePermissionResponse {
   permissionName: string
   scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
   scopeValue: string | null
+  productKey?: string
+  permissionSensitivity?: string
+  lastSyncedAt?: string | null
+}
+
+export interface ProductPermissionCatalogItemResponse {
+  permissionTemplateId: string
+  productKey: string
+  permissionKey: string
+  label: string
+  description: string | null
+  scope: string
+  sensitivity: string
+  status: string
+  lastSyncedAt: string
 }
 
 export interface RoleTemplateResponse {
@@ -845,6 +864,24 @@ export interface PersonnelIncidentSummaryResponse {
   managerPersonId?: string | null
   categoryKeys?: PersonnelIncidentType[] | null
   readinessDecision?: PersonnelIncidentReadinessDecision | null
+  trainingReviewRequired?: boolean
+  sourceProduct?: string | null
+  sourceIncidentId?: string | null
+  sourceEventKind?: string | null
+  sourceReferenceKey?: string | null
+  sourceSnapshot?: ProductSourceReferenceSnapshotResponse | null
+}
+
+export interface ProductSourceReferenceSnapshotResponse {
+  sourceProduct: string
+  sourceEntity: string
+  sourceId: string
+  labelSnapshot: string
+  statusSnapshot: string
+  selectedAt: string
+  lastVerifiedAt: string
+  lastSyncedAt: string | null
+  isAuthoritative: boolean
 }
 
 export interface PersonnelIncidentDetailResponse extends PersonnelIncidentSummaryResponse {

@@ -6,9 +6,9 @@ namespace STLCompliance.Dr.Tests;
 public sealed class StlRenderStagingDrillCatalogTests
 {
     [Fact]
-    public void All_maps_seven_render_database_services()
+    public void All_maps_render_database_services()
     {
-        Assert.Equal(7, StlRenderStagingDrillCatalog.All.Count);
+        Assert.Equal(8, StlRenderStagingDrillCatalog.All.Count);
         Assert.Contains(
             StlRenderStagingDrillCatalog.All,
             entry => entry.RenderDatabaseServiceName == "nexarr-db"
@@ -44,11 +44,12 @@ public sealed class StlRenderStagingDrillSupportTests
         Environment.SetEnvironmentVariable("RENDER_STAGING_ROUTARR_DATABASE_URL", "postgresql://routarr:pw@host.example.com:5432/routarr");
         Environment.SetEnvironmentVariable("RENDER_STAGING_SUPPLYARR_DATABASE_URL", "postgresql://supplyarr:pw@host.example.com:5432/supplyarr");
         Environment.SetEnvironmentVariable("RENDER_STAGING_COMPLIANCECORE_DATABASE_URL", "postgresql://compliancecore:pw@host.example.com:5432/compliancecore");
+        Environment.SetEnvironmentVariable("RENDER_STAGING_LOADARR_DATABASE_URL", "postgresql://loadarr:pw@host.example.com:5432/loadarr");
 
         try
         {
             var targets = StlRenderStagingDrillSupport.ResolveTargetsFromEnvironment();
-            Assert.Equal(7, targets.Count);
+            Assert.Equal(8, targets.Count);
         }
         finally
         {

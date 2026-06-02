@@ -6,7 +6,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace TrainArr.Api.Services;
 
-public sealed class TrainingApplicabilityProfileService(TrainArrDbContext db, ITrainArrAuditService audit)
+public sealed class TrainingApplicabilityProfileService(
+    TrainArrDbContext db,
+    ITrainArrAuditService audit,
+    StaffArrSiteReferenceService staffArrSites)
 {
     private static readonly HashSet<string> AllowedScopeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -40,6 +43,10 @@ public sealed class TrainingApplicabilityProfileService(TrainArrDbContext db, IT
         var scopeKey = NormalizeScopeKey(request.ScopeKey);
         var label = NormalizeLabel(request.Label);
         var profileKey = BuildProfileKey(scopeType, scopeKey);
+        if (string.Equals(scopeType, TrainingApplicabilityScopeTypes.Site, StringComparison.OrdinalIgnoreCase))
+        {
+            await staffArrSites.ValidateActiveSiteAsync(tenantId, scopeKey, cancellationToken);
+        }
 
         var duplicate = await db.TrainingApplicabilityProfiles.AnyAsync(
             x => x.TenantId == tenantId && x.ProfileKey == profileKey,

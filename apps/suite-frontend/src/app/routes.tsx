@@ -18,6 +18,7 @@ import { EntitlementReconciliationPage } from '../pages/platform-admin/Entitleme
 import { TenantLifecyclePage } from '../pages/platform-admin/TenantLifecyclePage'
 import { PlatformLifecyclePage } from '../pages/platform-admin/PlatformLifecyclePage'
 import { PlatformOutboxPage } from '../pages/platform-admin/PlatformOutboxPage'
+import { PlatformSessionSettingsPage } from '../pages/platform-admin/PlatformSessionSettingsPage'
 import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorkerHealthPage'
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 import { HybridDataPlanePage } from '../pages/platform-admin/HybridDataPlanePage'
@@ -41,6 +42,7 @@ export function AppRoutes() {
                 <Route path="products" element={<ProductOverviewPage />} />
                 <Route path="data-plane" element={<HybridDataPlanePage />} />
                 <Route path="audit-export" element={<PlatformAuditExportPage />} />
+                <Route path="sessions" element={<PlatformSessionSettingsPage />} />
                 <Route path="lifecycle" element={<PlatformLifecyclePage />} />
                 <Route path="platform-outbox" element={<PlatformOutboxPage />} />
                 <Route path="orchestration" element={<PlatformWorkerHealthPage />} />

@@ -411,6 +411,13 @@ export interface ServiceTokenCleanupSettings {
   updatedAt: string | null
 }
 
+export interface PlatformSessionSettings {
+  accessTokenMinutes: number
+  refreshTokenDays: number
+  rememberedRefreshTokenDays: number
+  updatedAt: string | null
+}
+
 export interface ServiceTokenCleanupRunItem {
   runId: string
   outcome: string

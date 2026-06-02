@@ -19,6 +19,7 @@ public static class StlM13ShipGateCatalog
         "routarr",
         "supplyarr",
         "compliancecore",
+        "loadarr",
     ];
 
     /// <summary>Path fragments every product OpenAPI document must expose.</summary>

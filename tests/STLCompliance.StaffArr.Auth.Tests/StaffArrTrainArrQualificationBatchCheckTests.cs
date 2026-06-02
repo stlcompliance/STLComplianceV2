@@ -120,12 +120,16 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         var personAllow = Guid.NewGuid();
         var personWarn = Guid.NewGuid();
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var definitionId = await SeedTrainingDefinitionAsync(
+            "hazmat_endorsement",
+            "Hazmat Endorsement Batch");
 
-        var batch = await RunBatchQualificationCheckAsync(
+        var batch = await RunBatchQualificationCheckWithDefinitionAsync(
             adminToken,
             "hazmat_endorsement",
             "driver_qualification",
             "/api/qualification-checks/batch",
+            definitionId,
             personAllow,
             personWarn);
 
@@ -135,6 +139,13 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         Assert.Equal(0, batch.Summary.BlockCount);
         Assert.Equal(2, batch.Results.Count);
         Assert.All(batch.Results, result => Assert.Equal(QualificationCheckOutcomes.Warn, result.Outcome));
+        Assert.All(batch.Results, result =>
+        {
+            Assert.NotNull(result.QualificationCatalog);
+            Assert.Equal(definitionId, result.QualificationCatalog!.SourceId);
+            Assert.Equal("Hazmat Endorsement Batch", result.QualificationCatalog.LabelSnapshot);
+            Assert.Equal("active", result.QualificationCatalog.StatusSnapshot);
+        });
         Assert.Contains(batch.Results, result => result.StaffarrPersonId == personAllow);
         Assert.Contains(batch.Results, result => result.StaffarrPersonId == personWarn);
     }
@@ -312,7 +323,7 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
             qualificationKey,
             rulePackKey,
             endpoint,
-            effectiveAt: null,
+            null,
             personIds);
 
     private async Task<BatchQualificationCheckResponse> RunBatchQualificationCheckAsync(
@@ -322,17 +333,75 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         string endpoint,
         DateTimeOffset? effectiveAt,
         params Guid[] personIds)
+        => await SendBatchQualificationCheckAsync(
+            trainarrToken,
+            qualificationKey,
+            rulePackKey,
+            endpoint,
+            effectiveAt,
+            null,
+            personIds);
+
+    private async Task<BatchQualificationCheckResponse> RunBatchQualificationCheckWithDefinitionAsync(
+        string trainarrToken,
+        string qualificationKey,
+        string rulePackKey,
+        string endpoint,
+        Guid trainingDefinitionId,
+        params Guid[] personIds)
+        => await SendBatchQualificationCheckAsync(
+            trainarrToken,
+            qualificationKey,
+            rulePackKey,
+            endpoint,
+            null,
+            trainingDefinitionId,
+            personIds);
+
+    private async Task<BatchQualificationCheckResponse> SendBatchQualificationCheckAsync(
+        string trainarrToken,
+        string qualificationKey,
+        string rulePackKey,
+        string endpoint,
+        DateTimeOffset? effectiveAt,
+        Guid? trainingDefinitionId,
+        params Guid[] personIds)
     {
         var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateBatchQualificationCheckRequest(
             qualificationKey,
             rulePackKey,
             personIds.Select(id => new BatchQualificationCheckSubject(id, null)).ToList(),
-            effectiveAt));
+            effectiveAt,
+            trainingDefinitionId));
 
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<BatchQualificationCheckResponse>())!;
+    }
+
+    private async Task<Guid> SeedTrainingDefinitionAsync(string qualificationKey, string qualificationName)
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var definitionId = Guid.NewGuid();
+        db.TrainingDefinitions.Add(new TrainArr.Api.Entities.TrainingDefinition
+        {
+            Id = definitionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            DefinitionKey = $"{qualificationKey}.{Guid.NewGuid():N}",
+            Name = qualificationName,
+            Description = $"{qualificationName} catalog test definition.",
+            QualificationKey = qualificationKey,
+            QualificationName = qualificationName,
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await db.SaveChangesAsync();
+        return definitionId;
     }
 
     private async Task SeedIssuedQualificationIssueAsync(

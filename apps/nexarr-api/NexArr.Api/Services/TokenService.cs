@@ -17,8 +17,9 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements) =>
-        CreateSessionAccessToken(user, tenantId, sessionId, entitlements, string.Empty, user.Id);
+        IReadOnlyList<string> entitlements,
+        int? accessTokenMinutes = null) =>
+        CreateSessionAccessToken(user, tenantId, sessionId, entitlements, string.Empty, user.Id, accessTokenMinutes);
 
     public (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
         PlatformUser user,
@@ -26,10 +27,14 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
         Guid sessionId,
         IReadOnlyList<string> entitlements,
         string tenantRoleKey,
-        Guid personId)
+        Guid personId,
+        int? accessTokenMinutes = null)
     {
         var signingKey = configuration["AUTH_SIGNING_KEY"] ?? _options.SigningKey;
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
+        var lifetimeMinutes = accessTokenMinutes is > 0
+            ? accessTokenMinutes.Value
+            : _options.AccessTokenMinutes;
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(lifetimeMinutes);
 
         var claims = new List<Claim>
         {

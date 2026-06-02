@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.ComplianceCore.Auth.Tests;
 
@@ -16,11 +17,14 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
 {
     private WebApplicationFactory<global::ComplianceCore.Api.Program> _factory = null!;
     private HttpClient _client = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("e15113ec-5e80-41e2-8d51-66dfd214dd8d");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
         const string signingKey = "test-signing-key-at-least-32-chars-long";
         var dbName = $"ComplianceCoreSdsHazCom-{Guid.NewGuid():N}";
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
 
         _factory = new WebApplicationFactory<global::ComplianceCore.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -28,10 +32,14 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "compliancecore-to-staffarr-token");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<ComplianceCoreDbContext>(services);
                 services.AddDbContext<ComplianceCoreDbContext>(options => options.UseInMemoryDatabase(dbName));
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -81,7 +89,9 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
             "Central binder location",
             null,
             "shop-a",
-            "https://example.com/hazcom"));
+            "https://example.com/hazcom",
+            true,
+            _staffarrSiteOrgUnitId));
 
         var createResponse = await _client.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
@@ -89,7 +99,10 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
         var listResponse = await _client.SendAsync(Authorized(HttpMethod.Get, "/api/hazcom", adminToken));
         listResponse.EnsureSuccessStatusCode();
         var items = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<HazComReferenceResponse>>())!;
-        Assert.Contains(items, x => x.HazComKey == "shop-a-hazcom");
+        Assert.Contains(items, x =>
+            x.HazComKey == "shop-a-hazcom"
+            && x.StaffarrSiteOrgUnitId == _staffarrSiteOrgUnitId
+            && x.StaffarrSiteNameSnapshot == "Central Compliance Site");
     }
 
     [Fact]
@@ -237,6 +250,29 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.EndsWith($"/api/v1/integrations/sites/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+            }
+
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new StaffArrSiteLookupResponse(
+                    siteOrgUnitId,
+                    "Central Compliance Site",
+                    null,
+                    "active"))
+            });
         }
     }
 }

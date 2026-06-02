@@ -26,6 +26,8 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     private WebApplicationFactory<global::RoutArr.Api.Program> _routarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _routarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("837ff090-5b84-4a4d-a393-0c3795ab4137");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -52,6 +54,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var serviceToken = await IssueServiceTokenAsync(adminToken, "routarr");
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
 
         _routarrFactory = new WebApplicationFactory<global::RoutArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -61,6 +64,8 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", serviceToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "routarr-to-staffarr-sites");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<RoutArrDbContext>(services);
@@ -68,6 +73,8 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -208,6 +215,71 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
         var fetched = (await getRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
         Assert.Equal(created.RouteId, fetched.RouteId);
         Assert.Equal(2, fetched.Stops.Count);
+    }
+
+    [Fact]
+    public async Task Route_internal_stop_validates_staffarr_site_and_external_stop_remains_snapshot()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "StaffArr site route",
+            "Internal pickup with external delivery.",
+            null,
+            [
+                new CreateRouteStopRequest(
+                    "pickup",
+                    "Pickup",
+                    "Internal depot",
+                    "pickup",
+                    1,
+                    null,
+                    _staffarrSiteOrgUnitId),
+                new CreateRouteStopRequest(
+                    "delivery",
+                    "Delivery",
+                    "123 Customer Ave",
+                    "delivery",
+                    2,
+                    null),
+            ]));
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        createRouteResponse.EnsureSuccessStatusCode();
+        var route = (await createRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+
+        var pickup = route.Stops.Single(x => x.StopKey == "pickup");
+        Assert.Equal(_staffarrSiteOrgUnitId, pickup.StaffarrSiteOrgUnitId);
+        Assert.Equal("Central Dispatch Depot", pickup.StaffarrSiteNameSnapshot);
+
+        var delivery = route.Stops.Single(x => x.StopKey == "delivery");
+        Assert.Null(delivery.StaffarrSiteOrgUnitId);
+        Assert.Equal("123 Customer Ave", delivery.AddressLabel);
+    }
+
+    [Fact]
+    public async Task Route_internal_stop_rejects_unknown_staffarr_site()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Unknown StaffArr site route",
+            "Should reject unresolved internal site.",
+            null,
+            [
+                new CreateRouteStopRequest(
+                    "pickup",
+                    "Pickup",
+                    "Internal depot",
+                    "pickup",
+                    1,
+                    null,
+                    Guid.NewGuid()),
+            ]));
+
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        Assert.Equal(HttpStatusCode.NotFound, createRouteResponse.StatusCode);
     }
 
     [Fact]
@@ -422,5 +494,35 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Dispatch Depot",
+                null,
+                "active");
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

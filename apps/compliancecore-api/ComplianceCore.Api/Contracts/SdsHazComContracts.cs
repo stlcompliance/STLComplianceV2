@@ -36,6 +36,8 @@ public sealed record HazComReferenceResponse(
     string Title,
     string Description,
     string? LinkedSdsKey,
+    Guid? StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
     string LocationRef,
     string DocumentUrl,
     bool IsActive,
@@ -49,7 +51,8 @@ public sealed record CreateHazComReferenceRequest(
     string? LinkedSdsKey,
     string LocationRef,
     string DocumentUrl,
-    bool IsActive = true);
+    bool IsActive = true,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateHazComReferenceRequest(
     string? Title,
@@ -57,7 +60,8 @@ public sealed record UpdateHazComReferenceRequest(
     string? LinkedSdsKey,
     string? LocationRef,
     string? DocumentUrl,
-    bool? IsActive);
+    bool? IsActive,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record RuleVersionResponse(
     Guid RulePackId,

@@ -33,6 +33,7 @@ import type {
   PlatformAuditPackageManifest,
   PlatformAuditPackageScope,
   PlatformAuditEventTimelineItem,
+  PlatformSessionSettings,
   ServiceTokenCleanupRunsResponse,
   ServiceTokenCleanupSettings,
   EntitlementReconciliationSettings,
@@ -844,6 +845,32 @@ export async function downloadPlatformAuditPackageGenerationJob(jobId: string): 
     throw await parseError(response)
   }
   return response.blob()
+}
+
+export async function getPlatformSessionSettings(): Promise<PlatformSessionSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/session-settings')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformSessionSettings
+}
+
+export async function upsertPlatformSessionSettings(
+  payload: Pick<
+    PlatformSessionSettings,
+    'accessTokenMinutes' | 'refreshTokenDays' | 'rememberedRefreshTokenDays'
+  >,
+): Promise<PlatformSessionSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/session-settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformSessionSettings
 }
 
 export async function getServiceTokenCleanupSettings(): Promise<ServiceTokenCleanupSettings> {

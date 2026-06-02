@@ -10688,6 +10688,13 @@
               "null",
               "string"
             ]
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -12394,6 +12401,13 @@
               "null",
               "string"
             ]
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

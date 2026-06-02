@@ -19,6 +19,7 @@ public static class StlRenderStagingDrillCatalog
         new(StlProductDatabaseCatalog.RoutArr, "routarr-db", "RENDER_STAGING_ROUTARR_DATABASE_URL"),
         new(StlProductDatabaseCatalog.SupplyArr, "supplyarr-db", "RENDER_STAGING_SUPPLYARR_DATABASE_URL"),
         new(StlProductDatabaseCatalog.ComplianceCore, "compliancecore-db", "RENDER_STAGING_COMPLIANCECORE_DATABASE_URL"),
+        new(StlProductDatabaseCatalog.LoadArr, "loadarr-db", "RENDER_STAGING_LOADARR_DATABASE_URL"),
     ];
 
     public static Entry? TryGetEntry(string productDatabase) =>

@@ -21,6 +21,7 @@ import {
   getComplianceReportSummary,
   getExecutiveReportSummary,
   MaintainArrApiError,
+  updateAssetControlledV1,
 } from './client'
 
 describe('maintainarr api client', () => {
@@ -147,6 +148,23 @@ describe('maintainarr api client', () => {
       status: 422,
       message:
         'Validation failed - assetTag: Asset tag is required.; siteRef: Site reference is invalid.',
+    })
+  })
+
+  it('explains expired sessions when asset update is unauthorized', async () => {
+    const assetId = '11111111-1111-1111-1111-111111111111'
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 401 }))
+
+    await expect(
+      updateAssetControlledV1('expired-token', assetId, {
+        assetTag: 'TRK-100',
+        name: 'Truck 100',
+        values: {},
+      }),
+    ).rejects.toMatchObject({
+      status: 401,
+      message:
+        'Failed to update controlled asset: your MaintainArr session expired before this request was accepted. Launch MaintainArr from the suite again, then retry.',
     })
   })
 

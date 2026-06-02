@@ -200,6 +200,8 @@ public sealed class AssetLocationHistory : IHasTenant
     public Guid TenantId { get; set; }
     public Guid AssetId { get; set; }
     public string? SiteId { get; set; }
+    public Guid? StaffarrSiteOrgUnitId { get; set; }
+    public string? StaffarrSiteNameSnapshot { get; set; }
     public string? HomeLocationId { get; set; }
     public string? CurrentLocationId { get; set; }
     public string? Yard { get; set; }

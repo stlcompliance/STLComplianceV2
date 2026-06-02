@@ -78,6 +78,12 @@ public sealed class QualificationCheckService(
 
 
         var qualificationKey = NormalizeQualificationKey(request.QualificationKey);
+        var qualificationCatalog = await ResolveQualificationCatalogSnapshotAsync(
+            tenantId,
+            qualificationKey,
+            request.TrainingDefinitionId,
+            request.TrainingProgramId,
+            cancellationToken);
 
         var localStates = await LoadLocalQualificationStatesAsync(
 
@@ -135,7 +141,9 @@ public sealed class QualificationCheckService(
 
             localState,
 
-            complianceSummary);
+            complianceSummary,
+
+            qualificationCatalog);
 
         result = result with
         {
@@ -251,6 +259,12 @@ public sealed class QualificationCheckService(
 
         var qualificationKey = NormalizeQualificationKey(request.QualificationKey);
         var evaluationAt = request.EffectiveAt ?? DateTimeOffset.UtcNow;
+        var qualificationCatalog = await ResolveQualificationCatalogSnapshotAsync(
+            tenantId,
+            qualificationKey,
+            request.TrainingDefinitionId,
+            request.TrainingProgramId,
+            cancellationToken);
 
         var distinctSubjects = request.Subjects
 
@@ -380,7 +394,9 @@ public sealed class QualificationCheckService(
 
                 localState,
 
-                complianceSummary));
+                complianceSummary,
+
+                qualificationCatalog));
 
             var subjectResult = results[^1];
 
@@ -471,6 +487,12 @@ public sealed class QualificationCheckService(
     {
         var qualificationKey = issue.QualificationKey.Trim().ToLowerInvariant();
         var localState = MapLocalState(issue);
+        var qualificationCatalog = await ResolveQualificationCatalogSnapshotAsync(
+            tenantId,
+            qualificationKey,
+            trainingDefinitionId,
+            null,
+            cancellationToken);
         var rulePackKey = await ResolveRulePackKeyAsync(
             tenantId,
             null,
@@ -490,7 +512,8 @@ public sealed class QualificationCheckService(
             issue.StaffarrPersonId,
             qualificationKey,
             localState,
-            complianceSummary);
+            complianceSummary,
+            qualificationCatalog);
 
         return result with
         {
@@ -633,7 +656,9 @@ public sealed class QualificationCheckService(
 
         QualificationLocalStateResponse localState,
 
-        ComplianceCoreCheckSummaryResponse? complianceSummary)
+        ComplianceCoreCheckSummaryResponse? complianceSummary,
+
+        QualificationCatalogSnapshotResponse qualificationCatalog)
 
     {
 
@@ -657,8 +682,36 @@ public sealed class QualificationCheckService(
 
             complianceSummary,
 
-            BuildDependencyFacts(complianceSummary));
+            BuildDependencyFacts(complianceSummary),
 
+            QualificationCatalog: qualificationCatalog);
+
+    }
+
+    private async Task<QualificationCatalogSnapshotResponse> ResolveQualificationCatalogSnapshotAsync(
+        Guid tenantId,
+        string qualificationKey,
+        Guid? requestedTrainingDefinitionId,
+        Guid? requestedTrainingProgramId,
+        CancellationToken cancellationToken)
+    {
+        var definition = await ResolveGuidanceDefinitionAsync(
+            tenantId,
+            qualificationKey,
+            requestedTrainingDefinitionId,
+            requestedTrainingProgramId,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        return new QualificationCatalogSnapshotResponse(
+            "trainarr",
+            "training_definition",
+            definition?.Id,
+            qualificationKey,
+            definition?.QualificationName ?? qualificationKey,
+            definition?.Status ?? "missing",
+            now,
+            definition?.UpdatedAt);
     }
 
     private static IReadOnlyList<QualificationDependencyFactResponse> BuildDependencyFacts(
@@ -1037,7 +1090,14 @@ public sealed class QualificationCheckService(
 
 
 
-        return new QualificationLocalStateResponse(issue.Id, status, message);
+        return new QualificationLocalStateResponse(
+            issue.Id,
+            status,
+            message,
+            issue.QualificationName,
+            issue.IssuedAt,
+            issue.ExpiresAt,
+            issue.UpdatedAt);
 
     }
 

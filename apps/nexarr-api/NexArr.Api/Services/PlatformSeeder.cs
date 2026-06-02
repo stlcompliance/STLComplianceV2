@@ -28,6 +28,7 @@ public static class PlatformSeeder
         new("routarr", "RoutArr", 50, "transportation", "Transportation Operations", "available", "http://localhost:5105", "http://localhost:5105/health/ready", "stl:routarr:api"),
         new("supplyarr", "SupplyArr", 60, "supply-chain", "Procurement Operations", "available", "http://localhost:5106", "http://localhost:5106/health/ready", "stl:supplyarr:api"),
         new("compliancecore", "Compliance Core", 70, "compliance", "Compliance Platform", "available", "http://localhost:5107", "http://localhost:5107/health/ready", "stl:compliancecore:api"),
+        new("loadarr", "LoadArr", 75, "warehouse", "Warehouse Operations", "available", "http://localhost:5108", "http://localhost:5108/health/ready", "stl:loadarr:api"),
         new("companion", "Companion App", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:companion:frontend")
     ];
 
@@ -40,6 +41,7 @@ public static class PlatformSeeder
         ("routarr", "http://localhost:5180", "/launch"),
         ("supplyarr", "http://localhost:5179", "/launch"),
         ("compliancecore", "http://localhost:5177", "/launch"),
+        ("loadarr", "http://localhost:5182", "/launch"),
         ("companion", "http://localhost:5181", "/launch")
     ];
 
@@ -380,6 +382,7 @@ public static class PlatformSeeder
             "routarr" => platformProductUrls?.RoutArrBaseUrl,
             "supplyarr" => platformProductUrls?.SupplyArrBaseUrl,
             "compliancecore" => platformProductUrls?.ComplianceCoreBaseUrl,
+            "loadarr" => platformProductUrls?.LoadArrBaseUrl,
             _ => null
         };
 
@@ -423,6 +426,7 @@ public static class PlatformSeeder
             "routarr" => "nexarr,staffarr,trainarr,maintainarr,supplyarr,compliancecore",
             "supplyarr" => "nexarr,staffarr,maintainarr,routarr,trainarr,compliancecore",
             "compliancecore" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
+            "loadarr" => "nexarr,staffarr,supplyarr,routarr",
             "companion" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
             _ => "nexarr"
         };

@@ -20,6 +20,10 @@ public sealed class Asset : IHasTenant
 
     public string? SiteRef { get; set; }
 
+    public Guid? StaffarrSiteOrgUnitId { get; set; }
+
+    public string StaffarrSiteNameSnapshot { get; set; } = string.Empty;
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

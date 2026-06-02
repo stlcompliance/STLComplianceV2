@@ -62,9 +62,16 @@ export function QualificationCheckPanel({
         >
           <p className="font-semibold uppercase tracking-wide">{check.outcome}</p>
           <p className="mt-2">{check.message}</p>
+          {check.qualificationCatalog && (
+            <p className="mt-2 text-xs opacity-90">
+              Catalog: {check.qualificationCatalog.labelSnapshot} · {check.qualificationCatalog.statusSnapshot}
+            </p>
+          )}
           {check.localQualification && (
             <p className="mt-2 text-xs opacity-90">
-              TrainArr qualification: {check.localQualification.status.replace('_', ' ')}
+              TrainArr qualification:{' '}
+              {(check.localQualification.qualificationName ?? check.qualificationKey).replace('_', ' ')} ·{' '}
+              {check.localQualification.status.replace('_', ' ')}
             </p>
           )}
           {check.complianceCore && (

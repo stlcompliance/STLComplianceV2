@@ -15,6 +15,7 @@ public sealed class AuthService(
     ITokenService tokenService,
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
+    PlatformSessionSettingsService sessionSettingsService,
     IOptions<StlJwtOptions> jwtOptions)
 {
     public const int FailedLoginLockoutThreshold = 5;
@@ -371,9 +372,10 @@ public sealed class AuthService(
         bool rememberDevice,
         CancellationToken cancellationToken)
     {
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
         var sessionId = Guid.NewGuid();
         var refreshToken = tokenService.GenerateRefreshToken();
-        var refreshLifetimeDays = ResolveRefreshTokenLifetimeDays(rememberDevice);
+        var refreshLifetimeDays = ResolveRefreshTokenLifetimeDays(rememberDevice, settings);
         var refreshExpires = DateTimeOffset.UtcNow.AddDays(refreshLifetimeDays);
 
         db.UserSessions.Add(new UserSession
@@ -390,7 +392,12 @@ public sealed class AuthService(
         });
         await db.SaveChangesAsync(cancellationToken);
 
-        var (accessToken, accessExpires) = tokenService.CreateAccessToken(user, tenantId, sessionId, entitlements);
+        var (accessToken, accessExpires) = tokenService.CreateAccessToken(
+            user,
+            tenantId,
+            sessionId,
+            entitlements,
+            settings.AccessTokenMinutes);
 
         await audit.WriteAsync(
             "auth.login",
@@ -411,25 +418,12 @@ public sealed class AuthService(
             tenantId);
     }
 
-    private int ResolveRefreshTokenLifetimeDays(bool rememberDevice)
-    {
-        var configuredDefault = jwtOptions.Value.RefreshTokenDays > 0
-            ? jwtOptions.Value.RefreshTokenDays
-            : 7;
-
-        if (!rememberDevice)
-        {
-            return configuredDefault;
-        }
-
-        var configuredRemembered = jwtOptions.Value.RememberedRefreshTokenDays;
-        if (configuredRemembered is null || configuredRemembered <= 0)
-        {
-            return configuredDefault;
-        }
-
-        return configuredRemembered.Value;
-    }
+    private static int ResolveRefreshTokenLifetimeDays(
+        bool rememberDevice,
+        PlatformSessionSettings settings) =>
+        rememberDevice
+            ? settings.RememberedRefreshTokenDays
+            : settings.RefreshTokenDays;
 
     private async Task RecordFailedLoginAsync(
         PlatformUser user,

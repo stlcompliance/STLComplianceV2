@@ -6,6 +6,7 @@ import {
   Route,
   ShieldCheck,
   Users,
+  Warehouse,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -67,6 +68,13 @@ export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
     description: 'Rules, vocabulary, and references',
     icon: ClipboardCheck,
     sortOrder: 60,
+  },
+  {
+    productKey: 'loadarr',
+    displayName: 'LoadArr',
+    description: 'Warehouse load execution',
+    icon: Warehouse,
+    sortOrder: 65,
   },
   {
     productKey: 'companion',

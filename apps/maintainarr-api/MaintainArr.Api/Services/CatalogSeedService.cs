@@ -23,23 +23,18 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
 
     public async Task EnsureSeededForTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        if (TenantSeedReady.ContainsKey(tenantId))
-        {
-            return;
-        }
-
         if (await HasMinimumSeedDataAsync(tenantId, cancellationToken))
         {
             TenantSeedReady.TryAdd(tenantId, 0);
             return;
         }
 
+        TenantSeedReady.TryRemove(tenantId, out _);
         var gate = TenantSeedLocks.GetOrAdd(tenantId, _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync(cancellationToken);
         try
         {
-            if (TenantSeedReady.ContainsKey(tenantId)
-                || await HasMinimumSeedDataAsync(tenantId, cancellationToken))
+            if (await HasMinimumSeedDataAsync(tenantId, cancellationToken))
             {
                 TenantSeedReady.TryAdd(tenantId, 0);
                 return;

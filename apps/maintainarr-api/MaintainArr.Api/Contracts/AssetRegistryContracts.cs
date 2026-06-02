@@ -54,6 +54,8 @@ public sealed record AssetResponse(
     string Description,
     string LifecycleStatus,
     string? SiteRef,
+    Guid? StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -62,11 +64,13 @@ public sealed record CreateAssetRequest(
     string AssetTag,
     string Name,
     string Description,
-    string? SiteRef);
+    string? SiteRef,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateAssetRequest(
     string Name,
     string Description,
-    string? SiteRef);
+    string? SiteRef,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateAssetLifecycleStatusRequest(string LifecycleStatus);

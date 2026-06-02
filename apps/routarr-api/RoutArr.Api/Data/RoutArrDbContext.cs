@@ -14,6 +14,10 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<TripPartsDemandStatusEvent> TripPartsDemandStatusEvents => Set<TripPartsDemandStatusEvent>();
 
+    public DbSet<SupplyArrShipmentIntent> SupplyArrShipmentIntents => Set<SupplyArrShipmentIntent>();
+
+    public DbSet<SupplyArrShipmentIntentLine> SupplyArrShipmentIntentLines => Set<SupplyArrShipmentIntentLine>();
+
     public DbSet<DispatchRoute> Routes => Set<DispatchRoute>();
 
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
@@ -163,6 +167,33 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => new { x.TenantId, x.SupplyarrCallbackPublicationId }).IsUnique();
         });
 
+        modelBuilder.Entity<SupplyArrShipmentIntent>(entity =>
+        {
+            entity.ToTable("routarr_supplyarr_shipment_intents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ShipmentKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DestinationName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DestinationAddressSnapshot).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SupplyarrShipmentId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<SupplyArrShipmentIntentLine>(entity =>
+        {
+            entity.ToTable("routarr_supplyarr_shipment_intent_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PartDisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Quantity).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ShipmentIntentId });
+            entity.HasOne(x => x.ShipmentIntent)
+                .WithMany(x => x.Lines)
+                .HasForeignKey(x => x.ShipmentIntentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<DispatchRoute>(entity =>
         {
             entity.ToTable("routarr_routes");
@@ -188,12 +219,14 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.StopKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Label).HasMaxLength(256).IsRequired();
             entity.Property(x => x.AddressLabel).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(x => x.StopType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.StopStatus).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RouteId });
             entity.HasIndex(x => new { x.TenantId, x.RouteId, x.StopKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.RouteId, x.SequenceNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrSiteOrgUnitId });
             entity.HasOne(x => x.Route)
                 .WithMany(x => x.Stops)
                 .HasForeignKey(x => x.RouteId)

@@ -3,6 +3,9 @@
   <Folder Name="/apps/compliancecore-api/">
     <Project Path="apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj" />
   </Folder>
+  <Folder Name="/apps/loadarr-api/">
+    <Project Path="apps/loadarr-api/LoadArr.Api/LoadArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/maintainarr-api/">
     <Project Path="apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj" />
   </Folder>

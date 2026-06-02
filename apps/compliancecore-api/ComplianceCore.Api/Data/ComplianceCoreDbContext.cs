@@ -878,10 +878,12 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
             entity.Property(x => x.LinkedSdsKey).HasMaxLength(64);
+            entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(x => x.LocationRef).HasMaxLength(256).IsRequired();
             entity.Property(x => x.DocumentUrl).HasMaxLength(1024).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.HazComKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrSiteOrgUnitId });
         });
 
         modelBuilder.Entity<TenantM12AnalyticsWorkerSettings>(entity =>

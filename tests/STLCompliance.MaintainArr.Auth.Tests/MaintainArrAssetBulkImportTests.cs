@@ -1,7 +1,9 @@
 using STLCompliance.Shared.Integration;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +31,8 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
     private string _managerToken = null!;
     private const string _classKey = "powered_industrial_truck";
     private const string _typeKey = "forklift";
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("5f0b49a9-7c67-4ce1-a0e9-3e7e226d3992");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -55,6 +59,8 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var serviceToken = await IssueServiceTokenAsync(adminToken, "maintainarr");
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
+        ClearTenantSeedReady(PlatformSeeder.DemoTenantId);
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -64,12 +70,16 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", serviceToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "maintainarr-to-staffarr-sites");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -96,7 +106,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(response);
         var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
         Assert.True(result.DryRun);
         Assert.Equal(1, result.SuccessCount);
@@ -115,19 +125,28 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         var request = Authorized(HttpMethod.Post, "/api/imports/assets/commit", _managerToken);
         request.Content = JsonContent.Create(new AssetBulkImportRequest(
         [
-            new AssetImportRowRequest(_classKey, _typeKey, tag, "Committed Import Asset", "desc", "site_a", "active"),
+            new AssetImportRowRequest(
+                _classKey,
+                _typeKey,
+                tag,
+                "Committed Import Asset",
+                "desc",
+                _staffarrSiteOrgUnitId.ToString("D"),
+                "active"),
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(response);
         var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
         Assert.False(result.DryRun);
-        Assert.Equal(1, result.SuccessCount);
+        Assert.True(result.SuccessCount == 1, JsonSerializer.Serialize(result));
         Assert.Equal("created", result.Results[0].Status);
 
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-        Assert.True(await db.Assets.AnyAsync(x => x.AssetTag == tag.ToUpperInvariant()));
+        var asset = await db.Assets.SingleAsync(x => x.AssetTag == tag.ToUpperInvariant());
+        Assert.Equal(_staffarrSiteOrgUnitId, asset.StaffarrSiteOrgUnitId);
+        Assert.Equal("Central Maintenance Site", asset.StaffarrSiteNameSnapshot);
     }
 
     [Fact]
@@ -141,7 +160,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(response);
         var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
         Assert.True(result.DryRun);
         Assert.Equal(1, result.SuccessCount);
@@ -181,7 +200,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(response);
         var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
         Assert.Equal(1, result.ErrorCount);
         Assert.Contains(result.Results, x => x.ErrorCode == "assets.duplicate_tag");
@@ -225,7 +244,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(response);
         var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
         Assert.Equal(1, result.SuccessCount);
         Assert.Equal("created", result.Results[0].Status);
@@ -329,5 +348,61 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private static async Task AssertSuccessAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Fail($"Expected success but received {(int)response.StatusCode} {response.StatusCode}: {body}");
+    }
+
+    private static void ClearTenantSeedReady(Guid tenantId)
+    {
+        var readyField = typeof(CatalogSeedService).GetField("TenantSeedReady", BindingFlags.NonPublic | BindingFlags.Static);
+        var ready = Assert.IsType<ConcurrentDictionary<Guid, byte>>(readyField?.GetValue(null));
+        ready.TryRemove(tenantId, out _);
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Maintenance Site",
+                null,
+                "active");
+
+            if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new[] { response })
+                });
+            }
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

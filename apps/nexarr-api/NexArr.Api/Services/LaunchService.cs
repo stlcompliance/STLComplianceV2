@@ -18,6 +18,7 @@ public sealed class LaunchService(
     ServiceTokenAdminService serviceTokenAdmin,
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
+    PlatformSessionSettingsService sessionSettingsService,
     IOptions<StlLaunchOptions> launchOptions)
 {
     public async Task<LaunchContextResponse> GetLaunchContextAsync(
@@ -467,6 +468,8 @@ public sealed class LaunchService(
                 }),
             cancellationToken: cancellationToken);
 
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+
         return new HandoffRedeemedResponse(
             record.UserId,
             record.User.Email,
@@ -479,6 +482,7 @@ public sealed class LaunchService(
             tenantRoleKey,
             record.User.IsPlatformAdmin,
             entitlements,
+            settings.AccessTokenMinutes,
             record.CallbackUrl);
     }
 

@@ -16,6 +16,14 @@ public sealed class PermissionTemplate : IHasTenant
 
     public string Status { get; set; } = "active";
 
+    public string ProductKey { get; set; } = "staffarr";
+
+    public string PermissionScope { get; set; } = "tenant";
+
+    public string Sensitivity { get; set; } = "standard";
+
+    public DateTimeOffset? LastSyncedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

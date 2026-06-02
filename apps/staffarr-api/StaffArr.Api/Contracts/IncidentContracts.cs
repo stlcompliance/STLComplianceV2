@@ -70,7 +70,19 @@ public sealed record IngestProductIncidentResponse(
     string SourceProduct,
     Guid SourceIncidentId,
     string Status,
-    bool IdempotentReplay);
+    bool IdempotentReplay,
+    ProductSourceReferenceSnapshotResponse? SourceSnapshot = null);
+
+public sealed record ProductSourceReferenceSnapshotResponse(
+    string SourceProduct,
+    string SourceEntity,
+    string SourceId,
+    string LabelSnapshot,
+    string StatusSnapshot,
+    DateTimeOffset SelectedAt,
+    DateTimeOffset LastVerifiedAt,
+    DateTimeOffset? LastSyncedAt,
+    bool IsAuthoritative = false);
 
 public sealed record IncidentTrainarrRoutingResponse(
     string RoutingStatus,
@@ -109,7 +121,8 @@ public sealed record PersonnelIncidentSummaryResponse(
     string? SourceProduct = null,
     Guid? SourceIncidentId = null,
     string? SourceEventKind = null,
-    string? SourceReferenceKey = null);
+    string? SourceReferenceKey = null,
+    ProductSourceReferenceSnapshotResponse? SourceSnapshot = null);
 
 public sealed record PersonnelIncidentDetailResponse(
     Guid IncidentId,
@@ -163,7 +176,8 @@ public sealed record PersonnelIncidentDetailResponse(
     string? SourceProduct = null,
     Guid? SourceIncidentId = null,
     string? SourceEventKind = null,
-    string? SourceReferenceKey = null);
+    string? SourceReferenceKey = null,
+    ProductSourceReferenceSnapshotResponse? SourceSnapshot = null);
 
 public sealed record RouteIncidentToTrainarrResponse(
     Guid IncidentId,

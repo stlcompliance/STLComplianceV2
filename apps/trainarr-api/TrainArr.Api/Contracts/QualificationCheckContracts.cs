@@ -20,7 +20,18 @@ public sealed record QualificationCheckResponse(
     ComplianceCoreCheckSummaryResponse? ComplianceCore,
     IReadOnlyList<QualificationDependencyFactResponse>? DependencyFacts = null,
     QualificationCheckAuditSnapshotResponse? AuditSnapshot = null,
-    QualificationAuthorizationGuidanceResponse? AuthorizationGuidance = null);
+    QualificationAuthorizationGuidanceResponse? AuthorizationGuidance = null,
+    QualificationCatalogSnapshotResponse? QualificationCatalog = null);
+
+public sealed record QualificationCatalogSnapshotResponse(
+    string SourceProduct,
+    string SourceEntity,
+    Guid? SourceId,
+    string QualificationKey,
+    string LabelSnapshot,
+    string StatusSnapshot,
+    DateTimeOffset LastVerifiedAt,
+    DateTimeOffset? LastSyncedAt);
 
 public sealed record QualificationAuthorizationGuidanceResponse(
     string BlockReason,
@@ -49,7 +60,11 @@ public sealed record QualificationCheckAuditSnapshotResponse(
 public sealed record QualificationLocalStateResponse(
     Guid? QualificationIssueId,
     string Status,
-    string Message);
+    string Message,
+    string? QualificationName = null,
+    DateTimeOffset? IssuedAt = null,
+    DateTimeOffset? ExpiresAt = null,
+    DateTimeOffset? LastVerifiedAt = null);
 
 public sealed record ComplianceCoreCheckSummaryResponse(
     string RulePackKey,

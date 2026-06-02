@@ -606,6 +606,18 @@ export interface QualificationCheckResponse {
   message: string
   localQualification: QualificationLocalStateResponse | null
   complianceCore: ComplianceCoreCheckSummaryResponse | null
+  qualificationCatalog?: QualificationCatalogSnapshotResponse | null
+}
+
+export interface QualificationCatalogSnapshotResponse {
+  sourceProduct: string
+  sourceEntity: string
+  sourceId: string | null
+  qualificationKey: string
+  labelSnapshot: string
+  statusSnapshot: string
+  lastVerifiedAt: string
+  lastSyncedAt: string | null
 }
 
 export interface BatchQualificationCheckSubject {
@@ -652,6 +664,10 @@ export interface QualificationLocalStateResponse {
   qualificationIssueId: string | null
   status: string
   message: string
+  qualificationName?: string | null
+  issuedAt?: string | null
+  expiresAt?: string | null
+  lastVerifiedAt?: string | null
 }
 
 export interface ComplianceCoreCheckSummaryResponse {

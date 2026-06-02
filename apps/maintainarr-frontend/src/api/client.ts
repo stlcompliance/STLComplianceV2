@@ -178,7 +178,10 @@ async function toApiError(
 ): Promise<MaintainArrApiError> {
   const body = await response.text()
   const parsedMessage = extractProblemDetailsMessage(body)
-  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  const message =
+    response.status === 401
+      ? `${fallbackMessage}: your MaintainArr session expired before this request was accepted. Launch MaintainArr from the suite again, then retry.`
+      : parsedMessage || body || `${fallbackMessage} (${response.status})`
   return new MaintainArrApiError(message, response.status, body)
 }
 

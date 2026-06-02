@@ -50,22 +50,66 @@ public sealed class ComplianceCoreReferenceAdapter(MaintainArrDbContext db) : IE
     }
 }
 
-public sealed class StaffArrReferenceAdapter(MaintainArrDbContext db) : IExternalReferenceAdapter
+public sealed class StaffArrReferenceAdapter(
+    MaintainArrDbContext db,
+    StaffArrSiteReferenceService staffArrSites) : IExternalReferenceAdapter
 {
     public string SourceType => "staffarr_reference";
     public string SourceOfTruth => "StaffArr";
 
-    public Task<IReadOnlyList<ReferenceOptionResponse>> GetOptionsAsync(Guid tenantId, string referenceKey, CancellationToken cancellationToken) =>
-        LoadFromCacheAsync(tenantId, referenceKey, cancellationToken);
+    public async Task<IReadOnlyList<ReferenceOptionResponse>> GetOptionsAsync(
+        Guid tenantId,
+        string referenceKey,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(referenceKey, "sites", StringComparison.OrdinalIgnoreCase))
+        {
+            var sites = await staffArrSites.ListActiveSitesAsync(tenantId, cancellationToken);
+            return sites
+                .OrderBy(x => x.Name)
+                .Select(x => new ReferenceOptionResponse(
+                    x.OrgUnitId.ToString("D"),
+                    x.OrgUnitId.ToString("D"),
+                    x.Name,
+                    SourceType,
+                    SourceOfTruth,
+                    "id",
+                    "mirroredDisplayName",
+                    true))
+                .ToList();
+        }
 
-    public Task<bool> ExistsAsync(Guid tenantId, string referenceKey, string key, CancellationToken cancellationToken) =>
-        db.ReferenceCacheEntries.AnyAsync(
+        return await LoadFromCacheAsync(tenantId, referenceKey, cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(Guid tenantId, string referenceKey, string key, CancellationToken cancellationToken)
+    {
+        if (string.Equals(referenceKey, "sites", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!Guid.TryParse(key, out var siteId))
+            {
+                return false;
+            }
+
+            try
+            {
+                _ = await staffArrSites.RequireActiveSiteAsync(tenantId, siteId, cancellationToken);
+                return true;
+            }
+            catch (StlApiException)
+            {
+                return false;
+            }
+        }
+
+        return await db.ReferenceCacheEntries.AnyAsync(
             x => x.TenantId == tenantId
                  && x.SourceOfTruth == SourceOfTruth
                  && x.ReferenceKey == referenceKey
                  && (x.ExternalId == key || x.ExternalKey == key)
                  && x.IsActive,
             cancellationToken);
+    }
 
     private async Task<IReadOnlyList<ReferenceOptionResponse>> LoadFromCacheAsync(Guid tenantId, string referenceKey, CancellationToken cancellationToken)
     {

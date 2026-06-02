@@ -18,11 +18,15 @@ public sealed class TrainArrTokenService(IOptions<StlJwtOptions> options, IConfi
         Guid sessionId,
         string tenantRoleKey,
         IReadOnlyList<string> entitlements,
-        bool isPlatformAdmin)
+        bool isPlatformAdmin,
+        int? accessTokenMinutes = null)
     {
         var signingKey = configuration["AUTH_SIGNING_KEY"] ?? options.Value.SigningKey;
         var jwtOptions = options.Value;
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(jwtOptions.AccessTokenMinutes);
+        var lifetimeMinutes = accessTokenMinutes is > 0
+            ? accessTokenMinutes.Value
+            : jwtOptions.AccessTokenMinutes;
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(lifetimeMinutes);
 
         var claims = new List<Claim>
         {

@@ -38,6 +38,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<PlatformServiceTokenCleanupSettings> PlatformServiceTokenCleanupSettings =>
         Set<PlatformServiceTokenCleanupSettings>();
 
+    public DbSet<PlatformSessionSettings> PlatformSessionSettings => Set<PlatformSessionSettings>();
+
     public DbSet<ServiceTokenCleanupRun> ServiceTokenCleanupRuns => Set<ServiceTokenCleanupRun>();
 
     public DbSet<TenantProductLicense> TenantProductLicenses => Set<TenantProductLicense>();
@@ -218,6 +220,12 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
         modelBuilder.Entity<PlatformServiceTokenCleanupSettings>(entity =>
         {
             entity.ToTable("nexarr_platform_service_token_cleanup_settings");
+            entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<PlatformSessionSettings>(entity =>
+        {
+            entity.ToTable("nexarr_platform_session_settings");
             entity.HasKey(x => x.Id);
         });
 

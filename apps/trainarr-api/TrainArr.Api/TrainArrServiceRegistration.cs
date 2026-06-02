@@ -85,6 +85,16 @@ public static class TrainArrServiceRegistration
 
         });
 
+        builder.Services.AddHttpClient<StaffArrSiteLookupClient>((sp, client) =>
+
+        {
+
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+
+        });
+
         builder.Services.AddHttpClient<ComplianceCoreRuleEvaluationClient>((sp, client) =>
 
         {
@@ -159,6 +169,7 @@ public static class TrainArrServiceRegistration
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        builder.Services.AddScoped<StaffArrSiteReferenceService>();
         builder.Services.AddScoped<StaffarrPublicationSettingsService>();
         builder.Services.AddScoped<StaffarrPublicationRetryService>();
 

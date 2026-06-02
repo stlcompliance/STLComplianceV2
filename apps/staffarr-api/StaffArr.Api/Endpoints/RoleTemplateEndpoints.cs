@@ -79,6 +79,19 @@ public static class RoleTemplateEndpoints
         })
         .WithName("ListPermissionTemplates");
 
+        permissionTemplates.MapGet("/product-catalog", async (
+            string? productKey,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ProductPermissionCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoleTemplateRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, productKey, cancellationToken));
+        })
+        .WithName("ListProductPermissionCatalog");
+
         permissionTemplates.MapPost("/", async (
             UpsertPermissionTemplateRequest request,
             HttpContext context,

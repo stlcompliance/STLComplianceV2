@@ -153,6 +153,11 @@ export function BatchQualificationCheckPanel({
               >
                 <p className={`font-semibold uppercase ${outcomeClass(result.outcome)}`}>{result.outcome}</p>
                 <p className="mt-1 font-mono text-xs text-slate-500">{result.staffarrPersonId}</p>
+                {result.qualificationCatalog && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    {result.qualificationCatalog.labelSnapshot} · {result.qualificationCatalog.statusSnapshot}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-slate-400">{result.message}</p>
               </li>
             ))}

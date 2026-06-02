@@ -87,6 +87,8 @@ public sealed class StockReservationService(
                 400);
         }
 
+        InventoryLocationMovementSafety.EnsureMovementSafe(bin.InventoryLocation);
+
         var stockLevel = await db.PartStockLevels.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.PartId == request.PartId && x.InventoryBinId == request.BinId,
             cancellationToken)
@@ -169,6 +171,12 @@ public sealed class StockReservationService(
                 "Linked stock level was not found.",
                 409);
 
+        var bin = await db.InventoryBins
+            .Include(x => x.InventoryLocation)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.InventoryBinId, cancellationToken)
+            ?? throw new StlApiException("inventory.bins.not_found", "Inventory bin was not found.", 404);
+        InventoryLocationMovementSafety.EnsureMovementSafe(bin.InventoryLocation);
+
         var now = DateTimeOffset.UtcNow;
         stockLevel.QuantityReserved -= entity.QuantityReserved;
         if (stockLevel.QuantityReserved < 0)
@@ -217,6 +225,8 @@ public sealed class StockReservationService(
                 "inventory.reservation.stock_level_missing",
                 "Linked stock level was not found.",
                 409);
+
+        InventoryLocationMovementSafety.EnsureMovementSafe(stockLevel.InventoryBin?.InventoryLocation);
 
         if (entity.QuantityReserved > stockLevel.QuantityOnHand)
         {

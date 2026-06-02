@@ -6,6 +6,9 @@ public sealed record InventoryLocationResponse(
     string Name,
     string LocationType,
     string AddressLine,
+    Guid? StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
+    string StaffarrSiteResolutionStatus,
     string Status,
     int BinCount,
     DateTimeOffset CreatedAt,
@@ -15,12 +18,14 @@ public sealed record CreateInventoryLocationRequest(
     string LocationKey,
     string Name,
     string LocationType,
-    string AddressLine);
+    string AddressLine,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateInventoryLocationRequest(
     string Name,
     string LocationType,
-    string AddressLine);
+    string AddressLine,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateInventoryLocationStatusRequest(string Status);
 

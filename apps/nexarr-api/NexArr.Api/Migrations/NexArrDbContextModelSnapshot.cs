@@ -748,6 +748,35 @@ namespace NexArr.Api.Migrations
                     b.ToTable("nexarr_platform_service_token_cleanup_settings", (string)null);
                 });
 
+            modelBuilder.Entity("NexArr.Api.Entities.PlatformSessionSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AccessTokenMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RefreshTokenDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RememberedRefreshTokenDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("nexarr_platform_session_settings", (string)null);
+                });
+
             modelBuilder.Entity("NexArr.Api.Entities.PlatformTenantLifecycleSettings", b =>
                 {
                     b.Property<Guid>("Id")

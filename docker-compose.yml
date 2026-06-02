@@ -136,6 +136,23 @@ services:
       postgres:
         condition: service_healthy
 
+  loadarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/loadarr-api/LoadArr.Api/LoadArr.Api.csproj
+        ASSEMBLY_NAME: LoadArr.Api
+    ports:
+      - "5108:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=loadarr;Username=stl;Password=stl_dev_password
+      LoadArr__FrontendBaseUrl: http://127.0.0.1:5182
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   nexarr-worker:
     build:
       context: .

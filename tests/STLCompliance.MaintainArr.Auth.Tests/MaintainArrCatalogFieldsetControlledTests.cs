@@ -1,11 +1,16 @@
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Http.Json;
 using System.Reflection;
+using MaintainArr.Api.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.MaintainArr.Auth.Tests;
 
@@ -507,9 +512,20 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         return
         [
             new ComplianceCoreReferenceAdapter(db),
-            new StaffArrReferenceAdapter(db),
+            new StaffArrReferenceAdapter(db, BuildStaffArrSiteReferenceService()),
             new SupplyArrReferenceAdapter(db),
         ];
+    }
+
+    private static StaffArrSiteReferenceService BuildStaffArrSiteReferenceService()
+    {
+        var handler = new StaffArrSiteLookupHandler();
+        var client = new StaffArrSiteLookupClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("http://staffarr.test/")
+        });
+        var options = Options.Create(new StaffArrClientOptions { ServiceToken = "maintainarr-to-staffarr-sites" });
+        return new StaffArrSiteReferenceService(client, options);
     }
 
     private static void AssertCatalogOptionDependency(
@@ -540,5 +556,45 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
             ["lifecycleStatus"] = "in_service",
             ["criticality"] = "medium",
         };
+    }
+
+    private sealed class StaffArrSiteLookupHandler : HttpMessageHandler
+    {
+        private static readonly Guid SiteOrgUnitId = Guid.Parse("11111111-1111-4111-8111-111111111111");
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                SiteOrgUnitId,
+                "Central Maintenance Site",
+                null,
+                "active");
+
+            if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new[] { response })
+                });
+            }
+
+            if (path.EndsWith($"/{SiteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

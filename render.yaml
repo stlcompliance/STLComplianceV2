@@ -50,6 +50,8 @@ envVarGroups:
         value: https://supplyarr-api-gavo.onrender.com
       - key: ComplianceCore__BaseUrl
         value: https://compliancecore-api-h69n.onrender.com
+      - key: LoadArr__BaseUrl
+        value: https://loadarr-api.onrender.com
 
   # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
   - name: stl-public-frontend-urls
@@ -68,6 +70,8 @@ envVarGroups:
         value: https://supplyarr-frontend.onrender.com
       - key: COMPLIANCECORE_FRONTEND_URL
         value: https://compliancecore-frontend.onrender.com
+      - key: LOADARR_FRONTEND_URL
+        value: https://loadarr-frontend.onrender.com
       - key: COMPANION_FRONTEND_URL
         value: https://companion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
@@ -88,6 +92,8 @@ envVarGroups:
         value: https://supplyarr-frontend.onrender.com
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
         value: https://compliancecore-frontend.onrender.com
+      - key: VITE_LOADARR_FRONTEND_BASE
+        value: https://loadarr-frontend.onrender.com
       - key: VITE_COMPANION_FRONTEND_BASE
         value: https://companion-frontend-vf7o.onrender.com
 
@@ -107,6 +113,8 @@ envVarGroups:
         value: https://supplyarr-api-gavo.onrender.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
         value: https://compliancecore-api-h69n.onrender.com
+      - key: LOADARR_PUBLIC_API_URL
+        value: https://loadarr-api.onrender.com
 
 databases:
   - name: nexarr-db
@@ -137,6 +145,10 @@ databases:
     plan: basic-256mb
     databaseName: compliancecore
     user: compliancecore
+  - name: loadarr-db
+    plan: basic-256mb
+    databaseName: loadarr
+    user: loadarr
 
 services:
   - type: keyvalue
@@ -184,6 +196,8 @@ services:
         value: https://supplyarr-frontend.onrender.com
       - key: Launch__Products__compliancecore__BaseUrl
         value: https://compliancecore-frontend.onrender.com
+      - key: Launch__Products__loadarr__BaseUrl
+        value: https://loadarr-frontend.onrender.com
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -195,6 +209,8 @@ services:
       - key: Launch__Products__supplyarr__LaunchPath
         value: /launch
       - key: Launch__Products__compliancecore__LaunchPath
+        value: /launch
+      - key: Launch__Products__loadarr__LaunchPath
         value: /launch
       - key: Launch__Products__companion__BaseUrl
         value: https://companion-frontend-vf7o.onrender.com
@@ -407,6 +423,34 @@ services:
       - key: Cors__ComplianceCoreFrontendOrigin
         value: https://compliancecore-frontend.onrender.com
       - key: Handoff__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+
+  - type: web
+    name: loadarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/loadarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: loadarr-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: loadarr-db
+          property: connectionString
+      - key: Cors__LoadArrFrontendOrigin
+        value: https://loadarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
         sync: false
 
   # --- Cross-product scheduled jobs ---
@@ -992,6 +1036,36 @@ services:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_NEXARR_API_BASE
         value: https://nexarr-api-3zlb.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+
+  - type: web
+    name: loadarr-frontend
+    runtime: static
+    rootDir: apps/loadarr-frontend
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - fromGroup: stl-vite-product-frontend-urls
+      - key: VITE_LOADARR_API_BASE
+        value: https://loadarr-api.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:

@@ -10506,6 +10506,13 @@
           "isActive": {
             "type": "boolean",
             "default": true
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -13074,6 +13081,13 @@
               "null",
               "boolean"
             ]
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

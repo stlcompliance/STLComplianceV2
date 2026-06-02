@@ -35,6 +35,7 @@ public sealed record HandoffRedeemedResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    int AccessTokenMinutes,
     string? CallbackUrl);
 
 public sealed record ValidateCallbackRequest(string ProductKey, string CallbackUrl, Guid? TenantId);

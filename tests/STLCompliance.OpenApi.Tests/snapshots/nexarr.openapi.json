@@ -2713,6 +2713,40 @@
         }
       }
     },
+    "/api/platform-admin/session-settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformSessionSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformSessionSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPlatformSessionSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/tenant-lifecycle/pending": {
       "get": {
         "tags": [
@@ -8800,6 +8834,40 @@
             "format": "int32"
           },
           "retryIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertPlatformSessionSettingsRequest": {
+        "required": [
+          "accessTokenMinutes",
+          "refreshTokenDays",
+          "rememberedRefreshTokenDays"
+        ],
+        "type": "object",
+        "properties": {
+          "accessTokenMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "refreshTokenDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rememberedRefreshTokenDays": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

@@ -92,6 +92,12 @@ using UpsertPartStockLevelRequest = SupplyArr.Api.Contracts.UpsertPartStockLevel
 using StockReservationResponse = SupplyArr.Api.Contracts.StockReservationResponse;
 using CreateStockReservationRequest = SupplyArr.Api.Contracts.CreateStockReservationRequest;
 using ReleaseStockReservationRequest = SupplyArr.Api.Contracts.ReleaseStockReservationRequest;
+using WmsMovementResponse = SupplyArr.Api.Contracts.WmsMovementResponse;
+using WmsStockLedgerEntryResponse = SupplyArr.Api.Contracts.WmsStockLedgerEntryResponse;
+using ReserveStockRequest = SupplyArr.Api.Contracts.ReserveStockRequest;
+using PickStockRequest = SupplyArr.Api.Contracts.PickStockRequest;
+using ShipStockRequest = SupplyArr.Api.Contracts.ShipStockRequest;
+using CancelStockMovementRequest = SupplyArr.Api.Contracts.CancelStockMovementRequest;
 using RfqResponse = SupplyArr.Api.Contracts.RfqResponse;
 using WarrantyClaimResponse = SupplyArr.Api.Contracts.WarrantyClaimResponse;
 using PurchaseRequestResponse = SupplyArr.Api.Contracts.PurchaseRequestResponse;
@@ -158,6 +164,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     private string _serviceToken = null!;
     private RecordingTrainArrQualificationCheckHandler _trainarrQualificationHandler = null!;
     private RecordingComplianceCoreHandler _complianceCoreHandler = null!;
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("7d96aa4b-1116-4a27-9660-b1f64dd03261");
 
     public async Task InitializeAsync()
     {
@@ -195,6 +203,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         _serviceToken = await IssueServiceTokenAsync(adminToken, "supplyarr");
         _trainarrQualificationHandler = new RecordingTrainArrQualificationCheckHandler();
         _complianceCoreHandler = new RecordingComplianceCoreHandler();
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
 
         _supplyarrFactory = new WebApplicationFactory<global::SupplyArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -213,6 +222,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             builder.UseSetting("ComplianceCore:VendorUseActionKey", "can-use-vendor");
             builder.UseSetting("ComplianceCore:VendorUseWorkflowKey", "can_use_vendor");
             builder.UseSetting("ComplianceCore:VendorUseActivityContextKey", "purchase_order_issue");
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "supplyarr-to-staffarr-token");
             builder.ConfigureServices(services =>
             {
                 var descriptors = services
@@ -237,6 +248,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreHandler);
                 services.AddHttpClient<ComplianceCoreVendorUseGateClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreHandler);
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -714,7 +727,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "alias-main",
             "Alias Main Location",
             "warehouse",
-            "100 Main St"));
+            "100 Main St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
 
@@ -922,7 +936,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "workflow-stock-wh",
             "Workflow Stock Warehouse",
             "warehouse",
-            "100 Alias Way"));
+            "100 Alias Way",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         Assert.Equal(HttpStatusCode.Created, createLocationResponse.StatusCode);
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -1379,7 +1394,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "export-value-wh-v1",
             "Export Value Warehouse",
             "warehouse",
-            string.Empty));
+            string.Empty,
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -1563,7 +1579,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "csv-count-wh-v1",
             "CSV Count Warehouse",
             "warehouse",
-            "100 Count Way"));
+            "100 Count Way",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -2065,7 +2082,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "csv-history-wh-v1",
             "CSV History Warehouse",
             "warehouse",
-            string.Empty));
+            string.Empty,
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -2208,7 +2226,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "main-wh",
             "Main Warehouse",
             "warehouse",
-            "100 Dock St"));
+            "100 Dock St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -2255,6 +2274,144 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inventory_location_create_requires_staffarr_site_and_snapshots_active_site()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var missingSiteRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        missingSiteRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            "missing-site",
+            "Missing StaffArr Site",
+            "warehouse",
+            "100 Dock St"));
+        var missingSiteResponse = await _supplyarrClient.SendAsync(missingSiteRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, missingSiteResponse.StatusCode);
+
+        var createLocationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        createLocationRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            "legacy-type-site",
+            "Legacy Type Site",
+            "site",
+            "100 Dock St",
+            _staffarrSiteOrgUnitId));
+        var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
+        createLocationResponse.EnsureSuccessStatusCode();
+        var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
+
+        Assert.Equal(_staffarrSiteOrgUnitId, location.StaffarrSiteOrgUnitId);
+        Assert.Equal("Central Parts Site", location.StaffarrSiteNameSnapshot);
+        Assert.Equal("active", location.StaffarrSiteResolutionStatus);
+        Assert.Equal("parts_room", location.LocationType);
+    }
+
+    [Fact]
+    public async Task Wms_reserve_pick_ship_cancel_are_ledger_backed_and_idempotent()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/v1/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "wms-ledger-part",
+            null,
+            "WMS Ledger Part",
+            string.Empty,
+            "general",
+            "each",
+            string.Empty,
+            string.Empty));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var createLocationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        createLocationRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            "wms-ledger-wh",
+            "WMS Ledger Warehouse",
+            "warehouse",
+            "400 Dock St",
+            _staffarrSiteOrgUnitId));
+        var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
+        createLocationResponse.EnsureSuccessStatusCode();
+        var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
+
+        var createBinRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inventory/locations/{location.LocationId}/bins",
+            token);
+        createBinRequest.Content = JsonContent.Create(new CreateInventoryBinRequest("wms-bin", "WMS Bin"));
+        var createBinResponse = await _supplyarrClient.SendAsync(createBinRequest);
+        createBinResponse.EnsureSuccessStatusCode();
+        var bin = (await createBinResponse.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
+
+        var stockRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/stock", token);
+        stockRequest.Content = JsonContent.Create(new UpsertPartStockLevelRequest(part.PartId, bin.BinId, 20m));
+        var stockResponse = await _supplyarrClient.SendAsync(stockRequest);
+        stockResponse.EnsureSuccessStatusCode();
+
+        var reserveRequest = Authorized(HttpMethod.Post, "/api/v1/wms/reserve", token);
+        reserveRequest.Content = JsonContent.Create(new ReserveStockRequest(
+            "wms-reserve-1",
+            part.PartId,
+            bin.BinId,
+            5m,
+            "work_order",
+            Guid.NewGuid(),
+            "reserve"));
+        var reserveResponse = await _supplyarrClient.SendAsync(reserveRequest);
+        reserveResponse.EnsureSuccessStatusCode();
+        var reserved = (await reserveResponse.Content.ReadFromJsonAsync<WmsMovementResponse>())!;
+        Assert.Single(reserved.Entries);
+        Assert.Equal(5m, reserved.Entries[0].QuantityReservedDelta);
+        Assert.Equal(_staffarrSiteOrgUnitId, reserved.Entries[0].StaffarrSiteOrgUnitId);
+
+        var replayReserveRequest = Authorized(HttpMethod.Post, "/api/v1/wms/reserve", token);
+        replayReserveRequest.Content = JsonContent.Create(new ReserveStockRequest(
+            "wms-reserve-1",
+            part.PartId,
+            bin.BinId,
+            5m,
+            "work_order",
+            null,
+            "reserve replay"));
+        var replayReserveResponse = await _supplyarrClient.SendAsync(replayReserveRequest);
+        replayReserveResponse.EnsureSuccessStatusCode();
+        var replayed = (await replayReserveResponse.Content.ReadFromJsonAsync<WmsMovementResponse>())!;
+        Assert.Equal(reserved.MovementGroupId, replayed.MovementGroupId);
+        Assert.Single(replayed.Entries);
+
+        var pickRequest = Authorized(HttpMethod.Post, "/api/v1/wms/pick", token);
+        pickRequest.Content = JsonContent.Create(new PickStockRequest("wms-pick-1", part.PartId, bin.BinId, 3m));
+        (await _supplyarrClient.SendAsync(pickRequest)).EnsureSuccessStatusCode();
+
+        var shipRequest = Authorized(HttpMethod.Post, "/api/v1/wms/ship", token);
+        shipRequest.Content = JsonContent.Create(new ShipStockRequest("wms-ship-1", part.PartId, bin.BinId, 3m));
+        (await _supplyarrClient.SendAsync(shipRequest)).EnsureSuccessStatusCode();
+
+        var cancelRequest = Authorized(HttpMethod.Post, "/api/v1/wms/cancel", token);
+        cancelRequest.Content = JsonContent.Create(new CancelStockMovementRequest(
+            "wms-cancel-1",
+            part.PartId,
+            bin.BinId,
+            2m,
+            "cancel remaining"));
+        (await _supplyarrClient.SendAsync(cancelRequest)).EnsureSuccessStatusCode();
+
+        var ledgerRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/v1/wms/stock-ledger?partId={part.PartId}&binId={bin.BinId}",
+            token);
+        var ledgerResponse = await _supplyarrClient.SendAsync(ledgerRequest);
+        ledgerResponse.EnsureSuccessStatusCode();
+        var ledger = (await ledgerResponse.Content.ReadFromJsonAsync<List<WmsStockLedgerEntryResponse>>())!;
+
+        Assert.Equal(4, ledger.Count);
+        Assert.Contains(ledger, x => x.MovementType == "reserve" && x.QuantityReservedDelta == 5m);
+        Assert.Contains(ledger, x => x.MovementType == "pick" && x.QuantityReservedDelta == 0m);
+        Assert.Contains(ledger, x => x.MovementType == "ship" && x.QuantityOnHandDelta == -3m && x.QuantityReservedDelta == -3m);
+        Assert.Contains(ledger, x => x.MovementType == "cancel" && x.QuantityReservedDelta == -2m);
+    }
+
+    [Fact]
     public async Task Inventory_v1_locations_bins_and_stock_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
@@ -2278,7 +2435,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "v1-main-wh",
             "v1 Main Warehouse",
             "warehouse",
-            "100 Dock St"));
+            "100 Dock St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -2336,7 +2494,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "reservation-wh",
             "Reservation warehouse",
             "warehouse",
-            "300 Dock St"));
+            "300 Dock St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -3245,7 +3404,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "denied-wh",
             "Denied Warehouse",
             "warehouse",
-            string.Empty));
+            string.Empty,
+            _staffarrSiteOrgUnitId));
 
         var response = await _supplyarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -4011,7 +4171,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "rcv-wh",
             "Receiving Warehouse",
             "warehouse",
-            "200 Dock St"));
+            "200 Dock St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -5849,7 +6010,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "reorder-wh",
             "Reorder warehouse",
             "warehouse",
-            string.Empty));
+            string.Empty,
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -5921,7 +6083,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"{keyPrefix}-wh",
             "Reorder Fact Warehouse",
             "warehouse",
-            string.Empty));
+            string.Empty,
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -6090,7 +6253,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"{locationKeyPrefix}-wh",
             $"{locationKeyPrefix} Warehouse",
             "warehouse",
-            "200 Dock St"));
+            "200 Dock St",
+            _staffarrSiteOrgUnitId));
         var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
         createLocationResponse.EnsureSuccessStatusCode();
         var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
@@ -6407,6 +6571,48 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                     message = NextMessage
                 })
             };
+        }
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        public List<string> Paths { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            Paths.Add(path);
+
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Parts Site",
+                null,
+                "active");
+
+            if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new[] { response })
+                });
+            }
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
         }
     }
 

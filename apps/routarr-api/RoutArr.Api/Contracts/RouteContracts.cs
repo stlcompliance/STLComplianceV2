@@ -5,6 +5,8 @@ public sealed record RouteStopSummaryResponse(
     string StopKey,
     string Label,
     string AddressLabel,
+    Guid? StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
     string StopType,
     string StopStatus,
     int SequenceNumber,
@@ -49,7 +51,8 @@ public sealed record CreateRouteStopRequest(
     string AddressLabel,
     string StopType,
     int SequenceNumber,
-    DateTimeOffset? ScheduledArrivalAt);
+    DateTimeOffset? ScheduledArrivalAt,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record CreateRouteRequest(
     string Title,
@@ -72,7 +75,8 @@ public sealed record AddRouteStopRequest(
     string AddressLabel,
     string StopType,
     int SequenceNumber,
-    DateTimeOffset? ScheduledArrivalAt);
+    DateTimeOffset? ScheduledArrivalAt,
+    Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateRouteStopStatusRequest(string StopStatus);
 

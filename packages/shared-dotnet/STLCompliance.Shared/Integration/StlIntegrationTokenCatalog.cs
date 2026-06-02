@@ -42,7 +42,7 @@ public static class StlIntegrationTokenCatalog
             "StaffArr__ServiceToken",
             "trainarr",
             ["staffarr"],
-            "staffarr.training_blockers.write,staffarr.training_acknowledgements.write,staffarr.training_acknowledgements.read,staffarr.certification_grants.write,staffarr.certification_lifecycle.write,staffarr.person.lookup"),
+            "staffarr.training_blockers.write,staffarr.training_acknowledgements.write,staffarr.training_acknowledgements.read,staffarr.certification_grants.write,staffarr.certification_lifecycle.write,staffarr.person.lookup,staffarr.sites.read"),
         Profile(
             "trainarr-compliancecore",
             "trainarr-api",
@@ -58,7 +58,7 @@ public static class StlIntegrationTokenCatalog
             "StaffArr__ServiceToken",
             "maintainarr",
             ["staffarr"],
-            "staffarr.person.lookup"),
+            "staffarr.person.lookup,staffarr.sites.read"),
         Profile(
             "maintainarr-supplyarr",
             "maintainarr-api",
@@ -76,7 +76,7 @@ public static class StlIntegrationTokenCatalog
 
         Profile("handoff-supplyarr", "supplyarr-api", "Handoff__ServiceToken", "supplyarr", ["supplyarr"], "launch.redeem"),
         Profile("supplyarr-maintainarr", "supplyarr-api", "MaintainArr__ServiceToken", "supplyarr", ["maintainarr"], "maintainarr.demand_status.write"),
-        Profile("supplyarr-routarr", "supplyarr-api", "RoutArr__ServiceToken", "supplyarr", ["routarr"], "routarr.demand_status.write"),
+        Profile("supplyarr-routarr", "supplyarr-api", "RoutArr__ServiceToken", "supplyarr", ["routarr"], "routarr.demand_status.write,routarr.shipments.create"),
         Profile("supplyarr-trainarr", "supplyarr-api", "TrainArr__ServiceToken", "supplyarr", ["trainarr"], "trainarr.demand_status.write"),
         Profile(
             "supplyarr-staffarr",
@@ -84,7 +84,7 @@ public static class StlIntegrationTokenCatalog
             "StaffArr__ServiceToken",
             "supplyarr",
             ["staffarr"],
-            "staffarr.demand_status.write,staffarr.procurement_approval_authority.read"),
+            "staffarr.demand_status.write,staffarr.procurement_approval_authority.read,staffarr.sites.read"),
         Profile(
             "supplyarr-compliancecore",
             "supplyarr-api",
@@ -95,16 +95,20 @@ public static class StlIntegrationTokenCatalog
 
         Profile("handoff-routarr", "routarr-api", "Handoff__ServiceToken", "routarr", ["routarr"], "launch.redeem"),
         Profile("routarr-trainarr", "routarr-api", "TrainArr__ServiceToken", "routarr", ["trainarr"], "trainarr.qualification_checks.dispatch"),
-        Profile("routarr-staffarr", "routarr-api", "StaffArr__ServiceToken", "routarr", ["staffarr"], "staffarr.readiness.dispatch_gate"),
+        Profile("routarr-staffarr", "routarr-api", "StaffArr__ServiceToken", "routarr", ["staffarr"], "staffarr.readiness.dispatch_gate,staffarr.sites.read"),
         Profile("routarr-maintainarr", "routarr-api", "MaintainArr__ServiceToken", "routarr", ["maintainarr"], "maintainarr.asset_readiness.dispatch_gate"),
         Profile("routarr-compliancecore", "routarr-api", "ComplianceCore__ServiceToken", "routarr", ["compliancecore"], "compliancecore.workflow.gates.check"),
-        Profile("routarr-supplyarr", "routarr-api", "SupplyArr__ServiceToken", "routarr", ["supplyarr"], "supplyarr.demand_intake.write"),
+        Profile("routarr-supplyarr", "routarr-api", "SupplyArr__ServiceToken", "routarr", ["supplyarr"], "supplyarr.demand_intake.write,supplyarr.shipments.status.write"),
 
         Profile("trainarr-supplyarr", "trainarr-api", "SupplyArr__ServiceToken", "trainarr", ["supplyarr"], "supplyarr.demand_intake.write"),
 
         Profile("staffarr-supplyarr", "staffarr-api", "SupplyArr__ServiceToken", "staffarr", ["supplyarr"], "supplyarr.demand_intake.write"),
 
         Profile("handoff-compliancecore", "compliancecore-api", "Handoff__ServiceToken", "compliancecore", ["compliancecore"], "launch.redeem"),
+        Profile("compliancecore-staffarr", "compliancecore-api", "StaffArr__ServiceToken", "compliancecore", ["staffarr"], "staffarr.sites.read"),
+
+        Profile("handoff-loadarr", "loadarr-api", "Handoff__ServiceToken", "loadarr", ["loadarr"], "launch.redeem"),
+        Profile("loadarr-staffarr", "loadarr-api", "StaffArr__ServiceToken", "loadarr", ["staffarr"], "staffarr.sites.read"),
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
         Profile(

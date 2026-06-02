@@ -1,0 +1,207 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "LoadArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "LoadArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/site-sources": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetLoadArrSiteSources",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health/observability": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetObservabilityHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "LoadArr.Api"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "Workspace"
+    }
+  ]
+}

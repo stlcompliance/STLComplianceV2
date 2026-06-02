@@ -161,7 +161,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         });
         await db.SaveChangesAsync();
 
-        var assetService = new AssetService(db, null!, null!, null!, null!);
+        var assetService = new AssetService(db, null!, null!, null!, null!, null!);
         var service = new AssetMeterService(db, assetService, null!);
 
         var meters = await service.ListForAssetAsync(tenantId, assetId);

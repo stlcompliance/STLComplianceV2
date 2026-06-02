@@ -194,12 +194,20 @@ export interface DispatchWorkflowGateResultSummary {
   isBlocking: boolean
 }
 
+export interface DispatchReleaseReadinessSnapshotResponse {
+  snapshotKind: string
+  capturedAt: string
+  context: Record<string, string>
+  gates: DispatchWorkflowGateResultSummary[]
+}
+
 export interface DispatchAssignmentWorkflowGateSummary {
   outcome: 'allow' | 'warn' | 'block' | string
   reasonCode: string
   message: string
   isBlocking: boolean
   gates: DispatchWorkflowGateResultSummary[]
+  releaseSnapshot?: DispatchReleaseReadinessSnapshotResponse | null
 }
 
 export interface DispatchAssignmentConflictSummary {
@@ -341,6 +349,7 @@ export interface DispatchWorkflowGateCheckResponse {
   message: string
   isBlocking: boolean
   gates: DispatchWorkflowGateResultSummary[]
+  releaseSnapshot?: DispatchReleaseReadinessSnapshotResponse | null
 }
 
 export interface AssetDispatchabilityCheckRequest {

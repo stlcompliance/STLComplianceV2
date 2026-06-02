@@ -160,7 +160,11 @@ public sealed record PermissionTemplateSummaryResponse(
     string PermissionKey,
     string Name,
     string? Description,
-    string Status);
+    string Status,
+    string ProductKey = "staffarr",
+    string PermissionScope = "tenant",
+    string Sensitivity = "standard",
+    DateTimeOffset? LastSyncedAt = null);
 
 public sealed record RoleTemplatePermissionResponse(
     Guid MappingId,
@@ -168,7 +172,10 @@ public sealed record RoleTemplatePermissionResponse(
     string PermissionKey,
     string PermissionName,
     string ScopeType,
-    string? ScopeValue);
+    string? ScopeValue,
+    string ProductKey = "staffarr",
+    string PermissionSensitivity = "standard",
+    DateTimeOffset? LastSyncedAt = null);
 
 public sealed record RoleTemplateResponse(
     Guid RoleTemplateId,

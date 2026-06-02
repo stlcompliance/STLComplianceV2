@@ -107,7 +107,8 @@ public static class DispatchWorkflowGateRules
             workflowGates.BatchId,
             workflowGates.CheckedAt,
             workflowGates.ContextSnapshot,
-            workflowGates.AuditSnapshot);
+            workflowGates.AuditSnapshot,
+            workflowGates.ReleaseSnapshot);
 
         var hasBlocking = preview.HasBlockingConflicts || workflowGates.IsBlocking;
 

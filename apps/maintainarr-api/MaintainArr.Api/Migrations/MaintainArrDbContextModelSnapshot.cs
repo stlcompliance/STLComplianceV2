@@ -58,6 +58,16 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("StaffarrSiteNameSnapshot")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("StaffarrSiteOrgUnitId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -74,6 +84,8 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.HasIndex("TenantId", "AssetTypeId");
+
+                    b.HasIndex("TenantId", "StaffarrSiteOrgUnitId");
 
                     b.ToTable("maintainarr_assets", (string)null);
                 });
@@ -579,6 +591,13 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("StaffarrSiteNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("StaffarrSiteOrgUnitId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -587,6 +606,8 @@ namespace MaintainArr.Api.Migrations
                         .HasColumnType("character varying(128)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "StaffarrSiteOrgUnitId");
 
                     b.HasIndex("TenantId", "AssetId", "EffectiveAt");
 

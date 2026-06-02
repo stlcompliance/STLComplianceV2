@@ -14,6 +14,7 @@ using StaffArr.Api.Data;
 using StaffArr.Api.Endpoints;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -24,8 +25,12 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _staffarrClient = null!;
     private string _maintainarrPermissionCheckToken = null!;
+    private string _maintainarrPermissionCatalogSyncToken = null!;
+    private string _maintainarrSitesReadToken = null!;
     private Guid _personId;
     private Guid _inactivePersonId;
+    private Guid _activeSiteOrgUnitId;
+    private Guid _inactiveSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -56,6 +61,16 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             "maintainarr",
             ["staffarr"],
             IntegrationEndpoints.PermissionCheckReadActionScope);
+        _maintainarrPermissionCatalogSyncToken = await IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            ["staffarr"],
+            IntegrationEndpoints.ProductPermissionCatalogSyncActionScope);
+        _maintainarrSitesReadToken = await IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            ["staffarr"],
+            IntegrationEndpoints.SitesReadActionScope);
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -76,7 +91,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
         await db.Database.EnsureCreatedAsync();
 
-        (_personId, _inactivePersonId) = await SeedPeopleAsync(db);
+        (_personId, _inactivePersonId, _activeSiteOrgUnitId, _inactiveSiteOrgUnitId) = await SeedPeopleAsync(db);
     }
 
     public async Task DisposeAsync()
@@ -182,10 +197,102 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task<(Guid ActivePersonId, Guid InactivePersonId)> SeedPeopleAsync(StaffArrDbContext db)
+    [Fact]
+    public async Task Product_permission_catalog_sync_upserts_product_owned_permissions()
+    {
+        var syncRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/product-permission-catalog", _maintainarrPermissionCatalogSyncToken);
+        syncRequest.Content = JsonContent.Create(new SyncProductPermissionCatalogRequest(
+            PlatformSeeder.DemoTenantId,
+            "maintainarr",
+            [
+                new ProductPermissionCatalogItemRequest(
+                    "maintainarr.work_order.release",
+                    "Release Work Order",
+                    "Allows a MaintainArr user to release a work order for execution.",
+                    "site",
+                    "sensitive"),
+                new ProductPermissionCatalogItemRequest(
+                    "maintainarr.asset.dispatchability.override",
+                    "Override Asset Dispatchability",
+                    "Allows a supervisor to override a blocked asset dispatchability result.",
+                    "tenant",
+                    "critical")
+            ]));
+
+        var syncResponse = await _staffarrClient.SendAsync(syncRequest);
+        syncResponse.EnsureSuccessStatusCode();
+        var synced = (await syncResponse.Content.ReadFromJsonAsync<SyncProductPermissionCatalogResponse>())!;
+        Assert.Equal("maintainarr", synced.ProductKey);
+        Assert.Equal(2, synced.UpsertedCount);
+        Assert.All(synced.Permissions, item =>
+        {
+            Assert.Equal("maintainarr", item.ProductKey);
+            Assert.StartsWith("maintainarr.", item.PermissionKey, StringComparison.Ordinal);
+            Assert.NotEqual(Guid.Empty, item.PermissionTemplateId);
+        });
+
+        var adminToken = CreateStaffArrAccessToken(_personId, "tenant_admin");
+        var listResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/permissions/product-catalog?productKey=maintainarr",
+            adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var catalog = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
+        Assert.Contains(catalog, x =>
+            x.PermissionKey == "maintainarr.work_order.release"
+            && x.Scope == "site"
+            && x.Sensitivity == "sensitive");
+
+        var templatesResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/permissions",
+            adminToken));
+        templatesResponse.EnsureSuccessStatusCode();
+        var templates = (await templatesResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionTemplateSummaryResponse>>())!;
+        Assert.Contains(templates, x =>
+            x.PermissionKey == "maintainarr.asset.dispatchability.override"
+            && x.ProductKey == "maintainarr"
+            && x.Sensitivity == "critical"
+            && x.LastSyncedAt is not null);
+    }
+
+    [Fact]
+    public async Task Integration_sites_read_returns_active_sites_and_rejects_inactive_site_detail()
+    {
+        var listResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/sites?tenantId={PlatformSeeder.DemoTenantId}",
+            _maintainarrSitesReadToken));
+        listResponse.EnsureSuccessStatusCode();
+        var sites = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<StaffArrSiteLookupResponse>>())!;
+        Assert.Contains(sites, x =>
+            x.OrgUnitId == _activeSiteOrgUnitId
+            && x.Name == "Central Yard"
+            && x.Status == "active");
+        Assert.DoesNotContain(sites, x => x.OrgUnitId == _inactiveSiteOrgUnitId);
+
+        var detailResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/sites/{_activeSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}",
+            _maintainarrSitesReadToken));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<StaffArrSiteLookupResponse>())!;
+        Assert.Equal(_activeSiteOrgUnitId, detail.OrgUnitId);
+        Assert.Equal("Central Yard", detail.Name);
+
+        var inactiveResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/sites/{_inactiveSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}",
+            _maintainarrSitesReadToken));
+        Assert.Equal(HttpStatusCode.NotFound, inactiveResponse.StatusCode);
+    }
+
+    private async Task<(Guid ActivePersonId, Guid InactivePersonId, Guid ActiveSiteOrgUnitId, Guid InactiveSiteOrgUnitId)> SeedPeopleAsync(StaffArrDbContext db)
     {
         var activePersonId = Guid.NewGuid();
         var inactivePersonId = Guid.NewGuid();
+        var activeSiteOrgUnitId = Guid.NewGuid();
+        var inactiveSiteOrgUnitId = Guid.NewGuid();
         db.People.AddRange(
             new StaffPerson
             {
@@ -210,6 +317,28 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
                 DisplayName = "Integration Inactive",
                 PrimaryEmail = "integration.inactive@demo.stl",
                 EmploymentStatus = "inactive",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+            });
+
+        db.OrgUnits.AddRange(
+            new OrgUnit
+            {
+                Id = activeSiteOrgUnitId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                UnitType = "site",
+                Name = "Central Yard",
+                Status = "active",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+            },
+            new OrgUnit
+            {
+                Id = inactiveSiteOrgUnitId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                UnitType = "site",
+                Name = "Retired Yard",
+                Status = "inactive",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
             });
@@ -262,7 +391,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         });
 
         await db.SaveChangesAsync();
-        return (activePersonId, inactivePersonId);
+        return (activePersonId, inactivePersonId, activeSiteOrgUnitId, inactiveSiteOrgUnitId);
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

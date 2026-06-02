@@ -2442,6 +2442,29 @@
         }
       }
     },
+    "/api/integrations/supplyarr-shipments": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateSupplyarrShipmentIntent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplyArrShipmentIntentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/attachment-retention/pending": {
       "get": {
         "tags": [
@@ -5440,6 +5463,29 @@
         }
       }
     },
+    "/api/v1/integrations/supplyarr-shipments": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateSupplyarrShipmentIntentV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplyArrShipmentIntentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/launch/catalog": {
       "get": {
         "tags": [
@@ -6401,6 +6447,13 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -6951,6 +7004,13 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -6975,6 +7035,42 @@
             ],
             "items": {
               "$ref": "#/components/schemas/CreateRouteStopRequest"
+            }
+          }
+        }
+      },
+      "CreateSupplyArrShipmentIntentRequest": {
+        "required": [
+          "tenantId",
+          "supplyarrShipmentId",
+          "shipmentKey",
+          "destinationName",
+          "destinationAddressSnapshot",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrShipmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentKey": {
+            "type": "string"
+          },
+          "destinationName": {
+            "type": "string"
+          },
+          "destinationAddressSnapshot": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplyArrShipmentLinePayload"
             }
           }
         }
@@ -7710,6 +7806,36 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SupplyArrShipmentLinePayload": {
+        "required": [
+          "supplyarrShipmentLineId",
+          "partId",
+          "partDisplayName",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "supplyarrShipmentLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "partDisplayName": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

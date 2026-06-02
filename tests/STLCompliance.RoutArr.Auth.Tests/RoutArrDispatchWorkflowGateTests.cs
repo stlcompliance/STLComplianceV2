@@ -154,6 +154,10 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         Assert.NotNull(check.ContextSnapshot);
         Assert.Equal(trip.TripId.ToString(), check.ContextSnapshot!["tripId"]);
         Assert.Equal(driverPersonId, check.ContextSnapshot["personId"]);
+        Assert.NotNull(check.ReleaseSnapshot);
+        Assert.Equal("dispatch_release_readiness", check.ReleaseSnapshot!.SnapshotKind);
+        Assert.Equal(trip.TripId.ToString(), check.ReleaseSnapshot.Context["tripId"]);
+        Assert.Contains(check.ReleaseSnapshot.Gates, x => x.GateKey == "dispatch_driver_qualification");
         Assert.NotNull(check.AuditSnapshot);
         Assert.NotEqual(Guid.Empty, check.AuditSnapshot!.AuditEventId);
         Assert.Equal(DispatchWorkflowGateService.CheckAction, check.AuditSnapshot.Action);
@@ -266,6 +270,8 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         Assert.True(preview.HasBlockingConflicts);
         Assert.NotNull(preview.WorkflowGates);
         Assert.Equal(DispatchWorkflowGateOutcomes.Block, preview.WorkflowGates!.Outcome);
+        Assert.NotNull(preview.WorkflowGates.ReleaseSnapshot);
+        Assert.Equal("dispatch_release_readiness", preview.WorkflowGates.ReleaseSnapshot!.SnapshotKind);
 
         assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", dispatcherToken);
         assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(

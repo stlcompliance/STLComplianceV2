@@ -5,3 +5,4 @@ CREATE DATABASE maintainarr;
 CREATE DATABASE routarr;
 CREATE DATABASE supplyarr;
 CREATE DATABASE compliancecore;
+CREATE DATABASE loadarr;

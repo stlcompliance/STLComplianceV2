@@ -36,6 +36,7 @@ public static class StlE2eFrontendCatalog
         new("maintainarr", 5178, "http://localhost:5178"),
         new("supplyarr", 5179, "http://localhost:5179"),
         new("routarr", 5180, "http://localhost:5180"),
+        new("loadarr", 5182, "http://localhost:5182"),
     ];
 
     public static readonly IReadOnlyList<StlE2eFrontendEndpoint> All =

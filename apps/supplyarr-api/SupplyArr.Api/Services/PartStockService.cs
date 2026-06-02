@@ -87,6 +87,8 @@ public sealed class PartStockService(
                 400);
         }
 
+        InventoryLocationMovementSafety.EnsureMovementSafe(bin.InventoryLocation);
+
         var existing = await db.PartStockLevels.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.PartId == request.PartId && x.InventoryBinId == request.BinId,
             cancellationToken);
@@ -171,6 +173,8 @@ public sealed class PartStockService(
                 400);
         }
 
+        InventoryLocationMovementSafety.EnsureMovementSafe(bin.InventoryLocation);
+
         var existing = await db.PartStockLevels.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.PartId == partId && x.InventoryBinId == binId,
             cancellationToken);
@@ -246,6 +250,16 @@ public sealed class PartStockService(
         {
             throw new StlApiException("inventory.bins.not_found", "Inventory bin was not found.", 404);
         }
+
+        if (!string.Equals(bin.Status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "inventory.stock.inactive_bin",
+                "Stock cannot be decremented from an inactive bin.",
+                400);
+        }
+
+        InventoryLocationMovementSafety.EnsureMovementSafe(bin.InventoryLocation);
 
         var existing = await db.PartStockLevels.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.PartId == partId && x.InventoryBinId == binId,

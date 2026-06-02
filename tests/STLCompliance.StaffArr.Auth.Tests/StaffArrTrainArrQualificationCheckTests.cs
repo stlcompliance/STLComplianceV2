@@ -258,6 +258,14 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
             trainingDefinitionId: definitionId);
 
         Assert.Equal(QualificationCheckOutcomes.Warn, check.Outcome);
+        Assert.NotNull(check.QualificationCatalog);
+        Assert.Equal("trainarr", check.QualificationCatalog!.SourceProduct);
+        Assert.Equal("training_definition", check.QualificationCatalog.SourceEntity);
+        Assert.Equal(definitionId, check.QualificationCatalog.SourceId);
+        Assert.Equal("Hazmat Endorsement", check.QualificationCatalog.LabelSnapshot);
+        Assert.Equal("active", check.QualificationCatalog.StatusSnapshot);
+        Assert.NotEqual(default, check.QualificationCatalog.LastVerifiedAt);
+        Assert.NotNull(check.QualificationCatalog.LastSyncedAt);
         Assert.NotNull(check.AuthorizationGuidance);
         Assert.Equal("No local qualification has been issued.", check.AuthorizationGuidance!.BlockReason);
         Assert.Equal("assigned", check.AuthorizationGuidance.PersonAssignmentStatus);
