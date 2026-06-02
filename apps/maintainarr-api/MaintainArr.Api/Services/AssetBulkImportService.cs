@@ -57,6 +57,8 @@ public sealed class AssetBulkImportService(
         "inspectionRequirementType",
         "compatiblePartIds",
         "secondaryMeterTypes",
+        "requiredInspectionTypes",
+        "documentType",
     };
 
     public async Task<AssetBulkImportResponse> ImportAsync(
@@ -269,6 +271,14 @@ public sealed class AssetBulkImportService(
         if (!values.ContainsKey("siteId") && !string.IsNullOrWhiteSpace(row.SiteRef))
         {
             values["siteId"] = row.SiteRef.Trim();
+        }
+        if (!values.ContainsKey("unitNumber"))
+        {
+            values["unitNumber"] = NormalizeAssetTag(row.AssetTag);
+        }
+        if (!values.ContainsKey("displayName") && !string.IsNullOrWhiteSpace(row.Name))
+        {
+            values["displayName"] = row.Name.Trim();
         }
         if (!values.ContainsKey("lifecycleStatus") && !string.IsNullOrWhiteSpace(row.LifecycleStatus))
         {

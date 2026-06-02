@@ -22,20 +22,15 @@ import {
   logWorkOrderLabor,
   publishWorkOrderPartsDemand,
   uploadWorkOrderEvidence,
-  createAssetControlledV1,
-  createAssetClass,
   createAssetMeter,
-  createAssetType,
   createInspectionChecklistItem,
   createInspectionTemplate,
   createInspectionTemplateCategory,
   getAssetClasses,
-  getAssetCreateFieldset,
   getAssetFieldContext,
   getAssetMeters,
   getAssets,
   getAssetTypes,
-  getCatalogs,
   getMeterPmForecast,
   getMeterReadings,
   getDefects,
@@ -108,19 +103,6 @@ export function useMaintainArrWorkspaceState() {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
-  const [confirmedClassKey, setConfirmedClassKey] = useState<string | null>(null)
-  const [className, setClassName] = useState('')
-  const [classDescription, setClassDescription] = useState('')
-  const [selectedClassId, setSelectedClassId] = useState('')
-  const [confirmedTypeKey, setConfirmedTypeKey] = useState<string | null>(null)
-  const [typeName, setTypeName] = useState('')
-  const [typeDescription, setTypeDescription] = useState('')
-  const [selectedTypeId, setSelectedTypeId] = useState('')
-  const [assetTag, setAssetTag] = useState('')
-  const [assetName, setAssetName] = useState('')
-  const [assetDescription, setAssetDescription] = useState('')
-  const [siteRef, setSiteRef] = useState('')
-  const [assetFieldValues, setAssetFieldValues] = useState<Record<string, unknown>>({})
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState('')
   const [templateName, setTemplateName] = useState('')
@@ -197,14 +179,6 @@ export function useMaintainArrWorkspaceState() {
   const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => {
-    setConfirmedClassKey(null)
-  }, [className])
-
-  useEffect(() => {
-    setConfirmedTypeKey(null)
-  }, [typeName])
-
-  useEffect(() => {
     setConfirmedMeterKey(null)
   }, [meterName])
 
@@ -232,35 +206,6 @@ export function useMaintainArrWorkspaceState() {
     queryFn: () => getAssets(accessToken),
     enabled: meQuery.isSuccess,
   })
-
-  const assetCreateFieldsetQuery = useQuery({
-    queryKey: ['maintainarr-fieldset-assets-create'],
-    queryFn: () => getAssetCreateFieldset(accessToken),
-    enabled: meQuery.isSuccess,
-  })
-
-  const assetCatalogsQuery = useQuery({
-    queryKey: ['maintainarr-catalogs-assets-create'],
-    queryFn: () => getCatalogs(accessToken, ['assetClass', 'assetType', 'make', 'model', 'fuelType', 'brakeType', 'tireConfiguration']),
-    enabled: meQuery.isSuccess,
-  })
-
-  useEffect(() => {
-    const fieldset = assetCreateFieldsetQuery.data
-    if (!fieldset) return
-    setAssetFieldValues((current) => {
-      const next = { ...current }
-      for (const field of fieldset.fields) {
-        if (next[field.key] !== undefined) continue
-        if (field.defaultValue !== null && field.defaultValue !== undefined) {
-          next[field.key] = field.defaultValue
-          continue
-        }
-        next[field.key] = field.control === 'multiSelect' ? [] : ''
-      }
-      return next
-    })
-  }, [assetCreateFieldsetQuery.data])
 
   const assetReadinessFleetQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-fleet'],
@@ -587,26 +532,6 @@ export function useMaintainArrWorkspaceState() {
     }
   }
 
-  const resolveClassKey = () =>
-    confirmedClassKey ??
-    buildSemanticKey({
-      domain: 'asset',
-      kind: 'category',
-      title: className,
-      existingKeys: (classesQuery.data ?? []).map((item) => item.classKey),
-      maxLength: 128,
-    })
-
-  const resolveTypeKey = () =>
-    confirmedTypeKey ??
-    buildSemanticKey({
-      domain: 'asset',
-      kind: 'type',
-      title: typeName,
-      existingKeys: (typesQuery.data ?? []).map((item) => item.typeKey),
-      maxLength: 128,
-    })
-
   const resolveMeterKey = () =>
     confirmedMeterKey ??
     buildSemanticKey({
@@ -616,41 +541,6 @@ export function useMaintainArrWorkspaceState() {
       existingKeys: (assetMetersQuery.data ?? []).map((item) => item.meterKey),
       maxLength: 128,
     })
-
-  const createClassMutation = useMutation({
-    mutationFn: () =>
-      createAssetClass(accessToken, {
-        classKey: resolveClassKey(),
-        name: className,
-        description: classDescription,
-      }),
-    onSuccess: async (created) => {
-      setConfirmedClassKey(created.classKey)
-      setClassName('')
-      setClassDescription('')
-      setApiError(null)
-      await invalidateRegistry()
-    },
-    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create asset class'),
-  })
-
-  const createTypeMutation = useMutation({
-    mutationFn: () =>
-      createAssetType(accessToken, {
-        assetClassId: selectedClassId,
-        typeKey: resolveTypeKey(),
-        name: typeName,
-        description: typeDescription,
-      }),
-    onSuccess: async (created) => {
-      setConfirmedTypeKey(created.typeKey)
-      setTypeName('')
-      setTypeDescription('')
-      setApiError(null)
-      await invalidateRegistry()
-    },
-    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create asset type'),
-  })
 
   const createTemplateMutation = useMutation({
     mutationFn: () =>
@@ -1060,39 +950,6 @@ export function useMaintainArrWorkspaceState() {
       setApiError(error instanceof Error ? error.message : 'Failed to publish parts demand'),
   })
 
-  const createAssetMutation = useMutation({
-    mutationFn: () => {
-      const values: Record<string, unknown> = { ...assetFieldValues }
-      if (!values.assetClass && selectedClassId) {
-        values.assetClass = classesQuery.data?.find((c) => c.assetClassId === selectedClassId)?.classKey ?? ''
-      }
-      if (!values.assetType && selectedTypeId) {
-        values.assetType = typesQuery.data?.find((t) => t.assetTypeId === selectedTypeId)?.typeKey ?? ''
-      }
-      if (!values.siteId && siteRef) {
-        values.siteId = siteRef
-      }
-      const normalizedAssetTag = assetTag.trim()
-      const normalizedAssetName = assetName.trim() || normalizedAssetTag
-      return createAssetControlledV1(accessToken, {
-        assetTag: normalizedAssetTag,
-        name: normalizedAssetName,
-        description: assetDescription || null,
-        values,
-      })
-    },
-    onSuccess: async () => {
-      setAssetTag('')
-      setAssetName('')
-      setAssetDescription('')
-      setSiteRef('')
-      setAssetFieldValues({})
-      setApiError(null)
-      await invalidateRegistry()
-    },
-    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create asset'),
-  })
-
   const createPmProgramMutation = useMutation({
     mutationFn: () =>
       createPmProgram(accessToken, {
@@ -1210,19 +1067,6 @@ export function useMaintainArrWorkspaceState() {
     accessToken,
     apiError,
     searchParams,
-    confirmedClassKey,
-    className,
-    classDescription,
-    selectedClassId,
-    confirmedTypeKey,
-    typeName,
-    typeDescription,
-    selectedTypeId,
-    assetTag,
-    assetName,
-    assetDescription,
-    siteRef,
-    assetFieldValues,
     templateKey,
     templateName,
     templateDescription,
@@ -1300,19 +1144,6 @@ export function useMaintainArrWorkspaceState() {
     selectedProgramId,
     selectedProgramScheduleIds,
     historyAssetId,
-    setConfirmedClassKey,
-    setClassName,
-    setClassDescription,
-    setSelectedClassId,
-    setConfirmedTypeKey,
-    setTypeName,
-    setTypeDescription,
-    setSelectedTypeId,
-    setAssetTag,
-    setAssetName,
-    setAssetDescription,
-    setSiteRef,
-    setAssetFieldValues,
     setSelectedAssetId,
     setTemplateKey,
     setTemplateName,
@@ -1386,8 +1217,6 @@ export function useMaintainArrWorkspaceState() {
     classesQuery,
     typesQuery,
     assetsQuery,
-    assetCreateFieldsetQuery,
-    assetCatalogsQuery,
     assetFieldContextQuery,
     selectedAssetId,
     assetReadinessFleetQuery,
@@ -1437,8 +1266,6 @@ export function useMaintainArrWorkspaceState() {
     invalidateWorkOrders,
     invalidateMeters,
     invalidatePmPrograms,
-    createClassMutation,
-    createTypeMutation,
     createTemplateMutation,
     createCategoryMutation,
     createItemMutation,
@@ -1462,7 +1289,6 @@ export function useMaintainArrWorkspaceState() {
     uploadInspectionRunEvidenceMutation,
     addWorkOrderPartsDemandMutation,
     publishWorkOrderPartsDemandMutation,
-    createAssetMutation,
     createPmProgramMutation,
     savePmProgramSchedulesMutation,
     activatePmProgramMutation,

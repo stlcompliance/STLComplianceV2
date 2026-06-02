@@ -10,8 +10,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/assets/drawer',
     icon: Boxes as NavIcon,
     children: [
-      { label: 'Details', to: '/assets/details', icon: ListCollapse as NavIcon },
-      { label: 'Create', to: '/assets/create', icon: StickyNote as NavIcon },
+      { label: 'Details', to: '/assets/drawer', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/assets/new', icon: StickyNote as NavIcon },
     ],
   },
   {

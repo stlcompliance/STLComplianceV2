@@ -45,11 +45,8 @@ export function SettingsSection({ state }: Props) {
 
       {subpage === 'source-data' ? (
         <AssetRegistryPanel
-          mode="create"
           showSourceData
           showAssetsTable={false}
-          showAssetCreateForm={false}
-          canManage={canManage}
           classes={state.classesQuery.data ?? []}
           types={state.typesQuery.data ?? []}
           assets={[]}
@@ -58,34 +55,6 @@ export function SettingsSection({ state }: Props) {
           onSelectAsset={state.setSelectedAssetId}
           isLoading={state.classesQuery.isLoading || state.typesQuery.isLoading}
           isReadinessLoading={false}
-          className={state.className}
-          classDescription={state.classDescription}
-          confirmedClassKey={state.confirmedClassKey}
-          selectedClassId={state.selectedClassId}
-          typeName={state.typeName}
-          typeDescription={state.typeDescription}
-          confirmedTypeKey={state.confirmedTypeKey}
-          selectedTypeId={state.selectedTypeId}
-          assetTag={state.assetTag}
-          assetName={state.assetName}
-          assetDescription={state.assetDescription}
-          siteRef={state.siteRef}
-          onClassNameChange={state.setClassName}
-          onClassDescriptionChange={state.setClassDescription}
-          onSelectedClassIdChange={state.setSelectedClassId}
-          onTypeNameChange={state.setTypeName}
-          onTypeDescriptionChange={state.setTypeDescription}
-          onSelectedTypeIdChange={state.setSelectedTypeId}
-          onAssetTagChange={state.setAssetTag}
-          onAssetNameChange={state.setAssetName}
-          onAssetDescriptionChange={state.setAssetDescription}
-          onSiteRefChange={state.setSiteRef}
-          onCreateClass={() => state.createClassMutation.mutate()}
-          onCreateType={() => state.createTypeMutation.mutate()}
-          onCreateAsset={() => state.createAssetMutation.mutate()}
-          isCreatingClass={state.createClassMutation.isPending}
-          isCreatingType={state.createTypeMutation.isPending}
-          isCreatingAsset={state.createAssetMutation.isPending}
         />
       ) : (
         <>

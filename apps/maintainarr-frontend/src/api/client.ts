@@ -270,6 +270,13 @@ export async function getAssets(accessToken: string): Promise<AssetResponse[]> {
   return parseJsonResponse<AssetResponse[]>(response, 'Failed to load assets')
 }
 
+export async function getAsset(accessToken: string, assetId: string): Promise<AssetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetResponse>(response, 'Failed to load asset')
+}
+
 export async function createAsset(accessToken: string, payload: CreateAssetRequest): Promise<AssetResponse> {
   const response = await fetch(`${apiBase}/api/assets`, {
     method: 'POST',
@@ -309,6 +316,13 @@ export async function getAssetCreateFieldset(accessToken: string): Promise<Field
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<FieldsetResponse>(response, 'Failed to load asset create fieldset')
+}
+
+export async function getAssetEditFieldset(accessToken: string, assetId: string): Promise<FieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/assets/${assetId}/edit`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldsetResponse>(response, 'Failed to load asset edit fieldset')
 }
 
 export async function getCatalogs(accessToken: string, keys?: string[]): Promise<CatalogResponse[]> {

@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   getAssets,
+  getAsset,
+  getAssetCreateFieldset,
+  getAssetEditFieldset,
   getAssetMeters,
   getDefects,
   getWorkOrders,
@@ -61,6 +64,52 @@ describe('maintainarr api client', () => {
     )
 
     await expect(getAssets('token-123')).rejects.toBeInstanceOf(MaintainArrApiError)
+  })
+
+  it('loads one asset and asset fieldsets from v1 endpoints', async () => {
+    const assetId = '11111111-1111-1111-1111-111111111111'
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            assetId,
+            assetTypeId: '22222222-2222-2222-2222-222222222222',
+            typeKey: 'pickup',
+            typeName: 'Pickup',
+            classKey: 'vehicle',
+            className: 'Vehicle',
+            assetTag: 'TRK-100',
+            name: 'Truck 100',
+            description: '',
+            lifecycleStatus: 'in_service',
+            siteRef: 'North Yard',
+            createdAt: '2026-05-27T00:00:00Z',
+            updatedAt: '2026-05-27T00:00:00Z',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ key: 'assets', label: 'Assets', entityType: 'asset', purpose: 'create', fields: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ key: 'assets', label: 'Assets', entityType: 'asset', purpose: 'edit', fields: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    await getAsset('token-123', assetId)
+    await getAssetCreateFieldset('token-123')
+    await getAssetEditFieldset('token-123', assetId)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, `/api/v1/assets/${assetId}`, expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/fieldsets/assets/create', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(3, `/api/v1/fieldsets/assets/${assetId}/edit`, expect.any(Object))
   })
 
   it('surfaces problem details title/detail in API errors', async () => {

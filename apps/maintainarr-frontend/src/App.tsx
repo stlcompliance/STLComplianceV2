@@ -5,6 +5,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 
 import { AssetsPage } from './pages/assets/AssetsPage'
+import { AssetCreatePage } from './pages/assets/AssetCreatePage'
+import { AssetProfilePage } from './pages/assets/AssetProfilePage'
 
 import { DefectsPage } from './pages/defects/DefectsPage'
 
@@ -71,8 +73,11 @@ export default function App() {
 
             <Route path="/assets" element={<AssetsPage />} />
             <Route path="/assets/drawer" element={<AssetsPage />} />
-            <Route path="/assets/details" element={<AssetsPage />} />
-            <Route path="/assets/create" element={<AssetsPage />} />
+            <Route path="/assets/details" element={<Navigate to="/assets/drawer" replace />} />
+            <Route path="/assets/create" element={<Navigate to="/assets/new" replace />} />
+            <Route path="/assets/new" element={<AssetCreatePage />} />
+            <Route path="/assets/:assetId" element={<AssetProfilePage />} />
+            <Route path="/assets/:assetId/edit" element={<AssetProfilePage editModeDefault />} />
 
             <Route path="/pm-programs" element={<PmProgramsPage />} />
             <Route path="/pm-programs/drawer" element={<PmProgramsPage />} />

@@ -35,6 +35,7 @@ public sealed class AssetService(
         "brakeSystemType",
         "trailerType",
         "meterType",
+        "primaryMeterType",
         "meterUnit",
         "usageProfile",
         "telematicsProvider",
@@ -111,9 +112,9 @@ public sealed class AssetService(
             assetTypeKey,
             cancellationToken);
 
-        var assetTag = NormalizeAssetTag(request.AssetTag);
-        var name = NormalizeNameOrFallback(request.Name, assetTag);
-        var description = NormalizeDescription(request.Description);
+        var assetTag = NormalizeAssetTag(ExtractFirst(request.Values, "unitNumber") ?? ExtractFirst(request.Values, "assetNumber") ?? request.AssetTag);
+        var name = NormalizeNameOrFallback(ExtractFirst(request.Values, "displayName") ?? request.Name, assetTag);
+        var description = NormalizeDescription(ExtractFirst(request.Values, "description") ?? request.Description);
 
         var exists = await db.Assets.AnyAsync(x => x.TenantId == tenantId && x.AssetTag == assetTag, cancellationToken);
         if (exists)
@@ -193,8 +194,22 @@ public sealed class AssetService(
             asset.AssetTypeId = projectedType.Id;
         }
 
-        asset.Name = NormalizeNameOrFallback(request.Name, asset.Name);
-        asset.Description = NormalizeDescription(request.Description);
+        var nextAssetTag = NormalizeAssetTag(ExtractFirst(request.Values, "unitNumber") ?? ExtractFirst(request.Values, "assetNumber") ?? request.AssetTag);
+        if (!string.Equals(asset.AssetTag, nextAssetTag, StringComparison.OrdinalIgnoreCase))
+        {
+            var duplicate = await db.Assets.AnyAsync(
+                x => x.TenantId == tenantId && x.Id != assetId && x.AssetTag == nextAssetTag,
+                cancellationToken);
+            if (duplicate)
+            {
+                throw new StlApiException("assets.duplicate_tag", "An asset with this tag already exists.", 409);
+            }
+
+            asset.AssetTag = nextAssetTag;
+        }
+
+        asset.Name = NormalizeNameOrFallback(ExtractFirst(request.Values, "displayName") ?? request.Name, asset.Name);
+        asset.Description = NormalizeDescription(ExtractFirst(request.Values, "description") ?? request.Description);
         asset.SiteRef = request.Values.TryGetValue("siteId", out var siteIdRaw) ? NormalizeSiteRef(siteIdRaw?.ToString()) : asset.SiteRef;
         if (request.Values.TryGetValue("lifecycleStatus", out var lifecycleRaw) && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString()))
         {

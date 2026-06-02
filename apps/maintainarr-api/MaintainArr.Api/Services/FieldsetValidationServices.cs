@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
@@ -261,7 +262,10 @@ public sealed class ControlledValueValidationService(
             if (!string.IsNullOrWhiteSpace(field.ReferenceKey))
             {
                 await ValidateReferenceFieldAsync(tenantId, field, selectedValues, cancellationToken);
+                continue;
             }
+
+            ValidateTypedField(field, selectedValues);
         }
     }
 
@@ -400,5 +404,140 @@ public sealed class ControlledValueValidationService(
         }
 
         return [raw.ToString()!.Trim()];
+    }
+
+    private static void ValidateTypedField(FieldMetadataResponse field, IReadOnlyList<string> selectedValues)
+    {
+        var validation = field.Validation ?? new Dictionary<string, object?>();
+        var minLength = ReadInt(validation, "minLength");
+        var maxLength = ReadInt(validation, "maxLength");
+        var min = ReadDecimal(validation, "min");
+        var max = ReadDecimal(validation, "max");
+        var pattern = ReadString(validation, "pattern");
+
+        foreach (var value in selectedValues)
+        {
+            if (minLength.HasValue && value.Length < minLength.Value)
+            {
+                throw new StlApiException(
+                    "assets.validation",
+                    $"{field.Key} must be at least {minLength.Value} characters.",
+                    400);
+            }
+
+            if (maxLength.HasValue && value.Length > maxLength.Value)
+            {
+                throw new StlApiException(
+                    "assets.validation",
+                    $"{field.Key} must be {maxLength.Value} characters or fewer.",
+                    400);
+            }
+
+            if (!string.IsNullOrWhiteSpace(pattern)
+                && !Regex.IsMatch(value, pattern, RegexOptions.None, TimeSpan.FromSeconds(1)))
+            {
+                throw new StlApiException(
+                    "assets.validation",
+                    $"{field.Key} format is invalid.",
+                    400);
+            }
+
+            if (string.Equals(field.Type, "number", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(field.Type, "integer", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(field.Control, "number", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!decimal.TryParse(value, out var parsed))
+                {
+                    throw new StlApiException(
+                        "assets.validation",
+                        $"{field.Key} must be numeric.",
+                        400);
+                }
+
+                if (string.Equals(field.Type, "integer", StringComparison.OrdinalIgnoreCase)
+                    && parsed != decimal.Truncate(parsed))
+                {
+                    throw new StlApiException(
+                        "assets.validation",
+                        $"{field.Key} must be a whole number.",
+                        400);
+                }
+
+                if (min.HasValue && parsed < min.Value)
+                {
+                    throw new StlApiException(
+                        "assets.validation",
+                        $"{field.Key} must be at least {min.Value}.",
+                        400);
+                }
+
+                if (max.HasValue && parsed > max.Value)
+                {
+                    throw new StlApiException(
+                        "assets.validation",
+                        $"{field.Key} must be {max.Value} or less.",
+                        400);
+                }
+            }
+
+            if (string.Equals(field.Type, "date", StringComparison.OrdinalIgnoreCase)
+                && !DateOnly.TryParse(value, out _))
+            {
+                throw new StlApiException(
+                    "assets.validation",
+                    $"{field.Key} must be a valid date.",
+                    400);
+            }
+        }
+    }
+
+    private static int? ReadInt(IReadOnlyDictionary<string, object?> values, string key)
+    {
+        if (!values.TryGetValue(key, out var raw) || raw is null)
+        {
+            return null;
+        }
+
+        if (raw is int intValue) return intValue;
+        if (raw is long longValue) return checked((int)longValue);
+        if (raw is JsonElement json)
+        {
+            if (json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out var jsonInt)) return jsonInt;
+            if (json.ValueKind == JsonValueKind.String && int.TryParse(json.GetString(), out var jsonStringInt)) return jsonStringInt;
+        }
+
+        return int.TryParse(raw.ToString(), out var parsed) ? parsed : null;
+    }
+
+    private static decimal? ReadDecimal(IReadOnlyDictionary<string, object?> values, string key)
+    {
+        if (!values.TryGetValue(key, out var raw) || raw is null)
+        {
+            return null;
+        }
+
+        if (raw is decimal decimalValue) return decimalValue;
+        if (raw is int intValue) return intValue;
+        if (raw is long longValue) return longValue;
+        if (raw is double doubleValue) return (decimal)doubleValue;
+        if (raw is JsonElement json)
+        {
+            if (json.ValueKind == JsonValueKind.Number && json.TryGetDecimal(out var jsonDecimal)) return jsonDecimal;
+            if (json.ValueKind == JsonValueKind.String && decimal.TryParse(json.GetString(), out var jsonStringDecimal)) return jsonStringDecimal;
+        }
+
+        return decimal.TryParse(raw.ToString(), out var parsed) ? parsed : null;
+    }
+
+    private static string? ReadString(IReadOnlyDictionary<string, object?> values, string key)
+    {
+        if (!values.TryGetValue(key, out var raw) || raw is null)
+        {
+            return null;
+        }
+
+        if (raw is string text) return text;
+        if (raw is JsonElement json && json.ValueKind == JsonValueKind.String) return json.GetString();
+        return raw.ToString();
     }
 }

@@ -1,19 +1,18 @@
 import { AssetReadinessDetailPanel } from '../../components/AssetReadinessDetailPanel'
 import { AssetDetailsPage } from '../../components/AssetDetailsPage'
 import { AssetRegistryPanel } from '../../components/AssetRegistryPanel'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ControlledSelect } from '@stl/shared-ui'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
-type AssetsViewMode = 'drawer' | 'details' | 'create'
+type AssetsViewMode = 'drawer' | 'details'
 
 export function AssetsSection({ state }: Props) {
   const s = state
   const location = useLocation()
-  const mode: AssetsViewMode = location.pathname.startsWith('/assets/create')
-    ? 'create'
-    : location.pathname.startsWith('/assets/details')
+  const navigate = useNavigate()
+  const mode: AssetsViewMode = location.pathname.startsWith('/assets/details')
       ? 'details'
       : 'drawer'
   const selectedAsset = (s.assetsQuery.data ?? []).find((item) => item.assetId === s.selectedAssetId)
@@ -25,11 +24,8 @@ export function AssetsSection({ state }: Props) {
     <div className="space-y-6" data-testid="maintainarr-assets-workspace">
       {mode !== 'details' ? (
         <AssetRegistryPanel
-          mode={mode}
           showSourceData={false}
           showAssetsTable
-          showAssetCreateForm={mode === 'create'}
-          canManage={s.canManage}
           classes={s.classesQuery.data ?? []}
           types={s.typesQuery.data ?? []}
           assets={s.assetsQuery.data ?? []}
@@ -37,42 +33,12 @@ export function AssetsSection({ state }: Props) {
             (s.assetReadinessFleetQuery.data ?? []).map((item) => [item.assetId, item]),
           )}
           selectedAssetId={s.selectedAssetId}
-          onSelectAsset={s.setSelectedAssetId}
+          onSelectAsset={(assetId) => {
+            s.setSelectedAssetId(assetId)
+            navigate(`/assets/${assetId}`)
+          }}
           isLoading={s.classesQuery.isLoading || s.typesQuery.isLoading || s.assetsQuery.isLoading}
           isReadinessLoading={s.assetReadinessFleetQuery.isLoading}
-          className={s.className}
-          classDescription={s.classDescription}
-          confirmedClassKey={s.confirmedClassKey}
-          selectedClassId={s.selectedClassId}
-          typeName={s.typeName}
-          typeDescription={s.typeDescription}
-          confirmedTypeKey={s.confirmedTypeKey}
-          selectedTypeId={s.selectedTypeId}
-          assetTag={s.assetTag}
-          assetName={s.assetName}
-          assetDescription={s.assetDescription}
-          siteRef={s.siteRef}
-          onClassNameChange={s.setClassName}
-          onClassDescriptionChange={s.setClassDescription}
-          onSelectedClassIdChange={s.setSelectedClassId}
-          onTypeNameChange={s.setTypeName}
-          onTypeDescriptionChange={s.setTypeDescription}
-          onSelectedTypeIdChange={s.setSelectedTypeId}
-          onAssetTagChange={s.setAssetTag}
-          onAssetNameChange={s.setAssetName}
-          onAssetDescriptionChange={s.setAssetDescription}
-          onSiteRefChange={s.setSiteRef}
-          onCreateClass={() => s.createClassMutation.mutate()}
-          onCreateType={() => s.createTypeMutation.mutate()}
-          onCreateAsset={() => s.createAssetMutation.mutate()}
-          isCreatingClass={s.createClassMutation.isPending}
-          isCreatingType={s.createTypeMutation.isPending}
-          isCreatingAsset={s.createAssetMutation.isPending}
-          assetFieldset={s.assetCreateFieldsetQuery.data ?? null}
-          assetFieldValues={s.assetFieldValues}
-          onAssetFieldChange={(fieldKey, value) =>
-            s.setAssetFieldValues((current) => ({ ...current, [fieldKey]: value }))
-          }
         />
       ) : null}
 
@@ -104,7 +70,7 @@ export function AssetsSection({ state }: Props) {
         )
       ) : null}
 
-      {mode !== 'create' && mode !== 'details' ? (
+      {mode !== 'details' ? (
         <AssetReadinessDetailPanel
           readiness={s.assetReadinessDetailQuery.data ?? null}
           isLoading={s.assetReadinessDetailQuery.isLoading}

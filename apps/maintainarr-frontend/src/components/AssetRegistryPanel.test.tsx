@@ -6,8 +6,6 @@ describe('AssetRegistryPanel', () => {
   it('renders asset registry lists', () => {
     render(
       <AssetRegistryPanel
-        mode="create"
-        canManage={false}
         classes={[
           {
             assetClassId: '11111111-1111-1111-1111-111111111111',
@@ -51,34 +49,6 @@ describe('AssetRegistryPanel', () => {
           },
         ]}
         isLoading={false}
-        className=""
-        classDescription=""
-        confirmedClassKey={null}
-        selectedClassId=""
-        typeName=""
-        typeDescription=""
-        confirmedTypeKey={null}
-        selectedTypeId=""
-        assetTag=""
-        assetName=""
-        assetDescription=""
-        siteRef=""
-        onClassNameChange={() => {}}
-        onClassDescriptionChange={() => {}}
-        onSelectedClassIdChange={() => {}}
-        onTypeNameChange={() => {}}
-        onTypeDescriptionChange={() => {}}
-        onSelectedTypeIdChange={() => {}}
-        onAssetTagChange={() => {}}
-        onAssetNameChange={() => {}}
-        onAssetDescriptionChange={() => {}}
-        onSiteRefChange={() => {}}
-        onCreateClass={() => {}}
-        onCreateType={() => {}}
-        onCreateAsset={() => {}}
-        isCreatingClass={false}
-        isCreatingType={false}
-        isCreatingAsset={false}
       />,
     )
 

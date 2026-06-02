@@ -570,28 +570,52 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
 
     private static IEnumerable<FieldSeed> GetFieldSeeds()
     {
+        var vehicleOrTrailer = VisibleWhen("assetClass", "vehicle", "trailer");
+        var physicalAsset = VisibleWhen("assetClass", "vehicle", "trailer", "powered_industrial_truck", "heavy_equipment", "production_equipment", "facility_equipment");
+        var equipmentOrTool = VisibleWhen("assetClass", "powered_industrial_truck", "heavy_equipment", "production_equipment", "facility_equipment", "tool", "component", "attachment");
+
+        yield return FieldSeed.FreeText("unitNumber", "Unit / Asset Number", "Tenant-unique asset number or unit number", sectionKey: "identity", required: true, validation: new Dictionary<string, object?> { ["minLength"] = 2, ["maxLength"] = 64 });
+        yield return FieldSeed.FreeText("displayName", "Display Name", "Human-readable asset name. If omitted, the asset number is used.", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 128 });
         yield return FieldSeed.Catalog("assetClass", "Asset Class", "Asset classification", required: true, catalogKey: "assetClass", sectionKey: "identity", drivesLogic: true);
         yield return FieldSeed.Catalog("assetType", "Asset Type", "Asset type", required: true, catalogKey: "assetType", sectionKey: "identity", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["assetClass"] = "assetClass" });
-        yield return FieldSeed.Catalog("assetStatus", "Asset Status", "Operational asset status", required: true, catalogKey: "assetStatus", sectionKey: "identity", drivesLogic: true);
+        yield return FieldSeed.Catalog("assetStatus", "Asset Status", "Operational asset status", required: true, catalogKey: "assetStatus", sectionKey: "identity", drivesLogic: true, defaultValueJson: "\"active\"");
         yield return FieldSeed.Catalog("lifecycleStatus", "Lifecycle Status", "Lifecycle state", required: true, catalogKey: "lifecycleStatus", sectionKey: "identity", drivesLogic: true, defaultValueJson: "\"in_service\"");
-        yield return FieldSeed.Catalog("criticality", "Criticality", "Business criticality", required: true, catalogKey: "criticality", sectionKey: "identity", drivesLogic: true);
+        yield return FieldSeed.Catalog("criticality", "Criticality", "Business criticality", required: true, catalogKey: "criticality", sectionKey: "identity", drivesLogic: true, defaultValueJson: "\"medium\"");
+        yield return FieldSeed.Catalog("primaryMeterType", "Primary Meter Type", "Primary meter for usage and PM applicability", required: false, catalogKey: "primaryMeterType", sectionKey: "identity", drivesLogic: true);
 
-        yield return FieldSeed.Catalog("make", "Make", "Manufacturer make", required: false, catalogKey: "make", sectionKey: "classification", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["assetClass"] = "assetClass" });
+        yield return FieldSeed.Catalog("make", "Make", "Vehicle or trailer make", required: false, catalogKey: "make", sectionKey: "classification", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["assetClass"] = "assetClass" }, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("manufacturer", "Manufacturer", "Equipment, tool, or component manufacturer", required: false, catalogKey: "manufacturer", sectionKey: "classification", drivesLogic: true, visibility: equipmentOrTool);
         yield return FieldSeed.Catalog("model", "Model", "Asset model", required: false, catalogKey: "model", sectionKey: "classification", drivesLogic: true, allowCustom: true, customRequiresApproval: true, dependsOn: new Dictionary<string, string> { ["make"] = "make" });
         yield return FieldSeed.Catalog("modelYear", "Model Year", "Model year", required: false, catalogKey: "modelYear", sectionKey: "classification", drivesLogic: true);
         yield return FieldSeed.Catalog("series", "Series", "Series", required: false, catalogKey: "series", sectionKey: "classification", drivesLogic: true);
         yield return FieldSeed.Catalog("trim", "Trim", "Trim", required: false, catalogKey: "trim", sectionKey: "classification", drivesLogic: true);
         yield return FieldSeed.Catalog("configuration", "Configuration", "Configuration", required: false, catalogKey: "configuration", sectionKey: "classification", drivesLogic: true);
 
-        yield return FieldSeed.Catalog("fuelType", "Fuel Type", "Fuel or energy type", required: false, catalogKey: "fuelType", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("aftertreatmentType", "Aftertreatment Type", "Aftertreatment profile", required: false, catalogKey: "aftertreatmentType", sectionKey: "configuration", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["fuelType"] = "fuelType" });
-        yield return FieldSeed.Catalog("hybridType", "Hybrid Type", "Hybrid profile", required: false, catalogKey: "hybridType", sectionKey: "configuration", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["fuelType"] = "fuelType" });
-        yield return FieldSeed.Catalog("brakeType", "Brake Type", "Brake type", required: false, catalogKey: "brakeType", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("brakeSystemType", "Brake System Type", "Brake system type", required: false, catalogKey: "brakeSystemType", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("axleConfiguration", "Axle Configuration", "Axle arrangement", required: false, catalogKey: "axleConfiguration", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("tireConfiguration", "Tire Configuration", "Tire layout", required: false, catalogKey: "tireConfiguration", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("trailerType", "Trailer Type", "Trailer profile", required: false, catalogKey: "trailerType", sectionKey: "configuration", drivesLogic: true);
-        yield return FieldSeed.Catalog("meterType", "Primary Meter Type", "Primary meter type", required: false, catalogKey: "meterType", sectionKey: "usage", drivesLogic: true);
+        yield return FieldSeed.Catalog("cabType", "Cab Type", "Vehicle cab type", required: false, catalogKey: "cabType", sectionKey: "configuration", drivesLogic: true, visibility: VisibleWhen("assetClass", "vehicle"));
+        yield return FieldSeed.Catalog("bodyType", "Body Type", "Asset body or mounted body type", required: false, catalogKey: "bodyType", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("fuelType", "Fuel Type", "Fuel or energy type", required: false, catalogKey: "fuelType", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("aftertreatmentType", "Aftertreatment Type", "Aftertreatment profile", required: false, catalogKey: "aftertreatmentType", sectionKey: "configuration", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["fuelType"] = "fuelType" }, visibility: VisibleWhen("fuelType", "diesel"));
+        yield return FieldSeed.Catalog("hybridType", "Hybrid Type", "Hybrid profile", required: false, catalogKey: "hybridType", sectionKey: "configuration", drivesLogic: true, dependsOn: new Dictionary<string, string> { ["fuelType"] = "fuelType" }, visibility: VisibleWhen("fuelType", "hybrid"));
+        yield return FieldSeed.Catalog("brakeType", "Brake Type", "Brake type", required: false, catalogKey: "brakeType", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("brakeSystemType", "Brake System Type", "Brake system type", required: false, catalogKey: "brakeSystemType", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("axleConfiguration", "Axle Configuration", "Axle arrangement", required: false, catalogKey: "axleConfiguration", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("tireConfiguration", "Tire Configuration", "Tire layout", required: false, catalogKey: "tireConfiguration", sectionKey: "configuration", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("trailerType", "Trailer Type", "Trailer profile", required: false, catalogKey: "trailerType", sectionKey: "configuration", drivesLogic: true, visibility: VisibleWhen("assetClass", "trailer"));
+        yield return FieldSeed.Catalog("engineMake", "Engine Make", "Engine manufacturer", required: false, catalogKey: "engineMake", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("engineModel", "Engine Model", "Engine model", required: false, catalogKey: "engineModel", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("transmissionMake", "Transmission Make", "Transmission manufacturer", required: false, catalogKey: "transmissionMake", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("transmissionModel", "Transmission Model", "Transmission model", required: false, catalogKey: "transmissionModel", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("tireSize", "Tire Size", "Primary tire size", required: false, catalogKey: "tireSize", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("wheelSize", "Wheel Size", "Primary wheel size", required: false, catalogKey: "wheelSize", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("suspensionType", "Suspension Type", "Suspension type", required: false, catalogKey: "suspensionType", sectionKey: "components", drivesLogic: true, visibility: physicalAsset);
+        yield return FieldSeed.Catalog("usageProfile", "Usage Profile", "Usage profile for scheduling and reporting", required: false, catalogKey: "usageProfile", sectionKey: "usage", drivesLogic: true);
+        yield return FieldSeed.Catalog("PMProgram", "PM Program", "PM program applicability", required: false, catalogKey: "PMProgram", sectionKey: "maintenance", drivesLogic: true);
+        yield return FieldSeed.Catalog("PMType", "PM Type", "Preventive maintenance type", required: false, catalogKey: "PMType", sectionKey: "maintenance", drivesLogic: true);
+        yield return FieldSeed.Catalog("inspectionType", "Inspection Type", "Inspection applicability", required: false, catalogKey: "inspectionType", sectionKey: "inspection", drivesLogic: true);
+        yield return FieldSeed.Catalog("requiredInspectionTypes", "Required Inspection Types", "Required inspection types", required: false, catalogKey: "requiredInspectionTypes", sectionKey: "inspection", drivesLogic: true, multi: true);
+        yield return FieldSeed.Catalog("documentType", "Document Type", "Document or evidence type", required: false, catalogKey: "documentType", sectionKey: "documents", drivesLogic: true, multi: true);
+        yield return FieldSeed.Catalog("telematicsProvider", "Telematics Provider", "Telematics provider", required: false, catalogKey: "telematicsProvider", sectionKey: "telematics", drivesLogic: true);
+        yield return FieldSeed.Catalog("diagnosticProtocol", "Diagnostic Protocol", "Diagnostic protocol", required: false, catalogKey: "diagnosticProtocol", sectionKey: "telematics", drivesLogic: true);
 
         yield return FieldSeed.Reference("governingBodyKey", "Governing Body", "Regulatory governing body", required: false, "governingBody", "compliancecore_reference", "Compliance Core", "compliance", true, multi: true, drivesCompliance: true);
         yield return FieldSeed.Reference("rulepackApplicabilityKeys", "Rulepack Applicability", "Compliance Core rulepacks", required: false, "rulepackApplicabilityKeys", "compliancecore_reference", "Compliance Core", "compliance", true, multi: true, drivesCompliance: true);
@@ -613,14 +637,16 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         yield return FieldSeed.Reference("compatiblePartIds", "Compatible Parts", "SupplyArr part references", required: false, "parts", "supplyarr_reference", "SupplyArr", "components", true, multi: true);
         yield return FieldSeed.Reference("preferredPartId", "Preferred Part", "SupplyArr part reference", required: false, "parts", "supplyarr_reference", "SupplyArr", "components", true);
 
-        yield return FieldSeed.FreeText("description", "Description", "Description and notes", sectionKey: "free_text");
-        yield return FieldSeed.FreeText("notes", "Notes", "Operational notes", sectionKey: "free_text");
-        yield return FieldSeed.FreeText("VIN", "VIN", "Vehicle identification number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 17, ["pattern"] = "^[A-HJ-NPR-Z0-9]{11,17}$" });
-        yield return FieldSeed.FreeText("serialNumber", "Serial Number", "Serial number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 64 });
-        yield return FieldSeed.FreeText("licensePlate", "License Plate", "Plate number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 32 });
-        yield return FieldSeed.FreeText("unitNumber", "Unit Number", "Unit number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 64 });
+        yield return FieldSeed.FreeText("description", "Description", "Description and notes", sectionKey: "free_text", validation: new Dictionary<string, object?> { ["maxLength"] = 1024 });
+        yield return FieldSeed.FreeText("notes", "Notes", "Operational notes", sectionKey: "free_text", validation: new Dictionary<string, object?> { ["maxLength"] = 2048 });
+        yield return FieldSeed.FreeText("VIN", "VIN", "Vehicle identification number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 17, ["pattern"] = "^[A-HJ-NPR-Z0-9]{11,17}$" }, visibility: vehicleOrTrailer);
+        yield return FieldSeed.FreeText("serialNumber", "Serial Number", "Serial number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 64 }, visibility: equipmentOrTool);
+        yield return FieldSeed.FreeText("licensePlate", "License Plate", "Plate number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 32 }, visibility: vehicleOrTrailer);
         yield return FieldSeed.FreeText("fleetNumber", "Fleet Number", "Fleet number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 64 });
     }
+
+    private static IReadOnlyDictionary<string, object?> VisibleWhen(string key, params string[] values) =>
+        new Dictionary<string, object?> { [key] = values };
 
     private static IReadOnlyList<DependencySeed> BuildDependencySeeds()
     {
@@ -996,13 +1022,15 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             IReadOnlyDictionary<string, object?>? validation = null,
             string defaultValueJson = "null",
             bool allowCustom = false,
-            bool customRequiresApproval = false) =>
+            bool customRequiresApproval = false,
+            bool multi = false,
+            IReadOnlyDictionary<string, object?>? visibility = null) =>
             new(
                 key,
                 label,
                 description,
                 "string",
-                "select",
+                multi ? "multiSelect" : "select",
                 required,
                 catalogKey,
                 null,
@@ -1012,7 +1040,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
                 dependsOn ?? new Dictionary<string, string>(),
                 validation ?? new Dictionary<string, object?>(),
                 defaultValueJson,
-                new Dictionary<string, object?>(),
+                visibility ?? new Dictionary<string, object?>(),
                 allowCustom,
                 customRequiresApproval,
                 drivesLogic,
@@ -1033,7 +1061,8 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             string sectionKey,
             bool drivesLogic,
             bool multi = false,
-            bool drivesCompliance = false) =>
+            bool drivesCompliance = false,
+            IReadOnlyDictionary<string, object?>? visibility = null) =>
             new(
                 key,
                 label,
@@ -1049,7 +1078,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
                 new Dictionary<string, string>(),
                 new Dictionary<string, object?>(),
                 "null",
-                new Dictionary<string, object?>(),
+                visibility ?? new Dictionary<string, object?>(),
                 false,
                 false,
                 drivesLogic,
@@ -1064,14 +1093,16 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             string label,
             string description,
             string sectionKey,
-            IReadOnlyDictionary<string, object?>? validation = null) =>
+            bool required = false,
+            IReadOnlyDictionary<string, object?>? validation = null,
+            IReadOnlyDictionary<string, object?>? visibility = null) =>
             new(
                 key,
                 label,
                 description,
                 "string",
                 "text",
-                false,
+                required,
                 null,
                 null,
                 "maintainarr_record",
@@ -1080,7 +1111,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
                 new Dictionary<string, string>(),
                 validation ?? new Dictionary<string, object?>(),
                 "null",
-                new Dictionary<string, object?>(),
+                visibility ?? new Dictionary<string, object?>(),
                 false,
                 false,
                 false,

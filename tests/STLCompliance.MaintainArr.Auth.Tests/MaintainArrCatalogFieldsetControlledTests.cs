@@ -175,6 +175,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
 
         var values = new Dictionary<string, object?>
         {
+            ["unitNumber"] = "TRL-100",
             ["assetClass"] = "trailer",
             ["assetType"] = "pickup",
             ["assetStatus"] = "active",
@@ -394,6 +395,51 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         Assert.Equal("references.ownership_violation", ex.Code);
     }
 
+    [Fact]
+    public async Task Non_controlled_fieldset_values_validate_format_and_length()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var catalogService = BuildCatalogService(db, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
+        var pending = new PendingCatalogValueService(db);
+        var validator = BuildValidator(db, catalogService, pending);
+
+        var values = BaseRequiredValues();
+        values["assetClass"] = "vehicle";
+        values["assetType"] = "pickup";
+        values["VIN"] = "bad vin with spaces";
+
+        var ex = await Assert.ThrowsAsync<StlApiException>(() =>
+            validator.ValidateFieldsetValuesAsync(
+                tenantId,
+                fieldset.Fields,
+                values,
+                ActorPersonId,
+                "asset",
+                "new",
+                createPendingValues: false,
+                CancellationToken.None));
+
+        Assert.Equal("assets.validation", ex.Code);
+        Assert.Contains("VIN", ex.Message, StringComparison.OrdinalIgnoreCase);
+
+        values["VIN"] = "1FTFW1E50PFA00001";
+        await validator.ValidateFieldsetValuesAsync(
+            tenantId,
+            fieldset.Fields,
+            values,
+            ActorPersonId,
+            "asset",
+            "new",
+            createPendingValues: false,
+            CancellationToken.None);
+    }
+
     private static MaintainArrDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<MaintainArrDbContext>()
@@ -446,6 +492,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
     {
         return new Dictionary<string, object?>
         {
+            ["unitNumber"] = "UNIT-100",
             ["assetStatus"] = "active",
             ["lifecycleStatus"] = "in_service",
             ["criticality"] = "medium",
