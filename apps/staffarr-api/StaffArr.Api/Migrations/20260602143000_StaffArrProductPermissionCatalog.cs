@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StaffArr.Api.Migrations
 {
     /// <inheritdoc />
-    [Migration("20260602143000_StaffArrProductPermissionCatalog")]
     public partial class StaffArrProductPermissionCatalog : Migration
     {
         /// <inheritdoc />
