@@ -4,6 +4,8 @@ public sealed class PlatformProductUrlsOptions
 {
     public const string SectionName = "PlatformProducts";
 
+    public string NexArrBaseUrl { get; set; } = "http://localhost:5101";
+
     public string StaffArrBaseUrl { get; set; } = "http://localhost:5102";
 
     public string TrainArrBaseUrl { get; set; } = "http://localhost:5103";

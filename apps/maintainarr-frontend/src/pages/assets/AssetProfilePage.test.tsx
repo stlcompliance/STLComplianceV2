@@ -234,7 +234,7 @@ describe('AssetProfilePage', () => {
     renderProfile('/assets/asset-1')
 
     expect((await screen.findAllByText('Truck 100')).length).toBeGreaterThan(0)
-    expect(screen.getByText('TRK-100')).toBeInTheDocument()
+    expect(screen.getAllByText('TRK-100').length).toBeGreaterThan(0)
     expect(screen.getByText('VIN not recorded')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /edit asset/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /save asset/i })).not.toBeInTheDocument()

@@ -47,11 +47,12 @@ public static class PlatformSeeder
         NexArrDbContext db,
         IPasswordHasher passwordHasher,
         StlLaunchOptions? launchOptions = null,
+        PlatformProductUrlsOptions? platformProductUrls = null,
         CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
         await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
-        await EnsureProductCatalogAsync(db, cancellationToken);
+        await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
 
         if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
         {
@@ -241,19 +242,21 @@ public static class PlatformSeeder
 
     private static async Task EnsureProductCatalogAsync(
         NexArrDbContext db,
+        PlatformProductUrlsOptions? platformProductUrls,
         CancellationToken cancellationToken)
     {
         foreach (var seed in Products)
         {
+            var effectiveSeed = ApplyConfiguredProductUrl(seed, platformProductUrls);
             var product = await db.ProductCatalog
-                .FirstOrDefaultAsync(p => p.ProductKey == seed.Key, cancellationToken);
+                .FirstOrDefaultAsync(p => p.ProductKey == effectiveSeed.Key, cancellationToken);
             if (product is null)
             {
-                db.ProductCatalog.Add(CreateProduct(seed));
+                db.ProductCatalog.Add(CreateProduct(effectiveSeed));
                 continue;
             }
 
-            ApplyMissingManifestMetadata(product, seed);
+            ApplyMissingManifestMetadata(product, effectiveSeed);
         }
 
         static ProductCatalogItem CreateProduct(ProductSeed seed) =>
@@ -273,7 +276,7 @@ public static class PlatformSeeder
                 MarketingUrl = $"https://stlcompliance.com/products/{seed.Key}",
                 DocumentationUrl = $"https://stlcompliance.com/docs/{seed.Key}",
                 SupportUrl = "https://stlcompliance.com/support",
-                EnvironmentKey = "local",
+                EnvironmentKey = ResolveEnvironmentKey(seed.ApiBaseUrl),
                 EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
                     ? "internal-platform-worker"
                     : "tenant-product-entitlement-required",
@@ -306,8 +309,16 @@ public static class PlatformSeeder
             {
                 product.ApiBaseUrl = seed.ApiBaseUrl;
             }
+            else if (IsLocalUrl(product.ApiBaseUrl) && !IsLocalUrl(seed.ApiBaseUrl))
+            {
+                product.ApiBaseUrl = seed.ApiBaseUrl;
+            }
 
             if (string.IsNullOrWhiteSpace(product.HealthUrl))
+            {
+                product.HealthUrl = seed.HealthUrl;
+            }
+            else if (IsLocalUrl(product.HealthUrl) && !IsLocalUrl(seed.HealthUrl))
             {
                 product.HealthUrl = seed.HealthUrl;
             }
@@ -336,6 +347,11 @@ public static class PlatformSeeder
             {
                 product.EnvironmentKey = "local";
             }
+            else if (product.EnvironmentKey.Equals("local", StringComparison.OrdinalIgnoreCase)
+                && ShouldUseProductionEnvironmentKey(seed.ApiBaseUrl))
+            {
+                product.EnvironmentKey = "production";
+            }
 
             if (string.IsNullOrWhiteSpace(product.EntitlementDependencyRules))
             {
@@ -350,6 +366,52 @@ public static class PlatformSeeder
             }
         }
     }
+
+    private static ProductSeed ApplyConfiguredProductUrl(
+        ProductSeed seed,
+        PlatformProductUrlsOptions? platformProductUrls)
+    {
+        var configuredBaseUrl = seed.Key switch
+        {
+            "nexarr" => platformProductUrls?.NexArrBaseUrl,
+            "staffarr" => platformProductUrls?.StaffArrBaseUrl,
+            "trainarr" => platformProductUrls?.TrainArrBaseUrl,
+            "maintainarr" => platformProductUrls?.MaintainArrBaseUrl,
+            "routarr" => platformProductUrls?.RoutArrBaseUrl,
+            "supplyarr" => platformProductUrls?.SupplyArrBaseUrl,
+            "compliancecore" => platformProductUrls?.ComplianceCoreBaseUrl,
+            _ => null
+        };
+
+        if (string.IsNullOrWhiteSpace(configuredBaseUrl))
+        {
+            return seed;
+        }
+
+        var normalizedBaseUrl = configuredBaseUrl.Trim().TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(normalizedBaseUrl) || string.Equals(normalizedBaseUrl, seed.ApiBaseUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            return seed;
+        }
+
+        return seed with
+        {
+            ApiBaseUrl = normalizedBaseUrl,
+            HealthUrl = $"{normalizedBaseUrl}/health/ready"
+        };
+    }
+
+    private static bool IsLocalUrl(string? url) =>
+        !string.IsNullOrWhiteSpace(url)
+        && (url.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+            || url.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+            || url.Contains("[::1]", StringComparison.OrdinalIgnoreCase));
+
+    private static string ResolveEnvironmentKey(string? apiBaseUrl) =>
+        ShouldUseProductionEnvironmentKey(apiBaseUrl) ? "production" : "local";
+
+    private static bool ShouldUseProductionEnvironmentKey(string? apiBaseUrl) =>
+        !string.IsNullOrWhiteSpace(apiBaseUrl) && !IsLocalUrl(apiBaseUrl);
 
     private static string ResolveDependencyMetadata(string productKey) =>
         productKey switch

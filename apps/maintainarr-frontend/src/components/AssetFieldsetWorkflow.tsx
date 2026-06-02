@@ -428,7 +428,7 @@ function controlTypeForField(field: FieldMetadataResponse): string {
   return field.control
 }
 
-function formatFieldValue(
+export function formatAssetFieldValue(
   fieldset: FieldsetResponse,
   field: FieldMetadataResponse,
   value: unknown,
@@ -482,7 +482,7 @@ function AssetFieldControl({
       <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
         <dt className="text-xs font-medium text-slate-400">{field.label}</dt>
         <dd className="mt-1 text-sm font-medium text-slate-100">
-          {formatFieldValue(fieldset, field, value, values, displayValues)}
+          {formatAssetFieldValue(fieldset, field, value, values, displayValues)}
         </dd>
       </div>
     )

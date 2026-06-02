@@ -79,21 +79,22 @@ public static class NexArrServiceRegistration
         builder.Services.Configure<CompanionProductUrlsOptions>(options =>
         {
             var configuration = builder.Configuration;
-            options.StaffArrBaseUrl = configuration["StaffArr__BaseUrl"] ?? options.StaffArrBaseUrl;
-            options.TrainArrBaseUrl = configuration["TrainArr__BaseUrl"] ?? options.TrainArrBaseUrl;
-            options.MaintainArrBaseUrl = configuration["MaintainArr__BaseUrl"] ?? options.MaintainArrBaseUrl;
-            options.RoutArrBaseUrl = configuration["RoutArr__BaseUrl"] ?? options.RoutArrBaseUrl;
-            options.SupplyArrBaseUrl = configuration["SupplyArr__BaseUrl"] ?? options.SupplyArrBaseUrl;
+            options.StaffArrBaseUrl = ResolveProductBaseUrl(configuration, "StaffArr", options.StaffArrBaseUrl);
+            options.TrainArrBaseUrl = ResolveProductBaseUrl(configuration, "TrainArr", options.TrainArrBaseUrl);
+            options.MaintainArrBaseUrl = ResolveProductBaseUrl(configuration, "MaintainArr", options.MaintainArrBaseUrl);
+            options.RoutArrBaseUrl = ResolveProductBaseUrl(configuration, "RoutArr", options.RoutArrBaseUrl);
+            options.SupplyArrBaseUrl = ResolveProductBaseUrl(configuration, "SupplyArr", options.SupplyArrBaseUrl);
         });
         builder.Services.Configure<PlatformProductUrlsOptions>(options =>
         {
             var configuration = builder.Configuration;
-            options.StaffArrBaseUrl = configuration["StaffArr__BaseUrl"] ?? options.StaffArrBaseUrl;
-            options.TrainArrBaseUrl = configuration["TrainArr__BaseUrl"] ?? options.TrainArrBaseUrl;
-            options.MaintainArrBaseUrl = configuration["MaintainArr__BaseUrl"] ?? options.MaintainArrBaseUrl;
-            options.RoutArrBaseUrl = configuration["RoutArr__BaseUrl"] ?? options.RoutArrBaseUrl;
-            options.SupplyArrBaseUrl = configuration["SupplyArr__BaseUrl"] ?? options.SupplyArrBaseUrl;
-            options.ComplianceCoreBaseUrl = configuration["ComplianceCore__BaseUrl"] ?? options.ComplianceCoreBaseUrl;
+            options.NexArrBaseUrl = ResolveProductBaseUrl(configuration, "NexArr", options.NexArrBaseUrl);
+            options.StaffArrBaseUrl = ResolveProductBaseUrl(configuration, "StaffArr", options.StaffArrBaseUrl);
+            options.TrainArrBaseUrl = ResolveProductBaseUrl(configuration, "TrainArr", options.TrainArrBaseUrl);
+            options.MaintainArrBaseUrl = ResolveProductBaseUrl(configuration, "MaintainArr", options.MaintainArrBaseUrl);
+            options.RoutArrBaseUrl = ResolveProductBaseUrl(configuration, "RoutArr", options.RoutArrBaseUrl);
+            options.SupplyArrBaseUrl = ResolveProductBaseUrl(configuration, "SupplyArr", options.SupplyArrBaseUrl);
+            options.ComplianceCoreBaseUrl = ResolveProductBaseUrl(configuration, "ComplianceCore", options.ComplianceCoreBaseUrl);
         });
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
 
@@ -129,13 +130,15 @@ public static class NexArrServiceRegistration
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
-            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
+            var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
+            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions, platformProductUrls);
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
         }
         else if (app.Environment.IsProduction())
         {
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
-            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
+            var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
+            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions, platformProductUrls);
 
             var productionOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var origin in new[]
@@ -166,5 +169,17 @@ public static class NexArrServiceRegistration
             var bootstrap = scope.ServiceProvider.GetRequiredService<IntegrationTokenBootstrapService>();
             await bootstrap.EnsureProvisionedAsync();
         }
+    }
+
+    private static string ResolveProductBaseUrl(
+        IConfiguration configuration,
+        string productSectionName,
+        string fallback)
+    {
+        var hierarchicalKey = $"{productSectionName}:BaseUrl";
+        var legacyFlatKey = $"{productSectionName}__BaseUrl";
+        return configuration[hierarchicalKey]
+            ?? configuration[legacyFlatKey]
+            ?? fallback;
     }
 }

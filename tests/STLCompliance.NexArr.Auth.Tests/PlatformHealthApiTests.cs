@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
+using NexArr.Api.Options;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -59,5 +62,30 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
         Assert.True(
             response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
             $"Unexpected status: {response.StatusCode}");
+    }
+
+    [Fact]
+    public void Product_url_options_read_hierarchical_render_keys()
+    {
+        using var factory = new WebApplicationFactory<global::NexArr.Api.Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.UseSetting("ConnectionStrings:Database", string.Empty);
+            builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+            builder.UseSetting("StaffArr:BaseUrl", "https://staffarr-api.example.test");
+            builder.UseSetting("TrainArr:BaseUrl", "https://trainarr-api.example.test");
+            builder.UseSetting("ComplianceCore:BaseUrl", "https://compliancecore-api.example.test");
+        });
+
+        using var scope = factory.Services.CreateScope();
+        var platformOptions = scope.ServiceProvider.GetRequiredService<IOptions<PlatformProductUrlsOptions>>().Value;
+        var companionOptions = scope.ServiceProvider.GetRequiredService<IOptions<CompanionProductUrlsOptions>>().Value;
+
+        Assert.Equal("https://staffarr-api.example.test", platformOptions.StaffArrBaseUrl);
+        Assert.Equal("https://trainarr-api.example.test", platformOptions.TrainArrBaseUrl);
+        Assert.Equal("https://compliancecore-api.example.test", platformOptions.ComplianceCoreBaseUrl);
+        Assert.Equal("https://staffarr-api.example.test", companionOptions.StaffArrBaseUrl);
+        Assert.Equal("https://trainarr-api.example.test", companionOptions.TrainArrBaseUrl);
     }
 }
