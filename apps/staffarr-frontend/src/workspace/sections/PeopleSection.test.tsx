@@ -353,7 +353,7 @@ describe('PeopleSection quick filter', () => {
     expect(setSelectedPersonId).toHaveBeenCalledWith('person-2')
   })
 
-  it('shows details content groups behind tabs', () => {
+  it('renders the replacement person detail overview', () => {
     const profile = {
       personId: 'person-1',
       externalUserId: null,
@@ -386,9 +386,10 @@ describe('PeopleSection quick filter', () => {
       '/people/details',
     )
 
-    expect(screen.getByText('Selected person')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Alex Rivera' })).toBeTruthy()
+    expect(screen.getByText('Person snapshot')).toBeTruthy()
+    expect(screen.getByText('Authorization decision')).toBeTruthy()
     expect(screen.getByRole('tab', { name: 'Overview' }).getAttribute('aria-selected')).toBe('true')
-    fireEvent.click(screen.getByRole('tab', { name: 'Records' }))
-    expect(screen.getByRole('tab', { name: 'Records' }).getAttribute('aria-selected')).toBe('true')
+    expect(screen.getByRole('tab', { name: 'Documents' })).toBeTruthy()
   })
 })

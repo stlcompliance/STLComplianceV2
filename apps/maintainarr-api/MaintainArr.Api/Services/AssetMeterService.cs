@@ -18,9 +18,7 @@ public sealed class AssetMeterService(
     {
         _ = await assetService.GetAsync(tenantId, assetId, cancellationToken);
 
-        return await QueryMeters(tenantId)
-            .Where(x => x.AssetId == assetId)
-            .OrderBy(x => x.MeterKey)
+        return await QueryMeters(tenantId, assetId: assetId, orderByMeterKey: true)
             .ToListAsync(cancellationToken);
     }
 
@@ -29,8 +27,8 @@ public sealed class AssetMeterService(
         Guid assetMeterId,
         CancellationToken cancellationToken = default)
     {
-        var meter = await QueryMeters(tenantId)
-            .FirstOrDefaultAsync(x => x.AssetMeterId == assetMeterId, cancellationToken);
+        var meter = await QueryMeters(tenantId, assetMeterId: assetMeterId)
+            .FirstOrDefaultAsync(cancellationToken);
         if (meter is null)
         {
             throw new StlApiException("meter.not_found", "Asset meter was not found.", 404);
@@ -126,9 +124,31 @@ public sealed class AssetMeterService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private IQueryable<AssetMeterResponse> QueryMeters(Guid tenantId) =>
-        db.AssetMeters.AsNoTracking()
-            .Where(x => x.TenantId == tenantId)
+    private IQueryable<AssetMeterResponse> QueryMeters(
+        Guid tenantId,
+        Guid? assetId = null,
+        Guid? assetMeterId = null,
+        bool orderByMeterKey = false)
+    {
+        var meters = db.AssetMeters.AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+
+        if (assetId.HasValue)
+        {
+            meters = meters.Where(x => x.AssetId == assetId.Value);
+        }
+
+        if (assetMeterId.HasValue)
+        {
+            meters = meters.Where(x => x.Id == assetMeterId.Value);
+        }
+
+        if (orderByMeterKey)
+        {
+            meters = meters.OrderBy(x => x.MeterKey);
+        }
+
+        return meters
             .Join(
                 db.Assets.AsNoTracking().Where(a => a.TenantId == tenantId),
                 meter => meter.AssetId,
@@ -148,6 +168,7 @@ public sealed class AssetMeterService(
                     meter.Status,
                     meter.CreatedAt,
                     meter.UpdatedAt));
+    }
 
     private static string NormalizeMeterKey(string meterKey)
     {

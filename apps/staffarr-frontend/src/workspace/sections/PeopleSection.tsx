@@ -1,22 +1,33 @@
 import { getErrorMessage } from '@stl/shared-ui'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Award,
+  BriefcaseBusiness,
+  CalendarClock,
+  CheckCircle2,
+  ChevronDown,
+  FileText,
+  GraduationCap,
+  IdCard,
+  KeyRound,
+  MoreHorizontal,
+  Pencil,
+  ShieldCheck,
+  User,
+  UserCheck,
+  XCircle,
+} from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CreatePersonPanel } from '../../components/CreatePersonPanel'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
-import { PersonLookupPanel } from '../../components/PersonLookupPanel'
-import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
-import { PersonTrainarrTrainingHistoryPanel } from '../../components/PersonTrainarrTrainingHistoryPanel'
-import { WorkforceOnboardingJourneyPanel } from '../../components/WorkforceOnboardingJourneyPanel'
-import { PersonOffboardingPanel } from '../../components/PersonOffboardingPanel'
-import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
-import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
-import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
-import { Link, useLocation } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
 type PeopleViewMode = 'drawer' | 'details' | 'create'
 type DrawerColumnKey = 'name' | 'email' | 'jobTitle' | 'orgUnit' | 'status' | 'manager'
-type DetailsTabKey = 'overview' | 'profile' | 'records' | 'lifecycle' | 'activity'
+type Tone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
 
 const PEOPLE_DRAWER_COLUMN_STORAGE_KEY = 'staffarr.people.drawer.columns.v1'
 
@@ -31,39 +42,142 @@ const ALL_DRAWER_COLUMNS: Array<{ key: DrawerColumnKey; label: string }> = [
 
 const DEFAULT_DRAWER_COLUMNS: DrawerColumnKey[] = ['name', 'email', 'jobTitle', 'orgUnit', 'status']
 
-const DETAIL_TABS: Array<{ key: DetailsTabKey; label: string }> = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'profile', label: 'Profile' },
-  { key: 'records', label: 'Records' },
-  { key: 'lifecycle', label: 'Lifecycle' },
-  { key: 'activity', label: 'Activity' },
-]
+const detailTabs = ['Overview', 'Permissions', 'Certifications', 'Assignments', 'Training', 'Incidents', 'Documents', 'History']
 
-function formatStatus(status: string | null | undefined) {
-  return status ? status.replaceAll('_', ' ') : 'Unavailable'
+function humanize(value: string | null | undefined): string {
+  if (!value) return 'Not recorded'
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-function statusBadgeClass(status: string | null | undefined) {
-  switch (status) {
-    case 'complete':
-    case 'active':
-      return 'border-emerald-700/60 bg-emerald-950/30 text-emerald-200'
-    case 'blocked':
-    case 'terminated':
-    case 'inactive':
-      return 'border-rose-700/60 bg-rose-950/30 text-rose-200'
-    case 'in_progress':
-      return 'border-sky-700/60 bg-sky-950/30 text-sky-200'
-    default:
-      return 'border-slate-700 bg-slate-900 text-slate-300'
-  }
+function formatDate(value: string | null | undefined): string {
+  if (!value) return 'Not recorded'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Not recorded'
+  return date.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })
+}
+
+function daysUntil(value: string | null | undefined): number | null {
+  if (!value) return null
+  const timestamp = Date.parse(value)
+  if (!Number.isFinite(timestamp)) return null
+  return Math.ceil((timestamp - Date.now()) / 86_400_000)
+}
+
+function badgeClass(tone: Tone): string {
+  if (tone === 'good') return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
+  if (tone === 'warn') return 'border-amber-400/30 bg-amber-500/15 text-amber-200'
+  if (tone === 'bad') return 'border-red-400/30 bg-red-500/15 text-red-200'
+  if (tone === 'info') return 'border-sky-400/30 bg-sky-500/15 text-sky-200'
+  return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
+}
+
+function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
+      {label}
+    </span>
+  )
+}
+
+function MetricCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone = 'neutral',
+}: {
+  label: string
+  value: string | number
+  hint: string
+  icon: ReactNode
+  tone?: Tone
+}) {
+  const iconClass = {
+    good: 'bg-emerald-500/15 text-emerald-300',
+    warn: 'bg-amber-500/15 text-amber-300',
+    bad: 'bg-red-500/15 text-red-300',
+    info: 'bg-sky-500/15 text-sky-300',
+    neutral: 'bg-slate-700/60 text-slate-300',
+  }[tone]
+
+  return (
+    <section className="min-h-32 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-sky-200/80">{label}</p>
+          <p className="mt-3 text-3xl font-bold tracking-normal text-white">{value}</p>
+        </div>
+        <div className={`rounded-xl p-3 ${iconClass}`}>{icon}</div>
+      </div>
+      <p className="mt-2 text-xs text-slate-400">{hint}</p>
+    </section>
+  )
+}
+
+function SnapshotField({
+  label,
+  value,
+  source,
+}: {
+  label: string
+  value: string
+  source: string
+}) {
+  return (
+    <div className="min-h-[4.5rem] rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{label}</dt>
+        <span className="shrink-0 text-[10px] text-slate-500">{source}</span>
+      </div>
+      <dd className="mt-2 break-words text-sm font-semibold text-white">{value}</dd>
+    </div>
+  )
+}
+
+function ProductPermissionCard({
+  product,
+  role,
+  detail,
+  allowed,
+}: {
+  product: string
+  role: string
+  detail: string
+  allowed: boolean
+}) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-bold text-white">{product}</p>
+          <p className="mt-3 text-sm text-slate-100">{role}</p>
+          <p className="mt-2 text-xs text-slate-400">{detail}</p>
+        </div>
+        <Badge label={allowed ? 'Allowed' : 'Blocked'} tone={allowed ? 'good' : 'bad'} />
+      </div>
+    </div>
+  )
+}
+
+function certificationTone(expiresAt: string | null, status: string): Tone {
+  if (status !== 'active') return 'bad'
+  const remaining = daysUntil(expiresAt)
+  if (remaining != null && remaining <= 60) return 'warn'
+  return 'good'
+}
+
+function certificationLabel(expiresAt: string | null, status: string): string {
+  if (status !== 'active') return humanize(status)
+  const remaining = daysUntil(expiresAt)
+  if (remaining != null && remaining <= 60) return 'Expiring soon'
+  return 'Current'
 }
 
 export function PeopleSection({ state }: Props) {
   const s = state
   const location = useLocation()
   const [selectedColumns, setSelectedColumns] = useState<DrawerColumnKey[]>(DEFAULT_DRAWER_COLUMNS)
-  const [activeDetailsTab, setActiveDetailsTab] = useState<DetailsTabKey>('overview')
+  const [showEditor, setShowEditor] = useState(false)
   const managerDisplayName = s.profile?.managerPersonId
     ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
     : 'None'
@@ -105,10 +219,8 @@ export function PeopleSection({ state }: Props) {
   }, [selectedColumns])
 
   useEffect(() => {
-    if (mode !== 'details') {
-      setActiveDetailsTab('overview')
-    }
-  }, [mode])
+    setShowEditor(false)
+  }, [s.effectivePersonId, mode])
 
   const visibleColumns = useMemo(() => {
     const picked = selectedColumns
@@ -152,24 +264,6 @@ export function PeopleSection({ state }: Props) {
         return ''
     }
   }
-
-  const detailPersonId = s.selectedPerson?.personId ?? s.profile?.personId ?? s.effectivePersonId ?? null
-  const detailPersonDisplayName = s.profile?.displayName ?? s.selectedPerson?.displayName ?? 'No profile selected'
-  const detailPersonEmail = s.profile?.primaryEmail ?? s.selectedPerson?.primaryEmail ?? null
-  const detailPersonStatus = s.profile?.employmentStatus ?? s.selectedPerson?.employmentStatus ?? null
-  const detailPersonOrgUnit = s.profile?.primaryOrgUnitName ?? s.selectedPerson?.primaryOrgUnitName ?? 'Unassigned'
-  const lookup = s.personLookupQuery.data
-  const journey = s.workforceOnboardingJourneyQuery.data
-  const historySummary = s.personHistorySummaryQuery.data
-  const completedJourneyStepCount = journey?.steps.filter((step) => step.status === 'complete').length ?? 0
-  const blockedJourneyStepCount = journey?.steps.filter((step) => step.status === 'blocked').length ?? 0
-
-  const emptyDetailsState = (
-    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-sm font-medium text-slate-300">No profile selected</h2>
-      <p className="mt-2 text-sm text-slate-400">Choose a person from the directory to view these details.</p>
-    </section>
-  )
 
   const renderDirectorySection = () => (
     <section className={mode === 'details' ? '' : 'mt-8'}>
@@ -254,7 +348,7 @@ export function PeopleSection({ state }: Props) {
           ) : null}
         </div>
         {s.peopleQuery.isLoading ? (
-          <p className="mt-4 text-sm text-slate-400">Loading people…</p>
+          <p className="mt-4 text-sm text-slate-400">Loading people...</p>
         ) : s.people.length === 0 ? (
           <p className="mt-4 text-sm text-slate-400">No people have been added yet for this tenant.</p>
         ) : s.filteredPeople.length === 0 ? (
@@ -347,7 +441,7 @@ export function PeopleSection({ state }: Props) {
                   >
                     <p className="text-sm text-white">{person.displayName}</p>
                     <p className="text-xs text-slate-400">
-                      {person.jobTitle ?? 'No title'} · {person.primaryEmail}
+                      {person.jobTitle ?? 'No title'} - {person.primaryEmail}
                     </p>
                   </button>
                   <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
@@ -360,516 +454,452 @@ export function PeopleSection({ state }: Props) {
     </section>
   )
 
-  const selectedProfilePanel = (
-    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
-      {s.personProfileQuery.isLoading ? (
-        <p className="mt-4 text-sm text-slate-400">Loading selected profile…</p>
-      ) : !s.profile ? (
-        <p className="mt-4 text-sm text-slate-400">No profile selected.</p>
-      ) : (
-        <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Name</dt>
-            <dd className="text-right text-white">{s.profile.displayName}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Email</dt>
-            <dd className="text-right text-white">{s.profile.primaryEmail}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Org unit</dt>
-            <dd className="text-right text-white">{s.profile.primaryOrgUnitName ?? 'Unassigned'}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Manager</dt>
-            <dd className="text-right text-white">{managerDisplayName}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Created</dt>
-            <dd className="text-right text-slate-200">{new Date(s.profile.createdAt).toLocaleDateString()}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Updated</dt>
-            <dd className="text-right text-slate-200">{new Date(s.profile.updatedAt).toLocaleDateString()}</dd>
-          </div>
-        </dl>
-      )}
-    </section>
-  )
-
-  const overviewStatusCards = (
-    <div className="mt-6 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Employment</p>
-        <p className="mt-2 text-sm font-medium capitalize text-slate-100">{formatStatus(detailPersonStatus)}</p>
-      </div>
-      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Placement</p>
-        <p className="mt-2 truncate text-sm font-medium text-slate-100">{detailPersonOrgUnit}</p>
-      </div>
-      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Onboarding</p>
-        <p className="mt-2 text-sm font-medium capitalize text-slate-100">
-          {s.workforceOnboardingJourneyQuery.isLoading ? 'Loading' : formatStatus(journey?.overallStatus)}
-        </p>
-      </div>
-      <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Activity</p>
-        <p className="mt-2 text-sm font-medium text-slate-100">
-          {historySummary ? `${historySummary.eventCount} events` : 'No rollup yet'}
-        </p>
-      </div>
-    </div>
-  )
-
-  const overviewWorkflowCard = (
-    <section className="mt-6 rounded-lg border border-slate-700 bg-slate-900/60 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-medium text-slate-300">Readiness and onboarding</h2>
-          {journey ? (
-            <p className="mt-2 text-sm text-slate-400">{journey.overallSummary}</p>
-          ) : (
-            <p className="mt-2 text-sm text-slate-400">
-              {s.workforceOnboardingJourneyQuery.isLoading
-                ? 'Loading onboarding summary…'
-                : 'No onboarding summary is available for this person.'}
-            </p>
-          )}
-        </div>
-        <span className={`rounded-md border px-2 py-1 text-xs font-medium capitalize ${statusBadgeClass(journey?.overallStatus)}`}>
-          {formatStatus(journey?.overallStatus)}
-        </span>
-      </div>
-      {journey ? (
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Complete</dt>
-            <dd className="mt-1 text-lg font-semibold text-white">{completedJourneyStepCount}</dd>
-          </div>
-          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Blocked</dt>
-            <dd className="mt-1 text-lg font-semibold text-white">{blockedJourneyStepCount}</dd>
-          </div>
-          <div className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Total steps</dt>
-            <dd className="mt-1 text-lg font-semibold text-white">{journey.steps.length}</dd>
-          </div>
-        </dl>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => setActiveDetailsTab('lifecycle')}
-        className="mt-4 rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:border-sky-500 hover:text-white"
-      >
-        Review lifecycle
-      </button>
-    </section>
-  )
-
-  const detailsTabs = (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-2">
-      <div
-        className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        role="tablist"
-        aria-label="People detail views"
-      >
-        {DETAIL_TABS.map((tab) => {
-          const isActive = activeDetailsTab === tab.key
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              id={`people-details-${tab.key}-tab`}
-              aria-selected={isActive}
-              aria-controls={`people-details-${tab.key}-panel`}
-              onClick={() => setActiveDetailsTab(tab.key)}
-              className={[
-                'shrink-0 rounded-md px-3 py-2 text-sm font-medium transition',
-                isActive
-                  ? 'bg-sky-600 text-white shadow-sm shadow-sky-950/40'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white',
-              ].join(' ')}
-            >
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-
-  const profileEditorPanel = s.profile ? (
-    <PersonProfileEditorPanel
-      profile={s.profile}
-      orgUnits={s.orgUnits}
-      peopleOptions={s.people.map((person) => ({
-        personId: person.personId,
-        displayName: person.displayName,
-      }))}
-      canManage={s.canManagePeopleProfiles}
-      isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
-      errorMessage={
-        s.personProfileMutationError
-          ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
-          : null
-      }
-      onUpdate={async (request) => {
-        await s.updatePersonMutation.mutateAsync({
-          personId: s.profile!.personId,
-          ...request,
-        })
-      }}
-      onEmploymentStatusChange={async (request) => {
-        await s.updateEmploymentStatusMutation.mutateAsync({
-          personId: s.profile!.personId,
-          ...request,
-        })
-      }}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const personnelNotesPanel = detailPersonId ? (
-    <PersonnelNotesPanel
-      personId={detailPersonId}
-      personDisplayName={detailPersonDisplayName}
-      notes={s.personNotes}
-      selectedNoteId={s.selectedNoteId}
-      selectedNote={s.noteDetailQuery.data ?? null}
-      isLoading={s.personNotesQuery.isLoading}
-      isError={s.personNotesQuery.isError}
-      readErrorMessage={
-        s.personNotesQuery.isError
-          ? getErrorMessage(
-              s.personNotesQuery.error,
-              'Failed to load personnel notes.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personNotesQuery.refetch()}
-      isLoadingDetail={s.noteDetailQuery.isLoading}
-      isDetailError={s.noteDetailQuery.isError}
-      detailErrorMessage={
-        s.noteDetailQuery.isError
-          ? getErrorMessage(
-              s.noteDetailQuery.error,
-              'Failed to load note detail.',
-            )
-          : null
-      }
-      onRetryDetail={() => void s.noteDetailQuery.refetch()}
-      canManage={s.canManagePersonNotes}
-      isSubmitting={s.createNoteMutation.isPending}
-      actionErrorMessage={
-        s.noteMutationError
-          ? getErrorMessage(s.noteMutationError, 'Failed to save personnel note.')
-          : null
-      }
-      onSelectNote={s.setSelectedNoteId}
-      onCreateNote={async (payload) => {
-        await s.createNoteMutation.mutateAsync(payload)
-      }}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const personnelDocumentsPanel = detailPersonId ? (
-    <PersonnelDocumentsPanel
-      personId={detailPersonId}
-      personDisplayName={detailPersonDisplayName}
-      accessToken={s.accessToken}
-      documents={s.personDocuments}
-      selectedDocumentId={s.selectedDocumentId}
-      selectedDocument={s.documentDetailQuery.data ?? null}
-      isLoading={s.personDocumentsQuery.isLoading}
-      isError={s.personDocumentsQuery.isError}
-      readErrorMessage={
-        s.personDocumentsQuery.isError
-          ? getErrorMessage(
-              s.personDocumentsQuery.error,
-              'Failed to load personnel documents.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personDocumentsQuery.refetch()}
-      isLoadingDetail={s.documentDetailQuery.isLoading}
-      isDetailError={s.documentDetailQuery.isError}
-      detailErrorMessage={
-        s.documentDetailQuery.isError
-          ? getErrorMessage(
-              s.documentDetailQuery.error,
-              'Failed to load document detail.',
-            )
-          : null
-      }
-      onRetryDetail={() => void s.documentDetailQuery.refetch()}
-      canManage={s.canManagePersonDocuments}
-      isSubmitting={s.uploadDocumentMutation.isPending}
-      actionErrorMessage={
-        s.documentMutationError
-          ? getErrorMessage(s.documentMutationError, 'Failed to upload personnel document.')
-          : null
-      }
-      onSelectDocument={s.setSelectedDocumentId}
-      onUploadDocument={async (payload) => {
-        await s.uploadDocumentMutation.mutateAsync(payload)
-      }}
-      contentUrlFor={(documentId) =>
-        s.personnelDocumentContentUrl(detailPersonId, documentId)
-      }
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const workforceOnboardingPanel = detailPersonId ? (
-    <WorkforceOnboardingJourneyPanel
-      accessToken={s.accessToken}
-      personDisplayName={detailPersonDisplayName}
-      journey={s.workforceOnboardingJourneyQuery.data ?? null}
-      isLoading={s.workforceOnboardingJourneyQuery.isLoading}
-      isError={s.workforceOnboardingJourneyQuery.isError}
-      readErrorMessage={
-        s.workforceOnboardingJourneyQuery.isError
-          ? getErrorMessage(
-              s.workforceOnboardingJourneyQuery.error,
-              'Failed to load workforce onboarding journey.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.workforceOnboardingJourneyQuery.refetch()}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const offboardingPanel = detailPersonId ? (
-    <PersonOffboardingPanel
-      personId={detailPersonId}
-      personDisplayName={detailPersonDisplayName}
-      peopleOptions={s.people.map((person) => ({
-        personId: person.personId,
-        displayName: person.displayName,
-      }))}
-      offboarding={s.personOffboardingQuery.data ?? null}
-      isLoading={s.personOffboardingQuery.isLoading}
-      isError={s.personOffboardingQuery.isError}
-      readErrorMessage={
-        s.personOffboardingQuery.isError
-          ? getErrorMessage(
-              s.personOffboardingQuery.error,
-              'Failed to load offboarding workflow state.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personOffboardingQuery.refetch()}
-      canManage={s.canManagePeopleProfiles}
-      isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
-      actionErrorMessage={
-        s.offboardingMutationError
-          ? getErrorMessage(s.offboardingMutationError, 'Failed to update offboarding workflow.')
-          : null
-      }
-      onStart={async (request) => {
-        await s.startOffboardingMutation.mutateAsync({
-          personId: detailPersonId,
-          ...request,
-        })
-      }}
-      onExecute={async (request) => {
-        const offboarding = s.personOffboardingQuery.data
-        if (!offboarding) {
-          return
-        }
-
-        await s.executeOffboardingMutation.mutateAsync({
-          personId: detailPersonId,
-          offboardingId: offboarding.offboardingId,
-          ...request,
-        })
-      }}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const personLookupPanel = detailPersonId ? (
-    <PersonLookupPanel
-      personId={detailPersonId}
-      personDisplayName={detailPersonDisplayName}
-      lookup={s.personLookupQuery.data ?? null}
-      isLoading={s.personLookupQuery.isLoading}
-      isError={s.personLookupQuery.isError}
-      readErrorMessage={
-        s.personLookupQuery.isError
-          ? getErrorMessage(
-              s.personLookupQuery.error,
-              'Failed to load person identity and placement details.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personLookupQuery.refetch()}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const personHistorySummaryPanel = detailPersonId ? (
-    <PersonHistorySummaryPanel
-      personDisplayName={detailPersonDisplayName}
-      summary={s.personHistorySummaryQuery.data ?? null}
-      isLoading={s.personHistorySummaryQuery.isLoading}
-      isError={s.personHistorySummaryQuery.isError}
-      readErrorMessage={
-        s.personHistorySummaryQuery.isError
-          ? getErrorMessage(
-              s.personHistorySummaryQuery.error,
-              'Failed to load personnel history summary.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personHistorySummaryQuery.refetch()}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const personTimelinePanel = detailPersonId ? (
-    <PersonTimelinePanel
-      personDisplayName={detailPersonDisplayName}
-      entries={s.personTimelineEntries}
-      totalCount={s.personTimelineTotalCount}
-      page={s.personTimelinePage}
-      pageSize={s.personTimelinePageSize}
-      hasNextPage={s.personTimelineHasNextPage}
-      categoryFilter={s.personTimelineCategoryFilter}
-      isLoading={s.personTimelineQuery.isLoading}
-      isError={s.personTimelineQuery.isError}
-      readErrorMessage={
-        s.personTimelineQuery.isError
-          ? getErrorMessage(
-              s.personTimelineQuery.error,
-              'Failed to load person timeline events.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.personTimelineQuery.refetch()}
-      onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
-      onPageChange={s.setPersonTimelinePage}
-      onPageSizeChange={s.setPersonTimelinePageSize}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const trainarrHistoryPanel = detailPersonId ? (
-    <PersonTrainarrTrainingHistoryPanel
-      personDisplayName={detailPersonDisplayName}
-      history={s.trainarrTrainingHistoryQuery.data ?? null}
-      isLoading={s.trainarrTrainingHistoryQuery.isLoading}
-      isError={s.trainarrTrainingHistoryQuery.isError}
-      readErrorMessage={
-        s.trainarrTrainingHistoryQuery.isError
-          ? getErrorMessage(
-              s.trainarrTrainingHistoryQuery.error,
-              'Failed to load TrainArr training history.',
-            )
-          : null
-      }
-      onRetryRead={() => void s.trainarrTrainingHistoryQuery.refetch()}
-    />
-  ) : (
-    emptyDetailsState
-  )
-
-  const renderDetailsTabPanel = () => {
-    switch (activeDetailsTab) {
-      case 'profile':
-        return <div>{profileEditorPanel}</div>
-      case 'records':
-        return (
-          <div className="2xl:grid 2xl:grid-cols-2 2xl:gap-6">
-            {personnelNotesPanel}
-            {personnelDocumentsPanel}
-          </div>
-        )
-      case 'lifecycle':
-        return (
-          <div className="2xl:grid 2xl:grid-cols-2 2xl:gap-6">
-            {workforceOnboardingPanel}
-            {offboardingPanel}
-          </div>
-        )
-      case 'activity':
-        return (
-          <div className="2xl:grid 2xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 2xl:gap-6">
-            <div>
-              {personHistorySummaryPanel}
-              {trainarrHistoryPanel}
-            </div>
-            {personTimelinePanel}
-          </div>
-        )
-      default:
-        return (
-          <>
-            {overviewStatusCards}
-            <div className="2xl:grid 2xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.85fr)] 2xl:gap-6">
-              <div>
-                {selectedProfilePanel}
-                {personLookupPanel}
-              </div>
-              <div>{overviewWorkflowCard}</div>
-            </div>
-          </>
-        )
-    }
-  }
-
   if (mode === 'details') {
+    const profile = s.profile
+    const selectedPerson = s.selectedPerson
+    const lookup = s.personLookupQuery.data
+    const certifications = s.personCertifications ?? []
+    const incidents = s.personIncidents ?? []
+    const roleAssignments = s.roleAssignments ?? []
+    const documents = s.personDocuments ?? []
+    const recentActivity = s.personTimelineEntries ?? []
+    const permissions = s.effectivePermissions?.permissions ?? []
+    const readiness = s.personReadinessQuery?.data
+    const personId = profile?.personId ?? selectedPerson?.personId ?? s.effectivePersonId
+    const displayName = profile?.displayName ?? selectedPerson?.displayName ?? 'No profile selected'
+    const email = profile?.primaryEmail ?? selectedPerson?.primaryEmail ?? 'Not recorded'
+    const employmentStatus = profile?.employmentStatus ?? selectedPerson?.employmentStatus ?? 'unknown'
+    const jobTitle = profile?.jobTitle ?? selectedPerson?.jobTitle ?? 'Unassigned role'
+    const primaryOrg = profile?.primaryOrgUnitName ?? selectedPerson?.primaryOrgUnitName ?? 'Unassigned'
+    const activeAssignment = lookup?.placement.activeAssignments[0] ?? null
+    const siteName = activeAssignment?.siteName ?? primaryOrg
+    const departmentName = activeAssignment?.departmentName ?? 'Not assigned'
+    const positionName = activeAssignment?.positionName ?? jobTitle
+    const managerName = lookup?.placement.managerDisplayName ?? managerDisplayName
+    const hasUserAccount = Boolean(profile?.externalUserId ?? selectedPerson?.externalUserId)
+    const activeCertifications = certifications.filter((cert) => cert.effectiveStatus === 'active')
+    const expiringCertifications = activeCertifications.filter((cert) => {
+      const remaining = daysUntil(cert.expiresAt)
+      return remaining != null && remaining <= 60
+    })
+    const openTrainingCount =
+      s.workforceOnboardingJourneyQuery?.data?.steps?.filter((step) => step.status !== 'complete').length ??
+      s.trainarrTrainingHistoryQuery?.data?.items?.filter((item) => item.eventKind !== 'completed').length ??
+      0
+    const readinessAllowed = readiness?.readinessStatus !== 'not_ready'
+    const allowedChecks = readiness?.requirements.filter((requirement) => requirement.requirementStatus === 'satisfied').length
+      ?? permissions.length
+      ?? 0
+    const blockedChecks = readiness?.blockers.length ?? 0
+    const activeRoleAssignments = roleAssignments.filter((assignment) => assignment.status === 'active')
+    const permissionKeys = permissions.map((permission) => permission.permissionKey.toLowerCase())
+    const hasProductSignal = (product: string) =>
+      permissionKeys.some((permission) => permission.includes(product.toLowerCase())) ||
+      activeRoleAssignments.some((assignment) => assignment.roleKey.toLowerCase().includes(product.toLowerCase()))
+    const certificationCards = certifications.slice(0, 3)
+    const upcomingRequirements = [
+      ...expiringCertifications.slice(0, 2).map((cert) => ({
+        title: `${cert.certificationName} review`,
+        detail: 'Certification expires soon',
+        badge: cert.expiresAt ? `Due ${formatDate(cert.expiresAt)}` : 'Due soon',
+        tone: 'warn' as Tone,
+      })),
+      ...(readiness?.blockers ?? []).slice(0, 2).map((blocker) => ({
+        title: blocker.certificationName ?? blocker.qualificationName ?? humanize(blocker.blockerType),
+        detail: blocker.message,
+        badge: 'Required',
+        tone: 'bad' as Tone,
+      })),
+    ].slice(0, 3)
+    const documentCards = documents.slice(0, 4)
+    const recentActivityCards = recentActivity.slice(0, 5)
+
+    const editorPanel = profile ? (
+      <PersonProfileEditorPanel
+        profile={profile}
+        orgUnits={s.orgUnits}
+        peopleOptions={s.people.map((person) => ({
+          personId: person.personId,
+          displayName: person.displayName,
+        }))}
+        canManage={s.canManagePeopleProfiles}
+        isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
+        errorMessage={
+          s.personProfileMutationError
+            ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
+            : null
+        }
+        onUpdate={async (request) => {
+          await s.updatePersonMutation.mutateAsync({
+            personId: profile.personId,
+            ...request,
+          })
+        }}
+        onEmploymentStatusChange={async (request) => {
+          await s.updateEmploymentStatusMutation.mutateAsync({
+            personId: profile.personId,
+            ...request,
+          })
+        }}
+      />
+    ) : null
+
     return (
-      <div className="xl:-mx-4 2xl:-mx-10">
-        <div className="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="space-y-4 xl:sticky xl:top-0 xl:max-h-[calc(100vh-2rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
-            <section className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Selected person</p>
-              <h2 className="mt-2 text-lg font-semibold text-white">{detailPersonDisplayName}</h2>
-              {detailPersonEmail ? (
-                <p className="mt-1 break-all text-xs text-slate-400">{detailPersonEmail}</p>
-              ) : null}
-              <dl className="mt-4 space-y-3 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Status</dt>
-                  <dd className="text-right capitalize text-slate-100">{formatStatus(detailPersonStatus)}</dd>
+      <div className="w-full max-w-[1500px] space-y-6 pb-10">
+        <section className="rounded-[1.4rem] border border-slate-800 bg-slate-950/80 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="min-w-0">
+              <nav className="flex flex-wrap items-center gap-3 text-sm text-sky-200/80" aria-label="Person breadcrumb">
+                <Link
+                  to="/people/drawer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-slate-300 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  People
+                </Link>
+                <span className="text-slate-500">/</span>
+                <span>{siteName}</span>
+                <span className="text-slate-500">/</span>
+                <span className="font-semibold text-white">{displayName}</span>
+              </nav>
+
+              <div className="mt-7 flex items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/15 text-sky-300">
+                  <User className="h-9 w-9" />
                 </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Org</dt>
-                  <dd className="text-right text-slate-100">{detailPersonOrgUnit}</dd>
+                <div className="min-w-0">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <Badge label={profile?.externalUserId ?? 'StaffArr profile'} tone="info" />
+                    <Badge label={humanize(employmentStatus)} tone={employmentStatus === 'active' ? 'good' : 'warn'} />
+                    <Badge label={hasUserAccount ? 'Has user account' : 'No user account'} tone={hasUserAccount ? 'good' : 'neutral'} />
+                  </div>
+                  <h1 className="truncate text-3xl font-bold tracking-normal text-white md:text-4xl">{displayName}</h1>
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-sky-100/75">
+                    <BriefcaseBusiness className="h-4 w-4 text-slate-400" />
+                    <span>{jobTitle}</span>
+                    <span className="text-slate-600">-</span>
+                    <span>{siteName}</span>
+                  </p>
                 </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Manager</dt>
-                  <dd className="text-right text-slate-100">{lookup?.placement.managerDisplayName ?? managerDisplayName}</dd>
-                </div>
-              </dl>
-            </section>
-            <div className="hidden xl:block">{renderDirectorySection()}</div>
-          </aside>
-          <div className="min-w-0">
-            {detailsTabs}
-            <div className="mt-4 xl:hidden">{renderDirectorySection()}</div>
-            <section
-              role="tabpanel"
-              id={`people-details-${activeDetailsTab}-panel`}
-              aria-labelledby={`people-details-${activeDetailsTab}-tab`}
-            >
-              {renderDetailsTabPanel()}
-            </section>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowEditor((current) => !current)}
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit person
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Assign training
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Manage access
+              </button>
+              <button
+                type="button"
+                aria-label="More person actions"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </div>
           </div>
+        </section>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Account state"
+            value={hasUserAccount ? 'Enabled' : 'Not linked'}
+            hint={hasUserAccount ? 'NexArr login allowed' : 'No NexArr login account'}
+            icon={<KeyRound className="h-5 w-5" />}
+            tone={hasUserAccount ? 'good' : 'neutral'}
+          />
+          <MetricCard
+            label="Open training"
+            value={openTrainingCount}
+            hint={openTrainingCount === 1 ? '1 item needs action' : `${openTrainingCount} items need action`}
+            icon={<GraduationCap className="h-5 w-5" />}
+            tone={openTrainingCount > 0 ? 'warn' : 'good'}
+          />
+          <MetricCard
+            label="Active certifications"
+            value={activeCertifications.length}
+            hint={`${expiringCertifications.length} expire in 60 days`}
+            icon={<Award className="h-5 w-5" />}
+            tone={expiringCertifications.length > 0 ? 'warn' : 'good'}
+          />
+          <MetricCard
+            label="Incidents"
+            value={incidents.length}
+            hint={incidents.length > 0 ? 'Review personnel history' : 'No active restriction'}
+            icon={<AlertTriangle className="h-5 w-5" />}
+            tone={incidents.length > 0 ? 'warn' : 'good'}
+          />
+        </div>
+
+        {showEditor ? <div>{editorPanel}</div> : null}
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_397px]">
+          <main className="min-w-0 rounded-2xl border border-slate-800 bg-slate-950/70">
+            <div className="flex gap-2 overflow-x-auto border-b border-slate-800 p-3" role="tablist" aria-label="Person detail sections">
+              {detailTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === 'Overview'}
+                  className={`shrink-0 rounded-xl px-4 py-3 text-sm font-semibold ${tab === 'Overview' ? 'bg-slate-900 text-sky-300' : 'text-sky-200/70 hover:bg-slate-900/70 hover:text-white'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <section className="p-5">
+              <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Person snapshot</h2>
+                  <p className="mt-1 text-sm text-sky-100/75">
+                    Identity, employment placement, login capability, assignments, and source-of-truth references.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200"
+                >
+                  Field sources
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+
+              <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <SnapshotField label="Person ID" value={personId ?? 'Not selected'} source="NexArr source of truth" />
+                <SnapshotField label="Employee number" value={profile?.externalUserId ?? 'Not linked'} source="StaffArr" />
+                <SnapshotField label="Display name" value={displayName} source="NexArr person record" />
+                <SnapshotField label="Preferred name" value={profile?.givenName ?? lookup?.givenName ?? 'Not recorded'} source="StaffArr profile" />
+                <SnapshotField label="Email" value={email} source="Login/contact" />
+                <SnapshotField label="Phone" value={lookup?.workPhone ?? 'Not recorded'} source="Contact profile" />
+                <SnapshotField label="Site" value={siteName} source="StaffArr org structure" />
+                <SnapshotField label="Department" value={departmentName} source="StaffArr org structure" />
+                <SnapshotField label="Position" value={positionName} source="StaffArr position catalog" />
+                <SnapshotField label="Manager" value={managerName} source="Reporting line" />
+                <SnapshotField label="Hire date" value={formatDate(profile?.createdAt)} source="Personnel record" />
+                <SnapshotField label="Shift" value="Not assigned" source="Schedule profile" />
+              </dl>
+
+              <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <h3 className="text-lg font-bold text-white">Product permissions</h3>
+                    <Badge label="NexArr entitlement checked" tone="info" />
+                  </div>
+                  <div className="space-y-3">
+                    <ProductPermissionCard
+                      product="MaintainArr"
+                      role={hasProductSignal('maintainarr') ? 'Fleet Technician' : 'No product entitlement'}
+                      detail={hasProductSignal('maintainarr') ? 'Work orders, inspections, defects, asset notes' : 'No direct access'}
+                      allowed={hasProductSignal('maintainarr')}
+                    />
+                    <ProductPermissionCard
+                      product="TrainArr"
+                      role={hasProductSignal('trainarr') ? 'Trainee / Evaluator' : 'No product entitlement'}
+                      detail={hasProductSignal('trainarr') ? 'Assigned training, evaluator signoffs where qualified' : 'No direct access'}
+                      allowed={hasProductSignal('trainarr')}
+                    />
+                    <ProductPermissionCard
+                      product="StaffArr"
+                      role={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Self Service' : 'No product entitlement'}
+                      detail={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Own profile, own documents, own training history' : 'No direct access'}
+                      allowed={hasProductSignal('staffarr') || activeRoleAssignments.length > 0}
+                    />
+                    <ProductPermissionCard
+                      product="SupplyArr"
+                      role={hasProductSignal('supplyarr') ? 'Supply workspace user' : 'No product entitlement'}
+                      detail={hasProductSignal('supplyarr') ? 'Parts and procurement access' : 'No direct access'}
+                      allowed={hasProductSignal('supplyarr')}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <h3 className="text-lg font-bold text-white">Certification status</h3>
+                    <Link to="/certifications" className="text-sm font-semibold text-sky-300 hover:text-sky-200">
+                      View all
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {certificationCards.length > 0 ? certificationCards.map((cert) => (
+                      <div key={cert.personCertificationId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-bold text-white">{cert.certificationName}</p>
+                            <p className="mt-3 text-sm text-slate-100">Expires: {formatDate(cert.expiresAt)}</p>
+                            <p className="mt-2 text-xs text-slate-400">{humanize(cert.sourceType)} - Training completion</p>
+                          </div>
+                          <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
+                        </div>
+                      </div>
+                    )) : (
+                      <p className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                        No certifications are recorded for this person.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </div>
+            </section>
+          </main>
+
+          <aside className="space-y-5">
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-lg font-bold text-white">Authorization decision</h2>
+                <Badge label={readinessAllowed ? 'Allowed' : 'Blocked'} tone={readinessAllowed ? 'good' : 'bad'} />
+              </div>
+              <div className={`mt-4 rounded-2xl border p-4 ${readinessAllowed ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-red-500/30 bg-red-500/10'}`}>
+                <div className="flex gap-3">
+                  {readinessAllowed ? (
+                    <UserCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                  ) : (
+                    <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+                  )}
+                  <div>
+                    <p className="font-semibold text-white">
+                      {readinessAllowed ? 'Can perform assigned work' : 'Restrictions require review'}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                      {readinessAllowed
+                        ? 'No active restrictions. Training and role checks allow normal StaffArr work.'
+                        : readiness?.blockers[0]?.message ?? 'One or more authorization checks are blocked.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                  <p className="mt-4 text-xs text-slate-400">Allowed checks</p>
+                  <p className="text-xl font-bold text-white">{allowedChecks}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <XCircle className="h-5 w-5 text-red-300" />
+                  <p className="mt-4 text-xs text-slate-400">Blocked checks</p>
+                  <p className="text-xl font-bold text-white">{blockedChecks}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">Account and identity</h2>
+                <IdCard className="h-5 w-5 text-sky-300" />
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <p className="text-sm font-bold text-white">Person source</p>
+                  <p className="mt-1 text-sm text-sky-100/75">NexArr personId is the human identity source of truth.</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <p className="text-sm font-bold text-white">Login capability</p>
+                  <p className="mt-1 text-sm text-sky-100/75">
+                    hasUserAccount = {hasUserAccount ? 'true' : 'false'}; credentials managed by NexArr.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <p className="text-sm font-bold text-white">Product access</p>
+                  <p className="mt-1 text-sm leading-6 text-sky-100/75">
+                    {[
+                      hasProductSignal('maintainarr') ? 'MaintainArr' : null,
+                      hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'StaffArr' : null,
+                      hasProductSignal('trainarr') ? 'TrainArr' : null,
+                    ].filter(Boolean).join(' - ') || 'No direct product access'}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">Upcoming requirements</h2>
+                <CalendarClock className="h-5 w-5 text-sky-300" />
+              </div>
+              <div className="space-y-3">
+                {upcomingRequirements.length > 0 ? upcomingRequirements.map((item) => (
+                  <div key={`${item.title}-${item.badge}`} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-white">{item.title}</p>
+                        <p className="mt-2 text-xs text-slate-400">{item.detail}</p>
+                      </div>
+                      <Badge label={item.badge} tone={item.tone} />
+                    </div>
+                  </div>
+                )) : (
+                  <p className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+                    No upcoming requirements are currently flagged.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">Documents</h2>
+                <FileText className="h-5 w-5 text-sky-300" />
+              </div>
+              <div className="overflow-hidden rounded-xl border border-slate-800">
+                {documentCards.length > 0 ? documentCards.map((document) => (
+                  <div key={document.documentId} className="flex items-start justify-between gap-3 border-b border-slate-800 bg-slate-950/70 p-4 last:border-b-0">
+                    <div>
+                      <p className="font-semibold text-white">{document.title}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {document.expiresAt ? `Expires ${formatDate(document.expiresAt)}` : `Uploaded ${formatDate(document.createdAt)}`}
+                      </p>
+                    </div>
+                    <Badge label={document.status === 'active' ? 'Current' : humanize(document.status)} tone={document.status === 'active' ? 'good' : 'warn'} />
+                  </div>
+                )) : (
+                  <p className="bg-slate-950/70 p-4 text-sm text-slate-400">No documents uploaded yet.</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">Recent activity</h2>
+                <CalendarClock className="h-5 w-5 text-sky-300" />
+              </div>
+              <ol className="space-y-4">
+                {recentActivityCards.length > 0 ? recentActivityCards.map((entry) => (
+                  <li key={entry.entryId} className="relative pl-7">
+                    <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-sky-400 shadow-[0_0_0_4px_rgba(14,165,233,0.18)]" />
+                    <p className="text-xs font-bold uppercase tracking-normal text-sky-300">{humanize(entry.category)}</p>
+                    <p className="mt-2 text-sm font-semibold text-white">{entry.title}</p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {formatDate(entry.occurredAt)} - {humanize(entry.sourceEntityType)}
+                    </p>
+                  </li>
+                )) : (
+                  <li className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+                    No recent activity recorded.
+                  </li>
+                )}
+              </ol>
+            </section>
+          </aside>
         </div>
       </div>
     )

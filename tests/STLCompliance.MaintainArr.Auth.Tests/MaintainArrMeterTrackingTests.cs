@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
@@ -85,6 +86,90 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         _nexarrClient.Dispose();
         await _maintainarrFactory.DisposeAsync();
         await _nexarrFactory.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task List_and_get_meters_translate_on_relational_provider()
+    {
+        await using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<MaintainArrDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new MaintainArrDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var tenantId = Guid.NewGuid();
+        var assetClassId = Guid.NewGuid();
+        var assetTypeId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        db.AssetClasses.Add(new AssetClass
+        {
+            Id = assetClassId,
+            TenantId = tenantId,
+            ClassKey = "vehicles",
+            Name = "Vehicles",
+            Description = string.Empty,
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.AssetTypes.Add(new AssetType
+        {
+            Id = assetTypeId,
+            TenantId = tenantId,
+            AssetClassId = assetClassId,
+            TypeKey = "forklift",
+            Name = "Forklift",
+            Description = string.Empty,
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.Assets.Add(new Asset
+        {
+            Id = assetId,
+            TenantId = tenantId,
+            AssetTypeId = assetTypeId,
+            AssetTag = "MTR-001",
+            Name = "Meter Test Asset",
+            Description = string.Empty,
+            LifecycleStatus = "active",
+            SiteRef = null,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.AssetMeters.Add(new AssetMeter
+        {
+            Id = meterId,
+            TenantId = tenantId,
+            AssetId = assetId,
+            MeterKey = "engine-hours",
+            Name = "Engine hours",
+            Description = string.Empty,
+            Unit = "hours",
+            BaselineReading = 1000m,
+            CurrentReading = 1000m,
+            Status = MeterStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        await db.SaveChangesAsync();
+
+        var assetService = new AssetService(db, null!, null!, null!, null!);
+        var service = new AssetMeterService(db, assetService, null!);
+
+        var meters = await service.ListForAssetAsync(tenantId, assetId);
+        var meter = await service.GetAsync(tenantId, meterId);
+
+        Assert.Single(meters);
+        Assert.Equal(meterId, meters[0].AssetMeterId);
+        Assert.Equal(assetId, meter.AssetId);
     }
 
     [Fact]
