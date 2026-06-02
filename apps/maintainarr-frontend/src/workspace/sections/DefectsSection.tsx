@@ -1,10 +1,17 @@
 import { DefectsPanel } from '../../components/DefectsPanel'
+import { useLocation } from 'react-router-dom'
+import { DefectProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
 
 export function DefectsSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  if (location.pathname.startsWith('/defects/details')) {
+    return <DefectProfile state={s} />
+  }
+
   const selectedDefect =
     (s.defectsQuery.data ?? []).find((defect) => defect.defectId === s.selectedDefectId) ?? null
 

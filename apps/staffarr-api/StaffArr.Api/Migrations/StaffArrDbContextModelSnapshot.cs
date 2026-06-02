@@ -1486,24 +1486,122 @@ namespace StaffArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AdditionalInvolvedPersonIdsJson")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("CategoryKeysJson")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<bool>("CreateFollowUpTask")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DepartmentOrgUnitId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4096)
                         .HasColumnType("character varying(4096)");
 
+                    b.Property<DateTimeOffset?>("DiscoveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmployeeSelfReport")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EvidencePackageRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("FollowUpDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FollowUpRequired")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ImmediateActionsTaken")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("IncidentSource")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("IncidentType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LocationDetail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ManagerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MedicalAttention")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("NotifyHr")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyManager")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifySafetyCompliance")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("OutOfServiceRemoveFromDuty")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<Guid>("PersonId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("PpeConcern")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ReasonCategoryKey")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReadinessDecision")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RelatedAssetReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RelatedDocumentReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RelatedPolicyReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RelatedRouteReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RelatedSupplierReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RelatedWorkOrderReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset>("ReportedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1511,10 +1609,24 @@ namespace StaffArr.Api.Migrations
                     b.Property<Guid>("ReportedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ReporterPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReturnToWorkNeeded")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RootCause")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("Severity")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("SiteOrgUnitId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SourceEventKind")
                         .HasMaxLength(64)
@@ -1544,8 +1656,23 @@ namespace StaffArr.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("TrainingReviewReason")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("TrainingReviewRequired")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WitnessPersonIdsJson")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("WorkRestriction")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 
@@ -1553,7 +1680,11 @@ namespace StaffArr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("TenantId", "IncidentType", "ReportedAt");
+
                     b.HasIndex("TenantId", "PersonId", "ReportedAt");
+
+                    b.HasIndex("TenantId", "ReadinessDecision", "ReportedAt");
 
                     b.HasIndex("TenantId", "SourceProduct", "SourceIncidentId")
                         .IsUnique()

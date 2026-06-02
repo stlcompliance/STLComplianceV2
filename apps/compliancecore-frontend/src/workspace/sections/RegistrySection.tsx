@@ -1,13 +1,22 @@
+import { useLocation } from 'react-router-dom'
 import { RegulatoryRegistryPanel } from '../../components/RegulatoryRegistryPanel'
 import { RuleVersionManagementPanel } from '../../components/RuleVersionManagementPanel'
 import { SdsHazComReferencesPanel } from '../../components/SdsHazComReferencesPanel'
 import { VocabularyPanel } from '../../components/VocabularyPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
+import { RegistryDetailProfile } from './RegistryDetailProfile'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
 export function RegistrySection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  const isDetails = location.pathname.endsWith('/details')
+
+  if (isDetails) {
+    return <RegistryDetailProfile state={s} />
+  }
+
   return (
     <>
       <VocabularyPanel

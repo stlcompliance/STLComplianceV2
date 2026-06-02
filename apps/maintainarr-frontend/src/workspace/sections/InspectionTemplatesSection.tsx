@@ -1,10 +1,17 @@
 import { InspectionTemplateBuilderPanel } from '../../components/InspectionTemplateBuilderPanel'
+import { useLocation } from 'react-router-dom'
+import { InspectionTemplateProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
 
 export function InspectionTemplatesSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  if (location.pathname.startsWith('/inspection-templates/details')) {
+    return <InspectionTemplateProfile state={s} />
+  }
+
   return (
     <div className="mb-8">
       <InspectionTemplateBuilderPanel

@@ -1,12 +1,16 @@
+import {
+  DetailBadge as Badge,
+  DetailEmptyState as EmptyPanel,
+  ProfileDetailsLayout,
+  type DetailTone,
+} from '@stl/shared-ui'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
-  ArrowLeft,
   Boxes,
   Building2,
   CalendarClock,
   CheckCircle2,
-  ChevronDown,
   CircleCheck,
   DollarSign,
   FileText,
@@ -22,10 +26,9 @@ import {
   Star,
   Truck,
   Users,
-  XCircle,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import {
   getCompliancePartyDetail,
   getPartyVendorRestrictionEnforcement,
@@ -48,7 +51,7 @@ import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 type PartiesViewMode = 'drawer' | 'details' | 'create'
-type Tone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
+type Tone = DetailTone
 
 const detailTabs = [
   'Overview',
@@ -109,95 +112,12 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
-function badgeClass(tone: Tone): string {
-  if (tone === 'good') return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
-  if (tone === 'warn') return 'border-amber-400/30 bg-amber-500/15 text-amber-200'
-  if (tone === 'bad') return 'border-red-400/30 bg-red-500/15 text-red-200'
-  if (tone === 'info') return 'border-sky-400/30 bg-sky-500/15 text-sky-200'
-  return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
-}
-
 function statusTone(value: string | null | undefined): Tone {
   const normalized = value?.toLowerCase() ?? ''
   if (['approved', 'active', 'current', 'satisfied', 'ready'].includes(normalized)) return 'good'
   if (['pending', 'review', 'submitted', 'expiring_soon'].includes(normalized)) return 'warn'
   if (['restricted', 'inactive', 'blocked', 'rejected', 'expired', 'not_ready'].includes(normalized)) return 'bad'
   return 'neutral'
-}
-
-function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
-  return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
-      {label}
-    </span>
-  )
-}
-
-function MetricCard({
-  label,
-  value,
-  hint,
-  icon,
-  tone = 'neutral',
-}: {
-  label: string
-  value: string | number
-  hint: string
-  icon: ReactNode
-  tone?: Tone
-}) {
-  const iconClass = {
-    good: 'bg-emerald-500/15 text-emerald-300',
-    warn: 'bg-amber-500/15 text-amber-300',
-    bad: 'bg-red-500/15 text-red-300',
-    info: 'bg-sky-500/15 text-sky-300',
-    neutral: 'bg-slate-700/60 text-slate-300',
-  }[tone]
-
-  return (
-    <section className="min-h-32 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-sky-200/80">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-normal text-white">{value}</p>
-        </div>
-        <div className={`rounded-xl p-3 ${iconClass}`}>{icon}</div>
-      </div>
-      <p className="mt-2 text-xs text-slate-400">{hint}</p>
-    </section>
-  )
-}
-
-function SnapshotField({ label, value, source }: { label: string; value: string; source: string }) {
-  return (
-    <div className="min-h-[4.5rem] rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{label}</dt>
-        <span className="shrink-0 text-[10px] text-slate-500">{source}</span>
-      </div>
-      <dd className="mt-3 break-words text-sm font-semibold text-white">{value}</dd>
-    </div>
-  )
-}
-
-function RailSection({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold text-white">{title}</h2>
-        <div className="text-sky-300">{icon}</div>
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function EmptyPanel({ text }: { text: string }) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">
-      {text}
-    </div>
-  )
 }
 
 function normalizeDocumentStatus(document: PartyComplianceDocumentResponse): string {
@@ -542,245 +462,168 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
   ]
 
   return (
-    <div className="space-y-6" data-testid="supplyarr-party-profile">
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div className="min-w-0">
-            <nav className="mb-5 flex flex-wrap items-center gap-3 text-sm text-sky-200/80">
-              <Link
-                to="/parties/drawer"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 hover:border-sky-700"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Suppliers
-              </Link>
-              <span>/</span>
-              <span>{humanize(selectedParty.partyType)}</span>
-              <span>/</span>
-              <span className="font-semibold text-white">{selectedParty.displayName}</span>
-            </nav>
-            <div className="flex items-start gap-4">
-              <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-2xl border border-sky-700/50 bg-sky-500/15 text-sky-300">
-                <Building2 className="h-9 w-9" />
-              </div>
-              <div className="min-w-0">
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <Badge label={selectedParty.partyKey.toUpperCase()} tone="info" />
-                  <Badge label={humanize(selectedParty.approvalStatus)} tone={statusTone(selectedParty.approvalStatus)} />
-                  {documentWatchLabel ? <Badge label={documentWatchLabel} tone="warn" /> : null}
-                </div>
-                <h1 className="break-words text-3xl font-bold tracking-normal text-white">{selectedParty.displayName}</h1>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-sky-100/75">
-                  <MapPin className="h-4 w-4 text-slate-400" />
-                  <span>{selectedParty.legalName || 'Legal name not recorded'}</span>
-                  <span className="text-slate-600">-</span>
-                  <span>{humanize(selectedParty.partyType)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/purchasing/procurement"
-              className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400"
-            >
-              <PackagePlus className="h-4 w-4" />
-              Create PO
-            </Link>
-            <Link
-              to="/purchasing/procurement"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
-            >
-              <Plus className="h-4 w-4" />
-              Request quote
-            </Link>
-            <Link
-              to={`/parties/drawer?partyId=${selectedParty.partyId}`}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit supplier
-            </Link>
-            <button
-              type="button"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:border-sky-700"
-              aria-label="More supplier actions"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Approval state"
-          value={humanize(selectedParty.approvalStatus)}
-          hint={documents.some((document) => document.isAttention) ? 'Document watch active' : 'No document blockers'}
-          icon={<ShieldCheck className="h-5 w-5" />}
-          tone={statusTone(selectedParty.approvalStatus)}
-        />
-        <MetricCard
-          label="Open orders"
-          value={reportOpenOrders}
-          hint={`${waitingShipmentCount} waiting shipment - ${purchaseRequests.length} request${purchaseRequests.length === 1 ? '' : 's'}`}
-          icon={<Boxes className="h-5 w-5" />}
-          tone="neutral"
-        />
-        <MetricCard
-          label="YTD spend"
-          value={formatCurrency(ytdSpend)}
-          hint={reportPartLinks > 0 ? `${reportPartLinks} linked item${reportPartLinks === 1 ? '' : 's'}` : 'No linked catalog spend'}
-          icon={<DollarSign className="h-5 w-5" />}
-          tone="good"
-        />
-        <MetricCard
-          label="Fill rate"
-          value={fillRate == null ? 'Not tracked' : `${fillRate}%`}
-          hint={orderedQuantity > 0 ? 'Based on received quantities' : 'No received quantity data'}
-          icon={<CircleCheck className="h-5 w-5" />}
-          tone="good"
-        />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
-          <div className="flex overflow-x-auto border-b border-slate-800">
-            {detailTabs.map((tab, index) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={index === 0}
-                className={`shrink-0 px-5 py-4 text-sm font-semibold ${
-                  index === 0 ? 'bg-slate-900 text-sky-300' : 'text-sky-200/75 hover:bg-slate-900/50'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-6 p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-white">Supplier snapshot</h2>
-                <p className="mt-1 text-sm text-sky-100/70">
-                  Supplier identity, approval state, ownership, terms, documents, and cross-product usage.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-sky-100"
-              >
-                Field sources
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
-
-            <dl className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              <SnapshotField label="Supplier ID" value={selectedParty.partyId} source="SupplyArr source of truth" />
-              <SnapshotField label="Legal name" value={selectedParty.legalName || selectedParty.displayName} source="Supplier profile" />
-              <SnapshotField label="Supplier category" value={humanize(selectedParty.partyType)} source="Selectable catalog" />
-              <SnapshotField label="Primary site" value="Not recorded" source="StaffArr site reference" />
-              <SnapshotField label="Supplier owner" value="Not assigned" source="StaffArr personId" />
-              <SnapshotField label="Payment terms" value="Not recorded" source="Approved terms" />
-              <SnapshotField label="Tax status" value={selectedParty.taxIdentifier ? 'Tax identifier on file' : 'Not recorded'} source="Document evidence" />
-              <SnapshotField label="Insurance" value={documents.some((document) => document.title.toLowerCase().includes('insurance')) ? 'Document on file' : 'Not recorded'} source="Document watch" />
-              <SnapshotField label="Risk tier" value={isBlocked ? 'High' : hasWatchItems ? 'Medium' : 'Low'} source="Supplier review" />
-              <SnapshotField label="Phone" value={primaryContact?.phone || 'Not recorded'} source="Primary contact" />
-              <SnapshotField label="Email" value={primaryContact?.email || 'Not recorded'} source="Primary contact" />
-              <SnapshotField label="Website" value="Not recorded" source="Supplier profile" />
-            </dl>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold text-white">Supplied items</h3>
-                  <Badge label="MaintainArr-linked" tone="info" />
-                </div>
-                <div className="space-y-3">
-                  {partyPartLinks.length > 0 ? partyPartLinks.slice(0, 3).map(({ part, link }) => (
-                    <div key={link.linkId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="font-semibold text-white">{part.displayName}</h4>
-                          <p className="mt-2 text-sm text-sky-100/80">
-                            {humanize(part.categoryKey)} - {link.catalogLeadTimeDays ?? 'untracked'} days lead time
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
-                        </div>
-                        <Badge label={link.isPreferred ? 'Preferred' : 'Approved'} tone={link.isPreferred ? 'good' : 'neutral'} />
-                      </div>
-                    </div>
-                  )) : <EmptyPanel text="No linked items yet." />}
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold text-white">Recent purchase orders</h3>
-                  <Link to="/purchasing/procurement" className="text-sm font-semibold text-sky-300 hover:text-sky-200">View all</Link>
-                </div>
-                <div className="space-y-3">
-                  {recentPurchaseOrders.length > 0 ? recentPurchaseOrders.slice(0, 3).map((order) => (
-                    <div key={order.id} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="font-semibold text-white">{order.key}</h4>
-                          <p className="mt-2 text-sm text-sky-100/80">{order.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{order.detail}</p>
-                        </div>
-                        <Badge label={humanize(order.status)} tone={statusTone(order.status)} />
-                      </div>
-                    </div>
-                  )) : <EmptyPanel text="No purchase orders yet." />}
-                </div>
-              </section>
-            </div>
-          </div>
-        </section>
-
-        <aside className="space-y-6">
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+    <ProfileDetailsLayout
+      testId="supplyarr-party-profile"
+      backLabel="Suppliers"
+      backTo="/parties/drawer"
+      breadcrumbs={[humanize(selectedParty.partyType), selectedParty.displayName]}
+      icon={<Building2 className="h-9 w-9" />}
+      title={selectedParty.displayName}
+      subtitle={(
+        <span className="flex flex-wrap items-center gap-2">
+          <MapPin className="h-4 w-4 text-slate-400" />
+          <span>{selectedParty.legalName || 'Legal name not recorded'}</span>
+          <span className="text-slate-600">-</span>
+          <span>{humanize(selectedParty.partyType)}</span>
+        </span>
+      )}
+      badges={[
+        { label: selectedParty.partyKey.toUpperCase(), tone: 'info' },
+        { label: humanize(selectedParty.approvalStatus), tone: statusTone(selectedParty.approvalStatus) },
+        ...(documentWatchLabel ? [{ label: documentWatchLabel, tone: 'warn' as Tone }] : []),
+      ]}
+      actions={(
+        <>
+          <Link
+            to="/purchasing/procurement"
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+          >
+            <PackagePlus className="h-4 w-4" />
+            Create PO
+          </Link>
+          <Link
+            to="/purchasing/procurement"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
+          >
+            <Plus className="h-4 w-4" />
+            Request quote
+          </Link>
+          <Link
+            to={`/parties/drawer?partyId=${selectedParty.partyId}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit supplier
+          </Link>
+          <button
+            type="button"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:border-sky-700"
+            aria-label="More supplier actions"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        </>
+      )}
+      metrics={[
+        {
+          label: 'Approval state',
+          value: humanize(selectedParty.approvalStatus),
+          hint: documents.some((document) => document.isAttention) ? 'Document watch active' : 'No document blockers',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          tone: statusTone(selectedParty.approvalStatus),
+        },
+        {
+          label: 'Open orders',
+          value: reportOpenOrders,
+          hint: `${waitingShipmentCount} waiting shipment - ${purchaseRequests.length} request${purchaseRequests.length === 1 ? '' : 's'}`,
+          icon: <Boxes className="h-5 w-5" />,
+          tone: 'neutral',
+        },
+        {
+          label: 'YTD spend',
+          value: formatCurrency(ytdSpend),
+          hint: reportPartLinks > 0 ? `${reportPartLinks} linked item${reportPartLinks === 1 ? '' : 's'}` : 'No linked catalog spend',
+          icon: <DollarSign className="h-5 w-5" />,
+          tone: 'good',
+        },
+        {
+          label: 'Fill rate',
+          value: fillRate == null ? 'Not tracked' : `${fillRate}%`,
+          hint: orderedQuantity > 0 ? 'Based on received quantities' : 'No received quantity data',
+          icon: <CircleCheck className="h-5 w-5" />,
+          tone: 'good',
+        },
+      ]}
+      tabs={detailTabs}
+      snapshotTitle="Supplier snapshot"
+      snapshotSubtitle="Supplier identity, approval state, ownership, terms, documents, and cross-product usage."
+      snapshotFields={[
+        { label: 'Supplier ID', value: selectedParty.partyId, source: 'SupplyArr source of truth' },
+        { label: 'Legal name', value: selectedParty.legalName || selectedParty.displayName, source: 'Supplier profile' },
+        { label: 'Supplier category', value: humanize(selectedParty.partyType), source: 'Selectable catalog' },
+        { label: 'Primary site', value: 'Not recorded', source: 'StaffArr site reference' },
+        { label: 'Supplier owner', value: 'Not assigned', source: 'StaffArr personId' },
+        { label: 'Payment terms', value: 'Not recorded', source: 'Approved terms' },
+        { label: 'Tax status', value: selectedParty.taxIdentifier ? 'Tax identifier on file' : 'Not recorded', source: 'Document evidence' },
+        { label: 'Insurance', value: documents.some((document) => document.title.toLowerCase().includes('insurance')) ? 'Document on file' : 'Not recorded', source: 'Document watch' },
+        { label: 'Risk tier', value: isBlocked ? 'High' : hasWatchItems ? 'Medium' : 'Low', source: 'Supplier review' },
+        { label: 'Phone', value: primaryContact?.phone || 'Not recorded', source: 'Primary contact' },
+        { label: 'Email', value: primaryContact?.email || 'Not recorded', source: 'Primary contact' },
+        { label: 'Website', value: 'Not recorded', source: 'Supplier profile' },
+      ]}
+      mainContent={(
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-white">Supplier decision</h2>
-              <Badge label={decisionLabel} tone={decisionTone} />
+              <h3 className="text-lg font-bold text-white">Supplied items</h3>
+              <Badge label="MaintainArr-linked" tone="info" />
             </div>
-            <div className={`rounded-2xl border p-5 ${
-              decisionTone === 'bad'
-                ? 'border-red-500/30 bg-red-950/20'
-                : decisionTone === 'warn'
-                  ? 'border-amber-500/30 bg-amber-950/20'
-                  : 'border-emerald-500/30 bg-emerald-950/20'
-            }`}>
-              <div className="flex gap-3">
-                {decisionTone === 'good' ? (
-                  <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-emerald-300" />
-                ) : (
-                  <AlertTriangle className={`mt-1 h-5 w-5 shrink-0 ${decisionTone === 'bad' ? 'text-red-300' : 'text-amber-300'}`} />
-                )}
-                <div>
-                  <h3 className="font-bold text-white">{decisionTitle}</h3>
-                  <p className="mt-2 text-sm leading-6 text-sky-100/80">{decisionDetail}</p>
+            <div className="space-y-3">
+              {partyPartLinks.length > 0 ? partyPartLinks.slice(0, 3).map(({ part, link }) => (
+                <div key={link.linkId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{part.displayName}</h4>
+                      <p className="mt-2 text-sm text-sky-100/80">
+                        {humanize(part.categoryKey)} - {link.catalogLeadTimeDays ?? 'untracked'} days lead time
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
+                    </div>
+                    <Badge label={link.isPreferred ? 'Preferred' : 'Approved'} tone={link.isPreferred ? 'good' : 'neutral'} />
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                <p className="mt-3 text-xs text-slate-400">Allowed checks</p>
-                <p className="text-xl font-bold text-white">{allowedChecks}</p>
-              </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <XCircle className="h-5 w-5 text-red-300" />
-                <p className="mt-3 text-xs text-slate-400">Blocked checks</p>
-                <p className="text-xl font-bold text-white">{blockedChecks}</p>
-              </div>
+              )) : <EmptyPanel text="No linked items yet." />}
             </div>
           </section>
 
-          <RailSection title="Primary contacts" icon={<Users className="h-5 w-5" />}>
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-white">Recent purchase orders</h3>
+              <Link to="/purchasing/procurement" className="text-sm font-semibold text-sky-300 hover:text-sky-200">View all</Link>
+            </div>
+            <div className="space-y-3">
+              {recentPurchaseOrders.length > 0 ? recentPurchaseOrders.slice(0, 3).map((order) => (
+                <div key={order.id} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{order.key}</h4>
+                      <p className="mt-2 text-sm text-sky-100/80">{order.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">{order.detail}</p>
+                    </div>
+                    <Badge label={humanize(order.status)} tone={statusTone(order.status)} />
+                  </div>
+                </div>
+              )) : <EmptyPanel text="No purchase orders yet." />}
+            </div>
+          </section>
+        </div>
+      )}
+      decisionTitle="Supplier decision"
+      decisionBadge={{ label: decisionLabel, tone: decisionTone }}
+      decisionIcon={decisionTone === 'good' ? (
+        <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+      ) : (
+        <AlertTriangle className={`h-5 w-5 ${decisionTone === 'bad' ? 'text-red-300' : 'text-amber-300'}`} />
+      )}
+      decisionSummary={decisionTitle}
+      decisionDetail={decisionDetail}
+      allowedChecks={allowedChecks}
+      blockedChecks={blockedChecks}
+      railSections={[
+        {
+          title: 'Primary contacts',
+          icon: <Users className="h-5 w-5" />,
+          content: (
             <div className="space-y-3">
               {selectedParty.contacts.length > 0 ? selectedParty.contacts.slice(0, 3).map((contact) => (
                 <div key={contact.contactId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
@@ -806,36 +649,44 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                 </div>
               )) : <EmptyPanel text="No contacts on file." />}
             </div>
-          </RailSection>
-
-          <RailSection title="Performance" icon={<Star className="h-5 w-5" />}>
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-              <p className="text-sm font-semibold text-white">Fill rate</p>
-              <div className="mt-3 h-2 rounded-full bg-slate-800">
-                <div
-                  className="h-2 rounded-full bg-sky-400"
-                  style={{ width: `${Math.min(Math.max(fillRate ?? 0, 0), 100)}%` }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-slate-400">
-                {fillRate == null ? 'No received quantity data' : `${fillRate}% based on current purchase orders`}
-              </p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3">
+          ),
+        },
+        {
+          title: 'Performance',
+          icon: <Star className="h-5 w-5" />,
+          content: (
+            <>
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <Truck className="h-5 w-5 text-sky-300" />
-                <p className="mt-3 text-xs text-slate-400">Avg lead time</p>
-                <p className="font-bold text-white">{averageLeadTime == null ? 'Not tracked' : `${averageLeadTime.toFixed(1)} days`}</p>
+                <p className="text-sm font-semibold text-white">Fill rate</p>
+                <div className="mt-3 h-2 rounded-full bg-slate-800">
+                  <div
+                    className="h-2 rounded-full bg-sky-400"
+                    style={{ width: `${Math.min(Math.max(fillRate ?? 0, 0), 100)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-400">
+                  {fillRate == null ? 'No received quantity data' : `${fillRate}% based on current purchase orders`}
+                </p>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <DollarSign className="h-5 w-5 text-sky-300" />
-                <p className="mt-3 text-xs text-slate-400">Preferred items</p>
-                <p className="font-bold text-white">{reportPreferredLinks}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <Truck className="h-5 w-5 text-sky-300" />
+                  <p className="mt-3 text-xs text-slate-400">Avg lead time</p>
+                  <p className="font-bold text-white">{averageLeadTime == null ? 'Not tracked' : `${averageLeadTime.toFixed(1)} days`}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <DollarSign className="h-5 w-5 text-sky-300" />
+                  <p className="mt-3 text-xs text-slate-400">Preferred items</p>
+                  <p className="font-bold text-white">{reportPreferredLinks}</p>
+                </div>
               </div>
-            </div>
-          </RailSection>
-
-          <RailSection title="Documents" icon={<FileText className="h-5 w-5" />}>
+            </>
+          ),
+        },
+        {
+          title: 'Documents',
+          icon: <FileText className="h-5 w-5" />,
+          content: (
             <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60">
               {documents.length > 0 ? documents.slice(0, 4).map((document, index) => (
                 <div
@@ -850,9 +701,12 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                 </div>
               )) : <div className="p-4"><EmptyPanel text="No compliance documents on file." /></div>}
             </div>
-          </RailSection>
-
-          <RailSection title="Upcoming requirements" icon={<CalendarClock className="h-5 w-5" />}>
+          ),
+        },
+        {
+          title: 'Upcoming requirements',
+          icon: <CalendarClock className="h-5 w-5" />,
+          content: (
             <div className="space-y-3">
               {upcomingRequirements.length > 0 ? upcomingRequirements.map((requirement) => (
                 <div key={`${requirement.title}-${requirement.badge}`} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
@@ -866,9 +720,12 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                 </div>
               )) : <EmptyPanel text="No upcoming supplier requirements." />}
             </div>
-          </RailSection>
-
-          <RailSection title="Recent activity" icon={<History className="h-5 w-5" />}>
+          ),
+        },
+        {
+          title: 'Recent activity',
+          icon: <History className="h-5 w-5" />,
+          content: (
             <div className="space-y-4">
               {recentActivity.length > 0 ? recentActivity.slice(0, 5).map((activity) => (
                 <div key={activity.id} className="relative pl-7">
@@ -879,10 +736,10 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                 </div>
               )) : <EmptyPanel text="No recent supplier activity." />}
             </div>
-          </RailSection>
-        </aside>
-      </div>
-    </div>
+          ),
+        },
+      ]}
+    />
   )
 }
 

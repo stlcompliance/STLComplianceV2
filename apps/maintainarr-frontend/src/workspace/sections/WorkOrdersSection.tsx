@@ -1,10 +1,17 @@
 import { WorkOrdersPanel } from '../../components/WorkOrdersPanel'
+import { useLocation } from 'react-router-dom'
+import { WorkOrderProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
 
 export function WorkOrdersSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  if (location.pathname.startsWith('/work-orders/details')) {
+    return <WorkOrderProfile state={s} />
+  }
+
   return (
     <div className="mb-8" data-testid="maintainarr-work-orders-workspace">
       <WorkOrdersPanel

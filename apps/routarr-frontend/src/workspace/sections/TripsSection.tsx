@@ -8,6 +8,7 @@ import {
   canViewAllTrips,
 } from '../../auth/sessionStorage'
 import { TripsPanel } from '../../components/TripsPanel'
+import { TripProfile } from './RoutingDetailProfiles'
 
 type Props = { state: RoutArrWorkspaceState }
 type TripsViewMode = 'drawer' | 'details' | 'create'
@@ -48,6 +49,10 @@ export function TripsSection({ state }: Props) {
     setLoadDestination,
     setStatusFilter,
   } = state
+
+  if (mode === 'details') {
+    return <TripProfile state={state} />
+  }
 
   return (
     <div className="mt-8">

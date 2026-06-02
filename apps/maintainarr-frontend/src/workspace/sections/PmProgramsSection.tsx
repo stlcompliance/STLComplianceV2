@@ -1,5 +1,6 @@
 import { PmProgramBuilderPanel } from '../../components/PmProgramBuilderPanel'
 import { useLocation } from 'react-router-dom'
+import { PmProgramProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
@@ -10,9 +11,13 @@ export function PmProgramsSection({ state }: Props) {
   const location = useLocation()
   const mode: PmProgramsViewMode = location.pathname.startsWith('/pm-programs/create')
     ? 'create'
-    : location.pathname.startsWith('/pm-programs/details')
+      : location.pathname.startsWith('/pm-programs/details')
       ? 'details'
       : 'drawer'
+  if (mode === 'details') {
+    return <PmProgramProfile state={s} />
+  }
+
   return (
     <div className="mb-8">
       {mode === 'create' ? (

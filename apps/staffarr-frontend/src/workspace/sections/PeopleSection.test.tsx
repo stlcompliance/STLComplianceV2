@@ -15,8 +15,35 @@ vi.mock('../../components/PersonHistorySummaryPanel', () => ({ PersonHistorySumm
 vi.mock('../../components/PersonnelNotesPanel', () => ({ PersonnelNotesPanel: () => null }))
 vi.mock('../../components/PersonnelDocumentsPanel', () => ({ PersonnelDocumentsPanel: () => null }))
 vi.mock('@stl/shared-ui', () => ({
+  DetailBadge: ({ label }: { label: string }) => <span>{label}</span>,
   getErrorMessage: (error: unknown, fallback = 'Something went wrong.') =>
     error instanceof Error ? error.message : fallback,
+  ProfileDetailsLayout: ({
+    testId,
+    title,
+    snapshotTitle,
+    decisionTitle,
+    tabs,
+  }: {
+    testId?: string
+    title: string
+    snapshotTitle: string
+    decisionTitle: string
+    tabs: string[]
+  }) => (
+    <div data-testid={testId}>
+      <h1>{title}</h1>
+      <h2>{snapshotTitle}</h2>
+      <h2>{decisionTitle}</h2>
+      <div role="tablist">
+        {tabs.map((tab, index) => (
+          <button key={tab} type="button" role="tab" aria-selected={index === 0}>
+            {tab}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
 }))
 
 function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWorkspaceState {

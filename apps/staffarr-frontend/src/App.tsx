@@ -4,6 +4,7 @@ import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { AdminPage } from './pages/admin/AdminPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { CertificationsPage } from './pages/certifications/CertificationsPage'
+import { IncidentCreatePage } from './pages/incidents/IncidentCreatePage'
 import { IncidentsPage } from './pages/incidents/IncidentsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
 import { OrgPage } from './pages/org/OrgPage'
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/permissions" element={<PermissionsPage />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
+            <Route path="/incidents/create" element={<IncidentCreatePage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/reports" element={<ReportsPage />} />

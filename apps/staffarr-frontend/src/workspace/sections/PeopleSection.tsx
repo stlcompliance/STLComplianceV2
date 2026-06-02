@@ -1,12 +1,14 @@
-import { getErrorMessage } from '@stl/shared-ui'
+import {
+  DetailBadge as Badge,
+  getErrorMessage,
+  ProfileDetailsLayout,
+  type DetailTone,
+} from '@stl/shared-ui'
 import {
   AlertTriangle,
-  ArrowLeft,
   Award,
   BriefcaseBusiness,
   CalendarClock,
-  CheckCircle2,
-  ChevronDown,
   FileText,
   GraduationCap,
   IdCard,
@@ -19,7 +21,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CreatePersonPanel } from '../../components/CreatePersonPanel'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
@@ -27,7 +29,7 @@ import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 type Props = { state: StaffArrWorkspaceState }
 type PeopleViewMode = 'drawer' | 'details' | 'create'
 type DrawerColumnKey = 'name' | 'email' | 'jobTitle' | 'orgUnit' | 'status' | 'manager'
-type Tone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
+type Tone = DetailTone
 
 const PEOPLE_DRAWER_COLUMN_STORAGE_KEY = 'staffarr.people.drawer.columns.v1'
 
@@ -61,77 +63,6 @@ function daysUntil(value: string | null | undefined): number | null {
   const timestamp = Date.parse(value)
   if (!Number.isFinite(timestamp)) return null
   return Math.ceil((timestamp - Date.now()) / 86_400_000)
-}
-
-function badgeClass(tone: Tone): string {
-  if (tone === 'good') return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
-  if (tone === 'warn') return 'border-amber-400/30 bg-amber-500/15 text-amber-200'
-  if (tone === 'bad') return 'border-red-400/30 bg-red-500/15 text-red-200'
-  if (tone === 'info') return 'border-sky-400/30 bg-sky-500/15 text-sky-200'
-  return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
-}
-
-function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
-  return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
-      {label}
-    </span>
-  )
-}
-
-function MetricCard({
-  label,
-  value,
-  hint,
-  icon,
-  tone = 'neutral',
-}: {
-  label: string
-  value: string | number
-  hint: string
-  icon: ReactNode
-  tone?: Tone
-}) {
-  const iconClass = {
-    good: 'bg-emerald-500/15 text-emerald-300',
-    warn: 'bg-amber-500/15 text-amber-300',
-    bad: 'bg-red-500/15 text-red-300',
-    info: 'bg-sky-500/15 text-sky-300',
-    neutral: 'bg-slate-700/60 text-slate-300',
-  }[tone]
-
-  return (
-    <section className="min-h-32 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-sky-200/80">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-normal text-white">{value}</p>
-        </div>
-        <div className={`rounded-xl p-3 ${iconClass}`}>{icon}</div>
-      </div>
-      <p className="mt-2 text-xs text-slate-400">{hint}</p>
-    </section>
-  )
-}
-
-function SnapshotField({
-  label,
-  value,
-  source,
-}: {
-  label: string
-  value: string
-  source: string
-}) {
-  return (
-    <div className="min-h-[4.5rem] rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{label}</dt>
-        <span className="shrink-0 text-[10px] text-slate-500">{source}</span>
-      </div>
-      <dd className="mt-2 break-words text-sm font-semibold text-white">{value}</dd>
-    </div>
-  )
 }
 
 function ProductPermissionCard({
@@ -545,268 +476,188 @@ export function PeopleSection({ state }: Props) {
     ) : null
 
     return (
-      <div className="w-full max-w-[1500px] space-y-6 pb-10">
-        <section className="rounded-[1.4rem] border border-slate-800 bg-slate-950/80 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="min-w-0">
-              <nav className="flex flex-wrap items-center gap-3 text-sm text-sky-200/80" aria-label="Person breadcrumb">
-                <Link
-                  to="/people/drawer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-slate-300 hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  People
-                </Link>
-                <span className="text-slate-500">/</span>
-                <span>{siteName}</span>
-                <span className="text-slate-500">/</span>
-                <span className="font-semibold text-white">{displayName}</span>
-              </nav>
-
-              <div className="mt-7 flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/15 text-sky-300">
-                  <User className="h-9 w-9" />
+      <ProfileDetailsLayout
+        testId="staffarr-person-profile"
+        backLabel="People"
+        backTo="/people/drawer"
+        breadcrumbs={[siteName, displayName]}
+        icon={<User className="h-9 w-9" />}
+        title={displayName}
+        subtitle={(
+          <span className="flex flex-wrap items-center gap-2">
+            <BriefcaseBusiness className="h-4 w-4 text-slate-400" />
+            <span>{jobTitle}</span>
+            <span className="text-slate-600">-</span>
+            <span>{siteName}</span>
+          </span>
+        )}
+        badges={[
+          { label: profile?.externalUserId ?? 'StaffArr profile', tone: 'info' },
+          { label: humanize(employmentStatus), tone: employmentStatus === 'active' ? 'good' : 'warn' },
+          { label: hasUserAccount ? 'Has user account' : 'No user account', tone: hasUserAccount ? 'good' : 'neutral' },
+        ]}
+        actions={(
+          <>
+            <button
+              type="button"
+              onClick={() => setShowEditor((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit person
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+            >
+              <GraduationCap className="h-4 w-4" />
+              Assign training
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Manage access
+            </button>
+            <button
+              type="button"
+              aria-label="More person actions"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </>
+        )}
+        metrics={[
+          {
+            label: 'Account state',
+            value: hasUserAccount ? 'Enabled' : 'Not linked',
+            hint: hasUserAccount ? 'NexArr login allowed' : 'No NexArr login account',
+            icon: <KeyRound className="h-5 w-5" />,
+            tone: hasUserAccount ? 'good' : 'neutral',
+          },
+          {
+            label: 'Open training',
+            value: openTrainingCount,
+            hint: openTrainingCount === 1 ? '1 item needs action' : `${openTrainingCount} items need action`,
+            icon: <GraduationCap className="h-5 w-5" />,
+            tone: openTrainingCount > 0 ? 'warn' : 'good',
+          },
+          {
+            label: 'Active certifications',
+            value: activeCertifications.length,
+            hint: `${expiringCertifications.length} expire in 60 days`,
+            icon: <Award className="h-5 w-5" />,
+            tone: expiringCertifications.length > 0 ? 'warn' : 'good',
+          },
+          {
+            label: 'Incidents',
+            value: incidents.length,
+            hint: incidents.length > 0 ? 'Review personnel history' : 'No active restriction',
+            icon: <AlertTriangle className="h-5 w-5" />,
+            tone: incidents.length > 0 ? 'warn' : 'good',
+          },
+        ]}
+        tabs={detailTabs}
+        snapshotTitle="Person snapshot"
+        snapshotSubtitle="Identity, employment placement, login capability, assignments, and source-of-truth references."
+        snapshotFields={[
+          { label: 'Person ID', value: personId ?? 'Not selected', source: 'NexArr source of truth' },
+          { label: 'Employee number', value: profile?.externalUserId ?? 'Not linked', source: 'StaffArr' },
+          { label: 'Display name', value: displayName, source: 'NexArr person record' },
+          { label: 'Preferred name', value: profile?.givenName ?? lookup?.givenName ?? 'Not recorded', source: 'StaffArr profile' },
+          { label: 'Email', value: email, source: 'Login/contact' },
+          { label: 'Phone', value: lookup?.workPhone ?? 'Not recorded', source: 'Contact profile' },
+          { label: 'Site', value: siteName, source: 'StaffArr org structure' },
+          { label: 'Department', value: departmentName, source: 'StaffArr org structure' },
+          { label: 'Position', value: positionName, source: 'StaffArr position catalog' },
+          { label: 'Manager', value: managerName, source: 'Reporting line' },
+          { label: 'Hire date', value: formatDate(profile?.createdAt), source: 'Personnel record' },
+          { label: 'Shift', value: 'Not assigned', source: 'Schedule profile' },
+        ]}
+        mainContent={(
+          <>
+            {showEditor ? <div>{editorPanel}</div> : null}
+            <div className="grid gap-5 lg:grid-cols-2">
+              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-bold text-white">Product permissions</h3>
+                  <Badge label="NexArr entitlement checked" tone="info" />
                 </div>
-                <div className="min-w-0">
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <Badge label={profile?.externalUserId ?? 'StaffArr profile'} tone="info" />
-                    <Badge label={humanize(employmentStatus)} tone={employmentStatus === 'active' ? 'good' : 'warn'} />
-                    <Badge label={hasUserAccount ? 'Has user account' : 'No user account'} tone={hasUserAccount ? 'good' : 'neutral'} />
-                  </div>
-                  <h1 className="truncate text-3xl font-bold tracking-normal text-white md:text-4xl">{displayName}</h1>
-                  <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-sky-100/75">
-                    <BriefcaseBusiness className="h-4 w-4 text-slate-400" />
-                    <span>{jobTitle}</span>
-                    <span className="text-slate-600">-</span>
-                    <span>{siteName}</span>
-                  </p>
+                <div className="space-y-3">
+                  <ProductPermissionCard
+                    product="MaintainArr"
+                    role={hasProductSignal('maintainarr') ? 'Fleet Technician' : 'No product entitlement'}
+                    detail={hasProductSignal('maintainarr') ? 'Work orders, inspections, defects, asset notes' : 'No direct access'}
+                    allowed={hasProductSignal('maintainarr')}
+                  />
+                  <ProductPermissionCard
+                    product="TrainArr"
+                    role={hasProductSignal('trainarr') ? 'Trainee / Evaluator' : 'No product entitlement'}
+                    detail={hasProductSignal('trainarr') ? 'Assigned training, evaluator signoffs where qualified' : 'No direct access'}
+                    allowed={hasProductSignal('trainarr')}
+                  />
+                  <ProductPermissionCard
+                    product="StaffArr"
+                    role={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Self Service' : 'No product entitlement'}
+                    detail={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Own profile, own documents, own training history' : 'No direct access'}
+                    allowed={hasProductSignal('staffarr') || activeRoleAssignments.length > 0}
+                  />
+                  <ProductPermissionCard
+                    product="SupplyArr"
+                    role={hasProductSignal('supplyarr') ? 'Supply workspace user' : 'No product entitlement'}
+                    detail={hasProductSignal('supplyarr') ? 'Parts and procurement access' : 'No direct access'}
+                    allowed={hasProductSignal('supplyarr')}
+                  />
                 </div>
-              </div>
-            </div>
+              </section>
 
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowEditor((current) => !current)}
-                className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit person
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
-              >
-                <GraduationCap className="h-4 w-4" />
-                Assign training
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Manage access
-              </button>
-              <button
-                type="button"
-                aria-label="More person actions"
-                className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                <MoreHorizontal className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Account state"
-            value={hasUserAccount ? 'Enabled' : 'Not linked'}
-            hint={hasUserAccount ? 'NexArr login allowed' : 'No NexArr login account'}
-            icon={<KeyRound className="h-5 w-5" />}
-            tone={hasUserAccount ? 'good' : 'neutral'}
-          />
-          <MetricCard
-            label="Open training"
-            value={openTrainingCount}
-            hint={openTrainingCount === 1 ? '1 item needs action' : `${openTrainingCount} items need action`}
-            icon={<GraduationCap className="h-5 w-5" />}
-            tone={openTrainingCount > 0 ? 'warn' : 'good'}
-          />
-          <MetricCard
-            label="Active certifications"
-            value={activeCertifications.length}
-            hint={`${expiringCertifications.length} expire in 60 days`}
-            icon={<Award className="h-5 w-5" />}
-            tone={expiringCertifications.length > 0 ? 'warn' : 'good'}
-          />
-          <MetricCard
-            label="Incidents"
-            value={incidents.length}
-            hint={incidents.length > 0 ? 'Review personnel history' : 'No active restriction'}
-            icon={<AlertTriangle className="h-5 w-5" />}
-            tone={incidents.length > 0 ? 'warn' : 'good'}
-          />
-        </div>
-
-        {showEditor ? <div>{editorPanel}</div> : null}
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_397px]">
-          <main className="min-w-0 rounded-2xl border border-slate-800 bg-slate-950/70">
-            <div className="flex gap-2 overflow-x-auto border-b border-slate-800 p-3" role="tablist" aria-label="Person detail sections">
-              {detailTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === 'Overview'}
-                  className={`shrink-0 rounded-xl px-4 py-3 text-sm font-semibold ${tab === 'Overview' ? 'bg-slate-900 text-sky-300' : 'text-sky-200/70 hover:bg-slate-900/70 hover:text-white'}`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            <section className="p-5">
-              <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold text-white">Person snapshot</h2>
-                  <p className="mt-1 text-sm text-sky-100/75">
-                    Identity, employment placement, login capability, assignments, and source-of-truth references.
-                  </p>
+              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-bold text-white">Certification status</h3>
+                  <Link to="/certifications" className="text-sm font-semibold text-sky-300 hover:text-sky-200">
+                    View all
+                  </Link>
                 </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200"
-                >
-                  Field sources
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-
-              <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <SnapshotField label="Person ID" value={personId ?? 'Not selected'} source="NexArr source of truth" />
-                <SnapshotField label="Employee number" value={profile?.externalUserId ?? 'Not linked'} source="StaffArr" />
-                <SnapshotField label="Display name" value={displayName} source="NexArr person record" />
-                <SnapshotField label="Preferred name" value={profile?.givenName ?? lookup?.givenName ?? 'Not recorded'} source="StaffArr profile" />
-                <SnapshotField label="Email" value={email} source="Login/contact" />
-                <SnapshotField label="Phone" value={lookup?.workPhone ?? 'Not recorded'} source="Contact profile" />
-                <SnapshotField label="Site" value={siteName} source="StaffArr org structure" />
-                <SnapshotField label="Department" value={departmentName} source="StaffArr org structure" />
-                <SnapshotField label="Position" value={positionName} source="StaffArr position catalog" />
-                <SnapshotField label="Manager" value={managerName} source="Reporting line" />
-                <SnapshotField label="Hire date" value={formatDate(profile?.createdAt)} source="Personnel record" />
-                <SnapshotField label="Shift" value="Not assigned" source="Schedule profile" />
-              </dl>
-
-              <div className="mt-5 grid gap-5 lg:grid-cols-2">
-                <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h3 className="text-lg font-bold text-white">Product permissions</h3>
-                    <Badge label="NexArr entitlement checked" tone="info" />
-                  </div>
-                  <div className="space-y-3">
-                    <ProductPermissionCard
-                      product="MaintainArr"
-                      role={hasProductSignal('maintainarr') ? 'Fleet Technician' : 'No product entitlement'}
-                      detail={hasProductSignal('maintainarr') ? 'Work orders, inspections, defects, asset notes' : 'No direct access'}
-                      allowed={hasProductSignal('maintainarr')}
-                    />
-                    <ProductPermissionCard
-                      product="TrainArr"
-                      role={hasProductSignal('trainarr') ? 'Trainee / Evaluator' : 'No product entitlement'}
-                      detail={hasProductSignal('trainarr') ? 'Assigned training, evaluator signoffs where qualified' : 'No direct access'}
-                      allowed={hasProductSignal('trainarr')}
-                    />
-                    <ProductPermissionCard
-                      product="StaffArr"
-                      role={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Self Service' : 'No product entitlement'}
-                      detail={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Own profile, own documents, own training history' : 'No direct access'}
-                      allowed={hasProductSignal('staffarr') || activeRoleAssignments.length > 0}
-                    />
-                    <ProductPermissionCard
-                      product="SupplyArr"
-                      role={hasProductSignal('supplyarr') ? 'Supply workspace user' : 'No product entitlement'}
-                      detail={hasProductSignal('supplyarr') ? 'Parts and procurement access' : 'No direct access'}
-                      allowed={hasProductSignal('supplyarr')}
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h3 className="text-lg font-bold text-white">Certification status</h3>
-                    <Link to="/certifications" className="text-sm font-semibold text-sky-300 hover:text-sky-200">
-                      View all
-                    </Link>
-                  </div>
-                  <div className="space-y-3">
-                    {certificationCards.length > 0 ? certificationCards.map((cert) => (
-                      <div key={cert.personCertificationId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-bold text-white">{cert.certificationName}</p>
-                            <p className="mt-3 text-sm text-slate-100">Expires: {formatDate(cert.expiresAt)}</p>
-                            <p className="mt-2 text-xs text-slate-400">{humanize(cert.sourceType)} - Training completion</p>
-                          </div>
-                          <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
+                <div className="space-y-3">
+                  {certificationCards.length > 0 ? certificationCards.map((cert) => (
+                    <div key={cert.personCertificationId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-bold text-white">{cert.certificationName}</p>
+                          <p className="mt-3 text-sm text-slate-100">Expires: {formatDate(cert.expiresAt)}</p>
+                          <p className="mt-2 text-xs text-slate-400">{humanize(cert.sourceType)} - Training completion</p>
                         </div>
+                        <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
                       </div>
-                    )) : (
-                      <p className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-                        No certifications are recorded for this person.
-                      </p>
-                    )}
-                  </div>
-                </section>
-              </div>
-            </section>
-          </main>
-
-          <aside className="space-y-5">
-            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-lg font-bold text-white">Authorization decision</h2>
-                <Badge label={readinessAllowed ? 'Allowed' : 'Blocked'} tone={readinessAllowed ? 'good' : 'bad'} />
-              </div>
-              <div className={`mt-4 rounded-2xl border p-4 ${readinessAllowed ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-red-500/30 bg-red-500/10'}`}>
-                <div className="flex gap-3">
-                  {readinessAllowed ? (
-                    <UserCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
-                  ) : (
-                    <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+                    </div>
+                  )) : (
+                    <p className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                      No certifications are recorded for this person.
+                    </p>
                   )}
-                  <div>
-                    <p className="font-semibold text-white">
-                      {readinessAllowed ? 'Can perform assigned work' : 'Restrictions require review'}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-200">
-                      {readinessAllowed
-                        ? 'No active restrictions. Training and role checks allow normal StaffArr work.'
-                        : readiness?.blockers[0]?.message ?? 'One or more authorization checks are blocked.'}
-                    </p>
-                  </div>
                 </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                  <p className="mt-4 text-xs text-slate-400">Allowed checks</p>
-                  <p className="text-xl font-bold text-white">{allowedChecks}</p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                  <XCircle className="h-5 w-5 text-red-300" />
-                  <p className="mt-4 text-xs text-slate-400">Blocked checks</p>
-                  <p className="text-xl font-bold text-white">{blockedChecks}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">Account and identity</h2>
-                <IdCard className="h-5 w-5 text-sky-300" />
-              </div>
+              </section>
+            </div>
+          </>
+        )}
+        decisionTitle="Authorization decision"
+        decisionBadge={{ label: readinessAllowed ? 'Allowed' : 'Blocked', tone: readinessAllowed ? 'good' : 'bad' }}
+        decisionIcon={readinessAllowed ? <UserCheck className="h-5 w-5 text-emerald-300" /> : <XCircle className="h-5 w-5 text-red-300" />}
+        decisionSummary={readinessAllowed ? 'Can perform assigned work' : 'Restrictions require review'}
+        decisionDetail={
+          readinessAllowed
+            ? 'No active restrictions. Training and role checks allow normal StaffArr work.'
+            : readiness?.blockers[0]?.message ?? 'One or more authorization checks are blocked.'
+        }
+        allowedChecks={allowedChecks}
+        blockedChecks={blockedChecks}
+        railSections={[
+          {
+            title: 'Account and identity',
+            icon: <IdCard className="h-5 w-5" />,
+            content: (
               <div className="space-y-3">
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
                   <p className="text-sm font-bold text-white">Person source</p>
@@ -829,13 +680,12 @@ export function PeopleSection({ state }: Props) {
                   </p>
                 </div>
               </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">Upcoming requirements</h2>
-                <CalendarClock className="h-5 w-5 text-sky-300" />
-              </div>
+            ),
+          },
+          {
+            title: 'Upcoming requirements',
+            icon: <CalendarClock className="h-5 w-5" />,
+            content: (
               <div className="space-y-3">
                 {upcomingRequirements.length > 0 ? upcomingRequirements.map((item) => (
                   <div key={`${item.title}-${item.badge}`} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
@@ -853,13 +703,12 @@ export function PeopleSection({ state }: Props) {
                   </p>
                 )}
               </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">Documents</h2>
-                <FileText className="h-5 w-5 text-sky-300" />
-              </div>
+            ),
+          },
+          {
+            title: 'Documents',
+            icon: <FileText className="h-5 w-5" />,
+            content: (
               <div className="overflow-hidden rounded-xl border border-slate-800">
                 {documentCards.length > 0 ? documentCards.map((document) => (
                   <div key={document.documentId} className="flex items-start justify-between gap-3 border-b border-slate-800 bg-slate-950/70 p-4 last:border-b-0">
@@ -875,13 +724,12 @@ export function PeopleSection({ state }: Props) {
                   <p className="bg-slate-950/70 p-4 text-sm text-slate-400">No documents uploaded yet.</p>
                 )}
               </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">Recent activity</h2>
-                <CalendarClock className="h-5 w-5 text-sky-300" />
-              </div>
+            ),
+          },
+          {
+            title: 'Recent activity',
+            icon: <CalendarClock className="h-5 w-5" />,
+            content: (
               <ol className="space-y-4">
                 {recentActivityCards.length > 0 ? recentActivityCards.map((entry) => (
                   <li key={entry.entryId} className="relative pl-7">
@@ -898,10 +746,10 @@ export function PeopleSection({ state }: Props) {
                   </li>
                 )}
               </ol>
-            </section>
-          </aside>
-        </div>
-      </div>
+            ),
+          },
+        ]}
+      />
     )
   }
 

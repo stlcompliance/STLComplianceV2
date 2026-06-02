@@ -15,6 +15,15 @@ export {
 export type { SuiteProductCatalogEntry } from './productCatalog'
 export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 export type { ProductWorkspaceFrameProps, ProductWorkspaceSession } from './ProductWorkspaceFrame'
+export { DetailBadge, DetailEmptyState, ProfileDetailsLayout } from './ProfileDetailsLayout'
+export type {
+  DetailBadgeConfig,
+  DetailMetricConfig,
+  DetailRailSectionConfig,
+  DetailSnapshotFieldConfig,
+  DetailTone,
+  ProfileDetailsLayoutProps,
+} from './ProfileDetailsLayout'
 export { resolveSuiteHomeUrl } from './suiteWorkspaceEnv'
 export {
   buildProductLaunchUrlMap,

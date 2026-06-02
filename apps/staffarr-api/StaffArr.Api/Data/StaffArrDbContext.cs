@@ -302,12 +302,36 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.IncidentSource).HasMaxLength(64);
+            entity.Property(x => x.IncidentType).HasMaxLength(64);
+            entity.Property(x => x.LocationDetail).HasMaxLength(256);
+            entity.Property(x => x.WitnessPersonIdsJson).HasMaxLength(2048);
+            entity.Property(x => x.AdditionalInvolvedPersonIdsJson).HasMaxLength(2048);
+            entity.Property(x => x.ImmediateActionsTaken).HasMaxLength(2000);
+            entity.Property(x => x.RootCause).HasMaxLength(2000);
+            entity.Property(x => x.CategoryKeysJson).HasMaxLength(1024);
+            entity.Property(x => x.ReadinessDecision).HasMaxLength(32);
+            entity.Property(x => x.WorkRestriction).HasMaxLength(64);
+            entity.Property(x => x.ReturnToWorkNeeded).HasMaxLength(32);
+            entity.Property(x => x.PpeConcern).HasMaxLength(64);
+            entity.Property(x => x.MedicalAttention).HasMaxLength(64);
+            entity.Property(x => x.OutOfServiceRemoveFromDuty).HasMaxLength(32);
+            entity.Property(x => x.FollowUpRequired).HasMaxLength(32);
+            entity.Property(x => x.TrainingReviewReason).HasMaxLength(128);
+            entity.Property(x => x.RelatedAssetReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedWorkOrderReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedRouteReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedSupplierReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedDocumentReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedPolicyReference).HasMaxLength(128);
             entity.Property(x => x.SourceProduct).HasMaxLength(64);
             entity.Property(x => x.SourceEventKind).HasMaxLength(64);
             entity.Property(x => x.SourceReferenceKey).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.ReportedAt });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.ReportedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IncidentType, x.ReportedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ReadinessDecision, x.ReportedAt });
             entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceIncidentId })
                 .IsUnique()
                 .HasDatabaseName("IX_staffarr_personnel_incidents_source_incident")

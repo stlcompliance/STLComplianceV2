@@ -1,10 +1,17 @@
 import { InspectionRunnerPanel } from '../../components/InspectionRunnerPanel'
+import { useLocation } from 'react-router-dom'
+import { InspectionRunProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
 
 export function InspectionsSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  if (location.pathname.startsWith('/inspections/details')) {
+    return <InspectionRunProfile state={s} />
+  }
+
   return (
     <div className="mb-8" data-testid="maintainarr-inspections-workspace">
       <InspectionRunnerPanel

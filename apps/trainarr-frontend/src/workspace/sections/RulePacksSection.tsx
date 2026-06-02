@@ -2,10 +2,9 @@ import {
   removeTrainingDefinitionRulePackRequirement,
   removeTrainingProgramRulePackRequirement,
 } from '../../api/client'
-import { ControlledSelect } from '@stl/shared-ui'
 import { useLocation } from 'react-router-dom'
-import { RulePackImpactPanel } from '../../components/RulePackImpactPanel'
 import { RulePackRequirementPanel } from '../../components/RulePackRequirementPanel'
+import { RulePackProfile } from './TrainingDetailProfiles'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
 type Props = { state: TrainArrWorkspaceState }
@@ -19,6 +18,10 @@ export function RulePacksSection({ state }: Props) {
     : location.pathname.startsWith('/rule-packs/details')
       ? 'details'
       : 'drawer'
+  if (mode === 'details') {
+    return <RulePackProfile state={s} />
+  }
+
   return (
     <>
       {mode === 'create' ? (
@@ -28,30 +31,6 @@ export function RulePacksSection({ state }: Props) {
             <li>Step 2: Select a Compliance Core rule pack reference for the requirement.</li>
             <li>Step 3: Save and validate so downstream qualification logic uses the latest reference.</li>
           </ol>
-        </div>
-      ) : null}
-      {mode === 'details' ? (
-        <div className="mb-4 grid gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 md:grid-cols-2">
-          <ControlledSelect
-            label="Training definition context"
-            value={s.selectedDefinitionIdForCitations ?? ''}
-            onChange={s.setSelectedDefinitionIdForCitations}
-            options={(s.definitionsQuery.data ?? []).map((item) => ({
-              value: item.trainingDefinitionId,
-              label: item.name,
-            }))}
-            emptyLabel="Select definition"
-          />
-          <ControlledSelect
-            label="Training program context"
-            value={s.selectedProgramId ?? ''}
-            onChange={s.setSelectedProgramId}
-            options={(s.programsQuery.data ?? []).map((item) => ({
-              value: item.programId,
-              label: item.name,
-            }))}
-            emptyLabel="Select program"
-          />
         </div>
       ) : null}
       {s.selectedDefinitionIdForCitations ? (
@@ -120,20 +99,6 @@ export function RulePacksSection({ state }: Props) {
         />
       ) : null}
 
-      {mode === 'details' && s.canImpact ? (
-        <RulePackImpactPanel
-          rulePackKeyInput={s.impactRulePackKeyInput}
-          rulePackOptions={s.rulePackOptions}
-          onRulePackKeyChange={(value) => {
-            s.setImpactRulePackKeyInput(value)
-            s.setRulePackImpactAssessment(null)
-          }}
-          onAssess={() => s.rulePackImpactMutation.mutate()}
-          isAssessing={s.rulePackImpactMutation.isPending}
-          canAssess={s.canImpact}
-          assessment={s.rulePackImpactAssessment}
-        />
-      ) : null}
     </>
   )
 }

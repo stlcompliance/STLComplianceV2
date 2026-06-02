@@ -2,6 +2,7 @@ import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
 import { useLocation } from 'react-router-dom'
 import { canCreateTrips, canPerformTrips, canViewAllTrips } from '../../auth/sessionStorage'
 import { RoutesPanel } from '../../components/RoutesPanel'
+import { RouteProfile } from './RoutingDetailProfiles'
 
 type Props = { state: RoutArrWorkspaceState }
 type RoutesViewMode = 'drawer' | 'details' | 'create'
@@ -37,6 +38,10 @@ export function RoutesSection({ state }: Props) {
     setStopAddress,
     setStopType,
   } = state
+
+  if (mode === 'details') {
+    return <RouteProfile state={state} />
+  }
 
   return (
     <div className="mt-8">

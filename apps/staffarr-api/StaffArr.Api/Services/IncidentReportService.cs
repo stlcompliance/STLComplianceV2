@@ -13,7 +13,15 @@ public sealed class IncidentReportService(StaffArrDbContext db)
     private static readonly HashSet<string> OpenStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
         "open",
+        "submitted",
         "in_review",
+        "needs_review",
+        "triage",
+        "assigned",
+        "in_progress",
+        "waiting_on_training_review",
+        "waiting_on_compliance_review",
+        "corrective_action_pending",
     };
 
     private static readonly HashSet<string> HighSeverities = new(StringComparer.OrdinalIgnoreCase)

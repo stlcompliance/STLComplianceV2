@@ -1,5 +1,6 @@
 import { MeterReadingsPanel } from '../../components/MeterReadingsPanel'
 import { useLocation } from 'react-router-dom'
+import { MeterProfile } from './MaintenanceDetailProfiles'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
@@ -10,9 +11,13 @@ export function MetersSection({ state }: Props) {
   const location = useLocation()
   const mode: MetersViewMode = location.pathname.startsWith('/meters/create')
     ? 'create'
-    : location.pathname.startsWith('/meters/details')
+      : location.pathname.startsWith('/meters/details')
       ? 'details'
       : 'drawer'
+  if (mode === 'details') {
+    return <MeterProfile state={s} />
+  }
+
   return (
     <div className="mb-8">
       {mode === 'create' ? (

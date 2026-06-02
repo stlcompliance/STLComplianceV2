@@ -130,9 +130,17 @@ export function IncidentsPanel({
           </p>
         </div>
         {canManage ? (
-          <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-600">
-            staffarr.incidents.manage
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href="/incidents/create"
+              className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500"
+            >
+              Create incident
+            </a>
+            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-600">
+              staffarr.incidents.manage
+            </span>
+          </div>
         ) : null}
       </div>
 

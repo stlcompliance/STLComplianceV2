@@ -32,7 +32,15 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'Org structure', to: '/org', icon: Network },
   { label: 'Permissions', to: '/permissions', icon: Shield },
   { label: 'Readiness', to: '/readiness', icon: Activity },
-  { label: 'Incidents', to: '/incidents' , icon: AlertCircle },
+  {
+    label: 'Incidents',
+    to: '/incidents',
+    icon: AlertCircle,
+    children: [
+      { label: 'Review', to: '/incidents', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/incidents/create', icon: StickyNote as NavIcon },
+    ],
+  },
   { label: 'Training acks', to: '/training-acknowledgements', icon: ClipboardCheck },
   { label: 'Certifications', to: '/certifications' , icon: Award },
   { label: 'Reports', to: '/reports', icon: BarChart3, sectionBreakBefore: true },

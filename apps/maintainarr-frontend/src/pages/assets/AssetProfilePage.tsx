@@ -1,11 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { DetailBadge as Badge, ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
 import {
   AlertTriangle,
-  ArrowLeft,
   CheckCircle2,
-  ChevronDown,
   ClipboardCheck,
   FilePenLine,
   Gauge,
@@ -71,22 +70,6 @@ const snapshotPreferredKeys = [
   'siteId',
   'homeLocationId',
 ]
-
-function badgeClass(tone: 'good' | 'warn' | 'neutral' | 'bad' | 'info'): string {
-  if (tone === 'good') return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
-  if (tone === 'warn') return 'border-amber-400/30 bg-amber-500/15 text-amber-200'
-  if (tone === 'bad') return 'border-red-400/30 bg-red-500/15 text-red-200'
-  if (tone === 'info') return 'border-sky-400/30 bg-sky-500/15 text-sky-200'
-  return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
-}
-
-function Badge({ label, tone = 'neutral' }: { label: string; tone?: 'good' | 'warn' | 'neutral' | 'bad' | 'info' }) {
-  return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
-      {label}
-    </span>
-  )
-}
 
 function humanize(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
@@ -182,112 +165,6 @@ function orderedSnapshotFields(
     })
 
   return [...preferred, ...remaining].slice(0, 9)
-}
-
-function SummaryMetric({
-  label,
-  value,
-  hint,
-  icon,
-  tone = 'neutral',
-}: {
-  label: string
-  value: string | number
-  hint: string
-  icon: ReactNode
-  tone?: 'good' | 'warn' | 'neutral' | 'bad' | 'info'
-}) {
-  const iconClass = {
-    good: 'bg-emerald-500/15 text-emerald-300',
-    warn: 'bg-amber-500/15 text-amber-300',
-    bad: 'bg-red-500/15 text-red-300',
-    info: 'bg-sky-500/15 text-sky-300',
-    neutral: 'bg-slate-700/60 text-slate-300',
-  }[tone]
-
-  return (
-    <section className="min-h-36 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_18px_42px_rgba(2,6,23,0.22)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-sky-200/80">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-normal text-white">{value}</p>
-        </div>
-        <div className={`rounded-xl p-3 ${iconClass}`}>{icon}</div>
-      </div>
-      <p className="mt-2 text-xs text-slate-400">{hint}</p>
-    </section>
-  )
-}
-
-function SnapshotGrid({
-  fieldset,
-  values,
-  displayValues,
-}: {
-  fieldset: FieldsetResponse
-  values: AssetFieldValues
-  displayValues: Record<string, string>
-}) {
-  const fields = orderedSnapshotFields(fieldset, values)
-
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {fields.map((field) => (
-        <div key={field.key} className="min-h-[4.5rem] rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-          <div className="flex items-start justify-between gap-2">
-            <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{field.label}</dt>
-            <span className="shrink-0 text-[10px] text-slate-500">{fieldSourceLabel(field)}</span>
-          </div>
-          <dd className="mt-2 break-words text-sm font-semibold text-white">
-            {formatAssetFieldValue(fieldset, field, values[field.key], values, displayValues)}
-          </dd>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ReadinessDecision({
-  readinessStatus,
-  blockerCount,
-  advisoryCount,
-}: {
-  readinessStatus: 'ready' | 'not_ready' | undefined
-  blockerCount: number
-  advisoryCount: number
-}) {
-  const isBlocked = readinessStatus === 'not_ready' || blockerCount > 0
-  const isAdvisory = !isBlocked && advisoryCount > 0
-
-  const title = isBlocked
-    ? 'Hold dispatch until blockers clear'
-    : isAdvisory
-      ? 'May dispatch, monitor defects'
-      : 'Ready for dispatch'
-  const body = isBlocked
-    ? 'Open maintenance blockers should be resolved before this asset returns to service.'
-    : isAdvisory
-      ? 'No hard out-of-service blockers. Track advisory signals before the next route.'
-      : 'No current blockers or advisory maintenance signals are recorded.'
-  const tone = isBlocked ? 'bad' : isAdvisory ? 'warn' : 'good'
-
-  return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-bold text-white">Readiness decision</h2>
-        <Badge label={isBlocked ? 'Blocked' : isAdvisory ? 'Advisory' : 'Clear'} tone={tone} />
-      </div>
-      <div className={`mt-4 rounded-2xl border p-4 ${isBlocked ? 'border-red-500/30 bg-red-500/10' : isAdvisory ? 'border-amber-500/30 bg-amber-500/10' : 'border-emerald-500/30 bg-emerald-500/10'}`}>
-        <div className="flex gap-3">
-          {isBlocked ? <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" /> : isAdvisory ? <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" /> : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />}
-          <div>
-            <p className="font-semibold text-white">{title}</p>
-            <p className="mt-2 text-sm leading-6 text-slate-200">{body}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
 }
 
 export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?: boolean }) {
@@ -465,6 +342,20 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
   const classificationText = asset ? `${asset.className} / ${asset.typeName}` : 'Asset detail'
   const inspectionState = failedInspections > 0 ? 'Action' : 'Pass'
   const inspectionHint = failedInspections > 0 ? `${failedInspections} failed checks` : 'No failed inspections recorded'
+  const readinessBlocked = readiness?.readinessStatus === 'not_ready' || blockerCount > 0
+  const readinessAdvisory = !readinessBlocked && advisoryCount > 0
+  const readinessDecisionLabel = readinessBlocked ? 'Blocked' : readinessAdvisory ? 'Advisory' : 'Clear'
+  const readinessDecisionSummary = readinessBlocked
+    ? 'Hold dispatch until blockers clear'
+    : readinessAdvisory
+      ? 'May dispatch, monitor defects'
+      : 'Ready for dispatch'
+  const readinessDecisionDetail = readinessBlocked
+    ? 'Open maintenance blockers should be resolved before this asset returns to service.'
+    : readinessAdvisory
+      ? 'No hard out-of-service blockers. Track advisory signals before the next route.'
+      : 'No current blockers or advisory maintenance signals are recorded.'
+  const readinessDecisionTone: DetailTone = readinessBlocked ? 'bad' : readinessAdvisory ? 'warn' : 'good'
 
   return (
     <div className="w-full max-w-[1500px] space-y-6 pb-10" data-testid="asset-profile-page">
@@ -495,270 +386,211 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
       ) : null}
 
       {asset && fieldset ? (
-        <>
-          <section className="rounded-[1.4rem] border border-slate-800 bg-slate-950/80 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
-            <div className="flex flex-wrap items-start justify-between gap-5">
-              <div className="min-w-0">
-                <nav className="flex flex-wrap items-center gap-3 text-sm text-sky-200/80" aria-label="Asset breadcrumb">
+        <ProfileDetailsLayout
+          testId="asset-profile-page"
+          backLabel="Assets"
+          backTo="/assets/drawer"
+          breadcrumbs={[asset.className, asset.assetTag]}
+          icon={<Truck className="h-8 w-8" />}
+          title={asset.name}
+          subtitle={(
+            <span className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 text-slate-400" />
+              <span>{locationText}</span>
+              <span className="text-slate-600">-</span>
+              <span>{classificationText}</span>
+              <span className="text-slate-600">-</span>
+              <span>{humanize(asset.lifecycleStatus)}</span>
+            </span>
+          )}
+          badges={[
+            { label: asset.assetTag, tone: 'info' },
+            outOfService ? { label: 'Out of service', tone: 'bad' } : { label: 'Available', tone: 'good' },
+            { label: readinessDecisionLabel === 'Clear' ? 'Ready' : readinessDecisionLabel === 'Advisory' ? 'Ready with advisories' : 'Blocked', tone: readinessDecisionTone },
+          ]}
+          actions={(
+            <>
+              {isEditing ? (
+                <>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Save asset"
+                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50"
+                    disabled={!isDirty || Object.keys(validationErrors).length > 0 || updateMutation.isPending}
+                    onClick={() => updateMutation.mutate()}
+                  >
+                    {updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </button>
+                </>
+              ) : (
+                <>
                   <Link
-                    to="/assets/drawer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-slate-300 hover:text-white"
+                    to={`/inspections/create?assetId=${encodeURIComponent(asset.assetId)}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
                   >
-                    <ArrowLeft className="h-4 w-4" />
-                    Assets
+                    <ClipboardCheck className="h-4 w-4" />
+                    Start inspection
                   </Link>
-                  <span className="text-slate-500">/</span>
-                  <span>{asset.className}</span>
-                  <span className="text-slate-500">/</span>
-                  <span className="font-semibold text-white">{asset.assetTag}</span>
-                </nav>
-
-                <div className="mt-7 flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/15 text-sky-300">
-                    <Truck className="h-8 w-8" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <Badge label={asset.assetTag} tone="info" />
-                      {outOfService ? <Badge label="Out of service" tone="bad" /> : <Badge label="Available" tone="good" />}
-                      {readiness?.readinessStatus === 'not_ready' ? (
-                        <Badge label="Blocked" tone="bad" />
-                      ) : advisoryCount > 0 ? (
-                        <Badge label="Ready with advisories" tone="warn" />
-                      ) : (
-                        <Badge label="Ready" tone="good" />
-                      )}
-                    </div>
-                    <h1 className="truncate text-3xl font-bold tracking-normal text-white md:text-4xl">{asset.name}</h1>
-                    <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-sky-100/75">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      <span>{locationText}</span>
-                      <span className="text-slate-600">-</span>
-                      <span>{classificationText}</span>
-                      <span className="text-slate-600">-</span>
-                      <span>{humanize(asset.lifecycleStatus)}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {isEditing ? (
-                  <>
-                    <button
-                      type="button"
-                      className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
-                      onClick={handleCancel}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Save asset"
-                      className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50"
-                      disabled={!isDirty || Object.keys(validationErrors).length > 0 || updateMutation.isPending}
-                      onClick={() => updateMutation.mutate()}
-                    >
-                      {updateMutation.isPending ? 'Saving...' : 'Save'}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to={`/inspections/create?assetId=${encodeURIComponent(asset.assetId)}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
-                    >
-                      <ClipboardCheck className="h-4 w-4" />
-                      Start inspection
-                    </Link>
-                    <Link
-                      to={`/work-orders/create?assetId=${encodeURIComponent(asset.assetId)}`}
-                      className={`inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 ${canCreateWo ? '' : 'pointer-events-none opacity-50'}`}
-                    >
-                      <Wrench className="h-4 w-4" />
-                      Create WO
-                    </Link>
-                    {canUpdate ? (
-                      <Link
-                        to={`/assets/${asset.assetId}/edit`}
-                        aria-label="Edit asset"
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
-                      >
-                        <FilePenLine className="h-4 w-4" />
-                        Edit
-                      </Link>
-                    ) : null}
-                    <button
-                      type="button"
-                      aria-label="More asset actions"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <SummaryMetric
-              label="Open defects"
-              value={openDefects}
-              hint={`${safetyWatched} safety watched`}
-              icon={<AlertTriangle className="h-5 w-5" />}
-              tone={openDefects > 0 ? 'warn' : 'good'}
-            />
-            <SummaryMetric
-              label="Open work orders"
-              value={activeWorkOrders}
-              hint={`${workOrdersQuery.data?.filter((workOrder) => workOrder.status === 'waiting_parts').length ?? 0} waiting parts`}
-              icon={<Wrench className="h-5 w-5" />}
-              tone={activeWorkOrders > 0 ? 'info' : 'good'}
-            />
-            <SummaryMetric
-              label="PM compliance"
-              value={`${pmPercent}%`}
-              hint={nextPm ? `${nextPm.name} due ${formatDate(nextPm.nextDueAt)}` : 'No PM program assigned'}
-              icon={<Gauge className="h-5 w-5" />}
-              tone={pmPercent >= 90 ? 'good' : pmPercent >= 70 ? 'warn' : 'bad'}
-            />
-            <SummaryMetric
-              label="Inspection state"
-              value={inspectionState}
-              hint={inspectionHint}
-              icon={<ClipboardCheck className="h-5 w-5" />}
-              tone={failedInspections > 0 ? 'bad' : 'good'}
-            />
-          </div>
-
-          {isEditing && Object.keys(validationErrors).length > 0 ? (
-            <p className="rounded-xl border border-amber-700 bg-amber-950/40 p-3 text-sm text-amber-100">
-              Resolve inline validation errors before saving.
-            </p>
-          ) : null}
-
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_397px]">
-            <main className="min-w-0 rounded-2xl border border-slate-800 bg-slate-950/70">
-              <div className="flex gap-2 overflow-x-auto border-b border-slate-800 p-3" role="tablist" aria-label="Asset detail sections">
-                {overviewTabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === 'Overview'}
-                    className={`shrink-0 rounded-xl px-4 py-3 text-sm font-semibold ${tab === 'Overview' ? 'bg-slate-900 text-sky-300' : 'text-sky-200/70 hover:bg-slate-900/70 hover:text-white'}`}
+                  <Link
+                    to={`/work-orders/create?assetId=${encodeURIComponent(asset.assetId)}`}
+                    className={`inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 ${canCreateWo ? '' : 'pointer-events-none opacity-50'}`}
                   >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              <section className="p-5">
-                <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Asset snapshot</h2>
-                    <p className="mt-1 text-sm text-sky-100/75">Core identity, platform-populated fields, and live operating counters.</p>
-                  </div>
+                    <Wrench className="h-4 w-4" />
+                    Create WO
+                  </Link>
+                  {canUpdate ? (
+                    <Link
+                      to={`/assets/${asset.assetId}/edit`}
+                      aria-label="Edit asset"
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+                    >
+                      <FilePenLine className="h-4 w-4" />
+                      Edit
+                    </Link>
+                  ) : null}
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200"
+                    aria-label="More asset actions"
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
                   >
-                    Field sources
-                    <ChevronDown className="h-4 w-4" />
+                    <MoreHorizontal className="h-5 w-5" />
                   </button>
-                </div>
-
-                {isEditing ? (
-                  <AssetSectionList
-                    fieldset={fieldset}
-                    values={values}
-                    mode="edit"
-                    onChange={handleFieldChange}
-                    errors={validationErrors}
-                    displayValues={displayValues}
-                  />
-                ) : (
-                  <>
-                    <SnapshotGrid fieldset={fieldset} values={values} displayValues={displayValues} />
-
-                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-bold text-white">Usage and meters</h3>
-                            <p className="mt-1 text-sm text-slate-400">
-                              {latest ? `${latest.name} latest reading` : 'No meter reading recorded'}
-                            </p>
-                          </div>
-                          <Badge label={latest ? latest.status : 'Empty'} tone={latest ? 'info' : 'neutral'} />
+                </>
+              )}
+            </>
+          )}
+          metrics={[
+            {
+              label: 'Open defects',
+              value: openDefects,
+              hint: `${safetyWatched} safety watched`,
+              icon: <AlertTriangle className="h-5 w-5" />,
+              tone: openDefects > 0 ? 'warn' : 'good',
+            },
+            {
+              label: 'Open work orders',
+              value: activeWorkOrders,
+              hint: `${workOrdersQuery.data?.filter((workOrder) => workOrder.status === 'waiting_parts').length ?? 0} waiting parts`,
+              icon: <Wrench className="h-5 w-5" />,
+              tone: activeWorkOrders > 0 ? 'info' : 'good',
+            },
+            {
+              label: 'PM compliance',
+              value: `${pmPercent}%`,
+              hint: nextPm ? `${nextPm.name} due ${formatDate(nextPm.nextDueAt)}` : 'No PM program assigned',
+              icon: <Gauge className="h-5 w-5" />,
+              tone: pmPercent >= 90 ? 'good' : pmPercent >= 70 ? 'warn' : 'bad',
+            },
+            {
+              label: 'Inspection state',
+              value: inspectionState,
+              hint: inspectionHint,
+              icon: <ClipboardCheck className="h-5 w-5" />,
+              tone: failedInspections > 0 ? 'bad' : 'good',
+            },
+          ]}
+          tabs={overviewTabs}
+          snapshotTitle="Asset snapshot"
+          snapshotSubtitle="Core identity, platform-populated fields, and live operating counters."
+          snapshotFields={orderedSnapshotFields(fieldset, values).map((field) => ({
+            label: field.label,
+            value: formatAssetFieldValue(fieldset, field, values[field.key], values, displayValues),
+            source: fieldSourceLabel(field),
+          }))}
+          mainContent={(
+            <>
+              {isEditing && Object.keys(validationErrors).length > 0 ? (
+                <p className="rounded-xl border border-amber-700 bg-amber-950/40 p-3 text-sm text-amber-100">
+                  Resolve inline validation errors before saving.
+                </p>
+              ) : null}
+              {isEditing ? (
+                <AssetSectionList
+                  fieldset={fieldset}
+                  values={values}
+                  mode="edit"
+                  onChange={handleFieldChange}
+                  errors={validationErrors}
+                  displayValues={displayValues}
+                />
+              ) : (
+                <>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-bold text-white">Usage and meters</h3>
+                          <p className="mt-1 text-sm text-slate-400">
+                            {latest ? `${latest.name} latest reading` : 'No meter reading recorded'}
+                          </p>
                         </div>
-                        <p className="mt-5 text-3xl font-bold text-white">
-                          {latest ? `${compactNumber(latest.currentReading)} ${latest.unit}` : 'No reading'}
-                        </p>
-                      </section>
-
-                      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-bold text-white">Action before dispatch</h3>
-                            <p className="mt-1 text-sm text-slate-400">
-                              {blockerCount > 0 ? `${blockerCount} blocker signal(s)` : 'No out-of-service blocker'}
-                            </p>
-                          </div>
-                          <Badge label={blockerCount > 0 ? 'Blocked' : 'Ready'} tone={blockerCount > 0 ? 'bad' : 'good'} />
-                        </div>
-                        <p className="mt-5 text-sm leading-6 text-slate-300">
-                          {readiness?.blockers[0]?.message ?? 'Keep routine PM, inspection, and defect checks current for this asset.'}
-                        </p>
-                      </section>
-                    </div>
-
-                    <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                      <h3 className="font-bold text-white">History / Audit</h3>
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                          <p className="text-xs text-slate-500">Created</p>
-                          <p className="text-sm font-medium text-slate-100">{new Date(asset.createdAt).toLocaleString()}</p>
-                        </div>
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                          <p className="text-xs text-slate-500">Last updated</p>
-                          <p className="text-sm font-medium text-slate-100">{new Date(asset.updatedAt).toLocaleString()}</p>
-                        </div>
+                        <Badge label={latest ? latest.status : 'Empty'} tone={latest ? 'info' : 'neutral'} />
                       </div>
+                      <p className="mt-5 text-3xl font-bold text-white">
+                        {latest ? `${compactNumber(latest.currentReading)} ${latest.unit}` : 'No reading'}
+                      </p>
                     </section>
-                  </>
-                )}
-              </section>
-            </main>
 
-            <aside className="space-y-5">
-              <ReadinessDecision
-                readinessStatus={readiness?.readinessStatus}
-                blockerCount={blockerCount}
-                advisoryCount={advisoryCount}
-              />
-
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                    <p className="mt-4 text-xs text-slate-400">Compliant</p>
-                    <p className="text-xl font-bold text-white">{compliantSignalCount} checks</p>
+                    <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-bold text-white">Action before dispatch</h3>
+                          <p className="mt-1 text-sm text-slate-400">
+                            {blockerCount > 0 ? `${blockerCount} blocker signal(s)` : 'No out-of-service blocker'}
+                          </p>
+                        </div>
+                        <Badge label={blockerCount > 0 ? 'Blocked' : 'Ready'} tone={blockerCount > 0 ? 'bad' : 'good'} />
+                      </div>
+                      <p className="mt-5 text-sm leading-6 text-slate-300">
+                        {readiness?.blockers[0]?.message ?? 'Keep routine PM, inspection, and defect checks current for this asset.'}
+                      </p>
+                    </section>
                   </div>
-                  <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                    <XCircle className="h-5 w-5 text-red-300" />
-                    <p className="mt-4 text-xs text-slate-400">Blocked</p>
-                    <p className="text-xl font-bold text-white">{blockedSignalCount} checks</p>
-                  </div>
-                </div>
-              </section>
 
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-white">Compliance links</h2>
-                  <ShieldCheck className="h-5 w-5 text-sky-300" />
-                </div>
+                  <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                    <h3 className="font-bold text-white">History / Audit</h3>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <p className="text-xs text-slate-500">Created</p>
+                        <p className="text-sm font-medium text-slate-100">{new Date(asset.createdAt).toLocaleString()}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <p className="text-xs text-slate-500">Last updated</p>
+                        <p className="text-sm font-medium text-slate-100">{new Date(asset.updatedAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
+            </>
+          )}
+          decisionTitle="Readiness decision"
+          decisionBadge={{ label: readinessDecisionLabel, tone: readinessDecisionTone }}
+          decisionIcon={
+            readinessBlocked ? (
+              <XCircle className="h-5 w-5 text-red-300" />
+            ) : readinessAdvisory ? (
+              <AlertTriangle className="h-5 w-5 text-amber-300" />
+            ) : (
+              <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+            )
+          }
+          decisionSummary={readinessDecisionSummary}
+          decisionDetail={readinessDecisionDetail}
+          allowedChecks={compliantSignalCount}
+          blockedChecks={blockedSignalCount}
+          railSections={[
+            {
+              title: 'Compliance links',
+              icon: <ShieldCheck className="h-5 w-5" />,
+              content: (
                 <div className="space-y-3">
                   <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
                     <p className="text-sm font-bold text-white">Governing body</p>
@@ -775,10 +607,10 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                     <p className="mt-1 text-sm text-slate-400">Evidence and inspection documents stay attached to this asset profile.</p>
                   </div>
                 </div>
-              </section>
-            </aside>
-          </div>
-        </>
+              ),
+            },
+          ]}
+        />
       ) : null}
     </div>
   )

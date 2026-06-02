@@ -762,13 +762,46 @@ export type ReadinessRollupSelection = {
 export type PersonnelIncidentReasonCategory =
   | 'safety'
   | 'conduct'
+  | 'behavior'
   | 'injury'
   | 'equipment'
+  | 'equipment_damage'
   | 'training_compliance'
+  | 'training_issue'
   | 'policy'
+  | 'policy_violation'
+  | 'attendance'
+  | 'near_miss'
   | 'other'
 
+export type PersonnelIncidentStatus = 'draft' | 'submitted' | 'open' | 'in_review' | 'closed'
+
 export type PersonnelIncidentSeverity = 'low' | 'medium' | 'high' | 'critical'
+
+export type PersonnelIncidentSource =
+  | 'staffarr'
+  | 'self_report'
+  | 'manager_report'
+  | 'safety_observation'
+  | 'compliancecore'
+  | 'maintainarr'
+  | 'routarr'
+  | 'supplyarr'
+  | 'trainarr'
+  | 'other'
+
+export type PersonnelIncidentType =
+  | 'injury'
+  | 'safety'
+  | 'behavior'
+  | 'equipment_damage'
+  | 'policy_violation'
+  | 'training_issue'
+  | 'attendance'
+  | 'near_miss'
+  | 'other'
+
+export type PersonnelIncidentReadinessDecision = 'allowed' | 'watched' | 'restricted'
 
 export interface IncidentTrainarrRoutingResponse {
   routingStatus: string
@@ -805,12 +838,47 @@ export interface PersonnelIncidentSummaryResponse {
   reportedAt: string
   reportedByUserId: string
   trainarrRouting: IncidentTrainarrRoutingResponse | null
+  incidentSource?: PersonnelIncidentSource | null
+  incidentType?: PersonnelIncidentType | null
+  discoveredAt?: string | null
+  reporterPersonId?: string | null
+  managerPersonId?: string | null
+  categoryKeys?: PersonnelIncidentType[] | null
+  readinessDecision?: PersonnelIncidentReadinessDecision | null
 }
 
 export interface PersonnelIncidentDetailResponse extends PersonnelIncidentSummaryResponse {
   description: string
   createdAt: string
   updatedAt: string
+  siteOrgUnitId?: string | null
+  departmentOrgUnitId?: string | null
+  locationDetail?: string | null
+  witnessPersonIds?: string[] | null
+  additionalInvolvedPersonIds?: string[] | null
+  employeeSelfReport?: boolean
+  immediateActionsTaken?: string | null
+  rootCause?: string | null
+  workRestriction?: string | null
+  returnToWorkNeeded?: string | null
+  ppeConcern?: string | null
+  medicalAttention?: string | null
+  outOfServiceRemoveFromDuty?: string | null
+  followUpRequired?: string | null
+  trainingReviewRequired?: boolean
+  trainingReviewReason?: string | null
+  relatedAssetReference?: string | null
+  relatedWorkOrderReference?: string | null
+  relatedRouteReference?: string | null
+  relatedSupplierReference?: string | null
+  relatedDocumentReference?: string | null
+  relatedPolicyReference?: string | null
+  evidencePackageRequested?: boolean
+  notifyManager?: boolean
+  notifySafetyCompliance?: boolean
+  notifyHr?: boolean
+  createFollowUpTask?: boolean
+  followUpDueAt?: string | null
 }
 
 export interface RouteIncidentToTrainarrResponse {
@@ -828,6 +896,42 @@ export interface CreatePersonnelIncidentRequest {
   title: string
   description: string
   occurredAt: string
+  status?: PersonnelIncidentStatus | null
+  incidentSource?: PersonnelIncidentSource | null
+  incidentType?: PersonnelIncidentType | null
+  discoveredAt?: string | null
+  siteOrgUnitId?: string | null
+  departmentOrgUnitId?: string | null
+  locationDetail?: string | null
+  reporterPersonId?: string | null
+  managerPersonId?: string | null
+  witnessPersonIds?: string[] | null
+  additionalInvolvedPersonIds?: string[] | null
+  employeeSelfReport?: boolean
+  immediateActionsTaken?: string | null
+  rootCause?: string | null
+  categoryKeys?: PersonnelIncidentType[] | null
+  readinessDecision?: PersonnelIncidentReadinessDecision | null
+  workRestriction?: string | null
+  returnToWorkNeeded?: string | null
+  ppeConcern?: string | null
+  medicalAttention?: string | null
+  outOfServiceRemoveFromDuty?: string | null
+  followUpRequired?: string | null
+  trainingReviewRequired?: boolean
+  trainingReviewReason?: string | null
+  relatedAssetReference?: string | null
+  relatedWorkOrderReference?: string | null
+  relatedRouteReference?: string | null
+  relatedSupplierReference?: string | null
+  relatedDocumentReference?: string | null
+  relatedPolicyReference?: string | null
+  evidencePackageRequested?: boolean
+  notifyManager?: boolean
+  notifySafetyCompliance?: boolean
+  notifyHr?: boolean
+  createFollowUpTask?: boolean
+  followUpDueAt?: string | null
 }
 
 export interface SubmitSelfReportedPersonnelIncidentRequest {

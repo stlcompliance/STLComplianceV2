@@ -193,6 +193,95 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Admin_incident_create_accepts_controlled_metadata()
+    {
+        var personId = Guid.NewGuid();
+        var reporterId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
+        var witnessId = Guid.NewGuid();
+        await SeedPersonAsync(personId, "Create", "Subject", "create.subject@example.com", managerId);
+        await SeedPersonAsync(reporterId, "Incident", "Reporter", "incident.reporter@example.com");
+        await SeedPersonAsync(managerId, "Incident", "Manager", "incident.manager@example.com");
+        await SeedPersonAsync(witnessId, "Incident", "Witness", "incident.witness@example.com");
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin", personId: reporterId);
+        var occurredAt = DateTimeOffset.UtcNow.AddHours(-2);
+        var discoveredAt = DateTimeOffset.UtcNow.AddHours(-1);
+        var followUpDueAt = DateTimeOffset.UtcNow.AddDays(3);
+
+        var request = Authorized(HttpMethod.Post, "/api/incidents", token);
+        request.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "training_compliance",
+            "high",
+            "Forklift retraining near miss",
+            "Forklift near miss requires retraining review and supervisor follow-up.",
+            occurredAt)
+        {
+            Status = "submitted",
+            IncidentSource = "manager_report",
+            IncidentType = "training_issue",
+            DiscoveredAt = discoveredAt,
+            LocationDetail = "Warehouse aisle 4",
+            ReporterPersonId = reporterId,
+            ManagerPersonId = managerId,
+            WitnessPersonIds = [witnessId],
+            AdditionalInvolvedPersonIds = [reporterId],
+            ImmediateActionsTaken = "Area was secured and supervisor notified.",
+            RootCause = "Procedure gap identified during shift handoff.",
+            CategoryKeys = ["training_issue", "near_miss"],
+            ReadinessDecision = "watched",
+            WorkRestriction = "modified_duty",
+            ReturnToWorkNeeded = "pending",
+            PpeConcern = "none",
+            MedicalAttention = "none",
+            OutOfServiceRemoveFromDuty = "no",
+            FollowUpRequired = "yes",
+            TrainingReviewRequired = true,
+            TrainingReviewReason = "procedure_gap",
+            RelatedAssetReference = "FORK-12",
+            RelatedWorkOrderReference = "WO-778",
+            RelatedRouteReference = "TRIP-44",
+            RelatedSupplierReference = "Vendor A",
+            RelatedDocumentReference = "EVID-2026-001",
+            RelatedPolicyReference = "PIT-OPS",
+            EvidencePackageRequested = true,
+            NotifyManager = true,
+            NotifySafetyCompliance = true,
+            NotifyHr = true,
+            CreateFollowUpTask = true,
+            FollowUpDueAt = followUpDueAt,
+        });
+
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = (await response.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+
+        Assert.Equal("submitted", created.Status);
+        Assert.Equal("manager_report", created.IncidentSource);
+        Assert.Equal("training_issue", created.IncidentType);
+        Assert.Equal(reporterId, created.ReporterPersonId);
+        Assert.Equal(managerId, created.ManagerPersonId);
+        Assert.NotNull(created.WitnessPersonIds);
+        Assert.NotNull(created.CategoryKeys);
+        Assert.Contains(witnessId, created.WitnessPersonIds!);
+        Assert.Contains("near_miss", created.CategoryKeys!);
+        Assert.Equal("watched", created.ReadinessDecision);
+        Assert.Equal("modified_duty", created.WorkRestriction);
+        Assert.True(created.TrainingReviewRequired);
+        Assert.Equal("procedure_gap", created.TrainingReviewReason);
+        Assert.Equal("FORK-12", created.RelatedAssetReference);
+        Assert.True(created.NotifyHr);
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/incidents/{created.IncidentId}", token);
+        var getResponse = await _staffarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var detail = (await getResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+        Assert.Equal("Warehouse aisle 4", detail.LocationDetail);
+        Assert.Equal("EVID-2026-001", detail.RelatedDocumentReference);
+    }
+
+    [Fact]
     public async Task Me_incident_detail_denied_for_other_person_without_incidents_read()
     {
         var personId = Guid.NewGuid();
