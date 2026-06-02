@@ -32,13 +32,22 @@ public sealed class FieldsetService(
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
 
+        var catalogKeys = fields
+            .Where(x => !string.IsNullOrWhiteSpace(x.CatalogKey))
+            .Select(x => x.CatalogKey!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var catalogOptionsByKey = await LoadCatalogOptionsByKeyAsync(tenantId, catalogKeys, cancellationToken);
+
         var resultFields = new List<FieldMetadataResponse>();
         foreach (var field in fields)
         {
             IReadOnlyList<CatalogOptionResponse>? options = null;
             if (!string.IsNullOrWhiteSpace(field.CatalogKey))
             {
-                options = (await catalogService.GetAsync(tenantId, field.CatalogKey!, cancellationToken)).Options;
+                options = catalogOptionsByKey.TryGetValue(field.CatalogKey!, out var catalogOptions)
+                    ? catalogOptions
+                    : (await catalogService.GetAsync(tenantId, field.CatalogKey!, cancellationToken)).Options;
             }
             else if (!string.IsNullOrWhiteSpace(field.ReferenceKey) && _adapters.TryGetValue(field.SourceType, out var adapter))
             {
@@ -93,6 +102,73 @@ public sealed class FieldsetService(
         }
 
         return new FieldsetResponse(definition.Key, definition.Label, definition.EntityType, definition.Purpose, resultFields);
+    }
+
+    private async Task<IReadOnlyDictionary<string, IReadOnlyList<CatalogOptionResponse>>> LoadCatalogOptionsByKeyAsync(
+        Guid tenantId,
+        IReadOnlyCollection<string> catalogKeys,
+        CancellationToken cancellationToken)
+    {
+        if (catalogKeys.Count == 0)
+        {
+            return new Dictionary<string, IReadOnlyList<CatalogOptionResponse>>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var keys = catalogKeys.ToArray();
+        var catalogs = await db.CatalogDefinitions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.IsActive && keys.Contains(x.Key))
+            .OrderBy(x => x.Label)
+            .ToListAsync(cancellationToken);
+        if (catalogs.Count == 0)
+        {
+            return new Dictionary<string, IReadOnlyList<CatalogOptionResponse>>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var catalogIds = catalogs.Select(x => x.Id).ToArray();
+        var options = await db.CatalogOptions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.IsActive && catalogIds.Contains(x.CatalogId))
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Label)
+            .ToListAsync(cancellationToken);
+
+        var optionById = options.ToDictionary(x => x.Id);
+        var optionsByCatalogId = options
+            .GroupBy(x => x.CatalogId)
+            .ToDictionary(x => x.Key, x => x.ToList());
+        var optionIds = options.Select(x => x.Id).ToArray();
+        var dependenciesByOptionId = optionIds.Length == 0
+            ? new Dictionary<Guid, Dictionary<string, string>>()
+            : (await db.CatalogOptionDependencies.AsNoTracking()
+                    .Where(x => x.TenantId == tenantId && optionIds.Contains(x.CatalogOptionId))
+                    .ToListAsync(cancellationToken))
+                .GroupBy(x => x.CatalogOptionId)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.ToDictionary(d => d.DependsOnCatalogKey, d => d.DependsOnOptionKey));
+
+        var result = new Dictionary<string, IReadOnlyList<CatalogOptionResponse>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var catalog in catalogs)
+        {
+            result[catalog.Key] = optionsByCatalogId.TryGetValue(catalog.Id, out var catalogOptions)
+                ? catalogOptions
+                    .Select(o => new CatalogOptionResponse(
+                        o.Key,
+                        o.Label,
+                        o.Description,
+                        o.SortOrder,
+                        o.ParentOptionId.HasValue && optionById.TryGetValue(o.ParentOptionId.Value, out var parent)
+                            ? parent.Key
+                            : null,
+                        o.IsActive,
+                        dependenciesByOptionId.TryGetValue(o.Id, out var dependency)
+                            ? dependency
+                            : new Dictionary<string, string>(),
+                        ParseObjectDict(o.MetadataJson)))
+                    .ToList()
+                : [];
+        }
+
+        return result;
     }
 
     private static string InferStoredValue(FieldsetField field)

@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PartiesSection } from './PartiesSection'
@@ -9,26 +11,47 @@ vi.mock('../../components/PartyRegistryPanel', () => ({
   ),
 }))
 
-vi.mock('../../components/SupplierOnboardingPanel', () => ({
-  SupplierOnboardingPanel: () => null,
-}))
-
-vi.mock('../../components/VendorRestrictionsPanel', () => ({
-  VendorRestrictionsPanel: () => null,
-}))
-
-vi.mock('../../components/SupplierIncidentsPanel', () => ({
-  SupplierIncidentsPanel: () => null,
-}))
+const supplier = {
+  partyId: 'supplier-1',
+  partyKey: 'sup-2048',
+  partyType: 'supplier',
+  displayName: 'Midwest Fleet Parts & Service',
+  legalName: 'Midwest Fleet Parts & Service LLC',
+  taxIdentifier: '12-3456789',
+  approvalStatus: 'approved',
+  status: 'active',
+  notes: '',
+  contacts: [
+    {
+      contactId: 'contact-1',
+      contactName: 'Sarah Jenkins',
+      email: 'sarah@midwestfleet.example',
+      phone: '(555) 774-2190',
+      roleLabel: 'Account Manager',
+      isPrimary: true,
+      createdAt: '2026-01-03T00:00:00Z',
+    },
+  ],
+  createdAt: '2026-01-03T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+}
 
 const baseState = {
-  accessToken: 'token',
+  accessToken: '',
   canManage: true,
   canApprovePr: true,
+  canReadVendorReports: false,
+  canReadPurchasingReports: false,
+  canReadComplianceReports: false,
+  canReadAuditHistory: false,
+  canReadSupplyReadiness: false,
   vendors: [],
   vendorsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [], isLoading: false },
   dealersQuery: { data: [], isLoading: false },
+  partsQuery: { data: [], isLoading: false },
+  purchaseOrdersQuery: { data: [], isLoading: false },
+  purchaseRequestsQuery: { data: [], isLoading: false },
   vendorKey: '',
   vendorName: '',
   vendorLegalName: '',
@@ -66,14 +89,43 @@ const baseState = {
   updatePartyApprovalMutation: { mutate: () => {}, isPending: false },
   updatePartyStatusMutation: { mutate: () => {}, isPending: false },
   addPartyContactMutation: { mutate: () => {}, isPending: false },
-} as never
+}
+
+function renderPartiesSection(path = '/parties/drawer', state: unknown = baseState) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <PartiesSection state={state as never} />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
 
 describe('PartiesSection', () => {
   it('renders party registry workspace with vendor, supplier, and dealer panels', () => {
-    render(<PartiesSection state={baseState} />)
+    renderPartiesSection()
     expect(screen.getByTestId('supplyarr-party-registry-workspace')).toBeInTheDocument()
     expect(screen.getByTestId('party-registry-panel-vendors')).toBeInTheDocument()
     expect(screen.getByTestId('party-registry-panel-suppliers')).toBeInTheDocument()
     expect(screen.getByTestId('party-registry-panel-dealers')).toBeInTheDocument()
+  })
+
+  it('renders the replacement supplier profile detail view', () => {
+    renderPartiesSection('/parties/details', {
+      ...baseState,
+      suppliersQuery: { data: [supplier], isLoading: false },
+    } as never)
+
+    expect(screen.getByTestId('supplyarr-party-profile')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Midwest Fleet Parts & Service' })).toBeInTheDocument()
+    expect(screen.getByText('Supplier snapshot')).toBeInTheDocument()
+    expect(screen.getByText('Supplier decision')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
   })
 })

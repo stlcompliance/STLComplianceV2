@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
@@ -8,6 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class CatalogSeedService(MaintainArrDbContext db)
 {
     private const string AssetsFieldsetKey = "assets";
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> TenantSeedLocks = new();
+    private static readonly ConcurrentDictionary<Guid, byte> TenantSeedReady = new();
 
     public async Task SeedDefaultsAsync(CancellationToken cancellationToken = default)
     {
@@ -19,6 +22,39 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
     }
 
     public async Task EnsureSeededForTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        if (TenantSeedReady.ContainsKey(tenantId))
+        {
+            return;
+        }
+
+        if (await HasMinimumSeedDataAsync(tenantId, cancellationToken))
+        {
+            TenantSeedReady.TryAdd(tenantId, 0);
+            return;
+        }
+
+        var gate = TenantSeedLocks.GetOrAdd(tenantId, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (TenantSeedReady.ContainsKey(tenantId)
+                || await HasMinimumSeedDataAsync(tenantId, cancellationToken))
+            {
+                TenantSeedReady.TryAdd(tenantId, 0);
+                return;
+            }
+
+            await SeedTenantAsync(tenantId, cancellationToken);
+            TenantSeedReady.TryAdd(tenantId, 0);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    private async Task SeedTenantAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -32,6 +68,50 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         await EnsureDependencySeedsAsync(tenantId, catalogIds, cancellationToken);
         await EnsureAssetFieldsetsAsync(tenantId, cancellationToken);
         await EnsureReferenceFallbackSeedsAsync(tenantId, cancellationToken);
+    }
+
+    private async Task<bool> HasMinimumSeedDataAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var catalogKeys = GetCatalogSeeds().Select(x => x.Key).ToArray();
+        var existingCatalogKeys = await db.CatalogDefinitions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                    && x.IsActive
+                    && catalogKeys.Contains(x.Key))
+            .Select(x => x.Key)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        var existingCatalogKeySet = existingCatalogKeys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (catalogKeys.Any(x => !existingCatalogKeySet.Contains(x)))
+        {
+            return false;
+        }
+
+        var purposes = new[] { "default", "create", "edit" };
+        var definitions = await db.FieldsetDefinitions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.Key == AssetsFieldsetKey
+                && x.IsActive
+                && purposes.Contains(x.Purpose))
+            .Select(x => new { x.Id, x.Purpose })
+            .ToListAsync(cancellationToken);
+        var definitionPurposes = definitions.Select(x => x.Purpose).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (purposes.Any(x => !definitionPurposes.Contains(x)))
+        {
+            return false;
+        }
+
+        var expectedFieldCount = GetFieldSeeds().Count();
+        var fieldsetIds = definitions.Select(x => x.Id).ToArray();
+        var fieldCounts = await db.FieldsetFields.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && fieldsetIds.Contains(x.FieldsetId))
+            .GroupBy(x => x.FieldsetId)
+            .Select(x => new { FieldsetId = x.Key, Count = x.Count() })
+            .ToListAsync(cancellationToken);
+
+        return purposes.All(purpose =>
+            definitions
+                .Where(x => string.Equals(x.Purpose, purpose, StringComparison.OrdinalIgnoreCase))
+                .Any(definition => fieldCounts.Any(x => x.FieldsetId == definition.Id && x.Count >= expectedFieldCount)));
     }
 
     private async Task<IReadOnlyList<Guid>> ResolveKnownTenantIdsAsync(CancellationToken cancellationToken)

@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
@@ -31,6 +33,40 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         Assert.Contains(catalogs, x => x.Key == "fuelType");
         Assert.Contains(catalogs, x => x.Key == "brakeType");
         Assert.Contains(catalogs, x => x.Key == "telematicsProvider");
+    }
+
+    [Fact]
+    public async Task Fieldset_reads_skip_reseeding_when_defaults_exist()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var originalCatalogUpdatedAt = await db.CatalogDefinitions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Key == "assetClass")
+            .Select(x => x.UpdatedAt)
+            .SingleAsync();
+        var originalOptionUpdatedAt = await db.CatalogOptions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Key == "vehicle")
+            .Select(x => x.UpdatedAt)
+            .SingleAsync();
+
+        ClearTenantSeedReady(tenantId);
+
+        var catalogService = BuildCatalogService(db, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "edit", CancellationToken.None);
+
+        Assert.NotEmpty(fieldset.Fields);
+        Assert.Equal(originalCatalogUpdatedAt, await db.CatalogDefinitions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Key == "assetClass")
+            .Select(x => x.UpdatedAt)
+            .SingleAsync());
+        Assert.Equal(originalOptionUpdatedAt, await db.CatalogOptions.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Key == "vehicle")
+            .Select(x => x.UpdatedAt)
+            .SingleAsync());
     }
 
     [Fact]
@@ -486,6 +522,13 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         Assert.NotNull(option.Dependency);
         Assert.True(option.Dependency!.TryGetValue(parentCatalogKey, out var actualParentOptionKey));
         Assert.Equal(parentOptionKey, actualParentOptionKey);
+    }
+
+    private static void ClearTenantSeedReady(Guid tenantId)
+    {
+        var readyField = typeof(CatalogSeedService).GetField("TenantSeedReady", BindingFlags.NonPublic | BindingFlags.Static);
+        var ready = Assert.IsType<ConcurrentDictionary<Guid, byte>>(readyField?.GetValue(null));
+        ready.TryRemove(tenantId, out _);
     }
 
     private static Dictionary<string, object?> BaseRequiredValues()
