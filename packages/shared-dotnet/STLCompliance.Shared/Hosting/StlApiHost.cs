@@ -69,6 +69,27 @@ public static class StlApiHost
             var jwtEnabled = !string.IsNullOrWhiteSpace(signingKey) && signingKey.Length >= 32;
 
             var app = builder.Build();
+            var bundledFrontendIndexPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "index.html");
+            var hasBundledFrontend = File.Exists(bundledFrontendIndexPath);
+
+            if (hasBundledFrontend)
+            {
+                app.MapWhen(
+                    context =>
+                        !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+                        && !context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase)
+                        && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase),
+                    spaApp =>
+                    {
+                        spaApp.UseDefaultFiles();
+                        spaApp.UseStaticFiles();
+                        spaApp.Run(async context =>
+                        {
+                            context.Response.ContentType = "text/html; charset=utf-8";
+                            await context.Response.SendFileAsync(bundledFrontendIndexPath);
+                        });
+                    });
+            }
 
             app.UseStlCorrelationId();
             configurePipeline?.Invoke(app);
@@ -154,14 +175,17 @@ public static class StlApiHost
             .WithTags("Health")
             .AllowAnonymous();
 
-            app.MapGet("/", (ProductDescriptor descriptor) => Results.Ok(new
+            if (!hasBundledFrontend)
             {
-                product = descriptor.DisplayName,
-                key = descriptor.ProductKey,
-                health = "/health",
-                ready = "/health/ready",
-                openapi = exposeOpenApi ? "/openapi/v1.json" : null
-            })).AllowAnonymous();
+                app.MapGet("/", (ProductDescriptor descriptor) => Results.Ok(new
+                {
+                    product = descriptor.DisplayName,
+                    key = descriptor.ProductKey,
+                    health = "/health",
+                    ready = "/health/ready",
+                    openapi = exposeOpenApi ? "/openapi/v1.json" : null
+                })).AllowAnonymous();
+            }
 
             if (mapEndpoints is not null)
             {

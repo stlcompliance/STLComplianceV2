@@ -57,21 +57,21 @@ envVarGroups:
   - name: stl-public-frontend-urls
     envVars:
       - key: SUITE_FRONTEND_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
       - key: STAFFARR_FRONTEND_URL
-        value: https://staffarr-frontend.onrender.com
+        value: https://staffarr-api-oyrj.onrender.com
       - key: TRAINARR_FRONTEND_URL
-        value: https://trainarr-frontend.onrender.com
+        value: https://trainarr-api-nsiw.onrender.com
       - key: MAINTAINARR_FRONTEND_URL
-        value: https://maintainarr-frontend.onrender.com
+        value: https://maintainarr-api-z39r.onrender.com
       - key: ROUTARR_FRONTEND_URL
-        value: https://routarr-frontend.onrender.com
+        value: https://routarr-api-l9uj.onrender.com
       - key: SUPPLYARR_FRONTEND_URL
-        value: https://supplyarr-frontend.onrender.com
+        value: https://supplyarr-api-dn8u.onrender.com
       - key: COMPLIANCECORE_FRONTEND_URL
-        value: https://compliancecore-frontend.onrender.com
+        value: https://compliancecore-api-w7e5.onrender.com
       - key: LOADARR_FRONTEND_URL
-        value: https://loadarr-frontend.onrender.com
+        value: https://loadarr-api.onrender.com
       - key: COMPANION_FRONTEND_URL
         value: https://companion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
@@ -81,19 +81,19 @@ envVarGroups:
   - name: stl-vite-product-frontend-urls
     envVars:
       - key: VITE_STAFFARR_FRONTEND_BASE
-        value: https://staffarr-frontend.onrender.com
+        value: https://staffarr-api-oyrj.onrender.com
       - key: VITE_TRAINARR_FRONTEND_BASE
-        value: https://trainarr-frontend.onrender.com
+        value: https://trainarr-api-nsiw.onrender.com
       - key: VITE_MAINTAINARR_FRONTEND_BASE
-        value: https://maintainarr-frontend.onrender.com
+        value: https://maintainarr-api-z39r.onrender.com
       - key: VITE_ROUTARR_FRONTEND_BASE
-        value: https://routarr-frontend.onrender.com
+        value: https://routarr-api-l9uj.onrender.com
       - key: VITE_SUPPLYARR_FRONTEND_BASE
-        value: https://supplyarr-frontend.onrender.com
+        value: https://supplyarr-api-dn8u.onrender.com
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
-        value: https://compliancecore-frontend.onrender.com
+        value: https://compliancecore-api-w7e5.onrender.com
       - key: VITE_LOADARR_FRONTEND_BASE
-        value: https://loadarr-frontend.onrender.com
+        value: https://loadarr-api.onrender.com
       - key: VITE_COMPANION_FRONTEND_BASE
         value: https://companion-frontend-vf7o.onrender.com
 
@@ -179,25 +179,25 @@ services:
           type: keyvalue
           property: connectionString
       - key: Cors__SuiteFrontendOrigin
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
       - key: Cors__CompanionFrontendOrigin
         value: https://companion-frontend-vf7o.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
       - key: Launch__Products__staffarr__BaseUrl
-        value: https://staffarr-frontend.onrender.com
+        value: https://staffarr-api-oyrj.onrender.com
       - key: Launch__Products__trainarr__BaseUrl
-        value: https://trainarr-frontend.onrender.com
+        value: https://trainarr-api-nsiw.onrender.com
       - key: Launch__Products__maintainarr__BaseUrl
-        value: https://maintainarr-frontend.onrender.com
+        value: https://maintainarr-api-z39r.onrender.com
       - key: Launch__Products__routarr__BaseUrl
-        value: https://routarr-frontend.onrender.com
+        value: https://routarr-api-l9uj.onrender.com
       - key: Launch__Products__supplyarr__BaseUrl
-        value: https://supplyarr-frontend.onrender.com
+        value: https://supplyarr-api-dn8u.onrender.com
       - key: Launch__Products__compliancecore__BaseUrl
-        value: https://compliancecore-frontend.onrender.com
+        value: https://compliancecore-api-w7e5.onrender.com
       - key: Launch__Products__loadarr__BaseUrl
-        value: https://loadarr-frontend.onrender.com
+        value: https://loadarr-api.onrender.com
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -243,7 +243,7 @@ services:
           name: staffarr-db
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
-        value: https://staffarr-frontend.onrender.com
+        value: https://staffarr-api-oyrj.onrender.com
       - key: Handoff__ServiceToken
         sync: false
       - key: NexArr__ServiceToken
@@ -279,9 +279,9 @@ services:
           name: trainarr-db
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
-        value: https://trainarr-frontend.onrender.com
+        value: https://trainarr-api-nsiw.onrender.com
       - key: TrainArr__FrontendBaseUrl
-        value: https://trainarr-frontend.onrender.com
+        value: https://trainarr-api-nsiw.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
       - key: Handoff__ServiceToken
@@ -317,9 +317,9 @@ services:
           name: maintainarr-db
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
-        value: https://maintainarr-frontend.onrender.com
+        value: https://maintainarr-api-z39r.onrender.com
       - key: MaintainArr__FrontendBaseUrl
-        value: https://maintainarr-frontend.onrender.com
+        value: https://maintainarr-api-z39r.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
       - key: Handoff__ServiceToken
@@ -349,9 +349,9 @@ services:
           name: routarr-db
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
-        value: https://routarr-frontend.onrender.com
+        value: https://routarr-api-l9uj.onrender.com
       - key: RoutArr__FrontendBaseUrl
-        value: https://routarr-frontend.onrender.com
+        value: https://routarr-api-l9uj.onrender.com
       - key: Handoff__ServiceToken
         sync: false
       - key: TrainArr__ServiceToken
@@ -385,9 +385,9 @@ services:
           name: supplyarr-db
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
-        value: https://supplyarr-frontend.onrender.com
+        value: https://supplyarr-api-dn8u.onrender.com
       - key: SupplyArr__FrontendBaseUrl
-        value: https://supplyarr-frontend.onrender.com
+        value: https://supplyarr-api-dn8u.onrender.com
       - key: Handoff__ServiceToken
         sync: false
       - key: MaintainArr__ServiceToken
@@ -421,7 +421,7 @@ services:
           name: compliancecore-db
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
-        value: https://compliancecore-frontend.onrender.com
+        value: https://compliancecore-api-w7e5.onrender.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -447,7 +447,7 @@ services:
           name: loadarr-db
           property: connectionString
       - key: Cors__LoadArrFrontendOrigin
-        value: https://loadarr-frontend.onrender.com
+        value: https://loadarr-api.onrender.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -796,7 +796,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_SUITE_LOGIN_URL
-        value: https://suite-frontend.onrender.com/login
+        value: https://nexarr-api-w9pl.onrender.com/login
       - key: VITE_CONTACT_EMAIL
         value: hello@stlcompliance.com
       - key: VITE_SITE_BASE_URL
@@ -857,7 +857,7 @@ services:
       - key: VITE_STAFFARR_API_BASE
         value: https://staffarr-api-oyrj.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -887,7 +887,7 @@ services:
       - key: VITE_TRAINARR_API_BASE
         value: https://trainarr-api-nsiw.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -917,7 +917,7 @@ services:
       - key: VITE_MAINTAINARR_API_BASE
         value: https://maintainarr-api-z39r.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -947,7 +947,7 @@ services:
       - key: VITE_ROUTARR_API_BASE
         value: https://routarr-api-l9uj.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -977,7 +977,7 @@ services:
       - key: VITE_SUPPLYARR_API_BASE
         value: https://supplyarr-api-dn8u.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -1007,7 +1007,7 @@ services:
       - key: VITE_COMPLIANCECORE_API_BASE
         value: https://compliancecore-api-w7e5.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -1037,7 +1037,7 @@ services:
       - key: VITE_NEXARR_API_BASE
         value: https://nexarr-api-w9pl.onrender.com
       - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
+        value: https://nexarr-api-w9pl.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -1052,32 +1052,3 @@ services:
         name: Permissions-Policy
         value: camera=(), microphone=(), geolocation=()
 
-  - type: web
-    name: loadarr-frontend
-    runtime: static
-    rootDir: apps/loadarr-frontend
-    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - fromGroup: stl-vite-product-frontend-urls
-      - key: VITE_LOADARR_API_BASE
-        value: https://loadarr-api.onrender.com
-      - key: VITE_SUITE_URL
-        value: https://suite-frontend.onrender.com
-    headers:
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-      - path: /*
-        name: Permissions-Policy
-        value: camera=(), microphone=(), geolocation=()
