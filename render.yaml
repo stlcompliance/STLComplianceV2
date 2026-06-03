@@ -247,7 +247,7 @@ services:
           name: staffarr-db
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
-        value: https://app.stlcompliance.com/staffarr
+        value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
       - key: NexArr__ServiceToken
@@ -283,7 +283,7 @@ services:
           name: trainarr-db
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
-        value: https://app.stlcompliance.com/trainarr
+        value: https://app.stlcompliance.com
       - key: TrainArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/trainarr
       - key: EvidenceStorage__RootPath
@@ -321,7 +321,7 @@ services:
           name: maintainarr-db
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
-        value: https://app.stlcompliance.com/maintainarr
+        value: https://app.stlcompliance.com
       - key: MaintainArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/maintainarr
       - key: EvidenceStorage__RootPath
@@ -353,7 +353,7 @@ services:
           name: routarr-db
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
-        value: https://app.stlcompliance.com/routarr
+        value: https://app.stlcompliance.com
       - key: RoutArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/routarr
       - key: Handoff__ServiceToken
@@ -389,7 +389,7 @@ services:
           name: supplyarr-db
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
-        value: https://app.stlcompliance.com/supplyarr
+        value: https://app.stlcompliance.com
       - key: SupplyArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/supplyarr
       - key: Handoff__ServiceToken
@@ -425,7 +425,7 @@ services:
           name: compliancecore-db
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
-        value: https://app.stlcompliance.com/compliancecore
+        value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -451,7 +451,7 @@ services:
           name: loadarr-db
           property: connectionString
       - key: Cors__LoadArrFrontendOrigin
-        value: https://app.stlcompliance.com/loadarr
+        value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
