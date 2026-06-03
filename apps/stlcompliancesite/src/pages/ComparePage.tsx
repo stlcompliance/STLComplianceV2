@@ -1,132 +1,179 @@
 import { Link } from 'react-router-dom'
-import { AlternativeComparisonTable } from '../components/AlternativeComparisonTable'
-import { MarketComparisonTable } from '../components/MarketComparisonTable'
+import {
+  CanWorkStartChecklist,
+  CategoryComparisonCards,
+  FeatureChecklistTable,
+  ObjectionCards,
+  ProductStackTable,
+  UsualStackTable,
+} from '../components/MarketComparisonTable'
 import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
-import {
-  ALTERNATIVE_SCENARIOS,
-  COMPARE_DISCLAIMER,
-  COMPARE_LEAD,
-  SUITE_HONESTY_NOTES,
-} from '../content/compare'
-import { MARKET_COMPARISON_LEAD } from '../content/marketComparison'
-import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
+import { siteConfig } from '../lib/siteConfig'
 
 export function ComparePage() {
   return (
     <>
       <SiteSeo
-        title={`Compare approaches — ${siteConfig.siteName}`}
-        description="Compare spreadsheets, point tools, and STL Compliance for connected operations and compliance proof."
+        title={`Compare STL Compliance — ${siteConfig.siteName}`}
+        description="Compare STL Compliance against WMS, CMMS, LMS, WFM, TMS, GRC, and IAM point tools by workflow, readiness, and evidence features."
         path="/compare"
       />
       <PageHero
         eyebrow="Suite comparison"
-        title="When disconnected tools start costing too much attention"
-        subtitle={COMPARE_LEAD}
+        title="Stop comparing one app to one app. Compare the whole workflow."
+        subtitle="Most software solves one department’s problem. STL Compliance connects the work between them."
       >
         <Link
-          to="/demo"
+          to="/compare#suite-checklist"
           className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
         >
-          Request a walkthrough
+          Compare the suite
         </Link>
         <Link
           to="/products"
           className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
         >
-          Explore products
+          See product map
         </Link>
-        <a
-          href={suiteLoginUrl()}
-          className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
-        >
-          Client sign in
-        </a>
       </PageHero>
 
-      <section className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
-        <div
-          data-testid="compare-disclaimer"
-          className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100"
-        >
-          <strong className="font-semibold">Fit matters:</strong> {COMPARE_DISCLAIMER}
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
+          <div>
+            <p className="text-lg text-slate-200">
+              A WMS moves inventory. A CMMS manages work orders. An LMS tracks training. A WFM
+              system schedules people. A TMS dispatches routes. A GRC tool stores compliance
+              requirements.
+            </p>
+            <p className="mt-5 text-xl font-semibold text-white">
+              STL Compliance is built for companies that need to know:
+            </p>
+            <p className="mt-3 text-2xl font-bold text-teal-200">
+              Can this person perform this work, with this equipment, at this site, using this
+              material, under these rules, and can we prove it later?
+            </p>
+          </div>
+          <aside className="rounded-2xl border border-teal-500/30 bg-teal-950/20 p-6">
+            <p className="text-sm font-semibold uppercase text-teal-300">The difference</p>
+            <p className="mt-3 text-lg font-semibold text-white">
+              STL Compliance is not just another WMS, CMMS, LMS, WFM, TMS, IAM, or GRC product.
+            </p>
+            <p className="mt-3 text-sm text-slate-300">
+              It is an Adaptive Risk Reduction platform for real operations.
+            </p>
+          </aside>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">When alternatives still make sense</h2>
-        <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          The suite does not need to replace every spreadsheet or vendor overnight. Many customers
-          start with one product and grow as operational scope expands.
-        </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {ALTERNATIVE_SCENARIOS.map((scenario) => (
-            <article
-              key={scenario.id}
-              data-testid={`compare-scenario-${scenario.id}`}
-              className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5"
-            >
-              <h3 className="text-lg font-semibold text-teal-200">{scenario.title}</h3>
-              <p className="mt-3 text-sm font-medium text-slate-200">When it fits</p>
-              <p className="mt-1 text-sm text-slate-300">{scenario.whenItFits}</p>
-              <p className="mt-4 text-sm font-medium text-slate-200">Typical limitations</p>
-              <p className="mt-1 text-sm text-slate-400">{scenario.limitations}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">STL feature checklist vs. market products</h2>
-        <p className="mt-2 max-w-4xl text-sm text-slate-400">{MARKET_COMPARISON_LEAD}</p>
-        <div className="mt-6">
-          <MarketComparisonTable />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Checklist comparison</h2>
-        <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Concrete operating questions, not abstract positioning. For per-product scope, see the{' '}
-          <Link to="/products" className="text-teal-400 hover:text-teal-300">
-            products hub
-          </Link>
-          .
+        <h2 className="text-xl font-bold text-white">The usual software stack</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          Category leaders are strong in their own lanes. STL Compliance is biased toward the gaps
+          that appear when those lanes have to produce one work decision.
         </p>
         <div className="mt-6">
-          <AlternativeComparisonTable />
+          <UsualStackTable />
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">A straight answer</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-300">
-          {SUITE_HONESTY_NOTES.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
+        <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-6 text-center">
+          <p className="text-sm font-semibold uppercase text-slate-400">Point tools answer</p>
+          <h2 className="mt-2 text-2xl font-bold text-white">Did my department complete its task?</h2>
+          <p className="mt-6 text-sm font-semibold uppercase text-teal-300">STL Compliance answers</p>
+          <h2 className="mt-2 text-3xl font-bold text-teal-100">Should this work be allowed to happen?</h2>
+        </div>
+      </section>
+
+      <section id="suite-checklist" className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Biased checklist comparison</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          This table is intentionally STL-biased: it compares market categories against the
+          cross-functional features STL is built to unify.
+        </p>
+        <div className="mt-6">
+          <FeatureChecklistTable />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Category-by-category comparison</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          The point is not that specialists are bad. The point is that the handoff is where risk,
+          evidence, and accountability leak.
+        </p>
+        <div className="mt-6">
+          <CategoryComparisonCards />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">The “Can work start?” checklist</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          Before STL, supervisors check multiple systems, spreadsheets, binders, emails, and memory.
+          With STL, the operating model checks the conditions that decide whether work is allowed,
+          blocked, or missing evidence.
+        </p>
+        <div className="mt-6">
+          <CanWorkStartChecklist />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Product stack comparison</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          Each product owns a practical part of the workflow, while the suite keeps readiness and
+          proof connected across the operation.
+        </p>
+        <div className="mt-6">
+          <ProductStackTable />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Why not just buy best-of-breed?</h2>
+        <div className="mt-4 max-w-4xl space-y-4 text-sm text-slate-300">
+          <p>You can. For some companies, that is the right answer.</p>
+          <p>
+            But your audit does not care that every department bought a strong app. Your supervisor
+            does not have time to check six systems before assigning work.
+          </p>
+          <p className="text-lg font-semibold text-teal-200">
+            STL Compliance wins when the problem is not one department. STL Compliance wins when
+            the problem is the handoff.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Objection handling</h2>
+        <div className="mt-6">
+          <ObjectionCards />
+        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-        <div className="rounded-2xl border border-slate-600 bg-slate-900/40 px-6 py-8 text-center">
-          <h2 className="text-lg font-semibold text-white">Evaluate fit with your team</h2>
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-400">
-            Walk through your current workflows, where proof gets lost, and which products make
-            sense first. Licensing depends on scope and product mix.
+        <div className="rounded-2xl border border-teal-500/30 bg-teal-950/20 px-6 py-8 text-center">
+          <h2 className="text-2xl font-bold text-white">
+            Your software should not just record work. It should help decide whether the work should happen.
+          </h2>
+          <p className="mx-auto mt-3 max-w-3xl text-sm text-slate-300">
+            STL Compliance connects people, training, assets, inventory, dispatch, incidents,
+            vendors, and compliance evidence into one Adaptive Risk Reduction platform.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               to="/demo"
               className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
             >
-              Demo & contact
+              See how STL Compliance works
             </Link>
             <Link
-              to="/pricing"
+              to="/products"
               className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
             >
-              Pricing & licensing
+              Compare products by workflow
             </Link>
           </div>
         </div>

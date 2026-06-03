@@ -33,7 +33,7 @@ describe('App routing', () => {
     expect(education).toHaveTextContent(/evidence expectations/i)
   })
 
-  it('renders compare page with fit disclaimer', async () => {
+  it('renders compare page with workflow checklist sections', async () => {
     render(
       <MemoryRouter initialEntries={['/compare']}>
         <App />
@@ -41,12 +41,15 @@ describe('App routing', () => {
     )
     expect(
       await screen.findByRole('heading', {
-        name: /disconnected tools/i,
+        name: /Compare the whole workflow/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByTestId('compare-disclaimer')).toBeInTheDocument()
-    expect(screen.getByTestId('market-products-table')).toHaveTextContent(/Manhattan Active/i)
-    expect(screen.getByTestId('compare-dimensions-table')).toBeInTheDocument()
+    expect(screen.getByTestId('usual-stack-table')).toHaveTextContent(/What still falls between/i)
+    expect(screen.getByTestId('feature-checklist-table')).toHaveTextContent(
+      /Qualification controls work eligibility/i,
+    )
+    expect(screen.getByTestId('can-work-start-list')).toHaveTextContent(/Asset is inspected/i)
+    expect(screen.getByTestId('product-stack-table')).toHaveTextContent(/Compliance Core/i)
   })
 
   it('renders pricing page without checkout', async () => {

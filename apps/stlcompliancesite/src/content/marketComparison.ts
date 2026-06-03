@@ -1,236 +1,454 @@
-export type MarketProductComparison = {
-  id: string
-  category: string
+export type UsualStackRow = {
+  need: string
   product: string
-  bestAt: string
-  buyerFit: string
-  stlDifference: string
-  sourceLabel: string
-  sourceHref: string
+  solves: string
+  gap: string
 }
 
-export type MarketChecklistRow = {
+export type FeatureChecklistRow = {
+  capability: string
+  wms: string
+  cmms: string
+  lms: string
+  wfm: string
+  tms: string
+  grc: string
+  stl: string
+}
+
+export type CategoryComparison = {
   id: string
-  feature: string
-  stlCoverage: string
-  typicalMarketCoverage: string
-  stlAdvantage: string
-  competitorExamples: string
+  title: string
+  pointToolsGreatAt: string
+  stlAdds: string[]
+  takeaway: string
 }
 
-export const MARKET_COMPARISON_LEAD =
-  'Use this as a buying checklist. Category tools usually solve one department deeply. STL Compliance is biased toward the cross-functional features that decide whether work can start, continue, and be proven later.'
+export type ProductStackRow = {
+  product: string
+  complements: string
+  primaryJob: string
+  positioning: string
+}
 
-export const MARKET_PRODUCT_COMPARISONS: MarketProductComparison[] = [
+export type Objection = {
+  title: string
+  body: string
+  answer: string
+}
+
+export const USUAL_STACK_ROWS: UsualStackRow[] = [
   {
-    id: 'manhattan-active-wm',
-    category: 'WMS',
-    product: 'Manhattan Active Warehouse Management',
-    bestAt:
-      'High-volume warehouse execution, order streaming, distribution center flexibility, and cloud-native WMS scale.',
-    buyerFit:
-      'Best fit when the main buying problem is deep warehouse control, fulfillment throughput, labor orchestration, and DC complexity.',
-    stlDifference:
-      'STL is broader around readiness. LoadArr covers inventory and warehouse proof, but the suite differentiates when warehouse work depends on worker qualifications, maintenance release, supplier evidence, dispatch readiness, and audit packaging.',
-    sourceLabel: 'Manhattan WMS',
-    sourceHref: 'https://www.manh.com/products/warehouse-management',
+    need: 'Warehouse operations',
+    product: 'WMS',
+    solves: 'Receiving, picking, put-away, cycle counts, inventory movement',
+    gap: 'Worker qualification, equipment readiness, training evidence, regulatory proof',
   },
   {
-    id: 'blue-yonder-wms',
-    category: 'WMS',
-    product: 'Blue Yonder Warehouse Management',
-    bestAt:
-      'Tier-1 warehouse management across receiving, putaway, picking, packing, shipping, labor, and automation-heavy distribution.',
-    buyerFit:
-      'Best fit when the buyer needs a mature enterprise WMS for complex distribution center operations.',
-    stlDifference:
-      'STL should not pretend to be a robotics-first WMS. Its stronger story is connecting inventory and warehouse proof to workforce, maintenance, supply, dispatch, and compliance decisions.',
-    sourceLabel: 'Blue Yonder WMS',
-    sourceHref: 'https://blueyonder.com/solutions/warehouse-management',
+    need: 'Maintenance',
+    product: 'CMMS / EAM',
+    solves: 'Assets, inspections, PMs, repairs, work orders',
+    gap: 'Training-gated assignment, compliance rule mapping, route impact, parts approval',
   },
   {
-    id: 'ibm-maximo',
-    category: 'EAM / CMMS',
-    product: 'IBM Maximo Application Suite',
-    bestAt:
-      'Enterprise asset management, inspections, maintenance, reliability planning, asset monitoring, and predictive maintenance.',
-    buyerFit:
-      'Best fit for asset-intensive organizations where maintenance depth, reliability engineering, and asset lifecycle management are the center of gravity.',
-    stlDifference:
-      'MaintainArr covers maintenance readiness, but STL’s difference is the operational gate around the asset: worker qualification, part availability, route use, compliance rules, and evidence export in one suite.',
-    sourceLabel: 'IBM Maximo',
-    sourceHref: 'https://www.ibm.com/products/maximo',
+    need: 'Training',
+    product: 'LMS',
+    solves: 'Courses, completions, learning paths, certificates',
+    gap: 'Whether training actually controls work eligibility',
   },
   {
-    id: 'upkeep',
-    category: 'CMMS',
-    product: 'UpKeep Maintenance / Asset Operations',
-    bestAt:
-      'Mobile-first work orders, preventive maintenance, inspections, asset tracking, parts inventory, and frontline maintenance execution.',
-    buyerFit:
-      'Best fit when the buyer wants a practical maintenance platform with strong technician adoption and CMMS workflows.',
-    stlDifference:
-      'STL competes when maintenance is only one readiness input. MaintainArr can connect repairs and inspections to dispatch, purchasing, workforce eligibility, and compliance proof.',
-    sourceLabel: 'UpKeep CMMS',
-    sourceHref: 'https://upkeep.com/product/cmms-software/',
+    need: 'Workforce',
+    product: 'WFM / HCM',
+    solves: 'Scheduling, labor, time, attendance, staffing',
+    gap: 'Whether the scheduled person is operationally qualified and compliant',
   },
   {
-    id: 'cornerstone-learning',
-    category: 'LMS',
-    product: 'Cornerstone Learning Management',
-    bestAt:
-      'Enterprise learning, content subscriptions, compliance monitoring, ILT management, learning assignment, and learning ecosystem integrations.',
-    buyerFit:
-      'Best fit when the main problem is learning scale, content administration, skill development, and enterprise learning operations.',
-    stlDifference:
-      'TrainArr is stronger as an operational qualification system than a content marketplace. STL turns training proof into assignment, dispatch, maintenance, and compliance readiness signals.',
-    sourceLabel: 'Cornerstone Learning',
-    sourceHref: 'https://www.cornerstoneondemand.com/platform/learning/',
+    need: 'Dispatch',
+    product: 'TMS / fleet system',
+    solves: 'Routes, vehicles, drivers, ETAs, exceptions',
+    gap: 'Whether people, vehicles, inspections, docs, and evidence are all ready',
   },
   {
-    id: 'docebo',
-    category: 'LMS',
-    product: 'Docebo Learning Platform',
-    bestAt:
-      'Compliance training, enrollment rules, learning analytics, certification and retraining workflows, and internal or external education programs.',
-    buyerFit:
-      'Best fit when the buyer needs a dedicated LMS for employee, partner, customer, or government-scale learning programs.',
-    stlDifference:
-      'STL is not trying to out-LMS Docebo. Its advantage is tying certificates, signoffs, evaluations, and qualifications to real operational gates.',
-    sourceLabel: 'Docebo Compliance Training',
-    sourceHref: 'https://www.docebo.com/?solution=compliance-training',
+    need: 'Compliance',
+    product: 'GRC / document system',
+    solves: 'Policies, controls, audits, requirements',
+    gap: 'Whether compliance is enforced inside daily work',
   },
   {
-    id: 'ukg-pro-wfm',
-    category: 'WFM / HCM',
-    product: 'UKG Pro Workforce Management',
-    bestAt:
-      'Workforce management, scheduling, time, people data, workforce visibility, and HR/payroll-adjacent controls.',
-    buyerFit:
-      'Best fit when labor planning, scheduling, time, payroll alignment, and workforce operations are the budget center.',
-    stlDifference:
-      'StaffArr is not a payroll-grade WFM replacement. STL focuses on whether the person is operationally qualified and compliant for the work, then connects that answer to training, assets, dispatch, and evidence.',
-    sourceLabel: 'UKG Pro',
-    sourceHref: 'https://www.ukg.com/products/ukg-pro',
-  },
-  {
-    id: 'dayforce-wfm',
-    category: 'WFM / HCM',
-    product: 'Dayforce Workforce Management',
-    bestAt:
-      'HCM, workforce management, labor decisions, HR communication, reporting, analytics, and payroll-adjacent workforce data.',
-    buyerFit:
-      'Best fit when the buyer needs broad HCM/WFM with labor cost, HR, pay, time, and people analytics in one people platform.',
-    stlDifference:
-      'STL complements this kind of system where work authorization depends on more than HR status: training proof, asset readiness, vendor documents, route conditions, inventory, and compliance rules.',
-    sourceLabel: 'Dayforce WFM',
-    sourceHref: 'https://www.dayforce.com/how-we-help/dayforce',
-  },
-  {
-    id: 'samsara',
-    category: 'Fleet / telematics',
-    product: 'Samsara Connected Operations',
-    bestAt:
-      'Telematics, ELD, fleet safety, driver app workflows, dispatch and routing, vehicle maintenance, equipment monitoring, and real-time operational data.',
-    buyerFit:
-      'Best fit when the center of gravity is fleet visibility, safety, driver behavior, ELD/HOS compliance, GPS, cameras, and connected physical operations.',
-    stlDifference:
-      'RoutArr manages dispatch readiness and trip proof, but STL is not a telematics device cloud. STL’s role is to combine telematics or route signals with worker qualification, asset readiness, inventory, and audit evidence.',
-    sourceLabel: 'Samsara ELD / Connected Operations',
-    sourceHref: 'https://www.samsara.com/products/apps-and-workflows/eld/',
-  },
-  {
-    id: 'oracle-transportation',
-    category: 'TMS',
-    product: 'Oracle Transportation Management',
-    bestAt:
-      'Transportation planning, logistics operations, shipment optimization, freight cost control, service levels, and enterprise transportation execution.',
-    buyerFit:
-      'Best fit for enterprise shippers and logistics teams with deep transportation planning, optimization, carrier, freight, and execution requirements.',
-    stlDifference:
-      'RoutArr is better framed as route readiness and dispatch proof inside STL’s compliance operating model, not a replacement for enterprise transportation optimization.',
-    sourceLabel: 'Oracle Transportation Management',
-    sourceHref: 'https://www.oracle.com/scm/logistics/transportation-management/',
+    need: 'Identity',
+    product: 'IAM / SSO',
+    solves: 'Login, roles, access, authentication',
+    gap: 'Product-specific readiness, qualifications, operational permissions',
   },
 ]
 
-export const MARKET_CHECKLIST_ROWS: MarketChecklistRow[] = [
+export const FEATURE_CHECKLIST_ROWS: FeatureChecklistRow[] = [
   {
-    id: 'cross-functional-readiness',
-    feature: 'Cross-functional readiness decision',
-    stlCoverage:
-      'Combines worker readiness, qualification proof, asset condition, route context, supply availability, warehouse state, and compliance rules.',
-    typicalMarketCoverage:
-      'Usually split across WFM, LMS, CMMS, WMS, TMS, procurement, and compliance tools.',
-    stlAdvantage:
-      'STL gives the operator one operational answer: who can work, what can run, what stock is available, what route can release, and what proof exists.',
-    competitorExamples:
-      'UKG/Dayforce for workforce, Cornerstone/Docebo for learning, Maximo/UpKeep for maintenance, Manhattan/Blue Yonder for WMS, Oracle/Samsara for transport.',
+    capability: 'One platform login across products',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'qualification-gated-work',
-    feature: 'Qualification-gated work',
-    stlCoverage:
-      'TrainArr creates qualification proof; StaffArr exposes readiness; MaintainArr and RoutArr can depend on qualifications before assigning jobs or trips.',
-    typicalMarketCoverage:
-      'LMS tools prove training completion, while maintenance and dispatch systems often need integration to use that proof operationally.',
-    stlAdvantage:
-      'STL turns training into an operating gate, not a separate record someone checks manually.',
-    competitorExamples: 'Cornerstone, Docebo, IBM Maximo, UpKeep, Samsara, Oracle Transportation Management.',
+    capability: 'Tenant and product entitlement control',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'asset-release',
-    feature: 'Asset and vehicle release',
-    stlCoverage:
-      'MaintainArr tracks inspections, defects, work orders, repairs, part usage, and asset readiness; RoutArr consumes vehicle readiness before dispatch.',
-    typicalMarketCoverage:
-      'CMMS/EAM systems handle maintenance depth; fleet/TMS tools handle dispatch depth; the release decision often crosses both.',
-    stlAdvantage:
-      'STL links maintenance proof to dispatch action so a vehicle or asset is not just repaired, but operationally cleared for the next job.',
-    competitorExamples: 'IBM Maximo, UpKeep, Samsara, Oracle Transportation Management.',
+    capability: 'Central person record',
+    wms: 'No',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Yes',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'inventory-aware-dispatch',
-    feature: 'Inventory-aware dispatch and work execution',
-    stlCoverage:
-      'LoadArr tracks stock, reservations, picks, shipments, counts, and inventory history; RoutArr and MaintainArr can use that state for route, load, and parts readiness.',
-    typicalMarketCoverage:
-      'WMS tools know inventory; TMS and maintenance tools may not naturally see the warehouse state without integration.',
-    stlAdvantage:
-      'STL connects stock reality to the work decision: dispatch can depend on load/stock status, and maintenance can depend on parts availability.',
-    competitorExamples: 'Manhattan Active WM, Blue Yonder WMS, Oracle Transportation Management, UpKeep.',
+    capability: 'Training programs and signoffs',
+    wms: 'No',
+    cmms: 'Partial',
+    lms: 'Yes',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'vendor-procurement-gates',
-    feature: 'Vendor, purchasing, and approval gates',
-    stlCoverage:
-      'SupplyArr manages vendors, customers, parts, purchase requests, approvals, receiving, restrictions, incidents, and procurement exceptions.',
-    typicalMarketCoverage:
-      'Procurement tools manage purchasing depth; operations tools often see only whether something arrived or not.',
-    stlAdvantage:
-      'STL keeps vendor and approval evidence connected to maintenance, warehouse, dispatch, and compliance decisions.',
-    competitorExamples: 'ERP/procurement suites, WMS, CMMS, TMS platforms.',
+    capability: 'Qualification controls work eligibility',
+    wms: 'Rare',
+    cmms: 'Rare',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Rare',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'audit-evidence',
-    feature: 'Workflow-native audit evidence',
-    stlCoverage:
-      'StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, and Compliance Core preserve evidence where the work happens.',
-    typicalMarketCoverage:
-      'Specialists export their own slice; cross-domain evidence usually needs reporting work, middleware, or manual assembly.',
-    stlAdvantage:
-      'STL packages the story across people, training, equipment, route, supply, warehouse, rules, and approvals.',
-    competitorExamples: 'All named specialists can contribute records; STL is built around the joined evidence chain.',
+    capability: 'Asset records and inspections',
+    wms: 'Partial',
+    cmms: 'Yes',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
   },
   {
-    id: 'field-handoffs',
-    feature: 'Field task handoffs',
-    stlCoverage:
-      'Companion gives workers a focused inbox and sends them to the product that owns the record.',
-    typicalMarketCoverage:
-      'Point tools often have their own mobile experience, but field work across departments fragments quickly.',
-    stlAdvantage:
-      'STL keeps field action tied to the owning workflow without turning the inbox into another system of record.',
-    competitorExamples: 'Samsara driver apps, UpKeep mobile CMMS, LMS mobile apps, WMS handheld workflows.',
+    capability: 'PMs, defects, work orders, repairs',
+    wms: 'No',
+    cmms: 'Yes',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Route and dispatch execution',
+    wms: 'Partial',
+    cmms: 'No',
+    lms: 'No',
+    wfm: 'Partial',
+    tms: 'Yes',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Inventory movement and WMS workflows',
+    wms: 'Yes',
+    cmms: 'Partial',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Vendor, customer, procurement records',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Rule packs and evidence mapping',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Yes',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Audit package by person/site/asset/event',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Yes',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Incident-to-retraining workflow',
+    wms: 'Rare',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Assignment blocked by missing qualification',
+    wms: 'Rare',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Rare',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Asset readiness affects dispatch/work',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Parts demand tied to work orders',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'No',
+    wfm: 'No',
+    tms: 'No',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Evidence captured during work',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+  {
+    capability: 'Compliance built into execution',
+    wms: 'Partial',
+    cmms: 'Partial',
+    lms: 'Partial',
+    wfm: 'Partial',
+    tms: 'Partial',
+    grc: 'Partial',
+    stl: 'Yes',
+  },
+]
+
+export const CATEGORY_COMPARISONS: CategoryComparison[] = [
+  {
+    id: 'wms',
+    title: 'STL Compliance vs WMS',
+    pointToolsGreatAt:
+      'Inventory control, put-away, picking, replenishment, cycle counts, warehouse labor, slotting, automation, and throughput.',
+    stlAdds: [
+      'Whether the worker is qualified.',
+      'Whether equipment is safe.',
+      'Whether training is current.',
+      'Whether the movement has a compliance reason.',
+      'Whether the evidence can be produced later.',
+    ],
+    takeaway:
+      'A WMS tells you where the inventory moved. STL tells you whether the movement was allowed, who did it, why it happened, and whether the supporting evidence exists.',
+  },
+  {
+    id: 'cmms',
+    title: 'STL Compliance vs CMMS / EAM',
+    pointToolsGreatAt:
+      'Assets, preventive maintenance, work orders, inspections, downtime, repairs, technician notes, and maintenance history.',
+    stlAdds: [
+      'Training-gated maintenance assignment.',
+      'StaffArr person history.',
+      'TrainArr qualification evidence.',
+      'SupplyArr parts and vendor context.',
+      'LoadArr inventory movement.',
+      'Compliance Core rule mapping.',
+      'RoutArr readiness impact.',
+    ],
+    takeaway:
+      'A CMMS tells you the asset was repaired. STL tells you whether the right person repaired it, whether the part was controlled, whether the defect affected operations, and whether the repair satisfies the rule.',
+  },
+  {
+    id: 'lms',
+    title: 'STL Compliance vs LMS',
+    pointToolsGreatAt:
+      'Courses, completions, certificates, learning paths, content delivery, quizzes, and compliance training reports.',
+    stlAdds: [
+      'Training as operational authorization.',
+      'Certificates that become work eligibility conditions.',
+      'Signoffs, evaluations, remediation, retraining, and qualification history tied to operations.',
+    ],
+    takeaway: 'An LMS says training is complete. STL decides whether the person is cleared to work.',
+  },
+  {
+    id: 'wfm',
+    title: 'STL Compliance vs WFM / HCM',
+    pointToolsGreatAt:
+      'Scheduling, time, attendance, shift coverage, labor cost, overtime, availability, and staffing rules.',
+    stlAdds: [
+      'Operational readiness behind the schedule.',
+      'Qualification and permission checks.',
+      'Asset, route, evidence, and compliance dependencies around the assignment.',
+    ],
+    takeaway: 'WFM schedules people. STL verifies whether the scheduled work should happen.',
+  },
+  {
+    id: 'tms',
+    title: 'STL Compliance vs TMS / Fleet / Dispatch',
+    pointToolsGreatAt:
+      'Routes, dispatch, ETA, vehicle location, driver app workflows, optimization, telematics, HOS, and exceptions.',
+    stlAdds: [
+      'Pre-dispatch readiness.',
+      'Driver qualification and site fit.',
+      'Vehicle inspection and defect closure.',
+      'Load, stock, documentation, and route evidence checks.',
+    ],
+    takeaway: 'A TMS moves the route. STL clears the route.',
+  },
+  {
+    id: 'grc',
+    title: 'STL Compliance vs GRC',
+    pointToolsGreatAt:
+      'Policies, controls, audits, risk registers, documents, regulatory references, and compliance tasks.',
+    stlAdds: [
+      'Execution-level enforcement.',
+      'Rules applied when people are assigned, assets are inspected, parts are consumed, routes are dispatched, or incidents are reported.',
+      'Evidence expectations connected to daily workflows.',
+    ],
+    takeaway: 'GRC documents the requirement. STL applies the requirement to the work.',
+  },
+]
+
+export const CAN_WORK_START_ITEMS = [
+  'Person exists',
+  'Person is active',
+  'Person belongs to the tenant/site',
+  'Person has required permissions',
+  'Person has required qualifications',
+  'Training is complete and current',
+  'Asset is available',
+  'Asset is inspected',
+  'Defects are resolved or dispositioned',
+  'Required parts/materials are available',
+  'Vendor/customer records are valid where applicable',
+  'Route or work assignment is allowed',
+  'Compliance Core requirements are satisfied or flagged',
+  'Evidence is captured automatically',
+  'Audit history is preserved',
+] as const
+
+export const PRODUCT_STACK_ROWS: ProductStackRow[] = [
+  {
+    product: 'NexArr',
+    complements: 'IAM, SSO, tenant admin',
+    primaryJob: 'Login, entitlement, product access',
+    positioning: 'The secure front door for the suite',
+  },
+  {
+    product: 'StaffArr',
+    complements: 'WFM, HR admin, org charts',
+    primaryJob: 'People, sites, permissions, incidents',
+    positioning: 'The people and readiness source of truth',
+  },
+  {
+    product: 'TrainArr',
+    complements: 'LMS, certification trackers',
+    primaryJob: 'Training, signoffs, qualifications',
+    positioning: 'Training that actually controls work',
+  },
+  {
+    product: 'MaintainArr',
+    complements: 'CMMS / EAM',
+    primaryJob: 'Assets, PMs, inspections, repairs',
+    positioning: 'Maintenance tied to readiness and evidence',
+  },
+  {
+    product: 'RoutArr',
+    complements: 'TMS / dispatch',
+    primaryJob: 'Routes, drivers, vehicles, execution',
+    positioning: 'Dispatch with qualification and asset checks',
+  },
+  {
+    product: 'SupplyArr',
+    complements: 'Procurement / vendor systems',
+    primaryJob: 'Vendors, customers, parts, approvals',
+    positioning: 'Supply records tied to operational work',
+  },
+  {
+    product: 'LoadArr',
+    complements: 'WMS',
+    primaryJob: 'Inventory, locations, movement, picks',
+    positioning: 'WMS connected to people, sites, and compliance',
+  },
+  {
+    product: 'Compliance Core',
+    complements: 'GRC / rule libraries',
+    primaryJob: 'Rule packs, evidence, citations',
+    positioning: 'Compliance logic that products can enforce',
+  },
+]
+
+export const OBJECTIONS: Objection[] = [
+  {
+    title: 'We already have a WMS.',
+    body:
+      'Great. STL does not have to replace it on day one. But your WMS probably does not own training qualifications, incident history, maintenance readiness, regulatory rule packs, or cross-product audit packaging.',
+    answer:
+      'STL can either replace lightweight WMS needs through LoadArr or sit around an existing WMS as the readiness and compliance layer.',
+  },
+  {
+    title: 'We already have a CMMS.',
+    body:
+      'Good. That means you already understand asset discipline. The question is whether your CMMS knows whether the technician was qualified, whether retraining was required after an incident, whether the part came from an approved source, whether the route was blocked because of the defect, and whether the evidence satisfies the rule.',
+    answer:
+      'MaintainArr is strongest when maintenance readiness needs to connect to the rest of operations.',
+  },
+  {
+    title: 'We already have an LMS.',
+    body: 'That is fine. But course completion is not the same as work authorization.',
+    answer:
+      'TrainArr is built around qualifications, signoffs, evaluations, remediation, and publishing work eligibility back into the operational record.',
+  },
+  {
+    title: 'We already have workforce scheduling.',
+    body: 'Scheduling someone is not the same as clearing them.',
+    answer:
+      'StaffArr and TrainArr make sure the person is not just available, but appropriate, qualified, assigned, permitted, and documented.',
+  },
+  {
+    title: 'We already have compliance software.',
+    body: 'Most compliance software stores requirements. STL Compliance applies requirements.',
+    answer:
+      'Compliance Core turns rules, evidence expectations, exceptions, and citations into logic the rest of the suite can actually use.',
   },
 ]

@@ -1,30 +1,45 @@
 import { describe, expect, it } from 'vitest'
-import { MARKET_CHECKLIST_ROWS, MARKET_PRODUCT_COMPARISONS } from './marketComparison'
+import {
+  CAN_WORK_START_ITEMS,
+  CATEGORY_COMPARISONS,
+  FEATURE_CHECKLIST_ROWS,
+  OBJECTIONS,
+  PRODUCT_STACK_ROWS,
+  USUAL_STACK_ROWS,
+} from './marketComparison'
 
 describe('marketComparison content', () => {
-  it('compares named products across major operating categories', () => {
-    const products = MARKET_PRODUCT_COMPARISONS.map((row) => row.product)
-
-    expect(products).toContain('Manhattan Active Warehouse Management')
-    expect(products).toContain('IBM Maximo Application Suite')
-    expect(products).toContain('Cornerstone Learning Management')
-    expect(products).toContain('UKG Pro Workforce Management')
-    expect(products).toContain('Oracle Transportation Management')
-    expect(MARKET_PRODUCT_COMPARISONS.length).toBeGreaterThanOrEqual(10)
+  it('defines the usual stack gaps STL is positioned against', () => {
+    expect(USUAL_STACK_ROWS.some((row) => row.product === 'WMS')).toBe(true)
+    expect(USUAL_STACK_ROWS.some((row) => row.product === 'CMMS / EAM')).toBe(true)
+    expect(USUAL_STACK_ROWS.some((row) => row.product === 'LMS')).toBe(true)
+    expect(USUAL_STACK_ROWS.some((row) => row.product === 'TMS / fleet system')).toBe(true)
   })
 
-  it('keeps every competitor row sourced and positioned against STL', () => {
-    for (const row of MARKET_PRODUCT_COMPARISONS) {
-      expect(row.sourceHref).toMatch(/^https:\/\//)
-      expect(row.bestAt.trim().length).toBeGreaterThan(20)
-      expect(row.stlDifference).toMatch(/STL|LoadArr|MaintainArr|TrainArr|StaffArr|RoutArr/)
-    }
+  it('keeps the biased feature checklist STL-favorable', () => {
+    expect(FEATURE_CHECKLIST_ROWS.length).toBeGreaterThanOrEqual(15)
+    expect(
+      FEATURE_CHECKLIST_ROWS.every((row) => row.stl === 'Yes'),
+    ).toBe(true)
+    expect(
+      FEATURE_CHECKLIST_ROWS.some((row) => row.capability === 'Qualification controls work eligibility'),
+    ).toBe(true)
+    expect(
+      FEATURE_CHECKLIST_ROWS.some((row) => row.capability === 'Compliance built into execution'),
+    ).toBe(true)
   })
 
-  it('includes checklist-style buyer questions', () => {
-    expect(MARKET_CHECKLIST_ROWS.length).toBeGreaterThanOrEqual(6)
-    expect(MARKET_CHECKLIST_ROWS.some((row) => row.feature === 'Cross-functional readiness decision')).toBe(true)
-    expect(MARKET_CHECKLIST_ROWS.some((row) => row.feature === 'Inventory-aware dispatch and work execution')).toBe(true)
-    expect(MARKET_CHECKLIST_ROWS.every((row) => row.stlAdvantage.includes('STL'))).toBe(true)
+  it('covers category cards, work-start checklist, product stack, and objections', () => {
+    expect(CATEGORY_COMPARISONS.map((row) => row.id)).toEqual([
+      'wms',
+      'cmms',
+      'lms',
+      'wfm',
+      'tms',
+      'grc',
+    ])
+    expect(CAN_WORK_START_ITEMS).toContain('Person has required qualifications')
+    expect(PRODUCT_STACK_ROWS.some((row) => row.product === 'Compliance Core')).toBe(true)
+    expect(OBJECTIONS.some((row) => row.title === 'We already have a WMS.')).toBe(true)
   })
 })
