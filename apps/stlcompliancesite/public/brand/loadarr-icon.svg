@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>LoadArr</title>
+  <rect width="512" height="512" rx="112" fill="#0f2744"/>
+  <path d="M128 188 256 116l128 72-128 72-128-72Z" fill="#7dd3fc"/>
+  <path d="M128 210 244 276v128L128 338V210Z" fill="#1d4ed8"/>
+  <path d="M384 210 268 276v128l116-66V210Z" fill="#22d3ee"/>
+  <path d="M156 352h200v36H156z" fill="#e2e8f0" opacity=".9"/>
+  <path d="M190 404h132v28H190z" fill="#38bdf8"/>
+</svg>

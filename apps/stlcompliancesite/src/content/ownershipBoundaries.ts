@@ -42,6 +42,12 @@ export const PRODUCT_OWNERSHIP: Record<string, ProductOwnershipCopy> = {
     doesNotOwn:
       'Employee records, training records, repair execution, dispatch execution, or warehouse movement history.',
   },
+  loadarr: {
+    owns:
+      'Warehouse locations, receiving, stock movement, reservations, picking, shipments, adjustments, cycle counts, and inventory history.',
+    doesNotOwn:
+      'Vendor approval, purchase negotiation, employee records, training records, repair execution, or route dispatch.',
+  },
   compliancecore: {
     owns:
       'Regulatory requirements, evidence expectations, citations, approved wording, rule packs, and compliance checks.',
@@ -66,6 +72,3 @@ export const COMPLIANCE_CORE_EDUCATION = {
     'This keeps compliance proof tied to what actually happened instead of buried in side documents.',
   ],
 } as const
-
-export const DOCS_11_ACCEPTANCE_NOTE =
-  'V1 labels mean the product has usable workflows available today. Full roadmap coverage continues to be tracked separately so public pages do not overpromise.'

@@ -41,13 +41,6 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     category: 'records',
   },
   {
-    id: 'implementation-maturity',
-    title: 'Product status',
-    summary: 'A plain snapshot of what is available now and what is still expanding.',
-    href: '/maturity',
-    category: 'suite',
-  },
-  {
     id: 'compare-approaches',
     title: 'Compare spreadsheets, point tools, and the suite',
     summary:
@@ -58,7 +51,7 @@ export const RESOURCE_LINKS: ResourceLink[] = [
   {
     id: 'pricing-licensing',
     title: 'Pricing and licensing',
-    summary: 'How product mix, rollout needs, and operational scope shape pricing.',
+    summary: 'How product mix, operational scale, and compliance scope shape pricing.',
     href: '/pricing',
     category: 'contact',
   },

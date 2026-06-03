@@ -18,7 +18,7 @@ export function TermsPage() {
       <article className="mx-auto max-w-3xl space-y-4 px-4 pb-16 text-slate-300 sm:px-6">
         <p>
           Product descriptions on this site are for evaluation and education. Feature availability
-          for your organization depends on your agreement and rollout scope.
+          for your organization depends on your agreement and licensed scope.
         </p>
         <p>
           Do not rely on this site for operational decisions, compliance determinations, or emergency

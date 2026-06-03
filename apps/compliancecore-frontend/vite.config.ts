@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const complianceCoreApiTarget = process.env.VITE_COMPLIANCECORE_PROXY_TARGET ?? 'http://localhost:5107'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],

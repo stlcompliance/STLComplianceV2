@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const maintainarrApiTarget = process.env.VITE_MAINTAINARR_PROXY_TARGET ?? 'http://localhost:5104'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],

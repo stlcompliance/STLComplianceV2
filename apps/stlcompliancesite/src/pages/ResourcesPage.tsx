@@ -15,14 +15,14 @@ export function ResourcesPage() {
     <>
       <SiteSeo
         title={`Resources — ${siteConfig.siteName}`}
-        description="Resources for learning how STL Compliance connects operations, records, product status, and demos."
+        description="Resources for learning how STL Compliance connects operations, records, trust, and demos."
         path="/resources"
         ogType="website"
       />
       <PageHero
         eyebrow="Resources"
         title="Learn how STL Compliance fits real operations"
-        subtitle="Use these pages to compare products, understand rollout status, review trust basics, and request a walkthrough."
+        subtitle="Use these pages to compare products, understand records, review trust basics, and request a walkthrough."
       />
 
       <section className="mx-auto max-w-6xl space-y-12 px-4 pb-16 sm:px-6">

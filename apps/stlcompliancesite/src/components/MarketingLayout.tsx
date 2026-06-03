@@ -4,7 +4,6 @@ import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 const navLinks = [
   { to: '/products', label: 'Products' },
   { to: '/compare', label: 'Compare' },
-  { to: '/maturity', label: 'Product status' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/resources', label: 'Resources' },
   { to: '/security', label: 'Security' },
@@ -19,11 +18,11 @@ export function MarketingLayout() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/stl-logo.png"
+              src="/brand/stl-logo-wordmark.png"
               alt={siteConfig.siteName}
-              className="h-10 w-auto"
-              width={160}
-              height={40}
+              className="h-11 w-auto rounded-sm bg-white/95 px-2 py-1"
+              width={220}
+              height={64}
             />
           </Link>
           <nav className="flex flex-wrap items-center gap-1 text-sm font-medium">
@@ -51,17 +50,23 @@ export function MarketingLayout() {
       </main>
 
       <footer className="border-t border-slate-700/60 bg-slate-950/80">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>
-            © {new Date().getFullYear()} {siteConfig.companyLegalName}. {siteConfig.arrTagline} (ARR)
-            suite.
-          </p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="space-y-3">
+            <img
+              src="/brand/stl-wordmark-tagline.png"
+              alt={siteConfig.siteName}
+              className="h-12 w-auto rounded-sm bg-white/95 px-2 py-1"
+              width={260}
+              height={80}
+            />
+            <p>
+              © {new Date().getFullYear()} {siteConfig.companyLegalName}. {siteConfig.arrTagline}{' '}
+              suite.
+            </p>
+          </div>
           <div className="flex flex-wrap gap-4">
             <Link to="/compare" className="hover:text-teal-300">
               Compare
-            </Link>
-            <Link to="/maturity" className="hover:text-teal-300">
-              Product status
             </Link>
             <Link to="/pricing" className="hover:text-teal-300">
               Pricing

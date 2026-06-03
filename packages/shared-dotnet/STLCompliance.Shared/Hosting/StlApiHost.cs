@@ -74,6 +74,19 @@ public static class StlApiHost
 
             if (hasBundledFrontend)
             {
+                var productFrontendIndexPaths = Directory
+                    .EnumerateDirectories(Path.Combine(app.Environment.ContentRootPath, "wwwroot"))
+                    .Select(path => new
+                    {
+                        Segment = Path.GetFileName(path),
+                        IndexPath = Path.Combine(path, "index.html")
+                    })
+                    .Where(item => File.Exists(item.IndexPath))
+                    .ToDictionary(
+                        item => item.Segment,
+                        item => item.IndexPath,
+                        StringComparer.OrdinalIgnoreCase);
+
                 app.MapWhen(
                     context =>
                         !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
@@ -85,8 +98,17 @@ public static class StlApiHost
                         spaApp.UseStaticFiles();
                         spaApp.Run(async context =>
                         {
+                            var firstSegment = context.Request.Path.Value?
+                                .TrimStart('/')
+                                .Split('/', 2, StringSplitOptions.RemoveEmptyEntries)
+                                .FirstOrDefault();
+                            var indexPath = firstSegment is not null
+                                && productFrontendIndexPaths.TryGetValue(firstSegment, out var productIndexPath)
+                                    ? productIndexPath
+                                    : bundledFrontendIndexPath;
+
                             context.Response.ContentType = "text/html; charset=utf-8";
-                            await context.Response.SendFileAsync(bundledFrontendIndexPath);
+                            await context.Response.SendFileAsync(indexPath);
                         });
                     });
             }

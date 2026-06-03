@@ -81,8 +81,8 @@ export function ComparePage() {
           Practical differences, not a feature scorecard. For per-product scope, see the{' '}
           <Link to="/products" className="text-teal-400 hover:text-teal-300">
             products hub
-          </Link>{' '}
-          and status labels.
+          </Link>
+          .
         </p>
         <div className="mt-6">
           <AlternativeComparisonTable />

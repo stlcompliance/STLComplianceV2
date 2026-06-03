@@ -4,8 +4,6 @@ import {
 
   MARKETING_PRODUCTS,
 
-  MATURITY_LABELS,
-
   PRODUCT_CATEGORY_LABELS,
 
   productPagePath,
@@ -42,7 +40,7 @@ export function ProductsComparisonTable() {
 
             <th scope="col" className="px-4 py-3 font-semibold">
 
-              Status
+              Focus
 
             </th>
 
@@ -64,7 +62,17 @@ export function ProductsComparisonTable() {
 
               <td className="px-4 py-3 font-medium">
 
-                <Link to={productPagePath(product.productKey)} className="text-teal-400 hover:text-teal-300">
+                <Link
+                  to={productPagePath(product.productKey)}
+                  className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300"
+                >
+
+                  <img
+                    src={product.brandImageSrc}
+                    alt=""
+                    className="h-7 w-7 rounded-md bg-white object-contain p-0.5"
+                    aria-hidden
+                  />
 
                   {product.displayName}
 
@@ -76,25 +84,7 @@ export function ProductsComparisonTable() {
 
               <td className="px-4 py-3">
 
-                <span
-
-                  className={
-
-                    product.maturity === 'v1-operational'
-
-                      ? 'rounded-full bg-teal-950/80 px-2 py-0.5 text-xs font-semibold text-teal-200'
-
-                      : 'rounded-full bg-amber-950/60 px-2 py-0.5 text-xs font-semibold text-amber-200'
-
-                  }
-
-                >
-
-                  {MATURITY_LABELS[product.maturity]}
-
-                </span>
-
-                <p className="mt-1 text-xs text-slate-400">{product.maturityLabel}</p>
+                <p className="text-xs text-slate-400">{product.tagline}</p>
 
               </td>
 

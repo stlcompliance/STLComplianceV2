@@ -12,7 +12,7 @@ export type PageSeoInput = {
   ogImagePath?: string
 }
 
-const DEFAULT_OG_IMAGE = '/stl-logo.png'
+const DEFAULT_OG_IMAGE = '/brand/stl-full-bluebg.png'
 
 export function siteBaseUrl(): string {
   const raw = import.meta.env.VITE_SITE_BASE_URL ?? 'https://stlcompliancesite.onrender.com'
@@ -73,6 +73,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     name: siteConfig.companyLegalName,
     url: siteBaseUrl(),
     description: siteConfig.defaultDescription,
+    logo: absoluteUrl('/brand/stl-mark.png'),
   }
 }
 

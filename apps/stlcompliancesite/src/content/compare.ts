@@ -88,7 +88,7 @@ export const COMPARISON_DIMENSIONS: ComparisonDimension[] = [
 ]
 
 export const SUITE_HONESTY_NOTES: string[] = [
-  'Core V1 workflows are available today; the suite continues to expand by product area.',
-  'Public status labels describe what customers can reasonably expect, without pretending every roadmap item is finished.',
+  'STL Compliance connects frontline identity, qualifications, maintenance readiness, route readiness, inventory status, procurement evidence, and audit packaging in one operating model.',
+  'The suite is strongest where operational decisions depend on multiple teams and records, not one departmental workflow.',
   'This public site explains the platform. Real customer work happens after secure sign-in.',
 ]

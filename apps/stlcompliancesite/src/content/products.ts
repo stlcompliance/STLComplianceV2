@@ -20,8 +20,6 @@ export type ProductCategoryKey =
   | 'compliance'
   | 'field'
 
-export type PublicCapabilityMaturity = 'v1-operational' | 'v1-partial'
-
 export type MarketingProduct = {
   productKey: string
   displayName: string
@@ -31,8 +29,8 @@ export type MarketingProduct = {
   icon: LucideIcon
   sortOrder: number
   category: ProductCategoryKey
-  maturity: PublicCapabilityMaturity
-  maturityLabel: string
+  brandImageSrc: string
+  brandAccentClass: string
 }
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
@@ -42,14 +40,6 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
   compliance: 'Compliance proof',
   field: 'Field work',
 }
-
-export const MATURITY_LABELS: Record<PublicCapabilityMaturity, string> = {
-  'v1-operational': 'Available in V1',
-  'v1-partial': 'Early access',
-}
-
-export const MATURITY_STACK_LABEL =
-  'Core workflows are available now; deeper coverage continues to expand.'
 
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
@@ -61,8 +51,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: ShieldCheck,
     sortOrder: 0,
     category: 'control-plane',
-    maturity: 'v1-operational',
-    maturityLabel: 'Login, product access, and administration are available now.',
+    brandImageSrc: '/brand/nexarr-icon.png',
+    brandAccentClass: 'from-blue-500/20 to-sky-400/10',
   },
   {
     productKey: 'staffarr',
@@ -73,8 +63,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Users,
     sortOrder: 10,
     category: 'workforce',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/staffarr-icon.png',
+    brandAccentClass: 'from-purple-500/20 to-violet-400/10',
   },
   {
     productKey: 'trainarr',
@@ -85,8 +75,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: GraduationCap,
     sortOrder: 20,
     category: 'workforce',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/trainarr-icon.png',
+    brandAccentClass: 'from-orange-500/20 to-amber-400/10',
   },
   {
     productKey: 'maintainarr',
@@ -97,8 +87,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Wrench,
     sortOrder: 30,
     category: 'operations',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/maintainarr-icon.png',
+    brandAccentClass: 'from-emerald-500/20 to-teal-400/10',
   },
   {
     productKey: 'routarr',
@@ -109,8 +99,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Route,
     sortOrder: 40,
     category: 'operations',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/routarr-icon.png',
+    brandAccentClass: 'from-blue-500/20 to-cyan-400/10',
   },
   {
     productKey: 'supplyarr',
@@ -121,8 +111,20 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: PackageSearch,
     sortOrder: 50,
     category: 'operations',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/supplyarr-icon.png',
+    brandAccentClass: 'from-green-500/20 to-lime-400/10',
+  },
+  {
+    productKey: 'loadarr',
+    displayName: 'LoadArr',
+    tagline: 'Warehouse operations, receiving, stock movement, picking, counts, and inventory proof.',
+    owns: PRODUCT_OWNERSHIP.loadarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.loadarr.doesNotOwn,
+    icon: PackageSearch,
+    sortOrder: 60,
+    category: 'operations',
+    brandImageSrc: '/brand/loadarr-icon.svg',
+    brandAccentClass: 'from-cyan-500/20 to-blue-400/10',
   },
   {
     productKey: 'compliancecore',
@@ -131,10 +133,10 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     owns: PRODUCT_OWNERSHIP.compliancecore.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.compliancecore.doesNotOwn,
     icon: ClipboardCheck,
-    sortOrder: 60,
+    sortOrder: 70,
     category: 'compliance',
-    maturity: 'v1-operational',
-    maturityLabel: MATURITY_STACK_LABEL,
+    brandImageSrc: '/brand/compliancecore-icon.png',
+    brandAccentClass: 'from-indigo-500/20 to-sky-400/10',
   },
   {
     productKey: 'companion',
@@ -143,10 +145,10 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     owns: PRODUCT_OWNERSHIP.companion.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.companion.doesNotOwn,
     icon: Inbox,
-    sortOrder: 70,
+    sortOrder: 80,
     category: 'field',
-    maturity: 'v1-partial',
-    maturityLabel: 'Field inbox and product handoffs are available in early form.',
+    brandImageSrc: '/brand/companion-icon.svg',
+    brandAccentClass: 'from-slate-500/20 to-teal-400/10',
   },
 ]
 

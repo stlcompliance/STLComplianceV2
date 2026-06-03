@@ -13,7 +13,7 @@ const proofPoints = [
 ] as const
 
 export function HomePage() {
-  const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'companion').slice(0, 6)
+  const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'companion')
 
   return (
     <>
@@ -27,6 +27,9 @@ export function HomePage() {
         eyebrow={siteConfig.arrTagline}
         title="Compliance should not live in binders, spreadsheets, and disconnected apps."
         subtitle="STL Compliance connects your people, training, assets, maintenance, dispatch, inventory, vendors, and evidence into one Adaptive Risk Reduction platform."
+        brandImageSrc="/brand/stl-wordmark-tagline.png"
+        brandImageAlt="STL Compliance"
+        backgroundImageSrc="/brand/stl-full-bluebg.png"
       >
         <Link
           to="/demo"

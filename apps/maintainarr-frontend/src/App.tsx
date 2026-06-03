@@ -58,7 +58,7 @@ export default function App() {
 
     <QueryClientProvider client={queryClient}>
 
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.VITE_ROUTER_BASENAME}>
 
         <Routes>
 

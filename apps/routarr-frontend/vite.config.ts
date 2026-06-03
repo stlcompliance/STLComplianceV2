@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const routarrApiTarget = process.env.VITE_ROUTARR_PROXY_TARGET ?? 'http://localhost:5105'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],

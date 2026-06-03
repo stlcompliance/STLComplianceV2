@@ -29,7 +29,7 @@ export const LICENSING_PILLARS: LicensingPillar[] = [
   {
     id: 'honesty',
     title: 'No surprise checkout',
-    body: 'Pricing is scoped with your team based on products, rollout needs, and operational complexity.',
+    body: 'Pricing is scoped with your team based on products, operational scale, and compliance complexity.',
   },
 ]
 
@@ -58,6 +58,11 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
     productKey: 'supplyarr',
     displayName: 'SupplyArr',
     summary: 'Vendors, purchasing, approvals, receiving, and supply records.',
+  },
+  {
+    productKey: 'loadarr',
+    displayName: 'LoadArr',
+    summary: 'Warehouse operations, stock movement, picking, counts, and inventory history.',
   },
   {
     productKey: 'compliancecore',

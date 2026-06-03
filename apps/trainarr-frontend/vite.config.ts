@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const trainarrApiTarget = process.env.VITE_TRAINARR_PROXY_TARGET ?? 'http://localhost:5103'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],

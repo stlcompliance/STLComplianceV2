@@ -1,14 +1,33 @@
 FROM node:22-bookworm-slim AS frontend-build
 WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
-ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL}
-COPY packages/shared-ui/package.json packages/shared-ui/package-lock.json packages/shared-ui/
+ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
+    VITE_SUITE_URL=${VITE_APP_PUBLIC_BASE_URL} \
+    VITE_STAFFARR_API_BASE=https://staffarr-api-oyrj.onrender.com \
+    VITE_TRAINARR_API_BASE=https://trainarr-api-nsiw.onrender.com \
+    VITE_MAINTAINARR_API_BASE=https://maintainarr-api-z39r.onrender.com \
+    VITE_ROUTARR_API_BASE=https://routarr-api-l9uj.onrender.com \
+    VITE_SUPPLYARR_API_BASE=https://supplyarr-api-dn8u.onrender.com \
+    VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-w7e5.onrender.com \
+    VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com
+COPY . .
 RUN npm ci --prefix packages/shared-ui
-COPY apps/suite-frontend/package.json apps/suite-frontend/package-lock.json apps/suite-frontend/
-RUN npm ci --prefix apps/suite-frontend
-COPY packages/shared-ui packages/shared-ui
-COPY apps/suite-frontend apps/suite-frontend
-RUN npm run build --prefix apps/suite-frontend
+RUN npm ci --prefix apps/suite-frontend \
+    && npm ci --prefix apps/staffarr-frontend \
+    && npm ci --prefix apps/trainarr-frontend \
+    && npm ci --prefix apps/maintainarr-frontend \
+    && npm ci --prefix apps/routarr-frontend \
+    && npm ci --prefix apps/supplyarr-frontend \
+    && npm ci --prefix apps/compliancecore-frontend \
+    && npm ci --prefix apps/loadarr-frontend
+RUN npm run build --prefix apps/suite-frontend \
+    && VITE_ROUTER_BASENAME=/staffarr npm run build --prefix apps/staffarr-frontend \
+    && VITE_ROUTER_BASENAME=/trainarr npm run build --prefix apps/trainarr-frontend \
+    && VITE_ROUTER_BASENAME=/maintainarr npm run build --prefix apps/maintainarr-frontend \
+    && VITE_ROUTER_BASENAME=/routarr npm run build --prefix apps/routarr-frontend \
+    && VITE_ROUTER_BASENAME=/supplyarr npm run build --prefix apps/supplyarr-frontend \
+    && VITE_ROUTER_BASENAME=/compliancecore npm run build --prefix apps/compliancecore-frontend \
+    && VITE_ROUTER_BASENAME=/loadarr npm run build --prefix apps/loadarr-frontend
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -20,5 +39,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-
 WORKDIR /app
 COPY --from=build /app/publish .
 COPY --from=frontend-build /src/apps/suite-frontend/dist ./wwwroot
+COPY --from=frontend-build /src/apps/staffarr-frontend/dist ./wwwroot/staffarr
+COPY --from=frontend-build /src/apps/trainarr-frontend/dist ./wwwroot/trainarr
+COPY --from=frontend-build /src/apps/maintainarr-frontend/dist ./wwwroot/maintainarr
+COPY --from=frontend-build /src/apps/routarr-frontend/dist ./wwwroot/routarr
+COPY --from=frontend-build /src/apps/supplyarr-frontend/dist ./wwwroot/supplyarr
+COPY --from=frontend-build /src/apps/compliancecore-frontend/dist ./wwwroot/compliancecore
+COPY --from=frontend-build /src/apps/loadarr-frontend/dist ./wwwroot/loadarr
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet NexArr.Api.dll"]

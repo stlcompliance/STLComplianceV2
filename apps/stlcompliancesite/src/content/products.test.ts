@@ -13,9 +13,9 @@ describe('MARKETING_PRODUCTS', () => {
     expect(getMarketingProduct('TrainArr')?.displayName).toBe('TrainArr')
   })
 
-  it('assigns category and public maturity labels', () => {
+  it('assigns product categories', () => {
     expect(getMarketingProduct('nexarr')?.category).toBe('control-plane')
-    expect(getMarketingProduct('companion')?.maturity).toBe('v1-partial')
-    expect(MARKETING_PRODUCTS.every((p) => p.maturityLabel.length > 0)).toBe(true)
+    expect(getMarketingProduct('companion')?.category).toBe('field')
+    expect(MARKETING_PRODUCTS.every((p) => p.tagline.length > 0)).toBe(true)
   })
 })

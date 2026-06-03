@@ -26,7 +26,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.VITE_ROUTER_BASENAME}>
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />

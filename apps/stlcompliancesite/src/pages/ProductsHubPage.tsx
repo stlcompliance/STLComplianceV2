@@ -15,7 +15,7 @@ export function ProductsHubPage() {
     <>
       <SiteSeo
         title={`Products — ${siteConfig.siteName}`}
-        description="Overview of the STL Compliance product suite for people, training, maintenance, dispatch, supply, field work, and compliance proof."
+        description="Overview of the STL Compliance product suite for people, training, maintenance, dispatch, supply, warehouse work, field work, and compliance proof."
         path="/products"
       />
       <PageHero
@@ -23,15 +23,6 @@ export function ProductsHubPage() {
         title="Connected tools for the work that creates compliance risk"
         subtitle="Every product focuses on a real part of operations. Together, they help teams know who can work, what is ready, what is missing, and what proof exists."
       />
-
-      <section className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
-        <div className="rounded-2xl border border-slate-600 bg-slate-900/40 px-5 py-4 text-sm text-slate-300">
-          <strong className="font-semibold text-white">Plain-English status:</strong>{' '}
-          <span className="text-teal-300">Available in V1</span> means the product has usable
-          workflows today. <span className="text-amber-200">Early access</span> means the area is
-          useful now and still growing.
-        </div>
-      </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
         <h2 className="text-lg font-semibold text-white">Quick comparison</h2>
@@ -58,7 +49,7 @@ export function ProductsHubPage() {
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {products.map((product) => (
-                <ProductCard key={product.productKey} product={product} showMaturity />
+                <ProductCard key={product.productKey} product={product} />
               ))}
             </div>
           </section>

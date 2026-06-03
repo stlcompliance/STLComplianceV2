@@ -33,20 +33,6 @@ describe('App routing', () => {
     expect(education).toHaveTextContent(/evidence expectations/i)
   })
 
-  it('renders product status page with rollout snapshot', async () => {
-    render(
-      <MemoryRouter initialEntries={['/maturity']}>
-        <App />
-      </MemoryRouter>,
-    )
-    expect(
-      await screen.findByRole('heading', { name: /What is available now/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByTestId('maturity-disclaimer')).toBeInTheDocument()
-    expect(screen.getByTestId('program-milestone-table')).toBeInTheDocument()
-    expect(screen.getByTestId('maturity-product-companion')).toBeInTheDocument()
-  })
-
   it('renders compare page with fit disclaimer', async () => {
     render(
       <MemoryRouter initialEntries={['/compare']}>

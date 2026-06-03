@@ -6,6 +6,7 @@ import {
   LICENSING_PILLARS,
   PRICING_DISCLAIMER,
 } from '../content/pricing'
+import { getMarketingProduct } from '../content/products'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 export function PricingPage() {
@@ -13,13 +14,13 @@ export function PricingPage() {
     <>
       <SiteSeo
         title={`Pricing & licensing — ${siteConfig.siteName}`}
-        description="How STL Compliance pricing is scoped by product mix, rollout needs, and operational complexity."
+        description="How STL Compliance pricing is scoped by product mix, operational scale, and compliance complexity."
         path="/pricing"
       />
       <PageHero
         eyebrow="Pricing"
         title="Start with the products your operation needs"
-        subtitle="STL Compliance is scoped around your product mix, workforce size, sites, and compliance needs. The goal is a practical rollout, not a shopping-cart surprise."
+        subtitle="STL Compliance is scoped around your product mix, workforce size, sites, and compliance needs. The goal is practical packaging, not a shopping-cart surprise."
       >
         <Link
           to="/demo"
@@ -72,6 +73,14 @@ export function PricingPage() {
               key={item.productKey}
               className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm"
             >
+              {getMarketingProduct(item.productKey) ? (
+                <img
+                  src={getMarketingProduct(item.productKey)?.brandImageSrc}
+                  alt=""
+                  className="mb-3 h-9 w-9 rounded-md bg-white object-contain p-0.5"
+                  aria-hidden
+                />
+              ) : null}
               <Link
                 to={`/products/${item.productKey}`}
                 className="font-semibold text-teal-400 hover:text-teal-300"

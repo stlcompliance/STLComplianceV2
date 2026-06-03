@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const staffarrApiTarget = process.env.VITE_STAFFARR_PROXY_TARGET ?? 'http://localhost:5102'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     // shared-ui is aliased to source; dedupe prevents duplicate React / TanStack Query (blank UI / hook context crash).

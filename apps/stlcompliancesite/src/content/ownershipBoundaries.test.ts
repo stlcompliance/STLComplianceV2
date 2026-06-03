@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   COMPLIANCE_CORE_EDUCATION,
-  DOCS_11_ACCEPTANCE_NOTE,
   PRODUCT_OWNERSHIP,
 } from './ownershipBoundaries'
 import { MARKETING_PRODUCTS } from './products'
@@ -27,8 +26,4 @@ describe('ownershipBoundaries', () => {
     expect(COMPLIANCE_CORE_EDUCATION.bullets.join(' ')).toMatch(/evidence expectations/i)
   })
 
-  it('documents status labels without implying 100% complete', () => {
-    expect(DOCS_11_ACCEPTANCE_NOTE.toLowerCase()).toMatch(/usable workflows/)
-    expect(DOCS_11_ACCEPTANCE_NOTE.toLowerCase()).toMatch(/do not overpromise/)
-  })
 })
