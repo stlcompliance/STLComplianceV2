@@ -200,13 +200,13 @@ When unset, subscribe APIs return `503 companion.push.vapid_unavailable` and dis
 
 | Static site | Build variable | Public API |
 |-------------|----------------|------------|
-| `suite-frontend` | `VITE_NEXARR_API_URL` | `https://nexarr-api-3zlb.onrender.com` |
-| `staffarr-frontend` | `VITE_STAFFARR_API_BASE` | `https://staffarr-api-58w6.onrender.com` |
-| `trainarr-frontend` | `VITE_TRAINARR_API_BASE` | `https://trainarr-api-ieni.onrender.com` |
-| `maintainarr-frontend` | `VITE_MAINTAINARR_API_BASE` | `https://maintainarr-api-gx03.onrender.com` |
-| `routarr-frontend` | `VITE_ROUTARR_API_BASE` | `https://routarr-api-nmwr.onrender.com` |
-| `supplyarr-frontend` | `VITE_SUPPLYARR_API_BASE` | `https://supplyarr-api-gavo.onrender.com` |
-| `compliancecore-frontend` | `VITE_COMPLIANCECORE_API_BASE` | `https://compliancecore-api-h69n.onrender.com` |
+| `suite-frontend` | `VITE_NEXARR_API_URL` | `https://nexarr-api-w9pl.onrender.com` |
+| `staffarr-frontend` | `VITE_STAFFARR_API_BASE` | `https://staffarr-api-oyrj.onrender.com` |
+| `trainarr-frontend` | `VITE_TRAINARR_API_BASE` | `https://trainarr-api-nsiw.onrender.com` |
+| `maintainarr-frontend` | `VITE_MAINTAINARR_API_BASE` | `https://maintainarr-api-z39r.onrender.com` |
+| `routarr-frontend` | `VITE_ROUTARR_API_BASE` | `https://routarr-api-l9uj.onrender.com` |
+| `supplyarr-frontend` | `VITE_SUPPLYARR_API_BASE` | `https://supplyarr-api-dn8u.onrender.com` |
+| `compliancecore-frontend` | `VITE_COMPLIANCECORE_API_BASE` | `https://compliancecore-api-w7e5.onrender.com` |
 
 Static sites cannot use private network hostnames; always use public HTTPS URLs (or custom domains — update Blueprint values after DNS cutover).
 
@@ -217,10 +217,10 @@ Static sites cannot use private network hostnames; always use public HTTPS URLs 
 | `trainarr-api` | `EvidenceStorage__RootPath` | `/var/data/trainarr-evidence` — **10 GB persistent disk** attached in Blueprint |
 | `maintainarr-api` | `EvidenceStorage__RootPath` | `/var/data/maintainarr-evidence` — **10 GB persistent disk** attached in Blueprint |
 
-## Not in V1 Blueprint
+## Static site notes
 
-- **stlcompliancesite** (`apps/stlcompliancesite`, port 5173) — static marketing SPA; `VITE_SUITE_LOGIN_URL`, `VITE_CONTACT_EMAIL`, `VITE_SITE_BASE_URL` (canonical/OG URLs and build-time `sitemap.xml` / `robots.txt`); no product APIs.
-- **Companion app** — separate mobile slice (Worker 90+).
+- **stlcompliancesite** (`apps/stlcompliancesite`) — static marketing SPA; `VITE_SUITE_LOGIN_URL`, `VITE_CONTACT_EMAIL`, `VITE_SITE_BASE_URL` (canonical/OG URLs and build-time `sitemap.xml` / `robots.txt`).
+- **companion-frontend** (`apps/companion-frontend`) — field inbox SPA with NexArr API and product frontend base URLs configured at build time.
 
 ## Blueprint validation
 

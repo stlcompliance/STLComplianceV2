@@ -8,20 +8,20 @@ export function ProgramMilestoneTable() {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/50">
       <table className="min-w-full text-left text-sm" data-testid="program-milestone-table">
-        <caption className="sr-only">Program milestone posture for V1 implementation</caption>
+        <caption className="sr-only">Product rollout status</caption>
         <thead className="border-b border-slate-700 text-slate-300">
           <tr>
             <th scope="col" className="px-4 py-3 font-semibold">
-              Milestone
+              Area
             </th>
             <th scope="col" className="px-4 py-3 font-semibold">
-              Posture
+              Status
             </th>
             <th scope="col" className="px-4 py-3 font-semibold">
               Summary
             </th>
             <th scope="col" className="hidden px-4 py-3 font-semibold lg:table-cell">
-              Primary products
+              Products
             </th>
           </tr>
         </thead>

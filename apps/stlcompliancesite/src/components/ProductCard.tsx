@@ -30,7 +30,7 @@ export function ProductCard({ product, showMaturity = false }: ProductCardProps)
         </div>
       </div>
       <p className="mt-3 flex-1 text-sm text-slate-300">{product.tagline}</p>
-      <span className="mt-4 text-sm font-medium text-teal-400">Learn ownership →</span>
+      <span className="mt-4 text-sm font-medium text-teal-400">See what it does →</span>
     </Link>
   )
 }

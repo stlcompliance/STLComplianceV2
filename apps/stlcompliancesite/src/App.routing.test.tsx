@@ -9,18 +9,18 @@ describe('App routing', () => {
     cleanup()
   })
 
-  it('renders TrainArr product ownership page', async () => {
+  it('renders TrainArr product page', async () => {
     render(
       <MemoryRouter initialEntries={['/products/trainarr']}>
         <App />
       </MemoryRouter>,
     )
     expect(await screen.findByRole('heading', { name: 'TrainArr' })).toBeInTheDocument()
-    expect(screen.getByText(/Owns/i)).toBeInTheDocument()
-    expect(screen.getByTestId('ownership-source-doc')).toHaveTextContent(/docs\/02/)
+    expect(screen.getByText(/Best for/i)).toBeInTheDocument()
+    expect(screen.getByTestId('ownership-source-doc')).toHaveTextContent(/secure suite login/i)
   })
 
-  it('renders Compliance Core authority education block', async () => {
+  it('renders Compliance Core education block', async () => {
     render(
       <MemoryRouter initialEntries={['/products/compliancecore']}>
         <App />
@@ -29,25 +29,25 @@ describe('App routing', () => {
     expect(await screen.findByRole('heading', { name: 'Compliance Core' })).toBeInTheDocument()
     const education = screen.getByTestId('compliance-core-education')
     expect(education).toBeInTheDocument()
-    expect(education).toHaveTextContent(/Authority layer/i)
-    expect(education).toHaveTextContent(/entitled product APIs/i)
+    expect(education).toHaveTextContent(/Rules and proof/i)
+    expect(education).toHaveTextContent(/evidence expectations/i)
   })
 
-  it('renders maturity page with program snapshot', async () => {
+  it('renders product status page with rollout snapshot', async () => {
     render(
       <MemoryRouter initialEntries={['/maturity']}>
         <App />
       </MemoryRouter>,
     )
     expect(
-      await screen.findByRole('heading', { name: /V1 maturity by product and milestone/i }),
+      await screen.findByRole('heading', { name: /What is available now/i }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('maturity-disclaimer')).toBeInTheDocument()
     expect(screen.getByTestId('program-milestone-table')).toBeInTheDocument()
     expect(screen.getByTestId('maturity-product-companion')).toBeInTheDocument()
   })
 
-  it('renders compare page with honest disclaimer', async () => {
+  it('renders compare page with fit disclaimer', async () => {
     render(
       <MemoryRouter initialEntries={['/compare']}>
         <App />
@@ -55,7 +55,7 @@ describe('App routing', () => {
     )
     expect(
       await screen.findByRole('heading', {
-        name: /Spreadsheets, point tools, or a bounded product suite/i,
+        name: /disconnected tools/i,
       }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('compare-disclaimer')).toBeInTheDocument()
@@ -69,7 +69,7 @@ describe('App routing', () => {
       </MemoryRouter>,
     )
     expect(
-      await screen.findByRole('heading', { name: /Suite licensing through NexArr/i }),
+      await screen.findByRole('heading', { name: /Start with the products/i }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('pricing-disclaimer')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /checkout|buy now|add to cart/i })).toBeNull()
@@ -82,7 +82,7 @@ describe('App routing', () => {
       </MemoryRouter>,
     )
     expect(
-      await screen.findByRole('link', { name: /Products hub and ownership map/i }),
+      await screen.findByRole('link', { name: /Products hub/i }),
     ).toBeInTheDocument()
   })
 

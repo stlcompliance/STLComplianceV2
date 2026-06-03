@@ -1,8 +1,4 @@
-/**
- * Canonical product ownership copy — kept in sync with docs/02_PRODUCT_OWNERSHIP_BOUNDARIES.md.
- * Marketing pages import from here so public language matches the suite boundary matrix.
- */
-export const OWNERSHIP_SOURCE_DOC = 'docs/02_PRODUCT_OWNERSHIP_BOUNDARIES.md'
+/** Canonical product scope copy for public product pages. */
 
 export type ProductOwnershipCopy = {
   owns: string
@@ -12,62 +8,64 @@ export type ProductOwnershipCopy = {
 export const PRODUCT_OWNERSHIP: Record<string, ProductOwnershipCopy> = {
   nexarr: {
     owns:
-      'Platform identity, login, tenants, entitlements, licensing, service clients, service tokens, platform admin, and launch.',
+      'Secure login, company access, product availability, administrator setup, and the launch point for the suite.',
     doesNotOwn:
-      'Operations, people records, maintenance, training, routing, purchasing, or compliance rule content.',
+      'Daily work records such as training, maintenance, dispatch, purchasing, inventory, or inspections.',
   },
   staffarr: {
     owns:
-      'People, org, roles, permissions, certifications, readiness, incidents, and personnel history.',
+      'Employee records, sites, departments, roles, permissions, incidents, certifications, readiness, and personnel history.',
     doesNotOwn:
-      'Login, entitlement, training workflow evidence, maintenance, routing, procurement, or rule packs.',
+      'Detailed training courses, maintenance work, dispatch work, purchasing, inventory movement, or rule libraries.',
   },
   trainarr: {
     owns:
-      'Programs, versions, requirements, assignments, evidence, tests, evaluations, signoffs, completions, retraining, and training-derived qualifications.',
+      'Training programs, assignments, required steps, tests, evaluations, signoffs, certificates, retraining, and qualification proof.',
     doesNotOwn:
-      'People/org truth, platform login, maintenance, routing, procurement, or compliance rule packs.',
+      'Core employee records, maintenance work, dispatch work, purchasing, inventory, or company login.',
   },
   maintainarr: {
     owns:
-      'Assets, inspections, defects, work orders, PM, maintenance history, labor, part-consumption snapshots, and asset readiness.',
-    doesNotOwn: 'People, training, dispatch, full procurement, vendors, or rule packs.',
+      'Assets, inspections, defects, preventive maintenance, work orders, repairs, labor notes, part usage, and asset readiness.',
+    doesNotOwn:
+      'Employee records, training programs, route dispatch, vendor approval, or purchasing decisions.',
   },
   routarr: {
     owns:
-      'Route planning, trip execution, dispatch, driver assignment, vehicle references, DVIR, proof, exceptions, and route history.',
-    doesNotOwn: 'People, training, asset maintenance, procurement, or rule packs.',
+      'Route planning, dispatch, driver and vehicle assignment, trip progress, stop tracking, exceptions, inspections, and route history.',
+    doesNotOwn:
+      'Employee records, training programs, repair work, parts purchasing, or regulatory rule libraries.',
   },
   supplyarr: {
     owns:
-      'Vendors, suppliers, parts, catalogs, inventory, purchase requests, purchase orders, receiving, pricing, and lead times.',
+      'Vendors, customers, parts, purchase requests, approvals, receiving, pricing snapshots, lead times, and supply records.',
     doesNotOwn:
-      'Login, people, maintenance execution, training records, dispatch records, or rule packs.',
+      'Employee records, training records, repair execution, dispatch execution, or warehouse movement history.',
   },
   compliancecore: {
     owns:
-      'Controlled vocabulary, compliance keys, material keys, rule packs, regulatory mappings, SDS/HazCom references, source metadata, and evaluation patterns.',
+      'Regulatory requirements, evidence expectations, citations, approved wording, rule packs, and compliance checks.',
     doesNotOwn:
-      'Tenant operations, people, assets, work orders, routes, purchase orders, or training workflow records.',
+      'The daily work records created by employees, trainers, mechanics, dispatchers, buyers, or warehouse teams.',
   },
   companion: {
     owns:
-      'Aggregated field inbox presentation and mobile-oriented task navigation (links into entitled products).',
+      'A simple field inbox that brings tasks and messages together and sends workers to the right product when action is needed.',
     doesNotOwn:
-      'Business authority, tenant data, or product workflow state (each product API remains authoritative).',
+      'The original training, maintenance, dispatch, purchasing, inventory, or compliance records.',
   },
 }
 
 export const COMPLIANCE_CORE_EDUCATION = {
-  headline: 'Authority layer — not an operational workflow product',
+  headline: 'Rules and proof, connected to real work',
   lead:
-    'Compliance Core supplies rule context, controlled vocabulary, and evaluation patterns. Operational Arr products own facts, workflow actions, and permitted overrides with audit.',
+    'Compliance Core helps the suite understand which rules apply, what proof matters, and where evidence should come from. The work still happens in the product built for that job.',
   bullets: [
-    'Normal tenant users consume compliance results through entitled product APIs — not unrestricted rule authoring.',
-    'Products publish operational facts; Compliance Core maps keys, rule packs, and reason codes for evaluation.',
-    'SDS/HazCom references and regulatory mappings live here; work orders, routes, and training assignments do not.',
+    'A trainer, mechanic, dispatcher, or buyer keeps working in the tool made for their workflow.',
+    'Compliance Core helps connect that work to rules, citations, evidence expectations, and audit questions.',
+    'This keeps compliance proof tied to what actually happened instead of buried in side documents.',
   ],
 } as const
 
 export const DOCS_11_ACCEPTANCE_NOTE =
-  'V1 operational labels mean each product ships a real API, PostgreSQL database, worker, and authenticated UI in render.yaml. docs/11 acceptance still requires 100% FEATURESET implementation — per-product gap canvases track remaining doc-true items.'
+  'V1 labels mean the product has usable workflows available today. Full roadmap coverage continues to be tracked separately so public pages do not overpromise.'

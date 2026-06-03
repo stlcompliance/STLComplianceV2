@@ -10,27 +10,26 @@ export type EntitlementExample = {
   summary: string
 }
 
-/** Public licensing narrative — not a price list or checkout surface. */
 export const LICENSING_PILLARS: LicensingPillar[] = [
   {
     id: 'tenant',
-    title: 'Tenant-scoped suite access',
-    body: 'Every customer organization is a NexArr tenant. Identity, licensing metadata, and product entitlements are enforced on the control plane before any operational product API runs.',
+    title: 'One customer account',
+    body: 'Each customer gets a secure company space for its users, products, and access settings.',
   },
   {
     id: 'entitlements',
-    title: 'Per-product entitlements',
-    body: 'StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, Compliance Core, and Companion are licensed independently per tenant. Entitlements determine which product UIs and APIs a user may launch — not this marketing site.',
+    title: 'Choose the products you need',
+    body: 'Customers can start with the products that match their work, then add more as the operation grows.',
   },
   {
     id: 'nexarr',
-    title: 'NexArr is always in the path',
-    body: 'Login, session authority, service clients, service tokens, and launch handoffs are NexArr responsibilities. Operational products never grant access on their own.',
+    title: 'Secure sign-in is included',
+    body: 'NexArr gives users one secure entry point instead of separate logins for every part of the suite.',
   },
   {
     id: 'honesty',
-    title: 'No checkout on this site',
-    body: 'STLComplianceSite does not process payments, issue licenses, or change entitlements. Quotes, contracts, and provisioning are handled through your STL Compliance agreement and NexArr platform administration.',
+    title: 'No surprise checkout',
+    body: 'Pricing is scoped with your team based on products, rollout needs, and operational complexity.',
   },
 ]
 
@@ -38,39 +37,39 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
   {
     productKey: 'staffarr',
     displayName: 'StaffArr',
-    summary: 'Workforce directory, readiness, certifications, and incidents when entitled.',
+    summary: 'Workforce directory, readiness, certifications, and incidents.',
   },
   {
     productKey: 'trainarr',
     displayName: 'TrainArr',
-    summary: 'Training assignments, evidence, signoffs, and qualification proof when entitled.',
+    summary: 'Training assignments, evidence, signoffs, and qualification proof.',
   },
   {
     productKey: 'maintainarr',
     displayName: 'MaintainArr',
-    summary: 'Assets, inspections, work orders, and maintenance history when entitled.',
+    summary: 'Assets, inspections, work orders, and maintenance history.',
   },
   {
     productKey: 'routarr',
     displayName: 'RoutArr',
-    summary: 'Routes, dispatch, transportation execution, and DVIR surfaces when entitled.',
+    summary: 'Routes, dispatch, transportation execution, and inspections.',
   },
   {
     productKey: 'supplyarr',
     displayName: 'SupplyArr',
-    summary: 'Vendors, purchasing, receiving, and inventory when entitled.',
+    summary: 'Vendors, purchasing, approvals, receiving, and supply records.',
   },
   {
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
-    summary: 'Controlled vocabulary, rule packs, mappings, and evaluation context when entitled.',
+    summary: 'Rules, evidence mapping, citations, and compliance checks.',
   },
   {
     productKey: 'companion',
     displayName: 'Companion',
-    summary: 'Field inbox aggregation and deep links into entitled products when entitled.',
+    summary: 'Field inbox, task handoffs, and quick product navigation.',
   },
 ]
 
 export const PRICING_DISCLAIMER =
-  'Illustrative packaging only. Actual scope, limits, and commercial terms are defined in your agreement with STL Compliance. List prices are not published on this marketing site.'
+  'Actual scope, limits, and commercial terms are defined with your STL Compliance team. List prices are not published on this site.'

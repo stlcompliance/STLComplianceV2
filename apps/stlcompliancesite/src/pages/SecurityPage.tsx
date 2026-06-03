@@ -1,13 +1,13 @@
-import { SiteSeo } from '../components/SiteSeo'
 import { PageHero } from '../components/PageHero'
+import { SiteSeo } from '../components/SiteSeo'
 import { siteConfig } from '../lib/siteConfig'
 
 const principles = [
-  'Tenant context validated server-side on every product API.',
-  'NexArr identity and product entitlement checked before business operations.',
-  'Product-specific permissions enforced in the owning service — not in shared UI libraries.',
-  'Cross-product integration via APIs, events, and rebuildable mirrors — no cross-database foreign keys.',
-  'Customer-hosted or external data treated as untrusted until validated by the owning product.',
+  'Customers use a secure sign-in before reaching suite products.',
+  'Users only see the products and records they are allowed to use.',
+  'Important actions are checked by the product responsible for that work.',
+  'Connected products share the context needed for the job without turning records into a free-for-all.',
+  'Uploaded or outside information is checked before it becomes trusted evidence.',
 ] as const
 
 export function SecurityPage() {
@@ -15,13 +15,13 @@ export function SecurityPage() {
     <>
       <SiteSeo
         title={`Security — ${siteConfig.siteName}`}
-        description="Trust and security posture for the STL Compliance suite: server authority, tenant isolation, and integration boundaries."
+        description="Trust and security posture for STL Compliance customers."
         path="/security"
       />
       <PageHero
         eyebrow="Trust"
-        title="Security and platform posture"
-        subtitle="The suite is designed so business authority never lives in marketing pages, shared UI helpers, or the browser alone."
+        title="Security built around real work"
+        subtitle="STL Compliance is designed so access, approvals, and evidence are controlled by the products where the work actually happens."
       />
       <section className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
         <ul className="space-y-4">

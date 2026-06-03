@@ -22,7 +22,7 @@ export function ProductsComparisonTable() {
 
       <table className="min-w-full text-left text-sm">
 
-        <caption className="sr-only">Suite product comparison with public capability maturity labels</caption>
+        <caption className="sr-only">Suite product comparison</caption>
 
         <thead className="border-b border-slate-700 text-slate-300">
 
@@ -42,13 +42,13 @@ export function ProductsComparisonTable() {
 
             <th scope="col" className="px-4 py-3 font-semibold">
 
-              Maturity (public)
+              Status
 
             </th>
 
             <th scope="col" className="hidden px-4 py-3 font-semibold md:table-cell">
 
-              Primary ownership
+              Helps manage
 
             </th>
 

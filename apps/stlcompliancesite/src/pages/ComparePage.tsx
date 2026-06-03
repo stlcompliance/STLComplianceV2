@@ -15,12 +15,12 @@ export function ComparePage() {
     <>
       <SiteSeo
         title={`Compare approaches — ${siteConfig.siteName}`}
-        description="Honest comparison of spreadsheets, single-domain point tools, and the STL Compliance multi-product suite — architecture, ownership, and when each approach fits."
+        description="Compare spreadsheets, point tools, and STL Compliance for connected operations and compliance proof."
         path="/compare"
       />
       <PageHero
         eyebrow="Suite comparison"
-        title="Spreadsheets, point tools, or a bounded product suite"
+        title="When disconnected tools start costing too much attention"
         subtitle={COMPARE_LEAD}
       >
         <Link
@@ -48,15 +48,15 @@ export function ComparePage() {
           data-testid="compare-disclaimer"
           className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100"
         >
-          <strong className="font-semibold">Marketing only:</strong> {COMPARE_DISCLAIMER}
+          <strong className="font-semibold">Fit matters:</strong> {COMPARE_DISCLAIMER}
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
         <h2 className="text-xl font-bold text-white">When alternatives still make sense</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          We do not claim the suite replaces every spreadsheet or vendor overnight. Many customers
-          start with one entitled product and grow as operational scope expands.
+          The suite does not need to replace every spreadsheet or vendor overnight. Many customers
+          start with one product and grow as operational scope expands.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {ALTERNATIVE_SCENARIOS.map((scenario) => (
@@ -76,14 +76,13 @@ export function ComparePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Side-by-side dimensions</h2>
+        <h2 className="text-xl font-bold text-white">Side-by-side view</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Architecture and ownership differences — not a feature scorecard. For per-product scope,
-          see the{' '}
+          Practical differences, not a feature scorecard. For per-product scope, see the{' '}
           <Link to="/products" className="text-teal-400 hover:text-teal-300">
             products hub
           </Link>{' '}
-          and maturity labels.
+          and status labels.
         </p>
         <div className="mt-6">
           <AlternativeComparisonTable />
@@ -91,7 +90,7 @@ export function ComparePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Suite honesty</h2>
+        <h2 className="text-xl font-bold text-white">A straight answer</h2>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-300">
           {SUITE_HONESTY_NOTES.map((note) => (
             <li key={note}>{note}</li>
@@ -103,8 +102,8 @@ export function ComparePage() {
         <div className="rounded-2xl border border-slate-600 bg-slate-900/40 px-6 py-8 text-center">
           <h2 className="text-lg font-semibold text-white">Evaluate fit with your team</h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-400">
-            Walk through product boundaries, entitlements, and a realistic rollout path. Licensing
-            narrative lives on the pricing page — still no checkout on this site.
+            Walk through your current workflows, where proof gets lost, and which products make
+            sense first. Licensing depends on scope and product mix.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link

@@ -10,8 +10,8 @@ describe('HomePage', () => {
         <HomePage />
       </MemoryRouter>,
     )
-    expect(screen.getByRole('heading', { name: /Operational compliance/i })).toBeInTheDocument()
-    expect(screen.getByText(/Adaptive Risk Reduction/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Compliance should not live/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/Adaptive Risk Reduction/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: /StaffArr/i })).toBeInTheDocument()
   })
 })

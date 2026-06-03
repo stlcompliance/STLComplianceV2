@@ -26,9 +26,9 @@ describe('compare content', () => {
   })
 
   it('states marketing-only perspective and V1 honesty', () => {
-    expect(COMPARE_DISCLAIMER.toLowerCase()).toContain('marketing')
+    expect(COMPARE_DISCLAIMER.toLowerCase()).toContain('audit scramble')
     const honesty = SUITE_HONESTY_NOTES.join(' ')
-    expect(honesty).toMatch(/V1|real APIs/i)
+    expect(honesty).toMatch(/V1|workflows/i)
     expect(honesty).not.toMatch(/\$\d/)
   })
 })

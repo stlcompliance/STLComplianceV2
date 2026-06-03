@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ProgramMilestoneTable } from '../components/ProgramMilestoneTable'
 import { PageHero } from '../components/PageHero'
+import { ProgramMilestoneTable } from '../components/ProgramMilestoneTable'
 import { SiteSeo } from '../components/SiteSeo'
 import {
   MATURITY_DISCLAIMER,
@@ -20,15 +20,11 @@ export function MaturityPage() {
   return (
     <>
       <SiteSeo
-        title={`V1 implementation maturity — ${siteConfig.siteName}`}
-        description="Honest public snapshot of STL Compliance V1 progress by product and program milestone — marketing transparency aligned to implementation docs, not live tenant data."
+        title={`Product status — ${siteConfig.siteName}`}
+        description="Plain snapshot of STL Compliance product availability and rollout status."
         path="/maturity"
       />
-      <PageHero
-        eyebrow="Implementation transparency"
-        title="V1 maturity by product and milestone"
-        subtitle={MATURITY_LEAD}
-      >
+      <PageHero eyebrow="Product status" title="What is available now" subtitle={MATURITY_LEAD}>
         <Link
           to="/products"
           className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
@@ -54,18 +50,15 @@ export function MaturityPage() {
           data-testid="maturity-disclaimer"
           className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100"
         >
-          <strong className="font-semibold">Marketing only:</strong> {MATURITY_DISCLAIMER}
+          <strong className="font-semibold">Status note:</strong> {MATURITY_DISCLAIMER}
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Program snapshot</h2>
+        <h2 className="text-xl font-bold text-white">Suite snapshot</h2>
         <p className="mt-2 text-sm text-slate-400" data-testid="maturity-snapshot">
-          Through {PROGRAM_SNAPSHOT.lastUpdatedLabel}: {PROGRAM_SNAPSHOT.completedWorkersThrough}{' '}
-          documented worker slices complete. Latest slice: {PROGRAM_SNAPSHOT.latestSliceSummary} (
-          <code className="text-teal-300">{PROGRAM_SNAPSHOT.latestCommitShort}</code>). Source of
-          truth in-repo: <span className="text-slate-300">{PROGRAM_SNAPSHOT.sliceStateDoc}</span> and{' '}
-          <span className="text-slate-300">{PROGRAM_SNAPSHOT.statusDoc}</span>.
+          Updated {PROGRAM_SNAPSHOT.lastUpdatedLabel}: {PROGRAM_SNAPSHOT.latestSliceSummary}.
+          Current product status is summarized below for evaluation and rollout planning.
         </p>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {VERIFICATION_HIGHLIGHTS.map((item) => (
@@ -80,11 +73,11 @@ export function MaturityPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Product capability labels</h2>
+        <h2 className="text-xl font-bold text-white">Product status labels</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
           Public labels match the products hub comparison table.{' '}
           <span className="text-slate-200">
-            {operationalCount} V1 operational, {partialCount} V1 partial
+            {operationalCount} available in V1, {partialCount} early access
           </span>{' '}
           (of {MARKETING_PRODUCTS.length} marketed products).
         </p>
@@ -113,10 +106,9 @@ export function MaturityPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Milestone posture (M0–M13)</h2>
+        <h2 className="text-xl font-bold text-white">Rollout areas</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Summarized from the milestone masterplan and worker slice history — not a per-feature
-          matrix export.
+          A plain view of where the suite is strong today and where depth continues to expand.
         </p>
         <div className="mt-6">
           <ProgramMilestoneTable />
@@ -136,8 +128,7 @@ export function MaturityPage() {
         <div className="rounded-2xl border border-slate-600 bg-slate-900/40 px-6 py-8 text-center">
           <h2 className="text-lg font-semibold text-white">Need detail for your rollout?</h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-400">
-            Request a walkthrough focused on entitled products, integration boundaries, and realistic
-            V1 scope — not marketing labels alone.
+            Request a walkthrough focused on your products, teams, and first practical rollout.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link

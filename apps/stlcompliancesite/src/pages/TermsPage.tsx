@@ -13,17 +13,16 @@ export function TermsPage() {
       <PageHero
         eyebrow="Legal"
         title="Terms of use"
-        subtitle="Marketing content is provided for education and positioning. Entitled use of the suite is governed by your agreement with STL Compliance."
+        subtitle="This public site helps visitors understand STL Compliance. Customer use of the suite is governed by your agreement with STL Compliance."
       />
       <article className="mx-auto max-w-3xl space-y-4 px-4 pb-16 text-slate-300 sm:px-6">
         <p>
-          Capability descriptions on this site reflect product ownership boundaries and V1
-          implementation goals. Feature availability for your tenant depends on entitlements and
-          deployed product versions.
+          Product descriptions on this site are for evaluation and education. Feature availability
+          for your organization depends on your agreement and rollout scope.
         </p>
         <p>
           Do not rely on this site for operational decisions, compliance determinations, or emergency
-          response. Sign in through NexArr for authoritative product data.
+          response. Customers should use client sign-in for actual product records.
         </p>
         <p className="text-sm text-slate-500">© {new Date().getFullYear()} {siteConfig.companyLegalName}</p>
       </article>

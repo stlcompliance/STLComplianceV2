@@ -25,11 +25,11 @@ describe('implementationMaturity content', () => {
     }
   })
 
-  it('states marketing-only transparency and tracks worker snapshot', () => {
-    expect(MATURITY_DISCLAIMER.toLowerCase()).toMatch(/marketing|transparency/)
-    expect(MATURITY_DISCLAIMER).toMatch(/docs\/11|FEATURESET/i)
-    expect(PROGRAM_SNAPSHOT.lastUpdatedLabel).toMatch(/Worker 4/)
-    expect(VERIFICATION_HIGHLIGHTS.join(' ')).toMatch(/900\+/)
+  it('states plain status transparency and tracks rollout snapshot', () => {
+    expect(MATURITY_DISCLAIMER.toLowerCase()).toMatch(/status|snapshot/)
+    expect(MATURITY_DISCLAIMER.toLowerCase()).toMatch(/roadmap|contract/)
+    expect(PROGRAM_SNAPSHOT.lastUpdatedLabel).toMatch(/June 2026/)
+    expect(VERIFICATION_HIGHLIGHTS.join(' ')).toMatch(/Core product workflows/i)
     expect(VERIFICATION_HIGHLIGHTS.length).toBeGreaterThanOrEqual(3)
   })
 

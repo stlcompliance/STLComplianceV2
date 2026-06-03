@@ -1,4 +1,4 @@
-export type ResourceCategory = 'suite' | 'trust' | 'ownership' | 'contact'
+export type ResourceCategory = 'suite' | 'trust' | 'records' | 'contact'
 
 export type ResourceLink = {
   id: string
@@ -12,41 +12,38 @@ export type ResourceLink = {
 export const RESOURCE_LINKS: ResourceLink[] = [
   {
     id: 'products-hub',
-    title: 'Products hub and ownership map',
+    title: 'Products hub',
     summary:
-      'Compare NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, Compliance Core, and Companion with accurate owns / does-not-own language.',
+      'Compare NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, Compliance Core, and Companion in plain language.',
     href: '/products',
     category: 'suite',
   },
   {
     id: 'nexarr-sign-in',
     title: 'Client sign-in through NexArr',
-    summary:
-      'Operational access always flows through NexArr identity, tenant context, entitlements, and launch — never through this marketing site.',
+    summary: 'Customers use NexArr as the secure front door to the products their teams use.',
     href: '/products/nexarr',
     category: 'suite',
   },
   {
     id: 'security-trust',
     title: 'Security and platform trust',
-    summary:
-      'How the suite separates products, enforces server-side authorization, and treats customer-hosted data as untrusted until validated.',
+    summary: 'How STL Compliance approaches secure access, customer records, and trusted workflows.',
     href: '/security',
     category: 'trust',
   },
   {
     id: 'data-ownership',
-    title: 'Data ownership and mirrors',
+    title: 'Where records live',
     summary:
-      'Each product owns its PostgreSQL database; cross-product relationships use APIs, events, and rebuildable mirrors — not shared foreign keys.',
+      'How records stay with the product built for that work, while connected views keep teams aligned.',
     href: '/data-ownership',
-    category: 'ownership',
+    category: 'records',
   },
   {
     id: 'implementation-maturity',
-    title: 'V1 implementation maturity status',
-    summary:
-      'Public snapshot of program progress by product and milestone — aligned to implementation docs, not live tenant data.',
+    title: 'Product status',
+    summary: 'A plain snapshot of what is available now and what is still expanding.',
     href: '/maturity',
     category: 'suite',
   },
@@ -54,22 +51,21 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     id: 'compare-approaches',
     title: 'Compare spreadsheets, point tools, and the suite',
     summary:
-      'Honest architecture comparison — when spreadsheets or single-domain tools fit, and how bounded Arr products differ.',
+      'When spreadsheets or single-purpose tools still fit, and where connected operations help.',
     href: '/compare',
     category: 'suite',
   },
   {
     id: 'pricing-licensing',
-    title: 'Pricing and licensing narrative',
-    summary:
-      'How NexArr tenant entitlements package the suite — no checkout or list prices on this marketing site.',
+    title: 'Pricing and licensing',
+    summary: 'How product mix, rollout needs, and operational scope shape pricing.',
     href: '/pricing',
     category: 'contact',
   },
   {
     id: 'demo-contact',
     title: 'Demo and contact',
-    summary: 'Request a walkthrough or reach the team — client-side mailto only; no tenant data is collected on this site.',
+    summary: 'Request a walkthrough or reach the team.',
     href: '/demo',
     category: 'contact',
   },
@@ -85,7 +81,7 @@ export const RESOURCE_LINKS: ResourceLink[] = [
 export const RESOURCE_CATEGORY_LABELS: Record<ResourceCategory, string> = {
   suite: 'Suite education',
   trust: 'Trust and legal',
-  ownership: 'Ownership model',
+  records: 'Records',
   contact: 'Get started',
 }
 

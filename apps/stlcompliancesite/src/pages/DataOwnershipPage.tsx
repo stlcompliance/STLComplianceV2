@@ -1,32 +1,32 @@
-import { SiteSeo } from '../components/SiteSeo'
 import { PageHero } from '../components/PageHero'
+import { SiteSeo } from '../components/SiteSeo'
 import { siteConfig } from '../lib/siteConfig'
 
 export function DataOwnershipPage() {
   return (
     <>
       <SiteSeo
-        title={`Data ownership — ${siteConfig.siteName}`}
-        description="How STL Compliance products own operational data, mirrors, and compliance authority boundaries."
+        title={`Records — ${siteConfig.siteName}`}
+        description="How STL Compliance keeps records with the product built for that work while connecting the suite around them."
         path="/data-ownership"
       />
       <PageHero
-        eyebrow="Data ownership"
-        title="Each product owns its truth"
-        subtitle="Operational facts and workflow actions stay in the product that owns the domain. Compliance Core supplies rule context and results; products supply facts and permitted overrides with audit."
+        eyebrow="Records"
+        title="Each product keeps the truth for its work"
+        subtitle="Training proof belongs with training. Maintenance proof belongs with maintenance. Dispatch proof belongs with dispatch. The suite connects those records so teams can see the full story."
       />
       <section className="mx-auto max-w-3xl space-y-6 px-4 pb-16 text-slate-200 sm:px-6">
         <p>
-          A displayed record from another product is never local truth. Local mirrors are rebuildable
-          and labeled with source product, source ID, source event, and source timestamp.
+          A connected view can show information from another product, but the original record stays
+          with the product built to manage that work.
         </p>
         <p>
-          Durable tenant data belongs in PostgreSQL or object storage managed by the owning service —
-          not on ephemeral instance filesystems. Redis-compatible Key Value is used for cache and
-          coordination only.
+          That helps supervisors and compliance teams see the important relationships without
+          forcing every department to maintain duplicate versions of the same truth.
         </p>
-        <p className="text-sm text-slate-400">
-          {siteConfig.siteName} marketing pages do not store or process tenant operational data.
+        <p>
+          The public website only explains the platform. Customer records and daily work happen
+          after secure sign-in.
         </p>
       </section>
     </>

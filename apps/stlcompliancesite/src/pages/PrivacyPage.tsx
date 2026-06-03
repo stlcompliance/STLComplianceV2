@@ -13,13 +13,13 @@ export function PrivacyPage() {
       <PageHero
         eyebrow="Legal"
         title="Privacy notice"
-        subtitle="This public marketing site does not authenticate users or store tenant operational records."
+        subtitle="This public site is for learning about STL Compliance. Customer records live inside the secure suite."
       />
       <article className="prose prose-invert mx-auto max-w-3xl px-4 pb-16 text-slate-300 sm:px-6">
         <p>
           Information you submit through the demo/contact form is handled in your browser until you
-          choose to email {siteConfig.contactEmail}. Product tenants sign in through NexArr and
-          governed product APIs with their own privacy and retention policies.
+          choose to email {siteConfig.contactEmail}. Customers use secure client sign-in for real
+          product records, with privacy and retention handled under their STL Compliance agreement.
         </p>
         <p>
           We may collect standard web analytics on this static site as configured by our hosting

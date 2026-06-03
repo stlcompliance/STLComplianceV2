@@ -5,6 +5,13 @@ import { SiteSeo } from '../components/SiteSeo'
 import { MARKETING_PRODUCTS } from '../content/products'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
+const proofPoints = [
+  'Know who can work.',
+  'Know what is ready.',
+  'Know what is missing.',
+  'Know what you can prove.',
+] as const
+
 export function HomePage() {
   const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'companion').slice(0, 6)
 
@@ -18,8 +25,8 @@ export function HomePage() {
       />
       <PageHero
         eyebrow={siteConfig.arrTagline}
-        title="Operational compliance with clear product boundaries"
-        subtitle="STL Compliance is a multi-product suite for workforce readiness, training proof, asset maintenance, transportation execution, supply chain, and compliance authority — each product owns its data and APIs."
+        title="Compliance should not live in binders, spreadsheets, and disconnected apps."
+        subtitle="STL Compliance connects your people, training, assets, maintenance, dispatch, inventory, vendors, and evidence into one Adaptive Risk Reduction platform."
       >
         <Link
           to="/demo"
@@ -28,35 +35,45 @@ export function HomePage() {
           Request a demo
         </Link>
         <Link
-          to="/compare"
+          to="/products"
           className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
         >
-          Compare approaches
-        </Link>
-        <Link
-          to="/pricing"
-          className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
-        >
-          Pricing & licensing
+          Explore products
         </Link>
         <a
           href={suiteLoginUrl()}
           className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
         >
-          Client sign in (NexArr)
+          Client sign in
         </a>
       </PageHero>
 
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100">
-          <strong className="font-semibold">V1 implementation maturity:</strong> each Arr product
-          ships a real API, database, worker, and UI — docs/11 FEATURESET completion is tracked
-          in-repo, not implied here.{' '}
-          <Link to="/maturity" className="font-semibold text-teal-300 underline hover:text-teal-200">
-            View public maturity snapshot →
-          </Link>{' '}
-          This site is marketing and education only — it does not grant access, store tenant data, or
-          execute product workflows.
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {proofPoints.map((point) => (
+            <div
+              key={point}
+              className="rounded-2xl border border-teal-500/25 bg-teal-950/20 px-5 py-4 text-sm font-semibold text-teal-100"
+            >
+              {point}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-700 bg-slate-900/50 px-6 py-7">
+          <h2 className="text-2xl font-bold text-white">The problem is scattered information</h2>
+          <p className="mt-3 max-w-3xl text-slate-300">
+            A driver file in one folder. A training certificate buried in email. A defect found
+            during inspection but never turned into a repair. A vendor document that expires before
+            anyone notices. Most compliance failures start as everyday handoffs that slipped through
+            the cracks.
+          </p>
+          <p className="mt-3 max-w-3xl text-slate-300">
+            STL Compliance helps fix the system around the work, so the right person knows what to
+            do, has the authority to do it, and leaves proof behind as the job gets done.
+          </p>
         </div>
       </section>
 
@@ -65,17 +82,17 @@ export function HomePage() {
           <div>
             <h2 className="text-2xl font-bold text-white">Suite products</h2>
             <p className="mt-2 max-w-2xl text-slate-300">
-              Each Arr product has a dedicated PostgreSQL database and server-enforced permissions.
-              Cross-product relationships use APIs, events, and rebuildable mirrors — never shared
-              database foreign keys.
+              Each product gives a team the depth it needs, while the suite keeps the important
+              connections visible: who can work, what is ready, what is missing, and what can be
+              proven.
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-medium">
             <Link to="/products" className="text-teal-400 hover:text-teal-300">
               View all products →
             </Link>
-            <Link to="/resources" className="text-teal-400 hover:text-teal-300">
-              Resources →
+            <Link to="/compare" className="text-teal-400 hover:text-teal-300">
+              Compare approaches →
             </Link>
           </div>
         </div>

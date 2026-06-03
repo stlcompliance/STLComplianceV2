@@ -55,6 +55,7 @@ public static class PlatformSeeder
         var now = DateTimeOffset.UtcNow;
         await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
         await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
+        await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
 
         if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
         {
@@ -181,7 +182,6 @@ public static class PlatformSeeder
             });
         }
 
-        await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
         SeedCallbackAllowlist(db, now);
 
         await db.SaveChangesAsync(cancellationToken);
@@ -439,17 +439,32 @@ public static class PlatformSeeder
     {
         foreach (var profile in DefaultLaunchProfiles)
         {
-            if (await db.LaunchProfiles.AnyAsync(p => p.ProductKey == profile.ProductKey, cancellationToken))
+            var configured = launchOptions?.Products.GetValueOrDefault(profile.ProductKey);
+            var baseUrl = configured?.BaseUrl ?? profile.BaseUrl;
+            var launchPath = configured?.LaunchPath ?? profile.LaunchPath;
+            var existing = await db.LaunchProfiles
+                .FirstOrDefaultAsync(p => p.ProductKey == profile.ProductKey, cancellationToken);
+
+            if (existing is not null)
             {
+                if (configured is not null
+                    && (!string.Equals(existing.BaseUrl, baseUrl, StringComparison.OrdinalIgnoreCase)
+                        || !string.Equals(existing.LaunchPath, launchPath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    existing.BaseUrl = baseUrl;
+                    existing.LaunchPath = launchPath;
+                    existing.IsActive = true;
+                    existing.ModifiedAt = now;
+                }
+
                 continue;
             }
 
-            var configured = launchOptions?.Products.GetValueOrDefault(profile.ProductKey);
             db.LaunchProfiles.Add(new ProductLaunchProfile
             {
                 ProductKey = profile.ProductKey,
-                BaseUrl = configured?.BaseUrl ?? profile.BaseUrl,
-                LaunchPath = configured?.LaunchPath ?? profile.LaunchPath,
+                BaseUrl = baseUrl,
+                LaunchPath = launchPath,
                 IsActive = true,
                 ModifiedAt = now
             });

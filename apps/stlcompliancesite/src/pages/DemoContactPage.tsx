@@ -36,7 +36,7 @@ export function DemoContactPage() {
       <PageHero
         eyebrow="Get started"
         title="Demo and contact"
-        subtitle="This form does not call product APIs. Submitting prepares a message you can send to our team, or use client sign-in for entitled tenants."
+        subtitle="Tell us what you want to see, or use client sign-in if you are already a customer."
       >
         <a
           href={suiteLoginUrl()}
@@ -119,7 +119,7 @@ export function DemoContactPage() {
               Submit request
             </button>
             <p className="text-xs text-slate-500">
-              No data is sent to NexArr or product APIs from this page.
+              This public form only prepares your request on this device.
             </p>
           </form>
         )}

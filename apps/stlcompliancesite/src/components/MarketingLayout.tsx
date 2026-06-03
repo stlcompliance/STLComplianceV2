@@ -4,11 +4,11 @@ import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 const navLinks = [
   { to: '/products', label: 'Products' },
   { to: '/compare', label: 'Compare' },
-  { to: '/maturity', label: 'V1 maturity' },
+  { to: '/maturity', label: 'Product status' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/resources', label: 'Resources' },
   { to: '/security', label: 'Security' },
-  { to: '/data-ownership', label: 'Data ownership' },
+  { to: '/data-ownership', label: 'Records' },
   { to: '/demo', label: 'Demo & contact' },
 ] as const
 
@@ -61,7 +61,7 @@ export function MarketingLayout() {
               Compare
             </Link>
             <Link to="/maturity" className="hover:text-teal-300">
-              V1 maturity
+              Product status
             </Link>
             <Link to="/pricing" className="hover:text-teal-300">
               Pricing

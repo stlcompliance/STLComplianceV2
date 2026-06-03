@@ -13,13 +13,13 @@ export function PricingPage() {
     <>
       <SiteSeo
         title={`Pricing & licensing — ${siteConfig.siteName}`}
-        description="How STL Compliance suite licensing works: NexArr tenant entitlements per product, no checkout on this marketing site. Request a walkthrough for commercial terms."
+        description="How STL Compliance pricing is scoped by product mix, rollout needs, and operational complexity."
         path="/pricing"
       />
       <PageHero
-        eyebrow="Pricing narrative"
-        title="Suite licensing through NexArr entitlements"
-        subtitle="STL Compliance is sold as a multi-product platform. Access is granted per tenant and per product — enforced server-side, not through this public website."
+        eyebrow="Pricing"
+        title="Start with the products your operation needs"
+        subtitle="STL Compliance is scoped around your product mix, workforce size, sites, and compliance needs. The goal is a practical rollout, not a shopping-cart surprise."
       >
         <Link
           to="/demo"
@@ -40,12 +40,12 @@ export function PricingPage() {
           data-testid="pricing-disclaimer"
           className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100"
         >
-          <strong className="font-semibold">Marketing only:</strong> {PRICING_DISCLAIMER}
+          <strong className="font-semibold">Pricing note:</strong> {PRICING_DISCLAIMER}
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">How licensing works</h2>
+        <h2 className="text-xl font-bold text-white">How packaging works</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {LICENSING_PILLARS.map((pillar) => (
             <article
@@ -61,10 +61,10 @@ export function PricingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Typical entitlement packaging</h2>
+        <h2 className="text-xl font-bold text-white">Common product mix</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Customers mix products to match operational scope. NexArr records which products are active
-          for each tenant; platform administrators manage entitlements — not end users on this site.
+          Customers mix products to match the work they need to control first, then expand as more
+          teams and workflows come online.
         </p>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ENTITLEMENT_EXAMPLES.map((item) => (
@@ -88,8 +88,8 @@ export function PricingPage() {
         <div className="rounded-2xl border border-slate-600 bg-slate-900/40 px-6 py-8 text-center">
           <h2 className="text-lg font-semibold text-white">Ready for commercial terms?</h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-400">
-            Contact the team for packaging aligned to your fleet size, product mix, and compliance
-            scope. Existing entitled users should sign in through NexArr.
+            Contact the team for packaging aligned to your fleet size, workforce, sites, product
+            mix, and compliance scope. Existing customers can use client sign-in.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
@@ -106,7 +106,7 @@ export function PricingPage() {
             </Link>
           </div>
           <p className="mt-6 text-xs text-slate-500">
-            No shopping cart, payment form, or license activation exists on STLComplianceSite.
+            No shopping cart, payment form, or license activation exists on this public site.
           </p>
         </div>
       </section>
