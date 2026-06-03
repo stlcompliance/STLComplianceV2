@@ -66,7 +66,7 @@ function WorkspaceTopBar({
   const ProductIcon = getSuiteProductIcon(productKey)
 
   return (
-    <header className="flex shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-6 py-4">
+    <header className="flex shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-4 py-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <ProductIcon className="h-5 w-5 shrink-0 text-teal-400" aria-hidden />
         <div className="min-w-0">

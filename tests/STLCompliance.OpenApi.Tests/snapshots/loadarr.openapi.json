@@ -443,6 +443,157 @@
         }
       }
     },
+    "/api/v1/kits": {
+      "get": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ListLoadArrKits",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}": {
+      "get": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "GetLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/break": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "BreakLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/build": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "BuildLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/replenish": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ReplenishLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/launch/catalog": {
       "get": {
         "tags": [
@@ -2314,6 +2465,37 @@
           }
         }
       },
+      "KitMutationRequest": {
+        "required": [
+          "personId",
+          "quantity",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "QuarantineLoadArrUnexplainedInventoryRequest": {
         "required": [
           "quarantineLocationId",
@@ -2544,6 +2726,9 @@
     },
     {
       "name": "TruckStock"
+    },
+    {
+      "name": "Kits"
     }
   ]
 }

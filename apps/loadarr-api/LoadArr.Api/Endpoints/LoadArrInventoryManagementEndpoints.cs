@@ -676,6 +676,221 @@ public static partial class LoadArrWorkspaceEndpoints
             return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, restockTask));
         })
         .WithName("CountLoadArrTruckStock");
+
+        var kits = app.MapGroup("/api/v1/kits")
+            .WithTags("Kits")
+            .RequireAuthorization();
+
+        kits.MapGet("/", (string? status, string? locationId) =>
+        {
+            var records = CreateKitRecords()
+                .Where(record => status is null
+                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
+                .Where(record => locationId is null
+                    || string.Equals(record.LocationId, locationId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(record => record.LocationNameSnapshot, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(record => record.KitNumber, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            return Results.Ok(new LoadArrListResponse<LoadArrKitResponse>(records, records.Length));
+        })
+        .WithName("ListLoadArrKits");
+
+        kits.MapGet("/{id}", (string id) =>
+        {
+            var record = ResolveKitRecord(id);
+            return record is null ? Results.NotFound() : Results.Ok(record);
+        })
+        .WithName("GetLoadArrKit");
+
+        kits.MapPost("/{id}/build", (string id, KitMutationRequest request) =>
+        {
+            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var builtQuantity = record.QuantityOnHand + request.Quantity;
+            var status = builtQuantity <= 0m ? "broken" : builtQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
+            var updated = record with
+            {
+                QuantityOnHand = builtQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                Notes = $"Built {request.Quantity} kit(s) from LoadArr components.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:build:{changedAtUtc}" }).ToArray()
+            };
+            var followUpTask = status == "needs_replenishment"
+                ? new LoadArrWarehouseTaskResponse(
+                    $"task-{Guid.NewGuid():N}"[..13],
+                    "replenish",
+                    $"Replenish {record.KitNameSnapshot}",
+                    "normal",
+                    "ready",
+                    record.LocationNameSnapshot,
+                    "Kit Coordinator",
+                    record.PrimaryItemId,
+                    Math.Max(0m, record.MinimumQuantity - builtQuantity),
+                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                    new[] { "kit_low", "replenish_requested" })
+                : null;
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "kit_build",
+                record.StaffarrSiteOrgUnitId,
+                record.LocationId,
+                record.LocationId,
+                record.PrimaryItemId,
+                record.KitNameSnapshot,
+                request.Quantity,
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "kit",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                changedAtUtc);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("BuildLoadArrKit");
+
+        kits.MapPost("/{id}/break", (string id, KitMutationRequest request) =>
+        {
+            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var brokenQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
+            var status = brokenQuantity == 0m ? "broken" : brokenQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
+            var updated = record with
+            {
+                QuantityOnHand = brokenQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                Notes = $"Broke down {request.Quantity} kit(s) for component recovery.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:break:{changedAtUtc}" }).ToArray()
+            };
+            var followUpTask = status == "needs_replenishment"
+                ? new LoadArrWarehouseTaskResponse(
+                    $"task-{Guid.NewGuid():N}"[..13],
+                    "replenish",
+                    $"Replenish {record.KitNameSnapshot}",
+                    "normal",
+                    "ready",
+                    record.LocationNameSnapshot,
+                    "Kit Coordinator",
+                    record.PrimaryItemId,
+                    Math.Max(0m, record.MinimumQuantity - brokenQuantity),
+                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                    new[] { "kit_low", "replenish_requested" })
+                : null;
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "kit_break",
+                record.StaffarrSiteOrgUnitId,
+                record.LocationId,
+                record.LocationId,
+                record.PrimaryItemId,
+                record.KitNameSnapshot,
+                request.Quantity,
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "kit",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                changedAtUtc);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("BreakLoadArrKit");
+
+        kits.MapPost("/{id}/replenish", (string id, KitMutationRequest request) =>
+        {
+            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var replenishedQuantity = record.QuantityOnHand + request.Quantity;
+            var status = replenishedQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
+            var updated = record with
+            {
+                QuantityOnHand = replenishedQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                Notes = $"Replenished {request.Quantity} kit(s) at the warehouse.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:replenish:{changedAtUtc}" }).ToArray()
+            };
+            var followUpTask = status == "needs_replenishment"
+                ? new LoadArrWarehouseTaskResponse(
+                    $"task-{Guid.NewGuid():N}"[..13],
+                    "replenish",
+                    $"Replenish {record.KitNameSnapshot}",
+                    "normal",
+                    "ready",
+                    record.LocationNameSnapshot,
+                    "Kit Coordinator",
+                    record.PrimaryItemId,
+                    Math.Max(0m, record.MinimumQuantity - replenishedQuantity),
+                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                    new[] { "kit_low", "replenish_requested" })
+                : null;
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "kit_replenish",
+                record.StaffarrSiteOrgUnitId,
+                record.LocationId,
+                record.LocationId,
+                record.PrimaryItemId,
+                record.KitNameSnapshot,
+                request.Quantity,
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "kit",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                changedAtUtc);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("ReplenishLoadArrKit");
     }
 
     private static LoadArrLocationUtilizationResponse? CreateLocationUtilization(string locationId)
@@ -870,6 +1085,50 @@ public static partial class LoadArrWorkspaceEndpoints
                 new[] { "truck_stock", "restock_required", "route_replenishment" })
         ];
 
+    private static IReadOnlyCollection<LoadArrKitResponse> CreateKitRecords() =>
+        [
+            new LoadArrKitResponse(
+                "kit-pm-emergency-17",
+                "KIT-PM-17",
+                "staff-site-south-depot",
+                "South Service Depot",
+                "loc-truck-17",
+                "Truck Stock 17",
+                "SUP-VALVE-KIT-A",
+                "Valve repair kit A",
+                "each",
+                "person-route-stock-lead",
+                "Jordan Reed",
+                4m,
+                3m,
+                10m,
+                "built",
+                "2026-06-02T18:15:00Z",
+                "2026-06-02T18:50:00Z",
+                "Maintenance and route response kit assigned to mobile stock.",
+                new[] { "kit", "mobile_stock", "pm_ready" }),
+            new LoadArrKitResponse(
+                "kit-ppe-hazmat-04",
+                "KIT-PPE-04",
+                "staff-site-stl-north",
+                "STL North Yard",
+                "loc-dock-01",
+                "Receiving Dock 1",
+                "SUP-ADH-49",
+                "Regulated adhesive cartridge kit",
+                "case",
+                "person-hazmat-reviewer",
+                "Taylor Brooks",
+                1m,
+                1m,
+                4m,
+                "needs_replenishment",
+                "2026-06-02T20:00:00Z",
+                "2026-06-02T20:30:00Z",
+                "Hazmat response kit pending replenishment after inspection.",
+                new[] { "kit", "hazmat", "inspection" })
+        ];
+
     private static LoadArrCountResponse? ResolveCount(string id) =>
         CreateCounts()
             .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
@@ -880,6 +1139,10 @@ public static partial class LoadArrWorkspaceEndpoints
 
     private static LoadArrTruckStockResponse? ResolveTruckStockRecord(string id) =>
         CreateTruckStockRecords()
+            .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
+
+    private static LoadArrKitResponse? ResolveKitRecord(string id) =>
+        CreateKitRecords()
             .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrAdjustmentResponse CreateAdjustmentFromVariance(
@@ -961,6 +1224,32 @@ public static partial class LoadArrWorkspaceEndpoints
             return Results.BadRequest(new LoadArrProblemResponse(
                 "invalid_counted_quantity",
                 "Truck stock counted quantity cannot be negative."));
+        }
+
+        return null;
+    }
+
+    private static IResult? ValidateKitMutationRequest(string personId, string reasonCode, decimal quantity)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Kit operations require the acting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Kit operations require a controlled reason code."));
+        }
+
+        if (quantity <= 0m)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_quantity",
+                "Kit quantity must be greater than zero."));
         }
 
         return null;
@@ -1256,3 +1545,35 @@ public sealed record LoadArrTruckStockMutationResponse(
     LoadArrTruckStockResponse TruckStock,
     LoadArrInventoryMovementResponse? Movement,
     LoadArrWarehouseTaskResponse? RestockTask);
+
+public sealed record LoadArrKitResponse(
+    string Id,
+    string KitNumber,
+    string StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
+    string LocationId,
+    string LocationNameSnapshot,
+    string PrimaryItemId,
+    string KitNameSnapshot,
+    string UnitOfMeasure,
+    string AssignedPersonId,
+    string AssignedPersonNameSnapshot,
+    decimal QuantityOnHand,
+    decimal MinimumQuantity,
+    decimal MaximumQuantity,
+    string Status,
+    string LastActionAtUtc,
+    string LastMovementAtUtc,
+    string Notes,
+    IReadOnlyCollection<string> TraceTags);
+
+public sealed record KitMutationRequest(
+    string PersonId,
+    decimal Quantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record LoadArrKitMutationResponse(
+    LoadArrKitResponse Kit,
+    LoadArrInventoryMovementResponse? Movement,
+    LoadArrWarehouseTaskResponse? FollowUpTask);
