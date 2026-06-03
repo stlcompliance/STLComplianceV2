@@ -5,7 +5,6 @@ import {
   Inbox,
   PackageSearch,
   Route,
-  ShieldCheck,
   Users,
   Wrench,
 } from 'lucide-react'
@@ -14,7 +13,6 @@ import { productPath } from '../lib/publicRoutes'
 import { PRODUCT_OWNERSHIP } from './ownershipBoundaries'
 
 export type ProductCategoryKey =
-  | 'control-plane'
   | 'workforce'
   | 'operations'
   | 'compliance'
@@ -56,7 +54,6 @@ export type MarketingProduct = {
 }
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
-  'control-plane': 'Secure access',
   workforce: 'Workforce and readiness',
   operations: 'Daily operations',
   compliance: 'Compliance proof',
@@ -119,42 +116,6 @@ function reasons(entries: Partial<Record<CapabilityKey, string>>): Partial<Recor
 
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
-    productKey: 'nexarr',
-    displayName: 'NexArr',
-    tagline: 'One secure front door for users, companies, products, and access.',
-    overview:
-      'NexArr is the suite control plane. It handles company-level access, user sign-in, product launch, administrator setup, and product entitlement so teams do not manage separate entry points for each operational tool.',
-    owns: PRODUCT_OWNERSHIP.nexarr.owns,
-    doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
-    primaryWorkflows: [
-      'Authenticate users and route them to the products their organization has licensed.',
-      'Manage customer companies, administrators, product access, and suite-level launch settings.',
-      'Keep user entry, product switching, and account-level configuration in one secure front door.',
-    ],
-    recordsManaged: ['Customer companies', 'Users', 'Product entitlements', 'Access roles', 'Suite launch profiles'],
-    readinessChecks: [
-      'Confirms whether a user belongs to the right company before product launch.',
-      'Checks whether a user has access to the requested product.',
-      'Keeps administration separate from daily work records owned by product apps.',
-    ],
-    evidenceOutputs: [
-      'Access and administration context',
-      'Product entitlement history',
-      'User and company setup records',
-    ],
-    handoffs: [
-      'Launches StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Companion.',
-      'Provides the suite-level identity context used by product workspaces.',
-    ],
-    checklist: checklist(['secureAccess']),
-    connectedReasons: reasons({}),
-    icon: ShieldCheck,
-    sortOrder: 0,
-    category: 'control-plane',
-    brandImageSrc: '/brand/nexarr-icon.png',
-    brandAccentClass: 'from-blue-500/20 to-sky-400/10',
-  },
-  {
     productKey: 'staffarr',
     displayName: 'StaffArr',
     tagline: 'People, sites, roles, permissions, incidents, and readiness in one place.',
@@ -202,7 +163,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Users,
     sortOrder: 10,
     category: 'workforce',
-    brandImageSrc: '/brand/staffarr-icon.png',
+    brandImageSrc: '/brand/staffarr-fullcolor.png',
     brandAccentClass: 'from-purple-500/20 to-violet-400/10',
   },
   {
@@ -258,7 +219,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: GraduationCap,
     sortOrder: 20,
     category: 'workforce',
-    brandImageSrc: '/brand/trainarr-icon.png',
+    brandImageSrc: '/brand/trainarr-fullcolor.png',
     brandAccentClass: 'from-orange-500/20 to-amber-400/10',
   },
   {
@@ -321,7 +282,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Wrench,
     sortOrder: 30,
     category: 'operations',
-    brandImageSrc: '/brand/maintainarr-icon.png',
+    brandImageSrc: '/brand/maintainarr-fullcolor.png',
     brandAccentClass: 'from-emerald-500/20 to-teal-400/10',
   },
   {
@@ -384,7 +345,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: Route,
     sortOrder: 40,
     category: 'operations',
-    brandImageSrc: '/brand/routarr-icon.png',
+    brandImageSrc: '/brand/routarr-fullcolor.png',
     brandAccentClass: 'from-blue-500/20 to-cyan-400/10',
   },
   {
@@ -446,7 +407,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: PackageSearch,
     sortOrder: 50,
     category: 'operations',
-    brandImageSrc: '/brand/supplyarr-icon.png',
+    brandImageSrc: '/brand/supplyarr-fullcolor.png',
     brandAccentClass: 'from-green-500/20 to-lime-400/10',
   },
   {
@@ -505,7 +466,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: PackageSearch,
     sortOrder: 60,
     category: 'operations',
-    brandImageSrc: '/brand/loadarr-icon.svg',
+    brandImageSrc: '/brand/loadarr-fullcolor.png',
     brandAccentClass: 'from-cyan-500/20 to-blue-400/10',
   },
   {
@@ -564,7 +525,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     icon: ClipboardCheck,
     sortOrder: 70,
     category: 'compliance',
-    brandImageSrc: '/brand/compliancecore-icon.png',
+    brandImageSrc: '/brand/compliancecore-fullcolor.png',
     brandAccentClass: 'from-indigo-500/20 to-sky-400/10',
   },
   {
@@ -632,7 +593,6 @@ export function productsByCategory(category: ProductCategoryKey): MarketingProdu
 }
 
 export const PRODUCT_CATEGORY_ORDER: ProductCategoryKey[] = [
-  'control-plane',
   'workforce',
   'operations',
   'compliance',

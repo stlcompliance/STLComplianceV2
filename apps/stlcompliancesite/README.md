@@ -8,7 +8,7 @@ Public static marketing site for the STL Compliance / Arr suite (port **5173**).
 - Client sign-in links to the suite (`VITE_SUITE_LOGIN_URL`)
 - Demo/contact is client-side (mailto), not a backend form post
 - `/compare` explains when spreadsheets or point tools fit vs. the bounded multi-product suite
-- `/pricing` explains NexArr tenant entitlements — no checkout or list prices
+- `/pricing` explains product licensing and secure suite access — no checkout or list prices
 
 ## Local dev
 
@@ -36,7 +36,7 @@ Per-route metadata via `SiteSeo` (title, description, canonical, Open Graph, Twi
 
 ## Branding
 
-`public/stl-logo.png` is copied from `branding/STLCompliance/STL Compliance-Full-monchrome.png`. Re-copy after logo updates.
+Updated full-color PNGs are copied from the root `branding/` folder into `public/brand/`. Re-copy after logo updates.
 
 ## Deploy
 

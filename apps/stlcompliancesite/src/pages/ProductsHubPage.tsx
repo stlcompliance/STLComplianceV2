@@ -70,7 +70,7 @@ export function ProductsHubPage() {
 
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         <p className="text-center text-sm text-slate-500">
-          {MARKETING_PRODUCTS.length} products · secure customer sign-in through NexArr
+          {MARKETING_PRODUCTS.length} products · secure customer sign-in
         </p>
       </section>
     </>

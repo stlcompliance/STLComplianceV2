@@ -27,7 +27,7 @@ export function HomePage() {
         eyebrow={siteConfig.arrTagline}
         title="Compliance should not live in binders, spreadsheets, and disconnected apps."
         subtitle="STL Compliance connects your people, training, assets, maintenance, dispatch, inventory, vendors, and evidence into one Adaptive Risk Reduction platform."
-        brandImageSrc="/brand/stl-wordmark-tagline.png"
+        brandImageSrc="/brand/stl-fullcolor.png"
         brandImageAlt="STL Compliance"
         backgroundImageSrc="/brand/stl-full-bluebg.png"
       >

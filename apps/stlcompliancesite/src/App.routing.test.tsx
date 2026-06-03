@@ -7,6 +7,7 @@ import App from './App'
 describe('App routing', () => {
   afterEach(() => {
     cleanup()
+    window.localStorage.clear()
   })
 
   it('renders TrainArr product page', async () => {
@@ -74,6 +75,49 @@ describe('App routing', () => {
     expect(
       await screen.findByRole('link', { name: /Products hub/i }),
     ).toBeInTheDocument()
+  })
+
+  it('renders privacy policy with company contact details', async () => {
+    render(
+      <MemoryRouter initialEntries={['/privacy']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument()
+    expect(screen.getAllByText(/STL Compliance LLC/i)[0]).toBeInTheDocument()
+    expect(screen.getByText(/303 N Sparta St, Steeleville, IL 62288/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/privacy@stlcompliance.com/i)[0]).toBeInTheDocument()
+  })
+
+  it('renders terms and conditions with company contact details', async () => {
+    render(
+      <MemoryRouter initialEntries={['/terms']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(
+      await screen.findByRole('heading', { name: 'Terms and Conditions' }),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/STL Compliance LLC/i)[0]).toBeInTheDocument()
+    expect(screen.getByText(/303 N Sparta St, Steeleville, IL 62288/i)).toBeInTheDocument()
+    expect(screen.getByText(/hello@stlcompliance.com/i)).toBeInTheDocument()
+  })
+
+  it('shows dismissible cookie notice with privacy link', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    )
+    const notice = await screen.findByTestId('cookie-notice')
+    expect(notice).toHaveTextContent(/necessary cookies for login, security, and session management/i)
+    expect(notice).toHaveTextContent(/limited usage data to fix bugs/i)
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy')
+
+    await user.click(screen.getByRole('button', { name: 'Got it' }))
+    expect(screen.queryByTestId('cookie-notice')).toBeNull()
+    expect(window.localStorage.getItem('stl-cookie-notice-dismissed')).toBe('true')
   })
 
   it('shows 404 for unknown paths', () => {

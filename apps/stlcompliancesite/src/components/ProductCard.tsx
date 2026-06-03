@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogoFrame } from './BrandLogoFrame'
 import type { MarketingProduct } from '../content/products'
 import { productPagePath } from '../content/products'
 
@@ -18,15 +19,8 @@ export function ProductCard({ product }: ProductCardProps) {
         aria-hidden
       />
       <div className="flex items-center gap-3">
-        <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-white p-1.5 shadow-sm">
-          <img
-            src={product.brandImageSrc}
-            alt=""
-            className="max-h-full max-w-full object-contain"
-            aria-hidden
-          />
-          <Icon className="sr-only" aria-hidden />
-        </span>
+        <BrandLogoFrame src={product.brandImageSrc} size="md" />
+        <Icon className="sr-only" aria-hidden />
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold text-white group-hover:text-teal-200">
             {product.displayName}

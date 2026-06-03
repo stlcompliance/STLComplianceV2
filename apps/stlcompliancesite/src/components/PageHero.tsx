@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BrandLogoFrame } from './BrandLogoFrame'
 
 type PageHeroProps = {
   eyebrow?: string
@@ -32,10 +33,11 @@ export function PageHero({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,#0a101c_0%,rgba(10,16,28,.92)_46%,rgba(15,39,68,.7)_100%)]" />
       <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
         {brandImageSrc ? (
-          <img
+          <BrandLogoFrame
             src={brandImageSrc}
             alt={brandImageAlt}
-            className="mb-6 max-h-20 max-w-xs object-contain sm:max-w-sm"
+            size="lg"
+            className="mb-6"
           />
         ) : null}
         {eyebrow && <p className="text-sm font-semibold uppercase text-teal-300">{eyebrow}</p>}

@@ -7,6 +7,23 @@ $ErrorActionPreference = 'Stop'
 
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
 
+function Get-RelativePath {
+    param(
+        [string]$BasePath,
+        [string]$TargetPath
+    )
+
+    if (-not $BasePath.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $BasePath = $BasePath + [System.IO.Path]::DirectorySeparatorChar
+    }
+
+    $baseUri = [System.Uri]::new($BasePath)
+    $targetUri = [System.Uri]::new($TargetPath)
+    $relativeUri = $baseUri.MakeRelativeUri($targetUri)
+
+    return [System.Uri]::UnescapeDataString($relativeUri.ToString()).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+}
+
 $excludedDirectories = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 @(
     '.git', '.github', '.vs', '.idea', '.cursor', '.vscode',
@@ -51,6 +68,7 @@ $excludedFileNamePatterns = @(
     '\.g\.(cs|ts|tsx|js|jsx)$',
     '\.generated\.',
     '\.designer\.cs$',
+    '\.openapi\.json$',
     '\.min\.(css|js)$',
     '\.bundle\.(css|js)$',
     '^package-lock\.json$',
@@ -62,7 +80,7 @@ $excludedFileNamePatterns = @(
 function Test-ExcludedPath {
     param([System.IO.FileSystemInfo]$Item)
 
-    $relativePath = [System.IO.Path]::GetRelativePath($rootPath, $Item.FullName)
+    $relativePath = Get-RelativePath -BasePath $rootPath -TargetPath $Item.FullName
     $segments = $relativePath -split '[\\/]'
 
     foreach ($segment in $segments) {
@@ -102,6 +120,27 @@ function Test-SourceFile {
     }
 
     return $false
+}
+
+function Get-SourceFiles {
+    $pendingDirectories = [System.Collections.Generic.Stack[System.IO.DirectoryInfo]]::new()
+    $pendingDirectories.Push([System.IO.DirectoryInfo]::new($rootPath))
+
+    while ($pendingDirectories.Count -gt 0) {
+        $directory = $pendingDirectories.Pop()
+
+        foreach ($childDirectory in $directory.EnumerateDirectories()) {
+            if (-not (Test-ExcludedPath -Item $childDirectory)) {
+                $pendingDirectories.Push($childDirectory)
+            }
+        }
+
+        foreach ($file in $directory.EnumerateFiles()) {
+            if (Test-SourceFile -File $file) {
+                $file
+            }
+        }
+    }
 }
 
 function Test-BinaryFile {
@@ -156,10 +195,87 @@ function Test-CommentLine {
     }
 }
 
+function ConvertTo-ProductName {
+    param([string]$Slug)
+
+    switch ($Slug.ToLowerInvariant()) {
+        'compliancecore' { return 'ComplianceCore' }
+        'loadarr' { return 'LoadArr' }
+        'maintainarr' { return 'MaintainArr' }
+        'nexarr' { return 'NexArr' }
+        'routarr' { return 'RoutArr' }
+        'staffarr' { return 'StaffArr' }
+        'supplyarr' { return 'SupplyArr' }
+        'trainarr' { return 'TrainArr' }
+        'load' { return 'LoadArr' }
+        'companion' { return 'Companion' }
+        'suite' { return 'Suite' }
+        'stlcompliancesite' { return 'STLComplianceSite' }
+        'shared' { return 'Shared' }
+        'e2e' { return 'E2E' }
+        'dr' { return 'DisasterRecovery' }
+        'health' { return 'Health' }
+        'openapi' { return 'OpenAPI' }
+        'otel' { return 'OpenTelemetry' }
+        default {
+            if ([string]::IsNullOrWhiteSpace($Slug)) {
+                return 'Workspace'
+            }
+
+            return (Get-Culture).TextInfo.ToTitleCase($Slug.ToLowerInvariant())
+        }
+    }
+}
+
+function Get-ProductName {
+    param([string]$RelativePath)
+
+    $segments = $RelativePath -split '[\\/]'
+
+    if ($segments.Count -ge 2) {
+        switch ($segments[0].ToLowerInvariant()) {
+            'apps' {
+                $slug = $segments[1] -replace '-(api|frontend)$', ''
+                return ConvertTo-ProductName -Slug $slug
+            }
+            'workers' {
+                $slug = $segments[1] -replace '-worker$', ''
+                return ConvertTo-ProductName -Slug $slug
+            }
+            'tests' {
+                if ($segments[1] -ieq 'e2e-playwright') {
+                    return 'E2E'
+                }
+
+                if ($segments[1] -ieq 'load-k6') {
+                    return 'LoadArr'
+                }
+
+                if ($segments[1] -match '^STLCompliance\.([^.]+)') {
+                    return ConvertTo-ProductName -Slug $Matches[1]
+                }
+
+                return 'Tests'
+            }
+            'packages' {
+                if ($segments[1] -match '^shared') {
+                    return 'Shared'
+                }
+
+                return ConvertTo-ProductName -Slug $segments[1]
+            }
+            'root' {
+                return 'Workspace'
+            }
+        }
+    }
+
+    return 'Workspace'
+}
+
 $fileResults = New-Object System.Collections.Generic.List[object]
 
-Get-ChildItem -LiteralPath $rootPath -Recurse -File -Force |
-    Where-Object { Test-SourceFile -File $_ } |
+Get-SourceFiles |
     ForEach-Object {
         $file = $_
 
@@ -175,87 +291,32 @@ Get-ChildItem -LiteralPath $rootPath -Recurse -File -Force |
             $file.Extension.ToLowerInvariant()
         }
 
-        $relativePath = [System.IO.Path]::GetRelativePath($rootPath, $file.FullName)
-        $topDirectory = ($relativePath -split '[\\/]')[0]
-        $style = Get-CommentStyle -Extension $extension
+        $relativePath = Get-RelativePath -BasePath $rootPath -TargetPath $file.FullName
+        $product = Get-ProductName -RelativePath $relativePath
 
         $totalLines = 0
-        $blankLines = 0
-        $commentLines = 0
 
         foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
             $totalLines++
-            $trimmed = $line.Trim()
-
-            if ($trimmed.Length -eq 0) {
-                $blankLines++
-            } elseif (Test-CommentLine -TrimmedLine $trimmed -Style $style) {
-                $commentLines++
-            }
         }
 
         $fileResults.Add([pscustomobject]@{
-            Path = $relativePath
-            Extension = $extension
-            TopDirectory = $topDirectory
+            Product = $product
             Lines = $totalLines
-            Blank = $blankLines
-            Comment = $commentLines
-            Code = $totalLines - $blankLines - $commentLines
         })
     }
 
-$summary = [pscustomobject]@{
-    Files = $fileResults.Count
-    Lines = ($fileResults | Measure-Object -Property Lines -Sum).Sum
-    Code = ($fileResults | Measure-Object -Property Code -Sum).Sum
-    Blank = ($fileResults | Measure-Object -Property Blank -Sum).Sum
-    Comment = ($fileResults | Measure-Object -Property Comment -Sum).Sum
-}
-
-Write-Host "LOC summary for $rootPath"
-Write-Host ""
-$summary | Format-Table -AutoSize
-
-Write-Host ""
-Write-Host "By extension"
 $fileResults |
-    Group-Object Extension |
+    Group-Object Product |
     ForEach-Object {
         [pscustomobject]@{
-            Extension = $_.Name
+            Product = $_.Name
             Files = $_.Count
-            Lines = ($_.Group | Measure-Object -Property Lines -Sum).Sum
-            Code = ($_.Group | Measure-Object -Property Code -Sum).Sum
-            Blank = ($_.Group | Measure-Object -Property Blank -Sum).Sum
-            Comment = ($_.Group | Measure-Object -Property Comment -Sum).Sum
+            Lines = [int](($_.Group | Measure-Object -Property Lines -Sum).Sum)
         }
     } |
-    Sort-Object Code -Descending |
+    Sort-Object Lines -Descending |
     Format-Table -AutoSize
 
-Write-Host ""
-Write-Host "By top-level path"
-$fileResults |
-    Group-Object TopDirectory |
-    ForEach-Object {
-        [pscustomobject]@{
-            Path = $_.Name
-            Files = $_.Count
-            Lines = ($_.Group | Measure-Object -Property Lines -Sum).Sum
-            Code = ($_.Group | Measure-Object -Property Code -Sum).Sum
-            Blank = ($_.Group | Measure-Object -Property Blank -Sum).Sum
-            Comment = ($_.Group | Measure-Object -Property Comment -Sum).Sum
-        }
-    } |
-    Sort-Object Code -Descending |
-    Format-Table -AutoSize
-
-if ($Detailed) {
-    Write-Host ""
-    Write-Host "Largest files"
-    $fileResults |
-        Sort-Object Code -Descending |
-        Select-Object -First 50 |
-        Format-Table Path, Lines, Code, Blank, Comment -AutoSize
-}
+Write-Host "Total files: $($fileResults.Count)"
+Write-Host "Total lines: $([int](($fileResults | Measure-Object -Property Lines -Sum).Sum))"

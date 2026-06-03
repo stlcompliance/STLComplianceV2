@@ -1,6 +1,5 @@
 /** Public marketing routes included in sitemap generation (no auth or API routes). */
 export const MARKETING_PRODUCT_KEYS = [
-  'nexarr',
   'staffarr',
   'trainarr',
   'maintainarr',

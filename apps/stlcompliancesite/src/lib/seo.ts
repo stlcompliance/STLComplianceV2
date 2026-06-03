@@ -73,7 +73,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     name: siteConfig.companyLegalName,
     url: siteBaseUrl(),
     description: siteConfig.defaultDescription,
-    logo: absoluteUrl('/brand/stl-mark.png'),
+    logo: absoluteUrl('/brand/stl-fullcolor.png'),
   }
 }
 

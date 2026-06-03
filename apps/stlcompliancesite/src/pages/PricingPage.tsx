@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogoFrame } from '../components/BrandLogoFrame'
 import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
 import {
@@ -68,28 +69,27 @@ export function PricingPage() {
           teams and workflows come online.
         </p>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {ENTITLEMENT_EXAMPLES.map((item) => (
-            <li
-              key={item.productKey}
-              className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm"
-            >
-              {getMarketingProduct(item.productKey) ? (
-                <img
-                  src={getMarketingProduct(item.productKey)?.brandImageSrc}
-                  alt=""
-                  className="mb-3 h-9 w-9 rounded-md bg-white object-contain p-0.5"
-                  aria-hidden
-                />
-              ) : null}
-              <Link
-                to={`/products/${item.productKey}`}
-                className="font-semibold text-teal-400 hover:text-teal-300"
+          {ENTITLEMENT_EXAMPLES.map((item) => {
+            const product = getMarketingProduct(item.productKey)
+
+            return (
+              <li
+                key={item.productKey}
+                className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm"
               >
-                {item.displayName}
-              </Link>
-              <p className="mt-1 text-slate-400">{item.summary}</p>
-            </li>
-          ))}
+                {product ? (
+                  <BrandLogoFrame src={product.brandImageSrc} size="sm" className="mb-3" />
+                ) : null}
+                <Link
+                  to={`/products/${item.productKey}`}
+                  className="font-semibold text-teal-400 hover:text-teal-300"
+                >
+                  {item.displayName}
+                </Link>
+                <p className="mt-1 text-slate-400">{item.summary}</p>
+              </li>
+            )
+          })}
         </ul>
       </section>
 

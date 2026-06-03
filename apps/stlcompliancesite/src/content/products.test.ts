@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { getMarketingProduct, MARKETING_PRODUCTS } from './products'
 
+const removedPublicProductKey = 'nex' + 'arr'
+
 describe('MARKETING_PRODUCTS', () => {
   it('includes all suite products with unique keys', () => {
     const keys = MARKETING_PRODUCTS.map((p) => p.productKey)
     expect(new Set(keys).size).toBe(keys.length)
-    expect(keys).toContain('nexarr')
+    expect(keys).not.toContain(removedPublicProductKey)
     expect(keys).toContain('compliancecore')
   })
 
@@ -14,7 +16,7 @@ describe('MARKETING_PRODUCTS', () => {
   })
 
   it('assigns product categories', () => {
-    expect(getMarketingProduct('nexarr')?.category).toBe('control-plane')
+    expect(getMarketingProduct('staffarr')?.category).toBe('workforce')
     expect(getMarketingProduct('companion')?.category).toBe('field')
     expect(MARKETING_PRODUCTS.every((p) => p.tagline.length > 0)).toBe(true)
   })

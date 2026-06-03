@@ -369,12 +369,6 @@ export const CAN_WORK_START_ITEMS = [
 
 export const PRODUCT_STACK_ROWS: ProductStackRow[] = [
   {
-    product: 'NexArr',
-    complements: 'IAM, SSO, tenant admin',
-    primaryJob: 'Login, entitlement, product access',
-    positioning: 'The secure front door for the suite',
-  },
-  {
     product: 'StaffArr',
     complements: 'WFM, HR admin, org charts',
     primaryJob: 'People, sites, permissions, incidents',

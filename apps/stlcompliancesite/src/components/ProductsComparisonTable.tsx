@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogoFrame } from './BrandLogoFrame'
 
 import {
 
@@ -90,12 +91,7 @@ export function ProductsComparisonTable() {
                   className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300"
                 >
 
-                  <img
-                    src={product.brandImageSrc}
-                    alt=""
-                    className="h-7 w-7 rounded-md bg-white object-contain p-0.5"
-                    aria-hidden
-                  />
+                  <BrandLogoFrame src={product.brandImageSrc} size="sm" />
 
                   {product.displayName}
 

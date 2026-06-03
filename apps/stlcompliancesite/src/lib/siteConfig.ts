@@ -6,7 +6,9 @@ export const siteConfig = {
     'STL Compliance helps operations teams connect people, training, assets, dispatch, inventory, vendors, and compliance proof in one Adaptive Risk Reduction platform.',
   suiteLoginUrl: import.meta.env.VITE_SUITE_LOGIN_URL ?? 'http://localhost:5174/login',
   contactEmail: import.meta.env.VITE_CONTACT_EMAIL ?? 'hello@stlcompliance.com',
-  companyLegalName: 'STL Compliance',
+  privacyEmail: import.meta.env.VITE_PRIVACY_EMAIL ?? 'privacy@stlcompliance.com',
+  companyLegalName: 'STL Compliance LLC',
+  mailingAddress: '303 N Sparta St, Steeleville, IL 62288',
 } as const
 
 export function suiteLoginUrl(): string {

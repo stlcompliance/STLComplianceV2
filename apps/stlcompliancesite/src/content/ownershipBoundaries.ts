@@ -6,12 +6,6 @@ export type ProductOwnershipCopy = {
 }
 
 export const PRODUCT_OWNERSHIP: Record<string, ProductOwnershipCopy> = {
-  nexarr: {
-    owns:
-      'Secure login, company access, product availability, administrator setup, and the launch point for the suite.',
-    doesNotOwn:
-      'Daily work records such as training, maintenance, dispatch, purchasing, inventory, or inspections.',
-  },
   staffarr: {
     owns:
       'Employee records, sites, departments, roles, permissions, incidents, certifications, readiness, and personnel history.',

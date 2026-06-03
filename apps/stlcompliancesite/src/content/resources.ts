@@ -14,15 +14,15 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     id: 'products-hub',
     title: 'Products hub',
     summary:
-      'Compare NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, Compliance Core, and Companion in plain language.',
+      'Compare StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Companion in plain language.',
     href: '/products',
     category: 'suite',
   },
   {
-    id: 'nexarr-sign-in',
-    title: 'Client sign-in through NexArr',
-    summary: 'Customers use NexArr as the secure front door to the products their teams use.',
-    href: '/products/nexarr',
+    id: 'client-sign-in',
+    title: 'Client sign-in',
+    summary: 'Customers use secure sign-in to access the products their teams use.',
+    href: '/demo',
     category: 'suite',
   },
   {

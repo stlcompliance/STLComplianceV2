@@ -22,9 +22,9 @@ export const LICENSING_PILLARS: LicensingPillar[] = [
     body: 'Customers can start with the products that match their work, then add more as the operation grows.',
   },
   {
-    id: 'nexarr',
+    id: 'secure-sign-in',
     title: 'Secure sign-in is included',
-    body: 'NexArr gives users one secure entry point instead of separate logins for every part of the suite.',
+    body: 'Secure suite access gives users one entry point instead of separate logins for every operational product.',
   },
   {
     id: 'honesty',

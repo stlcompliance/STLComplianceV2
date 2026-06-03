@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
+import { CookieNotice } from './CookieNotice'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 const navLinks = [
@@ -18,11 +19,11 @@ export function MarketingLayout() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/brand/stl-logo-wordmark.png"
+              src="/brand/stl-fullcolor.png"
               alt={siteConfig.siteName}
-              className="h-11 w-auto rounded-sm bg-white/95 px-2 py-1"
-              width={220}
-              height={64}
+              className="h-12 w-auto rounded-sm bg-white/95 px-2 py-1"
+              width={260}
+              height={90}
             />
           </Link>
           <nav className="flex flex-wrap items-center gap-1 text-sm font-medium">
@@ -53,11 +54,11 @@ export function MarketingLayout() {
         <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="space-y-3">
             <img
-              src="/brand/stl-wordmark-tagline.png"
+              src="/brand/stl-fullcolor.png"
               alt={siteConfig.siteName}
-              className="h-12 w-auto rounded-sm bg-white/95 px-2 py-1"
-              width={260}
-              height={80}
+              className="h-14 w-auto rounded-sm bg-white/95 px-2 py-1"
+              width={280}
+              height={96}
             />
             <p>
               © {new Date().getFullYear()} {siteConfig.companyLegalName}. {siteConfig.arrTagline}{' '}
@@ -83,6 +84,8 @@ export function MarketingLayout() {
           </div>
         </div>
       </footer>
+
+      <CookieNotice />
     </div>
   )
 }
