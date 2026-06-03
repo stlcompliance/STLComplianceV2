@@ -79,6 +79,19 @@
         }
       }
     },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "LoadArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/adjustments": {
       "get": {
         "tags": [
@@ -1071,6 +1084,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "LoadArrGetSessionBootstrapV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -3014,6 +3040,9 @@
     },
     {
       "name": "LoadArr.Api"
+    },
+    {
+      "name": "Session"
     },
     {
       "name": "Launch"
