@@ -47,6 +47,7 @@ export type MarketingProduct = {
   evidenceOutputs: string[]
   handoffs: string[]
   checklist: Record<CapabilityKey, CapabilityLevel>
+  connectedReasons: Partial<Record<CapabilityKey, string>>
   icon: LucideIcon
   sortOrder: number
   category: ProductCategoryKey
@@ -112,6 +113,10 @@ function checklist(
   } as Record<CapabilityKey, CapabilityLevel>
 }
 
+function reasons(entries: Partial<Record<CapabilityKey, string>>): Partial<Record<CapabilityKey, string>> {
+  return entries
+}
+
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     productKey: 'nexarr',
@@ -141,7 +146,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Launches StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Companion.',
       'Provides the suite-level identity context used by product workspaces.',
     ],
-    checklist: checklist(['secureAccess'], ['auditEvidence']),
+    checklist: checklist(['secureAccess']),
+    connectedReasons: reasons({}),
     icon: ShieldCheck,
     sortOrder: 0,
     category: 'control-plane',
@@ -188,6 +194,11 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Feeds people-related evidence into audit and reporting workflows.',
     ],
     checklist: checklist(['workforce', 'auditEvidence'], ['secureAccess', 'training', 'complianceRules']),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      training: 'receives qualification proof',
+      complianceRules: 'feeds people facts',
+    }),
     icon: Users,
     sortOrder: 10,
     category: 'workforce',
@@ -238,6 +249,12 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Creates material or remediation demand signals for connected operations when training reveals a need.',
     ],
     checklist: checklist(['training', 'auditEvidence'], ['secureAccess', 'workforce', 'complianceRules', 'fieldInbox']),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      workforce: 'assigns real people',
+      complianceRules: 'maps training to rules',
+      fieldInbox: 'sends worker tasks',
+    }),
     icon: GraduationCap,
     sortOrder: 20,
     category: 'workforce',
@@ -268,6 +285,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Preventive maintenance schedules',
     ],
     readinessChecks: [
+      'Checks technician qualifications for job types that require specific training or certification.',
       'Blocks or flags asset use when inspections, defects, or repairs make equipment unready.',
       'Connects part usage and supply availability to maintenance execution.',
       'Preserves inspection and repair proof for compliance review.',
@@ -282,11 +300,24 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Maintenance audit package inputs',
     ],
     handoffs: [
-      'Sends part demand to SupplyArr when maintenance needs materials.',
+      'Uses StaffArr and TrainArr readiness when repair, inspection, or work order tasks require qualified people.',
+      'Sends part demand to SupplyArr and stock context to LoadArr when maintenance needs materials.',
       'Provides asset readiness context to RoutArr before vehicle or equipment assignment.',
       'Provides inspection and repair evidence to Compliance Core.',
     ],
-    checklist: checklist(['maintenance', 'auditEvidence'], ['secureAccess', 'supply', 'dispatch', 'complianceRules']),
+    checklist: checklist(
+      ['maintenance', 'auditEvidence'],
+      ['secureAccess', 'workforce', 'training', 'supply', 'warehouse', 'dispatch', 'complianceRules'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      workforce: 'qualified technician',
+      training: 'job qualification',
+      supply: 'parts demand',
+      warehouse: 'stock availability',
+      dispatch: 'asset release',
+      complianceRules: 'inspection rules',
+    }),
     icon: Wrench,
     sortOrder: 30,
     category: 'operations',
@@ -318,7 +349,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Inspection references',
     ],
     readinessChecks: [
-      'Checks whether the assigned driver and vehicle are fit for the trip.',
+      'Checks whether the assigned driver, vehicle, load, inventory state, and route conditions are fit for the trip.',
       'Supports trip completion controls tied to inspection, proof, or delivery requirements.',
       'Connects route execution to compliance gates and notification events.',
     ],
@@ -331,11 +362,25 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Dispatch notification records',
     ],
     handoffs: [
-      'Uses StaffArr readiness and MaintainArr asset readiness before assignment.',
-      'Creates demand or shipment context for SupplyArr and LoadArr.',
+      'Uses StaffArr and TrainArr readiness before driver assignment.',
+      'Uses MaintainArr asset readiness before vehicle assignment.',
+      'Uses SupplyArr and LoadArr context for demand, shipment, load, stock, and inventory status.',
       'Publishes trip and dispatch evidence to Compliance Core.',
     ],
-    checklist: checklist(['dispatch', 'auditEvidence'], ['secureAccess', 'workforce', 'maintenance', 'supply', 'complianceRules', 'fieldInbox']),
+    checklist: checklist(
+      ['dispatch', 'auditEvidence'],
+      ['secureAccess', 'workforce', 'training', 'maintenance', 'supply', 'warehouse', 'complianceRules', 'fieldInbox'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      workforce: 'driver assignment',
+      training: 'driver qualification',
+      maintenance: 'vehicle readiness',
+      supply: 'shipment demand',
+      warehouse: 'load/stock status',
+      complianceRules: 'dispatch gates',
+      fieldInbox: 'driver tasks',
+    }),
     icon: Route,
     sortOrder: 40,
     category: 'operations',
@@ -386,7 +431,18 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Provides supply availability and procurement evidence back to operational workflows.',
       'Feeds vendor, purchasing, and receiving evidence into Compliance Core.',
     ],
-    checklist: checklist(['supply', 'auditEvidence'], ['secureAccess', 'maintenance', 'dispatch', 'warehouse', 'complianceRules']),
+    checklist: checklist(
+      ['supply', 'auditEvidence'],
+      ['secureAccess', 'workforce', 'maintenance', 'dispatch', 'warehouse', 'complianceRules'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      workforce: 'approval authority',
+      maintenance: 'parts demand',
+      dispatch: 'route demand',
+      warehouse: 'receiving/stock',
+      complianceRules: 'vendor rules',
+    }),
     icon: PackageSearch,
     sortOrder: 50,
     category: 'operations',
@@ -404,7 +460,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     primaryWorkflows: [
       'Manage warehouse locations, inventory movement, receiving, picking, reservations, shipments, and adjustments.',
       'Run cycle counts and preserve inventory history for operational and audit review.',
-      'Connect warehouse availability to purchasing, route, and maintenance work.',
+      'Connect warehouse availability to purchasing, route, maintenance, and shipment work.',
     ],
     recordsManaged: [
       'Warehouse locations',
@@ -432,10 +488,20 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     ],
     handoffs: [
       'Uses SupplyArr purchasing and receiving context.',
-      'Provides stock and shipment context to RoutArr and MaintainArr.',
+      'Provides stock, reservation, pick, load, and shipment context to RoutArr and MaintainArr.',
       'Feeds inventory evidence into Compliance Core when rules or audits require it.',
     ],
-    checklist: checklist(['warehouse', 'auditEvidence'], ['secureAccess', 'supply', 'dispatch', 'maintenance', 'complianceRules']),
+    checklist: checklist(
+      ['warehouse', 'auditEvidence'],
+      ['secureAccess', 'supply', 'dispatch', 'maintenance', 'complianceRules'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      supply: 'receiving/PO context',
+      dispatch: 'load/ship status',
+      maintenance: 'parts stock',
+      complianceRules: 'inventory proof',
+    }),
     icon: PackageSearch,
     sortOrder: 60,
     category: 'operations',
@@ -482,7 +548,19 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Sends rule context, gates, and findings back into product workflows.',
       'Supports audit package generation for compliance review.',
     ],
-    checklist: checklist(['complianceRules', 'auditEvidence'], ['secureAccess', 'workforce', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse']),
+    checklist: checklist(
+      ['complianceRules', 'auditEvidence'],
+      ['secureAccess', 'workforce', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      workforce: 'people facts',
+      training: 'qualification proof',
+      maintenance: 'inspection facts',
+      dispatch: 'trip facts',
+      supply: 'vendor facts',
+      warehouse: 'inventory facts',
+    }),
     icon: ClipboardCheck,
     sortOrder: 70,
     category: 'compliance',
@@ -517,7 +595,19 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       'Routes users into TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, StaffArr, or Compliance Core as needed.',
       'Returns field attention to the workflow owner instead of copying the record.',
     ],
-    checklist: checklist(['fieldInbox'], ['secureAccess', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse', 'auditEvidence']),
+    checklist: checklist(
+      ['fieldInbox'],
+      ['secureAccess', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse', 'auditEvidence'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      training: 'training tasks',
+      maintenance: 'work order tasks',
+      dispatch: 'driver tasks',
+      supply: 'field requests',
+      warehouse: 'warehouse tasks',
+      auditEvidence: 'task proof',
+    }),
     icon: Inbox,
     sortOrder: 80,
     category: 'field',

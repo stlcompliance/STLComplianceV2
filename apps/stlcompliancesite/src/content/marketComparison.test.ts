@@ -22,9 +22,9 @@ describe('marketComparison content', () => {
   })
 
   it('includes checklist-style buyer questions', () => {
-    expect(MARKET_CHECKLIST_ROWS.length).toBeGreaterThanOrEqual(4)
-    expect(MARKET_CHECKLIST_ROWS.some((row) => row.question.includes('should this work start'))).toBe(
-      true,
-    )
+    expect(MARKET_CHECKLIST_ROWS.length).toBeGreaterThanOrEqual(6)
+    expect(MARKET_CHECKLIST_ROWS.some((row) => row.feature === 'Cross-functional readiness decision')).toBe(true)
+    expect(MARKET_CHECKLIST_ROWS.some((row) => row.feature === 'Inventory-aware dispatch and work execution')).toBe(true)
+    expect(MARKET_CHECKLIST_ROWS.every((row) => row.stlAdvantage.includes('STL'))).toBe(true)
   })
 })

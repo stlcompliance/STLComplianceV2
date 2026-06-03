@@ -11,14 +11,15 @@ export type MarketProductComparison = {
 
 export type MarketChecklistRow = {
   id: string
-  question: string
-  strongestMarketExamples: string
-  marketReality: string
-  stlAnswer: string
+  feature: string
+  stlCoverage: string
+  typicalMarketCoverage: string
+  stlAdvantage: string
+  competitorExamples: string
 }
 
 export const MARKET_COMPARISON_LEAD =
-  'STL Compliance is not positioned as a deeper WMS, CMMS, LMS, WFM, TMS, or telematics product than the category leaders. The comparison below shows the real tradeoff: specialists usually win inside one department, while STL is built for cross-functional operational readiness and compliance proof.'
+  'Use this as a buying checklist. Category tools usually solve one department deeply. STL Compliance is biased toward the cross-functional features that decide whether work can start, continue, and be proven later.'
 
 export const MARKET_PRODUCT_COMPARISONS: MarketProductComparison[] = [
   {
@@ -155,43 +156,81 @@ export const MARKET_PRODUCT_COMPARISONS: MarketProductComparison[] = [
 
 export const MARKET_CHECKLIST_ROWS: MarketChecklistRow[] = [
   {
-    id: 'single-category-depth',
-    question: 'Who wins when the buyer needs deep single-category functionality?',
-    strongestMarketExamples:
-      'Manhattan or Blue Yonder for WMS; IBM Maximo or UpKeep for maintenance; Cornerstone or Docebo for LMS; UKG or Dayforce for WFM; Oracle or Samsara for transport/fleet.',
-    marketReality:
-      'Category leaders are deeper in their native domains and often bring larger ecosystems, implementation partner networks, and specialized workflows.',
-    stlAnswer:
-      'STL wins only when the buying problem crosses departments: people, training, assets, routes, supply, warehouse work, and compliance proof need to agree before work starts.',
+    id: 'cross-functional-readiness',
+    feature: 'Cross-functional readiness decision',
+    stlCoverage:
+      'Combines worker readiness, qualification proof, asset condition, route context, supply availability, warehouse state, and compliance rules.',
+    typicalMarketCoverage:
+      'Usually split across WFM, LMS, CMMS, WMS, TMS, procurement, and compliance tools.',
+    stlAdvantage:
+      'STL gives the operator one operational answer: who can work, what can run, what stock is available, what route can release, and what proof exists.',
+    competitorExamples:
+      'UKG/Dayforce for workforce, Cornerstone/Docebo for learning, Maximo/UpKeep for maintenance, Manhattan/Blue Yonder for WMS, Oracle/Samsara for transport.',
   },
   {
-    id: 'work-readiness',
-    question: 'Can the platform answer “should this work start now?” across people, equipment, supply, route, and rules?',
-    strongestMarketExamples:
-      'A best-of-breed stack can answer this through integrations, data warehouses, middleware, and manual operating rules.',
-    marketReality:
-      'The more systems involved, the more the final readiness answer often depends on brittle handoffs, duplicate records, or local spreadsheets.',
-    stlAnswer:
-      'STL is designed around the cross-functional readiness question: qualified worker, ready asset, available supply, dispatch context, and evidence expectations in one operating model.',
+    id: 'qualification-gated-work',
+    feature: 'Qualification-gated work',
+    stlCoverage:
+      'TrainArr creates qualification proof; StaffArr exposes readiness; MaintainArr and RoutArr can depend on qualifications before assigning jobs or trips.',
+    typicalMarketCoverage:
+      'LMS tools prove training completion, while maintenance and dispatch systems often need integration to use that proof operationally.',
+    stlAdvantage:
+      'STL turns training into an operating gate, not a separate record someone checks manually.',
+    competitorExamples: 'Cornerstone, Docebo, IBM Maximo, UpKeep, Samsara, Oracle Transportation Management.',
   },
   {
-    id: 'audit-package',
-    question: 'Can the audit package come from the workflow history rather than a scramble after the fact?',
-    strongestMarketExamples:
-      'Specialist products can export their own records; enterprise platforms often have reporting and analytics modules.',
-    marketReality:
-      'Cross-domain evidence still has to be assembled when training, maintenance, dispatch, purchasing, and compliance facts live in different systems.',
-    stlAnswer:
-      'STL’s audit story is cross-product: evidence originates in the workflow that created it and can be packaged around the operational event or compliance question.',
+    id: 'asset-release',
+    feature: 'Asset and vehicle release',
+    stlCoverage:
+      'MaintainArr tracks inspections, defects, work orders, repairs, part usage, and asset readiness; RoutArr consumes vehicle readiness before dispatch.',
+    typicalMarketCoverage:
+      'CMMS/EAM systems handle maintenance depth; fleet/TMS tools handle dispatch depth; the release decision often crosses both.',
+    stlAdvantage:
+      'STL links maintenance proof to dispatch action so a vehicle or asset is not just repaired, but operationally cleared for the next job.',
+    competitorExamples: 'IBM Maximo, UpKeep, Samsara, Oracle Transportation Management.',
   },
   {
-    id: 'replacement-vs-layer',
-    question: 'Should STL replace every specialist?',
-    strongestMarketExamples:
-      'No. Deep WMS, EAM, LMS, WFM, TMS, and telematics systems are valid when their domain is the center of gravity.',
-    marketReality:
-      'Large buyers may keep best-of-breed systems because category depth, existing contracts, devices, integrations, or established operating process matter.',
-    stlAnswer:
-      'STL should be sold as the integrated compliance and readiness layer where operational authorization, evidence, and cross-functional handoffs matter most.',
+    id: 'inventory-aware-dispatch',
+    feature: 'Inventory-aware dispatch and work execution',
+    stlCoverage:
+      'LoadArr tracks stock, reservations, picks, shipments, counts, and inventory history; RoutArr and MaintainArr can use that state for route, load, and parts readiness.',
+    typicalMarketCoverage:
+      'WMS tools know inventory; TMS and maintenance tools may not naturally see the warehouse state without integration.',
+    stlAdvantage:
+      'STL connects stock reality to the work decision: dispatch can depend on load/stock status, and maintenance can depend on parts availability.',
+    competitorExamples: 'Manhattan Active WM, Blue Yonder WMS, Oracle Transportation Management, UpKeep.',
+  },
+  {
+    id: 'vendor-procurement-gates',
+    feature: 'Vendor, purchasing, and approval gates',
+    stlCoverage:
+      'SupplyArr manages vendors, customers, parts, purchase requests, approvals, receiving, restrictions, incidents, and procurement exceptions.',
+    typicalMarketCoverage:
+      'Procurement tools manage purchasing depth; operations tools often see only whether something arrived or not.',
+    stlAdvantage:
+      'STL keeps vendor and approval evidence connected to maintenance, warehouse, dispatch, and compliance decisions.',
+    competitorExamples: 'ERP/procurement suites, WMS, CMMS, TMS platforms.',
+  },
+  {
+    id: 'audit-evidence',
+    feature: 'Workflow-native audit evidence',
+    stlCoverage:
+      'StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, and Compliance Core preserve evidence where the work happens.',
+    typicalMarketCoverage:
+      'Specialists export their own slice; cross-domain evidence usually needs reporting work, middleware, or manual assembly.',
+    stlAdvantage:
+      'STL packages the story across people, training, equipment, route, supply, warehouse, rules, and approvals.',
+    competitorExamples: 'All named specialists can contribute records; STL is built around the joined evidence chain.',
+  },
+  {
+    id: 'field-handoffs',
+    feature: 'Field task handoffs',
+    stlCoverage:
+      'Companion gives workers a focused inbox and sends them to the product that owns the record.',
+    typicalMarketCoverage:
+      'Point tools often have their own mobile experience, but field work across departments fragments quickly.',
+    stlAdvantage:
+      'STL keeps field action tied to the owning workflow without turning the inbox into another system of record.',
+    competitorExamples: 'Samsara driver apps, UpKeep mobile CMMS, LMS mobile apps, WMS handheld workflows.',
   },
 ]

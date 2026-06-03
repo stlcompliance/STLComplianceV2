@@ -18,4 +18,14 @@ describe('MARKETING_PRODUCTS', () => {
     expect(getMarketingProduct('companion')?.category).toBe('field')
     expect(MARKETING_PRODUCTS.every((p) => p.tagline.length > 0)).toBe(true)
   })
+
+  it('documents direct cross-product dependencies in the checklist', () => {
+    const maintainarr = getMarketingProduct('maintainarr')!
+    const routarr = getMarketingProduct('routarr')!
+
+    expect(maintainarr.checklist.training).toBe('connected')
+    expect(maintainarr.connectedReasons.training).toMatch(/qualification/i)
+    expect(routarr.checklist.warehouse).toBe('connected')
+    expect(routarr.connectedReasons.warehouse).toMatch(/stock|load/i)
+  })
 })

@@ -78,7 +78,7 @@ export function ComparePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Compared with market products</h2>
+        <h2 className="text-xl font-bold text-white">STL feature checklist vs. market products</h2>
         <p className="mt-2 max-w-4xl text-sm text-slate-400">{MARKET_COMPARISON_LEAD}</p>
         <div className="mt-6">
           <MarketComparisonTable />

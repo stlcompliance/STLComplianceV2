@@ -28,6 +28,11 @@ const LEVEL_LABELS: Record<CapabilityLevel, string> = {
   none: 'No',
 }
 
+function capabilityCellLabel(level: CapabilityLevel, reason?: string): string {
+  if (level === 'connected' && reason) return reason
+  return LEVEL_LABELS[level]
+}
+
 
 
 export function ProductsComparisonTable() {
@@ -104,12 +109,14 @@ export function ProductsComparisonTable() {
 
               {CAPABILITY_ORDER.map((capability) => {
                 const level = product.checklist[capability]
+                const reason = product.connectedReasons[capability]
                 return (
-                  <td key={capability} className="px-3 py-3">
+                  <td key={capability} className="px-3 py-3 align-top">
                     <span
-                      className={`inline-flex min-w-20 justify-center rounded-full border px-2 py-1 text-[11px] font-semibold ${LEVEL_STYLES[level]}`}
+                      className={`inline-flex min-w-20 max-w-28 justify-center rounded-full border px-2 py-1 text-center text-[11px] font-semibold leading-tight ${LEVEL_STYLES[level]}`}
+                      title={level === 'connected' ? `Connected: ${reason}` : LEVEL_LABELS[level]}
                     >
-                      {LEVEL_LABELS[level]}
+                      {capabilityCellLabel(level, reason)}
                     </span>
                   </td>
                 )

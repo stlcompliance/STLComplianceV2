@@ -115,5 +115,5 @@ export const COMPARISON_DIMENSIONS: ComparisonDimension[] = [
 export const SUITE_HONESTY_NOTES: string[] = [
   'STL Compliance connects frontline identity, qualifications, maintenance readiness, route readiness, inventory status, procurement evidence, and audit packaging in one operating model.',
   'The suite is strongest where operational decisions depend on multiple teams and records, not one departmental workflow.',
-  'This public site explains the platform. Real customer work happens after secure sign-in.',
+  'The value is the readiness decision: who can work, what equipment can run, what supply is available, what route is safe to release, and what proof exists if anyone asks.',
 ]
