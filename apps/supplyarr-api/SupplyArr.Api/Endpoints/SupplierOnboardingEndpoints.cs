@@ -195,6 +195,21 @@ public static class SupplierOnboardingEndpoints
             })
             .WithName($"ApprovePartyComplianceDocument{nameSuffix}");
 
+            partyDocs.MapGet("/{documentId:guid}/content", async (
+                Guid partyId,
+                Guid documentId,
+                HttpContext context,
+                SupplyArrAuthorizationService authorization,
+                PartyComplianceDocumentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireSupplierOnboardingRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var (metadata, stream) = await service.OpenDocumentContentAsync(tenantId, documentId, cancellationToken);
+                return Results.File(stream, metadata.ContentType, metadata.FileName);
+            })
+            .WithName($"DownloadPartyComplianceDocument{nameSuffix}");
+
             partyDocs.MapPost("/{documentId:guid}/reject", async (
                 Guid partyId,
                 Guid documentId,

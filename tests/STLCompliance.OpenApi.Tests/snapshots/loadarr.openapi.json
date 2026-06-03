@@ -92,6 +92,112 @@
         }
       }
     },
+    "/api/v1/holds": {
+      "get": {
+        "tags": [
+          "Holds"
+        ],
+        "operationId": "ListLoadArrInventoryHolds",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "holdType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Holds"
+        ],
+        "operationId": "CreateLoadArrInventoryHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrInventoryHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/holds/{id}": {
+      "get": {
+        "tags": [
+          "Holds"
+        ],
+        "operationId": "GetLoadArrInventoryHold",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/holds/{id}/release": {
+      "post": {
+        "tags": [
+          "Holds"
+        ],
+        "operationId": "ReleaseLoadArrInventoryHold",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLoadArrInventoryHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/launch/catalog": {
       "get": {
         "tags": [
@@ -150,12 +256,790 @@
         }
       }
     },
+    "/api/v1/receiving": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListLoadArrReceivingSessions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "receivingType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateLoadArrReceivingSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrReceivingSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{id}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "GetLoadArrReceivingSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CancelLoadArrReceivingSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelLoadArrReceivingSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{id}/complete": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CompleteLoadArrReceivingSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLoadArrReceivingSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{id}/lines": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "AddLoadArrReceivingLine",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddLoadArrReceivingLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transfers": {
+      "get": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "ListLoadArrTransferOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "transferType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "CreateLoadArrTransferOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrTransferOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/{id}": {
+      "get": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "GetLoadArrTransferOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "CancelLoadArrTransferOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelLoadArrTransferOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/{id}/complete": {
+      "post": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "CompleteLoadArrTransferOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLoadArrTransferOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/unexplained-inventory": {
+      "get": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "ListLoadArrUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "CreateLoadArrUnexplainedInventory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrUnexplainedInventoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/unexplained-inventory/{id}": {
+      "get": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "GetLoadArrUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/unexplained-inventory/{id}/quarantine": {
+      "post": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "QuarantineLoadArrUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuarantineLoadArrUnexplainedInventoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/unexplained-inventory/{id}/resolve": {
+      "post": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "ResolveLoadArrUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveLoadArrUnexplainedInventoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/unexplained-inventory/{id}/scrap": {
+      "post": {
+        "tags": [
+          "Unexplained Inventory"
+        ],
+        "operationId": "ScrapLoadArrUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapLoadArrUnexplainedInventoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/evidence": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrEvidence",
+        "parameters": [
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationNameSnapshot",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/holds": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrHolds",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "holdType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/inventory": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrInventory",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/locations": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrLocations",
+        "parameters": [
+          {
+            "name": "staffarrSiteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/locations/tree": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetLoadArrLocationTree",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/locations/{id}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetLoadArrLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/route-handoffs": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrRouteHandoffs",
+        "parameters": [
+          {
+            "name": "targetProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/site-sources": {
       "get": {
         "tags": [
           "Workspace"
         ],
         "operationId": "GetLoadArrSiteSources",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/summary": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetLoadArrWorkspaceSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/supplyarr-item-references": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrSupplyArrItemReferences",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/tasks": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrWarehouseTasks",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taskType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/unexplained-inventory": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListLoadArrWorkspaceUnexplainedInventory",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -190,6 +1074,649 @@
       }
     }
   },
+  "components": {
+    "schemas": {
+      "AddLoadArrReceivingLineRequest": {
+        "required": [
+          "supplyarrItemId",
+          "expectedQuantity",
+          "receivedQuantity",
+          "warehouseLocationId",
+          "lotCode",
+          "serialCode",
+          "condition",
+          "discrepancyReasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "receivedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "condition": {
+            "type": "string"
+          },
+          "discrepancyReasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CancelLoadArrReceivingSessionRequest": {
+        "required": [
+          "canceledByPersonId",
+          "reasonCode",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "canceledByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CancelLoadArrTransferOrderRequest": {
+        "required": [
+          "canceledByPersonId",
+          "reasonCode",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "canceledByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CompleteLoadArrReceivingSessionRequest": {
+        "required": [
+          "receivingType",
+          "sourceProductKey",
+          "sourceObjectType",
+          "sourceObjectId",
+          "supplierNameSnapshot",
+          "completedByPersonId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "receivedQuantity",
+          "warehouseLocationId",
+          "lotCode",
+          "serialCode",
+          "condition",
+          "discrepancyReasonCode",
+          "complianceEvaluationId",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "receivingType": {
+            "type": "string"
+          },
+          "sourceProductKey": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "supplierNameSnapshot": {
+            "type": "string"
+          },
+          "completedByPersonId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "receivedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "condition": {
+            "type": "string"
+          },
+          "discrepancyReasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CompleteLoadArrTransferOrderRequest": {
+        "required": [
+          "transferType",
+          "fromLocationId",
+          "toLocationId",
+          "completedByPersonId",
+          "supplyarrItemId",
+          "quantity",
+          "lotCode",
+          "serialCode",
+          "reasonCode",
+          "complianceEvaluationId",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "transferType": {
+            "type": "string"
+          },
+          "fromLocationId": {
+            "type": "string"
+          },
+          "toLocationId": {
+            "type": "string"
+          },
+          "completedByPersonId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateLoadArrInventoryHoldRequest": {
+        "required": [
+          "holdType",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "quantity",
+          "reasonCode",
+          "description",
+          "createdByPersonId",
+          "complianceEvaluationId",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "holdType": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateLoadArrReceivingSessionRequest": {
+        "required": [
+          "receivingType",
+          "sourceProductKey",
+          "sourceObjectType",
+          "sourceObjectId",
+          "supplierNameSnapshot",
+          "startedByPersonId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "receivedQuantity",
+          "warehouseLocationId",
+          "lotCode",
+          "serialCode",
+          "condition",
+          "discrepancyReasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "receivingType": {
+            "type": "string"
+          },
+          "sourceProductKey": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "supplierNameSnapshot": {
+            "type": "string"
+          },
+          "startedByPersonId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "receivedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "condition": {
+            "type": "string"
+          },
+          "discrepancyReasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateLoadArrTransferOrderRequest": {
+        "required": [
+          "transferType",
+          "fromLocationId",
+          "toLocationId",
+          "requestedByPersonId",
+          "supplyarrItemId",
+          "quantity",
+          "lotCode",
+          "serialCode",
+          "reasonCode"
+        ],
+        "type": "object",
+        "properties": {
+          "transferType": {
+            "type": "string"
+          },
+          "fromLocationId": {
+            "type": "string"
+          },
+          "toLocationId": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateLoadArrUnexplainedInventoryRequest": {
+        "required": [
+          "discoverySource",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "quantity",
+          "lotCode",
+          "serialCode",
+          "discoveredByPersonId",
+          "reasonCode",
+          "evidenceSummary",
+          "complianceEvaluationId"
+        ],
+        "type": "object",
+        "properties": {
+          "discoverySource": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discoveredByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": "string"
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "QuarantineLoadArrUnexplainedInventoryRequest": {
+        "required": [
+          "quarantineLocationId",
+          "quarantinedByPersonId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "quarantineLocationId": {
+            "type": "string"
+          },
+          "quarantinedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReleaseLoadArrInventoryHoldRequest": {
+        "required": [
+          "releasedByPersonId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "releasedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ResolveLoadArrUnexplainedInventoryRequest": {
+        "required": [
+          "approvedByPersonId",
+          "reasonCode",
+          "complianceEvaluationId",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "approvedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ScrapLoadArrUnexplainedInventoryRequest": {
+        "required": [
+          "scrappedByPersonId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "scrappedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
   "tags": [
     {
       "name": "Health"
@@ -202,6 +1729,18 @@
     },
     {
       "name": "Workspace"
+    },
+    {
+      "name": "Receiving"
+    },
+    {
+      "name": "Transfers"
+    },
+    {
+      "name": "Holds"
+    },
+    {
+      "name": "Unexplained Inventory"
     }
   ]
 }

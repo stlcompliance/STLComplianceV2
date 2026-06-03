@@ -11,6 +11,7 @@ public static class SupplyArrServiceRegistration
     {
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
+        builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -72,6 +73,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
         builder.Services.AddScoped<IntegrationInboxEnqueueService>();
         builder.Services.AddScoped<RfqService>();
+        builder.Services.AddSingleton<SupplyArrDocumentStorageService>();
         builder.Services.AddScoped<PartyComplianceDocumentService>();
         builder.Services.AddScoped<SupplierOnboardingService>();
         builder.Services.AddScoped<VendorProcurementGuardService>();

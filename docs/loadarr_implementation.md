@@ -210,7 +210,7 @@ Add StaffArr site selector component.
 Use it in:
 
 * Dashboard filters
-* Location create/edit
+* StaffArr location selector and utilization detail
 * Inventory filters
 * Receiving workflow
 * Transfer workflow
@@ -228,15 +228,15 @@ Use it in:
 
 ---
 
-# Milestone 3: Warehouse Location Model
+# Milestone 3: StaffArr Location Utilization Model
 
 ## Goal
 
-Create LoadArr-owned operational locations under StaffArr sites.
+Consume StaffArr-owned operational locations for warehouse execution.
 
 ## Backend Models
 
-Create WarehouseLocation.
+Create a LoadArr utilization snapshot model for StaffArr-owned locations used in inventory execution.
 
 Fields:
 
@@ -297,10 +297,10 @@ Location types:
 
 * GET /api/v1/locations
 * GET /api/v1/locations/{id}
-* POST /api/v1/locations
-* PUT /api/v1/locations/{id}
-* POST /api/v1/locations/{id}/deactivate
 * GET /api/v1/locations/tree
+* GET /api/v1/locations/{id}/utilization
+
+Do not expose LoadArr location create/edit/deactivate endpoints. Canonical location lifecycle belongs to StaffArr.
 
 ## Frontend Work
 
@@ -308,17 +308,17 @@ Build pages:
 
 * Locations list
 * Location detail
-* Create location guided form
-* Edit location
+* StaffArr location selector
+* StaffArr location utilization detail
 * Location tree view
 
 ## Acceptance Criteria
 
-* Locations are tenant-scoped.
-* Locations are tied to StaffArr site.
-* Locations support hierarchy.
-* Location create form uses controlled location type values.
-* Location detail shows current configuration and future inventory placeholder.
+* Location references are tenant-scoped.
+* Location references point to StaffArr-owned locations tied to StaffArr sites.
+* Location hierarchy is consumed from StaffArr.
+* LoadArr does not create canonical or operational locations.
+* Location detail shows StaffArr location configuration plus LoadArr inventory utilization.
 
 ---
 
@@ -682,7 +682,7 @@ Create guided receiving workflow:
 
 ## Goal
 
-Allow controlled movement of stock between LoadArr locations.
+Allow controlled movement of stock between StaffArr-owned locations used by LoadArr.
 
 ## Backend Models
 
@@ -913,6 +913,7 @@ Create:
 * Found stock does not become available automatically.
 * Resolution as valid stock creates InventoryOriginEvent.
 * Resolution creates movement and balance update.
+* Location references remain StaffArr-owned and item references remain SupplyArr-owned throughout the workflow.
 * Unknown origin can require quarantine/approval.
 
 ---
@@ -1573,7 +1574,7 @@ Make LoadArr usable by normal warehouse users.
 * Dashboard
 * Inventory list/detail
 * Receiving workflow
-* Location create/detail
+* StaffArr location utilization detail
 * Transfer workflow
 * Holds
 * Unexplained Inventory
@@ -1595,7 +1596,7 @@ The first demo should prove the whole concept:
 
 1. User opens LoadArr from NexArr.
 2. User selects a StaffArr site.
-3. User creates warehouse locations:
+3. User selects StaffArr-owned warehouse locations for LoadArr utilization:
 
    * Receiving Dock
    * Parts Room

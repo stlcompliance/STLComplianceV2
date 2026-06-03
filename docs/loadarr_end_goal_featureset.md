@@ -53,7 +53,7 @@ It is the operational layer for:
 
 ## LoadArr Owns
 
-- Warehouse locations under StaffArr sites
+- Warehouse utilization of StaffArr-owned locations
 - Inventory balances
 - Inventory movements
 - Warehouse task queues
@@ -84,6 +84,7 @@ It is the operational layer for:
 - Tenant/product entitlement: NexArr
 - Canonical people/personId: StaffArr/NexArr platform identity model
 - Canonical internal sites: StaffArr
+- Internal locations: StaffArr
 - Training definitions and signoffs: TrainArr
 - Item master: SupplyArr
 - Vendors/customers: SupplyArr
@@ -98,19 +99,19 @@ It is the operational layer for:
 
 LoadArr must use StaffArr OrgUnit rows with UnitType = "site" as canonical internal site identity.
 
-Every LoadArr operational location must be tied to a StaffArr site.
+Every location used by LoadArr must be a StaffArr-owned location tied to a StaffArr site.
 
 Required concepts:
 
 - staffarrSiteOrgUnitId
 - staffarrSiteNameSnapshot
-- LoadArr warehouse location hierarchy
-- LoadArr location type
+- StaffArr location hierarchy consumed by LoadArr
+- StaffArr location type consumed by LoadArr
 - Location active/inactive status
 - Location capacity rules
 - Location compliance restrictions
 
-Example location hierarchy:
+Example StaffArr-owned location hierarchy used by LoadArr:
 
 - Site
   - Warehouse
@@ -1042,7 +1043,7 @@ Suggested LoadArr navigation:
 
 Core objects:
 
-- WarehouseLocation
+- StaffArrLocationReference
 - InventoryBalance
 - InventoryLot
 - InventorySerial
@@ -1072,7 +1073,7 @@ Core objects:
 - ProductionReceipt
 - RecoveredInventoryRecord
 - UnexplainedInventoryRecord
-- TruckStockLocation
+- TruckStockLocationReference
 - DockAppointment
 - WarehouseIncident
 - ComplianceEvaluationSnapshot

@@ -47,6 +47,16 @@ function isMissingOnboardingRecordError(error: unknown): boolean {
   )
 }
 
+async function fileToBase64(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  let binary = ''
+  const bytes = new Uint8Array(buffer)
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+  return window.btoa(binary)
+}
+
 export function SupplierOnboardingPanel({
   accessToken,
   canManage,
@@ -64,6 +74,7 @@ export function SupplierOnboardingPanel({
   const [docTypeKey, setDocTypeKey] = useState('w9')
   const [docKey, setDocKey] = useState('')
   const [docTitle, setDocTitle] = useState('')
+  const [docFile, setDocFile] = useState<File | null>(null)
 
   const requirementsQuery = useQuery({
     queryKey: ['supplyarr-onboarding-requirements', accessToken],
@@ -118,19 +129,24 @@ export function SupplierOnboardingPanel({
   })
 
   const registerDocMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const generatedDocumentKey = docKey.trim()
       if (!generatedDocumentKey) {
         throw new Error('Generated document key is required.')
       }
+      if (!docFile) {
+        throw new Error('Select a document file.')
+      }
+      const contentBase64 = await fileToBase64(docFile)
       return registerPartyComplianceDocument(accessToken, selectedPartyId, {
         documentKey: generatedDocumentKey,
         documentTypeKey: docTypeKey,
         title: docTitle || docTypeKey,
-        fileName: `${docTypeKey}.pdf`,
-        contentType: 'application/pdf',
-        sizeBytes: 1024,
+        fileName: docFile.name,
+        contentType: docFile.type || 'application/octet-stream',
+        sizeBytes: docFile.size,
         notes: '',
+        contentBase64,
       })
     },
     onSuccess: async (created) => {
@@ -287,8 +303,8 @@ export function SupplierOnboardingPanel({
 
       {canManage && selectedPartyId && onboarding ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-3">
-          <h3 className="text-sm font-medium text-slate-300">Upload document (metadata)</h3>
-          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          <h3 className="text-sm font-medium text-slate-300">Upload document</h3>
+          <div className="mt-2 grid gap-2 sm:grid-cols-4">
             <label htmlFor="supplier-onboarding-doc-type" className="block text-sm text-slate-400">
               Document type
               <select
@@ -322,11 +338,20 @@ export function SupplierOnboardingPanel({
               kind="document"
               label="Document key"
             />
+            <label htmlFor="supplier-onboarding-doc-file" className="block text-sm text-slate-400">
+              File
+              <input
+                id="supplier-onboarding-doc-file"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                type="file"
+                onChange={(e) => setDocFile(e.currentTarget.files?.[0] ?? null)}
+              />
+            </label>
           </div>
           <button
             type="button"
             className="mt-2 rounded-lg border border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-800 disabled:opacity-50"
-            disabled={registerDocMutation.isPending || !docKey.trim()}
+            disabled={registerDocMutation.isPending || !docKey.trim() || !docFile}
             onClick={() => registerDocMutation.mutate()}
           >
             Register {canReview ? '& approve' : ''} document

@@ -234,6 +234,10 @@ services:
     dockerfilePath: ./apps/staffarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    disk:
+      name: staffarr-documents
+      mountPath: /var/data/staffarr-documents
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -248,6 +252,8 @@ services:
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
         value: https://app.stlcompliance.com
+      - key: DocumentStorage__RootPath
+        value: /var/data/staffarr-documents
       - key: Handoff__ServiceToken
         sync: false
       - key: NexArr__ServiceToken
@@ -340,6 +346,10 @@ services:
     dockerfilePath: ./apps/routarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    disk:
+      name: routarr-capture-attachments
+      mountPath: /var/data/routarr-capture-attachments
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -356,6 +366,8 @@ services:
         value: https://app.stlcompliance.com
       - key: RoutArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/routarr
+      - key: CaptureAttachmentStorage__RootPath
+        value: /var/data/routarr-capture-attachments
       - key: Handoff__ServiceToken
         sync: false
       - key: TrainArr__ServiceToken
@@ -376,6 +388,10 @@ services:
     dockerfilePath: ./apps/supplyarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    disk:
+      name: supplyarr-documents
+      mountPath: /var/data/supplyarr-documents
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -392,6 +408,8 @@ services:
         value: https://app.stlcompliance.com
       - key: SupplyArr__FrontendBaseUrl
         value: https://app.stlcompliance.com/supplyarr
+      - key: DocumentStorage__RootPath
+        value: /var/data/supplyarr-documents
       - key: Handoff__ServiceToken
         sync: false
       - key: MaintainArr__ServiceToken

@@ -66,6 +66,20 @@ public static class VendorDocumentEndpoints
             })
             .WithName($"ApproveVendorDocument{nameSuffix}");
 
+            group.MapGet("/{documentId:guid}/content", async (
+                Guid documentId,
+                HttpContext context,
+                SupplyArrAuthorizationService authorization,
+                PartyComplianceDocumentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireSupplierOnboardingRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var (metadata, stream) = await service.OpenDocumentContentAsync(tenantId, documentId, cancellationToken);
+                return Results.File(stream, metadata.ContentType, metadata.FileName);
+            })
+            .WithName($"DownloadVendorDocument{nameSuffix}");
+
             group.MapPost("/{documentId:guid}/reject", async (
                 Guid documentId,
                 RejectPartyComplianceDocumentRequest request,

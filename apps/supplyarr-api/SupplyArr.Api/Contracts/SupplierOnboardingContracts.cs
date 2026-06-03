@@ -53,7 +53,8 @@ public sealed record RegisterPartyComplianceDocumentRequest(
     string FileName,
     string ContentType,
     long SizeBytes,
-    string Notes);
+    string Notes,
+    string? ContentBase64 = null);
 
 public sealed record PartyComplianceDocumentResponse(
     Guid DocumentId,

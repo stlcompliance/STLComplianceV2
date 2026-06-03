@@ -92,9 +92,9 @@ Compliance Core owns:
 - Storage/handling/shipping rule interpretation where applicable
 
 LoadArr owns:
-- Warehouse locations
-- Location hierarchy below StaffArr site
-- Bin/zone/aisle/shelf/cage/dock/staging/truck-stock locations
+- Warehouse utilization of StaffArr-owned locations
+- Inventory state at StaffArr-owned locations
+- Warehouse execution workflows that reference StaffArr-owned locations
 - Inventory balances
 - Inventory movements
 - Receiving execution
@@ -128,7 +128,7 @@ Whenever LoadArr references an internal site, it must store:
 - staffarrSiteOrgUnitId
 - staffarrSiteNameSnapshot where useful for display/history
 
-LoadArr may create warehouse locations under a StaffArr site, such as:
+StaffArr owns all internal locations, including warehouse-operational locations such as:
 
 - Warehouse
 - Parts room
@@ -148,7 +148,7 @@ LoadArr may create warehouse locations under a StaffArr site, such as:
 - Quarantine area
 - Scrap area
 
-These are LoadArr-owned operational locations, not StaffArr canonical sites.
+These are StaffArr-owned locations utilized by LoadArr and other apps according to product workflows.
 
 ## Item Master Rule
 

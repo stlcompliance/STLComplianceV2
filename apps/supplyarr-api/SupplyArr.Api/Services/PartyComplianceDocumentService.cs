@@ -9,8 +9,11 @@ namespace SupplyArr.Api.Services;
 public sealed class PartyComplianceDocumentService(
     SupplyArrDbContext db,
     IntegrationOutboxEnqueueService integrationOutbox,
+    SupplyArrDocumentStorageService storage,
     ISupplyArrAuditService audit)
 {
+    private const long MaxDocumentBytes = 10 * 1024 * 1024;
+
     public async Task<IReadOnlyList<PartyComplianceDocumentResponse>> ListForPartyAsync(
         Guid tenantId,
         Guid externalPartyId,
@@ -45,10 +48,35 @@ public sealed class PartyComplianceDocumentService(
                 && x.DocumentKey == documentKey)
             .MaxAsync(x => (int?)x.Version, cancellationToken) ?? 0;
 
+        var fileName = NormalizeFileName(request.FileName);
+        var contentType = NormalizeContentType(request.ContentType);
+        var contentBytes = DecodeOptionalContent(request.ContentBase64);
+        if (contentBytes.Length > MaxDocumentBytes)
+        {
+            throw new StlApiException(
+                "party_compliance_document.content_too_large",
+                $"Document file must be {MaxDocumentBytes / (1024 * 1024)} MB or smaller.",
+                400);
+        }
+
+        var documentId = Guid.NewGuid();
+        string? storageKey = null;
+        if (contentBytes.Length > 0)
+        {
+            await using var contentStream = new MemoryStream(contentBytes);
+            storageKey = await storage.SaveAsync(
+                tenantId,
+                externalPartyId,
+                documentId,
+                fileName,
+                contentStream,
+                cancellationToken);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new PartyComplianceDocument
         {
-            Id = Guid.NewGuid(),
+            Id = documentId,
             TenantId = tenantId,
             ExternalPartyId = externalPartyId,
             DocumentKey = documentKey,
@@ -58,9 +86,10 @@ public sealed class PartyComplianceDocumentService(
             ReviewStatus = PartyComplianceDocumentReviewStatuses.Pending,
             ExpiresAt = request.ExpiresAt,
             EffectiveAt = request.EffectiveAt,
-            FileName = NormalizeFileName(request.FileName),
-            ContentType = NormalizeContentType(request.ContentType),
-            SizeBytes = Math.Max(0, request.SizeBytes),
+            FileName = fileName,
+            ContentType = contentType,
+            SizeBytes = contentBytes.Length > 0 ? contentBytes.Length : Math.Max(0, request.SizeBytes),
+            StorageKey = storageKey,
             Notes = NormalizeNotes(request.Notes),
             UploadedByUserId = actorUserId,
             CreatedAt = now,
@@ -86,6 +115,31 @@ public sealed class PartyComplianceDocumentService(
             cancellationToken);
 
         return Map(entity);
+    }
+
+    public async Task<(PartyComplianceDocumentResponse Metadata, FileStream Stream)> OpenDocumentContentAsync(
+        Guid tenantId,
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.PartyComplianceDocuments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == documentId,
+                cancellationToken)
+            ?? throw new StlApiException("party_compliance_document.not_found", "Compliance document was not found.", 404);
+
+        if (string.IsNullOrWhiteSpace(entity.StorageKey)
+            || !storage.TryOpenReadStream(entity.StorageKey, out var stream)
+            || stream is null)
+        {
+            throw new StlApiException(
+                "party_compliance_document.content_missing",
+                "Compliance document content is unavailable.",
+                404);
+        }
+
+        return (Map(entity), stream);
     }
 
     public async Task<PartyComplianceDocumentResponse> ApproveAsync(
@@ -272,4 +326,24 @@ public sealed class PartyComplianceDocumentService(
         string.IsNullOrWhiteSpace(value) ? "application/pdf" : value.Trim();
 
     private static string NormalizeNotes(string? value) => value?.Trim() ?? string.Empty;
+
+    private static byte[] DecodeOptionalContent(string? contentBase64)
+    {
+        if (string.IsNullOrWhiteSpace(contentBase64))
+        {
+            return [];
+        }
+
+        try
+        {
+            return Convert.FromBase64String(contentBase64.Trim());
+        }
+        catch (FormatException)
+        {
+            throw new StlApiException(
+                "party_compliance_document.invalid_content",
+                "Document content must be valid base64.",
+                400);
+        }
+    }
 }

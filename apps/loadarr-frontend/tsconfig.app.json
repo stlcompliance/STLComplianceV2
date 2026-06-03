@@ -12,6 +12,12 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@stl/shared-ui": ["../../packages/shared-ui/src/index.ts"],
+      "@stl/shared-ui/*": ["../../packages/shared-ui/src/*"]
+    },
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

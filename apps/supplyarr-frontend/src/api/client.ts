@@ -2558,6 +2558,7 @@ export async function registerPartyComplianceDocument(
     contentType: string
     sizeBytes: number
     notes: string
+    contentBase64?: string | null
   },
 ): Promise<PartyComplianceDocumentResponse> {
   const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/compliance-documents`, {
