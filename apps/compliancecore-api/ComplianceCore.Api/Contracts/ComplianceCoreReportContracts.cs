@@ -73,6 +73,105 @@ public sealed record MissingEvidenceReportSummaryItem(
     string Summary,
     DateTimeOffset EvaluatedAt);
 
+public sealed record RemediationQueueReportSummaryResponse(
+    int TotalWarnings,
+    int QueuedCount,
+    int CriticalCount,
+    int HighCount,
+    int MediumCount,
+    int LowCount,
+    DateTimeOffset? LastEvaluatedAt,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<RemediationQueueItemResponse> QueueItems);
+
+public sealed record RemediationQueueItemResponse(
+    Guid WarningId,
+    Guid RunId,
+    Guid RulePackId,
+    string PackKey,
+    string FactKey,
+    string WarningType,
+    string Severity,
+    string ReasonCode,
+    string QueueState,
+    string RecommendedAction,
+    bool HasMirrorAtScope,
+    bool IsRequiredInRule,
+    bool IsRequiredInCatalog,
+    string Summary,
+    DateTimeOffset EvaluatedAt);
+
+public sealed record WaiverReportSummaryResponse(
+    int TotalWaivers,
+    int PendingCount,
+    int ApprovedCount,
+    int RejectedCount,
+    int RevokedCount,
+    int ExpiredCount,
+    int ExpiringSoonCount,
+    IReadOnlyList<WaiverReportSummaryItem> RecentWaivers);
+
+public sealed record WaiverReportSummaryItem(
+    Guid WaiverId,
+    string WaiverKey,
+    string PackKey,
+    string SubjectScopeKey,
+    string Status,
+    string ReasonCode,
+    DateTimeOffset EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ExceptionExemptionReportSummaryResponse(
+    int TotalExceptionExemptions,
+    int ActiveCount,
+    int InactiveCount,
+    int WaiverTypeCount,
+    int VarianceTypeCount,
+    int SpecialPermitTypeCount,
+    int ExpiringSoonCount,
+    IReadOnlyList<ExceptionExemptionReportSummaryItem> RecentExceptionExemptions);
+
+public sealed record ExceptionExemptionReportSummaryItem(
+    Guid ExceptionExemptionId,
+    string Key,
+    string Label,
+    string Type,
+    string EffectType,
+    string PackKey,
+    string? CitationKey,
+    string ActiveState,
+    DateTimeOffset? EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ProductIntegrationHealthReportSummaryResponse(
+    Guid TenantId,
+    bool WorkerEnabled,
+    int IntervalMinutes,
+    DateTimeOffset? LastBatchRunAt,
+    int ProductApiSourceCount,
+    int HealthyCount,
+    int StaleCount,
+    int FailedCount,
+    int PendingCount,
+    IReadOnlyList<FactSourceSyncHealthItem> Sources);
+
+public sealed record AuditReadinessReportSummaryResponse(
+    int TotalForecasts,
+    int ScopesTracked,
+    int ReadyCount,
+    int CautionCount,
+    int NotReadyCount,
+    int UnknownCount,
+    int ReadinessScore,
+    string ReadinessLevel,
+    int LowestReadinessScore,
+    int AverageReadinessScore,
+    DateTimeOffset? LastForecastedAt,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<ReadinessForecastResponse> Forecasts);
+
 public sealed record EntityExportFormatDescriptor(
     string FormatKey,
     string ContentType,

@@ -47,6 +47,11 @@ export type TrainArrJourneyFixture = {
   trainingAssignmentId: string
 }
 
+export type TrainArrQualificationCompletionJourneyFixture = {
+  trainingDefinitionId: string
+  assignmentId: string
+}
+
 export type MaintainArrFieldInboxFixture = {
   workOrderId: string
 }
@@ -2060,7 +2065,7 @@ export async function checkRoutarrDriverEligibility(
   }
 }
 
-async function ensureTrainArrRoutarrQualificationGateTrip(
+export async function ensureTrainArrRoutarrQualificationGateTrip(
   routarrToken: string,
 ): Promise<{ tripId: string }> {
   await ensureRoutArrJourneyDriverPersonRef(routarrToken)
@@ -2071,6 +2076,53 @@ async function ensureTrainArrRoutarrQualificationGateTrip(
     scheduledStartAt: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
     scheduledEndAt: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
   })
+}
+
+/**
+ * Creates a RoutArr trip fixture for the TrainArr qualification publication browser journey.
+ * The trip is independent from TrainArr qualification state; the browser completion step is
+ * responsible for issuing the new qualification grant that unlocks dispatch eligibility.
+ */
+export async function ensureTrainArrRoutarrQualificationIssuePublicationTripFixture(): Promise<{ tripId: string }> {
+  const routarrToken = await redeemHandoffForProduct('routarr')
+  return ensureTrainArrRoutarrQualificationGateTrip(routarrToken)
+}
+
+/**
+ * Creates a live TrainArr assignment that can be completed in the browser to issue a fresh
+ * qualification grant for the shared journey driver person.
+ */
+export async function ensureTrainArrDriverQualificationCompletionFixture(): Promise<TrainArrQualificationCompletionJourneyFixture> {
+  const trainarrToken = await redeemHandoffForProduct('trainarr')
+  const definition = await ensureTrainArrE2eDriverQualificationDefinition(trainarrToken)
+  const check = await runTrainArrQualificationCheckApi(
+    trainarrToken,
+    journeySubjectPersonId,
+    definition.trainingDefinitionId,
+  )
+
+  const assignment = await readJson<{ assignmentId: string }>(
+    await fetch(`${trainarrApiUrl()}/api/training-assignments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${trainarrToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        staffarrPersonId: journeySubjectPersonId,
+        trainingDefinitionId: definition.trainingDefinitionId,
+        staffarrIncidentRemediationId: null,
+        assignmentReason: e2eDriverQualificationAssignmentReason,
+        dueAt: null,
+        authorizationQualificationCheckId: check.checkId,
+      }),
+    }),
+  )
+
+  return {
+    trainingDefinitionId: definition.trainingDefinitionId,
+    assignmentId: assignment.assignmentId,
+  }
 }
 
 /**

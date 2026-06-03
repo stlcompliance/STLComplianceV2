@@ -14,6 +14,17 @@ public sealed record PurchasingReportTotalsResponse(
     decimal OpenPurchaseOrderLineQuantity,
     decimal PurchaseOrderQuantityReceived);
 
+public sealed record PurchasingProcurementAnalyticsResponse(
+    int PendingPurchaseRequestCount,
+    int EmergencyPurchaseRequestCount,
+    int ActiveProcurementExceptionCount,
+    int OpenReceivingExceptionCount,
+    int OpenWarrantyClaimCount,
+    int VendorDocumentExpiringSoonCount,
+    int BlockedVendorCount,
+    int? AverageLeadTimeDays,
+    decimal EstimatedSpendThisMonth);
+
 public sealed record PurchasingDocumentSummaryItemResponse(
     string DocumentType,
     Guid DocumentId,
@@ -30,6 +41,7 @@ public sealed record PurchasingDocumentSummaryItemResponse(
 public sealed record PurchasingReportSummaryResponse(
     DateTimeOffset GeneratedAt,
     PurchasingReportTotalsResponse Totals,
+    PurchasingProcurementAnalyticsResponse Analytics,
     IReadOnlyList<PurchasingStatusCountResponse> PurchaseRequestStatusCounts,
     IReadOnlyList<PurchasingStatusCountResponse> PurchaseOrderStatusCounts,
     IReadOnlyList<PurchasingDocumentSummaryItemResponse> Documents);

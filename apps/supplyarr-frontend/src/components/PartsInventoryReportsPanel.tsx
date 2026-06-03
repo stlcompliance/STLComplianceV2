@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import {
   exportPartsInventoryReportSummaryCsv,
@@ -54,6 +54,12 @@ export function PartsInventoryReportsPanel({
     queryFn: () => getPartsInventoryLocationDetail(accessToken, selectedLocationId!),
     enabled: canRead && Boolean(selectedLocationId),
   })
+
+  const locationOptions = (summaryQuery.data?.locations ?? []).map<PickerOption>((loc) => ({
+    value: loc.inventoryLocationId,
+    label: `${loc.locationKey} · ${loc.name}`,
+  }))
+  const selectedLocationOption = locationOptions.find((loc) => loc.value === locationFilter)
 
   const exportMutation = useMutation({
     mutationFn: () =>
@@ -121,23 +127,19 @@ export function PartsInventoryReportsPanel({
         </label>
         <label htmlFor="parts-inventory-location-filter" className="flex items-center gap-2 text-slate-300">
           Inventory location filter
-          <select
+          <StaticSearchPicker
             id="parts-inventory-location-filter"
-            className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={locationFilter}
-            onChange={(event) => {
-              setLocationFilter(event.target.value)
-              setSelectedLocationId(event.target.value || null)
+            options={locationOptions}
+            selectedOption={selectedLocationOption}
+            onChange={(value) => {
+              setLocationFilter(value)
+              setSelectedLocationId(value || null)
               setSelectedPartId(null)
             }}
-          >
-            <option value="">All locations</option>
-            {summaryQuery.data?.locations.map((loc) => (
-              <option key={loc.inventoryLocationId} value={loc.inventoryLocationId}>
-                {loc.locationKey} · {loc.name}
-              </option>
-            ))}
-          </select>
+            placeholder="All locations"
+            testId="parts-inventory-location-filter"
+          />
         </label>
       </div>
 

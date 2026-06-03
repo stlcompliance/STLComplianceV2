@@ -55,6 +55,7 @@ import {
   updatePartyApprovalStatus,
   updatePartyStatus,
   createPartyContact,
+  getContractRecords,
 
   approvePurchaseRequest,
 
@@ -1881,6 +1882,16 @@ export function useSupplyArrWorkspaceState() {
     ? userCanReadPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
+  const contractsQuery = useQuery({
+
+    queryKey: ['supplyarr-contract-records', session?.accessToken],
+
+    queryFn: () => getContractRecords(session!.accessToken, { limit: 100 }),
+
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPurchasingReports,
+
+  })
+
   const canExportPurchasingReports = me
     ? userCanExportPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
     : false
@@ -2143,6 +2154,7 @@ export function useSupplyArrWorkspaceState() {
     leadTimeSnapshotsQuery,
     availabilitySnapshotsQuery,
     reorderEvaluationQuery,
+    contractsQuery,
     demandRefsQuery,
     stockQuery,
     stockLedgerQuery,

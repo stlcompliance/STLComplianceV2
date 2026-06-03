@@ -47,6 +47,10 @@ public sealed class ProcurementExceptionEscalationSettingsService(
         entity.MaxEscalationsPerException = ProcurementExceptionEscalationRules.NormalizeMaxEscalations(
             request.MaxEscalationsPerException);
         entity.NotifyOnProcurementExceptionSlaEscalation = request.NotifyOnProcurementExceptionSlaEscalation;
+        entity.AutoCloseCompletedExceptionsEnabled = request.AutoCloseCompletedExceptionsEnabled;
+        entity.AutoCloseCompletedExceptionsAfterHours =
+            ProcurementExceptionAutomationRules.NormalizeAutoCloseCompletedExceptionsAfterHours(
+                request.AutoCloseCompletedExceptionsAfterHours);
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -81,7 +85,9 @@ public sealed class ProcurementExceptionEscalationSettingsService(
             settings.IsEnabled,
             settings.EscalationCooldownHours,
             settings.MaxEscalationsPerException,
-            settings.NotifyOnProcurementExceptionSlaEscalation);
+            settings.NotifyOnProcurementExceptionSlaEscalation,
+            settings.AutoCloseCompletedExceptionsEnabled,
+            settings.AutoCloseCompletedExceptionsAfterHours);
 
     private static ProcurementExceptionEscalationSettingsResponse DefaultResponse() =>
         new(
@@ -89,6 +95,9 @@ public sealed class ProcurementExceptionEscalationSettingsService(
             EscalationCooldownHours: ProcurementExceptionEscalationDefaults.EscalationCooldownHours,
             MaxEscalationsPerException: ProcurementExceptionEscalationDefaults.MaxEscalationsPerException,
             NotifyOnProcurementExceptionSlaEscalation: true,
+            AutoCloseCompletedExceptionsEnabled: false,
+            AutoCloseCompletedExceptionsAfterHours:
+                ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours,
             UpdatedAt: null);
 
     private static ProcurementExceptionEscalationSettingsResponse MapResponse(
@@ -98,5 +107,7 @@ public sealed class ProcurementExceptionEscalationSettingsService(
             settings.EscalationCooldownHours,
             settings.MaxEscalationsPerException,
             settings.NotifyOnProcurementExceptionSlaEscalation,
+            settings.AutoCloseCompletedExceptionsEnabled,
+            settings.AutoCloseCompletedExceptionsAfterHours,
             settings.UpdatedAt);
 }

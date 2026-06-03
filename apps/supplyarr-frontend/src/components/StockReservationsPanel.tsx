@@ -1,4 +1,4 @@
-import { ControlledSelect } from '@stl/shared-ui'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMemo } from 'react'
 
 import type { PartResponse, PartStockLevelResponse, StockReservationResponse } from '../api/types'
@@ -88,6 +88,30 @@ export function StockReservationsPanel({
     [reservations],
   )
   const selectedPart = parts.find((part) => part.partId === selectedReservationPartId)
+  const partOptions = useMemo<PickerOption[]>(
+    () =>
+      toPartPickerOptions(parts).map((option) => ({
+        value: option.value,
+        label: option.label,
+      })),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedReservationPartId),
+    [partOptions, selectedReservationPartId],
+  )
+  const binOptions = useMemo<PickerOption[]>(
+    () =>
+      toBinPickerOptions(bins).map((option) => ({
+        value: option.value,
+        label: option.label,
+      })),
+    [bins],
+  )
+  const selectedBinOption = useMemo<PickerOption | undefined>(
+    () => binOptions.find((option) => option.value === selectedReservationBinId),
+    [binOptions, selectedReservationBinId],
+  )
   const reservationKeySource =
     reservationNotes.trim() ||
     (selectedPart ? `${selectedPart.displayName} hold` : '')
@@ -198,21 +222,25 @@ export function StockReservationsPanel({
         <div className="mt-6 space-y-3 border-t border-slate-800 pt-6">
           <h3 className="text-sm font-medium text-slate-300">Create reservation</h3>
           <div className="grid gap-2 sm:grid-cols-2">
-            <ControlledSelect
+            <StaticSearchPicker
               id="stock-reservation-part"
               label="Part"
               value={selectedReservationPartId}
               onChange={onSelectedReservationPartIdChange}
-              options={toPartPickerOptions(parts)}
-              emptyLabel="Select part"
+              options={partOptions}
+              selectedOption={selectedPartOption}
+              placeholder="Search parts…"
+              testId="stock-reservation-part-picker"
             />
-            <ControlledSelect
+            <StaticSearchPicker
               id="stock-reservation-bin"
               label="Bin"
               value={selectedReservationBinId}
               onChange={onSelectedReservationBinIdChange}
-              options={toBinPickerOptions(bins)}
-              emptyLabel="Select bin"
+              options={binOptions}
+              selectedOption={selectedBinOption}
+              placeholder="Search bins…"
+              testId="stock-reservation-bin-picker"
             />
             <label htmlFor="stock-reservation-notes" className="block text-sm text-slate-400 sm:col-span-2">
               Reservation notes (optional)

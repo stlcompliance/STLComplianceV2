@@ -13,6 +13,10 @@ vi.mock('../../components/ReadinessReportsPanel', () => ({
   ReadinessReportsPanel: () => <div data-testid="readiness-reports-panel" />,
 }))
 
+vi.mock('../../components/CertificationReportsPanel', () => ({
+  CertificationReportsPanel: () => <div data-testid="certification-reports-panel" />,
+}))
+
 vi.mock('../../components/IncidentReportsPanel', () => ({
   IncidentReportsPanel: () => <div data-testid="incident-reports-panel" />,
 }))
@@ -50,6 +54,7 @@ describe('ReportsSection', () => {
     expect(screen.getByTestId('staffarr-reports-workspace')).toBeTruthy()
     expect(screen.getByTestId('personnel-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('readiness-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('certification-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('incident-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('data-exports-panel')).toBeTruthy()
     expect(screen.getByTestId('staffarr-audit-export-panel')).toBeTruthy()

@@ -1,5 +1,43 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: { value: string; label: string }[]
+      onChange: (value: string) => void
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-step-branch-picker'}>
+        {label ? <span>{label}</span> : null}
+        <select
+          id={testId ?? 'mock-step-branch-picker'}
+          aria-label={label ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">Select…</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 import { StepBranchBuilderPanel } from './StepBranchBuilderPanel'
 
 const definition = {
@@ -114,5 +152,53 @@ describe('StepBranchBuilderPanel', () => {
 
     expect(screen.getByText('Quiz fail remediation')).toBeInTheDocument()
     expect(screen.getByText('quiz_failed_remediation')).toBeInTheDocument()
+  })
+
+  it('uses searchable pickers for definitions and steps', () => {
+    const onSelectDefinition = vi.fn()
+    const onSelectStep = vi.fn()
+
+    render(
+      <StepBranchBuilderPanel
+        definitions={[definition]}
+        selectedDefinitionId=""
+        steps={steps}
+        selectedStepId=""
+        catalog={catalog}
+        branches={[]}
+        isLoading={false}
+        canManage
+        isSubmitting={false}
+        onSelectDefinition={onSelectDefinition}
+        onSelectStep={onSelectStep}
+        onCreateBranch={vi.fn()}
+        onDeleteBranch={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Training definition'), { target: { value: 'def-1' } })
+    expect(onSelectDefinition).toHaveBeenCalledWith('def-1')
+
+    cleanup()
+    render(
+      <StepBranchBuilderPanel
+        definitions={[definition]}
+        selectedDefinitionId="def-1"
+        steps={steps}
+        selectedStepId=""
+        catalog={catalog}
+        branches={[]}
+        isLoading={false}
+        canManage
+        isSubmitting={false}
+        onSelectDefinition={onSelectDefinition}
+        onSelectStep={onSelectStep}
+        onCreateBranch={vi.fn()}
+        onDeleteBranch={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Training step'), { target: { value: 'step-quiz' } })
+    expect(onSelectStep).toHaveBeenCalledWith('step-quiz')
   })
 })

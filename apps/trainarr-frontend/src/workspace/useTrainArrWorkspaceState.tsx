@@ -52,6 +52,7 @@ import {
   getTrainingProgramCitations,
   attachTrainingDefinitionCitation,
   attachTrainingProgramCitation,
+  attachTrainingProgramContentReference,
   getTrainingDefinitionRulePackRequirements,
   getTrainingProgramRulePackRequirements,
   upsertTrainingDefinitionRulePackRequirement,
@@ -109,6 +110,11 @@ export function useTrainArrWorkspaceState() {
   const [citationIdInput, setCitationIdInput] = useState('')
   const [citationKeyInput, setCitationKeyInput] = useState('')
   const [validateCitationWithComplianceCore, setValidateCitationWithComplianceCore] = useState(true)
+  const [contentReferenceTypeKey, setContentReferenceTypeKey] = useState('uploaded_pdf')
+  const [contentReferenceTitle, setContentReferenceTitle] = useState('')
+  const [contentReferenceValue, setContentReferenceValue] = useState('')
+  const [contentReferenceNotes, setContentReferenceNotes] = useState('')
+  const [contentReferenceLocaleTag, setContentReferenceLocaleTag] = useState('')
   const [rulePackKeyInput, setRulePackKeyInput] = useState('')
   const [validateRulePackWithComplianceCore, setValidateRulePackWithComplianceCore] = useState(true)
   const [impactRulePackKeyInput, setImpactRulePackKeyInput] = useState('driver_qualification')
@@ -116,6 +122,7 @@ export function useTrainArrWorkspaceState() {
     import('../api/types').RulePackImpactAssessmentResponse | null
   >(null)
   const [removingCitationId, setRemovingCitationId] = useState<string | null>(null)
+  const [removingProgramContentReferenceId, setRemovingProgramContentReferenceId] = useState<string | null>(null)
   const [removingRulePackRequirementId, setRemovingRulePackRequirementId] = useState<string | null>(null)
   const [evidenceTypeKey, setEvidenceTypeKey] = useState('completion_certificate')
   const [evidenceNotes, setEvidenceNotes] = useState('')
@@ -525,6 +532,37 @@ export function useTrainArrWorkspaceState() {
       setCitationKeyInput('')
       void queryClient.invalidateQueries({
         queryKey: ['trainarr-program-citations', session?.accessToken, selectedProgramId],
+      })
+    },
+  })
+
+  const attachProgramContentReferenceMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedProgramId) {
+        throw new Error('Select a training program for content reference management.')
+      }
+      const contentType = contentReferenceTypeKey.trim()
+      const title = contentReferenceTitle.trim()
+      const referenceValue = contentReferenceValue.trim()
+      if (!contentType || !title || !referenceValue) {
+        throw new Error('Select a content type and enter a title and reference value.')
+      }
+      return attachTrainingProgramContentReference(session!.accessToken, selectedProgramId, {
+        contentType,
+        title,
+        referenceValue,
+        notes: contentReferenceNotes.trim() || null,
+        localeTag: contentReferenceLocaleTag.trim() || null,
+      })
+    },
+    onSuccess: () => {
+      setContentReferenceTypeKey('uploaded_pdf')
+      setContentReferenceTitle('')
+      setContentReferenceValue('')
+      setContentReferenceNotes('')
+      setContentReferenceLocaleTag('')
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-program-detail', session?.accessToken, selectedProgramId],
       })
     },
   })
@@ -1107,11 +1145,23 @@ const me = meQuery.data
     citationIdInput,
     citationKeyInput,
     validateCitationWithComplianceCore,
+    contentReferenceTypeKey,
+    contentReferenceTitle,
+    contentReferenceValue,
+    contentReferenceNotes,
+    contentReferenceLocaleTag,
+    setContentReferenceTypeKey,
+    setContentReferenceTitle,
+    setContentReferenceValue,
+    setContentReferenceNotes,
+    setContentReferenceLocaleTag,
     rulePackKeyInput,
     validateRulePackWithComplianceCore,
     impactRulePackKeyInput,
     rulePackImpactAssessment,
     removingCitationId,
+    removingProgramContentReferenceId,
+    setRemovingProgramContentReferenceId,
     removingRulePackRequirementId,
     evidenceTypeKey,
     evidenceNotes,
@@ -1169,6 +1219,7 @@ const me = meQuery.data
     createManualAssignmentMutation,
     attachDefinitionCitationMutation,
     attachProgramCitationMutation,
+    attachProgramContentReferenceMutation,
     upsertDefinitionRulePackMutation,
     upsertProgramRulePackMutation,
     createProgramMutation,

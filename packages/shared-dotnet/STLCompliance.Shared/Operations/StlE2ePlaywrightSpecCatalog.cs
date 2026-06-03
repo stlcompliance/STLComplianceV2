@@ -315,6 +315,9 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string TrainArrRoutArrQualificationGateAssignJourneySmokeSpec =
         "trainarr-routarr-qualification-gate-assign-journey-smoke.spec.ts";
 
+    public const string TrainArrRoutArrQualificationIssuePublicationJourneySmokeSpec =
+        "trainarr-routarr-qualification-issue-publication-journey-smoke.spec.ts";
+
     public const string ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec =
         "compliancecore-routarr-dispatch-gate-command-center-dnd-journey-smoke.spec.ts";
 
@@ -399,6 +402,7 @@ public static class StlE2ePlaywrightSpecCatalog
         ComplianceCoreSettingsAdminWorkspaceSmokeSpec,
         ComplianceCoreReportsWorkspaceSmokeSpec,
         TrainArrAssignmentMaterialDemandSmokeSpec,
+        TrainArrRoutArrQualificationIssuePublicationJourneySmokeSpec,
         RoutArrDispatchCommandCenterSmokeSpec,
         RoutArrDispatchExceptionQueueSmokeSpec,
         RoutArrDispatchExceptionTriageDepthSmokeSpec,
@@ -491,6 +495,7 @@ public static class StlE2ePlaywrightSpecCatalog
         ComplianceCoreOperatorBatchWorkflowGateCheckJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateAssignJourneySmokeSpec,
         TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
+        TrainArrRoutArrQualificationIssuePublicationJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateBulkDispatchJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateUnassignedBulkAssignJourneySmokeSpec,

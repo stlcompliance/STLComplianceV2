@@ -180,6 +180,125 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_certification_definitions", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IncidentId", "CreatedAt");
+
+                    b.ToTable("staffarr_incident_attachments", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8192)
+                        .HasColumnType("character varying(8192)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NoteTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IncidentId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "IncidentId", "Status");
+
+                    b.ToTable("staffarr_incident_notes", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.IncidentSupplyDemandLine", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1109,6 +1228,9 @@ namespace StaffArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("PersonId")
                         .HasColumnType("uuid");
 
@@ -1144,6 +1266,8 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "Status", "ExpiresAt");
 
                     b.HasIndex("TenantId", "PersonId", "RoleTemplateId", "ScopeType", "ScopeValue")
                         .IsUnique();
@@ -1858,6 +1982,16 @@ namespace StaffArr.Api.Migrations
                     b.Property<DateTimeOffset>("ComputedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("low");
+
+                    b.Property<int>("ConfidenceScore")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2302,6 +2436,24 @@ namespace StaffArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("staffarr_tenant_worker_settings", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentAttachment", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PersonnelIncident", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentNote", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PersonnelIncident", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.IncidentSupplyDemandLine", b =>

@@ -6,12 +6,14 @@ import {
   assignTripDriver,
   createRoute,
   createTrip,
+  checkRouteStopGeofence,
   getMe,
   getRoute,
   getRoutes,
   getTrip,
   getTrips,
   linkRouteTrip,
+  optimizeRouteStops,
   updateRouteStopStatus,
   updateTripStatus,
 } from '../api/client'
@@ -44,6 +46,9 @@ export function useRoutArrWorkspaceState() {
   const [stopLabel, setStopLabel] = useState('')
   const [stopAddress, setStopAddress] = useState('')
   const [stopType, setStopType] = useState('pickup')
+  const [stopGeofenceAnchorLatitude, setStopGeofenceAnchorLatitude] = useState('')
+  const [stopGeofenceAnchorLongitude, setStopGeofenceAnchorLongitude] = useState('')
+  const [stopGeofenceRadiusMeters, setStopGeofenceRadiusMeters] = useState('')
   const [boardScope, setBoardScope] = useState<'daily' | 'weekly'>('daily')
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -160,6 +165,9 @@ export function useRoutArrWorkspaceState() {
                 addressLabel: stopAddress,
                 stopType,
                 sequenceNumber: 1,
+                geofenceAnchorLatitude: stopGeofenceAnchorLatitude.trim() ? Number(stopGeofenceAnchorLatitude) : null,
+                geofenceAnchorLongitude: stopGeofenceAnchorLongitude.trim() ? Number(stopGeofenceAnchorLongitude) : null,
+                geofenceRadiusMeters: stopGeofenceRadiusMeters.trim() ? Number(stopGeofenceRadiusMeters) : null,
               },
             ]
           : null,
@@ -170,6 +178,9 @@ export function useRoutArrWorkspaceState() {
       setStopKey('')
       setStopLabel('')
       setStopAddress('')
+      setStopGeofenceAnchorLatitude('')
+      setStopGeofenceAnchorLongitude('')
+      setStopGeofenceRadiusMeters('')
       setSelectedRouteId(created.routeId)
       await queryClient.invalidateQueries({ queryKey: ['routarr-routes'] })
     },
@@ -186,9 +197,37 @@ export function useRoutArrWorkspaceState() {
     },
   })
 
+  const optimizeRouteMutation = useMutation({
+    mutationFn: () => optimizeRouteStops(session!.accessToken, selectedRouteId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['routarr-routes'] })
+      await queryClient.invalidateQueries({ queryKey: ['routarr-route', session?.accessToken, selectedRouteId] })
+    },
+  })
+
   const updateStopStatusMutation = useMutation({
     mutationFn: ({ stopId, status }: { stopId: string; status: string }) =>
       updateRouteStopStatus(session!.accessToken, stopId, { stopStatus: status }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['routarr-routes'] })
+      await queryClient.invalidateQueries({ queryKey: ['routarr-route', session?.accessToken, selectedRouteId] })
+    },
+  })
+
+  const checkRouteStopGeofenceMutation = useMutation({
+    mutationFn: ({
+      stopId,
+      reportedLatitude,
+      reportedLongitude,
+    }: {
+      stopId: string
+      reportedLatitude: number
+      reportedLongitude: number
+    }) =>
+      checkRouteStopGeofence(session!.accessToken, stopId, {
+        reportedLatitude,
+        reportedLongitude,
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['routarr-routes'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-route', session?.accessToken, selectedRouteId] })
@@ -226,6 +265,9 @@ export function useRoutArrWorkspaceState() {
     stopLabel,
     stopAddress,
     stopType,
+    stopGeofenceAnchorLatitude,
+    stopGeofenceAnchorLongitude,
+    stopGeofenceRadiusMeters,
     boardScope,
     setBoardScope,
     setStatusFilter,
@@ -244,6 +286,9 @@ export function useRoutArrWorkspaceState() {
     setStopLabel,
     setStopAddress,
     setStopType,
+    setStopGeofenceAnchorLatitude,
+    setStopGeofenceAnchorLongitude,
+    setStopGeofenceRadiusMeters,
     setApiError,
     meQuery,
     tripsQuery,
@@ -256,7 +301,9 @@ export function useRoutArrWorkspaceState() {
     updateStatusMutation,
     createRouteMutation,
     linkRouteMutation,
+    optimizeRouteMutation,
     updateStopStatusMutation,
+    checkRouteStopGeofenceMutation,
     roleKey,
     isPlatformAdmin,
   }

@@ -891,6 +891,244 @@ public static partial class LoadArrWorkspaceEndpoints
             return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
         })
         .WithName("ReplenishLoadArrKit");
+
+        kits.MapPost("/{id}/reserve", (string id, KitLifecycleActionRequest request) =>
+        {
+            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var reservedQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
+            var status = reservedQuantity < record.MinimumQuantity ? "needs_replenishment" : "reserved";
+            var updated = record with
+            {
+                QuantityOnHand = reservedQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Reserved {request.Quantity} kit(s) for controlled use.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:reserve:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_reserve", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+            var followUpTask = status == "needs_replenishment"
+                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - reservedQuantity)
+                : null;
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("ReserveLoadArrKit");
+
+        kits.MapPost("/{id}/pick", (string id, KitLifecycleActionRequest request) =>
+        {
+            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var pickedQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
+            var status = pickedQuantity < record.MinimumQuantity ? "needs_replenishment" : "picked";
+            var updated = record with
+            {
+                QuantityOnHand = pickedQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Picked {request.Quantity} kit(s) from controlled stock.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:pick:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_pick", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+            var followUpTask = status == "needs_replenishment"
+                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - pickedQuantity)
+                : null;
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("PickLoadArrKit");
+
+        kits.MapPost("/{id}/inspect", (string id, KitLifecycleActionRequest request) =>
+        {
+            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var status = record.QuantityOnHand < record.MinimumQuantity ? "needs_replenishment" : "inspected";
+            var updated = record with
+            {
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Inspected by {request.PersonId} for readiness and condition.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:inspect:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_inspect", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+            var followUpTask = status == "needs_replenishment"
+                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - record.QuantityOnHand)
+                : null;
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("InspectLoadArrKit");
+
+        kits.MapPost("/{id}/assign", (string id, KitAssignRequest request) =>
+        {
+            var validation = ValidateKitAssignRequest(request.PersonId, request.TargetPersonId, request.TargetPersonNameSnapshot, request.ReasonCode);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var updated = record with
+            {
+                AssignedPersonId = request.TargetPersonId,
+                AssignedPersonNameSnapshot = request.TargetPersonNameSnapshot,
+                Status = "assigned",
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Assigned kit to {request.TargetPersonNameSnapshot}.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:assign:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_assign", 0m, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
+        })
+        .WithName("AssignLoadArrKit");
+
+        kits.MapPost("/{id}/return", (string id, KitLifecycleActionRequest request) =>
+        {
+            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var returnedQuantity = record.QuantityOnHand + request.Quantity;
+            var status = returnedQuantity < record.MinimumQuantity ? "needs_replenishment" : "returned";
+            var updated = record with
+            {
+                QuantityOnHand = returnedQuantity,
+                Status = status,
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Returned {request.Quantity} kit(s) to stock.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:return:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_return", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+            var followUpTask = status == "needs_replenishment"
+                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - returnedQuantity)
+                : null;
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
+        })
+        .WithName("ReturnLoadArrKit");
+
+        kits.MapPost("/{id}/expire-components", (string id, KitLifecycleActionRequest request) =>
+        {
+            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var updated = record with
+            {
+                QuantityOnHand = 0m,
+                Status = "expired",
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Expired kit components as of controlled review.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:expire:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_expire_components", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
+        })
+        .WithName("ExpireKitComponents");
+
+        kits.MapPost("/{id}/track-location", (string id, KitTrackLocationRequest request) =>
+        {
+            var validation = ValidateKitTrackLocationRequest(request.PersonId, request.TargetLocationId, request.ReasonCode);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveKitRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var targetLocation = ResolveLocation(request.TargetLocationId);
+            if (targetLocation is null)
+            {
+                return Results.BadRequest(new LoadArrProblemResponse(
+                    "invalid_location",
+                    "Kit location tracking requires a valid StaffArr-owned location reference."));
+            }
+
+            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var updated = record with
+            {
+                LocationId = targetLocation.Id,
+                LocationNameSnapshot = targetLocation.Name,
+                Status = "tracked",
+                LastActionAtUtc = changedAtUtc,
+                LastMovementAtUtc = changedAtUtc,
+                Notes = $"Tracked kit location to {targetLocation.Name}.",
+                TraceTags = record.TraceTags.Concat(new[] { $"kit:track:{changedAtUtc}" }).ToArray()
+            };
+            var movement = CreateKitMovement(record, "kit_track_location", 0m, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, targetLocation.Id, targetLocation.Name, targetLocation.Id, targetLocation.Name, record.KitNameSnapshot);
+
+            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
+        })
+        .WithName("TrackLoadArrKitLocation");
     }
 
     private static LoadArrLocationUtilizationResponse? CreateLocationUtilization(string locationId)
@@ -1144,6 +1382,143 @@ public static partial class LoadArrWorkspaceEndpoints
     private static LoadArrKitResponse? ResolveKitRecord(string id) =>
         CreateKitRecords()
             .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
+
+    private static LoadArrWarehouseTaskResponse? CreateKitFollowUpTask(LoadArrKitResponse record, decimal quantityNeeded) =>
+        quantityNeeded > 0m
+            ? new LoadArrWarehouseTaskResponse(
+                $"task-{Guid.NewGuid():N}"[..13],
+                "replenish",
+                $"Replenish {record.KitNameSnapshot}",
+                "normal",
+                "ready",
+                record.LocationNameSnapshot,
+                "Kit Coordinator",
+                record.PrimaryItemId,
+                quantityNeeded,
+                DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                new[] { "kit_low", "replenish_requested" })
+            : null;
+
+    private static LoadArrInventoryMovementResponse CreateKitMovement(
+        LoadArrKitResponse record,
+        string movementType,
+        decimal quantity,
+        string reasonCode,
+        string personId,
+        string changedAtUtc,
+        string previousStatus,
+        string nextStatus,
+        string fromLocationId,
+        string fromLocationName,
+        string toLocationId,
+        string toLocationName,
+        string sourceObjectType)
+    {
+        return new LoadArrInventoryMovementResponse(
+            $"move-{Guid.NewGuid():N}"[..13],
+            movementType,
+            record.StaffarrSiteOrgUnitId,
+            fromLocationId,
+            toLocationId,
+            record.PrimaryItemId,
+            record.KitNameSnapshot,
+            quantity,
+            record.UnitOfMeasure,
+            previousStatus,
+            nextStatus,
+            "loadarr",
+            sourceObjectType,
+            record.Id,
+            reasonCode,
+            personId,
+            null,
+            changedAtUtc);
+    }
+
+    private static IResult? ValidateKitLifecycleActionRequest(string personId, string reasonCode, decimal quantity)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Kit operations require the acting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Kit operations require a controlled reason code."));
+        }
+
+        if (quantity < 0m)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_quantity",
+                "Kit quantity cannot be negative."));
+        }
+
+        return null;
+    }
+
+    private static IResult? ValidateKitAssignRequest(string personId, string targetPersonId, string targetPersonNameSnapshot, string reasonCode)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Kit assignment requires the acting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(targetPersonId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_target_person",
+                "Kit assignment requires a target person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(targetPersonNameSnapshot))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_target_person_snapshot",
+                "Kit assignment requires a target person snapshot."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Kit assignment requires a controlled reason code."));
+        }
+
+        return null;
+    }
+
+    private static IResult? ValidateKitTrackLocationRequest(string personId, string targetLocationId, string reasonCode)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Kit location tracking requires the acting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(targetLocationId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_location",
+                "Kit location tracking requires a target location reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Kit location tracking requires a controlled reason code."));
+        }
+
+        return null;
+    }
 
     private static LoadArrAdjustmentResponse CreateAdjustmentFromVariance(
         LoadArrCountResponse count,
@@ -1570,6 +1945,25 @@ public sealed record LoadArrKitResponse(
 public sealed record KitMutationRequest(
     string PersonId,
     decimal Quantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record KitLifecycleActionRequest(
+    string PersonId,
+    decimal Quantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record KitAssignRequest(
+    string PersonId,
+    string TargetPersonId,
+    string TargetPersonNameSnapshot,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record KitTrackLocationRequest(
+    string PersonId,
+    string TargetLocationId,
     string ReasonCode,
     string? EvidenceSummary);
 

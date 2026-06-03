@@ -30,12 +30,18 @@ describe('PlatformSessionSettingsPanel', () => {
       accessTokenMinutes: 45,
       refreshTokenDays: 14,
       rememberedRefreshTokenDays: 60,
+      requirePlatformAdminMfa: false,
+      passwordMinLength: 14,
+      requirePasswordComplexity: true,
       updatedAt: '2026-06-02T12:00:00Z',
     })
     vi.mocked(nexarr.upsertPlatformSessionSettings).mockResolvedValue({
       accessTokenMinutes: 90,
       refreshTokenDays: 21,
       rememberedRefreshTokenDays: 120,
+      requirePlatformAdminMfa: true,
+      passwordMinLength: 16,
+      requirePasswordComplexity: false,
       updatedAt: '2026-06-02T12:05:00Z',
     })
 
@@ -54,6 +60,11 @@ describe('PlatformSessionSettingsPanel', () => {
     fireEvent.change(screen.getByTestId('platform-session-remembered-days'), {
       target: { value: '120' },
     })
+    fireEvent.change(screen.getByTestId('platform-session-password-min-length'), {
+      target: { value: '16' },
+    })
+    fireEvent.click(screen.getByTestId('platform-session-require-admin-mfa'))
+    fireEvent.click(screen.getByTestId('platform-session-require-password-complexity'))
     fireEvent.click(screen.getByTestId('platform-session-save'))
 
     await waitFor(() => {
@@ -61,6 +72,9 @@ describe('PlatformSessionSettingsPanel', () => {
         accessTokenMinutes: 90,
         refreshTokenDays: 21,
         rememberedRefreshTokenDays: 120,
+        requirePlatformAdminMfa: true,
+        passwordMinLength: 16,
+        requirePasswordComplexity: false,
       })
     })
     expect(await screen.findByText('Saved.')).toBeInTheDocument()

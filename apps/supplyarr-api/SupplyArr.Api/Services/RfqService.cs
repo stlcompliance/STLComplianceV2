@@ -3,6 +3,8 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SupplyArr.Api.Services;
 
@@ -13,6 +15,8 @@ public sealed class RfqService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    public static readonly Guid VendorPortalActorUserId = Guid.Parse("00000000-0000-0000-0000-0000000000f0");
+
     public async Task<IReadOnlyList<RfqResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
@@ -250,6 +254,10 @@ public sealed class RfqService(
                 continue;
             }
 
+            var portalAccessCode = GenerateVendorPortalAccessCode();
+            var portalAccessIssuedAt = now;
+            var portalAccessExpiresAt = now.AddDays(14);
+
             db.RfqVendorInvitations.Add(new RfqVendorInvitation
             {
                 Id = Guid.NewGuid(),
@@ -259,6 +267,9 @@ public sealed class RfqService(
                 Status = RfqInvitationStatuses.Invited,
                 InvitedAt = now,
                 InvitedByUserId = actorUserId,
+                PortalAccessCode = portalAccessCode,
+                PortalAccessCodeIssuedAt = portalAccessIssuedAt,
+                PortalAccessCodeExpiresAt = portalAccessExpiresAt,
             });
             existingVendorIds.Add(vendorPartyId);
         }
@@ -284,6 +295,74 @@ public sealed class RfqService(
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<VendorPortalRfqResponse> GetVendorPortalAsync(
+        Guid rfqId,
+        string accessCode,
+        CancellationToken cancellationToken = default)
+    {
+        var invitation = await ResolveVendorPortalInvitationAsync(rfqId, accessCode, cancellationToken);
+        var rfq = await LoadAsync(invitation.TenantId, invitation.RfqId, cancellationToken);
+        return MapVendorPortal(
+            rfq,
+            invitation,
+            ResolveVendorQuoteForInvitation(rfq, invitation));
+    }
+
+    public async Task<VendorQuoteResponse> CreateVendorPortalQuoteAsync(
+        Guid rfqId,
+        string accessCode,
+        VendorPortalCreateQuoteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var invitation = await ResolveVendorPortalInvitationAsync(rfqId, accessCode, cancellationToken);
+        return await CreateVendorQuoteAsync(
+            invitation.TenantId,
+            VendorPortalActorUserId,
+            rfqId,
+            new CreateVendorQuoteRequest(
+                invitation.VendorPartyId,
+                request.QuoteKey,
+                request.CurrencyCode,
+                request.Notes),
+            cancellationToken);
+    }
+
+    public async Task<VendorQuoteResponse> UpsertVendorPortalQuoteLineAsync(
+        Guid rfqId,
+        Guid vendorQuoteId,
+        string accessCode,
+        UpsertVendorQuoteLineRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var invitation = await ResolveVendorPortalInvitationAsync(rfqId, accessCode, cancellationToken);
+        var quote = await LoadQuoteTrackedAsync(invitation.TenantId, rfqId, vendorQuoteId, cancellationToken);
+        EnsureVendorPortalQuoteOwnership(invitation, quote);
+        return await UpsertQuoteLineAsync(
+            invitation.TenantId,
+            VendorPortalActorUserId,
+            rfqId,
+            vendorQuoteId,
+            request,
+            cancellationToken);
+    }
+
+    public async Task<VendorQuoteResponse> SubmitVendorPortalQuoteAsync(
+        Guid rfqId,
+        Guid vendorQuoteId,
+        string accessCode,
+        CancellationToken cancellationToken = default)
+    {
+        var invitation = await ResolveVendorPortalInvitationAsync(rfqId, accessCode, cancellationToken);
+        var quote = await LoadQuoteTrackedAsync(invitation.TenantId, rfqId, vendorQuoteId, cancellationToken);
+        EnsureVendorPortalQuoteOwnership(invitation, quote);
+        return await SubmitVendorQuoteAsync(
+            invitation.TenantId,
+            VendorPortalActorUserId,
+            rfqId,
+            vendorQuoteId,
+            cancellationToken);
     }
 
     public async Task<VendorQuoteResponse> CreateVendorQuoteAsync(
@@ -777,13 +856,72 @@ public sealed class RfqService(
         CancellationToken cancellationToken) =>
         await db.VendorQuotes
             .Include(x => x.Rfq).ThenInclude(x => x.Lines).ThenInclude(x => x.Part)
-            .Include(x => x.Rfq).ThenInclude(x => x.VendorInvitations)
-            .Include(x => x.VendorParty)
-            .Include(x => x.Lines).ThenInclude(x => x.RfqLine)
-            .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.RfqId == rfqId && x.Id == vendorQuoteId,
-                cancellationToken)
+        .Include(x => x.Rfq).ThenInclude(x => x.VendorInvitations)
+        .Include(x => x.VendorParty)
+        .Include(x => x.Lines).ThenInclude(x => x.RfqLine)
+        .FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.RfqId == rfqId && x.Id == vendorQuoteId,
+            cancellationToken)
         ?? throw new StlApiException("rfq.quote.not_found", "Vendor quote was not found.", 404);
+
+    private async Task<RfqVendorInvitation> ResolveVendorPortalInvitationAsync(
+        Guid rfqId,
+        string accessCode,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(accessCode))
+        {
+            throw new StlApiException("rfq.vendor_portal.access_code_required", "Vendor portal access code is required.", 401);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        var invitation = await db.RfqVendorInvitations
+            .Include(x => x.Rfq)
+                .ThenInclude(x => x.Lines).ThenInclude(x => x.Part)
+            .Include(x => x.Rfq)
+                .ThenInclude(x => x.VendorQuotes).ThenInclude(x => x.VendorParty)
+            .Include(x => x.Rfq)
+                .ThenInclude(x => x.VendorQuotes).ThenInclude(x => x.Lines).ThenInclude(x => x.RfqLine).ThenInclude(x => x.Part)
+            .Include(x => x.VendorParty)
+            .FirstOrDefaultAsync(
+                x => x.RfqId == rfqId && x.PortalAccessCode == accessCode.Trim(),
+                cancellationToken);
+
+        if (invitation is null)
+        {
+            throw new StlApiException("rfq.vendor_portal.invalid_access_code", "Vendor portal access code was not recognized.", 401);
+        }
+
+        if (invitation.PortalAccessCodeExpiresAt < now)
+        {
+            throw new StlApiException("rfq.vendor_portal.expired_access_code", "Vendor portal access code has expired.", 401);
+        }
+
+        if (invitation.Rfq.Status is not (RfqStatuses.Submitted or RfqStatuses.Awarded or RfqStatuses.Closed))
+        {
+            throw new StlApiException("rfq.vendor_portal.not_open", "Vendor portal access is only available for submitted RFQs.", 409);
+        }
+
+        return invitation;
+    }
+
+    private static VendorQuote? ResolveVendorQuoteForInvitation(
+        Rfq rfq,
+        RfqVendorInvitation invitation) =>
+        rfq.VendorQuotes.FirstOrDefault(x =>
+            x.VendorPartyId == invitation.VendorPartyId
+            && x.Status != VendorQuoteStatuses.Withdrawn);
+
+    private static void EnsureVendorPortalQuoteOwnership(
+        RfqVendorInvitation invitation,
+        VendorQuote quote)
+    {
+        if (quote.VendorPartyId != invitation.VendorPartyId || quote.RfqId != invitation.RfqId)
+        {
+            throw new StlApiException("rfq.vendor_portal.quote_forbidden", "The quote does not belong to this vendor portal invitation.", 403);
+        }
+    }
 
     private static RfqResponse Map(Rfq entity) =>
         new(
@@ -828,7 +966,71 @@ public sealed class RfqService(
             invitation.VendorParty.PartyKey,
             invitation.VendorParty.DisplayName,
             invitation.Status,
-            invitation.InvitedAt);
+            invitation.InvitedAt,
+            invitation.PortalAccessCodeIssuedAt,
+            invitation.PortalAccessCodeExpiresAt,
+            invitation.PortalAccessCode,
+            GenerateVendorPortalLink(invitation.RfqId, invitation.PortalAccessCode));
+
+    private static VendorPortalRfqResponse MapVendorPortal(
+        Rfq rfq,
+        RfqVendorInvitation invitation,
+        VendorQuote? quote)
+    {
+        var quoteLinesByRfqLineId = quote?.Lines.ToDictionary(x => x.RfqLineId) ?? new Dictionary<Guid, VendorQuoteLine>();
+        return new VendorPortalRfqResponse(
+            rfq.Id,
+            rfq.RfqKey,
+            rfq.Title,
+            rfq.Notes,
+            rfq.Status,
+            invitation.VendorPartyId,
+            invitation.VendorParty.PartyKey,
+            invitation.VendorParty.DisplayName,
+            invitation.Id,
+            invitation.Status,
+            invitation.InvitedAt,
+            invitation.PortalAccessCodeExpiresAt,
+            quote?.Id,
+            quote?.QuoteKey,
+            quote?.Status,
+            quote?.CurrencyCode,
+            quote?.TotalAmount,
+            quote?.LeadTimeDays,
+            quote?.Notes,
+            quote?.SubmittedAt,
+            rfq.Lines.OrderBy(x => x.LineNumber).Select(line =>
+            {
+                quoteLinesByRfqLineId.TryGetValue(line.Id, out var quoteLine);
+                return new VendorPortalRfqLineResponse(
+                    line.Id,
+                    line.LineNumber,
+                    line.PartId,
+                    line.Part.PartKey,
+                    line.Part.DisplayName,
+                    line.QuantityRequested,
+                    line.UnitOfMeasure,
+                    line.Notes,
+                    quoteLine?.Id,
+                    quoteLine?.UnitPrice,
+                    quoteLine?.QuantityQuoted,
+                    quoteLine?.LeadTimeDays,
+                    quoteLine?.Notes ?? string.Empty);
+            }).ToList(),
+            rfq.CreatedAt,
+            rfq.UpdatedAt);
+    }
+
+    private static string GenerateVendorPortalAccessCode()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    private static string GenerateVendorPortalLink(Guid rfqId, string portalAccessCode) =>
+        string.IsNullOrWhiteSpace(portalAccessCode)
+            ? string.Empty
+            : $"/vendor-portal?rfqId={rfqId:D}&accessCode={Uri.EscapeDataString(portalAccessCode)}";
 
     private static VendorQuoteResponse MapQuote(VendorQuote quote) =>
         new(

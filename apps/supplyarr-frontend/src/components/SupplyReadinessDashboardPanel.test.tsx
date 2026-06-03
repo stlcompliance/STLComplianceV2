@@ -35,6 +35,22 @@ vi.mock('../api/client', () => ({
         relatedEntityId: '11111111-1111-1111-1111-111111111111',
       },
     ],
+    predictiveStockoutItems: [
+      {
+        partId: '11111111-1111-1111-1111-111111111111',
+        partKey: 'PART-1',
+        displayName: 'Filter',
+        quantityAvailable: 2,
+        openDemandQuantity: 5,
+        openBackorderQuantity: 3,
+        projectedQuantity: -6,
+        shortageQuantity: 6,
+        reorderPoint: 5,
+        riskLevel: 'critical',
+        reason: 'Projected shortage after open demand and backorders',
+        sourceTimestamp: '2026-05-28T12:00:00Z',
+      },
+    ],
   }),
 }))
 
@@ -51,6 +67,9 @@ describe('SupplyReadinessDashboardPanel', () => {
     expect(screen.getByText('Supply readiness')).toBeInTheDocument()
     expect(await screen.findByText('PART-1 below reorder')).toBeInTheDocument()
     expect(screen.getByText('maintainarr: 2')).toBeInTheDocument()
+    expect(screen.getByText(/Predictive stockout risk/i)).toBeInTheDocument()
+    expect(screen.getByText(/PART-1 · Filter/i)).toBeInTheDocument()
+    expect(screen.getByText(/Projected shortage after open demand and backorders/i)).toBeInTheDocument()
   })
 
   it('returns null when user cannot read', () => {

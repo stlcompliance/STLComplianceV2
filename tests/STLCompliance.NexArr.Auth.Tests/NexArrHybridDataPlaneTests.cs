@@ -9,6 +9,7 @@ using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Health;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -16,9 +17,11 @@ public class NexArrHybridDataPlaneTests : IClassFixture<WebApplicationFactory<gl
 {
     private readonly WebApplicationFactory<global::NexArr.Api.Program> _factory;
     private readonly HttpClient _client;
+    private readonly DataPlaneValidationStubHandler _validationHandler;
 
     public NexArrHybridDataPlaneTests(WebApplicationFactory<global::NexArr.Api.Program> factory)
     {
+        _validationHandler = new DataPlaneValidationStubHandler();
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
@@ -39,6 +42,8 @@ public class NexArrHybridDataPlaneTests : IClassFixture<WebApplicationFactory<gl
 
                 services.AddDbContext<NexArrDbContext>(options =>
                     options.UseInMemoryDatabase("NexArrHybridDataPlaneTests"));
+                services.AddHttpClient(HybridDataPlaneService.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => _validationHandler);
             });
         });
         _client = _factory.CreateClient();
@@ -105,10 +110,92 @@ public class NexArrHybridDataPlaneTests : IClassFixture<WebApplicationFactory<gl
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Validation_marks_customer_hosted_endpoint_trusted_when_probe_succeeds()
+    {
+        await SeedDatabaseAsync();
+        _validationHandler.Respond = _ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new HealthResponse(
+                "Healthy",
+                "staffarr",
+                "1.0.0",
+                DateTimeOffset.UtcNow,
+                new Dictionary<string, object> { ["self"] = new { status = "Healthy" } })),
+        };
+
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/platform-admin/data-plane/validate",
+            token,
+            new ValidateDataPlaneProfileRequest(
+                PlatformSeeder.DemoTenantId,
+                "staffarr",
+                "customer_hosted",
+                "https://customer.example/staffarr",
+                "Validated customer deployment")));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<ValidateDataPlaneProfileResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("Trusted", payload.ValidationStatus);
+        Assert.Equal("trusted", payload.Profile.TrustStatus);
+        Assert.Equal("https://customer.example/staffarr/health/ready", payload.ReadyUrl);
+
+        var listResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/data-plane?tenantId={PlatformSeeder.DemoTenantId}",
+                token));
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var page = await listResponse.Content.ReadFromJsonAsync<PagedResult<DataPlaneProfileResponse>>();
+        Assert.NotNull(page);
+        Assert.Single(page.Items);
+        Assert.Equal("trusted", page.Items[0].TrustStatus);
+    }
+
+    [Fact]
+    public async Task Validation_sets_pending_validation_when_probe_fails()
+    {
+        await SeedDatabaseAsync();
+        _validationHandler.Respond = _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+        {
+            Content = new StringContent("maintenance"),
+        };
+
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/platform-admin/data-plane/validate",
+            token,
+            new ValidateDataPlaneProfileRequest(
+                PlatformSeeder.DemoTenantId,
+                "staffarr",
+                "customer_hosted",
+                "https://customer.example/staffarr",
+                null)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<ValidateDataPlaneProfileResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("PendingValidation", payload.ValidationStatus);
+        Assert.Equal("pending_validation", payload.Profile.TrustStatus);
+        Assert.Equal("upstream_503", payload.ErrorCode);
+        Assert.Contains("maintenance", payload.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return request;
+    }
+
+    private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken, object body)
+    {
+        var request = Authorized(method, url, accessToken);
+        request.Content = JsonContent.Create(body);
         return request;
     }
 
@@ -130,5 +217,32 @@ public class NexArrHybridDataPlaneTests : IClassFixture<WebApplicationFactory<gl
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private sealed class DataPlaneValidationStubHandler : HttpMessageHandler
+    {
+        public Func<HttpRequestMessage, HttpResponseMessage> Respond { get; set; } = _ =>
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new HealthResponse(
+                    "Healthy",
+                    "staffarr",
+                    "1.0.0",
+                    DateTimeOffset.UtcNow,
+                    new Dictionary<string, object> { ["self"] = new { status = "Healthy" } })),
+            };
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            if (request.RequestUri is null
+                || !request.RequestUri.AbsolutePath.EndsWith("/health/ready", StringComparison.Ordinal))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            return Task.FromResult(Respond(request));
+        }
     }
 }

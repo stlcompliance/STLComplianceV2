@@ -21,6 +21,18 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   )
 }
 
+function formatPercent(value: number | null): string {
+  return value == null ? '—' : `${value.toFixed(1)}%`
+}
+
+function formatDays(value: number | null): string {
+  return value == null ? '—' : `${value.toFixed(1)} days`
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+}
+
 export function AssignmentReportsPanel({
   accessToken,
   canRead,
@@ -68,8 +80,8 @@ export function AssignmentReportsPanel({
         <div>
           <h2 className="text-lg font-semibold text-foreground">Training assignment reports</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Assignment status rollups, overdue counts, and completion rates from TrainArr-owned
-            tables.
+            Assignment status rollups, overdue counts, completion rates, labor spend, and locale-tagged
+            content coverage from TrainArr-owned tables.
           </p>
         </div>
         {canExport ? (
@@ -148,6 +160,75 @@ export function AssignmentReportsPanel({
               label="Completion rate"
               value={`${summaryQuery.data.completionRatePercent.toFixed(1)}%`}
             />
+          </div>
+
+          <div className="mt-5">
+            <h3 className="text-sm font-semibold text-foreground">Training effectiveness</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Derived from completed assignments, evaluations, evidence, signoff activity, labor logs, and
+              localized content references.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 text-sm">
+              <MetricCard
+                label="Avg. completion time"
+                value={formatDays(summaryQuery.data.analytics.averageCompletionDays)}
+              />
+              <MetricCard
+                label="Evaluation pass rate"
+                value={formatPercent(summaryQuery.data.analytics.evaluationPassRatePercent)}
+              />
+              <MetricCard
+                label="Avg. evaluation score"
+                value={
+                  summaryQuery.data.analytics.averageEvaluationScore == null
+                    ? '—'
+                    : summaryQuery.data.analytics.averageEvaluationScore.toFixed(1)
+                }
+              />
+              <MetricCard
+                label="Evidence coverage"
+                value={formatPercent(summaryQuery.data.analytics.evidenceCoveragePercent)}
+              />
+              <MetricCard
+                label="Signoff coverage"
+                value={formatPercent(summaryQuery.data.analytics.signoffCoveragePercent)}
+              />
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <h3 className="text-sm font-semibold text-foreground">Labor and localization</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Derived from assignment labor entries and locale-tagged program content references.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6 text-sm">
+              <MetricCard label="Labor hours" value={summaryQuery.data.analytics.totalLaborHours.toFixed(2)} />
+              <MetricCard label="Labor cost" value={formatCurrency(summaryQuery.data.analytics.totalLaborCost)} />
+              <MetricCard
+                label="Avg. labor hours / completed assignment"
+                value={
+                  summaryQuery.data.analytics.averageLaborHoursPerCompletedAssignment == null
+                    ? '—'
+                    : summaryQuery.data.analytics.averageLaborHoursPerCompletedAssignment.toFixed(2)
+                }
+              />
+              <MetricCard
+                label="Avg. labor cost / completed assignment"
+                value={
+                  summaryQuery.data.analytics.averageLaborCostPerCompletedAssignment == null
+                    ? '—'
+                    : formatCurrency(summaryQuery.data.analytics.averageLaborCostPerCompletedAssignment)
+                }
+              />
+              <MetricCard
+                label="Locale-tagged refs"
+                value={String(summaryQuery.data.analytics.localizedContentReferenceCount)}
+              />
+              <MetricCard
+                label="Locales represented"
+                value={String(summaryQuery.data.analytics.distinctContentLocaleCount)}
+              />
+            </div>
           </div>
 
           {summaryQuery.data.recentAssignments.length === 0 ? (

@@ -1,4 +1,5 @@
-import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
 
 import type { TrainingRulePackRequirementResponse } from '../api/types'
@@ -43,6 +44,12 @@ export function RulePackRequirementPanel({
     { key: 'status', label: 'Status' },
   ]
   const [selectedColumns, setSelectedColumns] = useState<RulePackColumnKey[]>(['label', 'program', 'version', 'status'])
+  const selectedRulePackOption = useMemo<PickerOption | undefined>(
+    () =>
+      rulePackOptions.find((option) => option.value === rulePackKeyInput) ??
+      (rulePackKeyInput ? { value: rulePackKeyInput, label: rulePackKeyInput } : undefined),
+    [rulePackKeyInput, rulePackOptions],
+  )
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(storageKey)
@@ -66,14 +73,15 @@ export function RulePackRequirementPanel({
       {mode === 'create' && canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <ControlledSelect
+            <StaticSearchPicker
+              id="rule-pack-requirement-key"
               label="Rule pack"
               value={rulePackKeyInput}
               onChange={onRulePackKeyChange}
               options={rulePackOptions}
-              emptyLabel="Select rule pack…"
+              selectedOption={selectedRulePackOption}
+              placeholder="Search rule packs…"
               testId="rule-pack-requirement-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
             />
           </div>
           <label htmlFor="rule-pack-requirement-validate-compliance-core" className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">

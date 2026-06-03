@@ -39,7 +39,19 @@ public sealed class TenantAdminService(
             .OrderBy(t => t.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(t => new TenantDetailResponse(t.Id, t.Slug, t.DisplayName, t.Status, t.CreatedAt, t.ModifiedAt))
+            .Select(t => new TenantDetailResponse(
+                t.Id,
+                t.Slug,
+                t.DisplayName,
+                t.Status,
+                t.SubscriptionTier,
+                t.BillingCustomerId,
+                t.BillingSubscriptionId,
+                t.BillingGraceDays,
+                t.IsTrial,
+                t.IsInternalTenant,
+                t.CreatedAt,
+                t.ModifiedAt))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<TenantDetailResponse>(items, page, pageSize, total, page * pageSize < total);
@@ -55,7 +67,19 @@ public sealed class TenantAdminService(
         var tenant = await db.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken)
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
 
-        return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
+        return new TenantDetailResponse(
+            tenant.Id,
+            tenant.Slug,
+            tenant.DisplayName,
+            tenant.Status,
+            tenant.SubscriptionTier,
+            tenant.BillingCustomerId,
+            tenant.BillingSubscriptionId,
+            tenant.BillingGraceDays,
+            tenant.IsTrial,
+            tenant.IsInternalTenant,
+            tenant.CreatedAt,
+            tenant.ModifiedAt);
     }
 
     public async Task<TenantDetailResponse> CreateAsync(
@@ -71,13 +95,26 @@ public sealed class TenantAdminService(
             throw new StlApiException("tenant.slug_conflict", "A tenant with this slug already exists.", 409);
         }
 
+        var normalizedTier = NormalizeSubscriptionTier(request.SubscriptionTier);
+        var isTrialTenant = request.IsTrial || normalizedTier == TenantSubscriptionTiers.Trial;
+        if (isTrialTenant && normalizedTier == TenantSubscriptionTiers.Standard)
+        {
+            normalizedTier = TenantSubscriptionTiers.Trial;
+        }
+
         var now = DateTimeOffset.UtcNow;
         var tenant = new Tenant
         {
             Id = Guid.NewGuid(),
             Slug = slug,
             DisplayName = request.DisplayName.Trim(),
-            Status = TenantStatuses.Active,
+            Status = isTrialTenant ? TenantStatuses.Trial : TenantStatuses.Active,
+            SubscriptionTier = normalizedTier,
+            BillingCustomerId = NormalizeOptionalString(request.BillingCustomerId, 128),
+            BillingSubscriptionId = NormalizeOptionalString(request.BillingSubscriptionId, 128),
+            BillingGraceDays = request.BillingGraceDays,
+            IsTrial = isTrialTenant,
+            IsInternalTenant = request.IsInternalTenant,
             CreatedAt = now,
             ModifiedAt = now
         };
@@ -113,7 +150,19 @@ public sealed class TenantAdminService(
                 }),
             cancellationToken: cancellationToken);
 
-        return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
+        return new TenantDetailResponse(
+            tenant.Id,
+            tenant.Slug,
+            tenant.DisplayName,
+            tenant.Status,
+            tenant.SubscriptionTier,
+            tenant.BillingCustomerId,
+            tenant.BillingSubscriptionId,
+            tenant.BillingGraceDays,
+            tenant.IsTrial,
+            tenant.IsInternalTenant,
+            tenant.CreatedAt,
+            tenant.ModifiedAt);
     }
 
     public async Task<TenantDetailResponse> UpdateAsync(
@@ -128,6 +177,21 @@ public sealed class TenantAdminService(
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
 
         tenant.DisplayName = request.DisplayName.Trim();
+        tenant.SubscriptionTier = NormalizeSubscriptionTier(request.SubscriptionTier);
+        tenant.BillingCustomerId = NormalizeOptionalString(request.BillingCustomerId, 128);
+        tenant.BillingSubscriptionId = NormalizeOptionalString(request.BillingSubscriptionId, 128);
+        tenant.BillingGraceDays = request.BillingGraceDays;
+        var isTrialTenant = request.IsTrial || tenant.SubscriptionTier == TenantSubscriptionTiers.Trial;
+        tenant.IsTrial = isTrialTenant;
+        if (isTrialTenant && tenant.Status == TenantStatuses.Active)
+        {
+            tenant.Status = TenantStatuses.Trial;
+        }
+        else if (!isTrialTenant && tenant.Status == TenantStatuses.Trial)
+        {
+            tenant.Status = TenantStatuses.Active;
+        }
+        tenant.IsInternalTenant = request.IsInternalTenant;
         tenant.ModifiedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
@@ -159,7 +223,19 @@ public sealed class TenantAdminService(
                 }),
             cancellationToken: cancellationToken);
 
-        return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
+        return new TenantDetailResponse(
+            tenant.Id,
+            tenant.Slug,
+            tenant.DisplayName,
+            tenant.Status,
+            tenant.SubscriptionTier,
+            tenant.BillingCustomerId,
+            tenant.BillingSubscriptionId,
+            tenant.BillingGraceDays,
+            tenant.IsTrial,
+            tenant.IsInternalTenant,
+            tenant.CreatedAt,
+            tenant.ModifiedAt);
     }
 
     public async Task<TenantDetailResponse> UpdateStatusAsync(
@@ -170,27 +246,22 @@ public sealed class TenantAdminService(
     {
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
 
-        if (request.Status is not TenantStatuses.Active
-            and not TenantStatuses.Suspended
-            and not TenantStatuses.Archived)
-        {
-            throw new StlApiException("tenant.invalid_status", "Status must be Active, Suspended, or Archived.", 400);
-        }
+        var normalizedStatus = NormalizeStatus(request.Status);
 
         var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken)
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
 
-        if (tenant.Status == TenantStatuses.Archived && request.Status != TenantStatuses.Archived)
+        if (tenant.Status == TenantStatuses.Archived && normalizedStatus != TenantStatuses.Archived)
         {
             throw new StlApiException("tenant.archived", "Archived tenants cannot be re-enabled or suspended.", 409);
         }
 
         var previousStatus = tenant.Status;
-        tenant.Status = request.Status;
+        tenant.Status = normalizedStatus;
         tenant.ModifiedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
-        var isArchive = request.Status == TenantStatuses.Archived;
+        var isArchive = normalizedStatus == TenantStatuses.Archived;
         await audit.WriteAsync(
             isArchive ? "tenant.archive" : "tenant.status_change",
             "tenant",
@@ -227,9 +298,51 @@ public sealed class TenantAdminService(
                 }),
             cancellationToken: cancellationToken);
 
-        return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
+        return new TenantDetailResponse(
+            tenant.Id,
+            tenant.Slug,
+            tenant.DisplayName,
+            tenant.Status,
+            tenant.SubscriptionTier,
+            tenant.BillingCustomerId,
+            tenant.BillingSubscriptionId,
+            tenant.BillingGraceDays,
+            tenant.IsTrial,
+            tenant.IsInternalTenant,
+            tenant.CreatedAt,
+            tenant.ModifiedAt);
     }
 
     private static string NormalizeSlug(string slug) =>
         slug.Trim().ToLowerInvariant().Replace(' ', '-');
+
+    private static string? NormalizeOptionalString(string? value, int maxLength)
+    {
+        var normalized = value?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return null;
+        }
+
+        return normalized.Length <= maxLength ? normalized : normalized[..maxLength];
+    }
+
+    private static string NormalizeSubscriptionTier(string subscriptionTier)
+    {
+        var normalized = subscriptionTier.Trim().ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(normalized) ? TenantSubscriptionTiers.Standard : normalized;
+    }
+
+    private static string NormalizeStatus(string status)
+    {
+        var normalized = status?.Trim().ToLowerInvariant() ?? string.Empty;
+        return normalized switch
+        {
+            "active" => TenantStatuses.Active,
+            "trial" => TenantStatuses.Trial,
+            "suspended" or "inactive" => TenantStatuses.Suspended,
+            "archived" => TenantStatuses.Archived,
+            _ => throw new StlApiException("tenant.invalid_status", "Status must be active, trial, suspended, or archived.", 400),
+        };
+    }
 }

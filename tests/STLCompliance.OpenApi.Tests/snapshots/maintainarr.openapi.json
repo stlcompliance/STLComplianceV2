@@ -674,6 +674,42 @@
         }
       }
     },
+    "/api/assets/{assetId}/telematics-ingestion": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "ListAssetTelematicsIngestion",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit": {
       "get": {
         "tags": [
@@ -2248,6 +2284,30 @@
           },
           {
             "name": "checklistItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspection-templates/{inspectionTemplateId}/clone": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "CloneInspectionTemplate",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
             "in": "path",
             "required": true,
             "schema": {
@@ -5294,6 +5354,42 @@
         }
       }
     },
+    "/api/v1/assets/{assetId}/telematics-ingestion": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "ListAssetTelematicsIngestionV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "tags": [
@@ -7308,6 +7404,30 @@
           },
           {
             "name": "checklistItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-templates/{inspectionTemplateId}/clone": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "CloneInspectionTemplateV1",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
             "in": "path",
             "required": true,
             "schema": {

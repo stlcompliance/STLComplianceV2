@@ -91,6 +91,25 @@ public static class InspectionTemplateEndpoints
         })
         .WithName($"UpdateInspectionTemplateStatus{nameSuffix}");
 
+        group.MapPost("/{inspectionTemplateId:guid}/clone", async (
+            Guid inspectionTemplateId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionTemplateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var cloned = await service.CloneAsync(
+                tenantId,
+                actorUserId,
+                inspectionTemplateId,
+                cancellationToken);
+            return Results.Created($"/api/inspection-templates/{cloned.InspectionTemplateId}", cloned);
+        })
+        .WithName($"CloneInspectionTemplate{nameSuffix}");
+
         group.MapPost("/{inspectionTemplateId:guid}/categories", async (
             Guid inspectionTemplateId,
             CreateInspectionTemplateCategoryRequest request,

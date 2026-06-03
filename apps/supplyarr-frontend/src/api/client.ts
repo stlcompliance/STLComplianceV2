@@ -27,6 +27,11 @@ import type {
   CreateStockReservationRequest,
   ReleaseStockReservationRequest,
   PartVendorLinkResponse,
+  VendorCatalogApiSyncRequest,
+  VendorCatalogApiSyncResponse,
+  ContractsCsvImportRequest,
+  ContractsCsvImportResponse,
+  SupplyContractResponse,
   SupplyArrMeResponse,
   SupplyArrSessionBootstrapResponse,
   UpsertPartStockLevelRequest,
@@ -98,6 +103,7 @@ import type {
   ProcurementExceptionEscalationSettingsResponse,
   UpsertProcurementExceptionEscalationSettingsRequest,
   PendingProcurementExceptionEscalationsResponse,
+  PendingProcurementExceptionAutoClosesResponse,
   ProcurementExceptionEscalationRunsResponse,
   ProcurementExceptionEscalationEventsResponse,
   DemandProcessingSettingsResponse,
@@ -116,7 +122,12 @@ import type {
   IntegrationEventsListResponse,
   RfqResponse,
   RfqQuoteComparisonResponse,
+  VendorPortalCreateQuoteRequest,
+  VendorPortalRfqResponse,
   VendorQuoteResponse,
+  VendorEmailInboxListResponse,
+  IngestVendorEmailInboxRequest,
+  IngestVendorEmailInboxResponse,
   CreatePurchaseRequestFromRfqResponse,
   SupplierOnboardingResponse,
   SupplierOnboardingDocumentRequirementsResponse,
@@ -400,6 +411,18 @@ export async function getParts(accessToken: string): Promise<PartResponse[]> {
   return parseJsonResponse<PartResponse[]>(response, 'Failed to load parts')
 }
 
+export async function syncVendorCatalogApi(
+  accessToken: string,
+  request: VendorCatalogApiSyncRequest,
+): Promise<VendorCatalogApiSyncResponse> {
+  const response = await fetch(`${apiBase}/api/v1/vendor-catalogs/sync`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<VendorCatalogApiSyncResponse>(response, 'Failed to sync vendor catalog API feed')
+}
+
 export async function getSubstitutions(
   accessToken: string,
   partId?: string,
@@ -671,6 +694,88 @@ export async function getRfq(accessToken: string, rfqId: string): Promise<RfqRes
   return parseJsonResponse<RfqResponse>(response, 'Failed to load RFQ')
 }
 
+export async function getVendorPortalRfq(
+  rfqId: string,
+  accessCode: string,
+): Promise<VendorPortalRfqResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(`${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}${query}`)
+  return parseJsonResponse<VendorPortalRfqResponse>(response, 'Failed to load vendor portal RFQ')
+}
+
+export async function createVendorPortalQuote(
+  rfqId: string,
+  accessCode: string,
+  payload: VendorPortalCreateQuoteRequest,
+): Promise<VendorQuoteResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(`${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes${query}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to create vendor portal quote')
+}
+
+export async function upsertVendorPortalQuoteLine(
+  rfqId: string,
+  vendorQuoteId: string,
+  accessCode: string,
+  payload: {
+    rfqLineId: string
+    unitPrice: number
+    quantityQuoted: number
+    leadTimeDays?: number | null
+    notes: string
+  },
+): Promise<VendorQuoteResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(
+    `${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines${query}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to save vendor portal quote line')
+}
+
+export async function submitVendorPortalQuote(
+  rfqId: string,
+  vendorQuoteId: string,
+  accessCode: string,
+): Promise<VendorQuoteResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(
+    `${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit${query}`,
+    { method: 'POST' },
+  )
+  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to submit vendor portal quote')
+}
+
+export async function getVendorEmailInbox(
+  accessToken: string,
+  limit = 25,
+): Promise<VendorEmailInboxListResponse> {
+  const response = await fetch(`${apiBase}/api/v1/vendor-email-inbox?limit=${encodeURIComponent(limit)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorEmailInboxListResponse>(response, 'Failed to load vendor email inbox')
+}
+
+export async function ingestVendorEmailInbox(
+  accessToken: string,
+  payload: IngestVendorEmailInboxRequest,
+): Promise<IngestVendorEmailInboxResponse> {
+  const response = await fetch(`${apiBase}/api/v1/vendor-email-inbox`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<IngestVendorEmailInboxResponse>(response, 'Failed to ingest vendor email')
+}
+
 export async function createRfq(
   accessToken: string,
   payload: {
@@ -837,6 +942,56 @@ export async function getPurchaseOrders(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PurchaseOrderResponse[]>(response, 'Failed to load purchase orders')
+}
+
+export async function getContractRecords(
+  accessToken: string,
+  options?: { vendorPartyId?: string; status?: string; limit?: number },
+): Promise<SupplyContractResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.vendorPartyId) {
+    params.set('vendorPartyId', options.vendorPartyId)
+  }
+  if (options?.status) {
+    params.set('status', options.status)
+  }
+  if (typeof options?.limit === 'number') {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/contracts/records${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SupplyContractResponse[]>(response, 'Failed to load contract records')
+}
+
+export async function importContractsCsv(
+  accessToken: string,
+  request: ContractsCsvImportRequest,
+): Promise<ContractsCsvImportResponse> {
+  const response = await fetch(`${apiBase}/api/v1/imports/contracts-csv`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+
+  const body = await response.text()
+  if (!body) {
+    if (!response.ok) {
+      throw new SupplyArrApiError('Failed to import contracts CSV', response.status, body)
+    }
+    throw new SupplyArrApiError('Contracts CSV import returned an empty response.', response.status, body)
+  }
+
+  try {
+    return JSON.parse(body) as ContractsCsvImportResponse
+  } catch {
+    throw new SupplyArrApiError(
+      body || 'Failed to import contracts CSV',
+      response.status,
+      body,
+    )
+  }
 }
 
 export async function createPurchaseOrderFromPurchaseRequest(
@@ -1880,6 +2035,18 @@ export async function getPendingProcurementExceptionEscalations(
   return parseJsonResponse<PendingProcurementExceptionEscalationsResponse>(
     response,
     'Failed to load pending procurement exception escalations',
+  )
+}
+
+export async function getPendingProcurementExceptionAutoCloses(
+  accessToken: string,
+): Promise<PendingProcurementExceptionAutoClosesResponse> {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exception-escalation-settings/auto-close/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingProcurementExceptionAutoClosesResponse>(
+    response,
+    'Failed to load pending procurement exception auto-closes',
   )
 }
 

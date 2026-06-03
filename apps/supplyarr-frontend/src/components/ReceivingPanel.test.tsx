@@ -1,6 +1,45 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
+
 import { ReceivingPanel } from './ReceivingPanel'
 
 afterEach(() => {
@@ -229,5 +268,32 @@ describe('ReceivingPanel', () => {
 
     expect(screen.getByTestId('receiving-exception-row-ex-1')).toBeInTheDocument()
     expect(screen.queryByTestId('receiving-exception-row-ex-2')).not.toBeInTheDocument()
+  })
+
+  it('updates the selected issuing PO and destination bin through the searchable pickers', () => {
+    render(
+      <ReceivingPanel
+        {...baseProps}
+        selectedPurchaseOrderId=""
+        selectedBinId=""
+        receiptKey=""
+      />,
+    )
+
+    fireEvent.change(screen.getByTestId('receiving-create-po-picker'), {
+      target: { value: 'po-1' },
+    })
+    fireEvent.change(screen.getByTestId('receiving-create-bin-picker'), {
+      target: { value: 'bin-1' },
+    })
+
+    expect(baseProps.onSelectedPurchaseOrderIdChange).toHaveBeenCalledWith('po-1')
+    expect(baseProps.onSelectedBinIdChange).toHaveBeenCalledWith('bin-1')
+    expect(screen.getByTestId('receiving-create-po-picker-options')).toHaveTextContent(
+      'po-2026-001 — Shop restock PO',
+    )
+    expect(screen.getByTestId('receiving-create-bin-picker-options')).toHaveTextContent(
+      'main-wh/a-01 — Aisle 01',
+    )
   })
 })

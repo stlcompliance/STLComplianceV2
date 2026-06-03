@@ -1,4 +1,5 @@
-import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type { RulePackImpactAssessmentResponse } from '../api/types'
 
@@ -49,6 +50,13 @@ export function RulePackImpactPanel({
   canAssess,
   assessment,
 }: RulePackImpactPanelProps) {
+  const selectedRulePackOption = useMemo<PickerOption | undefined>(
+    () =>
+      rulePackOptions.find((option) => option.value === rulePackKeyInput) ??
+      (rulePackKeyInput ? { value: rulePackKeyInput, label: rulePackKeyInput } : undefined),
+    [rulePackKeyInput, rulePackOptions],
+  )
+
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Rule pack change impact</h2>
@@ -60,14 +68,15 @@ export function RulePackImpactPanel({
       {canAssess ? (
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1">
-            <ControlledSelect
+            <StaticSearchPicker
+              id="rule-pack-impact-key"
               label="Rule pack"
               value={rulePackKeyInput}
               onChange={onRulePackKeyChange}
               options={rulePackOptions}
-              emptyLabel="Select rule pack…"
+              selectedOption={selectedRulePackOption}
+              placeholder="Search rule packs…"
               testId="rule-pack-impact-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
             />
           </div>
           <button

@@ -61,7 +61,14 @@ public class NexArrPlatformSessionSettingsTests : IClassFixture<WebApplicationFa
         await SeedDatabaseAsync();
         var platformAdmin = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
-        await UpsertSettingsAsync(platformAdmin.AccessToken, accessTokenMinutes: 60, refreshTokenDays: 14, rememberedRefreshTokenDays: 90);
+        await UpsertSettingsAsync(
+            platformAdmin.AccessToken,
+            accessTokenMinutes: 60,
+            refreshTokenDays: 14,
+            rememberedRefreshTokenDays: 90,
+            requirePlatformAdminMfa: false,
+            passwordMinLength: 12,
+            requirePasswordComplexity: true);
 
         var issuedAt = DateTimeOffset.UtcNow;
         var standard = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
@@ -84,11 +91,43 @@ public class NexArrPlatformSessionSettingsTests : IClassFixture<WebApplicationFa
     }
 
     [Fact]
+    public async Task Login_requires_platform_admin_mfa_when_enabled()
+    {
+        await SeedDatabaseAsync();
+        var platformAdmin = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        await UpsertSettingsAsync(
+            platformAdmin.AccessToken,
+            accessTokenMinutes: 45,
+            refreshTokenDays: 14,
+            rememberedRefreshTokenDays: 90,
+            requirePlatformAdminMfa: true,
+            passwordMinLength: 12,
+            requirePasswordComplexity: true);
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Handoff_redeem_includes_configured_access_lifetime()
     {
         await SeedDatabaseAsync();
         var platformAdmin = await LoginAsync(PlatformSeeder.DemoAdminEmail);
-        await UpsertSettingsAsync(platformAdmin.AccessToken, accessTokenMinutes: 75, refreshTokenDays: 14, rememberedRefreshTokenDays: 90);
+        await UpsertSettingsAsync(
+            platformAdmin.AccessToken,
+            accessTokenMinutes: 75,
+            refreshTokenDays: 14,
+            rememberedRefreshTokenDays: 90,
+            requirePlatformAdminMfa: false,
+            passwordMinLength: 12,
+            requirePasswordComplexity: true);
 
         var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", platformAdmin.AccessToken);
         handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
@@ -107,17 +146,93 @@ public class NexArrPlatformSessionSettingsTests : IClassFixture<WebApplicationFa
         Assert.Equal(75, redeemed.AccessTokenMinutes);
     }
 
+    [Fact]
+    public async Task Password_policy_configuration_is_persisted_and_enforced()
+    {
+        await SeedDatabaseAsync();
+        var platformAdmin = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        await UpsertSettingsAsync(
+            platformAdmin.AccessToken,
+            accessTokenMinutes: 45,
+            refreshTokenDays: 14,
+            rememberedRefreshTokenDays: 90,
+            requirePlatformAdminMfa: false,
+            passwordMinLength: 16,
+            requirePasswordComplexity: true);
+
+        var settingsResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/session-settings", platformAdmin.AccessToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settings = (await settingsResponse.Content.ReadFromJsonAsync<PlatformSessionSettingsResponse>())!;
+        Assert.Equal(16, settings.PasswordMinLength);
+        Assert.True(settings.RequirePasswordComplexity);
+
+        var weakCreateRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", platformAdmin.AccessToken);
+        weakCreateRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "policy-weak@example.test",
+            "Policy Weak",
+            "WeakPass123"));
+        var weakCreateResponse = await _client.SendAsync(weakCreateRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, weakCreateResponse.StatusCode);
+        var weakCreateBody = await weakCreateResponse.Content.ReadAsStringAsync();
+        Assert.Contains("auth.password_policy", weakCreateBody);
+
+        var strongCreateRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", platformAdmin.AccessToken);
+        strongCreateRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "policy-strong@example.test",
+            "Policy Strong",
+            "StrongPassword123!",
+            IsPlatformAdmin: true));
+        var strongCreateResponse = await _client.SendAsync(strongCreateRequest);
+        strongCreateResponse.EnsureSuccessStatusCode();
+        var created = (await strongCreateResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+
+        var forgotResponse = await _client.PostAsJsonAsync(
+            "/api/auth/password/forgot",
+            new ForgotPasswordRequest(created.Email));
+        forgotResponse.EnsureSuccessStatusCode();
+        var forgot = (await forgotResponse.Content.ReadFromJsonAsync<ForgotPasswordResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(forgot.DevResetToken));
+
+        var weakResetResponse = await _client.PostAsJsonAsync(
+            "/api/auth/password/reset",
+            new ResetPasswordRequest(forgot.DevResetToken!, "weakpass123"));
+        Assert.Equal(HttpStatusCode.BadRequest, weakResetResponse.StatusCode);
+        var weakResetBody = await weakResetResponse.Content.ReadAsStringAsync();
+        Assert.Contains("auth.password_policy", weakResetBody);
+
+        var strongResetResponse = await _client.PostAsJsonAsync(
+            "/api/auth/password/reset",
+            new ResetPasswordRequest(forgot.DevResetToken!, "AnotherStrongPassword123!"));
+        strongResetResponse.EnsureSuccessStatusCode();
+
+        var loginAfterResetResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                created.Email,
+                "AnotherStrongPassword123!",
+                PlatformSeeder.DemoTenantId));
+        loginAfterResetResponse.EnsureSuccessStatusCode();
+    }
+
     private async Task UpsertSettingsAsync(
         string accessToken,
         int accessTokenMinutes,
         int refreshTokenDays,
-        int rememberedRefreshTokenDays)
+        int rememberedRefreshTokenDays,
+        bool requirePlatformAdminMfa,
+        int passwordMinLength,
+        bool requirePasswordComplexity)
     {
         var request = Authorized(HttpMethod.Put, "/api/platform-admin/session-settings", accessToken);
         request.Content = JsonContent.Create(new UpsertPlatformSessionSettingsRequest(
             accessTokenMinutes,
             refreshTokenDays,
-            rememberedRefreshTokenDays));
+            rememberedRefreshTokenDays,
+            requirePlatformAdminMfa,
+            passwordMinLength,
+            requirePasswordComplexity));
         var response = await _client.SendAsync(request);
         response.EnsureSuccessStatusCode();
     }

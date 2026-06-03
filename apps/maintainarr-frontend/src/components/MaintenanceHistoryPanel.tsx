@@ -1,3 +1,4 @@
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { AssetResponse, MaintenanceHistoryEntryResponse, MaintenanceHistorySummaryResponse } from '../api/types'
 
 interface MaintenanceHistoryPanelProps {
@@ -66,6 +67,12 @@ export function MaintenanceHistoryPanel({
   onSelectedAssetIdChange,
 }: MaintenanceHistoryPanelProps) {
   const selectedAsset = assets.find((asset) => asset.assetId === selectedAssetId)
+  const assetOptions = assets.map<PickerOption>((asset) => ({
+    value: asset.assetId,
+    label: `${asset.assetTag} — ${asset.name}`,
+  }))
+  const selectedAssetOption = assetOptions.find((option) => option.value === selectedAssetId)
+    ?? (selectedAssetId ? { value: selectedAssetId, label: selectedAssetId } : undefined)
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -75,22 +82,16 @@ export function MaintenanceHistoryPanel({
       </p>
 
       <div className="mt-4">
-        <label className="block text-xs text-slate-400" htmlFor="history-asset-select">
-          Asset
-        </label>
-        <select
+        <StaticSearchPicker
           id="history-asset-select"
-          className="mt-1 w-full max-w-md rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+          label="Asset"
           value={selectedAssetId}
-          onChange={(event) => onSelectedAssetIdChange(event.target.value)}
-        >
-          <option value="">Select an asset…</option>
-          {assets.map((asset) => (
-            <option key={asset.assetId} value={asset.assetId}>
-              {asset.assetTag} — {asset.name}
-            </option>
-          ))}
-        </select>
+          onChange={onSelectedAssetIdChange}
+          options={assetOptions}
+          selectedOption={selectedAssetOption}
+          placeholder="Search assets…"
+          testId="history-asset-select"
+        />
       </div>
 
       {!selectedAssetId ? (

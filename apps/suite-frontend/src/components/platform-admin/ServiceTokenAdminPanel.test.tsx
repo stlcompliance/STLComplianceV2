@@ -12,6 +12,7 @@ vi.mock('../../api/nexarrClient', async (importOriginal) => {
     listServiceClients: vi.fn(),
     listServiceTokens: vi.fn(),
     getServiceTokenAuditHistory: vi.fn(),
+    getServiceTokenDiscovery: vi.fn(),
     getPlatformAdminTenantOverview: vi.fn(),
     getPlatformAdminProductOverview: vi.fn(),
     rotateServiceClient: vi.fn(),
@@ -93,6 +94,13 @@ describe('ServiceTokenAdminPanel', () => {
       hasNextPage: false,
     })
     vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.getServiceTokenDiscovery).mockResolvedValue({
+      issuer: 'https://api.example.test',
+      audience: 'nexarr-service',
+      jwksUri: 'https://api.example.test/api/v1/.well-known/jwks.json',
+      supportedAlgorithms: ['RS256'],
+      publicKeyAvailable: true,
+    })
 
     renderPanel()
 
@@ -100,6 +108,9 @@ describe('ServiceTokenAdminPanel', () => {
       expect(screen.getByTestId('service-token-clients-list')).toBeInTheDocument()
     })
 
+    expect(screen.getByTestId('service-token-discovery-key-status')).toHaveTextContent('JWKS available')
+    expect(screen.getByText('Issuer')).toBeInTheDocument()
+    expect(screen.getByText('https://api.example.test')).toBeInTheDocument()
     expect(screen.getByText('StaffArr Worker')).toBeInTheDocument()
     expect(screen.getByText(/failed auth 2/)).toBeInTheDocument()
     expect(screen.getByTestId('service-token-list')).toBeInTheDocument()
@@ -144,6 +155,13 @@ describe('ServiceTokenAdminPanel', () => {
       hasNextPage: false,
     })
     vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.getServiceTokenDiscovery).mockResolvedValue({
+      issuer: 'https://api.example.test',
+      audience: 'nexarr-service',
+      jwksUri: 'https://api.example.test/api/v1/.well-known/jwks.json',
+      supportedAlgorithms: ['RS256'],
+      publicKeyAvailable: true,
+    })
     vi.mocked(nexarr.getServiceTokenAuditHistory).mockResolvedValue({
       items: [
         {
@@ -228,6 +246,13 @@ describe('ServiceTokenAdminPanel', () => {
       hasNextPage: false,
     })
     vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.getServiceTokenDiscovery).mockResolvedValue({
+      issuer: 'https://api.example.test',
+      audience: 'nexarr-service',
+      jwksUri: 'https://api.example.test/api/v1/.well-known/jwks.json',
+      supportedAlgorithms: ['RS256'],
+      publicKeyAvailable: true,
+    })
     vi.mocked(nexarr.getServiceTokenAuditHistory).mockResolvedValue({
       items: [],
       page: 1,
@@ -386,6 +411,13 @@ describe('ServiceTokenAdminPanel', () => {
       hasNextPage: false,
     })
     vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.getServiceTokenDiscovery).mockResolvedValue({
+      issuer: 'https://api.example.test',
+      audience: 'nexarr-service',
+      jwksUri: 'https://api.example.test/api/v1/.well-known/jwks.json',
+      supportedAlgorithms: ['RS256'],
+      publicKeyAvailable: true,
+    })
     vi.mocked(nexarr.getServiceTokenAuditHistory).mockResolvedValue({
       items: [],
       page: 1,

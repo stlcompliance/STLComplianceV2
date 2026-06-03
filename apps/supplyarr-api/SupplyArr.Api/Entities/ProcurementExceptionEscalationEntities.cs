@@ -16,6 +16,11 @@ public sealed class TenantProcurementExceptionEscalationSettings : IHasTenant
 
     public bool NotifyOnProcurementExceptionSlaEscalation { get; set; } = true;
 
+    public bool AutoCloseCompletedExceptionsEnabled { get; set; }
+
+    public int AutoCloseCompletedExceptionsAfterHours { get; set; } =
+        ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours;
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
@@ -62,6 +67,8 @@ public static class ProcurementExceptionEscalationDefaults
     public const int EscalationCooldownHours = 24;
 
     public const int MaxEscalationsPerException = 5;
+
+    public const int AutoCloseCompletedExceptionsAfterHours = 48;
 }
 
 public static class ProcurementExceptionEscalationActionKinds

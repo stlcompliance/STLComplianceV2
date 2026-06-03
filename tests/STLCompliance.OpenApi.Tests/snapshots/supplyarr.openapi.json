@@ -2854,6 +2854,72 @@
         }
       }
     },
+    "/api/internal/procurement-exception-automation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingProcurementExceptionAutoCloses",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-exception-automation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessProcurementExceptionAutoCloses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessProcurementExceptionAutoClosesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/procurement-exception-escalations/pending": {
       "get": {
         "tags": [
@@ -5294,6 +5360,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exception-escalation-settings/auto-close/pending": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "ListSupplyArrPendingProcurementExceptionAutoCloses",
         "responses": {
           "200": {
             "description": "OK"
@@ -15118,6 +15197,19 @@
         }
       }
     },
+    "/api/v1/procurement-exception-escalation-settings/auto-close/pending": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "ListSupplyArrPendingProcurementExceptionAutoClosesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/procurement-exception-escalation-settings/events": {
       "get": {
         "tags": [
@@ -20459,6 +20551,29 @@
         }
       }
     },
+    "/api/v1/vendor-catalogs/sync": {
+      "post": {
+        "tags": [
+          "VendorCatalogApi"
+        ],
+        "operationId": "SyncVendorCatalogApiV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorCatalogApiSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vendor-documents": {
       "get": {
         "tags": [
@@ -20586,6 +20701,54 @@
         }
       }
     },
+    "/api/v1/vendor-email-inbox": {
+      "get": {
+        "tags": [
+          "VendorEmailInbox"
+        ],
+        "operationId": "ListVendorEmailInboxV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorEmailInbox"
+        ],
+        "operationId": "IngestVendorEmailInboxV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestVendorEmailInboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vendor-items": {
       "get": {
         "tags": [
@@ -20631,6 +20794,172 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-portal/rfqs/{rfqId}": {
+      "get": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "GetVendorPortalRfqV1",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-portal/rfqs/{rfqId}/quotes": {
+      "post": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "CreateVendorPortalQuoteV1",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorPortalCreateQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-portal/rfqs/{rfqId}/quotes/{vendorQuoteId}/lines": {
+      "put": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "UpsertVendorPortalQuoteLineV1",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertVendorQuoteLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-portal/rfqs/{rfqId}/quotes/{vendorQuoteId}/submit": {
+      "post": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "SubmitVendorPortalQuoteV1",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -21533,6 +21862,220 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-email-inbox": {
+      "get": {
+        "tags": [
+          "VendorEmailInbox"
+        ],
+        "operationId": "ListVendorEmailInbox",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorEmailInbox"
+        ],
+        "operationId": "IngestVendorEmailInbox",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestVendorEmailInboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-portal/rfqs/{rfqId}": {
+      "get": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "GetVendorPortalRfq",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-portal/rfqs/{rfqId}/quotes": {
+      "post": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "CreateVendorPortalQuote",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorPortalCreateQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-portal/rfqs/{rfqId}/quotes/{vendorQuoteId}/lines": {
+      "put": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "UpsertVendorPortalQuoteLine",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertVendorQuoteLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-portal/rfqs/{rfqId}/quotes/{vendorQuoteId}/submit": {
+      "post": {
+        "tags": [
+          "VendorPortal"
+        ],
+        "operationId": "SubmitVendorPortalQuote",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accessCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -24835,6 +25378,44 @@
           }
         }
       },
+      "IngestVendorEmailInboxRequest": {
+        "required": [
+          "messageKey",
+          "messageKind",
+          "senderEmail",
+          "senderName",
+          "subject",
+          "body",
+          "referenceKey"
+        ],
+        "type": "object",
+        "properties": {
+          "messageKey": {
+            "type": "string"
+          },
+          "messageKind": {
+            "type": "string"
+          },
+          "senderEmail": {
+            "type": "string"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "referenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "InventoryCountsCsvImportRequest": {
         "required": [
           "csv"
@@ -25334,6 +25915,39 @@
             "format": "int32"
           },
           "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessProcurementExceptionAutoClosesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -26897,7 +27511,9 @@
           "isEnabled",
           "escalationCooldownHours",
           "maxEscalationsPerException",
-          "notifyOnProcurementExceptionSlaEscalation"
+          "notifyOnProcurementExceptionSlaEscalation",
+          "autoCloseCompletedExceptionsEnabled",
+          "autoCloseCompletedExceptionsAfterHours"
         ],
         "type": "object",
         "properties": {
@@ -26922,6 +27538,17 @@
           },
           "notifyOnProcurementExceptionSlaEscalation": {
             "type": "boolean"
+          },
+          "autoCloseCompletedExceptionsEnabled": {
+            "type": "boolean"
+          },
+          "autoCloseCompletedExceptionsAfterHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -27066,6 +27693,101 @@
           }
         }
       },
+      "VendorCatalogApiSyncItem": {
+        "required": [
+          "partKey",
+          "vendorPartNumber",
+          "isPreferred",
+          "catalogUnitPrice",
+          "catalogCurrencyCode",
+          "catalogMinimumOrderQuantity",
+          "catalogLeadTimeDays",
+          "catalogQuantityAvailable",
+          "catalogAvailabilityStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "partKey": {
+            "type": "string"
+          },
+          "vendorPartNumber": {
+            "type": "string"
+          },
+          "isPreferred": {
+            "type": "boolean"
+          },
+          "catalogUnitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogCurrencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "catalogMinimumOrderQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogLeadTimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "catalogQuantityAvailable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogAvailabilityStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "VendorCatalogApiSyncRequest": {
+        "required": [
+          "vendorPartyKey",
+          "dryRun",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorPartyKey": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorCatalogApiSyncItem"
+            }
+          }
+        }
+      },
       "VendorCatalogCsvImportRequest": {
         "required": [
           "csv"
@@ -27105,6 +27827,25 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "VendorPortalCreateQuoteRequest": {
+        "required": [
+          "quoteKey",
+          "currencyCode",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "quoteKey": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
           }
         }
       }
@@ -27172,6 +27913,12 @@
       "name": "PartyRegistry"
     },
     {
+      "name": "VendorCatalogApi"
+    },
+    {
+      "name": "VendorEmailInbox"
+    },
+    {
       "name": "ExternalReferences"
     },
     {
@@ -27185,6 +27932,9 @@
     },
     {
       "name": "Rfqs"
+    },
+    {
+      "name": "VendorPortal"
     },
     {
       "name": "SupplierOnboarding"

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import { EffectiveDeploymentCard } from './data-plane/EffectiveDeploymentCard'
@@ -27,6 +28,14 @@ export function HybridDataPlanePanel() {
   const [notes, setNotes] = useState('')
   const [overridesPage, setOverridesPage] = useState(1)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [validationSummary, setValidationSummary] = useState<{
+    validationStatus: string
+    errorCode: string | null
+    errorMessage: string | null
+    validatedAt: string
+    readyUrl: string | null
+    latencyMs: number | null
+  } | null>(null)
 
   const tenantsQuery = useQuery({
     queryKey: ['platform-admin-tenant-overview'],
@@ -62,6 +71,35 @@ export function HybridDataPlanePanel() {
       }),
     onSuccess: () => {
       setErrorMessage(null)
+      setValidationSummary(null)
+      void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-profiles', tenantId] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-effective', tenantId] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  const validateMutation = useMutation({
+    mutationFn: () =>
+      nexarr.validateDataPlaneProfile({
+        tenantId: tenantId.trim(),
+        productKey,
+        deploymentMode,
+        dataEndpointUrl: dataEndpointUrl.trim() || null,
+        notes: notes.trim() || null,
+      }),
+    onSuccess: (result) => {
+      setErrorMessage(null)
+      setValidationSummary({
+        validationStatus: result.validationStatus,
+        errorCode: result.errorCode,
+        errorMessage: result.errorMessage,
+        validatedAt: result.validatedAt,
+        readyUrl: result.readyUrl,
+        latencyMs: result.latencyMs,
+      })
+      setTrustStatus(result.profile.trustStatus)
+      setDataEndpointUrl(result.profile.dataEndpointUrl ?? '')
+      setNotes(result.profile.notes ?? '')
       void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-profiles', tenantId] })
       void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-effective', tenantId] })
     },
@@ -72,6 +110,7 @@ export function HybridDataPlanePanel() {
     mutationFn: (key: string) => nexarr.deleteDataPlaneProfile(tenantId, key),
     onSuccess: () => {
       setErrorMessage(null)
+      setValidationSummary(null)
       void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-profiles', tenantId] })
       void queryClient.invalidateQueries({ queryKey: ['platform-data-plane-effective', tenantId] })
     },
@@ -83,10 +122,32 @@ export function HybridDataPlanePanel() {
   const profilesPage = profilesQuery.data
   const effectiveProfiles = effectiveQuery.data ?? []
   const endpointRequired = deploymentMode !== 'hosted'
+  const tenantOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.displayName} (${tenant.slug})`,
+        inactive: tenant.status !== 'Active',
+      })),
+    [tenants],
+  )
+  const productOptions = useMemo<PickerOption[]>(
+    () =>
+      products.map((product) => ({
+        value: product.productKey,
+        label: product.displayName,
+        inactive: !product.isActive,
+      })),
+    [products],
+  )
 
   useEffect(() => {
     setOverridesPage(1)
   }, [tenantId])
+
+  useEffect(() => {
+    setValidationSummary(null)
+  }, [tenantId, productKey])
 
   return (
     <section
@@ -102,23 +163,17 @@ export function HybridDataPlanePanel() {
         </p>
       </header>
 
-      <label htmlFor="data-plane-tenant" className="block max-w-xl text-sm text-slate-300">
-        Data-plane tenant
-        <select
+      <div className="max-w-xl">
+        <StaticSearchPicker
+          label="Data-plane tenant"
           id="data-plane-tenant"
           value={tenantId}
-          onChange={(event) => setTenantId(event.target.value)}
-          data-testid="data-plane-tenant"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-        >
-          <option value="">Select tenant…</option>
-          {tenants.map((tenant) => (
-            <option key={tenant.tenantId} value={tenant.tenantId}>
-              {tenant.displayName} ({tenant.slug})
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={setTenantId}
+          options={tenantOptions}
+          placeholder="Search tenants"
+          testId="data-plane-tenant"
+        />
+      </div>
 
       {tenantId ? (
         <EffectiveDeploymentCard
@@ -133,23 +188,15 @@ export function HybridDataPlanePanel() {
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Configure product data plane</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label htmlFor="data-plane-product" className="block text-sm text-slate-300">
-            Product data plane
-            <select
-              id="data-plane-product"
-              value={productKey}
-              onChange={(event) => setProductKey(event.target.value)}
-              data-testid="data-plane-product"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">Select product…</option>
-              {products.map((product) => (
-                <option key={product.productKey} value={product.productKey}>
-                  {product.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            label="Product data plane"
+            id="data-plane-product"
+            value={productKey}
+            onChange={setProductKey}
+            options={productOptions}
+            placeholder="Search products"
+            testId="data-plane-product"
+          />
           <label htmlFor="data-plane-deployment-mode" className="block text-sm text-slate-300">
             Deployment mode
             <select
@@ -225,12 +272,42 @@ export function HybridDataPlanePanel() {
         >
           {upsertMutation.isPending ? 'Saving…' : 'Save data-plane profile'}
         </button>
+        <button
+          type="button"
+          onClick={() => validateMutation.mutate()}
+          disabled={!tenantId || !productKey || validateMutation.isPending}
+          data-testid="data-plane-validate"
+          className="mt-3 ml-3 rounded-md border border-teal-500 px-4 py-2 text-sm font-medium text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
+        >
+          {validateMutation.isPending ? 'Validating…' : 'Validate and save'}
+        </button>
       </div>
 
       {errorMessage ? (
         <p className="text-sm text-rose-400" data-testid="data-plane-error">
           {errorMessage}
         </p>
+      ) : null}
+
+      {validationSummary ? (
+        <div className="rounded-lg border border-teal-800 bg-teal-950/40 p-4 text-sm text-teal-100" data-testid="data-plane-validation-result">
+          <p className="font-medium">Validation {validationSummary.validationStatus.toLowerCase()}</p>
+          <div className="mt-2 grid gap-1 text-teal-200 sm:grid-cols-2">
+            <span>
+              Ready URL: {validationSummary.readyUrl ?? 'Hosted mode / not required'}
+            </span>
+            <span>
+              Latency: {validationSummary.latencyMs != null ? `${Math.round(validationSummary.latencyMs)} ms` : 'n/a'}
+            </span>
+            <span>Validated at: {new Date(validationSummary.validatedAt).toLocaleString()}</span>
+            <span>
+              Error:{' '}
+              {validationSummary.errorCode
+                ? `${validationSummary.errorCode}${validationSummary.errorMessage ? ` - ${validationSummary.errorMessage}` : ''}`
+                : 'none'}
+            </span>
+          </div>
+        </div>
       ) : null}
 
       {tenantId ? (

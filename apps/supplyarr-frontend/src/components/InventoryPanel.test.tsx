@@ -1,5 +1,44 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 
 import { InventoryPanel } from './InventoryPanel'
 
@@ -165,5 +204,11 @@ describe('InventoryPanel', () => {
     expect(screen.getByText(/on hand 12/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Transfer stock/i })).toBeTruthy()
     expect(screen.getByTestId('stock-ledger-row-ledger-1')).toBeTruthy()
+    expect(screen.getByTestId('inventory-bin-location-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('inventory-stock-part-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('inventory-stock-bin-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('inventory-transfer-part-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('inventory-transfer-from-bin-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('inventory-transfer-to-bin-picker')).toBeInTheDocument()
   })
 })

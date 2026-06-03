@@ -7,6 +7,7 @@ public static class PasswordResetRules
     public const int TokenLifetimeMinutes = 60;
 
     public const int DefaultMinPasswordLength = 12;
+    public const bool DefaultRequirePasswordComplexity = true;
 
     private static readonly Regex PasswordComplexity = new(
         @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
@@ -15,16 +16,22 @@ public static class PasswordResetRules
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     public static bool MeetsPasswordPolicy(string password) =>
+        MeetsPasswordPolicy(password, ResolveConfiguredMinPasswordLength(), ResolveConfiguredRequirePasswordComplexity());
+
+    public static bool MeetsPasswordPolicy(string password, int minPasswordLength, bool requireComplexity) =>
         !string.IsNullOrWhiteSpace(password)
-        && password.Length >= ResolveMinPasswordLength()
-        && (!ResolveRequirePasswordComplexity() || PasswordComplexity.IsMatch(password));
+        && password.Length >= minPasswordLength
+        && (!requireComplexity || PasswordComplexity.IsMatch(password));
 
     public static string PasswordPolicyMessage() =>
-        ResolveRequirePasswordComplexity()
-            ? $"Password must be at least {ResolveMinPasswordLength()} characters and include uppercase, lowercase, and a digit."
-            : $"Password must be at least {ResolveMinPasswordLength()} characters.";
+        PasswordPolicyMessage(ResolveConfiguredMinPasswordLength(), ResolveConfiguredRequirePasswordComplexity());
 
-    private static int ResolveMinPasswordLength()
+    public static string PasswordPolicyMessage(int minPasswordLength, bool requireComplexity) =>
+        requireComplexity
+            ? $"Password must be at least {minPasswordLength} characters and include uppercase, lowercase, and a digit."
+            : $"Password must be at least {minPasswordLength} characters.";
+
+    public static int ResolveConfiguredMinPasswordLength()
     {
         var configuredValue =
             Environment.GetEnvironmentVariable("AUTH_PASSWORD_MIN_LENGTH")
@@ -38,7 +45,7 @@ public static class PasswordResetRules
         return minPasswordLength;
     }
 
-    private static bool ResolveRequirePasswordComplexity()
+    public static bool ResolveConfiguredRequirePasswordComplexity()
     {
         var configuredValue =
             Environment.GetEnvironmentVariable("AUTH_REQUIRE_PASSWORD_COMPLEXITY")

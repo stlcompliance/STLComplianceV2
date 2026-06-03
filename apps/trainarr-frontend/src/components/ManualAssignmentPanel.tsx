@@ -1,4 +1,5 @@
 import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
 
 import type { QualificationCheckResponse, TrainingDefinitionResponse } from '../api/types'
 import { QualificationCheckPanel } from './QualificationCheckPanel'
@@ -43,6 +44,14 @@ export function ManualAssignmentPanel({
   }
 
   const selectedDefinition = definitions.find((d) => d.trainingDefinitionId === selectedDefinitionId)
+  const definitionOptions = useMemo<PickerOption[]>(
+    () => definitions.map((definition) => ({ value: definition.trainingDefinitionId, label: definition.name })),
+    [definitions],
+  )
+  const selectedDefinitionOption = useMemo<PickerOption | undefined>(
+    () => definitionOptions.find((option) => option.value === selectedDefinitionId),
+    [definitionOptions, selectedDefinitionId],
+  )
   const canRunCheck = Boolean(staffarrPersonId.trim() && selectedDefinition)
   const blockedByCheck = qualificationCheck?.outcome === 'block'
   const missingCheck = !qualificationCheck
@@ -72,22 +81,16 @@ export function ManualAssignmentPanel({
           testId="manual-assignment-person-advanced"
         />
 
-        <label htmlFor="manual-assignment-definition" className="block text-xs text-slate-400">
-          Training definition
-          <select
-            id="manual-assignment-definition"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-            value={selectedDefinitionId}
-            onChange={(e) => onSelectDefinition(e.target.value)}
-          >
-            <option value="">Select definition…</option>
-            {definitions.map((definition) => (
-              <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-                {definition.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="manual-assignment-definition"
+          label="Training definition"
+          value={selectedDefinitionId}
+          onChange={onSelectDefinition}
+          options={definitionOptions}
+          placeholder="Search training definitions…"
+          testId="manual-assignment-definition-picker"
+          selectedOption={selectedDefinitionOption}
+        />
 
         <QualificationCheckPanel
           check={qualificationCheck}

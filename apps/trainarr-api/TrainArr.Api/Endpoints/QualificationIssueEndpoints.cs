@@ -81,6 +81,42 @@ public static class QualificationIssueEndpoints
         })
         .WithName($"GetQualificationIssueHistory{nameSuffix}");
 
+        qualifications.MapGet("/{qualificationIssueId:guid}/wallet-credential", async (
+            Guid qualificationIssueId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationIssueService issueService,
+            QualificationWalletService walletService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            var issue = await issueService.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken);
+            authorization.RequireQualificationChecks(context.User, issue.StaffarrPersonId);
+            return Results.Ok(await walletService.GetCredentialAsync(
+                tenantId,
+                qualificationIssueId,
+                context.Request,
+                cancellationToken));
+        })
+        .WithName($"GetQualificationWalletCredential{nameSuffix}");
+
+        qualifications.MapPost("/wallet/verify", async (
+            QualificationWalletVerificationRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationWalletService walletService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await walletService.VerifyCredentialAsync(
+                tenantId,
+                request.CredentialToken,
+                context.Request,
+                cancellationToken));
+        })
+        .WithName($"VerifyQualificationWalletCredential{nameSuffix}");
+
         qualifications.MapPost("/{qualificationIssueId:guid}/suspend", async (
             Guid qualificationIssueId,
             QualificationLifecycleActionRequest request,

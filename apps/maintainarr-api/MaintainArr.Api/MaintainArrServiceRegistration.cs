@@ -21,6 +21,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<AssetClassService>();
         builder.Services.AddScoped<AssetTypeService>();
         builder.Services.AddScoped<AssetService>();
+        builder.Services.AddScoped<AssetTelematicsIngestionService>();
         builder.Services.AddScoped<CatalogService>();
         builder.Services.AddScoped<CatalogSeedService>();
         builder.Services.AddScoped<FieldsetService>();

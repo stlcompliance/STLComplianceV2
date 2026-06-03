@@ -105,6 +105,7 @@ describe('NexArrOverviewPanel', () => {
           activeTenantId: 'tenant-a',
           isCurrent: true,
           isActive: true,
+          isRemembered: false,
         },
       ],
     })

@@ -1,7 +1,46 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ReorderEvaluationPanel } from './ReorderEvaluationPanel'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
 
 const baseProps = {
   suggestions: [
@@ -55,11 +94,37 @@ const baseProps = {
 }
 
 describe('ReorderEvaluationPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders reorder suggestions with suggested quantity', () => {
     render(<ReorderEvaluationPanel {...baseProps} />)
     expect(screen.getByText('Reorder evaluation')).toBeInTheDocument()
     expect(screen.getByText('filter-01')).toBeInTheDocument()
     expect(screen.getByText('24')).toBeInTheDocument()
     expect(screen.getByText('Acme Supply')).toBeInTheDocument()
+  })
+
+  it('renders a searchable reorder policy part picker', () => {
+    const onSelectedPartIdChange = vi.fn()
+
+    render(
+      <ReorderEvaluationPanel
+        {...baseProps}
+        onSelectedPartIdChange={onSelectedPartIdChange}
+        selectedPartId=""
+      />,
+    )
+
+    expect(screen.getByTestId('reorder-policy-part-picker-options')).toHaveTextContent(
+      'filter-01 · Oil Filter',
+    )
+
+    fireEvent.change(screen.getByTestId('reorder-policy-part-picker'), {
+      target: { value: 'part-1' },
+    })
+
+    expect(onSelectedPartIdChange).toHaveBeenCalledWith('part-1')
   })
 })

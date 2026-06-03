@@ -592,7 +592,9 @@ export interface PersonRoleAssignmentResponse {
   roleName: string
   scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
   scopeValue: string | null
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'pending_review'
+  effectiveStatus: 'active' | 'inactive' | 'expired' | 'pending_review'
+  expiresAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -601,6 +603,7 @@ export interface CreatePersonRoleAssignmentRequest {
   roleTemplateId: string
   scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
   scopeValue: string | null
+  expiresAt: string | null
 }
 
 export interface EffectivePermissionSourceResponse {
@@ -786,6 +789,8 @@ export interface ReadinessRollupSummaryResponse {
   notReadyCount: number
   overrideCount: number
   readyPercent: number
+  confidenceLevel: 'high' | 'medium' | 'low'
+  confidenceScore: number
   computedAt: string
 }
 
@@ -948,6 +953,8 @@ export interface PersonnelIncidentDetailResponse extends PersonnelIncidentSummar
   notifyHr?: boolean
   createFollowUpTask?: boolean
   followUpDueAt?: string | null
+  notes?: IncidentNoteSummaryResponse[] | null
+  attachments?: IncidentAttachmentSummaryResponse[] | null
 }
 
 export interface RouteIncidentToTrainarrResponse {
@@ -1001,6 +1008,60 @@ export interface CreatePersonnelIncidentRequest {
   notifyHr?: boolean
   createFollowUpTask?: boolean
   followUpDueAt?: string | null
+}
+
+export interface UpdatePersonnelIncidentStatusRequest {
+  status: PersonnelIncidentStatus
+}
+
+export type IncidentNoteTypeKey = 'note' | 'corrective_action'
+
+export type IncidentNoteStatus = 'open' | 'completed'
+
+export interface CreateIncidentNoteRequest {
+  noteTypeKey: IncidentNoteTypeKey
+  subject: string
+  body: string
+  dueAt?: string | null
+}
+
+export interface UpdateIncidentNoteStatusRequest {
+  status: IncidentNoteStatus
+}
+
+export interface IncidentNoteSummaryResponse {
+  noteId: string
+  incidentId: string
+  noteTypeKey: IncidentNoteTypeKey
+  subject: string
+  body: string
+  status: IncidentNoteStatus
+  dueAt: string | null
+  completedAt: string | null
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateIncidentAttachmentRequest {
+  title: string
+  fileName: string
+  contentType: string
+  contentBase64: string
+  description?: string | null
+}
+
+export interface IncidentAttachmentSummaryResponse {
+  attachmentId: string
+  incidentId: string
+  title: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  description?: string | null
+  uploadedByUserId: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface SubmitSelfReportedPersonnelIncidentRequest {
@@ -1356,6 +1417,26 @@ export interface IncidentReportSummaryItem {
   title: string
   occurredAt: string
   reportedAt: string
+}
+
+export interface CertificationReportSummaryResponse {
+  totalPeople: number
+  activeCertificationCount: number
+  expiringSoonCount: number
+  expiredCertificationCount: number
+  missingCertificationCount: number
+  recentCertifications: CertificationReportSummaryItem[]
+}
+
+export interface CertificationReportSummaryItem {
+  personCertificationId: string
+  personId: string
+  personDisplayName: string
+  certificationKey: string
+  certificationName: string
+  status: string
+  grantedAt: string
+  expiresAt: string | null
 }
 
 export interface EntityExportFormatDescriptor {

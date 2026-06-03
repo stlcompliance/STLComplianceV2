@@ -16,6 +16,7 @@ describe('countActiveSessions', () => {
         activeTenantId: 'tenant-1',
         isCurrent: true,
         isActive: true,
+        isRemembered: false,
       },
       {
         sessionId: 's2',
@@ -27,6 +28,7 @@ describe('countActiveSessions', () => {
         activeTenantId: 'tenant-1',
         isCurrent: false,
         isActive: false,
+        isRemembered: false,
       },
     ]
 

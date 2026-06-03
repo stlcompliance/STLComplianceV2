@@ -1,6 +1,42 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { canManagePeople, PersonProfileEditorPanel } from './PersonProfileEditorPanel'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
 
 const profile = {
   personId: '11111111-1111-1111-1111-111111111101',
@@ -59,6 +95,8 @@ describe('PersonProfileEditorPanel', () => {
 
     expect(screen.getByRole('button', { name: /Save profile changes/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Mark inactive/i })).toBeTruthy()
+    expect(screen.getByTestId('edit-person-primary-org-unit-picker')).toBeTruthy()
+    expect(screen.getByTestId('edit-person-manager-picker')).toBeTruthy()
   })
 
   it('renders profile error in callout', () => {

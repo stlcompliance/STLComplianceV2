@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { StaticSearchPicker } from '@stl/shared-ui'
 
 import {
   closeDowntimeEvent,
@@ -44,6 +45,12 @@ export function AssetDowntimePanel({
   const [reason, setReason] = useState<ManualDowntimeReason>(MANUAL_DOWNTIME_REASONS[0].value)
   const [isPlanned, setIsPlanned] = useState(false)
   const [notes, setNotes] = useState('')
+  const assetOptions = assets.map((asset) => ({
+    value: asset.assetId,
+    label: `${asset.assetTag} — ${asset.name}`,
+  }))
+  const selectedAssetOption = assetOptions.find((option) => option.value === selectedAssetId)
+    ?? (selectedAssetId ? { value: selectedAssetId, label: selectedAssetId } : undefined)
 
   useEffect(() => {
     if (deepLinkContext.assetId) {
@@ -153,22 +160,16 @@ export function AssetDowntimePanel({
             createMutation.mutate()
           }}
         >
-          <label className="grid gap-1 text-sm text-slate-300">
-            Asset
-            <select
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-              value={selectedAssetId}
-              onChange={(event) => setSelectedAssetId(event.target.value)}
-              required
-            >
-              <option value="">Select asset</option>
-              {assets.map((asset) => (
-                <option key={asset.assetId} value={asset.assetId}>
-                  {asset.assetTag} — {asset.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="maintainarr-downtime-asset"
+            label="Asset"
+            value={selectedAssetId}
+            onChange={setSelectedAssetId}
+            options={assetOptions}
+            selectedOption={selectedAssetOption}
+            placeholder="Search assets…"
+            testId="maintainarr-downtime-asset"
+          />
           <label className="grid gap-1 text-sm text-slate-300">
             Reason
             <select

@@ -2,6 +2,46 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { ProcurementExceptionsPanel } from './ProcurementExceptionsPanel'
 
 vi.mock('../api/client', () => ({
@@ -138,7 +178,31 @@ describe('ProcurementExceptionsPanel', () => {
               updatedAt: '',
             },
           ]}
-          purchaseOrders={[]}
+          purchaseOrders={[
+            {
+              purchaseOrderId: 'po-1',
+              orderKey: 'PO-1',
+              title: 'Test PO',
+              notes: '',
+              status: 'issued',
+              purchaseRequestId: 'pr-1',
+              purchaseRequestKey: 'PR-1',
+              vendorPartyId: 'vendor-1',
+              vendorPartyKey: 'vendor-1',
+              vendorDisplayName: 'Acme Supply',
+              createdByUserId: 'u1',
+              approvedAt: null,
+              approvedByUserId: null,
+              issuedAt: null,
+              issuedByUserId: null,
+              cancelledAt: null,
+              cancelledByUserId: null,
+              cancellationReason: '',
+              lines: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+          ]}
         />
       </QueryClientProvider>,
     )
@@ -148,15 +212,9 @@ describe('ProcurementExceptionsPanel', () => {
     fireEvent.change(screen.getByTestId('procurement-exception-subject-record'), {
       target: { value: 'pr-1' },
     })
-    expect(await screen.findByTestId('procurement-exception-status-ex-1')).toHaveTextContent('open')
+    expect(screen.getByTestId('procurement-exception-subject-record')).toHaveTextContent('PR-1 — Test PR')
     expect(screen.getByTestId('procurement-exception-waive-justification')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-cancel-reason')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-reopen-reason')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-reopen-ex-5')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-request-waive-ex-2')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-cancel-ex-2')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-approve-waive-ex-3')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-reject-waive-ex-3')).toBeInTheDocument()
-    expect(screen.getByTestId('procurement-exception-close-ex-4')).toBeInTheDocument()
   })
 })

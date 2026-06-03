@@ -4,6 +4,40 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonExportPanel } from './PersonExportPanel'
 import { exportPeopleJson, getOrgUnits, getPersonExportPreset, upsertPersonExportPreset, upsertPersonExportSchedule } from '../api/client'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      value,
+      onChange,
+      options,
+      testId,
+      placeholder,
+    }: {
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      testId?: string
+      placeholder?: string
+    }) => (
+      <label>
+        {placeholder}
+        <input
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 vi.mock('../api/client', () => ({
   getPeopleExportManifest: vi.fn().mockResolvedValue({
     packageVersion: '1',
@@ -113,7 +147,7 @@ describe('PersonExportPanel', () => {
 
   it('saves tenant export preset from current filters', async () => {
     renderPanel(true)
-    await screen.findByRole('option', { name: /North Site/i })
+    await screen.findByTestId('person-export-org-unit')
 
     fireEvent.click(screen.getByRole('button', { name: /Active workforce/i }))
     fireEvent.click(screen.getByRole('button', { name: /Save tenant default/i }))
@@ -152,14 +186,13 @@ describe('PersonExportPanel', () => {
 
   it('applies active-at-org-unit preset and exports combined filters', async () => {
     renderPanel(true)
-    await screen.findByRole('option', { name: /North Site/i })
+    const orgUnitPicker = await screen.findByTestId('person-export-org-unit')
 
-    const orgUnitSelect = screen.getAllByRole('combobox')[1]
-    fireEvent.change(orgUnitSelect, {
+    fireEvent.change(orgUnitPicker, {
       target: { value: '11111111-1111-1111-1111-111111111111' },
     })
     await waitFor(() => {
-      expect((orgUnitSelect as HTMLSelectElement).value).toBe('11111111-1111-1111-1111-111111111111')
+      expect((orgUnitPicker as HTMLInputElement).value).toBe('11111111-1111-1111-1111-111111111111')
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Active at org unit/i }))
@@ -179,14 +212,13 @@ describe('PersonExportPanel', () => {
 
   it('passes org unit filter to JSON export', async () => {
     renderPanel(true)
-    await screen.findByRole('option', { name: /North Site/i })
+    const orgUnitPicker = await screen.findByTestId('person-export-org-unit')
 
-    const orgUnitSelect = screen.getAllByRole('combobox')[1]
-    fireEvent.change(orgUnitSelect, {
+    fireEvent.change(orgUnitPicker, {
       target: { value: '11111111-1111-1111-1111-111111111111' },
     })
     await waitFor(() => {
-      expect((orgUnitSelect as HTMLSelectElement).value).toBe('11111111-1111-1111-1111-111111111111')
+      expect((orgUnitPicker as HTMLInputElement).value).toBe('11111111-1111-1111-1111-111111111111')
     })
     fireEvent.click(screen.getByRole('button', { name: /Preview JSON export/i }))
 

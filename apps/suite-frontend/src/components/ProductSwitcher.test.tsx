@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as nexarr from '../api/nexarrClient'
@@ -46,6 +47,7 @@ describe('ProductSwitcher', () => {
   })
 
   it('shows launch errors in shared callout', async () => {
+    const user = userEvent.setup()
     vi.mocked(nexarr.getNavigation).mockResolvedValue({
       tenantId: 'tenant-1',
       products: [
@@ -54,6 +56,7 @@ describe('ProductSwitcher', () => {
           displayName: 'StaffArr',
           routePath: '/app/staffarr',
           sortOrder: 1,
+          isCurrent: true,
           surfaces: [],
         },
       ],
@@ -61,6 +64,12 @@ describe('ProductSwitcher', () => {
 
     renderSwitcher()
 
+    expect(vi.mocked(nexarr.getNavigation)).toHaveBeenCalledWith('staffarr')
+    await user.click(await screen.findByRole('button', { name: /StaffArr/ }))
+    expect(screen.getByRole('menuitem', { name: /StaffArr/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
     expect(await screen.findByText('launch failed')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })

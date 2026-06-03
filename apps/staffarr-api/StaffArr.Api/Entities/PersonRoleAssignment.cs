@@ -18,6 +18,8 @@ public sealed class PersonRoleAssignment : IHasTenant
 
     public string Status { get; set; } = "active";
 
+    public DateTimeOffset? ExpiresAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

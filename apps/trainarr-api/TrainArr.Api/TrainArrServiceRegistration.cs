@@ -144,6 +144,7 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<CertificationPublicationService>();
 
         builder.Services.AddScoped<QualificationIssueService>();
+        builder.Services.AddScoped<QualificationWalletService>();
 
         builder.Services.AddScoped<QualificationExpirationService>();
 
@@ -197,6 +198,7 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<StaffarrIncidentRemediationQueryService>();
 
         builder.Services.AddScoped<TrainingDefinitionService>();
+        builder.Services.AddScoped<TrainingProgramDraftService>();
 
         builder.Services.AddScoped<TrainingDefinitionStepService>();
 
@@ -209,6 +211,8 @@ public static class TrainArrServiceRegistration
 
         builder.Services.AddScoped<TrainingProgramService>();
 
+        builder.Services.AddScoped<TrainingProgramContentReferenceService>();
+
         builder.Services.AddScoped<TrainingMatrixService>();
 
         builder.Services.AddScoped<TrainingApplicabilityProfileService>();
@@ -220,6 +224,7 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<TrainingAssignmentService>();
         builder.Services.AddScoped<TrainingAssignmentMaterialDemandService>();
         builder.Services.AddScoped<TrainingAssignmentMaterialDemandStatusIngestionService>();
+        builder.Services.AddScoped<TrainingAssignmentLaborService>();
         builder.Services.AddScoped<FieldInboxService>();
 
         builder.Services.AddSingleton<TrainArrEvidenceStorageService>();

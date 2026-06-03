@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker } from '@stl/shared-ui'
 import type { PersonOffboardingResponse } from '../api/types'
 
 interface PersonOffboardingPanelProps {
@@ -69,6 +69,9 @@ export function PersonOffboardingPanel({
   }, [personId])
 
   const managerChoices = peopleOptions.filter((person) => person.personId !== personId)
+  const managerOptions = managerChoices.map((person) => ({ value: person.personId, label: person.displayName }))
+  const selectedNewManagerOption = managerOptions.find((option) => option.value === newManagerPersonId)
+  const selectedExecuteManagerOption = managerOptions.find((option) => option.value === executeManagerPersonId)
   const inProgress = offboarding?.status === 'in_progress'
 
   const handleStart = async (event: FormEvent) => {
@@ -178,25 +181,16 @@ export function PersonOffboardingPanel({
           {canManage && inProgress ? (
             <form className="grid gap-4 md:grid-cols-2" onSubmit={handleExecute}>
               {offboarding.activeDirectReportCount > 0 ? (
-                <label htmlFor="execute-offboarding-manager" className="block text-sm text-slate-300 md:col-span-2">
-                  Replacement manager for direct reports
-                  <select
-                    id="execute-offboarding-manager"
-                    value={executeManagerPersonId}
-                    onChange={(event) => setExecuteManagerPersonId(event.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                    required={!offboarding.newManagerPersonIdForReports}
-                  >
-                    <option value="">
-                      {offboarding.newManagerPersonIdForReports ? 'Use manager from start request' : 'Select manager'}
-                    </option>
-                    {managerChoices.map((person) => (
-                      <option key={person.personId} value={person.personId}>
-                        {person.displayName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <StaticSearchPicker
+                  id="execute-offboarding-manager"
+                  label="Replacement manager for direct reports"
+                  value={executeManagerPersonId}
+                  onChange={setExecuteManagerPersonId}
+                  options={managerOptions}
+                  placeholder="Search replacement managers…"
+                  testId="execute-offboarding-manager-picker"
+                  selectedOption={selectedExecuteManagerOption}
+                />
               ) : null}
               <div className="md:col-span-2">
                 <button
@@ -245,22 +239,16 @@ export function PersonOffboardingPanel({
               placeholder="Optional separation reason"
             />
           </label>
-          <label htmlFor="offboarding-manager" className="block text-sm text-slate-300 md:col-span-2">
-            Replacement manager for direct reports (optional at start)
-            <select
-              id="offboarding-manager"
-              value={newManagerPersonId}
-              onChange={(event) => setNewManagerPersonId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">Assign during execution if needed</option>
-              {managerChoices.map((person) => (
-                <option key={person.personId} value={person.personId}>
-                  {person.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="offboarding-manager"
+            label="Replacement manager for direct reports (optional at start)"
+            value={newManagerPersonId}
+            onChange={setNewManagerPersonId}
+            options={managerOptions}
+            placeholder="Search replacement managers…"
+            testId="offboarding-manager-picker"
+            selectedOption={selectedNewManagerOption}
+          />
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"

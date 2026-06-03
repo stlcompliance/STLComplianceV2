@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buildSemanticKey } from '@stl/shared-ui'
+import { buildSemanticKey, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -73,6 +73,18 @@ export function SupplierIncidentsPanel({
   const selectedParty = useMemo(
     () => incidentParties.find((p) => p.partyId === selectedPartyId),
     [incidentParties, selectedPartyId],
+  )
+  const partyOptions = useMemo<PickerOption[]>(
+    () =>
+      incidentParties.map((party) => ({
+        value: party.partyId,
+        label: `${party.partyType} · ${party.partyKey} · ${party.displayName}`,
+      })),
+    [incidentParties],
+  )
+  const selectedPartyOption = useMemo<PickerOption | undefined>(
+    () => partyOptions.find((option) => option.value === selectedPartyId),
+    [partyOptions, selectedPartyId],
   )
   const incidentKeySource = useMemo(() => {
     const partyLabel = selectedParty?.displayName ?? ''
@@ -175,22 +187,16 @@ export function SupplierIncidentsPanel({
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label htmlFor="supplier-incident-party" className="block text-sm text-slate-400 md:col-span-2">
-          Vendor or supplier party
-          <select
-            id="supplier-incident-party"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={selectedPartyId}
-            onChange={(event) => setSelectedPartyId(event.target.value)}
-          >
-            <option value="">Select vendor or supplier…</option>
-            {incidentParties.map((party) => (
-              <option key={party.partyId} value={party.partyId}>
-                {party.partyType} · {party.partyKey} · {party.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="supplier-incident-party"
+          label="Vendor or supplier party"
+          value={selectedPartyId}
+          onChange={setSelectedPartyId}
+          options={partyOptions}
+          selectedOption={selectedPartyOption}
+          placeholder="Search vendors or suppliers…"
+          testId="supplier-incident-party-picker"
+        />
 
         {selectedPartyId && (
           <>

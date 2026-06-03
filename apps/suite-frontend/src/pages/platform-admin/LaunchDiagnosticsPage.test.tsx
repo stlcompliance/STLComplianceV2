@@ -4,6 +4,48 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LaunchDiagnosticsPage } from './LaunchDiagnosticsPage'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      id,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      id: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+        {label}
+        <select
+          id={id}
+          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          data-testid={testId}
+        >
+          <option value="">{placeholder ?? `Select ${label.toLowerCase()}…`}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 vi.mock('../../api/nexarrClient', () => ({
   getPlatformAdminLaunchDiagnostics: vi.fn(),
   getPlatformAdminLaunchAttempts: vi.fn(),
@@ -83,6 +125,138 @@ describe('LaunchDiagnosticsPage', () => {
     expect(await screen.findByText('No')).toBeTruthy()
     expect(screen.getByText('entitlement_inactive')).toBeTruthy()
     expect(screen.getByText('http://localhost:5175/launch')).toBeTruthy()
+  })
+
+  it('filters launch attempts by actor, correlation, and time range', async () => {
+    const expectedFrom = new Date('2026-06-01T00:00').toISOString()
+    const expectedTo = new Date('2026-06-03T23:59').toISOString()
+
+    vi.mocked(nexarr.getPlatformAdminLaunchDiagnostics).mockResolvedValue({
+      rows: [
+        {
+          tenantId: 'tenant-1',
+          tenantSlug: 'demo-stl',
+          tenantDisplayName: 'STL Demo Tenant',
+          tenantStatus: 'active',
+          productKey: 'staffarr',
+          productDisplayName: 'StaffArr',
+          hasActiveEntitlement: true,
+          hasLaunchProfile: true,
+          launchProfileActive: true,
+          callbackAllowlistEntryCount: 3,
+          pendingHandoffCount: 0,
+          expiredHandoffCount: 0,
+          launchReadiness: 'ready',
+        },
+      ],
+      issues: [],
+      generatedAt: new Date().toISOString(),
+    })
+    vi.mocked(nexarr.getPlatformAdminLaunchAttempts).mockResolvedValue({
+      items: [
+        {
+          auditEventId: 'audit-1',
+          tenantId: 'tenant-1',
+          tenantSlug: 'demo-stl',
+          tenantDisplayName: 'STL Demo Tenant',
+          actorUserId: 'user-1',
+          actorEmail: 'driver@example.com',
+          actorDisplayName: 'Driver One',
+          productKey: 'staffarr',
+          productDisplayName: 'StaffArr',
+          action: 'launch.requested',
+          result: 'success',
+          reasonCode: null,
+          targetType: 'launch',
+          targetId: 'launch-1',
+          correlationId: 'corr-1',
+          occurredAt: new Date().toISOString(),
+          remediationHint: null,
+        },
+      ],
+      page: 1,
+      pageSize: 25,
+      totalCount: 1,
+      hasNextPage: false,
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('Recent launch attempts')).toBeTruthy()
+    fireEvent.change(screen.getByLabelText('Actor user ID'), { target: { value: 'user-1' } })
+    fireEvent.change(screen.getByLabelText('Correlation ID'), { target: { value: 'corr-1' } })
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-06-01T00:00' } })
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-06-03T23:59' } })
+
+    await waitFor(() => {
+      expect(nexarr.getPlatformAdminLaunchAttempts).toHaveBeenLastCalledWith({
+        tenantId: undefined,
+        productKey: undefined,
+        result: undefined,
+        userId: 'user-1',
+        correlationId: 'corr-1',
+        fromUtc: expectedFrom,
+        toUtc: expectedTo,
+        page: 1,
+        pageSize: 25,
+      })
+    })
+    expect(await screen.findByText('Driver One')).toBeTruthy()
+    expect(screen.getByText('corr-1')).toBeTruthy()
+  })
+
+  it('filters launch attempts by tenant and product pickers', async () => {
+    vi.mocked(nexarr.getPlatformAdminLaunchDiagnostics).mockResolvedValue({
+      rows: [
+        {
+          tenantId: 'tenant-1',
+          tenantSlug: 'demo-stl',
+          tenantDisplayName: 'STL Demo Tenant',
+          tenantStatus: 'active',
+          productKey: 'staffarr',
+          productDisplayName: 'StaffArr',
+          hasActiveEntitlement: true,
+          hasLaunchProfile: true,
+          launchProfileActive: true,
+          callbackAllowlistEntryCount: 3,
+          pendingHandoffCount: 0,
+          expiredHandoffCount: 0,
+          launchReadiness: 'ready',
+        },
+      ],
+      issues: [],
+      generatedAt: new Date().toISOString(),
+    })
+    vi.mocked(nexarr.getPlatformAdminLaunchAttempts).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 25,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('Recent launch attempts')).toBeTruthy()
+    fireEvent.change(screen.getByLabelText('Filter tenant'), { target: { value: 'tenant-1' } })
+    await waitFor(() => {
+      expect(screen.getByLabelText('Filter product')).toBeInTheDocument()
+    })
+    fireEvent.change(screen.getByLabelText('Filter product'), { target: { value: 'staffarr' } })
+
+    await waitFor(() => {
+      expect(nexarr.getPlatformAdminLaunchAttempts).toHaveBeenLastCalledWith({
+        tenantId: 'tenant-1',
+        productKey: 'staffarr',
+        result: undefined,
+        userId: undefined,
+        correlationId: undefined,
+        fromUtc: undefined,
+        toUtc: undefined,
+        page: 1,
+        pageSize: 25,
+      })
+    })
   })
 
   it('shows error message when launch validation fails', async () => {

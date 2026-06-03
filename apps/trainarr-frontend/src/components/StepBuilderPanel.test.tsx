@@ -1,5 +1,43 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: { value: string; label: string }[]
+      onChange: (value: string) => void
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-step-picker'}>
+        {label ? <span>{label}</span> : null}
+        <select
+          id={testId ?? 'mock-step-picker'}
+          aria-label={label ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">Select…</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 import { StepBuilderPanel } from './StepBuilderPanel'
 
 const definition = {
@@ -14,6 +52,10 @@ const definition = {
 }
 
 describe('StepBuilderPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('creates a step when form is submitted', () => {
     const onCreateStep = vi.fn().mockResolvedValue(undefined)
 
@@ -42,5 +84,28 @@ describe('StepBuilderPanel', () => {
         stepType: 'content',
       }),
     )
+  })
+
+  it('uses a searchable picker for training definitions', () => {
+    const onSelectDefinition = vi.fn()
+
+    render(
+      <StepBuilderPanel
+        definitions={[definition]}
+        selectedDefinitionId=""
+        steps={[]}
+        isLoading={false}
+        canManage
+        isSubmitting={false}
+        onSelectDefinition={onSelectDefinition}
+        onCreateStep={vi.fn()}
+        onDeleteStep={vi.fn()}
+      />,
+    )
+
+    const definitionPicker = screen.getByLabelText('Training definition')
+    fireEvent.change(definitionPicker, { target: { value: 'def-1' } })
+
+    expect(onSelectDefinition).toHaveBeenCalledWith('def-1')
   })
 })

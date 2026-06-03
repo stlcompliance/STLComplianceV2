@@ -26,6 +26,8 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<EquipmentAvailability> EquipmentAvailabilities => Set<EquipmentAvailability>();
 
+    public DbSet<DriverTimeEntry> DriverTimeEntries => Set<DriverTimeEntry>();
+
     public DbSet<RoutArrAuditEvent> AuditEvents => Set<RoutArrAuditEvent>();
 
     public DbSet<TenantDispatchNotificationSettings> TenantDispatchNotificationSettings =>
@@ -222,6 +224,11 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.StaffarrSiteNameSnapshot).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(x => x.StopType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.StopStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.GeofenceAnchorLatitude).HasPrecision(10, 6);
+            entity.Property(x => x.GeofenceAnchorLongitude).HasPrecision(10, 6);
+            entity.Property(x => x.LastGeofenceDistanceMeters).HasPrecision(18, 2);
+            entity.Property(x => x.LastGeofenceReportedLatitude).HasPrecision(10, 6);
+            entity.Property(x => x.LastGeofenceReportedLongitude).HasPrecision(10, 6);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RouteId });
             entity.HasIndex(x => new { x.TenantId, x.RouteId, x.StopKey }).IsUnique();
@@ -257,6 +264,19 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.VehicleRefKey, x.StartsAt });
             entity.HasIndex(x => new { x.TenantId, x.StartsAt, x.EndsAt });
+        });
+
+        modelBuilder.Entity<DriverTimeEntry>(entity =>
+        {
+            entity.ToTable("routarr_driver_time_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EntryType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.EditReason).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.StartsAt });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.EntryType, x.StartsAt });
         });
 
         modelBuilder.Entity<RoutArrAuditEvent>(entity =>

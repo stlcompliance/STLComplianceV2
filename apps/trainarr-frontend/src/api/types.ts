@@ -170,6 +170,12 @@ export interface SubmitTrainingAssignmentStepRequest {
   selectedOptionIndexes?: number[]
   practicalResult?: string
   notes?: string
+  contentAcknowledged?: boolean
+  practicalObservationNotes?: string
+  safetyCriticalFailure?: boolean
+  failureComments?: string
+  traineeAcknowledged?: boolean
+  retestRequired?: boolean
 }
 
 export interface TrainingAssignmentSummaryResponse {
@@ -517,6 +523,18 @@ export interface TrainingProgramDefinitionLinkResponse {
   sortOrder: number
 }
 
+export interface TrainingProgramContentReferenceResponse {
+  contentReferenceId: string
+  trainingProgramId: string
+  contentType: string
+  title: string
+  referenceValue: string
+  notes: string | null
+  localeTag: string | null
+  createdByUserId: string | null
+  createdAt: string
+}
+
 export interface TrainingProgramDetailResponse {
   programId: string
   programKey: string
@@ -524,6 +542,7 @@ export interface TrainingProgramDetailResponse {
   description: string
   status: string
   definitions: TrainingProgramDefinitionLinkResponse[]
+  contentReferences: TrainingProgramContentReferenceResponse[]
   createdAt: string
   updatedAt: string
 }
@@ -535,11 +554,63 @@ export interface CreateTrainingProgramRequest {
   trainingDefinitionIds: string[]
 }
 
+export interface GenerateTrainingProgramDraftRequest {
+  prompt: string
+}
+
+export interface TrainingProgramDraftMatchResponse {
+  trainingDefinitionId: string
+  definitionKey: string
+  name: string
+  qualificationKey: string
+  qualificationName: string
+  score: number
+  matchReason: string
+}
+
+export interface TrainingProgramDraftResponse {
+  generatedAt: string
+  prompt: string
+  name: string
+  description: string
+  trainingDefinitionIds: string[]
+  matchedDefinitions: TrainingProgramDraftMatchResponse[]
+  summary: string
+}
+
 export interface UpdateTrainingProgramRequest {
   name: string
   description: string
   status: string
   trainingDefinitionIds: string[]
+}
+
+export interface CreateTrainingProgramContentReferenceRequest {
+  contentType: string
+  title: string
+  referenceValue: string
+  notes?: string | null
+  localeTag?: string | null
+}
+
+export interface CreateTrainingAssignmentLaborEntryRequest {
+  laborTypeKey: 'delivery' | 'preparation' | 'review' | 'administration' | 'travel' | string
+  hoursWorked: number
+  costPerHour: number
+  notes?: string | null
+}
+
+export interface TrainingAssignmentLaborEntryResponse {
+  laborEntryId: string
+  trainingAssignmentId: string
+  laborTypeKey: string
+  hoursWorked: number
+  costPerHour: number
+  totalCost: number
+  notes: string | null
+  loggedByUserId: string | null
+  loggedAt: string
+  createdAt: string
 }
 
 export interface TrainingEvidenceResponse {
@@ -1365,6 +1436,19 @@ export interface AssignmentReportSummaryResponse {
   completedAssignments: number
   overdueAssignments: number
   completionRatePercent: number
+  analytics: {
+    averageCompletionDays: number | null
+    evaluationPassRatePercent: number | null
+    averageEvaluationScore: number | null
+    evidenceCoveragePercent: number
+    signoffCoveragePercent: number
+    totalLaborHours: number
+    totalLaborCost: number
+    averageLaborHoursPerCompletedAssignment: number | null
+    averageLaborCostPerCompletedAssignment: number | null
+    localizedContentReferenceCount: number
+    distinctContentLocaleCount: number
+  }
   recentAssignments: AssignmentReportSummaryItem[]
 }
 
@@ -1387,6 +1471,114 @@ export interface QualificationReportSummaryResponse {
   revokedCount: number
   expiringWithin30Days: number
   recentQualifications: QualificationReportSummaryItem[]
+}
+
+export interface QualificationPointInTimeReportResponse {
+  generatedAt: string
+  staffarrPersonId: string
+  actionTask: string
+  qualificationKey: string
+  qualificationName: string
+  asOfUtc: string
+  isQualified: boolean
+  statusOnDate: string
+  qualificationMessage: string
+  sourceCertificate: QualificationPointInTimeSourceCertificateResponse | null
+  programVersion: QualificationPointInTimeProgramVersionResponse | null
+  expirationState: QualificationPointInTimeExpirationStateResponse
+  restrictions: string[]
+  evidence: QualificationPointInTimeEvidenceResponse[]
+  signoffs: QualificationPointInTimeSignoffResponse[]
+  auditTrail: QualificationPointInTimeAuditTrailItemResponse[]
+}
+
+export interface QualificationPointInTimeSourceCertificateResponse {
+  qualificationIssueId: string
+  trainingAssignmentId: string
+  grantPublicationId: string
+  issuedAt: string
+  expiresAt: string | null
+  statusOnDate: string
+  lifecycleReason: string | null
+  lifecyclePublicationId: string | null
+}
+
+export interface QualificationWalletCredentialResponse {
+  qualificationIssueId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  qualificationName: string
+  status: string
+  issuedAt: string
+  expiresAt: string | null
+  generatedAt: string
+  credentialToken: string
+  verificationUrl: string
+  displayLabel: string
+}
+
+export interface QualificationWalletVerificationRequest {
+  credentialToken: string
+}
+
+export interface QualificationWalletVerificationResponse {
+  verifiedAt: string
+  isValid: boolean
+  message: string
+  credential: QualificationWalletCredentialResponse | null
+  report: QualificationPointInTimeReportResponse | null
+}
+
+export interface QualificationPointInTimeProgramVersionResponse {
+  trainingProgramVersionId: string
+  trainingProgramId: string
+  programKey: string
+  programName: string
+  versionNumber: number
+  status: string
+  publishedAt: string | null
+  trainingDefinitionId: string
+  definitionKey: string
+  definitionName: string
+}
+
+export interface QualificationPointInTimeExpirationStateResponse {
+  expiresAt: string | null
+  isExpired: boolean
+  daysUntilExpiration: number | null
+  message: string
+}
+
+export interface QualificationPointInTimeEvidenceResponse {
+  evidenceId: string
+  trainingAssignmentId: string
+  evidenceTypeKey: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string | null
+  uploadedByUserId: string
+  createdAt: string
+}
+
+export interface QualificationPointInTimeSignoffResponse {
+  signoffId: string
+  trainingAssignmentId: string
+  signoffRole: string
+  signedByUserId: string
+  notes: string | null
+  signedAt: string
+}
+
+export interface QualificationPointInTimeAuditTrailItemResponse {
+  auditEventId: string
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  actorUserId: string | null
+  occurredAt: string
 }
 
 export interface ComplianceReportRemediationItem {

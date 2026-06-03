@@ -1,4 +1,4 @@
-import { buildSemanticKey, ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { buildSemanticKey, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useMemo } from 'react'
 
 import type {
@@ -137,6 +137,18 @@ export function ApplicabilityBuilderPanel({
         .map((profile) => ({ value: profile.scopeKey, label: `${profile.scopeKey} (${profile.label})` })),
     [profileScopeType, profiles],
   )
+  const selectedScopeKeyOption = useMemo<PickerOption | undefined>(() => {
+    if (!profileScopeKey.trim()) {
+      return undefined
+    }
+
+    return (
+      scopeKeyOptions.find((option) => option.value === profileScopeKey) ?? {
+        value: profileScopeKey,
+        label: `${profileScopeKey} (selected)`,
+      }
+    )
+  }, [profileScopeKey, scopeKeyOptions])
   const sourceKeyOptions = useMemo<PickerOption[]>(
     () =>
       requirements
@@ -149,6 +161,42 @@ export function ApplicabilityBuilderPanel({
         .map((row) => ({ value: row.sourceKey!, label: row.sourceKey! })),
     [requirementSource, requirements],
   )
+  const targets =
+    requirementTargetType === 'program'
+      ? programs.map((program) => ({ id: program.programId, label: program.name }))
+      : definitions.map((definition) => ({ id: definition.trainingDefinitionId, label: definition.name }))
+  const selectedSourceKeyOption = useMemo<PickerOption | undefined>(() => {
+    if (!requirementSourceKey.trim()) {
+      return undefined
+    }
+
+    return (
+      sourceKeyOptions.find((option) => option.value === requirementSourceKey) ?? {
+        value: requirementSourceKey,
+        label: `${requirementSourceKey} (selected)`,
+      }
+    )
+  }, [requirementSourceKey, sourceKeyOptions])
+  const targetOptions = useMemo<PickerOption[]>(
+    () =>
+      targets.map((target) => ({
+        value: target.id,
+        label: `${target.label} (${requirementTargetType})`,
+      })),
+    [requirementTargetType, targets],
+  )
+  const selectedTargetOption = useMemo<PickerOption | undefined>(() => {
+    if (!requirementTargetId.trim()) {
+      return undefined
+    }
+
+    return (
+      targetOptions.find((option) => option.value === requirementTargetId) ?? {
+        value: requirementTargetId,
+        label: `${requirementTargetId} (selected)`,
+      }
+    )
+  }, [requirementTargetId, targetOptions])
 
   useEffect(() => {
     onProfileScopeKeyChange(generatedProfileScopeKey)
@@ -163,11 +211,6 @@ export function ApplicabilityBuilderPanel({
       onRequirementSourceKeyChange('')
     }
   }, [onRequirementSourceKeyChange, requirementSource])
-
-  const targets =
-    requirementTargetType === 'program'
-      ? programs.map((program) => ({ id: program.programId, label: program.name }))
-      : definitions.map((definition) => ({ id: definition.trainingDefinitionId, label: definition.name }))
 
   const groupedRequirements = requirements.reduce<Record<string, TrainingRequirementResponse[]>>((acc, row) => {
     const key = row.applicabilityProfileLabel ?? 'Unscoped'
@@ -222,14 +265,15 @@ export function ApplicabilityBuilderPanel({
               </label>
               <div className="space-y-1 text-xs text-slate-400">
                 <p>Scope reference is generated automatically from the profile label.</p>
-                <ControlledSelect
+                <StaticSearchPicker
+                  id="applicability-profile-scope-key-picker"
                   label="Known scope references"
                   value={profileScopeKey}
                   onChange={onProfileScopeKeyChange}
                   options={scopeKeyOptions}
-                  emptyLabel="Use generated key"
+                  placeholder="Search known scope references…"
                   testId="applicability-profile-scope-key-picker"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                  selectedOption={selectedScopeKeyOption}
                 />
               </div>
               <label htmlFor="applicability-profile-description" className="block text-xs text-slate-400 sm:col-span-2">
@@ -283,14 +327,15 @@ export function ApplicabilityBuilderPanel({
                 </select>
               </label>
               {requirementSource === 'internal' ? null : (
-                <ControlledSelect
+                <StaticSearchPicker
+                  id="requirement-mapping-source-key"
                   label="Source reference"
                   value={requirementSourceKey}
                   onChange={onRequirementSourceKeyChange}
                   options={sourceKeyOptions}
-                  emptyLabel="Select source reference…"
+                  placeholder="Search source references…"
                   testId="requirement-mapping-source-key"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                  selectedOption={selectedSourceKeyOption}
                 />
               )}
               <label htmlFor="requirement-mapping-profile" className="block text-xs text-slate-400">
@@ -335,19 +380,16 @@ export function ApplicabilityBuilderPanel({
               </label>
               <label htmlFor="requirement-mapping-target" className="block text-xs text-slate-400">
                 Target
-                <select
+                <StaticSearchPicker
                   id="requirement-mapping-target"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                  label="Target"
                   value={requirementTargetId}
-                  onChange={(event) => onRequirementTargetIdChange(event.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {targets.map((target) => (
-                    <option key={target.id} value={target.id}>
-                      {target.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={onRequirementTargetIdChange}
+                  options={targetOptions}
+                  placeholder={`Search ${requirementTargetType}s…`}
+                  testId="requirement-mapping-target"
+                  selectedOption={selectedTargetOption}
+                />
               </label>
               <div className="sm:col-span-2">
                 <button

@@ -17,7 +17,7 @@ function formatDevice(session: UserSessionSummary): string {
 
 function statusLabel(session: UserSessionSummary): string {
   if (session.isCurrent) {
-    return 'Current session'
+    return session.isRemembered ? 'Current remembered session' : 'Current session'
   }
   if (session.revokedAt) {
     return 'Revoked'
@@ -25,7 +25,7 @@ function statusLabel(session: UserSessionSummary): string {
   if (!session.isActive) {
     return 'Expired'
   }
-  return 'Active'
+  return session.isRemembered ? 'Remembered session' : 'Active'
 }
 
 type PendingRevoke = {

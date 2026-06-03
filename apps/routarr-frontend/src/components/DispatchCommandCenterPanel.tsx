@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import {
   assignTripDriver,
@@ -40,6 +40,10 @@ function TripCard({
 }) {
   const [selectedDriver, setSelectedDriver] = useState('')
   const [dragOver, setDragOver] = useState(false)
+  const selectedDriverMatch = driverOptions.find((d) => d.personId === selectedDriver)
+  const selectedDriverOption: PickerOption | undefined = selectedDriverMatch
+    ? { value: selectedDriver, label: selectedDriverMatch.displayName }
+    : undefined
 
   return (
     <li
@@ -72,19 +76,19 @@ function TripCard({
       ) : null}
       {canAssign ? (
         <div className="mt-2 flex flex-wrap gap-1">
-          <select id="dispatchcommandcenter-select-field"
-            className="min-w-0 flex-1 rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-slate-200"
+          <StaticSearchPicker
+            id="dispatchcommandcenter-select-field"
+            label="Driver"
             value={selectedDriver}
-            onChange={(e) => setSelectedDriver(e.target.value)}
-            data-testid={`command-center-driver-select-${trip.tripId}`}
-          >
-            <option value="">Assign driver…</option>
-            {driverOptions.map((d) => (
-              <option key={d.personId} value={d.personId}>
-                {d.displayName}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedDriver}
+            options={driverOptions.map((driver) => ({
+              value: driver.personId,
+              label: driver.displayName,
+            }))}
+            selectedOption={selectedDriverOption}
+            placeholder="Assign driver…"
+            testId={`command-center-driver-picker-${trip.tripId}`}
+          />
           <button
             type="button"
             className="rounded bg-slate-700 px-2 py-0.5 text-white disabled:opacity-50"

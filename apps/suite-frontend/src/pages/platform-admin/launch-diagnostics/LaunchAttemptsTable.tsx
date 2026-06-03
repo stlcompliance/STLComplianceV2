@@ -3,6 +3,7 @@ import type { PagedResult, LaunchAttemptTimelineItem } from '../../../api/types'
 import { resultClass } from './utils'
 
 type Props = {
+  isLoading: boolean
   attemptsResult: PagedResult<LaunchAttemptTimelineItem> | undefined
   isError: boolean
   error: Error | null
@@ -10,7 +11,14 @@ type Props = {
   generatedAt: string
 }
 
-export function LaunchAttemptsTable({ attemptsResult, isError, error, onRetry, generatedAt }: Props) {
+export function LaunchAttemptsTable({
+  isLoading,
+  attemptsResult,
+  isError,
+  error,
+  onRetry,
+  generatedAt,
+}: Props) {
   const attempts = attemptsResult?.items ?? []
 
   return (
@@ -25,6 +33,8 @@ export function LaunchAttemptsTable({ attemptsResult, isError, error, onRetry, g
           onRetry={onRetry}
           retryLabel="Retry launch attempts"
         />
+      ) : isLoading ? (
+        <p className="text-sm text-slate-500">Loading launch attempts…</p>
       ) : attempts.length === 0 ? (
         <p className="text-sm text-slate-500">No launch attempts recorded.</p>
       ) : (

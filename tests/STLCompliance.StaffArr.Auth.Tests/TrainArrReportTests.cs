@@ -19,6 +19,8 @@ public sealed class TrainArrReportTests : IAsyncLifetime
     private HttpClient _trainarrClient = null!;
     private string _adminToken = null!;
     private Guid _seedPersonId;
+    private Guid _seedProgramId;
+    private Guid _seedAssignmentId;
 
     public async Task InitializeAsync()
     {
@@ -57,8 +59,22 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
 
         var summary = (await response.Content.ReadFromJsonAsync<AssignmentReportSummaryResponse>())!;
-        Assert.True(summary.TotalAssignments >= 1);
-        Assert.True(summary.OpenAssignments >= 1);
+        Assert.Equal(2, summary.TotalAssignments);
+        Assert.Equal(1, summary.OpenAssignments);
+        Assert.Equal(1, summary.CompletedAssignments);
+        Assert.Equal(1, summary.OverdueAssignments);
+        Assert.NotNull(summary.Analytics);
+        Assert.Equal(2.0m, summary.Analytics.AverageCompletionDays);
+        Assert.Equal(50.0m, summary.Analytics.EvaluationPassRatePercent);
+        Assert.Equal(76.0m, summary.Analytics.AverageEvaluationScore);
+        Assert.Equal(100.0m, summary.Analytics.EvidenceCoveragePercent);
+        Assert.Equal(100.0m, summary.Analytics.SignoffCoveragePercent);
+        Assert.Equal(4.00m, summary.Analytics.TotalLaborHours);
+        Assert.Equal(175.00m, summary.Analytics.TotalLaborCost);
+        Assert.Equal(4.00m, summary.Analytics.AverageLaborHoursPerCompletedAssignment);
+        Assert.Equal(175.00m, summary.Analytics.AverageLaborCostPerCompletedAssignment);
+        Assert.Equal(2, summary.Analytics.LocalizedContentReferenceCount);
+        Assert.Equal(2, summary.Analytics.DistinctContentLocaleCount);
     }
 
     [Fact]
@@ -71,6 +87,72 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         var summary = (await response.Content.ReadFromJsonAsync<QualificationReportSummaryResponse>())!;
         Assert.Equal(1, summary.TotalQualifications);
         Assert.Equal(1, summary.IssuedCount);
+    }
+
+    [Fact]
+    public async Task Point_in_time_qualification_report_returns_auditable_snapshot()
+    {
+        var asOf = DateTimeOffset.UtcNow.ToString("O");
+        var response = await _trainarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/reports/qualifications/point-in-time?staffarrPersonId={_seedPersonId}&qualificationKey=hazmat_endorsement&actionTask=Drive%20hazmat%20route&asOfUtc={Uri.EscapeDataString(asOf)}",
+                _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var report = (await response.Content.ReadFromJsonAsync<QualificationPointInTimeReportResponse>())!;
+        Assert.Equal(_seedPersonId, report.StaffarrPersonId);
+        Assert.Equal("hazmat_endorsement", report.QualificationKey);
+        Assert.True(report.IsQualified);
+        Assert.Equal("issued", report.StatusOnDate);
+        Assert.NotNull(report.SourceCertificate);
+        Assert.NotNull(report.ProgramVersion);
+        Assert.Equal(1, report.ProgramVersion!.VersionNumber);
+        Assert.NotEmpty(report.Evidence);
+        Assert.NotEmpty(report.Signoffs);
+        Assert.NotEmpty(report.AuditTrail);
+    }
+
+    [Fact]
+    public async Task Qualification_wallet_credential_issues_and_verifies_current_status()
+    {
+        var issuesResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/qualifications?status=issued", _adminToken));
+        issuesResponse.EnsureSuccessStatusCode();
+        var issues = (await issuesResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueListItemResponse>>())!;
+        var issue = Assert.Single(issues.Where(x => x.QualificationKey == "hazmat_endorsement"));
+
+        var credentialResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications/{issue.QualificationIssueId}/wallet-credential", _adminToken));
+        credentialResponse.EnsureSuccessStatusCode();
+        var credential = (await credentialResponse.Content.ReadFromJsonAsync<QualificationWalletCredentialResponse>())!;
+        Assert.Equal(issue.QualificationIssueId, credential.QualificationIssueId);
+        Assert.Equal(issue.StaffarrPersonId, credential.StaffarrPersonId);
+        Assert.NotEmpty(credential.CredentialToken);
+        Assert.Contains("/api/v1/qualifications/wallet/verify", credential.VerificationUrl, StringComparison.OrdinalIgnoreCase);
+
+        var verifyRequest = Authorized(HttpMethod.Post, "/api/v1/qualifications/wallet/verify", _adminToken);
+        verifyRequest.Content = JsonContent.Create(new QualificationWalletVerificationRequest(credential.CredentialToken));
+        var verifyResponse = await _trainarrClient.SendAsync(verifyRequest);
+        verifyResponse.EnsureSuccessStatusCode();
+
+        var verification = (await verifyResponse.Content.ReadFromJsonAsync<QualificationWalletVerificationResponse>())!;
+        Assert.True(verification.IsValid);
+        Assert.NotNull(verification.Credential);
+        Assert.Equal(credential.CredentialToken, verification.Credential!.CredentialToken);
+        Assert.NotNull(verification.Report);
+        Assert.Equal("issued", verification.Report!.StatusOnDate);
+        Assert.NotNull(verification.Report.SourceCertificate);
+        Assert.Equal(issue.QualificationIssueId, verification.Report.SourceCertificate!.QualificationIssueId);
+    }
+
+    [Fact]
+    public async Task Wallet_verification_rejects_malformed_credential_tokens()
+    {
+        var verifyRequest = Authorized(HttpMethod.Post, "/api/v1/qualifications/wallet/verify", _adminToken);
+        verifyRequest.Content = JsonContent.Create(new QualificationWalletVerificationRequest("not-a-token"));
+        var verifyResponse = await _trainarrClient.SendAsync(verifyRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, verifyResponse.StatusCode);
     }
 
     [Fact]
@@ -119,11 +201,11 @@ public sealed class TrainArrReportTests : IAsyncLifetime
 
         var dashboard = (await response.Content.ReadFromJsonAsync<PersonalTrainingDashboardResponse>())!;
         Assert.Equal(_seedPersonId, dashboard.StaffarrPersonId);
-        Assert.Equal(2, dashboard.Summary.ActiveAssignmentCount);
+        Assert.Equal(1, dashboard.Summary.ActiveAssignmentCount);
         Assert.Equal(1, dashboard.Summary.OverdueAssignmentCount);
         Assert.Equal(1, dashboard.Summary.QualificationCount);
         Assert.Equal(1, dashboard.Summary.ExpiringQualificationCount);
-        Assert.Equal(2, dashboard.Summary.FieldInboxCount);
+        Assert.Equal(1, dashboard.Summary.FieldInboxCount);
         Assert.Single(dashboard.RecentHistory);
         Assert.Contains(dashboard.AssignedTraining, assignment => assignment.TrainingDefinitionName == "Hazmat Awareness");
         Assert.Contains(dashboard.Qualifications, qualification => qualification.QualificationKey == "hazmat_endorsement");
@@ -161,7 +243,7 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             && report.ExportPath == "/api/v1/reports/compliance/programs-without-citation/export");
 
         var assignmentsResponse = await _trainarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/exports/training-assignments?status=assigned", _adminToken));
+            Authorized(HttpMethod.Get, "/api/v1/exports/training-assignments?status=completed", _adminToken));
         assignmentsResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", assignmentsResponse.Content.Headers.ContentType?.MediaType);
         var assignmentsCsv = await assignmentsResponse.Content.ReadAsStringAsync();
@@ -192,6 +274,36 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/reports/assignments/summary/export", _adminToken));
         response.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Assignment_labor_entries_can_be_created_listed_and_removed()
+    {
+        var createRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/training-assignments/{_seedAssignmentId}/labor",
+            _adminToken);
+        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentLaborEntryRequest(
+            TrainingAssignmentLaborTypes.Review,
+            1.25m,
+            60m,
+            "Reviewer prep"));
+        var createResponse = await _trainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentLaborEntryResponse>())!;
+        Assert.Equal(TrainingAssignmentLaborTypes.Review, created.LaborTypeKey);
+        Assert.Equal(1.25m, created.HoursWorked);
+        Assert.Equal(75.00m, created.TotalCost);
+
+        var listResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/training-assignments/{_seedAssignmentId}/labor", _adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var laborEntries = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingAssignmentLaborEntryResponse>>())!;
+        Assert.Contains(laborEntries, entry => entry.LaborEntryId == created.LaborEntryId);
+
+        var deleteResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Delete, $"/api/training-assignments/{_seedAssignmentId}/labor/{created.LaborEntryId}", _adminToken));
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
     }
 
     [Fact]
@@ -232,6 +344,18 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         var complianceV1 = (await complianceV1Response.Content.ReadFromJsonAsync<ComplianceReportSummaryResponse>())!;
         Assert.Equal(complianceLegacy.CitationAttachmentCount, complianceV1.CitationAttachmentCount);
         Assert.Equal(complianceLegacy.RulePackRequirementCount, complianceV1.RulePackRequirementCount);
+    }
+
+    [Fact]
+    public async Task Training_program_content_references_include_locale_tags()
+    {
+        var response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/training-programs/{_seedProgramId}", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var program = (await response.Content.ReadFromJsonAsync<TrainingProgramDetailResponse>())!;
+        Assert.Contains(program.ContentReferences, reference => reference.LocaleTag == "en-us");
+        Assert.Contains(program.ContentReferences, reference => reference.LocaleTag == "es-mx");
     }
 
     [Fact]
@@ -337,6 +461,24 @@ public sealed class TrainArrReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Program_draft_assistant_suggests_matching_definition_catalog_entries()
+    {
+        var request = Authorized(HttpMethod.Post, "/api/training-programs/draft", _adminToken);
+        request.Content = JsonContent.Create(new GenerateTrainingProgramDraftRequest(
+            "Hazmat onboarding for new drivers with forklift and annual compliance coverage"));
+        var response = await _trainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var draft = (await response.Content.ReadFromJsonAsync<TrainingProgramDraftResponse>())!;
+        Assert.Contains("Training Program", draft.Name, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("hazmat", draft.Name, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEmpty(draft.TrainingDefinitionIds);
+        Assert.Contains(draft.MatchedDefinitions, match => match.DefinitionKey == "hazmat_awareness");
+        Assert.Contains("Suggested", draft.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("AI-assisted draft", draft.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Assignment_report_summary_denies_unauthorized_role()
     {
         var token = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "supplyarr_admin");
@@ -357,6 +499,11 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         var assignmentId = Guid.NewGuid();
         var gapAssignmentId = Guid.NewGuid();
         var programId = Guid.NewGuid();
+        _seedProgramId = programId;
+        var programVersionId = Guid.NewGuid();
+        var evidenceId = Guid.NewGuid();
+        var signoffId = Guid.NewGuid();
+        _seedAssignmentId = assignmentId;
 
         db.TrainingDefinitions.Add(new TrainingDefinition
         {
@@ -410,6 +557,57 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        db.TrainingProgramVersions.Add(new TrainingProgramVersion
+        {
+            Id = programVersionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingProgramId = programId,
+            VersionNumber = 1,
+            Status = "published",
+            Name = "Hazmat Program v1",
+            Description = "Seeded published version for point-in-time qualification reporting.",
+            PublishedAt = now.AddHours(-2),
+            PublishedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddHours(-2),
+            VersionDefinitions =
+            [
+                new TrainingProgramVersionDefinition
+                {
+                    TrainingProgramVersionId = programVersionId,
+                    TrainingDefinitionId = definitionId,
+                    SortOrder = 0,
+                }
+            ],
+        });
+
+        db.TrainingProgramContentReferences.Add(new TrainingProgramContentReference
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingProgramId = programId,
+            ContentType = TrainingProgramContentReferenceTypes.EmbeddedTextLesson,
+            Title = "Hazmat lesson",
+            ReferenceValue = "lesson-en",
+            LocaleTag = "en-us",
+            Notes = "English lesson content.",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddHours(-3),
+        });
+
+        db.TrainingProgramContentReferences.Add(new TrainingProgramContentReference
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingProgramId = programId,
+            ContentType = TrainingProgramContentReferenceTypes.EmbeddedTextLesson,
+            Title = "Hazmat lesson",
+            ReferenceValue = "lesson-es",
+            LocaleTag = "es-mx",
+            Notes = "Spanish lesson content.",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddHours(-2),
+        });
+
         db.TrainingAssignments.Add(new TrainingAssignment
         {
             Id = assignmentId,
@@ -417,10 +615,12 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             StaffarrPersonId = personId,
             TrainingDefinitionId = definitionId,
             AssignmentReason = "manual",
-            Status = "assigned",
+            Status = "completed",
             DueAt = now.AddDays(-1),
-            CreatedAt = now,
-            UpdatedAt = now,
+            CreatedAt = now.AddDays(-2),
+            CompletedAt = now.AddHours(-1),
+            CompletedByUserId = PlatformSeeder.DemoAdminUserId,
+            UpdatedAt = now.AddHours(-1),
         });
 
         db.TrainingAssignments.Add(new TrainingAssignment
@@ -431,9 +631,23 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             TrainingDefinitionId = gapDefinitionId,
             AssignmentReason = "equipment_assignment",
             Status = "assigned",
-            DueAt = now.AddDays(5),
+            DueAt = now.AddDays(-1),
             CreatedAt = now,
             UpdatedAt = now,
+        });
+
+        db.TrainingEvaluations.Add(new TrainingEvaluation
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            Result = "pass",
+            Score = 92,
+            Notes = "Seeded passing evaluation for effectiveness analytics.",
+            EvaluatorUserId = PlatformSeeder.DemoAdminUserId,
+            EvaluatedAt = now.AddHours(-2),
+            CreatedAt = now.AddHours(-2),
+            UpdatedAt = now.AddHours(-2),
         });
 
         db.TrainingEvaluations.Add(new TrainingEvaluation
@@ -450,6 +664,34 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        db.TrainingAssignmentLaborEntries.Add(new TrainingAssignmentLaborEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            LaborTypeKey = TrainingAssignmentLaborTypes.Delivery,
+            HoursWorked = 2m,
+            CostPerHour = 40m,
+            Notes = "Delivery and setup",
+            LoggedByUserId = PlatformSeeder.DemoAdminUserId,
+            LoggedAt = now.AddHours(-4),
+            CreatedAt = now.AddHours(-4),
+        });
+
+        db.TrainingAssignmentLaborEntries.Add(new TrainingAssignmentLaborEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = gapAssignmentId,
+            LaborTypeKey = TrainingAssignmentLaborTypes.Review,
+            HoursWorked = 2m,
+            CostPerHour = 47.5m,
+            Notes = "Review and coaching",
+            LoggedByUserId = PlatformSeeder.DemoAdminUserId,
+            LoggedAt = now.AddHours(-1),
+            CreatedAt = now.AddHours(-1),
+        });
+
         db.QualificationIssues.Add(new QualificationIssue
         {
             Id = Guid.NewGuid(),
@@ -464,6 +706,75 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             ExpiresAt = now.AddDays(20),
             CreatedAt = now,
             UpdatedAt = now,
+        });
+
+        db.TrainingEvidence.Add(new TrainingEvidence
+        {
+            Id = evidenceId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            EvidenceTypeKey = "practical_observation",
+            FileName = "hazmat-observation.pdf",
+            ContentType = "application/pdf",
+            SizeBytes = 1024,
+            StorageKey = "seed/hazmat-observation.pdf",
+            Notes = "Seeded evidence for point-in-time report.",
+            UploadedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddMinutes(-5),
+        });
+
+        db.TrainingSignoffs.Add(new TrainingSignoff
+        {
+            Id = signoffId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            SignoffRole = "trainer",
+            SignedByUserId = PlatformSeeder.DemoAdminUserId,
+            Notes = "Seeded trainer signoff for point-in-time report.",
+            SignedAt = now.AddMinutes(-3),
+            CreatedAt = now.AddMinutes(-3),
+        });
+
+        db.AuditEvents.Add(new TrainArrAuditEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ActorUserId = PlatformSeeder.DemoAdminUserId,
+            Action = "training_assignment.create",
+            TargetType = "training_assignment",
+            TargetId = assignmentId.ToString(),
+            Result = "Succeeded",
+            ReasonCode = null,
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = now.AddMinutes(-10),
+        });
+
+        db.AuditEvents.Add(new TrainArrAuditEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ActorUserId = PlatformSeeder.DemoAdminUserId,
+            Action = "training_evidence.create",
+            TargetType = "training_evidence",
+            TargetId = evidenceId.ToString(),
+            Result = "Succeeded",
+            ReasonCode = null,
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = now.AddMinutes(-5),
+        });
+
+        db.AuditEvents.Add(new TrainArrAuditEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ActorUserId = PlatformSeeder.DemoAdminUserId,
+            Action = "training_signoff.submit",
+            TargetType = "training_signoff",
+            TargetId = signoffId.ToString(),
+            Result = "Succeeded",
+            ReasonCode = null,
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = now.AddMinutes(-3),
         });
 
         db.TrainingCitationAttachments.Add(new TrainingCitationAttachment

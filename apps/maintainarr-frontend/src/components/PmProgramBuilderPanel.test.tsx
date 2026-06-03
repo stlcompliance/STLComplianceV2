@@ -1,5 +1,41 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
 import { PmProgramBuilderPanel } from './PmProgramBuilderPanel'
 
 describe('PmProgramBuilderPanel', () => {
@@ -139,5 +175,71 @@ describe('PmProgramBuilderPanel', () => {
     )
 
     expect(screen.getByText('No PM programs yet.')).toBeInTheDocument()
+  })
+
+  it('uses a searchable picker for asset type scoping', () => {
+    const onSelectedAssetTypeIdChange = vi.fn()
+
+    render(
+      <PmProgramBuilderPanel
+        {...baseProps}
+        mode="create"
+        programName="Forklift PM"
+        programDescription="desc"
+        selectedAssetTypeId=""
+        selectedAssetId=""
+        scopeType="asset_type"
+        assets={[]}
+        onSelectedAssetTypeIdChange={onSelectedAssetTypeIdChange}
+        onSelectedAssetIdChange={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByTestId('pmprogrambuilder-asset-type-picker')).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('pmprogrambuilder-asset-type-picker'), {
+      target: { value: '22222222-2222-2222-2222-222222222222' },
+    })
+    expect(onSelectedAssetTypeIdChange).toHaveBeenCalledWith('22222222-2222-2222-2222-222222222222')
+  })
+
+  it('uses a searchable picker for single-asset scoping', () => {
+    const onSelectedAssetIdChange = vi.fn()
+
+    render(
+      <PmProgramBuilderPanel
+        {...baseProps}
+        mode="create"
+        programName="Forklift PM"
+        programDescription="desc"
+        scopeType="asset"
+        selectedAssetTypeId=""
+        selectedAssetId=""
+        assets={[
+        {
+          assetId: '55555555-5555-5555-5555-555555555555',
+          assetTypeId: '22222222-2222-2222-2222-222222222222',
+          typeKey: 'forklift',
+          typeName: 'Forklift',
+          classKey: 'vehicles',
+          className: 'Vehicles',
+          assetTag: 'FL-001',
+          name: 'Forklift 1',
+          description: '',
+          lifecycleStatus: 'active',
+          siteRef: null,
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        },
+        ]}
+        onSelectedAssetTypeIdChange={vi.fn()}
+        onSelectedAssetIdChange={onSelectedAssetIdChange}
+      />,
+    )
+
+    expect(screen.getByTestId('pmprogrambuilder-asset-picker')).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('pmprogrambuilder-asset-picker'), {
+      target: { value: '55555555-5555-5555-5555-555555555555' },
+    })
+    expect(onSelectedAssetIdChange).toHaveBeenCalledWith('55555555-5555-5555-5555-555555555555')
   })
 })

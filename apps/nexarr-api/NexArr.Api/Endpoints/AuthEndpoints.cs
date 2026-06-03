@@ -9,8 +9,8 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/auth").WithTags("Auth");
-        var v1 = app.MapGroup("/api/v1/auth").WithTags("Auth");
+        var group = app.MapGroup("/api/auth").WithTags("Auth").RequireRateLimiting("NexArrAuthThrottle");
+        var v1 = app.MapGroup("/api/v1/auth").WithTags("Auth").RequireRateLimiting("NexArrAuthThrottle");
 
         static async Task<IResult> LoginEndpoint(
             LoginRequest request,

@@ -30,6 +30,7 @@ export function ProgramsSection({ state }: Props) {
         </div>
       ) : null}
       <ProgramBuilderPanel
+        accessToken={s.accessToken}
         mode={mode}
         programs={s.programsQuery.data ?? []}
         definitions={s.definitionsQuery.data ?? []}

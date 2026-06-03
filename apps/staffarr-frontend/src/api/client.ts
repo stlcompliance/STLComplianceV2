@@ -45,6 +45,10 @@ import type {
   PersonnelIncidentSummaryResponse,
   PersonnelIncidentDetailResponse,
   CreatePersonnelIncidentRequest,
+  UpdatePersonnelIncidentStatusRequest,
+  CreateIncidentNoteRequest,
+  UpdateIncidentNoteStatusRequest,
+  CreateIncidentAttachmentRequest,
   RouteIncidentToTrainarrResponse,
   PersonnelNoteSummaryResponse,
   PersonnelNoteDetailResponse,
@@ -88,6 +92,7 @@ import type {
   PersonnelReportSummaryResponse,
   ReadinessReportSummaryResponse,
   IncidentReportSummaryResponse,
+  CertificationReportSummaryResponse,
   EntityExportManifestResponse,
   LaunchHandoffResponse,
 } from './types'
@@ -1185,6 +1190,91 @@ export async function routePersonnelIncidentToTrainarr(
   )
 }
 
+export async function updatePersonnelIncidentStatus(
+  accessToken: string,
+  incidentId: string,
+  request: UpdatePersonnelIncidentStatusRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(response, 'Failed to update incident status')
+}
+
+export async function createIncidentNote(
+  accessToken: string,
+  incidentId: string,
+  request: CreateIncidentNoteRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}/notes`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(response, 'Failed to create incident note')
+}
+
+export async function updateIncidentNoteStatus(
+  accessToken: string,
+  incidentId: string,
+  noteId: string,
+  request: UpdateIncidentNoteStatusRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}/notes/${noteId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(
+    response,
+    'Failed to update incident note status',
+  )
+}
+
+export async function createIncidentAttachment(
+  accessToken: string,
+  incidentId: string,
+  request: CreateIncidentAttachmentRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}/attachments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(
+    response,
+    'Failed to upload incident attachment',
+  )
+}
+
+export async function getIncidentAttachmentContent(
+  accessToken: string,
+  incidentId: string,
+  attachmentId: string,
+): Promise<{ blob: Blob; fileName: string; contentType: string }> {
+  const response = await fetch(
+    `${apiBase}/api/incidents/${incidentId}/attachments/${attachmentId}/content`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download incident attachment')
+  }
+
+  const fileName =
+    response.headers.get('content-disposition')?.match(/filename="?([^"]+)"?/i)?.[1] ??
+    'attachment.bin'
+  return {
+    blob: await response.blob(),
+    fileName,
+    contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+  }
+}
+
 export async function listPersonnelNotes(
   accessToken: string,
   personId: string,
@@ -1550,6 +1640,40 @@ export async function exportIncidentReportSummaryCsv(
   )
   if (!response.ok) {
     throw await toApiError(response, 'Incident report export failed')
+  }
+  return response.blob()
+}
+
+export async function getCertificationReportSummary(
+  accessToken: string,
+  options?: { missingOnly?: boolean; expiringOnly?: boolean },
+): Promise<CertificationReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/certifications/summary${buildReportQuery({
+      missingOnly: options?.missingOnly,
+      expiringOnly: options?.expiringOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<CertificationReportSummaryResponse>(
+    response,
+    'Failed to load certification report summary',
+  )
+}
+
+export async function exportCertificationReportSummaryCsv(
+  accessToken: string,
+  options?: { missingOnly?: boolean; expiringOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/certifications/summary/export${buildReportQuery({
+      missingOnly: options?.missingOnly,
+      expiringOnly: options?.expiringOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Certification report export failed')
   }
   return response.blob()
 }

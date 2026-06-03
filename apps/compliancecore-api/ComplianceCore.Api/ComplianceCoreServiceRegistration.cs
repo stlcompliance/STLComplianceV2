@@ -56,6 +56,9 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<FactSourceSyncWorkerSettingsService>();
         builder.Services.AddScoped<FactSourceSyncWorkerService>();
         builder.Services.AddScoped<FactSourceSyncHealthService>();
+        builder.Services.AddScoped<ProductIntegrationHealthReportService>();
+        builder.Services.AddScoped<AuditReadinessReportService>();
+        builder.Services.AddScoped<RemediationQueueReportService>();
         builder.Services.AddScoped<ProductFactMirrorService>();
         builder.Services.AddScoped<ProductFactIngestionService>();
         builder.Services.AddScoped<SourceIngestionService>();
@@ -86,6 +89,8 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<FindingsReportService>();
         builder.Services.AddScoped<OperatorReportService>();
         builder.Services.AddScoped<MissingEvidenceReportService>();
+        builder.Services.AddScoped<WaiverReportService>();
+        builder.Services.AddScoped<ExceptionExemptionReportService>();
         builder.Services.AddScoped<ComplianceCoreEntityBulkExportService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
 

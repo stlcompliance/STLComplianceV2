@@ -60,11 +60,22 @@ public sealed class RoutarrEventIngestionService(
         var occurredAt = request.OccurredAt ?? now;
         var shouldCreateDefect = ShouldCreateDefect(request);
         var payloadJson = JsonSerializer.Serialize(request.Payload, JsonOptions);
+        Asset? asset = null;
+
+        if (!string.IsNullOrWhiteSpace(request.Payload.VehicleRefKey))
+        {
+            asset = await assetReadinessService.ResolveAssetForDispatchAsync(
+                request.TenantId,
+                null,
+                request.Payload.VehicleRefKey,
+                null,
+                cancellationToken);
+        }
 
         Defect? defect = null;
         if (shouldCreateDefect)
         {
-            defect = await CreateDefectAsync(request, now, cancellationToken);
+            defect = await CreateDefectAsync(request, asset, now, cancellationToken);
         }
 
         var inbound = new MaintenanceInboundPlatformEvent
@@ -74,8 +85,8 @@ public sealed class RoutarrEventIngestionService(
             SourceProduct = "routarr",
             SourceEventId = request.SourceEventId,
             EventKind = request.EventKind.Trim().ToLowerInvariant(),
-            RelatedEntityType = NormalizeOptional(request.RelatedEntityType) ?? "routarr_event",
-            RelatedEntityId = request.RelatedEntityId,
+            RelatedEntityType = asset is not null ? "asset" : NormalizeOptional(request.RelatedEntityType) ?? "routarr_event",
+            RelatedEntityId = asset?.Id ?? request.RelatedEntityId,
             CorrelationId = request.CorrelationId == Guid.Empty ? Guid.NewGuid() : request.CorrelationId,
             PayloadJson = payloadJson,
             Outcome = defect is null ? MaintenanceInboundEventOutcomes.Ignored : MaintenanceInboundEventOutcomes.Processed,
@@ -107,11 +118,12 @@ public sealed class RoutarrEventIngestionService(
 
     private async Task<Defect> CreateDefectAsync(
         IngestRoutarrEventRequest request,
+        Asset? asset,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
         var payload = request.Payload;
-        var asset = await assetReadinessService.ResolveAssetForDispatchAsync(
+        asset ??= await assetReadinessService.ResolveAssetForDispatchAsync(
             request.TenantId,
             null,
             payload.VehicleRefKey,

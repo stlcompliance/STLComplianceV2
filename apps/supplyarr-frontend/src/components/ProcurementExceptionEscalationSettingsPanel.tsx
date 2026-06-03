@@ -4,6 +4,7 @@ import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getPendingProcurementExceptionEscalations,
+  getPendingProcurementExceptionAutoCloses,
   getProcurementExceptionEscalationEvents,
   getProcurementExceptionEscalationRuns,
   getProcurementExceptionEscalationSettings,
@@ -26,6 +27,8 @@ export function ProcurementExceptionEscalationSettingsPanel({
   const [maxEscalationsPerException, setMaxEscalationsPerException] = useState(5)
   const [notifyOnProcurementExceptionSlaEscalation, setNotifyOnProcurementExceptionSlaEscalation] =
     useState(true)
+  const [autoCloseCompletedExceptionsEnabled, setAutoCloseCompletedExceptionsEnabled] = useState(false)
+  const [autoCloseCompletedExceptionsAfterHours, setAutoCloseCompletedExceptionsAfterHours] = useState(48)
 
   const settingsQuery = useQuery({
     queryKey: ['supplyarr-procurement-exception-escalation-settings', accessToken],
@@ -37,6 +40,12 @@ export function ProcurementExceptionEscalationSettingsPanel({
     queryKey: ['supplyarr-procurement-exception-escalation-pending', accessToken],
     queryFn: () => getPendingProcurementExceptionEscalations(accessToken),
     enabled: canManage && isEnabled,
+  })
+
+  const autoClosePendingQuery = useQuery({
+    queryKey: ['supplyarr-procurement-exception-auto-close-pending', accessToken],
+    queryFn: () => getPendingProcurementExceptionAutoCloses(accessToken),
+    enabled: canManage,
   })
 
   const runsQuery = useQuery({
@@ -60,6 +69,8 @@ export function ProcurementExceptionEscalationSettingsPanel({
     setEscalationCooldownHours(data.escalationCooldownHours)
     setMaxEscalationsPerException(data.maxEscalationsPerException)
     setNotifyOnProcurementExceptionSlaEscalation(data.notifyOnProcurementExceptionSlaEscalation)
+    setAutoCloseCompletedExceptionsEnabled(data.autoCloseCompletedExceptionsEnabled)
+    setAutoCloseCompletedExceptionsAfterHours(data.autoCloseCompletedExceptionsAfterHours)
     setInitialized(true)
   }, [initialized, settingsQuery.data, settingsQuery.isLoading])
 
@@ -70,6 +81,8 @@ export function ProcurementExceptionEscalationSettingsPanel({
         escalationCooldownHours,
         maxEscalationsPerException,
         notifyOnProcurementExceptionSlaEscalation,
+        autoCloseCompletedExceptionsEnabled,
+        autoCloseCompletedExceptionsAfterHours,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -77,6 +90,9 @@ export function ProcurementExceptionEscalationSettingsPanel({
       })
       void queryClient.invalidateQueries({
         queryKey: ['supplyarr-procurement-exception-escalation-pending', accessToken],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['supplyarr-procurement-exception-auto-close-pending', accessToken],
       })
       void queryClient.invalidateQueries({
         queryKey: ['supplyarr-procurement-exception-escalation-runs', accessToken],
@@ -168,6 +184,36 @@ export function ProcurementExceptionEscalationSettingsPanel({
           Notify on SLA escalation (requires notification webhook)
         </label>
 
+        <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+          <div className="text-sm font-semibold text-slate-100">Automated exception policy</div>
+          <p className="mt-1 text-xs text-slate-500">
+            Close resolved or waived procurement exceptions automatically after the retention window.
+          </p>
+          <label htmlFor="procurement-exception-auto-close-enabled" className="mt-3 flex items-center gap-2 text-sm text-slate-200">
+            <input
+              id="procurement-exception-auto-close-enabled"
+              type="checkbox"
+              checked={autoCloseCompletedExceptionsEnabled}
+              onChange={(event) => setAutoCloseCompletedExceptionsEnabled(event.target.checked)}
+              data-testid="procurement-exception-auto-close-enabled"
+            />
+            Enable completed exception auto-close
+          </label>
+          <label htmlFor="procurement-exception-auto-close-after-hours" className="mt-3 block text-sm text-slate-200">
+            <span className="font-medium">Auto-close after (hours)</span>
+            <input
+              id="procurement-exception-auto-close-after-hours"
+              className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              type="number"
+              min={1}
+              max={720}
+              value={autoCloseCompletedExceptionsAfterHours}
+              onChange={(event) => setAutoCloseCompletedExceptionsAfterHours(Number(event.target.value))}
+              data-testid="procurement-exception-auto-close-after-hours"
+            />
+          </label>
+        </div>
+
         <button
           type="button"
           className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
@@ -229,6 +275,56 @@ export function ProcurementExceptionEscalationSettingsPanel({
                 </div>
                 <div className="text-xs text-slate-500">
                   {Math.round(item.hoursOverdue)}h overdue · {item.escalationCount} escalations sent
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-slate-200">Pending auto-close</h3>
+        {autoClosePendingQuery.isLoading && (
+          <p className="mt-2 text-sm text-slate-500">Loading auto-close preview…</p>
+        )}
+        {autoClosePendingQuery.isError && (
+          <ApiErrorCallout
+            className="mt-2"
+            title="Auto-close preview unavailable"
+            message={getErrorMessage(
+              autoClosePendingQuery.error,
+              'Failed to load pending auto-close preview.',
+            )}
+            retryLabel="Retry auto-close preview"
+            onRetry={() => {
+              void autoClosePendingQuery.refetch()
+            }}
+          />
+        )}
+        {autoClosePendingQuery.data && autoClosePendingQuery.data.items.length === 0 && (
+          <p
+            className="mt-2 text-sm text-slate-500"
+            data-testid="procurement-exception-auto-close-pending-empty"
+          >
+            No completed exceptions are currently due for auto-close.
+          </p>
+        )}
+        {autoClosePendingQuery.data && autoClosePendingQuery.data.items.length > 0 && (
+          <ul
+            className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm"
+            data-testid="procurement-exception-auto-close-pending-list"
+          >
+            {autoClosePendingQuery.data.items.map((item) => (
+              <li
+                key={item.procurementExceptionId}
+                className="px-3 py-2 text-slate-300"
+                data-testid={`procurement-exception-auto-close-pending-${item.exceptionKey}`}
+              >
+                <div className="font-medium text-slate-100">
+                  {item.exceptionKey} · {item.title}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {Math.round(item.hoursCompleted)}h completed · closes in {Math.round(item.hoursUntilAutoClose)}h
                 </div>
               </li>
             ))}

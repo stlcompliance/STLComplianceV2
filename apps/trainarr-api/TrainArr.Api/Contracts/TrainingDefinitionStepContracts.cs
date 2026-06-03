@@ -53,4 +53,10 @@ public sealed record TrainingAssignmentStepProgressResponse(
 public sealed record SubmitTrainingAssignmentStepRequest(
     IReadOnlyList<int>? SelectedOptionIndexes,
     string? PracticalResult,
-    string? Notes);
+    string? Notes,
+    bool? ContentAcknowledged = null,
+    string? PracticalObservationNotes = null,
+    bool? SafetyCriticalFailure = null,
+    string? FailureComments = null,
+    bool? TraineeAcknowledged = null,
+    bool? RetestRequired = null);

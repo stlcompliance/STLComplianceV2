@@ -1,3 +1,4 @@
+import { EvaluationHistoryExplorerPanel } from '../../components/EvaluationHistoryExplorerPanel'
 import { RuleEvaluationPanel } from '../../components/RuleEvaluationPanel'
 import { SituationEvaluatorPanel } from '../../components/SituationEvaluatorPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
@@ -34,6 +35,13 @@ export function EvaluationSection({ state }: Props) {
         }
         isEvaluatingBatch={s.evaluateRulePackBatchMutation.isPending}
         lastBatchEvaluation={s.lastBatchEvaluation}
+      />
+      <EvaluationHistoryExplorerPanel
+        accessToken={s.accessToken}
+        rulePacks={s.rulePacksQuery.data ?? []}
+        evaluationRuns={s.allRuleEvaluationsQuery.data ?? []}
+        canExportAudit={s.canExportAudit}
+        onFocusRulePack={s.setSelectedRulePackId}
       />
     </div>
   )

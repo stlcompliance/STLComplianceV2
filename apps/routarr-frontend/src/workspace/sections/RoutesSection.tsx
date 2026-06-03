@@ -27,6 +27,9 @@ export function RoutesSection({ state }: Props) {
     stopLabel,
     stopAddress,
     stopType,
+    stopGeofenceAnchorLatitude,
+    stopGeofenceAnchorLongitude,
+    stopGeofenceRadiusMeters,
     createRouteMutation,
     linkRouteMutation,
     updateStopStatusMutation,
@@ -37,6 +40,9 @@ export function RoutesSection({ state }: Props) {
     setStopLabel,
     setStopAddress,
     setStopType,
+    setStopGeofenceAnchorLatitude,
+    setStopGeofenceAnchorLongitude,
+    setStopGeofenceRadiusMeters,
   } = state
 
   if (mode === 'details') {
@@ -60,6 +66,9 @@ export function RoutesSection({ state }: Props) {
         stopLabel={stopLabel}
         stopAddress={stopAddress}
         stopType={stopType}
+        stopGeofenceAnchorLatitude={stopGeofenceAnchorLatitude}
+        stopGeofenceAnchorLongitude={stopGeofenceAnchorLongitude}
+        stopGeofenceRadiusMeters={stopGeofenceRadiusMeters}
         isLoading={routesQuery.isLoading}
         isDetailLoading={routeDetailQuery.isLoading}
         isCreating={createRouteMutation.isPending}
@@ -72,6 +81,9 @@ export function RoutesSection({ state }: Props) {
         onStopLabelChange={setStopLabel}
         onStopAddressChange={setStopAddress}
         onStopTypeChange={setStopType}
+        onStopGeofenceAnchorLatitudeChange={setStopGeofenceAnchorLatitude}
+        onStopGeofenceAnchorLongitudeChange={setStopGeofenceAnchorLongitude}
+        onStopGeofenceRadiusMetersChange={setStopGeofenceRadiusMeters}
         onCreateRoute={() => createRouteMutation.mutate()}
         onLinkTrip={() => linkRouteMutation.mutate()}
         onUpdateStopStatus={(stopId, status) => updateStopStatusMutation.mutate({ stopId, status })}

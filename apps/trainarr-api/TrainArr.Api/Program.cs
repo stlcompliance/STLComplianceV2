@@ -51,6 +51,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrTrainingAssignmentEndpoints();
 
         app.MapTrainArrTrainingAssignmentMaterialDemandEndpoints();
+        app.MapTrainArrTrainingAssignmentLaborEndpoints();
 
         app.MapTrainArrTrainingEvidenceEndpoints();
 

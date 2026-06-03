@@ -9,6 +9,7 @@ import {
   Truck,
   UserCheck,
 } from 'lucide-react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -18,6 +19,7 @@ import {
   type DetailRailSectionConfig,
   type DetailTone,
 } from '@stl/shared-ui'
+import type { RouteStopSummaryResponse } from '../../api/types'
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
 
 function humanize(value: string | null | undefined): string {
@@ -39,6 +41,73 @@ function statusTone(value: string | null | undefined): DetailTone {
   if (['draft', 'planned', 'pending'].includes(normalized)) return 'warn'
   if (['cancelled', 'failed', 'blocked', 'skipped'].includes(normalized)) return 'bad'
   return 'neutral'
+}
+
+function geofenceTone(value: string | null | undefined): DetailTone {
+  const normalized = value?.toLowerCase() ?? ''
+  if (normalized === 'inside') return 'good'
+  if (normalized === 'nearby') return 'warn'
+  if (normalized === 'outside') return 'bad'
+  return 'neutral'
+}
+
+function formatGeofenceDistance(value: number | null | undefined) {
+  if (value == null) return 'Not recorded'
+  return `${value.toFixed(2)} m`
+}
+
+function isEditableRouteStatus(value: string | null | undefined) {
+  const normalized = value?.toLowerCase() ?? ''
+  return ['draft', 'planned'].includes(normalized)
+}
+
+function formatDateTime(value: string | null | undefined): string {
+  if (!value) return 'Not recorded'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Not recorded'
+  return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function buildRouteOptimizationPreview(stops: RouteStopSummaryResponse[]) {
+  const currentOrder = [...stops].sort((left, right) => left.sequenceNumber - right.sequenceNumber)
+  const suggestedOrder = [...currentOrder].sort((left, right) => {
+    const leftScheduled = left.scheduledArrivalAt
+    const rightScheduled = right.scheduledArrivalAt
+    const leftHasSchedule = Boolean(leftScheduled)
+    const rightHasSchedule = Boolean(rightScheduled)
+
+    if (leftHasSchedule !== rightHasSchedule) {
+      return leftHasSchedule ? -1 : 1
+    }
+
+    if (leftScheduled && rightScheduled && leftScheduled !== rightScheduled) {
+      return leftScheduled.localeCompare(rightScheduled)
+    }
+
+    if (left.sequenceNumber !== right.sequenceNumber) {
+      return left.sequenceNumber - right.sequenceNumber
+    }
+
+    return left.stopKey.localeCompare(right.stopKey)
+  })
+
+  const outOfOrderCount = currentOrder.filter((stop, index) => stop.stopId !== suggestedOrder[index]?.stopId).length
+  const scheduledCount = currentOrder.filter((stop) => Boolean(stop.scheduledArrivalAt)).length
+  const hasRecommendation = currentOrder.length > 1 && outOfOrderCount > 0
+  const summary = hasRecommendation
+    ? `${outOfOrderCount} stop(s) can be re-ordered to better match scheduled arrivals.`
+    : currentOrder.length > 1
+      ? 'Current stop order already matches scheduled arrivals.'
+      : 'Add more stops to preview route optimization.'
+
+  return {
+    currentOrder,
+    suggestedOrder,
+    outOfOrderCount,
+    scheduledCount,
+    hasRecommendation,
+    summary,
+  }
 }
 
 function actionLink(to: string, label: string, icon: ReactNode, primary = false) {
@@ -232,6 +301,9 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
     ?? (s.routesQuery?.data ?? [])[0]
     ?? null
   const route = detail ?? summary
+  const [selectedGeofenceStopId, setSelectedGeofenceStopId] = useState('')
+  const [reportedLatitude, setReportedLatitude] = useState('')
+  const [reportedLongitude, setReportedLongitude] = useState('')
   if (!route) {
     return noSelection('No route selected', 'Select or create a route to view stop progression and trip linkage.', '/routes/drawer')
   }
@@ -240,6 +312,11 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
   const stopCount = detail?.stops.length ?? summary?.stopCount ?? 0
   const pendingStops = stops.filter((stop) => stop.stopStatus === 'pending')
   const completedStops = stops.filter((stop) => stop.stopStatus === 'completed')
+  const optimizationPreview = detail ? buildRouteOptimizationPreview(detail.stops) : null
+  const canOptimize = Boolean(
+    detail && isEditableRouteStatus(route.routeStatus) && optimizationPreview?.hasRecommendation,
+  )
+  const selectedGeofenceStop = stops.find((stop) => stop.stopId === selectedGeofenceStopId) ?? null
   const blocked = route.routeStatus === 'cancelled' || !route.tripId
 
   return (
@@ -277,22 +354,122 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
         { label: 'Updated', value: formatDate(route.updatedAt), source: 'Audit trail' },
       ]}
       mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Stop progression</h3>
-          <div className="mt-4">
-            {emptyOrList(stops.slice(0, 6), 'No stops loaded for this route.', (stop) => (
-              <div key={stop.stopId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-semibold text-white">{stop.label}</h4>
-                    <p className="mt-1 text-sm text-sky-100/75">{stop.addressLabel}</p>
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Stop progression</h3>
+            <div className="mt-4">
+              {emptyOrList(stops.slice(0, 6), 'No stops loaded for this route.', (stop) => (
+                <div
+                  key={stop.stopId}
+                  className={`rounded-xl border border-slate-800 bg-slate-950/80 p-4 ${
+                    selectedGeofenceStopId === stop.stopId ? 'ring-1 ring-sky-500' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{stop.label}</h4>
+                      <p className="mt-1 text-sm text-sky-100/75">{stop.addressLabel}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {stop.stopType} · {stop.stopKey}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Geofence anchor:{' '}
+                        {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null
+                          ? `${stop.geofenceAnchorLatitude.toFixed(4)}, ${stop.geofenceAnchorLongitude.toFixed(4)}`
+                          : 'Not configured'}
+                        {stop.geofenceRadiusMeters != null ? ` · radius ${stop.geofenceRadiusMeters}m` : ''}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Latest geofence:{' '}
+                        {stop.lastGeofenceResult
+                          ? `${humanize(stop.lastGeofenceResult)} · ${formatGeofenceDistance(stop.lastGeofenceDistanceMeters)}`
+                          : 'No checks yet'}
+                      </p>
+                      {stop.lastGeofenceResult ? (
+                        <div className="mt-2">
+                          <DetailBadge
+                            label={humanize(stop.lastGeofenceResult)}
+                            tone={geofenceTone(stop.lastGeofenceResult)}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <DetailBadge label={humanize(stop.stopStatus)} tone={statusTone(stop.stopStatus)} />
+                      {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
+                        <button
+                          type="button"
+                          className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:border-sky-500"
+                          onClick={() => {
+                            setSelectedGeofenceStopId(stop.stopId)
+                            setReportedLatitude(stop.geofenceAnchorLatitude?.toString() ?? '')
+                            setReportedLongitude(stop.geofenceAnchorLongitude?.toString() ?? '')
+                          }}
+                        >
+                          Check geofence
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                  <DetailBadge label={humanize(stop.stopStatus)} tone={statusTone(stop.stopStatus)} />
                 </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+              <MapPinned className="h-5 w-5" />
+              Geofence check
+            </h3>
+            {selectedGeofenceStop ? (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-slate-300">
+                  Checking {selectedGeofenceStop.label} against its configured anchor and radius.
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-sm text-slate-300" htmlFor="route-geofence-latitude">
+                    Reported latitude
+                    <input
+                      id="route-geofence-latitude"
+                      className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+                      value={reportedLatitude}
+                      onChange={(event) => setReportedLatitude(event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm text-slate-300" htmlFor="route-geofence-longitude">
+                    Reported longitude
+                    <input
+                      id="route-geofence-longitude"
+                      className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+                      value={reportedLongitude}
+                      onChange={(event) => setReportedLongitude(event.target.value)}
+                    />
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className="rounded bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+                  disabled={
+                    s.checkRouteStopGeofenceMutation.isPending ||
+                    !reportedLatitude.trim() ||
+                    !reportedLongitude.trim()
+                  }
+                  onClick={() =>
+                    s.checkRouteStopGeofenceMutation.mutate({
+                      stopId: selectedGeofenceStop.stopId,
+                      reportedLatitude: Number(reportedLatitude),
+                      reportedLongitude: Number(reportedLongitude),
+                    })
+                  }
+                >
+                  {s.checkRouteStopGeofenceMutation.isPending ? 'Checking…' : 'Run geofence check'}
+                </button>
               </div>
-            ))}
-          </div>
-        </section>
+            ) : (
+              <DetailEmptyState text="Select a stop with a geofence anchor to run a GPS proximity check." />
+            )}
+          </section>
+        </div>
       )}
       decisionTitle="Route decision"
       decisionBadge={{ label: blocked ? 'Setup needed' : 'Ready', tone: blocked ? 'warn' : 'good' }}
@@ -316,6 +493,55 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                 <p className="mt-2 text-xl font-bold text-white">{completedStops.length}</p>
               </div>
             </div>
+          ),
+        },
+        {
+          title: 'Route optimization',
+          icon: <Navigation className="h-5 w-5" />,
+          content: optimizationPreview ? (
+            <div className="space-y-3 text-sm text-slate-300">
+              <div className="flex items-center gap-2">
+                <DetailBadge
+                  label={optimizationPreview.hasRecommendation ? 'Needs optimization' : 'Optimized'}
+                  tone={optimizationPreview.hasRecommendation ? 'warn' : 'good'}
+                />
+                <span className="text-xs text-slate-500">
+                  {optimizationPreview.scheduledCount} scheduled stop(s)
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">{optimizationPreview.summary}</p>
+              {optimizationPreview.suggestedOrder.length > 0 ? (
+                <ol className="space-y-2">
+                  {optimizationPreview.suggestedOrder.map((stop, index) => (
+                    <li key={stop.stopId} className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs">
+                      <p className="font-medium text-slate-100">
+                        {index + 1}. {stop.label || stop.stopKey}
+                      </p>
+                      <p className="mt-1 text-slate-400">
+                        {stop.stopKey} · {stop.stopType}
+                      </p>
+                      <p className="text-slate-500">
+                        Scheduled {formatDateTime(stop.scheduledArrivalAt)}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <DetailEmptyState text="No stops are available for optimization preview." />
+              )}
+              {canOptimize ? (
+                <button
+                  type="button"
+                  className="rounded-md bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+                  disabled={s.optimizeRouteMutation.isPending}
+                  onClick={() => s.optimizeRouteMutation.mutate()}
+                >
+                  {s.optimizeRouteMutation.isPending ? 'Optimizing…' : 'Optimize stop order'}
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <DetailEmptyState text="Select a route with stop detail to preview optimization." />
           ),
         },
       ]}

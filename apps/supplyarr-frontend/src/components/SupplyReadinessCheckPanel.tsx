@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 
 import {
   getPartSupplyReadiness,
@@ -34,6 +36,30 @@ export function SupplyReadinessCheckPanel({
 
   const quantity =
     requestedQuantity.trim() === '' ? undefined : Number.parseFloat(requestedQuantity)
+  const partOptions = useMemo<PickerOption[]>(
+    () =>
+      parts.map((part) => ({
+        value: part.partId,
+        label: `${part.partKey} · ${part.displayName}`,
+      })),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedPartId),
+    [partOptions, selectedPartId],
+  )
+  const vendorOptions = useMemo<PickerOption[]>(
+    () =>
+      vendors.map((vendor) => ({
+        value: vendor.partyId,
+        label: `${vendor.partyKey} · ${vendor.displayName}`,
+      })),
+    [vendors],
+  )
+  const selectedVendorOption = useMemo<PickerOption | undefined>(
+    () => vendorOptions.find((option) => option.value === selectedVendorId),
+    [selectedVendorId, vendorOptions],
+  )
 
   const partQuery = useQuery({
     queryKey: ['supplyarr-part-readiness', accessToken, selectedPartId, quantity],
@@ -111,41 +137,29 @@ export function SupplyReadinessCheckPanel({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {(checkMode === 'part' || checkMode === 'path') && (
-          <label htmlFor="readiness-check-part" className="block text-sm text-slate-400">
-            Part
-            <select
-              id="readiness-check-part"
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-              value={selectedPartId}
-              onChange={(event) => setSelectedPartId(event.target.value)}
-            >
-              <option value="">Select part…</option>
-              {parts.map((part) => (
-                <option key={part.partId} value={part.partId}>
-                  {part.partKey} · {part.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="readiness-check-part"
+            label="Part"
+            value={selectedPartId}
+            onChange={setSelectedPartId}
+            options={partOptions}
+            selectedOption={selectedPartOption}
+            placeholder="Search parts…"
+            testId="readiness-check-part-picker"
+          />
         )}
 
         {(checkMode === 'vendor' || checkMode === 'path') && (
-          <label htmlFor="readiness-check-vendor" className="block text-sm text-slate-400">
-            Vendor or supplier
-            <select
-              id="readiness-check-vendor"
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-              value={selectedVendorId}
-              onChange={(event) => setSelectedVendorId(event.target.value)}
-            >
-              <option value="">Select vendor…</option>
-              {vendors.map((vendor) => (
-                <option key={vendor.partyId} value={vendor.partyId}>
-                  {vendor.partyKey} · {vendor.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="readiness-check-vendor"
+            label="Vendor or supplier"
+            value={selectedVendorId}
+            onChange={setSelectedVendorId}
+            options={vendorOptions}
+            selectedOption={selectedVendorOption}
+            placeholder="Search vendors…"
+            testId="readiness-check-vendor-picker"
+          />
         )}
 
         {(checkMode === 'part' || checkMode === 'path') && (

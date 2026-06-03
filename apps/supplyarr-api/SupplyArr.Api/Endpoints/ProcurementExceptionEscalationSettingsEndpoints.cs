@@ -54,6 +54,18 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
         })
         .WithName($"ListSupplyArrPendingProcurementExceptionEscalations{nameSuffix}");
 
+        group.MapGet("/auto-close/pending", async (
+            SupplyArrAuthorizationService authorization,
+            ProcurementExceptionAutomationWorkerService workerService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireProcurementExceptionEscalationSettingsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await workerService.ListPendingAsync(tenantId, null, 25, cancellationToken));
+        })
+        .WithName($"ListSupplyArrPendingProcurementExceptionAutoCloses{nameSuffix}");
+
         group.MapGet("/runs", async (
             int? limit,
             SupplyArrAuthorizationService authorization,

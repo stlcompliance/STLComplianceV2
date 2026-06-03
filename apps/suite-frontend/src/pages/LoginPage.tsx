@@ -11,6 +11,10 @@ import { NexarrApiError } from '../api/types'
 const loginSchema = z.object({
   email: z.email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
+  rememberDevice: z.boolean(),
+  mfaMethod: z.enum(['totp', 'recovery']),
+  mfaCode: z.string().optional(),
+  recoveryCode: z.string().optional(),
 })
 
 type LoginForm = z.infer<typeof loginSchema>
@@ -22,6 +26,7 @@ export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
+  const [mfaChallengeRequired, setMfaChallengeRequired] = useState(false)
 
   const locationState = location.state as { from?: string; passwordReset?: boolean } | null
   const from = locationState?.from?.toString() ?? '/app'
@@ -30,14 +35,20 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'admin@demo.stl',
       password: 'ChangeMe!Demo2026',
+      rememberDevice: false,
+      mfaMethod: 'totp',
+      mfaCode: '',
+      recoveryCode: '',
     },
   })
+  const mfaMethod = watch('mfaMethod')
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />
@@ -46,10 +57,31 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setError(null)
     try {
-      await login(values.email, values.password, demoTenantId)
+      const mfaCode = mfaChallengeRequired && values.mfaMethod === 'totp' ? values.mfaCode?.trim() || null : undefined
+      const recoveryCode =
+        mfaChallengeRequired && values.mfaMethod === 'recovery'
+          ? values.recoveryCode?.trim() || null
+          : undefined
+
+      if (mfaChallengeRequired) {
+        if (values.mfaMethod === 'totp' && !mfaCode) {
+          setError('Enter the six-digit authentication code from your authenticator app.')
+          return
+        }
+
+        if (values.mfaMethod === 'recovery' && !recoveryCode) {
+          setError('Enter one of your recovery codes.')
+          return
+        }
+      }
+
+      await login(values.email, values.password, demoTenantId, values.rememberDevice, mfaCode, recoveryCode)
     } catch (err) {
       if (err instanceof NexarrApiError) {
         setError(err.message)
+        if (err.code === 'auth.mfa_required') {
+          setMfaChallengeRequired(true)
+        }
       } else {
         const apiBase = getNexarrApiBaseUrl() || '(same origin — dev proxy only)'
         setError(`Sign-in failed. Could not reach NexArr at ${apiBase}.`)
@@ -105,7 +137,77 @@ export function LoginPage() {
           <p className="mt-1 text-xs text-red-300">{errors.password.message}</p>
         )}
 
-        <p className="mt-2 text-right text-sm">
+        <label className="mt-4 flex items-center gap-2 text-sm text-slate-300" htmlFor="rememberDevice">
+          <input
+            id="rememberDevice"
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            {...register('rememberDevice')}
+          />
+          Remember this device
+        </label>
+        <p className="mt-1 text-xs text-slate-500">
+          When enabled, NexArr issues a longer-lived refresh token for this browser.
+        </p>
+
+        {mfaChallengeRequired && (
+          <div className="mt-4 rounded-lg border border-amber-700 bg-amber-950/40 p-4">
+            <p className="text-sm font-medium text-amber-100">Multi-factor authentication required</p>
+            <p className="mt-1 text-xs text-amber-200/80">
+              Enter a 6-digit code from your authenticator app or use a recovery code to finish sign-in.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-200">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="totp"
+                  className="h-4 w-4 border-slate-600 bg-slate-950"
+                  {...register('mfaMethod')}
+                />
+                Authenticator code
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="recovery"
+                  className="h-4 w-4 border-slate-600 bg-slate-950"
+                  {...register('mfaMethod')}
+                />
+                Recovery code
+              </label>
+            </div>
+            {mfaMethod === 'recovery' ? (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-slate-300" htmlFor="recoveryCode">
+                  Recovery code
+                </label>
+                <input
+                  id="recoveryCode"
+                  type="text"
+                  autoComplete="one-time-code"
+                  className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  {...register('recoveryCode')}
+                />
+              </div>
+            ) : (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-slate-300" htmlFor="mfaCode">
+                  Authentication code
+                </label>
+                <input
+                  id="mfaCode"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  {...register('mfaCode')}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <p className="mt-4 text-right text-sm">
           <Link to="/forgot-password" className="text-stl-teal hover:underline">
             Forgot password?
           </Link>
@@ -122,7 +224,7 @@ export function LoginPage() {
           disabled={isSubmitting}
           className="mt-6 w-full rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
         >
-          {isSubmitting ? 'Signing in…' : 'Sign in'}
+          {isSubmitting ? 'Signing in…' : mfaChallengeRequired ? 'Verify and sign in' : 'Sign in'}
         </button>
       </form>
     </div>

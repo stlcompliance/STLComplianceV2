@@ -2,6 +2,42 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WorkOrdersPanel } from './WorkOrdersPanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 const laborEvidenceProps = {
   tasks: [],
   labor: [],
@@ -142,6 +178,76 @@ describe('WorkOrdersPanel', () => {
     expect(screen.getByRole('button', { name: 'Create work order' })).toBeInTheDocument()
   })
 
+  it('uses searchable pickers for asset and technician selection', () => {
+    render(
+      <WorkOrdersPanel
+        canCreate
+        canPerform={false}
+        canClose={false}
+        viewAllWorkOrders={false}
+        sessionPersonId="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        technicianRefs={[
+          {
+            personId: 'person-tech-001',
+            displayName: 'Alex Technician',
+            activeStatus: 'active',
+            primarySite: 'yard-a',
+            lastSeenAt: '2026-05-28T00:00:00Z',
+          },
+        ]}
+        assets={[
+          {
+            assetId: '11111111-1111-1111-1111-111111111111',
+            assetTypeId: '22222222-2222-2222-2222-222222222222',
+            typeKey: 'forklift',
+            typeName: 'Forklift',
+            classKey: 'vehicles',
+            className: 'Vehicles',
+            assetTag: 'FL-100',
+            name: 'Forklift 100',
+            description: '',
+            lifecycleStatus: 'active',
+            siteRef: null,
+            createdAt: '2026-05-27T00:00:00Z',
+            updatedAt: '2026-05-27T00:00:00Z',
+          },
+        ]}
+        workOrders={[]}
+        selectedWorkOrder={null}
+        selectedWorkOrderId=""
+        selectedAssetId=""
+        workOrderTitle="Repair"
+        workOrderDescription=""
+        workOrderPriority="medium"
+        assignedPersonId=""
+        statusFilter=""
+        isLoading={false}
+        isDetailLoading={false}
+        isCreating={false}
+        isUpdatingStatus={false}
+        onSelectedWorkOrderIdChange={vi.fn()}
+        onSelectedAssetIdChange={vi.fn()}
+        onWorkOrderTitleChange={vi.fn()}
+        onWorkOrderDescriptionChange={vi.fn()}
+        onWorkOrderPriorityChange={vi.fn()}
+        onAssignedPersonIdChange={vi.fn()}
+        onStatusFilterChange={vi.fn()}
+        onCreateWorkOrder={vi.fn()}
+        onUpdateStatus={vi.fn()}
+        {...laborEvidenceProps}
+        {...partsDemandProps}
+      />,
+    )
+
+    const assetPicker = screen.getAllByTestId('work-order-create-asset-picker')[0]
+    const technicianPicker = screen.getAllByTestId('work-order-create-assigned-technician-picker')[0]
+
+    expect(assetPicker).toBeInTheDocument()
+    expect(technicianPicker).toBeInTheDocument()
+    expect(screen.getAllByText('FL-100 — Forklift 100').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Alex Technician · active · yard-a').length).toBeGreaterThan(0)
+  })
+
   it('shows empty state when no work orders', () => {
     render(
       <WorkOrdersPanel
@@ -179,6 +285,6 @@ describe('WorkOrdersPanel', () => {
       />,
     )
 
-    expect(screen.getByText('No work orders match the current filter.')).toBeInTheDocument()
+    expect(screen.getAllByText('No work orders match the current filter.').length).toBeGreaterThan(0)
   })
 })

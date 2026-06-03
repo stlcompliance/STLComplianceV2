@@ -214,6 +214,14 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
   }, [createTripId, tripOptions])
 
   const templates = templatesQuery.data ?? []
+  const templateOptions = useMemo<PickerOption[]>(
+    () =>
+      templates.map((template) => ({
+        value: template.templateKey,
+        label: template.label,
+      })),
+    [templates],
+  )
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-exceptions'] })
@@ -316,6 +324,10 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
   const defaultTemplateKey = useMemo(
     () => templates.find((t) => t.templateKey === 'reassign_driver')?.templateKey ?? '',
     [templates],
+  )
+  const selectedBulkTemplateOption = useMemo<PickerOption | undefined>(
+    () => templateOptions.find((option) => option.value === (bulkTemplateKey || defaultTemplateKey)),
+    [bulkTemplateKey, defaultTemplateKey, templateOptions],
   )
 
   if (listQuery.isLoading) {
@@ -441,19 +453,15 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
           <p className="w-full text-xs text-slate-400">
             {selectedIds.length} selected · resolution template for row/bulk resolve
           </p>
-          <select id="exception-resolution-template"
-            className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
+          <StaticSearchPicker
+            label="Resolution template"
             value={bulkTemplateKey || defaultTemplateKey}
-            data-testid="exception-resolution-template"
-            onChange={(e) => setBulkTemplateKey(e.target.value)}
-          >
-            <option value="">No template</option>
-            {templates.map((template) => (
-              <option key={template.templateKey} value={template.templateKey}>
-                {template.label}
-              </option>
-            ))}
-          </select>
+            onChange={setBulkTemplateKey}
+            options={templateOptions}
+            selectedOption={selectedBulkTemplateOption}
+            placeholder="Search templates…"
+            testId="exception-resolution-template-picker"
+          />
           <input id="dispatchexceptionqueue-input-field"
             className="min-w-[12rem] flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
             placeholder="Bulk resolve notes…"

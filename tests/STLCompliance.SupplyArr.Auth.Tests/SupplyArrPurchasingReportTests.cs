@@ -102,6 +102,15 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             x.DocumentType == "purchase_order" && x.DocumentId == _purchaseOrderId);
         Assert.Equal(1, summary.Totals.IssuedPurchaseOrderCount);
         Assert.Equal(1, summary.Totals.PostedReceivingReceiptCount);
+        Assert.Equal(1, summary.Analytics.PendingPurchaseRequestCount);
+        Assert.Equal(1, summary.Analytics.EmergencyPurchaseRequestCount);
+        Assert.Equal(1, summary.Analytics.ActiveProcurementExceptionCount);
+        Assert.Equal(1, summary.Analytics.OpenReceivingExceptionCount);
+        Assert.Equal(1, summary.Analytics.OpenWarrantyClaimCount);
+        Assert.Equal(1, summary.Analytics.VendorDocumentExpiringSoonCount);
+        Assert.Equal(1, summary.Analytics.BlockedVendorCount);
+        Assert.Equal(8, summary.Analytics.AverageLeadTimeDays);
+        Assert.Equal(25m, summary.Analytics.EstimatedSpendThisMonth);
     }
 
     [Fact]
@@ -196,6 +205,20 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
+        var blockedVendor = new ExternalParty
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartyKey = "V-BLOCKED",
+            PartyType = "vendor",
+            DisplayName = "Blocked Vendor",
+            LegalName = "Blocked Vendor",
+            ApprovalStatus = "restricted",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
         var part = new Part
         {
             Id = Guid.NewGuid(),
@@ -210,6 +233,21 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
+        var vendorLink = new PartVendorLink
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = part.Id,
+            ExternalPartyId = vendor.Id,
+            VendorPartNumber = "VENDOR-PART-1",
+            IsPreferred = true,
+            CatalogUnitPrice = 2.5m,
+            CatalogCurrencyCode = "USD",
+            CatalogLeadTimeDays = 8,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
         var purchaseRequest = new PurchaseRequest
         {
             Id = Guid.NewGuid(),
@@ -217,6 +255,8 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             RequestKey = "PR-PURCH",
             Title = "Purchasing report PR",
             Status = PurchaseRequestStatuses.Submitted,
+            IsEmergency = true,
+            EmergencyReason = "Emergency restock required",
             VendorPartyId = vendor.Id,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
@@ -259,6 +299,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             PartId = part.Id,
             QuantityOrdered = 10m,
             QuantityReceived = 4m,
+            UnitOfMeasure = "each",
             CreatedAt = now,
             UpdatedAt = now,
         });
@@ -277,11 +318,120 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
+        var receiptLine = new ReceivingReceiptLine
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReceivingReceiptId = receipt.Id,
+            PurchaseOrderLineId = purchaseOrder.Lines.First().Id,
+            PartId = part.Id,
+            LineNumber = 1,
+            QuantityExpected = 10m,
+            QuantityReceived = 4m,
+            Condition = "damaged",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var receivingException = new ReceivingException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReceivingReceiptId = receipt.Id,
+            ReceivingReceiptLineId = receiptLine.Id,
+            ExceptionType = "shortage",
+            Quantity = 1m,
+            Notes = "Missing units were identified during posting.",
+            Status = ReceivingExceptionStatuses.Open,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var warrantyClaim = new WarrantyClaim
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ClaimKey = "WC-PURCH",
+            Status = WarrantyClaimStatuses.Submitted,
+            ClaimType = WarrantyClaimTypes.Defective,
+            VendorPartyId = vendor.Id,
+            PartId = part.Id,
+            PurchaseOrderId = purchaseOrder.Id,
+            PurchaseOrderLineId = purchaseOrder.Lines.First().Id,
+            QuantityClaimed = 1m,
+            ProblemDescription = "Received a damaged unit.",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var procurementException = new ProcurementException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ExceptionKey = "PE-PURCH",
+            SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
+            SubjectId = purchaseRequest.Id,
+            SubjectKey = purchaseRequest.RequestKey,
+            VendorPartyId = vendor.Id,
+            ExceptionCategory = ProcurementExceptionCategories.ApprovalDelay,
+            Title = "Approval delay",
+            Description = "Purchase request is awaiting approval.",
+            Status = ProcurementExceptionStatuses.Open,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+            LinkedPurchaseRequestId = purchaseRequest.Id,
+        };
+
+        var complianceDocument = new PartyComplianceDocument
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ExternalPartyId = vendor.Id,
+            DocumentKey = "DOC-PURCH",
+            DocumentTypeKey = "insurance",
+            Title = "Insurance Certificate",
+            Version = 1,
+            ReviewStatus = PartyComplianceDocumentReviewStatuses.Approved,
+            EffectiveAt = now.AddDays(-30),
+            ExpiresAt = now.AddDays(14),
+            FileName = "insurance.pdf",
+            ContentType = "application/pdf",
+            SizeBytes = 2048,
+            UploadedByUserId = PlatformSeeder.DemoAdminUserId,
+            ReviewedByUserId = PlatformSeeder.DemoAdminUserId,
+            ReviewedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.PartVendorLinks.Add(vendorLink);
+        db.PartVendorLeadTimeSnapshots.Add(new PartVendorLeadTimeSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = vendorLink.Id,
+            SnapshotKey = "LT-PURCH",
+            LeadTimeDays = 8,
+            EffectiveFrom = now.AddDays(-1),
+            Source = SnapshotSources.Manual,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
         db.ExternalParties.Add(vendor);
+        db.ExternalParties.Add(blockedVendor);
         db.Parts.Add(part);
         db.PurchaseRequests.Add(purchaseRequest);
         db.PurchaseOrders.Add(purchaseOrder);
         db.ReceivingReceipts.Add(receipt);
+        db.ReceivingReceiptLines.Add(receiptLine);
+        db.ReceivingExceptions.Add(receivingException);
+        db.WarrantyClaims.Add(warrantyClaim);
+        db.ProcurementExceptions.Add(procurementException);
+        db.PartyComplianceDocuments.Add(complianceDocument);
         await db.SaveChangesAsync();
         return (purchaseRequest.Id, purchaseOrder.Id);
     }

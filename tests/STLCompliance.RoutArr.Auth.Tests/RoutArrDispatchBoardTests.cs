@@ -152,7 +152,16 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
             "Linked route",
             trip.TripId,
             [
-                new CreateRouteStopRequest("stop-1", "Pickup", "North yard", "pickup", 1, now.AddHours(1)),
+                new CreateRouteStopRequest(
+                    "stop-1",
+                    "Pickup",
+                    "North yard",
+                    "pickup",
+                    1,
+                    null,
+                    null,
+                    null,
+                    now.AddHours(1)),
             ]));
         (await _routarrClient.SendAsync(createRouteRequest)).EnsureSuccessStatusCode();
 
@@ -162,7 +171,7 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
             "Needs trip link",
             null,
             [
-                new CreateRouteStopRequest("stop-u1", "Depot", "Main depot", "depot", 1, null),
+                new CreateRouteStopRequest("stop-u1", "Depot", "Main depot", "depot", 1),
             ]));
         (await _routarrClient.SendAsync(unlinkedRouteRequest)).EnsureSuccessStatusCode();
 

@@ -766,6 +766,12 @@ export interface MeterPmForecastResponse {
   meterKey: string
   unit: string
   currentReading: number
+  usageVelocityPerDay: number | null
+  predictedUsageUntilDue: number | null
+  predictedDaysUntilDue: number | null
+  predictedDueAt: string | null
+  confidenceScore: number
+  isDueSoon: boolean
   linkedSchedules: MeterPmForecastItem[]
 }
 
@@ -933,6 +939,36 @@ export interface AssetReadinessHistoryResponse {
   totalCount: number
   limit: number
   items: AssetReadinessHistoryItemResponse[]
+}
+
+export interface AssetTelematicsIngestionEventResponse {
+  inboundEventId: string
+  sourceEventId: string
+  sourceProduct: string
+  eventKind: string
+  outcome: string
+  summary: string
+  vehicleRefKey: string | null
+  tripNumber: string | null
+  incidentType: string | null
+  incidentSeverity: string | null
+  dvirResult: string | null
+  createdDefectId: string | null
+  correlationId: string
+  occurredAt: string
+  createdAt: string
+}
+
+export interface AssetTelematicsIngestionResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  totalCount: number
+  limit: number
+  processedCount: number
+  ignoredCount: number
+  defectCount: number
+  items: AssetTelematicsIngestionEventResponse[]
 }
 
 export interface MaintenanceNotificationSettingsResponse {
@@ -1445,6 +1481,28 @@ export interface ExecutiveReportSupplyDemandSummary {
   procurementStatusCounts: ExecutiveReportCountItem[]
 }
 
+export interface ExecutiveReportPartsDemandForecastItem {
+  supplyarrPartId: string | null
+  partNumber: string
+  description: string
+  unitOfMeasure: string
+  forecastQuantity: number
+  openLineCount: number
+  openWorkOrderCount: number
+  pmWorkOrderCount: number
+  defectWorkOrderCount: number
+  manualWorkOrderCount: number
+  oldestCreatedAt: string | null
+  newestCreatedAt: string | null
+}
+
+export interface ExecutiveReportPartsDemandForecastSummary {
+  openLineCount: number
+  distinctPartCount: number
+  forecastQuantity: number
+  topParts: ExecutiveReportPartsDemandForecastItem[]
+}
+
 export interface ExecutiveReportOperationalTotals {
   totalAssetCount: number
   activeAssetCount: number
@@ -1484,6 +1542,7 @@ export interface ExecutiveReportSummaryResponse {
   operationalTotals: ExecutiveReportOperationalTotals
   downtimeTrend: ExecutiveReportDowntimeTrend
   supplyDemand: ExecutiveReportSupplyDemandSummary
+  partsDemandForecast: ExecutiveReportPartsDemandForecastSummary
   scopeReadiness: ExecutiveReportScopeReadinessItem[]
   workOrderStatusCounts: ExecutiveReportCountItem[]
   defectSeverityCounts: ExecutiveReportCountItem[]

@@ -65,6 +65,7 @@ public static class TrainArrReportEndpoints
                     new { key = "dashboard", path = route.Replace("/reports", "/dashboard"), description = "Tenant training command-center dashboard snapshot." },
                     new { key = "assignments", path = $"{route}/assignments", description = "Training assignment summaries and exports." },
                     new { key = "qualifications", path = $"{route}/qualifications", description = "Qualification issue and status summaries." },
+                    new { key = "qualifications_point_in_time", path = $"{route}/qualifications/point-in-time", description = "Point-in-time qualification checks for a person and action." },
                     new { key = "compliance", path = $"{route}/compliance", description = "Compliance coverage and remediation summaries." },
                     new { key = "compliance_gap_programs_without_citation", path = $"{route}/compliance/programs-without-citation", description = "Training programs missing citation attachments." },
                 };
@@ -254,6 +255,39 @@ public static class TrainArrReportEndpoints
             return Results.Ok(report);
         })
         .WithName($"GetTrainArrQualificationExpiringReport{suffix}");
+
+            group.MapGet("/point-in-time", async (
+            Guid staffarrPersonId,
+            string qualificationKey,
+            string actionTask,
+            DateTimeOffset? asOfUtc,
+            TrainArrAuthorizationService authorization,
+            QualificationReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var report = await reportService.GetPointInTimeReportAsync(
+                tenantId,
+                staffarrPersonId,
+                qualificationKey,
+                actionTask,
+                asOfUtc,
+                cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.qualifications.point_in_time",
+                tenantId,
+                actorUserId,
+                "qualification_report",
+                qualificationKey,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(report);
+        })
+        .WithName($"GetTrainArrQualificationPointInTimeReport{suffix}");
         }
     }
 

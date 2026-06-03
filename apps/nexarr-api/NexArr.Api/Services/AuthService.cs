@@ -1,6 +1,6 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
@@ -16,7 +16,7 @@ public sealed class AuthService(
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
     PlatformSessionSettingsService sessionSettingsService,
-    IOptions<StlJwtOptions> jwtOptions)
+    MfaService mfaService)
 {
     public const int FailedLoginLockoutThreshold = 5;
     public const int LockoutMinutes = 15;
@@ -73,7 +73,8 @@ public sealed class AuthService(
             throw new StlApiException("auth.email_not_verified", "Email verification is required before sign in.", 403);
         }
 
-        if (ShouldRequirePlatformAdminMfa(user) && !user.Credential.IsMfaEnabled)
+        var requiresMfa = await ShouldRequireMfaAsync(user, cancellationToken);
+        if (requiresMfa && !await VerifyMfaAsync(user, request, now, cancellationToken))
         {
             await audit.WriteAsync(
                 "auth.login",
@@ -81,9 +82,16 @@ public sealed class AuthService(
                 user.Id.ToString(),
                 "Denied",
                 actorUserId: user.Id,
-                reasonCode: "mfa_required",
+                reasonCode: request.MfaCode is null && request.RecoveryCode is null ? "mfa_required" : "invalid_mfa",
                 cancellationToken: cancellationToken);
-            throw new StlApiException("auth.mfa_required", "Multi-factor authentication is required before sign in.", 403);
+            throw new StlApiException(
+                request.MfaCode is null && request.RecoveryCode is null
+                    ? "auth.mfa_required"
+                    : "auth.invalid_mfa_code",
+                request.MfaCode is null && request.RecoveryCode is null
+                    ? "Multi-factor authentication is required before sign in."
+                    : "Invalid multi-factor authentication code.",
+                403);
         }
 
         var shouldEmitUnlock = user.Credential.LockedUntil is DateTimeOffset expiredLock && expiredLock <= now;
@@ -179,20 +187,91 @@ public sealed class AuthService(
         return await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
     }
 
-    private bool ShouldRequirePlatformAdminMfa(PlatformUser user)
+    private async Task<bool> ShouldRequireMfaAsync(
+        PlatformUser user,
+        CancellationToken cancellationToken)
     {
+        if (user.Credential?.IsMfaEnabled == true)
+        {
+            return true;
+        }
+
         if (!user.IsPlatformAdmin)
         {
             return false;
         }
 
-        var configuredValue =
-            Environment.GetEnvironmentVariable("AUTH_REQUIRE_PLATFORM_ADMIN_MFA")
-            ?? Environment.GetEnvironmentVariable("Auth__RequirePlatformAdminMfa")
-            ?? jwtOptions.Value.RequirePlatformAdminMfa?.ToString()
-            ?? string.Empty;
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+        return settings.RequirePlatformAdminMfa ?? false;
+    }
 
-        return bool.TryParse(configuredValue, out var requireMfa) && requireMfa;
+    private async Task<bool> VerifyMfaAsync(
+        PlatformUser user,
+        LoginRequest request,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (user.Credential is null || !user.Credential.IsMfaEnabled)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.RecoveryCode))
+        {
+            return await VerifyRecoveryCodeAsync(user, request.RecoveryCode!, cancellationToken);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.MfaCode))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.Credential.MfaSecret))
+        {
+            return false;
+        }
+
+        return mfaService.VerifyTotp(user.Credential.MfaSecret, request.MfaCode!, now);
+    }
+
+    private async Task<bool> VerifyRecoveryCodeAsync(
+        PlatformUser user,
+        string recoveryCode,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(user.Credential?.MfaRecoveryCodeHashesJson))
+        {
+            return false;
+        }
+
+        IReadOnlyList<string>? hashes;
+        try
+        {
+            hashes = JsonSerializer.Deserialize<IReadOnlyList<string>>(user.Credential.MfaRecoveryCodeHashesJson);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        if (hashes is not { Count: > 0 })
+        {
+            return false;
+        }
+
+        var targetHash = mfaService.HashRecoveryCode(recoveryCode);
+        if (!hashes.Contains(targetHash, StringComparer.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var remaining = hashes
+            .Where(hash => !string.Equals(hash, targetHash, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        user.Credential!.MfaRecoveryCodeHashesJson = remaining.Length > 0 ? JsonSerializer.Serialize(remaining) : null;
+        user.ModifiedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task LogoutAsync(LogoutRequest request, CancellationToken cancellationToken = default)

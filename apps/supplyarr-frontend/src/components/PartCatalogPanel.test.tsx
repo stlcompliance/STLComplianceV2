@@ -1,5 +1,45 @@
 import { render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { PartCatalogPanel } from './PartCatalogPanel'
 
 describe('PartCatalogPanel', () => {
@@ -141,6 +181,11 @@ describe('PartCatalogPanel', () => {
     )
 
     const catalogSection = screen.getByRole('heading', { name: 'Add catalog' }).parentElement!
-    expect(within(catalogSection).getByTestId('generated-key-preview')).toHaveTextContent('oem-filters')
+    expect(within(catalogSection).getByTestId('generated-key-preview')).toHaveTextContent(
+      'part.catalog.oemfilters',
+    )
+    expect(screen.getByTestId('part-catalog-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('vendor-link-part-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('vendor-link-vendor-picker')).toBeInTheDocument()
   })
 })

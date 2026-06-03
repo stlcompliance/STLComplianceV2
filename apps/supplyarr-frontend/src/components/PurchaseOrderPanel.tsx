@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type { PurchaseOrderResponse, PurchaseRequestResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
@@ -66,6 +70,25 @@ export function PurchaseOrderPanel({
   const selectedPo = purchaseOrders.find((po) => po.purchaseOrderId === selectedPurchaseOrderId)
   const selectedPr = approvedPurchaseRequests.find(
     (pr) => pr.purchaseRequestId === selectedPurchaseRequestId,
+  )
+  const purchaseRequestOptions = useMemo<PickerOption[]>(
+    () =>
+      approvedPurchaseRequests.map((pr) => ({
+        value: pr.purchaseRequestId,
+        label: `${pr.requestKey} — ${pr.title}${pr.vendorDisplayName ? ` · ${pr.vendorDisplayName}` : ''}`,
+      })),
+    [approvedPurchaseRequests],
+  )
+  const selectedPurchaseRequestOption = useMemo<PickerOption | undefined>(
+    () =>
+      purchaseRequestOptions.find((option) => option.value === selectedPurchaseRequestId) ??
+      (selectedPr
+        ? {
+            value: selectedPr.purchaseRequestId,
+            label: `${selectedPr.requestKey} — ${selectedPr.title}${selectedPr.vendorDisplayName ? ` · ${selectedPr.vendorDisplayName}` : ''}`,
+          }
+        : undefined),
+    [purchaseRequestOptions, selectedPurchaseRequestId, selectedPr],
   )
   const canCancelSelected =
     canCreate && selectedPo != null && (selectedPo.status === 'draft' || selectedPo.status === 'approved')
@@ -193,22 +216,17 @@ export function PurchaseOrderPanel({
         <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-order-create-form">
           <h3 className="text-sm font-medium text-slate-200">Create from approved PR</h3>
           <div className="mt-3 space-y-3">
-            <label htmlFor="purchase-order-create-pr-select" className="block text-xs text-slate-500">
-              Approved purchase request
-              <select
-                id="purchase-order-create-pr-select"
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
-                value={selectedPurchaseRequestId}
-                onChange={(e) => onSelectedPurchaseRequestIdChange(e.target.value)}
-              >
-                <option value="">Select…</option>
-                {approvedPurchaseRequests.map((pr) => (
-                  <option key={pr.purchaseRequestId} value={pr.purchaseRequestId}>
-                    {pr.requestKey} — {pr.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="purchase-order-create-pr-select"
+              label="Approved purchase request"
+              value={selectedPurchaseRequestId}
+              onChange={onSelectedPurchaseRequestIdChange}
+              options={purchaseRequestOptions}
+              selectedOption={selectedPurchaseRequestOption}
+              placeholder="Search approved purchase requests…"
+              disabled={isLoading}
+              testId="purchase-order-create-pr-picker"
+            />
             {selectedPr ? (
               <p className="text-xs text-slate-500">
                 Vendor: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)

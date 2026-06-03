@@ -10,6 +10,42 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       label,
       value,
       onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (v: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
     }: {
       label?: string
       value: string
@@ -111,5 +147,34 @@ describe('AuthorizationCheckOperationsPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /run qualification check/i }))
     expect(onRunCheck).toHaveBeenCalledOnce()
+  })
+
+  it('uses a searchable picker for training definitions', () => {
+    const onSelectDefinition = vi.fn()
+
+    render(
+      <AuthorizationCheckOperationsPanel
+        definitions={definitions}
+        history={[]}
+        isLoadingHistory={false}
+        check={null}
+        isChecking={false}
+        canRun
+        staffarrPersonId="person-1"
+        onStaffarrPersonIdChange={vi.fn()}
+        selectedDefinitionId=""
+        onSelectDefinition={onSelectDefinition}
+        rulePackKey="driver_qualification"
+        onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
+        personPickerOptions={[{ value: 'person-1', label: 'Person 1' }]}
+        onRunCheck={vi.fn()}
+      />,
+    )
+
+    const definitionPicker = screen.getByText('Training definition').closest('label')?.querySelector('input')
+    expect(definitionPicker).toBeTruthy()
+    fireEvent.change(definitionPicker as HTMLInputElement, { target: { value: 'def-1' } })
+    expect(onSelectDefinition).toHaveBeenCalledWith('def-1')
   })
 })

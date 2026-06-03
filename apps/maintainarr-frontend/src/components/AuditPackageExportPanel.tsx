@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ControlledSelect } from '@stl/shared-ui'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -139,7 +139,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
   }
 
   const filterOptions = filterOptionsQuery.data
-  const actorUserOptions = useMemo(
+  const actorUserOptions = useMemo<PickerOption[]>(
     () =>
       (filterOptions?.actorUserIds ?? []).map((id) => ({
         value: id,
@@ -147,6 +147,8 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       })),
     [filterOptions?.actorUserIds],
   )
+  const selectedActorUserOption = actorUserOptions.find((option) => option.value === actorUserId)
+    ?? (actorUserId ? { value: actorUserId, label: actorUserId } : undefined)
   const summary = summaryQuery.data
   const jobStatus = jobStatusQuery.data
   const jobInFlight =
@@ -255,14 +257,15 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               ))}
             </select>
           </label>
-          <ControlledSelect
+          <StaticSearchPicker
+            id="auditpackageexport-actor-user"
             label="Actor user"
             value={actorUserId}
             onChange={setActorUserId}
             options={actorUserOptions}
-            emptyLabel="Any actor"
+            selectedOption={selectedActorUserOption}
+            placeholder="Any actor"
             testId="maintainarr-audit-filter-actor"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
           />
         </div>
       </div>

@@ -2,6 +2,40 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      placeholder,
+      value,
+      options,
+      onChange,
+      testId,
+    }: {
+      placeholder?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      testId?: string
+    }) => (
+      <select
+        aria-label={placeholder ?? 'Static search picker'}
+        data-testid={testId}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">{placeholder ?? 'Select…'}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    ),
+  }
+})
+
 import { PartsInventoryReportsPanel } from './PartsInventoryReportsPanel'
 
 vi.mock('../api/client', () => ({
@@ -65,6 +99,7 @@ describe('PartsInventoryReportsPanel', () => {
     expect(await screen.findByTestId('parts-inventory-reports-panel')).toBeInTheDocument()
     expect(await screen.findByText(/PART-001 · Hydraulic filter/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export parts CSV/i })).toBeInTheDocument()
+    expect(screen.getByTestId('parts-inventory-location-filter')).toBeInTheDocument()
   })
 
   it('returns null when user cannot read reports', () => {

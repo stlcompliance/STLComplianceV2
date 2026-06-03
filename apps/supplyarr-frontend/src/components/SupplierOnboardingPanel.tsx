@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -104,6 +104,18 @@ export function SupplierOnboardingPanel({
   const selectedParty = useMemo(
     () => onboardableParties.find((p) => p.partyId === selectedPartyId),
     [onboardableParties, selectedPartyId],
+  )
+  const partyOptions = useMemo<PickerOption[]>(
+    () =>
+      onboardableParties.map((party) => ({
+        value: party.partyId,
+        label: `${party.displayName} (${party.partyType})`,
+      })),
+    [onboardableParties],
+  )
+  const selectedPartyOption = useMemo<PickerOption | undefined>(
+    () => partyOptions.find((option) => option.value === selectedPartyId),
+    [partyOptions, selectedPartyId],
   )
 
   const invalidate = () => {
@@ -248,22 +260,16 @@ export function SupplierOnboardingPanel({
       ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label htmlFor="supplier-onboarding-party" className="text-sm text-slate-400">
-          Onboarding party
-          <select
-            id="supplier-onboarding-party"
-            className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-            value={selectedPartyId}
-            onChange={(e) => setSelectedPartyId(e.target.value)}
-          >
-            <option value="">Select vendor or supplier…</option>
-            {onboardableParties.map((p) => (
-              <option key={p.partyId} value={p.partyId}>
-                {p.displayName} ({p.partyType})
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="supplier-onboarding-party"
+          label="Onboarding party"
+          value={selectedPartyId}
+          onChange={setSelectedPartyId}
+          options={partyOptions}
+          selectedOption={selectedPartyOption}
+          placeholder="Search vendors or suppliers…"
+          testId="supplier-onboarding-party-picker"
+        />
         <label htmlFor="supplier-onboarding-notes" className="text-sm text-slate-400">
           Onboarding notes
           <input

@@ -218,13 +218,16 @@ public sealed record PersonRoleAssignmentResponse(
     string ScopeType,
     string? ScopeValue,
     string Status,
+    string EffectiveStatus,
+    DateTimeOffset? ExpiresAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
 public sealed record CreatePersonRoleAssignmentRequest(
     Guid RoleTemplateId,
     string ScopeType,
-    string? ScopeValue);
+    string? ScopeValue,
+    DateTimeOffset? ExpiresAt = null);
 
 public sealed record UpdatePersonRoleAssignmentStatusRequest(
     string Status);

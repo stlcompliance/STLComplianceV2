@@ -2,6 +2,40 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CertificationPanel } from './CertificationPanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      value,
+      onChange,
+      options,
+      testId,
+      placeholder,
+    }: {
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      testId?: string
+      placeholder?: string
+    }) => (
+      <label>
+        {placeholder}
+        <input
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 const definitions = [
   {
     certificationDefinitionId: 'def-1',
@@ -128,6 +162,40 @@ describe('CertificationPanel', () => {
     expect(screen.getByText(/Manual grant for onboarding/i)).toBeTruthy()
     expect(screen.getByText('Readiness catalog')).toBeTruthy()
     expect(screen.getAllByText(/readiness.safety_orientation/i).length).toBeGreaterThan(0)
+  })
+
+  it('submits grants using the searchable certification definition picker', async () => {
+    const onGrantCertification = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <CertificationPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        definitions={definitions}
+        certifications={[]}
+        canManage
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onGrantCertification={onGrantCertification}
+        onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    fireEvent.change(screen.getByTestId('certification-grant-definition'), {
+      target: { value: 'def-1' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Grant manual certification/i }))
+
+    expect(onGrantCertification).toHaveBeenCalledWith({
+      certificationDefinitionId: 'def-1',
+      grantedAt: null,
+      expiresAt: null,
+      notes: null,
+    })
   })
 
   it('renders action errors in shared callout', () => {

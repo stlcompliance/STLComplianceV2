@@ -4,6 +4,45 @@ import { cleanup, render, screen } from '@testing-library/react'
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { PartSubstitutionsPanel } from './PartSubstitutionsPanel'
 
 const mockGetSubstitutions = vi.fn()
@@ -63,7 +102,7 @@ describe('PartSubstitutionsPanel', () => {
           accessToken="token"
           parts={parts}
           canRead={true}
-          selectedPartId=""
+          selectedPartId="part-1"
           onSelectedPartIdChange={() => undefined}
         />
       </QueryClientProvider>,
@@ -71,6 +110,7 @@ describe('PartSubstitutionsPanel', () => {
 
     expect(await screen.findByText('Part substitutions')).toBeTruthy()
     expect(screen.getByLabelText('Part filter')).toBeTruthy()
+    expect(screen.getByTestId('part-substitutions-filter')).toHaveValue('part-1')
     expect(await screen.findByText('P-1001 · Brake Pads')).toBeTruthy()
     expect(screen.getByText('alias')).toBeTruthy()
   })

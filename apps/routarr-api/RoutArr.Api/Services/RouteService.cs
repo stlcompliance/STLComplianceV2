@@ -359,6 +359,9 @@ public sealed class RouteService(
                 request.AddressLabel,
                 request.StopType,
                 request.SequenceNumber,
+                request.GeofenceAnchorLatitude,
+                request.GeofenceAnchorLongitude,
+                request.GeofenceRadiusMeters,
                 request.ScheduledArrivalAt,
                 request.StaffarrSiteOrgUnitId),
             now,
@@ -377,6 +380,126 @@ public sealed class RouteService(
             cancellationToken: cancellationToken);
 
         await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, "Route stop added", cancellationToken);
+
+        return MapDetail(route);
+    }
+
+    public async Task<RouteStopSummaryResponse> CheckStopGeofenceAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid stopId,
+        CheckRouteStopGeofenceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var stop = await db.RouteStops
+            .Include(x => x.Route)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == stopId, cancellationToken);
+
+        if (stop is null)
+        {
+            throw new StlApiException("route_stop.not_found", "Route stop was not found.", 404);
+        }
+
+        if (stop.GeofenceAnchorLatitude is null || stop.GeofenceAnchorLongitude is null)
+        {
+            throw new StlApiException(
+                "route_stop.geofence_missing",
+                "Route stop must have a geofence anchor before it can be checked.",
+                400);
+        }
+
+        var distanceMeters = CalculateGeofenceDistanceMeters(
+            stop.GeofenceAnchorLatitude.Value,
+            stop.GeofenceAnchorLongitude.Value,
+            request.ReportedLatitude,
+            request.ReportedLongitude);
+        var radiusMeters = stop.GeofenceRadiusMeters ?? 250;
+        var result = distanceMeters <= radiusMeters ? "inside" : distanceMeters <= radiusMeters * 1.5m ? "nearby" : "outside";
+        var now = DateTimeOffset.UtcNow;
+
+        stop.LastGeofenceCheckAt = now;
+        stop.LastGeofenceResult = result;
+        stop.LastGeofenceDistanceMeters = decimal.Round(distanceMeters, 2);
+        stop.LastGeofenceReportedLatitude = request.ReportedLatitude;
+        stop.LastGeofenceReportedLongitude = request.ReportedLongitude;
+        stop.UpdatedAt = now;
+        stop.Route.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "route_stop.geofence_check",
+            tenantId,
+            actorUserId,
+            "route_stop",
+            stop.Id.ToString(),
+            result,
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(stop.Route, "Route stop geofence checked", cancellationToken);
+
+        return MapStop(stop);
+    }
+
+    public async Task<RouteDetailResponse> OptimizeStopsAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid routeId,
+        CancellationToken cancellationToken = default)
+    {
+        var route = await db.Routes
+            .Include(x => x.Stops)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == routeId, cancellationToken);
+
+        if (route is null)
+        {
+            throw new StlApiException("route.not_found", "Route was not found.", 404);
+        }
+
+        if (!RouteStatuses.Editable.Contains(route.RouteStatus))
+        {
+            throw new StlApiException(
+                "route.not_editable",
+                "Route stop order can only be optimized while the route is draft or planned.",
+                400);
+        }
+
+        var currentOrder = route.Stops
+            .OrderBy(x => x.SequenceNumber)
+            .ToList();
+
+        if (currentOrder.Count < 2)
+        {
+            return MapDetail(route);
+        }
+
+        var optimizedOrder = BuildOptimizedStopOrder(currentOrder);
+        if (currentOrder.Select(x => x.Id).SequenceEqual(optimizedOrder.Select(x => x.Id)))
+        {
+            return MapDetail(route);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        for (var index = 0; index < optimizedOrder.Count; index++)
+        {
+            var stop = optimizedOrder[index];
+            stop.SequenceNumber = index + 1;
+            stop.UpdatedAt = now;
+        }
+
+        route.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "route.optimize_stops",
+            tenantId,
+            actorUserId,
+            "route",
+            route.Id.ToString(),
+            string.Join(',', optimizedOrder.Select(x => x.StopKey)),
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, "Route stops optimized", cancellationToken);
 
         return MapDetail(route);
     }
@@ -732,6 +855,9 @@ public sealed class RouteService(
             StopType = NormalizeStopType(request.StopType),
             StopStatus = RouteStopStatuses.Pending,
             SequenceNumber = request.SequenceNumber,
+            GeofenceAnchorLatitude = request.GeofenceAnchorLatitude,
+            GeofenceAnchorLongitude = request.GeofenceAnchorLongitude,
+            GeofenceRadiusMeters = request.GeofenceRadiusMeters,
             ScheduledArrivalAt = request.ScheduledArrivalAt,
             CreatedAt = now,
             UpdatedAt = now,
@@ -826,6 +952,27 @@ public sealed class RouteService(
             route.CompletedAt,
             route.CancelledAt);
 
+    private static IReadOnlyList<RouteStop> BuildOptimizedStopOrder(IReadOnlyList<RouteStop> stops)
+    {
+        var scheduledStops = stops
+            .Where(x => x.ScheduledArrivalAt.HasValue)
+            .OrderBy(x => x.ScheduledArrivalAt)
+            .ThenBy(x => x.SequenceNumber)
+            .ThenBy(x => x.StopKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var unscheduledStops = stops
+            .Where(x => !x.ScheduledArrivalAt.HasValue)
+            .OrderBy(x => x.SequenceNumber)
+            .ThenBy(x => x.StopKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var optimized = new List<RouteStop>(stops.Count);
+        optimized.AddRange(scheduledStops);
+        optimized.AddRange(unscheduledStops);
+        return optimized;
+    }
+
     private static RouteStopSummaryResponse MapStop(RouteStop stop) =>
         new(
             stop.Id,
@@ -837,11 +984,42 @@ public sealed class RouteService(
             stop.StopType,
             stop.StopStatus,
             stop.SequenceNumber,
+            stop.GeofenceAnchorLatitude,
+            stop.GeofenceAnchorLongitude,
+            stop.GeofenceRadiusMeters,
+            stop.LastGeofenceCheckAt,
+            stop.LastGeofenceResult,
+            stop.LastGeofenceDistanceMeters,
+            stop.LastGeofenceReportedLatitude,
+            stop.LastGeofenceReportedLongitude,
             stop.ScheduledArrivalAt,
             stop.ArrivedAt,
             stop.CompletedAt,
             stop.CreatedAt,
             stop.UpdatedAt);
+
+    private static decimal CalculateGeofenceDistanceMeters(
+        decimal anchorLatitude,
+        decimal anchorLongitude,
+        decimal reportedLatitude,
+        decimal reportedLongitude)
+    {
+        const double earthRadiusMeters = 6_371_000d;
+
+        static double ToRadians(double value) => value * Math.PI / 180d;
+
+        var anchorLat = ToRadians((double)anchorLatitude);
+        var anchorLon = ToRadians((double)anchorLongitude);
+        var reportedLat = ToRadians((double)reportedLatitude);
+        var reportedLon = ToRadians((double)reportedLongitude);
+
+        var deltaLat = reportedLat - anchorLat;
+        var deltaLon = reportedLon - anchorLon;
+        var a = Math.Pow(Math.Sin(deltaLat / 2d), 2d)
+            + Math.Cos(anchorLat) * Math.Cos(reportedLat) * Math.Pow(Math.Sin(deltaLon / 2d), 2d);
+        var c = 2d * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1d - a));
+        return (decimal)(earthRadiusMeters * c);
+    }
 }
 
 public sealed record RouteAccessContext(

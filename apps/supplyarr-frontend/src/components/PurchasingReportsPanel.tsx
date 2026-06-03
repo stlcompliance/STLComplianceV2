@@ -16,8 +16,36 @@ interface PurchasingReportsPanelProps {
   canExport: boolean
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+
 function formatDocumentType(type: string): string {
   return type === 'purchase_request' ? 'PR' : 'PO'
+}
+
+function formatCurrency(value: number | null): string {
+  return value == null ? '—' : currencyFormatter.format(value)
+}
+
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-1 text-xl font-semibold text-slate-50">{value}</div>
+      <div className="mt-1 text-xs text-slate-400">{detail}</div>
+    </div>
+  )
 }
 
 export function PurchasingReportsPanel({
@@ -151,6 +179,62 @@ export function PurchasingReportsPanel({
             <span className="rounded-md bg-amber-950 px-2 py-1 text-amber-200">
               Backorders: {summaryQuery.data.totals.openBackorderCount}
             </span>
+          </div>
+
+          <div className="mt-5">
+            <div className="text-sm font-semibold text-slate-100">Procurement analytics</div>
+            <p className="mt-1 text-xs text-slate-400">
+              Derived from the current purchase, receiving, compliance, exception, and vendor-data pipeline.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <MetricCard
+                label="Pending approvals"
+                value={String(summaryQuery.data.analytics.pendingPurchaseRequestCount)}
+                detail="Submitted purchase requests waiting for approval."
+              />
+              <MetricCard
+                label="Emergency requests"
+                value={String(summaryQuery.data.analytics.emergencyPurchaseRequestCount)}
+                detail="Purchase requests flagged as emergency."
+              />
+              <MetricCard
+                label="Open procurement exceptions"
+                value={String(summaryQuery.data.analytics.activeProcurementExceptionCount)}
+                detail="Procurement exceptions still active in the queue."
+              />
+              <MetricCard
+                label="Open receiving exceptions"
+                value={String(summaryQuery.data.analytics.openReceivingExceptionCount)}
+                detail="Receiving exceptions waiting on a resolution."
+              />
+              <MetricCard
+                label="Open warranty claims"
+                value={String(summaryQuery.data.analytics.openWarrantyClaimCount)}
+                detail="Warranty claims that are still in flight."
+              />
+              <MetricCard
+                label="Vendor docs expiring"
+                value={String(summaryQuery.data.analytics.vendorDocumentExpiringSoonCount)}
+                detail="Approved vendor compliance documents expiring in the next 30 days."
+              />
+              <MetricCard
+                label="Blocked vendors"
+                value={String(summaryQuery.data.analytics.blockedVendorCount)}
+                detail="Active vendor or supplier parties blocked by approval status."
+              />
+              <MetricCard
+                label="Average lead time"
+                value={summaryQuery.data.analytics.averageLeadTimeDays == null
+                  ? '—'
+                  : `${summaryQuery.data.analytics.averageLeadTimeDays} days`}
+                detail="Average lead time across active vendor links."
+              />
+              <MetricCard
+                label="Estimated spend this month"
+                value={formatCurrency(summaryQuery.data.analytics.estimatedSpendThisMonth)}
+                detail="Estimated from issued purchase orders and current vendor pricing."
+              />
+            </div>
           </div>
 
           {summaryQuery.data.documents.length === 0 ? (

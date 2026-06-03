@@ -93,6 +93,11 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
             x => x.Source == DemandRefSources.MaintainArr && x.OpenCount == 1);
         Assert.Contains(dashboard.AttentionItems, x => x.Category == "stock");
         Assert.Contains(dashboard.AttentionItems, x => x.Category == "backorder");
+        Assert.Contains(dashboard.PredictiveStockoutItems, x =>
+            x.PartKey == "READINESS-PART"
+            && x.OpenDemandQuantity == 5m
+            && x.OpenBackorderQuantity == 3m
+            && x.ShortageQuantity > 0m);
     }
 
     [Fact]
@@ -117,6 +122,7 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
         var dashboard = (await response.Content.ReadFromJsonAsync<SupplyReadinessDashboardResponse>())!;
         Assert.Equal(1, dashboard.Totals.ActivePartsCount);
         Assert.Equal(1, dashboard.Totals.PartsBelowReorderCount);
+        Assert.NotEmpty(dashboard.PredictiveStockoutItems);
 
         var aliasResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/readiness/dashboard", buyerToken));
@@ -139,6 +145,7 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
         var dashboard = (await dashboardResponse.Content.ReadFromJsonAsync<SupplyReadinessDashboardResponse>())!;
         Assert.Equal(1, dashboard.Totals.ActivePartsCount);
         Assert.Equal(1, dashboard.Totals.OpenDemandRefCount);
+        Assert.NotEmpty(dashboard.PredictiveStockoutItems);
 
         var commandCenterResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/command-center", buyerToken));
@@ -224,7 +231,7 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
-        db.MaintainArrDemandRefs.Add(new MaintainArrDemandRef
+        var demandRef = new MaintainArrDemandRef
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -238,6 +245,22 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
             ReceivedAt = now,
             CreatedAt = now,
             UpdatedAt = now,
+        };
+        db.MaintainArrDemandRefs.Add(demandRef);
+
+        db.MaintainArrDemandRefLines.Add(new MaintainArrDemandRefLine
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            DemandRefId = demandRef.Id,
+            LineNumber = 1,
+            MaintainarrDemandLineId = Guid.NewGuid(),
+            PartId = partId,
+            PartNumber = "READINESS-PART",
+            Description = "Predictive stockout demand line",
+            QuantityRequested = 5m,
+            UnitOfMeasure = "each",
+            Notes = string.Empty,
         });
 
         await db.SaveChangesAsync();

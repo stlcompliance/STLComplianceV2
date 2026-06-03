@@ -10,6 +10,14 @@ public sealed record RouteStopSummaryResponse(
     string StopType,
     string StopStatus,
     int SequenceNumber,
+    decimal? GeofenceAnchorLatitude,
+    decimal? GeofenceAnchorLongitude,
+    int? GeofenceRadiusMeters,
+    DateTimeOffset? LastGeofenceCheckAt,
+    string? LastGeofenceResult,
+    decimal? LastGeofenceDistanceMeters,
+    decimal? LastGeofenceReportedLatitude,
+    decimal? LastGeofenceReportedLongitude,
     DateTimeOffset? ScheduledArrivalAt,
     DateTimeOffset? ArrivedAt,
     DateTimeOffset? CompletedAt,
@@ -51,7 +59,10 @@ public sealed record CreateRouteStopRequest(
     string AddressLabel,
     string StopType,
     int SequenceNumber,
-    DateTimeOffset? ScheduledArrivalAt,
+    decimal? GeofenceAnchorLatitude = null,
+    decimal? GeofenceAnchorLongitude = null,
+    int? GeofenceRadiusMeters = null,
+    DateTimeOffset? ScheduledArrivalAt = null,
     Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record CreateRouteRequest(
@@ -75,9 +86,16 @@ public sealed record AddRouteStopRequest(
     string AddressLabel,
     string StopType,
     int SequenceNumber,
-    DateTimeOffset? ScheduledArrivalAt,
+    decimal? GeofenceAnchorLatitude = null,
+    decimal? GeofenceAnchorLongitude = null,
+    int? GeofenceRadiusMeters = null,
+    DateTimeOffset? ScheduledArrivalAt = null,
     Guid? StaffarrSiteOrgUnitId = null);
 
 public sealed record UpdateRouteStopStatusRequest(string StopStatus);
+
+public sealed record CheckRouteStopGeofenceRequest(
+    decimal ReportedLatitude,
+    decimal ReportedLongitude);
 
 public sealed record UpdateRouteStatusRequest(string RouteStatus);

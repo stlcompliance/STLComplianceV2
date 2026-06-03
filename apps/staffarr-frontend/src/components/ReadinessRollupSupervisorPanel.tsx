@@ -1,4 +1,5 @@
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
 import type {
   ReadinessRollupMemberResponse,
   ReadinessRollupMembersResponse,
@@ -45,6 +46,32 @@ function readinessStatusClass(status: ReadinessRollupMemberResponse['readinessSt
   return status === 'ready' ? 'text-emerald-300' : 'text-rose-300'
 }
 
+function confidenceLabel(level: ReadinessRollupSummaryResponse['confidenceLevel']): string {
+  switch (level) {
+    case 'high':
+      return 'High'
+    case 'medium':
+      return 'Medium'
+    case 'low':
+      return 'Low'
+    default:
+      return level
+  }
+}
+
+function confidenceClass(level: ReadinessRollupSummaryResponse['confidenceLevel']): string {
+  switch (level) {
+    case 'high':
+      return 'text-emerald-300'
+    case 'medium':
+      return 'text-amber-200'
+    case 'low':
+      return 'text-rose-300'
+    default:
+      return 'text-slate-300'
+  }
+}
+
 function RollupTable({
   title,
   rollups,
@@ -79,6 +106,7 @@ function RollupTable({
               <th className="pb-2 pr-4 font-medium">Ready</th>
               <th className="pb-2 pr-4 font-medium">Not ready</th>
               <th className="pb-2 pr-4 font-medium">Overrides</th>
+              <th className="pb-2 pr-4 font-medium">Confidence</th>
               <th className="pb-2 font-medium">Ready %</th>
             </tr>
           </thead>
@@ -117,6 +145,12 @@ function RollupTable({
                   <td className="py-3 pr-4 text-emerald-300">{rollup.readyCount}</td>
                   <td className="py-3 pr-4 text-rose-300">{rollup.notReadyCount}</td>
                   <td className="py-3 pr-4 text-amber-200">{rollup.overrideCount}</td>
+                  <td className={`py-3 pr-4 ${confidenceClass(rollup.confidenceLevel)}`}>
+                    <div className="flex flex-col">
+                      <span>{confidenceLabel(rollup.confidenceLevel)} confidence</span>
+                      <span className="text-xs text-slate-500">Score {rollup.confidenceScore}</span>
+                    </div>
+                  </td>
                   <td className="py-3">
                     <div className="flex min-w-[8rem] items-center gap-2">
                       <div className="h-2 flex-1 rounded-full bg-slate-800">
@@ -215,6 +249,28 @@ function RollupMembersDrillDown({
 
       {!isLoading && !readErrorMessage && members.length > 0 ? (
         <div className="mt-4 overflow-x-auto">
+          {rollupMembers ? (
+            <div className="mb-4 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Members</p>
+                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.totalMembers}</p>
+              </div>
+              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Ready %</p>
+                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.readyPercent.toFixed(1)}%</p>
+              </div>
+              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence</p>
+                <p className={`mt-1 text-sm ${confidenceClass(rollupMembers.rollup.confidenceLevel)}`}>
+                  {confidenceLabel(rollupMembers.rollup.confidenceLevel)} confidence
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence score</p>
+                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.confidenceScore}</p>
+              </div>
+            </div>
+          ) : null}
           <table className="min-w-full text-left text-sm" data-testid="readiness-rollup-members-table">
             <thead className="text-xs uppercase tracking-wide text-slate-500">
               <tr>
@@ -291,6 +347,15 @@ export function ReadinessRollupSupervisorPanel({
   readErrorMessage,
   onRetryRead,
 }: ReadinessRollupSupervisorPanelProps) {
+  const siteFilterOptions = useMemo<PickerOption[]>(
+    () => siteRollups.map((site) => ({ value: site.orgUnitId, label: site.orgUnitName })),
+    [siteRollups],
+  )
+  const selectedSiteOption = useMemo(
+    () => siteFilterOptions.find((option) => option.value === siteFilterOrgUnitId),
+    [siteFilterOptions, siteFilterOrgUnitId],
+  )
+
   return (
     <section className="mt-8 rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="readiness-rollup-supervisor-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -300,22 +365,16 @@ export function ReadinessRollupSupervisorPanel({
             Materialized summaries refreshed by the readiness rollup worker. Select a unit to drill into members.
           </p>
         </div>
-        <label htmlFor="readiness-rollup-site-filter" className="flex items-center gap-2 text-sm text-slate-400">
+        <label className="flex items-center gap-2 text-sm text-slate-400">
           <span>Filter teams by site</span>
-          <select
-            id="readiness-rollup-site-filter"
-            data-testid="readiness-rollup-site-filter"
+          <StaticSearchPicker
             value={siteFilterOrgUnitId ?? ''}
-            onChange={(event) => onSiteFilterChange(event.target.value || null)}
-            className="rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
-          >
-            <option value="">All sites</option>
-            {siteRollups.map((site) => (
-              <option key={site.orgUnitId} value={site.orgUnitId}>
-                {site.orgUnitName}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => onSiteFilterChange(value || null)}
+            options={siteFilterOptions}
+            selectedOption={selectedSiteOption}
+            placeholder="All sites"
+            testId="readiness-rollup-site-filter"
+          />
         </label>
       </div>
 

@@ -33,12 +33,17 @@ public sealed class RoutArrShipmentClient(
         RoutArrCreateShipmentPayload payload,
         CancellationToken cancellationToken = default)
     {
-        var serviceToken = options.Value.ServiceToken;
+        var serviceToken = options.Value.ShipmentServiceToken;
+        if (string.IsNullOrWhiteSpace(serviceToken))
+        {
+            serviceToken = options.Value.ServiceToken;
+        }
+
         if (string.IsNullOrWhiteSpace(serviceToken))
         {
             throw new StlApiException(
-                "routarr.service_token_missing",
-                "SupplyArr RoutArr service token is not configured.",
+                "routarr.shipment_service_token_missing",
+                "SupplyArr RoutArr shipment service token is not configured.",
                 500);
         }
 

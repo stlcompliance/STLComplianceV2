@@ -123,6 +123,40 @@ export interface PartVendorLinkResponse {
   createdAt: string
 }
 
+export interface VendorCatalogApiSyncItem {
+  partKey: string
+  vendorPartNumber: string
+  isPreferred: boolean
+  catalogUnitPrice: number | null
+  catalogCurrencyCode: string | null
+  catalogMinimumOrderQuantity: number | null
+  catalogLeadTimeDays: number | null
+  catalogQuantityAvailable: number | null
+  catalogAvailabilityStatus: string | null
+}
+
+export interface VendorCatalogApiSyncRequest {
+  vendorPartyKey: string
+  dryRun: boolean
+  items: VendorCatalogApiSyncItem[]
+}
+
+export interface VendorCatalogApiSyncIssue {
+  itemNumber: number
+  code: string
+  message: string
+}
+
+export interface VendorCatalogApiSyncResponse {
+  syncType: string
+  dryRun: boolean
+  success: boolean
+  itemsRead: number
+  itemsAccepted: number
+  itemsApplied: number
+  issues: VendorCatalogApiSyncIssue[]
+}
+
 export interface PartResponse {
   partId: string
   partKey: string
@@ -489,6 +523,52 @@ export interface PurchaseOrderResponse {
   cancelledByUserId: string | null
   cancellationReason: string
   lines: PurchaseOrderLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ContractsCsvImportRequest {
+  csv: string
+  dryRun?: boolean
+  fileName?: string | null
+}
+
+export interface ContractsCsvImportIssue {
+  lineNumber: number
+  code: string
+  message: string
+}
+
+export interface ContractsCsvImportResponse {
+  importType: string
+  dryRun: boolean
+  succeeded: boolean
+  rowsRead: number
+  contractsAccepted: number
+  contractsCreated: number
+  issues: ContractsCsvImportIssue[]
+}
+
+export interface SupplyContractResponse {
+  contractId: string
+  contractKey: string
+  contractType: string
+  title: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  effectiveAt: string
+  expiresAt: string | null
+  renewalAt: string | null
+  paymentTerms: string
+  freightTerms: string
+  warrantyTerms: string
+  minimumSpend: number | null
+  serviceLevelAgreement: string
+  approvalStatus: string
+  status: string
+  notes: string
+  createdByUserId: string
   createdAt: string
   updatedAt: string
 }
@@ -1281,6 +1361,8 @@ export interface ProcurementExceptionEscalationSettingsResponse {
   escalationCooldownHours: number
   maxEscalationsPerException: number
   notifyOnProcurementExceptionSlaEscalation: boolean
+  autoCloseCompletedExceptionsEnabled: boolean
+  autoCloseCompletedExceptionsAfterHours: number
   updatedAt: string | null
 }
 
@@ -1289,6 +1371,8 @@ export interface UpsertProcurementExceptionEscalationSettingsRequest {
   escalationCooldownHours: number
   maxEscalationsPerException: number
   notifyOnProcurementExceptionSlaEscalation: boolean
+  autoCloseCompletedExceptionsEnabled: boolean
+  autoCloseCompletedExceptionsAfterHours: number
 }
 
 export interface PendingProcurementExceptionEscalationItem {
@@ -1337,6 +1421,27 @@ export interface ProcurementExceptionEscalationEventItem {
 
 export interface ProcurementExceptionEscalationEventsResponse {
   items: ProcurementExceptionEscalationEventItem[]
+}
+
+export interface PendingProcurementExceptionAutoCloseItem {
+  procurementExceptionId: string
+  exceptionKey: string
+  subjectType: string
+  subjectId: string
+  subjectKey: string
+  title: string
+  status: string
+  resolvedAt: string | null
+  waivedAt: string | null
+  completedAt: string | null
+  hoursCompleted: number
+  hoursUntilAutoClose: number
+}
+
+export interface PendingProcurementExceptionAutoClosesResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingProcurementExceptionAutoCloseItem[]
 }
 
 export interface ApprovalReminderSummaryResponse {
@@ -1426,6 +1531,10 @@ export interface RfqVendorInvitationResponse {
   vendorDisplayName: string
   status: string
   invitedAt: string
+  portalAccessCodeIssuedAt: string
+  portalAccessExpiresAt: string
+  portalAccessCode: string
+  portalUrl: string
 }
 
 export interface VendorQuoteLineResponse {
@@ -1479,6 +1588,48 @@ export interface RfqResponse {
   updatedAt: string
 }
 
+export interface VendorPortalRfqLineResponse {
+  rfqLineId: string
+  lineNumber: number
+  partId: string
+  partKey: string
+  partDisplayName: string
+  quantityRequested: number
+  unitOfMeasure: string
+  notes: string
+  quoteLineId: string | null
+  unitPrice: number | null
+  quantityQuoted: number | null
+  leadTimeDays: number | null
+  quoteNotes: string
+}
+
+export interface VendorPortalRfqResponse {
+  rfqId: string
+  rfqKey: string
+  title: string
+  notes: string
+  status: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  invitationId: string
+  invitationStatus: string
+  invitedAt: string
+  portalAccessExpiresAt: string
+  vendorQuoteId: string | null
+  quoteKey: string | null
+  quoteStatus: string | null
+  currencyCode: string | null
+  totalAmount: number | null
+  leadTimeDays: number | null
+  quoteNotes: string | null
+  submittedAt: string | null
+  lines: VendorPortalRfqLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface RfqQuoteLineMetric {
   vendorQuoteId: string
   vendorPartyId: string
@@ -1524,6 +1675,12 @@ export interface CreatePurchaseRequestFromRfqResponse {
   rfqId: string
   purchaseRequestId: string
   purchaseRequest: PurchaseRequestResponse
+}
+
+export interface VendorPortalCreateQuoteRequest {
+  quoteKey: string
+  currencyCode: string
+  notes: string
 }
 
 export interface OnboardingDocumentRequirementStatus {
@@ -1940,11 +2097,27 @@ export interface SupplyReadinessAttentionItemResponse {
   relatedEntityId: string | null
 }
 
+export interface SupplyReadinessPredictiveStockoutResponse {
+  partId: string
+  partKey: string
+  displayName: string
+  quantityAvailable: number
+  openDemandQuantity: number
+  openBackorderQuantity: number
+  projectedQuantity: number
+  shortageQuantity: number
+  reorderPoint: number | null
+  riskLevel: string
+  reason: string
+  sourceTimestamp: string | null
+}
+
 export interface SupplyReadinessDashboardResponse {
   generatedAt: string
   totals: SupplyReadinessTotalsResponse
   demandRefsBySource: SupplyReadinessDemandRefSourceCountResponse[]
   attentionItems: SupplyReadinessAttentionItemResponse[]
+  predictiveStockoutItems: SupplyReadinessPredictiveStockoutResponse[]
 }
 
 export interface SupplyReadinessBlockerResponse {
@@ -2020,6 +2193,10 @@ export interface VendorReportSummaryItem {
   postedReceivingReceiptCount: number
   openBackorderCount: number
   openPurchaseOrderLineQuantity: number
+  averageLeadTimeDays: number | null
+  leadTimeSampleCount: number
+  onTimeDeliveryRate: number | null
+  onTimeDeliverySampleCount: number
   lastPurchaseOrderAt: string | null
   lastReceivingPostedAt: string | null
 }
@@ -2170,6 +2347,18 @@ export interface PurchasingReportTotals {
   purchaseOrderQuantityReceived: number
 }
 
+export interface PurchasingProcurementAnalytics {
+  pendingPurchaseRequestCount: number
+  emergencyPurchaseRequestCount: number
+  activeProcurementExceptionCount: number
+  openReceivingExceptionCount: number
+  openWarrantyClaimCount: number
+  vendorDocumentExpiringSoonCount: number
+  blockedVendorCount: number
+  averageLeadTimeDays: number | null
+  estimatedSpendThisMonth: number
+}
+
 export interface PurchasingDocumentSummaryItem {
   documentType: 'purchase_request' | 'purchase_order' | string
   documentId: string
@@ -2187,6 +2376,7 @@ export interface PurchasingDocumentSummaryItem {
 export interface PurchasingReportSummaryResponse {
   generatedAt: string
   totals: PurchasingReportTotals
+  analytics: PurchasingProcurementAnalytics
   purchaseRequestStatusCounts: PurchasingStatusCount[]
   purchaseOrderStatusCounts: PurchasingStatusCount[]
   documents: PurchasingDocumentSummaryItem[]
@@ -2339,4 +2529,45 @@ export interface PurchasingPurchaseOrderDetailResponse {
     quantityBackordered: number
     quantityFulfilled: number
   }>
+}
+
+export interface VendorEmailInboxMessageResponse {
+  messageId: string
+  messageKey: string
+  messageKind: string
+  senderEmail: string
+  senderName: string
+  subject: string
+  bodyPreview: string
+  matchStatus: string
+  matchReason: string
+  vendorPartyId: string | null
+  vendorPartyKey: string | null
+  vendorDisplayName: string | null
+  linkedReferenceType: string | null
+  linkedReferenceId: string | null
+  linkedReferenceKey: string | null
+  receivedAt: string
+  createdAt: string
+  updatedAt: string
+  processedAt: string | null
+}
+
+export interface VendorEmailInboxListResponse {
+  items: VendorEmailInboxMessageResponse[]
+}
+
+export interface IngestVendorEmailInboxRequest {
+  messageKey: string
+  messageKind: string
+  senderEmail: string
+  senderName: string
+  subject: string
+  body: string
+  referenceKey?: string | null
+}
+
+export interface IngestVendorEmailInboxResponse {
+  wasDuplicate: boolean
+  message: VendorEmailInboxMessageResponse
 }

@@ -26,7 +26,12 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         "readiness_override.clear",
         "incident.intake",
         "incident.product_intake",
-        "incident.self_report.submitted"
+        "incident.self_report.submitted",
+        "incident.status_update",
+        "incident.note.create",
+        "incident.corrective_action.create",
+        "incident.corrective_action.status_update",
+        "incident.attachment.upload"
     ];
 
     public async Task<StaffArrEventFeedResponse> ListAsync(
@@ -88,8 +93,12 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             .Where(x => x.TenantId == tenantId && targetIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
+        var incidentsById = await db.PersonnelIncidents.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && targetIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
         var items = auditEvents
-            .Select(x => MapEvent(x, peopleById, orgUnitsById, roleAssignmentsById, overridesById))
+            .Select(x => MapEvent(x, peopleById, orgUnitsById, roleAssignmentsById, overridesById, incidentsById))
             .Where(x => x is not null)
             .Select(x => x!)
             .ToList();
@@ -108,14 +117,16 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         IReadOnlyDictionary<Guid, StaffPerson> peopleById,
         IReadOnlyDictionary<Guid, OrgUnit> orgUnitsById,
         IReadOnlyDictionary<Guid, PersonRoleAssignment> roleAssignmentsById,
-        IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById)
+        IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById,
+        IReadOnlyDictionary<Guid, PersonnelIncident> incidentsById)
     {
         var eventKind = ResolveEventKind(
             auditEvent,
             peopleById,
             orgUnitsById,
             roleAssignmentsById,
-            overridesById);
+            overridesById,
+            incidentsById);
 
         if (eventKind is null)
         {
@@ -141,7 +152,8 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         IReadOnlyDictionary<Guid, StaffPerson> peopleById,
         IReadOnlyDictionary<Guid, OrgUnit> orgUnitsById,
         IReadOnlyDictionary<Guid, PersonRoleAssignment> roleAssignmentsById,
-        IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById)
+        IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById,
+        IReadOnlyDictionary<Guid, PersonnelIncident> incidentsById)
     {
         return auditEvent.Action switch
         {
@@ -156,7 +168,12 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             "person_role_assignment.status_update" => ResolvePermissionAssignmentEventKind(auditEvent, roleAssignmentsById),
             "readiness_override.grant" => "override.created",
             "readiness_override.clear" => ResolveOverrideEventKind(auditEvent, overridesById),
+            "incident.status_update" => ResolveIncidentStatusEventKind(auditEvent, incidentsById),
             "incident.intake" or "incident.product_intake" or "incident.self_report.submitted" => "incident.created",
+            "incident.note.create" => "incident.note.created",
+            "incident.corrective_action.create" => "incident.corrective_action.created",
+            "incident.corrective_action.status_update" => ResolveCorrectiveActionEventKind(auditEvent),
+            "incident.attachment.upload" => "incident.attachment.uploaded",
             _ => null
         };
     }
@@ -216,6 +233,43 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         }
 
         return "override.revoked";
+    }
+
+    private static string ResolveIncidentStatusEventKind(
+        StaffArrAuditEvent auditEvent,
+        IReadOnlyDictionary<Guid, PersonnelIncident> incidentsById)
+    {
+        if (!TryGetTargetId(auditEvent, out var incidentId)
+            || !incidentsById.TryGetValue(incidentId, out var incident))
+        {
+            return "incident.status_updated";
+        }
+
+        var status = string.IsNullOrWhiteSpace(auditEvent.ReasonCode)
+            ? incident.Status
+            : auditEvent.ReasonCode!;
+
+        if (string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "incident.closed";
+        }
+
+        if (string.Equals(status, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            return "incident.reopened";
+        }
+
+        return "incident.status_updated";
+    }
+
+    private static string ResolveCorrectiveActionEventKind(StaffArrAuditEvent auditEvent)
+    {
+        if (string.Equals(auditEvent.ReasonCode, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "incident.corrective_action.completed";
+        }
+
+        return "incident.corrective_action.reopened";
     }
 
     private static bool TryGetTargetId(StaffArrAuditEvent auditEvent, out Guid targetId) =>

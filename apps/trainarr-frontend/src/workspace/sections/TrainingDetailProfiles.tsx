@@ -22,6 +22,8 @@ import {
   type DetailTone,
 } from '@stl/shared-ui'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
+import { ProgramContentReferencePanel } from '../../components/ProgramContentReferencePanel'
+import { removeTrainingProgramContentReference } from '../../api/client'
 
 function humanize(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
@@ -91,6 +93,11 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
   }
 
   const definitions = detail?.definitions ?? []
+  const contentReferences = detail?.contentReferences ?? []
+  const localizedContentReferences = contentReferences.filter((reference) => Boolean(reference.localeTag?.trim()))
+  const contentLocaleCount = new Set(
+    localizedContentReferences.map((reference) => reference.localeTag!.trim().toLowerCase()),
+  ).size
   const versions = s.programVersionsQuery?.data ?? []
   const matrixEntries = (s.trainingMatrixQuery?.data?.entries ?? []).filter(
     (entry) => entry.trainingProgramId === program.programId,
@@ -128,6 +135,45 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
         </div>
       )),
     },
+    {
+      title: 'Content references',
+      icon: <BookOpen className="h-5 w-5" />,
+      content: (
+        <ProgramContentReferencePanel
+          title="Program content references"
+          contentReferences={contentReferences}
+          contentTypeKey={s.contentReferenceTypeKey}
+          contentTitle={s.contentReferenceTitle}
+          contentReferenceValue={s.contentReferenceValue}
+          contentNotes={s.contentReferenceNotes}
+          contentLocaleTag={s.contentReferenceLocaleTag}
+          onContentTypeKeyChange={s.setContentReferenceTypeKey}
+          onContentTitleChange={s.setContentReferenceTitle}
+          onContentReferenceValueChange={s.setContentReferenceValue}
+          onContentNotesChange={s.setContentReferenceNotes}
+          onContentLocaleTagChange={s.setContentReferenceLocaleTag}
+          onAttach={() => s.attachProgramContentReferenceMutation.mutate()}
+          onRemove={async (contentReferenceId) => {
+            s.setRemovingProgramContentReferenceId(contentReferenceId)
+            try {
+              await removeTrainingProgramContentReference(
+                s.accessToken,
+                s.selectedProgramId!,
+                contentReferenceId,
+              )
+              await s.queryClient.invalidateQueries({
+                queryKey: ['trainarr-program-detail', s.session.accessToken, s.selectedProgramId],
+              })
+            } finally {
+              s.setRemovingProgramContentReferenceId(null)
+            }
+          }}
+          isAttaching={s.attachProgramContentReferenceMutation.isPending}
+          isRemovingId={s.removingProgramContentReferenceId}
+          canManage={s.canPrograms}
+        />
+      ),
+    },
   ]
 
   return (
@@ -160,6 +206,9 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
         { label: 'Description', value: 'description' in program ? program.description : 'Not loaded', source: 'Program profile' },
         { label: 'Status', value: humanize(program.status), source: 'Lifecycle state' },
         { label: 'Definitions', value: definitionCount, source: 'Program builder' },
+        { label: 'Content references', value: contentReferences.length, source: 'Program content references' },
+        { label: 'Localized references', value: localizedContentReferences.length, source: 'Program content references' },
+        { label: 'Locales represented', value: contentLocaleCount, source: 'Program content references' },
         { label: 'Published versions', value: publishedVersionCount, source: 'Version history' },
         { label: 'Matrix entries', value: matrixEntries.length, source: 'Training matrix' },
         { label: 'Requirements', value: requirements.length, source: 'Applicability builder' },

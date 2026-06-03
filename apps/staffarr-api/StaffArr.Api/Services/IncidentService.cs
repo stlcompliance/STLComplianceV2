@@ -10,9 +10,11 @@ namespace StaffArr.Api.Services;
 public sealed class IncidentService(
     StaffArrDbContext db,
     IncidentRoutingService routingService,
+    StaffArrDocumentStorageService storage,
     IStaffArrAuditService audit)
 {
     private static readonly Guid ProductIncidentServiceActorId = Guid.Parse("00000000-0000-0000-0000-0000000005fa");
+    private const long MaxIncidentAttachmentBytes = 10 * 1024 * 1024;
 
     private static readonly HashSet<string> AllowedSourceProducts = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -138,6 +140,18 @@ public sealed class IncidentService(
         "behavior_coaching",
         "remedial_training",
         "other"
+    };
+
+    private static readonly HashSet<string> AllowedIncidentNoteTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "note",
+        "corrective_action"
+    };
+
+    private static readonly HashSet<string> AllowedIncidentNoteStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "open",
+        "completed"
     };
 
     public async Task<PersonnelIncidentDetailResponse> CreateIncidentAsync(
@@ -437,6 +451,229 @@ public sealed class IncidentService(
         return MapDetail(entity, null);
     }
 
+    public async Task<PersonnelIncidentDetailResponse> UpdateIncidentStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid incidentId,
+        UpdatePersonnelIncidentStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.PersonnelIncidents
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new StlApiException("incidents.not_found", "Incident was not found.", 404);
+        }
+
+        var nextStatus = NormalizeStatus(request.Status, entity.Status);
+        if (string.Equals(entity.Status, nextStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
+        }
+
+        entity.Status = nextStatus;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "incident.status_update",
+            tenantId,
+            actorUserId,
+            "personnel_incident",
+            incidentId.ToString(),
+            "Succeeded",
+            nextStatus,
+            cancellationToken: cancellationToken);
+
+        return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
+    }
+
+    public async Task<PersonnelIncidentDetailResponse> CreateIncidentNoteAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid incidentId,
+        CreateIncidentNoteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var incident = await RequireIncidentAsync(tenantId, incidentId, cancellationToken);
+        var noteTypeKey = NormalizeIncidentNoteTypeKey(request.NoteTypeKey);
+        var subject = NormalizeTitle(request.Subject);
+        var body = NormalizeDescription(request.Body);
+        ValidateTimestampNotFuture(request.DueAt, "Corrective action due date", allowFuture: true);
+
+        var now = DateTimeOffset.UtcNow;
+        var note = new IncidentNote
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            IncidentId = incidentId,
+            NoteTypeKey = noteTypeKey,
+            Subject = subject,
+            Body = body,
+            Status = "open",
+            DueAt = request.DueAt,
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.IncidentNotes.Add(note);
+        incident.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            noteTypeKey == "corrective_action" ? "incident.corrective_action.create" : "incident.note.create",
+            tenantId,
+            actorUserId,
+            "personnel_incident",
+            incidentId.ToString(),
+            "Succeeded",
+            note.NoteTypeKey,
+            cancellationToken: cancellationToken);
+
+        return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
+    }
+
+    public async Task<PersonnelIncidentDetailResponse> UpdateIncidentNoteStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid incidentId,
+        Guid noteId,
+        UpdateIncidentNoteStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var incident = await RequireIncidentAsync(tenantId, incidentId, cancellationToken);
+        var note = await db.IncidentNotes
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IncidentId == incidentId && x.Id == noteId, cancellationToken);
+
+        if (note is null)
+        {
+            throw new StlApiException("incident_notes.not_found", "Incident note was not found.", 404);
+        }
+
+        if (!string.Equals(note.NoteTypeKey, "corrective_action", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "incident_notes.validation",
+                "Only corrective actions can be marked completed.",
+                400);
+        }
+
+        var nextStatus = NormalizeIncidentNoteStatus(request.Status);
+        note.Status = nextStatus;
+        note.CompletedAt = string.Equals(nextStatus, "completed", StringComparison.OrdinalIgnoreCase)
+            ? DateTimeOffset.UtcNow
+            : null;
+        note.UpdatedAt = DateTimeOffset.UtcNow;
+        incident.UpdatedAt = note.UpdatedAt;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "incident.corrective_action.status_update",
+            tenantId,
+            actorUserId,
+            "personnel_incident",
+            incidentId.ToString(),
+            "Succeeded",
+            nextStatus,
+            cancellationToken: cancellationToken);
+
+        return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
+    }
+
+    public async Task<PersonnelIncidentDetailResponse> CreateIncidentAttachmentAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid incidentId,
+        CreateIncidentAttachmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var incident = await RequireIncidentAsync(tenantId, incidentId, cancellationToken);
+        var title = NormalizeTitle(request.Title);
+        var fileName = NormalizeFileName(request.FileName);
+        var contentType = NormalizeContentType(request.ContentType);
+        var description = NormalizeOptional(request.Description, 1024, "Attachment description");
+        var contentBytes = DecodeBase64(request.ContentBase64);
+        if (contentBytes.Length == 0)
+        {
+            throw new StlApiException("incident_attachments.validation", "Attachment content is required.", 400);
+        }
+
+        if (contentBytes.Length > MaxIncidentAttachmentBytes)
+        {
+            throw new StlApiException(
+                "incident_attachments.validation",
+                $"Attachment file must be {MaxIncidentAttachmentBytes / (1024 * 1024)} MB or smaller.",
+                400);
+        }
+
+        var attachmentId = Guid.NewGuid();
+        await using var contentStream = new MemoryStream(contentBytes);
+        var storageKey = await storage.SaveAsync(
+            tenantId,
+            incident.PersonId,
+            attachmentId,
+            fileName,
+            contentStream,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var attachment = new IncidentAttachment
+        {
+            Id = attachmentId,
+            TenantId = tenantId,
+            IncidentId = incidentId,
+            Title = title,
+            FileName = fileName,
+            ContentType = contentType,
+            SizeBytes = contentBytes.Length,
+            StorageKey = storageKey,
+            Description = description,
+            UploadedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.IncidentAttachments.Add(attachment);
+        incident.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "incident.attachment.upload",
+            tenantId,
+            actorUserId,
+            "personnel_incident",
+            incidentId.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
+    }
+
+    public async Task<(IncidentAttachmentSummaryResponse Metadata, FileStream Stream)> OpenIncidentAttachmentContentAsync(
+        Guid tenantId,
+        Guid incidentId,
+        Guid attachmentId,
+        CancellationToken cancellationToken = default)
+    {
+        var attachment = await db.IncidentAttachments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.IncidentId == incidentId && x.Id == attachmentId,
+                cancellationToken);
+
+        if (attachment is null)
+        {
+            throw new StlApiException("incident_attachments.not_found", "Incident attachment was not found.", 404);
+        }
+
+        if (!storage.TryOpenReadStream(attachment.StorageKey, out var stream) || stream is null)
+        {
+            throw new StlApiException("incident_attachments.content_missing", "Attachment content is unavailable.", 404);
+        }
+
+        return (MapAttachmentSummary(attachment), stream);
+    }
+
     public async Task<IReadOnlyList<PersonnelIncidentSummaryResponse>> ListIncidentsAsync(
         Guid tenantId,
         Guid? personId,
@@ -482,7 +719,24 @@ public sealed class IncidentService(
         }
 
         var routing = await routingService.GetRoutingForIncidentAsync(tenantId, incidentId, cancellationToken);
-        return MapDetail(entity, routing);
+        var notes = await db.IncidentNotes
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.IncidentId == incidentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
+            .ToListAsync(cancellationToken);
+        var attachments = await db.IncidentAttachments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.IncidentId == incidentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        return MapDetail(
+            entity,
+            routing,
+            notes.Select(MapNoteSummary).ToList(),
+            attachments.Select(MapAttachmentSummary).ToList());
     }
 
     private static string NormalizeReasonCategoryKey(string reasonCategoryKey)
@@ -584,6 +838,68 @@ public sealed class IncidentService(
         return trimmed;
     }
 
+    private static string NormalizeIncidentNoteTypeKey(string noteTypeKey)
+    {
+        var normalized = noteTypeKey.Trim().ToLowerInvariant();
+        if (!AllowedIncidentNoteTypes.Contains(normalized))
+        {
+            throw new StlApiException(
+                "incident_notes.validation",
+                $"Note type must be one of: {string.Join(", ", AllowedIncidentNoteTypes.OrderBy(x => x))}.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeIncidentNoteStatus(string status)
+    {
+        var normalized = status.Trim().ToLowerInvariant();
+        if (!AllowedIncidentNoteStatuses.Contains(normalized))
+        {
+            throw new StlApiException(
+                "incident_notes.validation",
+                $"Status must be one of: {string.Join(", ", AllowedIncidentNoteStatuses.OrderBy(x => x))}.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeFileName(string fileName)
+    {
+        var trimmed = Path.GetFileName(fileName.Trim());
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new StlApiException("incident_attachments.validation", "File name is required.", 400);
+        }
+
+        return trimmed.Length > 255 ? trimmed[..255] : trimmed;
+    }
+
+    private static string NormalizeContentType(string contentType)
+    {
+        var trimmed = contentType.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return "application/octet-stream";
+        }
+
+        return trimmed.Length > 128 ? trimmed[..128] : trimmed;
+    }
+
+    private static byte[] DecodeBase64(string contentBase64)
+    {
+        try
+        {
+            return Convert.FromBase64String(contentBase64);
+        }
+        catch (FormatException)
+        {
+            throw new StlApiException("incident_attachments.validation", "Attachment content must be valid base64.", 400);
+        }
+    }
+
     private static string NormalizeDescription(string description)
     {
         var trimmed = description.Trim();
@@ -649,6 +965,22 @@ public sealed class IncidentService(
                 $"{displayName} was not found.",
                 404);
         }
+    }
+
+    private async Task<PersonnelIncident> RequireIncidentAsync(
+        Guid tenantId,
+        Guid incidentId,
+        CancellationToken cancellationToken)
+    {
+        var incident = await db.PersonnelIncidents
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken);
+
+        if (incident is null)
+        {
+            throw new StlApiException("incidents.not_found", "Incident was not found.", 404);
+        }
+
+        return incident;
     }
 
     private async Task RequirePeopleExistAsync(
@@ -800,7 +1132,9 @@ public sealed class IncidentService(
 
     private static PersonnelIncidentDetailResponse MapDetail(
         PersonnelIncident entity,
-        IncidentTrainarrRoutingResponse? routing) =>
+        IncidentTrainarrRoutingResponse? routing,
+        IReadOnlyList<IncidentNoteSummaryResponse>? notes = null,
+        IReadOnlyList<IncidentAttachmentSummaryResponse>? attachments = null) =>
         new(
             entity.Id,
             entity.PersonId,
@@ -854,7 +1188,36 @@ public sealed class IncidentService(
             entity.SourceIncidentId,
             entity.SourceEventKind,
             entity.SourceReferenceKey,
-            BuildSourceSnapshot(entity));
+            BuildSourceSnapshot(entity),
+            notes,
+            attachments);
+
+    private static IncidentNoteSummaryResponse MapNoteSummary(IncidentNote entity) =>
+        new(
+            entity.Id,
+            entity.IncidentId,
+            entity.NoteTypeKey,
+            entity.Subject,
+            entity.Body,
+            entity.Status,
+            entity.DueAt,
+            entity.CompletedAt,
+            entity.CreatedByUserId,
+            entity.CreatedAt,
+            entity.UpdatedAt);
+
+    private static IncidentAttachmentSummaryResponse MapAttachmentSummary(IncidentAttachment entity) =>
+        new(
+            entity.Id,
+            entity.IncidentId,
+            entity.Title,
+            entity.FileName,
+            entity.ContentType,
+            entity.SizeBytes,
+            entity.Description,
+            entity.UploadedByUserId,
+            entity.CreatedAt,
+            entity.UpdatedAt);
 
     private static ProductSourceReferenceSnapshotResponse? BuildSourceSnapshot(PersonnelIncident entity)
     {

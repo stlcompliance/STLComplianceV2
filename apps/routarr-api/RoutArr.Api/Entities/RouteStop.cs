@@ -26,6 +26,22 @@ public sealed class RouteStop : IHasTenant
 
     public int SequenceNumber { get; set; }
 
+    public decimal? GeofenceAnchorLatitude { get; set; }
+
+    public decimal? GeofenceAnchorLongitude { get; set; }
+
+    public int? GeofenceRadiusMeters { get; set; }
+
+    public DateTimeOffset? LastGeofenceCheckAt { get; set; }
+
+    public string? LastGeofenceResult { get; set; }
+
+    public decimal? LastGeofenceDistanceMeters { get; set; }
+
+    public decimal? LastGeofenceReportedLatitude { get; set; }
+
+    public decimal? LastGeofenceReportedLongitude { get; set; }
+
     public DateTimeOffset? ScheduledArrivalAt { get; set; }
 
     public DateTimeOffset? ArrivedAt { get; set; }

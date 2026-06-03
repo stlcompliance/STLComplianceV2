@@ -2,6 +2,40 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { canManageOrgHierarchy, OrgHierarchyManager } from './OrgHierarchyManager'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      value,
+      onChange,
+      options,
+      testId,
+      placeholder,
+    }: {
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      testId?: string
+      placeholder?: string
+    }) => (
+      <label>
+        {placeholder}
+        <input
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 const sampleOrgUnits = [
   {
     orgUnitId: '11111111-1111-1111-1111-111111111111',
@@ -68,6 +102,52 @@ describe('OrgHierarchyManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }))
 
     expect(onStatusChange).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', 'inactive')
+  })
+
+  it('uses searchable parent pickers for create and edit flows', async () => {
+    const onCreate = vi.fn(async () => {})
+    const onUpdate = vi.fn(async () => {})
+
+    render(
+      <OrgHierarchyManager
+        orgUnits={sampleOrgUnits}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onStatusChange={vi.fn(async () => {})}
+      />,
+    )
+
+    fireEvent.change(screen.getAllByLabelText(/Org unit name/i)[0], {
+      target: { value: 'Safety' },
+    })
+    fireEvent.change(screen.getByTestId('create-org-unit-parent'), {
+      target: { value: '11111111-1111-1111-1111-111111111111' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(onCreate).toHaveBeenCalledWith({
+      unitType: 'department',
+      name: 'Safety',
+      parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Field Team' }))
+    fireEvent.change(screen.getAllByLabelText(/Org unit name/i)[1], {
+      target: { value: 'Field Ops' },
+    })
+    fireEvent.change(screen.getByTestId('edit-org-unit-parent'), {
+      target: { value: '11111111-1111-1111-1111-111111111111' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    expect(onUpdate).toHaveBeenCalledWith('22222222-2222-2222-2222-222222222222', {
+      unitType: 'team',
+      name: 'Field Ops',
+      parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
+    })
   })
 
   it('renders backend errors in shared callout', () => {

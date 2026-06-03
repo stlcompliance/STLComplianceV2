@@ -61,6 +61,10 @@ using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
 using OrgUnit = StaffArr.Api.Entities.OrgUnit;
+using PersonRoleAssignment = StaffArr.Api.Entities.PersonRoleAssignment;
+using PermissionTemplate = StaffArr.Api.Entities.PermissionTemplate;
+using RoleTemplate = StaffArr.Api.Entities.RoleTemplate;
+using RoleTemplatePermission = StaffArr.Api.Entities.RoleTemplatePermission;
 using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -952,6 +956,162 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             x => x.EventType == "assignment_status_updated"
                 && x.AssignmentId == assignment.AssignmentId
                 && x.AssignmentStatus == "inactive");
+    }
+
+    [Fact]
+    public async Task Sensitive_role_assignments_start_pending_review_and_require_approval()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Sensitive Role User", "sensitive.role@example.com");
+
+        var permissionTemplateId = Guid.NewGuid();
+        var roleTemplateId = Guid.NewGuid();
+        await using (var scope = _staffarrFactory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            db.PermissionTemplates.Add(new PermissionTemplate
+            {
+                Id = permissionTemplateId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                PermissionKey = "staffarr.people.manage_sensitive",
+                Name = "Sensitive People Manage",
+                Description = "Sensitive permission requiring review.",
+                Status = "active",
+                ProductKey = "staffarr",
+                PermissionScope = "tenant",
+                Sensitivity = "sensitive",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                LastSyncedAt = DateTimeOffset.UtcNow,
+            });
+            db.RoleTemplates.Add(new RoleTemplate
+            {
+                Id = roleTemplateId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                RoleKey = "staffarr.high.risk",
+                Name = "High Risk StaffArr Role",
+                Description = "Role with sensitive permission.",
+                Status = "active",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+            });
+            db.RoleTemplatePermissions.Add(new RoleTemplatePermission
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                RoleTemplateId = roleTemplateId,
+                PermissionTemplateId = permissionTemplateId,
+                ScopeType = "tenant",
+                ScopeValue = null,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
+            roleTemplateId,
+            "tenant",
+            null));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        assignmentResponse.EnsureSuccessStatusCode();
+        var assignment = (await assignmentResponse.Content.ReadFromJsonAsync<PersonRoleAssignmentResponse>())!;
+        Assert.Equal("pending_review", assignment.Status);
+        Assert.Equal("pending_review", assignment.EffectiveStatus);
+
+        var projectionBeforeApprovalResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/effective", token));
+        projectionBeforeApprovalResponse.EnsureSuccessStatusCode();
+        var projectionBeforeApproval =
+            (await projectionBeforeApprovalResponse.Content.ReadFromJsonAsync<EffectivePermissionProjectionResponse>())!;
+        Assert.DoesNotContain(
+            projectionBeforeApproval.Permissions,
+            p => p.PermissionKey == "staffarr.people.manage_sensitive");
+
+        var approveRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/people/{personId}/role-assignments/{assignment.AssignmentId}/status",
+            token);
+        approveRequest.Content = JsonContent.Create(new UpdatePersonRoleAssignmentStatusRequest("active"));
+        var approveResponse = await _staffarrClient.SendAsync(approveRequest);
+        approveResponse.EnsureSuccessStatusCode();
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<PersonRoleAssignmentResponse>())!;
+        Assert.Equal("active", approved.Status);
+        Assert.Equal("active", approved.EffectiveStatus);
+
+        var projectionAfterApprovalResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/effective", token));
+        projectionAfterApprovalResponse.EnsureSuccessStatusCode();
+        var projectionAfterApproval =
+            (await projectionAfterApprovalResponse.Content.ReadFromJsonAsync<EffectivePermissionProjectionResponse>())!;
+        Assert.Contains(
+            projectionAfterApproval.Permissions,
+            p => p.PermissionKey == "staffarr.people.manage_sensitive");
+    }
+
+    [Fact]
+    public async Task Expired_role_assignments_are_hidden_from_projection_but_reported_as_expired()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Expired Assignment User", "expired.assignment@example.com");
+
+        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", token);
+        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.people.read",
+            "People Read",
+            "Read access."));
+        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
+        permissionResponse.EnsureSuccessStatusCode();
+        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
+
+        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", token);
+        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
+            "staffarr.viewer",
+            "StaffArr Viewer",
+            "Viewer role.",
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
+
+        var expiredAt = DateTimeOffset.UtcNow.AddHours(-2);
+        await using (var scope = _staffarrFactory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            db.PersonRoleAssignments.Add(new PersonRoleAssignment
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                PersonId = personId,
+                RoleTemplateId = roleTemplate.RoleTemplateId,
+                ScopeType = "tenant",
+                ScopeValue = null,
+                Status = "active",
+                ExpiresAt = expiredAt,
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                UpdatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var projectionResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/effective", token));
+        projectionResponse.EnsureSuccessStatusCode();
+        var projection = (await projectionResponse.Content.ReadFromJsonAsync<EffectivePermissionProjectionResponse>())!;
+        Assert.DoesNotContain(projection.Permissions, p => p.PermissionKey == "staffarr.people.read");
+
+        var assignmentsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/role-assignments", token));
+        assignmentsResponse.EnsureSuccessStatusCode();
+        var assignments = (await assignmentsResponse.Content.ReadFromJsonAsync<IReadOnlyList<PersonRoleAssignmentResponse>>())!;
+        var expiredAssignment = Assert.Single(assignments);
+        Assert.Equal("expired", expiredAssignment.EffectiveStatus);
+        Assert.True(
+            Math.Abs((expiredAssignment.ExpiresAt!.Value - expiredAt).TotalSeconds) < 1,
+            $"Expected expiry close to {expiredAt:O} but found {expiredAssignment.ExpiresAt:O}.");
     }
 
     [Fact]

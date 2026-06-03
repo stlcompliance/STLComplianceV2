@@ -109,6 +109,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<ActiveTripsService>();
         builder.Services.AddScoped<UnassignedWorkQueueService>();
         builder.Services.AddScoped<DriverPortalService>();
+        builder.Services.AddScoped<DriverTimeTrackingService>();
         builder.Services.AddScoped<DispatchReportService>();
         builder.Services.AddScoped<DispatchOverrideReportService>();
         builder.Services.AddScoped<RouteReportService>();

@@ -42,6 +42,20 @@ public static class TrainingProgramEndpoints
         })
         .WithName($"CreateTrainingProgram{nameSuffix}");
 
+        programs.MapPost("/draft", async (
+            GenerateTrainingProgramDraftRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingProgramDraftService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingProgramsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.GenerateAsync(tenantId, actorUserId, request, cancellationToken));
+        })
+        .WithName($"GenerateTrainingProgramDraft{nameSuffix}");
+
         programs.MapGet("/{programId:guid}", async (
             Guid programId,
             HttpContext context,
@@ -70,5 +84,50 @@ public static class TrainingProgramEndpoints
             return Results.Ok(updated);
         })
         .WithName($"UpdateTrainingProgram{nameSuffix}");
+
+        programs.MapGet("/{programId:guid}/content-references", async (
+            Guid programId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingProgramContentReferenceService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingProgramsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, programId, cancellationToken));
+        })
+        .WithName($"ListTrainingProgramContentReferences{nameSuffix}");
+
+        programs.MapPost("/{programId:guid}/content-references", async (
+            Guid programId,
+            CreateTrainingProgramContentReferenceRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingProgramContentReferenceService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingProgramsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.AttachAsync(tenantId, actorUserId, programId, request, cancellationToken);
+            return Results.Created($"/api/training-programs/{programId}/content-references/{created.ContentReferenceId}", created);
+        })
+        .WithName($"AttachTrainingProgramContentReference{nameSuffix}");
+
+        programs.MapDelete("/{programId:guid}/content-references/{contentReferenceId:guid}", async (
+            Guid programId,
+            Guid contentReferenceId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingProgramContentReferenceService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingProgramsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            await service.RemoveAsync(tenantId, actorUserId, programId, contentReferenceId, cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName($"RemoveTrainingProgramContentReference{nameSuffix}");
     }
 }

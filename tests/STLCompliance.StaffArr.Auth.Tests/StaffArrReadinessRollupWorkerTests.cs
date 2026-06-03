@@ -183,6 +183,8 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Equal(1, teamRollup.TotalMembers);
         Assert.Equal(1, teamRollup.ReadyCount);
         Assert.Equal(0, teamRollup.NotReadyCount);
+        Assert.Equal("high", teamRollup.ConfidenceLevel);
+        Assert.Equal(100, teamRollup.ConfidenceScore);
 
         var membersRequest = Authorized(
             HttpMethod.Get,
@@ -215,6 +217,8 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         var v1TeamRollup = (await v1TeamRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
         Assert.Equal(teamRollup.TotalMembers, v1TeamRollup.TotalMembers);
         Assert.Equal(teamRollup.ReadyCount, v1TeamRollup.ReadyCount);
+        Assert.Equal(teamRollup.ConfidenceLevel, v1TeamRollup.ConfidenceLevel);
+        Assert.Equal(teamRollup.ConfidenceScore, v1TeamRollup.ConfidenceScore);
 
         var v1MembersResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
@@ -234,6 +238,8 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
             (await departmentRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
         Assert.Equal(1, departmentRollup.TotalMembers);
         Assert.Equal(1, departmentRollup.ReadyCount);
+        Assert.Equal("high", departmentRollup.ConfidenceLevel);
+        Assert.Equal(100, departmentRollup.ConfidenceScore);
 
         var departmentMembersResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
@@ -254,6 +260,8 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
             (await v1DepartmentRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
         Assert.Equal(departmentRollup.TotalMembers, v1DepartmentRollup.TotalMembers);
         Assert.Equal(departmentRollup.ReadyCount, v1DepartmentRollup.ReadyCount);
+        Assert.Equal(departmentRollup.ConfidenceLevel, v1DepartmentRollup.ConfidenceLevel);
+        Assert.Equal(departmentRollup.ConfidenceScore, v1DepartmentRollup.ConfidenceScore);
 
         var v1DepartmentMembersResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
@@ -328,6 +336,7 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         teamsResponse.EnsureSuccessStatusCode();
         var teams = (await teamsResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
         Assert.Contains(teams, x => x.ScopeType == ReadinessRollupRules.TeamScope && x.OrgUnitId == teamId);
+        Assert.Contains(teams, x => x.ScopeType == ReadinessRollupRules.TeamScope && x.ConfidenceLevel == "high");
 
         var sitesResponse = await _staffarrClient.SendAsync(ServiceAuthorized(
             HttpMethod.Get,
@@ -347,6 +356,9 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Contains(
             departments,
             x => x.ScopeType == ReadinessRollupRules.DepartmentScope && x.OrgUnitId == departmentId);
+        Assert.Contains(
+            departments,
+            x => x.ScopeType == ReadinessRollupRules.DepartmentScope && x.ConfidenceScore == 100);
     }
 
     private async Task<(Guid TeamId, Guid DepartmentId, Guid ReadyPersonId)> SeedOrgHierarchyWithAssignmentAsync()

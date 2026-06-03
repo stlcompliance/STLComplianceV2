@@ -3,6 +3,42 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DispatchExceptionQueuePanel } from './DispatchExceptionQueuePanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 vi.mock('../api/client', () => ({
   listDispatchExceptions: vi.fn(),
   listDispatchExceptionResolutionTemplates: vi.fn(),
@@ -76,7 +112,8 @@ describe('DispatchExceptionQueuePanel', () => {
     expect(screen.getByTestId('exception-row-ex-1')).toBeTruthy()
     expect(screen.getByTestId('exception-sla-breached-ex-1')).toBeTruthy()
     expect(screen.getByTestId('exception-bulk-actions')).toBeTruthy()
-    expect(screen.getByTestId('exception-resolution-template')).toBeTruthy()
+    expect(screen.getByTestId('exception-resolution-template-picker')).toBeTruthy()
+    expect(screen.getByText('Reassign driver')).toBeTruthy()
   })
 
   it('shows retry callout when queue fails', async () => {

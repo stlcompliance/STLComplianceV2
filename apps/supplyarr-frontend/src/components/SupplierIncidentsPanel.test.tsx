@@ -1,8 +1,47 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SupplierIncidentsPanel } from './SupplierIncidentsPanel'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
 
 vi.mock('../api/client', () => ({
   listSupplierIncidents: vi.fn().mockResolvedValue([]),
@@ -86,6 +125,10 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('SupplierIncidentsPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders cancel and reopen workflow controls', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -123,5 +166,61 @@ describe('SupplierIncidentsPanel', () => {
     expect(await screen.findByTestId('supplier-incident-cancel-inc-open')).toBeInTheDocument()
     expect(await screen.findByTestId('supplier-incident-reopen-inc-cancelled')).toBeInTheDocument()
     expect(screen.getByTestId('supplier-incident-status-inc-cancelled')).toHaveTextContent('cancelled')
+  })
+
+  it('uses a searchable party picker for incident creation', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SupplierIncidentsPanel
+          accessToken="token"
+          canManage
+          incidentParties={[
+            {
+              partyId: 'party-1',
+              partyKey: 'V-1',
+              displayName: 'Acme Supply',
+              partyType: 'vendor',
+              status: 'active',
+              approvalStatus: 'approved',
+              legalName: 'Acme Supply LLC',
+              taxIdentifier: null,
+              notes: '',
+              contacts: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+            {
+              partyId: 'party-2',
+              partyKey: 'S-1',
+              displayName: 'Bravo Logistics',
+              partyType: 'supplier',
+              status: 'active',
+              approvalStatus: 'approved',
+              legalName: 'Bravo Logistics Inc',
+              taxIdentifier: null,
+              notes: '',
+              contacts: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+          ]}
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('supplier-incidents-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
+      'vendor · V-1 · Acme Supply',
+    )
+    expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
+      'supplier · S-1 · Bravo Logistics',
+    )
+
+    fireEvent.change(screen.getByTestId('supplier-incident-party-picker'), {
+      target: { value: 'party-2' },
+    })
+
+    expect(screen.getByLabelText(/Incident title/i)).toBeInTheDocument()
   })
 })

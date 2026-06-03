@@ -1,8 +1,23 @@
 namespace NexArr.Api.Contracts;
 
-public sealed record CreateTenantRequest(string Slug, string DisplayName);
+public sealed record CreateTenantRequest(
+    string Slug,
+    string DisplayName,
+    string SubscriptionTier = "standard",
+    string? BillingCustomerId = null,
+    string? BillingSubscriptionId = null,
+    int? BillingGraceDays = null,
+    bool IsTrial = false,
+    bool IsInternalTenant = false);
 
-public sealed record UpdateTenantRequest(string DisplayName);
+public sealed record UpdateTenantRequest(
+    string DisplayName,
+    string SubscriptionTier,
+    string? BillingCustomerId,
+    string? BillingSubscriptionId,
+    int? BillingGraceDays,
+    bool IsTrial,
+    bool IsInternalTenant);
 
 public sealed record UpdateTenantStatusRequest(string Status);
 
@@ -11,6 +26,12 @@ public sealed record TenantDetailResponse(
     string Slug,
     string DisplayName,
     string Status,
+    string SubscriptionTier,
+    string? BillingCustomerId,
+    string? BillingSubscriptionId,
+    int? BillingGraceDays,
+    bool IsTrial,
+    bool IsInternalTenant,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt);
 

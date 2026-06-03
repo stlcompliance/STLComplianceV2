@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import * as nexarr from '../../api/nexarrClient'
 import type {
@@ -12,6 +12,7 @@ import type {
   PlatformUserIdentityAuditHistoryItemResponse,
   PlatformUserExternalIdentityProviderMappingItemResponse,
   PlatformUserListItemResponse,
+  PlatformUserMfaResponse,
   PlatformUserRoleItemResponse,
   PlatformUserSessionItemResponse,
   PlatformUserTenantMembershipItemResponse,
@@ -60,6 +61,7 @@ export function PlatformUsersPage() {
   const [roleTenantId, setRoleTenantId] = useState('')
   const [pendingMembershipRemoval, setPendingMembershipRemoval] = useState<PlatformUserTenantMembershipItemResponse | null>(null)
   const [pendingRoleRemoval, setPendingRoleRemoval] = useState<PlatformUserRoleItemResponse | null>(null)
+  const [mfaSetupResult, setMfaSetupResult] = useState<PlatformUserMfaResponse | null>(null)
   const [createMode, setCreateMode] = useState<'create' | 'invite'>('invite')
   const [createEmail, setCreateEmail] = useState('')
   const [createDisplayName, setCreateDisplayName] = useState('')
@@ -207,8 +209,13 @@ export function PlatformUsersPage() {
   const mfaMutation = useMutation({
     mutationFn: (isEnabled: boolean) => nexarr.setPlatformUserMfa(selectedUserIdResolved, isEnabled),
     onSuccess: async (result) => {
+      setMfaSetupResult(result.isMfaEnabled && result.mfaSecret ? result : null)
       pushToast({
-        message: result.wasAlreadySet ? 'MFA state unchanged.' : 'MFA setting updated.',
+        message: result.wasAlreadySet
+          ? 'MFA state unchanged.'
+          : result.recoveryCodes?.length
+            ? 'MFA setting updated. Recovery codes generated.'
+            : 'MFA setting updated.',
         variant: 'success',
       })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
@@ -347,6 +354,7 @@ export function PlatformUsersPage() {
     setMembershipRoleKey('tenant_user')
     setRoleKey('platform_support')
     setRoleTenantId('')
+    setMfaSetupResult(null)
     setExternalProviderKey('')
     setExternalSubject('')
     setExternalEmail('')
@@ -366,6 +374,15 @@ export function PlatformUsersPage() {
   const memberships = userTenantMembershipsQuery.data?.items ?? []
   const roles = userRolesQuery.data?.items ?? []
   const externalMappings = userExternalIdentityMappingsQuery.data?.items ?? []
+  const tenantPickerOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.displayName} (${tenant.slug})`,
+        inactive: tenant.status !== 'active',
+      })),
+    [tenants],
+  )
 
   const totalPages = useMemo(() => {
     const totalCount = usersQuery.data?.totalCount ?? 0
@@ -819,6 +836,43 @@ export function PlatformUsersPage() {
                     {selectedUser.isMfaEnabled ? 'Disable MFA' : 'Enable MFA'}
                   </button>
                 </div>
+                {mfaSetupResult?.mfaSecret ? (
+                  <div className="mt-4 space-y-4 rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Secret</p>
+                        <p className="mt-2 break-all font-mono text-sm text-slate-100">
+                          {mfaSetupResult.mfaSecret}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Provisioning URI</p>
+                        <p className="mt-2 break-all font-mono text-xs text-slate-100">
+                          {mfaSetupResult.provisioningUri ?? '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Recovery codes</p>
+                      {mfaSetupResult.recoveryCodes?.length ? (
+                        <ul className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                          {mfaSetupResult.recoveryCodes.map((code) => (
+                            <li
+                              key={code}
+                              className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-100"
+                            >
+                              {code}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-400">
+                          Recovery codes are only returned when MFA is freshly enabled.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
@@ -903,21 +957,15 @@ export function PlatformUsersPage() {
                     </p>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-                    <label className="block text-sm text-slate-300">
-                      Tenant
-                      <select
-                        value={membershipTenantId}
-                        onChange={(event) => setMembershipTenantId(event.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                      >
-                        <option value="">Select tenant</option>
-                        {tenants.map((tenant) => (
-                          <option key={tenant.tenantId} value={tenant.tenantId}>
-                            {tenant.displayName} ({tenant.slug})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <StaticSearchPicker
+                      label="Tenant"
+                      id="platform-user-membership-tenant"
+                      value={membershipTenantId}
+                      onChange={setMembershipTenantId}
+                      options={tenantPickerOptions}
+                      placeholder="Search tenants"
+                      testId="platform-user-membership-tenant-picker"
+                    />
                     <label className="block text-sm text-slate-300">
                       Tenant role
                       <select
@@ -1014,21 +1062,15 @@ export function PlatformUsersPage() {
                         <option value="read_only_auditor">read_only_auditor</option>
                       </select>
                     </label>
-                    <label className="block text-sm text-slate-300">
-                      Tenant scope
-                      <select
-                        value={roleTenantId}
-                        onChange={(event) => setRoleTenantId(event.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                      >
-                        <option value="">Global role</option>
-                        {tenants.map((tenant) => (
-                          <option key={tenant.tenantId} value={tenant.tenantId}>
-                            {tenant.displayName} ({tenant.slug})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <StaticSearchPicker
+                      label="Tenant scope"
+                      id="platform-user-role-tenant"
+                      value={roleTenantId}
+                      onChange={setRoleTenantId}
+                      options={tenantPickerOptions}
+                      placeholder="Search tenants"
+                      testId="platform-user-role-tenant-picker"
+                    />
                     <div className="flex items-end">
                       <button
                         type="button"

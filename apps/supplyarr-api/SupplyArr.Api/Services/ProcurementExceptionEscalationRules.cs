@@ -89,4 +89,6 @@ public sealed record TenantProcurementExceptionEscalationSettingsSnapshot(
     bool IsEnabled,
     int EscalationCooldownHours,
     int MaxEscalationsPerException,
-    bool NotifyOnProcurementExceptionSlaEscalation);
+    bool NotifyOnProcurementExceptionSlaEscalation,
+    bool AutoCloseCompletedExceptionsEnabled,
+    int AutoCloseCompletedExceptionsAfterHours);

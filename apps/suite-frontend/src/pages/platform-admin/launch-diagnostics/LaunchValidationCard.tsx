@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import type { LaunchDiagnosticRow } from '../../../api/types'
 import * as nexarr from '../../../api/nexarrClient'
 
@@ -19,6 +19,22 @@ export function LaunchValidationCard({ rows }: Props) {
     () => [...new Map(rows.map((row) => [row.productKey, row])).values()],
     [rows],
   )
+  const tenantOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.tenantDisplayName} (${tenant.tenantSlug})`,
+      })),
+    [tenants],
+  )
+  const productOptions = useMemo<PickerOption[]>(
+    () =>
+      products.map((product) => ({
+        value: product.productKey,
+        label: product.productDisplayName,
+      })),
+    [products],
+  )
   const validateLaunchMutation = useMutation({
     mutationFn: nexarr.validatePlatformLaunch,
   })
@@ -30,36 +46,24 @@ export function LaunchValidationCard({ rows }: Props) {
         Check whether a tenant can launch a product right now and see the denial reason code.
       </p>
       <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <label className="text-xs font-medium text-slate-600">
-          Tenant
-          <select
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-            value={selectedTenantId}
-            onChange={(event) => setSelectedTenantId(event.target.value)}
-          >
-            <option value="">Select tenant…</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.tenantId} value={tenant.tenantId}>
-                {tenant.tenantDisplayName} ({tenant.tenantSlug})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs font-medium text-slate-600">
-          Product
-          <select
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-            value={selectedProductKey}
-            onChange={(event) => setSelectedProductKey(event.target.value)}
-          >
-            <option value="">Select product…</option>
-            {products.map((product) => (
-              <option key={product.productKey} value={product.productKey}>
-                {product.productDisplayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          label="Tenant"
+          id="launch-validation-tenant"
+          value={selectedTenantId}
+          onChange={setSelectedTenantId}
+          options={tenantOptions}
+          placeholder="Search tenants"
+          testId="launch-validation-tenant"
+        />
+        <StaticSearchPicker
+          label="Product"
+          id="launch-validation-product"
+          value={selectedProductKey}
+          onChange={setSelectedProductKey}
+          options={productOptions}
+          placeholder="Search products"
+          testId="launch-validation-product"
+        />
         <div className="flex items-end">
           <button
             type="button"

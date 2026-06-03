@@ -11,6 +11,12 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
 {
     private const int DetailListLimit = 50;
 
+    private static readonly HashSet<string> BlockedApprovalStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "restricted",
+        "inactive",
+    };
+
     private static readonly HashSet<string> OpenPurchaseRequestStatuses =
     [
         PurchaseRequestStatuses.Draft,
@@ -23,6 +29,8 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         Guid? vendorPartyId,
         CancellationToken cancellationToken = default)
     {
+        var now = DateTimeOffset.UtcNow;
+
         var purchaseRequests = await db.PurchaseRequests
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
@@ -72,6 +80,104 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var blockedVendorCount = await db.ExternalParties
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                && x.Status == "active")
+            .ToListAsync(cancellationToken);
+
+        var procurementExceptionCount = await db.ProcurementExceptions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var receivingExceptionCount = await db.ReceivingExceptions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var warrantyClaimCount = await db.WarrantyClaims
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var vendorDocumentExpiringSoonCount = await db.PartyComplianceDocuments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var partVendorLinks = await db.PartVendorLinks
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .Select(x => new
+            {
+                x.Id,
+                x.ExternalPartyId,
+                x.PartId,
+                x.CatalogUnitPrice,
+                x.CatalogLeadTimeDays,
+            })
+            .ToListAsync(cancellationToken);
+
+        var currentLeadTimeByLinkId = await db.PartVendorLeadTimeSnapshots
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.EffectiveFrom <= now
+                && (x.EffectiveTo == null || x.EffectiveTo > now))
+            .OrderByDescending(x => x.EffectiveFrom)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => new
+            {
+                x.PartVendorLinkId,
+                x.LeadTimeDays,
+            })
+            .ToListAsync(cancellationToken);
+
+        var currentLeadTimeByLinkIdLookup = currentLeadTimeByLinkId
+            .GroupBy(x => x.PartVendorLinkId)
+            .ToDictionary(g => g.Key, g => g.First().LeadTimeDays);
+
+        var leadTimeSamples = partVendorLinks
+            .Select(link =>
+            {
+                if (currentLeadTimeByLinkIdLookup.TryGetValue(link.Id, out var leadTimeDays))
+                {
+                    return leadTimeDays > 0 ? (int?)leadTimeDays : null;
+                }
+
+                return link.CatalogLeadTimeDays is > 0 ? link.CatalogLeadTimeDays : null;
+            })
+            .Where(x => x.HasValue)
+            .Select(x => x!.Value)
+            .ToList();
+
+        var averageLeadTimeDays = leadTimeSamples.Count > 0
+            ? (int?)Math.Round(leadTimeSamples.Average())
+            : null;
+
+        var partVendorLookup = partVendorLinks.ToDictionary(
+            x => (x.ExternalPartyId, x.PartId),
+            x => x);
+
+        var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        var monthEnd = monthStart.AddMonths(1);
+        var estimatedSpendThisMonth = purchaseOrders
+            .Where(x => x.IssuedAt is DateTimeOffset issuedAt && issuedAt >= monthStart && issuedAt < monthEnd)
+            .SelectMany(x => x.Lines.Select(line => new { PurchaseOrder = x, Line = line }))
+            .Sum(item =>
+            {
+                if (!partVendorLookup.TryGetValue((item.PurchaseOrder.VendorPartyId, item.Line.PartId), out var link)
+                    || link.CatalogUnitPrice is not decimal unitPrice
+                    || unitPrice <= 0)
+                {
+                    return 0m;
+                }
+
+                return unitPrice * item.Line.QuantityOrdered;
+            });
 
         string VendorName(Guid? id) =>
             id is not null && vendors.TryGetValue(id.Value, out var party)
@@ -159,6 +265,21 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 .Sum(x => x.QuantityOrdered),
             purchaseOrders.SelectMany(x => x.Lines).Sum(x => x.QuantityReceived));
 
+        var analytics = new PurchasingProcurementAnalyticsResponse(
+            purchaseRequests.Count(x => string.Equals(x.Status, PurchaseRequestStatuses.Submitted, StringComparison.OrdinalIgnoreCase)),
+            purchaseRequests.Count(x => x.IsEmergency),
+            procurementExceptionCount.Count(x => ProcurementExceptionStatuses.Active.Contains(x.Status)),
+            receivingExceptionCount.Count(x => string.Equals(x.Status, ReceivingExceptionStatuses.Open, StringComparison.OrdinalIgnoreCase)),
+            warrantyClaimCount.Count(x => WarrantyClaimStatuses.Open.Contains(x.Status)),
+            vendorDocumentExpiringSoonCount.Count(x =>
+                x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= now.AddDays(30)),
+            blockedVendorCount.Count(x => BlockedApprovalStatuses.Contains(x.ApprovalStatus)),
+            averageLeadTimeDays,
+            estimatedSpendThisMonth);
+
         var prStatusCounts = purchaseRequests
             .GroupBy(x => x.Status)
             .Select(g => new PurchasingStatusCountResponse(g.Key, g.Count()))
@@ -174,6 +295,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         return new PurchasingReportSummaryResponse(
             DateTimeOffset.UtcNow,
             totals,
+            analytics,
             prStatusCounts,
             poStatusCounts,
             documents);

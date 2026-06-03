@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { ApiErrorCallout, ControlledSelect, getErrorMessage } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import type { PartResponse, SubstitutionItemResponse } from '../api/types'
 import { getSubstitutions } from '../api/client'
@@ -20,6 +21,25 @@ export function PartSubstitutionsPanel({
   selectedPartId,
   onSelectedPartIdChange,
 }: PartSubstitutionsPanelProps) {
+  const partOptions = useMemo<PickerOption[]>(() => toPartPickerOptions(parts), [parts])
+  const selectedPart = useMemo(
+    () => parts.find((part) => part.partId === selectedPartId) ?? null,
+    [parts, selectedPartId],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () =>
+      partOptions.find((option) => option.value === selectedPartId) ??
+      (selectedPart
+        ? {
+            value: selectedPartId,
+            label:
+              selectedPart.partKey && selectedPart.displayName
+                ? `${selectedPart.partKey} — ${selectedPart.displayName}`
+                : selectedPartId,
+          }
+        : undefined),
+    [partOptions, selectedPart, selectedPartId],
+  )
   const substitutionsQuery = useQuery({
     queryKey: ['supplyarr-substitutions', accessToken, selectedPartId],
     queryFn: () => getSubstitutions(accessToken, selectedPartId || undefined),
@@ -47,13 +67,15 @@ export function PartSubstitutionsPanel({
       </div>
 
       <div className="mt-4 max-w-md">
-        <ControlledSelect
+        <StaticSearchPicker
           id="part-substitutions-filter"
           label="Part filter"
           value={selectedPartId}
           onChange={onSelectedPartIdChange}
-          options={toPartPickerOptions(parts)}
-          emptyLabel="All parts"
+          options={partOptions}
+          selectedOption={selectedPartOption}
+          placeholder="Search parts…"
+          testId="part-substitutions-filter"
         />
       </div>
 

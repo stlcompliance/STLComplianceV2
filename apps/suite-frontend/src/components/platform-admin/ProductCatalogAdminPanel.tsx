@@ -1,8 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, buildSemanticKey, GeneratedKeyField, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  StaticSearchPicker,
+  buildSemanticKey,
+  GeneratedKeyField,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
+import { ConfirmDialog } from '../../feedback'
 
 export function ProductCatalogAdminPanel() {
   const queryClient = useQueryClient()
@@ -13,6 +21,7 @@ export function ProductCatalogAdminPanel() {
   const [isActive, setIsActive] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showProductKeyPolicy, setShowProductKeyPolicy] = useState(false)
+  const [pendingToggle, setPendingToggle] = useState<'enable' | 'disable' | null>(null)
 
   const productsQuery = useQuery({
     queryKey: ['platform-products-admin'],
@@ -21,6 +30,20 @@ export function ProductCatalogAdminPanel() {
 
   const products = productsQuery.data?.items ?? []
   const selectedProduct = products.find((product) => product.productKey === selectedProductKey) ?? null
+  const selectedProductDetailQuery = useQuery({
+    queryKey: ['platform-products-admin-detail', selectedProductKey],
+    queryFn: () => nexarr.getProduct(selectedProductKey),
+    enabled: Boolean(selectedProductKey),
+  })
+  const productOptions = useMemo<PickerOption[]>(
+    () =>
+      products.map((product) => ({
+        value: product.productKey,
+        label: `${product.displayName} (${product.productKey})`,
+        inactive: !product.isActive,
+      })),
+    [products],
+  )
   const generatedProductKey = useMemo(
     () =>
       buildSemanticKey({
@@ -70,6 +93,28 @@ export function ProductCatalogAdminPanel() {
     onError: (error: Error) => setErrorMessage(error.message),
   })
 
+  const enableMutation = useMutation({
+    mutationFn: () => nexarr.enableProduct(selectedProductKey),
+    onSuccess: async () => {
+      setErrorMessage(null)
+      setPendingToggle(null)
+      await queryClient.invalidateQueries({ queryKey: ['platform-products-admin'] })
+      await queryClient.invalidateQueries({ queryKey: ['platform-admin-product-overview'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  const disableMutation = useMutation({
+    mutationFn: () => nexarr.disableProduct(selectedProductKey),
+    onSuccess: async () => {
+      setErrorMessage(null)
+      setPendingToggle(null)
+      await queryClient.invalidateQueries({ queryKey: ['platform-products-admin'] })
+      await queryClient.invalidateQueries({ queryKey: ['platform-admin-product-overview'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
   const handleCreate = (event: FormEvent) => {
     event.preventDefault()
     createMutation.mutate()
@@ -80,6 +125,33 @@ export function ProductCatalogAdminPanel() {
       data-testid="product-catalog-admin-panel"
       className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-5"
     >
+      <ConfirmDialog
+        open={pendingToggle !== null}
+        title={pendingToggle === 'disable' ? 'Disable product?' : 'Enable product?'}
+        description={
+          selectedProduct
+            ? pendingToggle === 'disable'
+              ? `${selectedProduct.displayName} will stop launching until it is re-enabled.`
+              : `${selectedProduct.displayName} will be launchable again for entitled tenants.`
+            : ''
+        }
+        confirmLabel={pendingToggle === 'disable' ? 'Disable product' : 'Enable product'}
+        danger={pendingToggle === 'disable'}
+        loading={disableMutation.isPending || enableMutation.isPending}
+        onCancel={() => {
+          if (!disableMutation.isPending && !enableMutation.isPending) {
+            setPendingToggle(null)
+          }
+        }}
+        onConfirm={() => {
+          if (pendingToggle === 'disable') {
+            disableMutation.mutate()
+          } else if (pendingToggle === 'enable') {
+            enableMutation.mutate()
+          }
+        }}
+      />
+
       <header>
         <h2 className="text-lg font-semibold text-stl-navy">Product catalog administration</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -162,43 +234,96 @@ export function ProductCatalogAdminPanel() {
         </div>
       </form>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <label htmlFor="product-catalog-selected-product" className="block text-sm text-slate-700">
-          Product to edit
-          <select
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-3">
+          <StaticSearchPicker
+            label="Product to edit"
             id="product-catalog-selected-product"
             value={selectedProductKey}
-            onChange={(event) => {
-              const key = event.target.value
+            onChange={(key) => {
               setSelectedProductKey(key)
               const product = products.find((item) => item.productKey === key)
               setDisplayName(product?.displayName ?? '')
               setSortOrder(String(product?.sortOrder ?? 100))
               setIsActive(product?.isActive ?? true)
             }}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            <option value="">Select product…</option>
-            {products.map((product) => (
-              <option key={product.productKey} value={product.productKey}>
-                {product.displayName} ({product.productKey})
-              </option>
-            ))}
-          </select>
-        </label>
-        {selectedProduct ? (
-          <div className="flex items-end">
-            <button
-              type="button"
-              disabled={updateMutation.isPending}
-              onClick={() => updateMutation.mutate()}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
-            >
-              Save product changes
-            </button>
-          </div>
-        ) : null}
+            options={productOptions}
+            placeholder="Search products"
+            testId="product-catalog-selected-product"
+          />
+          {selectedProduct ? (
+            <div className="flex flex-wrap items-end gap-2">
+              <button
+                type="button"
+                disabled={updateMutation.isPending}
+                onClick={() => updateMutation.mutate()}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+              >
+                Save product changes
+              </button>
+              <button
+                type="button"
+                disabled={selectedProduct.isActive ? disableMutation.isPending : enableMutation.isPending}
+                onClick={() => setPendingToggle(selectedProduct.isActive ? 'disable' : 'enable')}
+                className={[
+                  'rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50',
+                  selectedProduct.isActive
+                    ? 'border border-rose-300 text-rose-700 hover:bg-rose-50'
+                    : 'border border-emerald-300 text-emerald-700 hover:bg-emerald-50',
+                ].join(' ')}
+              >
+                {selectedProduct.isActive ? 'Disable product' : 'Enable product'}
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <h3 className="text-sm font-semibold text-stl-navy">Product manifest</h3>
+          {selectedProductDetailQuery.isLoading ? (
+            <p className="mt-2 text-sm text-slate-500">Loading product manifest…</p>
+          ) : selectedProductDetailQuery.isError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(selectedProductDetailQuery.error, 'Failed to load product manifest.')}
+              onRetry={() => void selectedProductDetailQuery.refetch()}
+              retryLabel="Retry manifest"
+            />
+          ) : selectedProductDetailQuery.data ? (
+            <dl className="mt-3 grid gap-2 text-sm">
+              <DetailRow label="Owner" value={selectedProductDetailQuery.data.productOwner} />
+              <DetailRow label="Category" value={selectedProductDetailQuery.data.productCategory} />
+              <DetailRow label="Status" value={selectedProductDetailQuery.data.productStatus} />
+              <DetailRow label="Environment" value={selectedProductDetailQuery.data.environmentKey} />
+              <DetailRow label="Callback path" value={selectedProductDetailQuery.data.canonicalCallbackPath} mono />
+              <DetailRow label="API base URL" value={selectedProductDetailQuery.data.apiBaseUrl} mono />
+              <DetailRow label="Health URL" value={selectedProductDetailQuery.data.healthUrl} mono />
+              <DetailRow label="Service audience" value={selectedProductDetailQuery.data.serviceAudience} mono />
+              <DetailRow label="Marketing URL" value={selectedProductDetailQuery.data.marketingUrl} mono />
+              <DetailRow label="Documentation URL" value={selectedProductDetailQuery.data.documentationUrl} mono />
+              <DetailRow label="Support URL" value={selectedProductDetailQuery.data.supportUrl} mono />
+              <DetailRow label="Dependency rules" value={selectedProductDetailQuery.data.entitlementDependencyRules} />
+            </dl>
+          ) : (
+            <p className="mt-2 text-sm text-slate-500">Select a product to inspect its manifest details.</p>
+          )}
+        </div>
       </div>
     </section>
+  )
+}
+
+function DetailRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-[9rem_1fr] gap-3">
+      <dt className="font-medium text-slate-600">{label}</dt>
+      <dd className={mono ? 'font-mono text-xs break-all text-slate-700' : 'text-slate-700'}>{value || '—'}</dd>
+    </div>
   )
 }

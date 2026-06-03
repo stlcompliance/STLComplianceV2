@@ -101,6 +101,8 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
         Assert.Equal(1, vendor.PartVendorLinkCount);
         Assert.Equal(1, vendor.OpenPurchaseRequestCount);
         Assert.Equal(1, vendor.IssuedPurchaseOrderCount);
+        Assert.Equal(4, vendor.AverageLeadTimeDays);
+        Assert.Equal(100, vendor.OnTimeDeliveryRate);
     }
 
     [Fact]
@@ -113,6 +115,8 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
         var detail = await response.Content.ReadFromJsonAsync<VendorReportDetailResponse>();
         Assert.NotNull(detail);
         Assert.Equal(_vendorPartyId, detail!.Summary.VendorPartyId);
+        Assert.Equal(4, detail.Summary.AverageLeadTimeDays);
+        Assert.Equal(100, detail.Summary.OnTimeDeliveryRate);
         Assert.NotEmpty(detail.RecentPurchaseOrders);
         Assert.NotEmpty(detail.PartLinks);
     }
@@ -126,6 +130,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         var csv = await response.Content.ReadAsStringAsync();
         Assert.Contains("partyKey,displayName", csv, StringComparison.Ordinal);
+        Assert.Contains("averageLeadTimeDays", csv, StringComparison.Ordinal);
         Assert.Contains("VENDOR-REPORT", csv, StringComparison.Ordinal);
     }
 
@@ -210,7 +215,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        purchaseOrder.Lines.Add(new PurchaseOrderLine
+        var purchaseOrderLine = new PurchaseOrderLine
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -221,13 +226,88 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             QuantityReceived = 2m,
             CreatedAt = now,
             UpdatedAt = now,
-        });
+        };
+        purchaseOrder.Lines.Add(purchaseOrderLine);
+
+        var inventoryLocation = new InventoryLocation
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            LocationKey = "LOC-REPORT",
+            Name = "Report Location",
+            LocationType = "warehouse",
+            AddressLine = "1 Report Way",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var inventoryBin = new InventoryBin
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            InventoryLocationId = inventoryLocation.Id,
+            BinKey = "BIN-REPORT",
+            Name = "Report Bin",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var leadTimeSnapshot = new PartVendorLeadTimeSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = link.Id,
+            SnapshotKey = "LTS-REPORT",
+            LeadTimeDays = 4,
+            EffectiveFrom = now.AddDays(-1),
+            EffectiveTo = null,
+            Source = SnapshotSources.Manual,
+            Notes = "Report lead time snapshot",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
 
         db.ExternalParties.Add(vendor);
         db.Parts.Add(part);
         db.PartVendorLinks.Add(link);
         db.PurchaseRequests.Add(purchaseRequest);
         db.PurchaseOrders.Add(purchaseOrder);
+        db.InventoryLocations.Add(inventoryLocation);
+        db.InventoryBins.Add(inventoryBin);
+        db.PartVendorLeadTimeSnapshots.Add(leadTimeSnapshot);
+
+        var receipt = new ReceivingReceipt
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReceiptKey = "RCV-REPORT",
+            PurchaseOrderId = purchaseOrder.Id,
+            InventoryBinId = inventoryBin.Id,
+            Status = ReceivingReceiptStatuses.Posted,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            PostedAt = now.AddDays(3),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        receipt.Lines.Add(new ReceivingReceiptLine
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReceivingReceiptId = receipt.Id,
+            PurchaseOrderLineId = purchaseOrderLine.Id,
+            PartId = part.Id,
+            LineNumber = 1,
+            QuantityExpected = 5m,
+            QuantityReceived = 5m,
+            Condition = "good",
+            SerialLotNumbersJson = "[]",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        db.ReceivingReceipts.Add(receipt);
         await db.SaveChangesAsync();
         return vendor.Id;
     }

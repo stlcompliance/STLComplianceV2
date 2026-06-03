@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
@@ -17,6 +19,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPlatformAuditService, PlatformAuditService>();
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddScoped<MfaService>();
         builder.Services.AddScoped<PasswordResetService>();
         builder.Services.AddScoped<PlatformAuthorizationService>();
         builder.Services.AddScoped<TenantAdminService>();
@@ -50,6 +53,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
         builder.Services.AddScoped<HybridDataPlaneService>();
+        builder.Services.AddHttpClient(HybridDataPlaneService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
         builder.Services.AddScoped<CompanionAuthService>();
         builder.Services.AddScoped<CompanionFieldInboxService>();
         builder.Services.AddScoped<CompanionProductClient>();
@@ -110,10 +117,28 @@ public static class NexArrServiceRegistration
                     .AllowAnyMethod();
             });
         });
+
+        var loginPermitLimit = builder.Configuration.GetValue("Auth:LoginRateLimitPermitLimit", 100);
+        var loginWindowSeconds = builder.Configuration.GetValue("Auth:LoginRateLimitWindowSeconds", 60);
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("NexArrAuthThrottle", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = loginPermitLimit,
+                        Window = TimeSpan.FromSeconds(loginWindowSeconds),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
+        });
     }
 
     public static void ConfigurePipeline(WebApplication app)
     {
+        app.UseRateLimiter();
         app.UseCors("NexArrBrowserClients");
     }
 

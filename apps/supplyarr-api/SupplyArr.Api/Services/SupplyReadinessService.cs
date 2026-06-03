@@ -12,6 +12,7 @@ public sealed class SupplyReadinessService(
     ISupplyArrAuditService audit)
 {
     private const int AttentionItemLimit = 25;
+    private const int PredictiveStockoutLimit = 10;
     private static readonly TimeSpan StaleSourceWindow = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ComplianceExpiringSoonWindow = TimeSpan.FromDays(30);
 
@@ -152,6 +153,19 @@ public sealed class SupplyReadinessService(
 
         var openDemandRefCount = maintainarrOpen + routarrOpen + trainarrOpen + staffarrOpen;
 
+        var openDemandLines = await LoadOpenDemandLinesAsync(tenantId, cancellationToken);
+        var openDemandByPart = openDemandLines
+            .GroupBy(x => x.PartId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.QuantityRequested));
+
+        var openBackordersByPart = await db.Backorders
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Status == BackorderStatuses.Open)
+            .GroupBy(x => x.PartId)
+            .Select(g => new { PartId = g.Key, Quantity = g.Sum(x => x.QuantityBackordered) })
+            .ToListAsync(cancellationToken);
+        var openBackordersByPartMap = openBackordersByPart.ToDictionary(x => x.PartId, x => x.Quantity);
+
         var complianceDocuments = await db.PartyComplianceDocuments
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
@@ -214,6 +228,13 @@ public sealed class SupplyReadinessService(
             activeVendorRestrictionCount,
             activeProcurementExceptionCount);
 
+        var predictiveStockoutItems = BuildPredictiveStockoutItems(
+            now,
+            parts,
+            stockByPart,
+            openDemandByPart,
+            openBackordersByPartMap);
+
         return new SupplyReadinessDashboardResponse(
             now,
             new SupplyReadinessTotalsResponse(
@@ -237,7 +258,8 @@ public sealed class SupplyReadinessService(
                 new(DemandRefSources.TrainArr, trainarrOpen),
                 new(DemandRefSources.StaffArr, staffarrOpen),
             ],
-            attentionItems);
+            attentionItems,
+            predictiveStockoutItems);
     }
 
     public async Task<PartSupplyReadinessResponse> GetPartReadinessAsync(
@@ -678,6 +700,121 @@ public sealed class SupplyReadinessService(
 
     private static DateTimeOffset MaxTimestamp(DateTimeOffset left, DateTimeOffset? right) =>
         right is null || left >= right.Value ? left : right.Value;
+
+    private async Task<List<DemandLineRow>> LoadOpenDemandLinesAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var maintain = await db.MaintainArrDemandRefs
+            .AsNoTracking()
+            .Include(x => x.Lines)
+            .Where(x => x.TenantId == tenantId
+                && (x.Status == MaintainArrDemandRefStatuses.Received
+                    || x.Status == MaintainArrDemandRefStatuses.PrDrafted))
+            .ToListAsync(cancellationToken);
+
+        var rout = await db.RoutArrDemandRefs
+            .AsNoTracking()
+            .Include(x => x.Lines)
+            .Where(x => x.TenantId == tenantId
+                && (x.Status == RoutArrDemandRefStatuses.Received
+                    || x.Status == RoutArrDemandRefStatuses.PrDrafted))
+            .ToListAsync(cancellationToken);
+
+        var train = await db.TrainArrDemandRefs
+            .AsNoTracking()
+            .Include(x => x.Lines)
+            .Where(x => x.TenantId == tenantId
+                && (x.Status == TrainArrDemandRefStatuses.Received
+                    || x.Status == TrainArrDemandRefStatuses.PrDrafted))
+            .ToListAsync(cancellationToken);
+
+        var staff = await db.StaffArrDemandRefs
+            .AsNoTracking()
+            .Include(x => x.Lines)
+            .Where(x => x.TenantId == tenantId
+                && (x.Status == StaffArrDemandRefStatuses.Received
+                    || x.Status == StaffArrDemandRefStatuses.PrDrafted))
+            .ToListAsync(cancellationToken);
+
+        return [
+            .. FlattenMaintainDemandLines(maintain),
+            .. FlattenRoutDemandLines(rout),
+            .. FlattenTrainDemandLines(train),
+            .. FlattenStaffDemandLines(staff),
+        ];
+    }
+
+    private IReadOnlyList<SupplyReadinessPredictiveStockoutResponse> BuildPredictiveStockoutItems(
+        DateTimeOffset now,
+        IReadOnlyCollection<Part> parts,
+        IReadOnlyDictionary<Guid, (decimal OnHand, decimal Reserved)> stockByPart,
+        IReadOnlyDictionary<Guid, decimal> openDemandByPart,
+        IReadOnlyDictionary<Guid, decimal> openBackordersByPart)
+    {
+        var predictiveItems = new List<SupplyReadinessPredictiveStockoutResponse>();
+
+        foreach (var part in parts.Where(x => x.Status == "active"))
+        {
+            stockByPart.TryGetValue(part.Id, out var stock);
+            openDemandByPart.TryGetValue(part.Id, out var demandQty);
+            openBackordersByPart.TryGetValue(part.Id, out var backorderQty);
+
+            var available = stock.OnHand - stock.Reserved;
+            var projected = available - demandQty - backorderQty;
+            var shortage = Math.Max(0m, -projected);
+
+            if (shortage <= 0m && available > (part.ReorderPoint ?? 0m))
+            {
+                continue;
+            }
+
+            var riskLevel = shortage > 0m
+                ? "critical"
+                : available <= (part.ReorderPoint ?? 0m)
+                    ? "watch"
+                    : "info";
+            var reason = shortage > 0m
+                ? "Projected shortage after open demand and backorders"
+                : "Available stock is at or below the reorder point";
+            var sourceTimestamp = part.UpdatedAt;
+
+            predictiveItems.Add(new SupplyReadinessPredictiveStockoutResponse(
+                part.Id,
+                part.PartKey,
+                part.DisplayName,
+                available,
+                demandQty,
+                backorderQty,
+                projected,
+                shortage,
+                part.ReorderPoint,
+                riskLevel,
+                reason,
+                sourceTimestamp));
+        }
+
+        return predictiveItems
+            .OrderByDescending(x => x.ShortageQuantity)
+            .ThenByDescending(x => x.QuantityAvailable)
+            .ThenBy(x => x.PartKey)
+            .Take(PredictiveStockoutLimit)
+            .ToList();
+    }
+
+    private sealed record DemandLineRow(Guid PartId, decimal QuantityRequested);
+
+    private static IEnumerable<DemandLineRow> FlattenMaintainDemandLines(IEnumerable<MaintainArrDemandRef> refs) =>
+        refs.SelectMany(x => x.Lines.Where(line => line.PartId != null).Select(line => new DemandLineRow(line.PartId!.Value, line.QuantityRequested)));
+
+    private static IEnumerable<DemandLineRow> FlattenRoutDemandLines(IEnumerable<RoutArrDemandRef> refs) =>
+        refs.SelectMany(x => x.Lines.Where(line => line.PartId != null).Select(line => new DemandLineRow(line.PartId!.Value, line.QuantityRequested)));
+
+    private static IEnumerable<DemandLineRow> FlattenTrainDemandLines(IEnumerable<TrainArrDemandRef> refs) =>
+        refs.SelectMany(x => x.Lines.Where(line => line.PartId != null).Select(line => new DemandLineRow(line.PartId!.Value, line.QuantityRequested)));
+
+    private static IEnumerable<DemandLineRow> FlattenStaffDemandLines(IEnumerable<StaffArrDemandRef> refs) =>
+        refs.SelectMany(x => x.Lines.Where(line => line.PartId != null).Select(line => new DemandLineRow(line.PartId!.Value, line.QuantityRequested)));
 
     private async Task<List<SupplyReadinessBlockerResponse>> BuildVendorBlockersAsync(
         Guid tenantId,

@@ -24,14 +24,13 @@ import {
   Package,
   Paperclip,
   Save,
-  Search,
   Send,
   ShieldCheck,
   Users,
   Wrench,
   X,
 } from 'lucide-react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import { createPersonnelIncident, getOrgUnits, getPeople } from '../../api/client'
 import type {
   CreatePersonnelIncidentRequest,
@@ -326,31 +325,74 @@ function PersonSelect({
   onChange,
   people,
   placeholder,
-  required,
+  testId,
 }: {
   value: string
   onChange: (value: string) => void
   people: StaffPersonSummaryResponse[]
   placeholder: string
-  required?: boolean
+  testId: string
 }) {
+  const options = useMemo<PickerOption[]>(
+    () =>
+      personSelectOptions(people).map((person) => ({
+        value: person.personId,
+        label: personLabel(person),
+      })),
+    [people],
+  )
+  const selectedOption = useMemo(
+    () => options.find((option) => option.value === value),
+    [options, value],
+  )
+
   return (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-      <select
-        value={value}
-        required={required}
-        onChange={(event) => onChange(event.target.value)}
-        className={inputClass('appearance-auto pl-9')}
-      >
-        <option value="">{placeholder}</option>
-        {personSelectOptions(people).map((person) => (
-          <option key={person.personId} value={person.personId}>
-            {personLabel(person)}
-          </option>
-        ))}
-      </select>
-    </div>
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      selectedOption={selectedOption}
+      placeholder={placeholder}
+      testId={testId}
+    />
+  )
+}
+
+function OrgUnitPicker({
+  value,
+  onChange,
+  orgUnits,
+  placeholder,
+  testId,
+}: {
+  value: string
+  onChange: (value: string) => void
+  orgUnits: OrgUnitResponse[]
+  placeholder: string
+  testId: string
+}) {
+  const options = useMemo<PickerOption[]>(
+    () =>
+      sortOrgUnits(orgUnits).map((unit) => ({
+        value: unit.orgUnitId,
+        label: `${unit.name} · ${unit.unitType}`,
+      })),
+    [orgUnits],
+  )
+  const selectedOption = useMemo(
+    () => options.find((option) => option.value === value),
+    [options, value],
+  )
+
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      selectedOption={selectedOption}
+      placeholder={placeholder}
+      testId={testId}
+    />
   )
 }
 
@@ -814,32 +856,22 @@ export function IncidentCreatePage() {
                   />
                 </Field>
                 <Field label="Site">
-                  <select
+                  <OrgUnitPicker
                     value={siteOrgUnitId}
-                    onChange={(event) => setSiteOrgUnitId(event.target.value)}
-                    className={inputClass('appearance-auto')}
-                  >
-                    <option value="">Select site</option>
-                    {sortedOrgUnits.map((unit) => (
-                      <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                        {unit.name} · {unit.unitType}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSiteOrgUnitId}
+                    orgUnits={sortedOrgUnits}
+                    placeholder="Search site"
+                    testId="incident-site-picker"
+                  />
                 </Field>
                 <Field label="Department">
-                  <select
+                  <OrgUnitPicker
                     value={departmentOrgUnitId}
-                    onChange={(event) => setDepartmentOrgUnitId(event.target.value)}
-                    className={inputClass('appearance-auto')}
-                  >
-                    <option value="">Select department</option>
-                    {sortedOrgUnits.map((unit) => (
-                      <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                        {unit.name} · {unit.unitType}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setDepartmentOrgUnitId}
+                    orgUnits={sortedOrgUnits}
+                    placeholder="Search department"
+                    testId="incident-department-picker"
+                  />
                 </Field>
                 <Field label="Location detail" required>
                   <TextInput
@@ -875,7 +907,7 @@ export function IncidentCreatePage() {
                     }}
                     people={people}
                     placeholder={peopleQuery.isLoading ? 'Loading people...' : 'Search by person or name'}
-                    required
+                    testId="incident-affected-person-picker"
                   />
                 </Field>
                 <Field label="Reporter" required>
@@ -884,7 +916,7 @@ export function IncidentCreatePage() {
                     onChange={setReporterPersonId}
                     people={people}
                     placeholder="Search reporter"
-                    required
+                    testId="incident-reporter-picker"
                   />
                 </Field>
                 <Field label="Manager / supervisor" required>
@@ -893,7 +925,7 @@ export function IncidentCreatePage() {
                     onChange={setManagerPersonId}
                     people={people}
                     placeholder="Search manager"
-                    required
+                    testId="incident-manager-picker"
                   />
                 </Field>
                 <Field label="Witnesses" hint="Use Ctrl or Shift to select more than one">

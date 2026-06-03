@@ -1,3 +1,6 @@
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type {
   AssetResponse,
   InspectionRunDetailResponse,
@@ -127,6 +130,34 @@ export function InspectionRunnerPanel({
       value: item.checklistItemId,
       label: item.prompt,
     })) ?? []
+  const assetOptions = useMemo<PickerOption[]>(
+    () =>
+      assets.map((asset) => ({
+        value: asset.assetId,
+        label: `${asset.assetTag} — ${asset.name}`,
+      })),
+    [assets],
+  )
+  const templateOptions = useMemo<PickerOption[]>(
+    () =>
+      activeTemplates.map((template) => ({
+        value: template.inspectionTemplateId,
+        label: `${template.name} (v${template.version})`,
+      })),
+    [activeTemplates],
+  )
+  const selectedAssetOption = useMemo<PickerOption | undefined>(
+    () =>
+      assetOptions.find((option) => option.value === selectedAssetId) ??
+      (selectedAssetId ? { value: selectedAssetId, label: selectedAssetId } : undefined),
+    [assetOptions, selectedAssetId],
+  )
+  const selectedTemplateOption = useMemo<PickerOption | undefined>(
+    () =>
+      templateOptions.find((option) => option.value === selectedTemplateId) ??
+      (selectedTemplateId ? { value: selectedTemplateId, label: selectedTemplateId } : undefined),
+    [selectedTemplateId, templateOptions],
+  )
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -144,39 +175,27 @@ export function InspectionRunnerPanel({
         <>
           {canExecute ? (
             <div className="mb-6 grid gap-4 md:grid-cols-2">
-              <label className="block text-sm" htmlFor="inspection-runner-asset">
-                <span className="text-slate-300">Asset for inspection</span>
-                <select
-                  id="inspection-runner-asset"
-                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-                  value={selectedAssetId}
-                  onChange={(event) => onSelectedAssetIdChange(event.target.value)}
-                >
-                  <option value="">Select asset…</option>
-                  {assets.map((asset) => (
-                    <option key={asset.assetId} value={asset.assetId}>
-                      {asset.assetTag} — {asset.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StaticSearchPicker
+                id="inspection-runner-asset"
+                label="Asset for inspection"
+                value={selectedAssetId}
+                onChange={onSelectedAssetIdChange}
+                options={assetOptions}
+                selectedOption={selectedAssetOption}
+                placeholder="Search assets…"
+                testId="inspection-runner-asset"
+              />
 
-              <label className="block text-sm" htmlFor="inspection-runner-template">
-                <span className="text-slate-300">Active inspection template</span>
-                <select
-                  id="inspection-runner-template"
-                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-                  value={selectedTemplateId}
-                  onChange={(event) => onSelectedTemplateIdChange(event.target.value)}
-                >
-                  <option value="">Select template…</option>
-                  {activeTemplates.map((template) => (
-                    <option key={template.inspectionTemplateId} value={template.inspectionTemplateId}>
-                      {template.name} (v{template.version})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StaticSearchPicker
+                id="inspection-runner-template"
+                label="Active inspection template"
+                value={selectedTemplateId}
+                onChange={onSelectedTemplateIdChange}
+                options={templateOptions}
+                selectedOption={selectedTemplateOption}
+                placeholder="Search templates…"
+                testId="inspection-runner-template"
+              />
 
               <div className="md:col-span-2">
                 <button

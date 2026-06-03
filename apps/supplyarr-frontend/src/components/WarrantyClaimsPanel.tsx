@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   cancelWarrantyClaim,
@@ -104,11 +104,6 @@ export function WarrantyClaimsPanel({
     enabled: canManage,
   })
 
-  const poLineOptions = useMemo(() => {
-    const po = issuedPurchaseOrders.find((x) => x.purchaseOrderId === purchaseOrderId)
-    return po?.lines ?? []
-  }, [issuedPurchaseOrders, purchaseOrderId])
-
   const selectedVendor = useMemo(
     () => vendors.find((vendor) => vendor.partyId === vendorPartyId) ?? null,
     [vendorPartyId, vendors],
@@ -116,6 +111,42 @@ export function WarrantyClaimsPanel({
   const selectedPart = useMemo(
     () => parts.find((part) => part.partId === partId) ?? null,
     [partId, parts],
+  )
+  const selectedPurchaseOrder = useMemo(
+    () => issuedPurchaseOrders.find((po) => po.purchaseOrderId === purchaseOrderId) ?? null,
+    [issuedPurchaseOrders, purchaseOrderId],
+  )
+  const vendorOptions = useMemo<PickerOption[]>(
+    () =>
+      vendors.map((vendor) => ({
+        value: vendor.partyId,
+        label: `${vendor.displayName}${vendor.partyKey ? ` (${vendor.partyKey})` : ''}`,
+      })),
+    [vendors],
+  )
+  const partOptions = useMemo<PickerOption[]>(
+    () =>
+      parts.map((part) => ({
+        value: part.partId,
+        label: `${part.partKey} — ${part.displayName}`,
+      })),
+    [parts],
+  )
+  const purchaseOrderOptions = useMemo<PickerOption[]>(
+    () =>
+      issuedPurchaseOrders.map((po) => ({
+        value: po.purchaseOrderId,
+        label: `${po.orderKey}${po.title ? ` — ${po.title}` : ''}`,
+      })),
+    [issuedPurchaseOrders],
+  )
+  const poLineOptions = useMemo<PickerOption[]>(
+    () =>
+      (selectedPurchaseOrder?.lines ?? []).map((line) => ({
+        value: line.lineId,
+        label: `Line ${line.lineNumber} · ${line.partKey} · qty ${line.quantityOrdered}`,
+      })),
+    [selectedPurchaseOrder],
   )
   const claimKeySource = useMemo(() => {
     const vendorLabel = selectedVendor?.displayName.trim() ?? ''
@@ -127,6 +158,22 @@ export function WarrantyClaimsPanel({
     return `${vendorLabel || 'vendor'} ${partLabel || 'part'} ${claimType} claim`
   }, [claimType, selectedPart, selectedVendor])
   const existingClaimKeys = claimsQuery.data?.map((claim) => claim.claimKey) ?? []
+  const selectedVendorOption = useMemo<PickerOption | undefined>(
+    () => vendorOptions.find((option) => option.value === vendorPartyId),
+    [vendorOptions, vendorPartyId],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === partId),
+    [partOptions, partId],
+  )
+  const selectedPurchaseOrderOption = useMemo<PickerOption | undefined>(
+    () => purchaseOrderOptions.find((option) => option.value === purchaseOrderId),
+    [purchaseOrderOptions, purchaseOrderId],
+  )
+  const selectedPoLineOption = useMemo<PickerOption | undefined>(
+    () => poLineOptions.find((option) => option.value === purchaseOrderLineId),
+    [poLineOptions, purchaseOrderLineId],
+  )
 
   const selectedClaim = claimsQuery.data?.find((x) => x.warrantyClaimId === selectedClaimId)
 
@@ -232,74 +279,50 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label htmlFor="warranty-claim-vendor" className="text-sm text-slate-300">
-          Vendor
-          <select
-            id="warranty-claim-vendor"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-            value={vendorPartyId}
-            onChange={(e) => setVendorPartyId(e.target.value)}
-          >
-            <option value="">Select vendor</option>
-            {vendors.map((v) => (
-              <option key={v.partyId} value={v.partyId}>
-                {v.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="warranty-claim-part" className="text-sm text-slate-300">
-          Part
-          <select
-            id="warranty-claim-part"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-            value={partId}
-            onChange={(e) => setPartId(e.target.value)}
-          >
-            <option value="">Select part</option>
-            {parts.map((p) => (
-              <option key={p.partId} value={p.partId}>
-                {p.partKey} — {p.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="warranty-claim-purchase-order" className="text-sm text-slate-300">
-          Purchase order (optional)
-          <select
-            id="warranty-claim-purchase-order"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-            value={purchaseOrderId}
-            onChange={(e) => {
-              setPurchaseOrderId(e.target.value)
-              setPurchaseOrderLineId('')
-            }}
-          >
-            <option value="">None</option>
-            {issuedPurchaseOrders.map((po) => (
-              <option key={po.purchaseOrderId} value={po.purchaseOrderId}>
-                {po.orderKey}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="warranty-claim-po-line" className="text-sm text-slate-300">
-          PO line (optional)
-          <select
-            id="warranty-claim-po-line"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-            value={purchaseOrderLineId}
-            onChange={(e) => setPurchaseOrderLineId(e.target.value)}
-            disabled={!purchaseOrderId}
-          >
-            <option value="">None</option>
-            {poLineOptions.map((line) => (
-              <option key={line.lineId} value={line.lineId}>
-                Line {line.lineNumber} · qty {line.quantityOrdered}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="warranty-claim-vendor"
+          label="Vendor"
+          value={vendorPartyId}
+          onChange={setVendorPartyId}
+          options={vendorOptions}
+          selectedOption={selectedVendorOption}
+          placeholder="Search vendors…"
+          testId="warranty-claim-vendor-picker"
+        />
+        <StaticSearchPicker
+          id="warranty-claim-part"
+          label="Part"
+          value={partId}
+          onChange={setPartId}
+          options={partOptions}
+          selectedOption={selectedPartOption}
+          placeholder="Search parts…"
+          testId="warranty-claim-part-picker"
+        />
+        <StaticSearchPicker
+          id="warranty-claim-purchase-order"
+          label="Purchase order (optional)"
+          value={purchaseOrderId}
+          onChange={(value) => {
+            setPurchaseOrderId(value)
+            setPurchaseOrderLineId('')
+          }}
+          options={purchaseOrderOptions}
+          selectedOption={selectedPurchaseOrderOption}
+          placeholder="Search purchase orders…"
+          testId="warranty-claim-po-picker"
+        />
+        <StaticSearchPicker
+          id="warranty-claim-po-line"
+          label="PO line (optional)"
+          value={purchaseOrderLineId}
+          onChange={setPurchaseOrderLineId}
+          options={poLineOptions}
+          selectedOption={selectedPoLineOption}
+          placeholder={purchaseOrderId ? 'Search PO lines…' : 'Select a PO first'}
+          disabled={!purchaseOrderId}
+          testId="warranty-claim-po-line-picker"
+        />
         <label htmlFor="warranty-claim-quantity" className="text-sm text-slate-300">
           Quantity claimed
           <input

@@ -78,4 +78,5 @@ public static class ReadinessRollupRules
 public sealed record PersonReadinessRollupSnapshot(
     Guid PersonId,
     string ReadinessStatus,
-    bool HasActiveOverride);
+    bool HasActiveOverride,
+    string ConfidenceLevel);

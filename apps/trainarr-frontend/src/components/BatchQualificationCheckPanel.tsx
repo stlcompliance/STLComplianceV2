@@ -1,4 +1,5 @@
-import { CheckboxMultiSelect, ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { CheckboxMultiSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
 
 import type { BatchQualificationCheckResponse } from '../api/types'
 
@@ -52,6 +53,19 @@ export function BatchQualificationCheckPanel({
   onToggleRemediationPerson,
   remediationPersonOptions,
 }: BatchQualificationCheckPanelProps) {
+  const selectedQualificationOption = useMemo<PickerOption | undefined>(
+    () =>
+      qualificationOptions.find((option) => option.value === qualificationKey) ??
+      (qualificationKey ? { value: qualificationKey, label: qualificationKey } : undefined),
+    [qualificationKey, qualificationOptions],
+  )
+  const selectedRulePackOption = useMemo<PickerOption | undefined>(
+    () =>
+      rulePackOptions.find((option) => option.value === rulePackKey) ??
+      (rulePackKey ? { value: rulePackKey, label: rulePackKey } : undefined),
+    [rulePackKey, rulePackOptions],
+  )
+
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Batch authorization check</h2>
@@ -60,23 +74,25 @@ export function BatchQualificationCheckPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <ControlledSelect
+        <StaticSearchPicker
+          id="batch-qualification-key"
           label="Qualification key"
           value={qualificationKey}
           onChange={onQualificationKeyChange}
           options={qualificationOptions}
-          emptyLabel="Select qualification…"
+          selectedOption={selectedQualificationOption}
+          placeholder="Search qualifications…"
           testId="batch-qualification-key"
-          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
         />
-        <ControlledSelect
+        <StaticSearchPicker
+          id="batch-qualification-rule-pack"
           label="Compliance Core rule pack key"
           value={rulePackKey}
           onChange={onRulePackKeyChange}
           options={rulePackOptions}
-          emptyLabel="Select rule pack…"
+          selectedOption={selectedRulePackOption}
+          placeholder="Search rule packs…"
           testId="batch-qualification-rule-pack"
-          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
         />
       </div>
 

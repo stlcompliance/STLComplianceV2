@@ -38,6 +38,7 @@ public sealed class ExecutiveReportService(
         var downtimeTrend = await BuildDowntimeTrendAsync(tenantId, generatedAt, cancellationToken);
         var reliability = await BuildReliabilitySummaryAsync(tenantId, generatedAt, cancellationToken);
         var supplyDemand = await BuildSupplyDemandSummaryAsync(tenantId, cancellationToken);
+        var partsDemandForecast = await BuildPartsDemandForecastSummaryAsync(tenantId, cancellationToken);
         var scopeReadiness = await BuildScopeReadinessAsync(tenantId, cancellationToken);
 
         var workOrderStatusCounts = await db.WorkOrders
@@ -61,6 +62,7 @@ public sealed class ExecutiveReportService(
             downtimeTrend,
             reliability,
             supplyDemand,
+            partsDemandForecast,
             scopeReadiness,
             workOrderStatusCounts
                 .OrderBy(x => x.Status)
@@ -103,6 +105,17 @@ public sealed class ExecutiveReportService(
         builder.AppendLine($"reliability,mean_time_between_failures_hours,{summary.Reliability.MeanTimeBetweenFailuresHours:F2}");
         builder.AppendLine($"supplyarr,published_demand_lines,{summary.SupplyDemand.PublishedDemandLines}");
         builder.AppendLine($"supplyarr,open_procurement_lines,{summary.SupplyDemand.OpenProcurementLines}");
+        builder.AppendLine($"parts_demand_forecast,open_lines,{summary.PartsDemandForecast.OpenLineCount}");
+        builder.AppendLine($"parts_demand_forecast,distinct_parts,{summary.PartsDemandForecast.DistinctPartCount}");
+        builder.AppendLine($"parts_demand_forecast,forecast_quantity,{summary.PartsDemandForecast.ForecastQuantity:F2}");
+
+        builder.AppendLine();
+        builder.AppendLine("part_number,supplyarr_part_id,description,unit_of_measure,forecast_quantity,open_lines,open_work_orders,pm_work_orders,defect_work_orders,manual_work_orders,oldest_created_at,newest_created_at");
+        foreach (var part in summary.PartsDemandForecast.TopParts)
+        {
+            builder.AppendLine(
+                $"{CsvEscape(part.PartNumber)},{part.SupplyarrPartId?.ToString() ?? string.Empty},{CsvEscape(part.Description)},{CsvEscape(part.UnitOfMeasure)},{part.ForecastQuantity:F2},{part.OpenLineCount},{part.OpenWorkOrderCount},{part.PmWorkOrderCount},{part.DefectWorkOrderCount},{part.ManualWorkOrderCount},{part.OldestCreatedAt?.ToString("O") ?? string.Empty},{part.NewestCreatedAt?.ToString("O") ?? string.Empty}");
+        }
 
         builder.AppendLine();
         builder.AppendLine("scope_type,scope_label,total_assets,ready_count,not_ready_count,ready_percent");
@@ -408,6 +421,86 @@ public sealed class ExecutiveReportService(
             openProcurement,
             fulfilled,
             procurementCounts);
+    }
+
+    private async Task<ExecutiveReportPartsDemandForecastSummary> BuildPartsDemandForecastSummaryAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var demandLines = await (
+            from line in db.WorkOrderPartsDemandLines.AsNoTracking()
+            join workOrder in db.WorkOrders.AsNoTracking() on line.WorkOrderId equals workOrder.Id
+            where line.TenantId == tenantId
+                && workOrder.TenantId == tenantId
+                && line.Status != WorkOrderPartsDemandStatuses.Cancelled
+            select new
+            {
+                line.Id,
+                line.SupplyarrPartId,
+                line.PartNumber,
+                line.Description,
+                line.UnitOfMeasure,
+                line.QuantityRequested,
+                line.QuantityReceived,
+                line.CreatedAt,
+                WorkOrderId = workOrder.Id,
+                workOrder.Source,
+            })
+            .ToListAsync(cancellationToken);
+
+        var forecastRows = demandLines
+            .Select(line =>
+            {
+                var outstanding = line.QuantityRequested - line.QuantityReceived;
+                return new
+                {
+                    line.SupplyarrPartId,
+                    PartNumber = string.IsNullOrWhiteSpace(line.PartNumber) ? "UNKNOWN" : line.PartNumber.Trim(),
+                    Description = string.IsNullOrWhiteSpace(line.Description) ? string.Empty : line.Description.Trim(),
+                    UnitOfMeasure = string.IsNullOrWhiteSpace(line.UnitOfMeasure) ? "each" : line.UnitOfMeasure.Trim(),
+                    Outstanding = outstanding <= 0m ? 0m : outstanding,
+                    line.WorkOrderId,
+                    line.Source,
+                    line.CreatedAt,
+                };
+            })
+            .Where(x => x.Outstanding > 0m)
+            .ToList();
+
+        var items = forecastRows
+            .GroupBy(x => new { x.SupplyarrPartId, x.PartNumber, x.UnitOfMeasure })
+            .Select(group =>
+            {
+                var first = group.OrderBy(x => x.CreatedAt).First();
+                return new ExecutiveReportPartsDemandForecastItem(
+                    group.Key.SupplyarrPartId,
+                    group.Key.PartNumber,
+                    first.Description,
+                    group.Key.UnitOfMeasure,
+                    Math.Round(group.Sum(x => x.Outstanding), 2),
+                    group.Count(),
+                    group.Select(x => x.WorkOrderId).Distinct().Count(),
+                    group.Where(x => string.Equals(x.Source, WorkOrderSources.PmSchedule, StringComparison.OrdinalIgnoreCase)).Select(x => x.WorkOrderId).Distinct().Count(),
+                    group.Where(x => string.Equals(x.Source, WorkOrderSources.Defect, StringComparison.OrdinalIgnoreCase)).Select(x => x.WorkOrderId).Distinct().Count(),
+                    group.Where(x => string.Equals(x.Source, WorkOrderSources.Manual, StringComparison.OrdinalIgnoreCase)).Select(x => x.WorkOrderId).Distinct().Count(),
+                    group.Min(x => x.CreatedAt),
+                    group.Max(x => x.CreatedAt));
+            })
+            .OrderByDescending(x => x.ForecastQuantity)
+            .ThenByDescending(x => x.OpenLineCount)
+            .ThenBy(x => x.PartNumber)
+            .Take(10)
+            .ToList();
+
+        var distinctPartCount = forecastRows
+            .GroupBy(x => new { x.SupplyarrPartId, x.PartNumber, x.UnitOfMeasure })
+            .Count();
+
+        return new ExecutiveReportPartsDemandForecastSummary(
+            forecastRows.Count,
+            distinctPartCount,
+            Math.Round(forecastRows.Sum(x => x.Outstanding), 2),
+            items);
     }
 
     private async Task<IReadOnlyList<ExecutiveReportScopeReadinessItem>> BuildScopeReadinessAsync(

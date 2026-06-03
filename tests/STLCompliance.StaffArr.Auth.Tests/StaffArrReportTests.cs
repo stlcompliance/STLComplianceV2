@@ -321,6 +321,8 @@ public sealed class StaffArrReportTests : IAsyncLifetime
             NotReadyCount = 1,
             OverrideCount = 0,
             ReadyPercent = 0m,
+            ConfidenceLevel = "low",
+            ConfidenceScore = 25,
             ComputedAt = now,
             CreatedAt = now,
             UpdatedAt = now,

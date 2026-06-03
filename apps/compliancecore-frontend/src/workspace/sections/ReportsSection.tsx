@@ -1,6 +1,11 @@
 import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
+import { AuditReadinessReportsPanel } from '../../components/AuditReadinessReportsPanel'
 import { DataExportsPanel } from '../../components/DataExportsPanel'
+import { ExceptionExemptionReportsPanel } from '../../components/ExceptionExemptionReportsPanel'
+import { RemediationQueueReportsPanel } from '../../components/RemediationQueueReportsPanel'
+import { ProductIntegrationHealthReportsPanel } from '../../components/ProductIntegrationHealthReportsPanel'
 import { OperatorReportsPanel } from '../../components/OperatorReportsPanel'
+import { WaiverReportsPanel } from '../../components/WaiverReportsPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
@@ -24,6 +29,27 @@ export function ReportsSection({ state }: Props) {
         canExport={canExport}
       />
       <OperatorReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <WaiverReportsPanel accessToken={state.accessToken} canRead={canRead} canExport={canExport} />
+      <ExceptionExemptionReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <RemediationQueueReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <AuditReadinessReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <ProductIntegrationHealthReportsPanel
         accessToken={state.accessToken}
         canRead={canRead}
         canExport={canExport}

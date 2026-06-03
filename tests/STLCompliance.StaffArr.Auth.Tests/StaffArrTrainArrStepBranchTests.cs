@@ -205,6 +205,106 @@ public class StaffArrTrainArrStepBranchTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Practical_step_requires_failure_comments_and_persists_structured_observation_fields()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Practical Subject", "practical.subject@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var trainerToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_trainer", personId: personId);
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+        var practicalStepId = await CreatePracticalStepAsync(adminToken, definitionId, "practical-check", "Practical check", sortOrder: 0);
+        var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
+
+        var failRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/training-assignments/{assignmentId}/steps/{practicalStepId}/submit",
+            trainerToken);
+        failRequest.Content = JsonContent.Create(new SubmitTrainingAssignmentStepRequest(
+            SelectedOptionIndexes: null,
+            PracticalResult: "fail",
+            Notes: "Observed the trainee under evaluation.",
+            PracticalObservationNotes: "Approach, setup, and shutdown were observed.",
+            SafetyCriticalFailure: true,
+            FailureComments: "The trainee skipped a required safety check.",
+            TraineeAcknowledged: true,
+            RetestRequired: true));
+        var failResponse = await _trainarrClient.SendAsync(failRequest);
+        failResponse.EnsureSuccessStatusCode();
+
+        var stepsAfter = await LoadAssignmentStepsAsync(adminToken, assignmentId);
+        var practicalAfter = stepsAfter.Single(x => x.StepKey == "practical-check");
+        Assert.Equal("failed", practicalAfter.Status);
+        Assert.NotNull(practicalAfter.ResponseJson);
+        Assert.Contains("safetyCriticalFailure", practicalAfter.ResponseJson, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("failureComments", practicalAfter.ResponseJson, StringComparison.OrdinalIgnoreCase);
+
+        var assignmentResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/training-assignments/{assignmentId}", adminToken));
+        assignmentResponse.EnsureSuccessStatusCode();
+        var detail = (await assignmentResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+        Assert.False(detail.CompletionRequirementsMet);
+
+        var missingCommentsRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/training-assignments/{assignmentId}/steps/{practicalStepId}/submit",
+            trainerToken);
+        missingCommentsRequest.Content = JsonContent.Create(new SubmitTrainingAssignmentStepRequest(
+            SelectedOptionIndexes: null,
+            PracticalResult: "fail",
+            Notes: "Observed the trainee under evaluation.",
+            PracticalObservationNotes: "Approach, setup, and shutdown were observed.",
+            SafetyCriticalFailure: false,
+            FailureComments: null,
+            TraineeAcknowledged: true,
+            RetestRequired: true));
+        var missingCommentsResponse = await _trainarrClient.SendAsync(missingCommentsRequest);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, missingCommentsResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Content_step_renders_lesson_config_and_requires_acknowledgement_when_configured()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Lesson Subject", "lesson.subject@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+        var contentStepId = await CreateLessonContentStepAsync(adminToken, definitionId, "lesson-ack", "Lesson acknowledgment", sortOrder: 0);
+        var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
+
+        var missingAckRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/training-assignments/{assignmentId}/steps/{contentStepId}/submit",
+            memberToken);
+        missingAckRequest.Content = JsonContent.Create(new SubmitTrainingAssignmentStepRequest(
+            SelectedOptionIndexes: null,
+            PracticalResult: null,
+            Notes: "Lesson reviewed.",
+            ContentAcknowledged: false));
+        var missingAckResponse = await _trainarrClient.SendAsync(missingAckRequest);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, missingAckResponse.StatusCode);
+
+        var submitRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/training-assignments/{assignmentId}/steps/{contentStepId}/submit",
+            memberToken);
+        submitRequest.Content = JsonContent.Create(new SubmitTrainingAssignmentStepRequest(
+            SelectedOptionIndexes: null,
+            PracticalResult: null,
+            Notes: "Lesson reviewed.",
+            ContentAcknowledged: true));
+        var submitResponse = await _trainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var stepsAfter = await LoadAssignmentStepsAsync(adminToken, assignmentId);
+        var contentAfter = stepsAfter.Single(x => x.StepKey == "lesson-ack");
+        Assert.Equal("completed", contentAfter.Status);
+        Assert.NotNull(contentAfter.ResponseJson);
+        Assert.Contains("acknowledged", contentAfter.ResponseJson, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("contentTitle", contentAfter.ResponseJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Visibility_branch_hides_step_until_dependency_status_met()
     {
         var personId = Guid.NewGuid();
@@ -294,6 +394,31 @@ public class StaffArrTrainArrStepBranchTests : IAsyncLifetime
         return await CreateStepAsync(accessToken, definitionId, stepKey, name, TrainingStepTypes.Quiz, configJson, sortOrder);
     }
 
+    private async Task<Guid> CreatePracticalStepAsync(
+        string accessToken,
+        Guid definitionId,
+        string stepKey,
+        string name,
+        int sortOrder = 0)
+    {
+        var configJson = """
+            {
+              "skillTaskName": "Demonstrate the required procedure under evaluator observation.",
+              "passCriteria": "Complete the task safely, in the correct order, without critical errors.",
+              "observationPrompts": [
+                "Setup",
+                "Execution",
+                "Shutdown"
+              ],
+              "requiresEvaluatorSignoff": true,
+              "requireTraineeAcknowledgement": true,
+              "requireFailureComments": true,
+              "requireRetestOnFailure": true
+            }
+            """;
+        return await CreateStepAsync(accessToken, definitionId, stepKey, name, TrainingStepTypes.Practical, configJson, sortOrder);
+    }
+
     private async Task<Guid> CreateContentStepAsync(
         string accessToken,
         Guid definitionId,
@@ -302,6 +427,24 @@ public class StaffArrTrainArrStepBranchTests : IAsyncLifetime
         int sortOrder = 0)
     {
         var configJson = """{"body":"Review material."}""";
+        return await CreateStepAsync(accessToken, definitionId, stepKey, name, TrainingStepTypes.Content, configJson, sortOrder);
+    }
+
+    private async Task<Guid> CreateLessonContentStepAsync(
+        string accessToken,
+        Guid definitionId,
+        string stepKey,
+        string name,
+        int sortOrder = 0)
+    {
+        var configJson = """
+            {
+              "title": "Lesson overview",
+              "body": "Review the assigned material and acknowledge the lesson.",
+              "externalUrl": "https://example.com/lesson",
+              "requireAcknowledgement": true
+            }
+            """;
         return await CreateStepAsync(accessToken, definitionId, stepKey, name, TrainingStepTypes.Content, configJson, sortOrder);
     }
 

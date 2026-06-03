@@ -10,6 +10,9 @@ export function PlatformSessionSettingsPanel() {
   const [accessTokenMinutes, setAccessTokenMinutes] = useState('15')
   const [refreshTokenDays, setRefreshTokenDays] = useState('7')
   const [rememberedRefreshTokenDays, setRememberedRefreshTokenDays] = useState('7')
+  const [requirePlatformAdminMfa, setRequirePlatformAdminMfa] = useState(false)
+  const [passwordMinLength, setPasswordMinLength] = useState('12')
+  const [requirePasswordComplexity, setRequirePasswordComplexity] = useState(true)
 
   const settingsQuery = useQuery({
     queryKey: ['platform-session-settings'],
@@ -24,6 +27,9 @@ export function PlatformSessionSettingsPanel() {
     setAccessTokenMinutes(String(data.accessTokenMinutes))
     setRefreshTokenDays(String(data.refreshTokenDays))
     setRememberedRefreshTokenDays(String(data.rememberedRefreshTokenDays))
+    setRequirePlatformAdminMfa(data.requirePlatformAdminMfa)
+    setPasswordMinLength(String(data.passwordMinLength))
+    setRequirePasswordComplexity(data.requirePasswordComplexity)
     setInitialized(true)
   }, [initialized, settingsQuery.data, settingsQuery.isLoading])
 
@@ -33,6 +39,9 @@ export function PlatformSessionSettingsPanel() {
         accessTokenMinutes: Number.parseInt(accessTokenMinutes, 10) || 15,
         refreshTokenDays: Number.parseInt(refreshTokenDays, 10) || 7,
         rememberedRefreshTokenDays: Number.parseInt(rememberedRefreshTokenDays, 10) || 7,
+        requirePlatformAdminMfa,
+        passwordMinLength: Number.parseInt(passwordMinLength, 10) || 12,
+        requirePasswordComplexity,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['platform-session-settings'] })
@@ -59,7 +68,7 @@ export function PlatformSessionSettingsPanel() {
         />
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label htmlFor="platform-session-access-minutes" className="block text-sm text-slate-200">
           Access token minutes
           <input
@@ -101,7 +110,51 @@ export function PlatformSessionSettingsPanel() {
             data-testid="platform-session-remembered-days"
           />
         </label>
+        <label htmlFor="platform-session-password-min-length" className="block text-sm text-slate-200">
+          Password minimum length
+          <input
+            id="platform-session-password-min-length"
+            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            type="number"
+            min={8}
+            max={128}
+            value={passwordMinLength}
+            onChange={(event) => setPasswordMinLength(event.target.value)}
+            data-testid="platform-session-password-min-length"
+          />
+        </label>
       </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="platform-session-require-admin-mfa">
+          <input
+            id="platform-session-require-admin-mfa"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            type="checkbox"
+            checked={requirePlatformAdminMfa}
+            onChange={(event) => setRequirePlatformAdminMfa(event.target.checked)}
+            data-testid="platform-session-require-admin-mfa"
+          />
+          Require MFA for platform admins
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="platform-session-require-password-complexity">
+          <input
+            id="platform-session-require-password-complexity"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            type="checkbox"
+            checked={requirePasswordComplexity}
+            onChange={(event) => setRequirePasswordComplexity(event.target.checked)}
+            data-testid="platform-session-require-password-complexity"
+          />
+          Require uppercase, lowercase, and a digit in passwords
+        </label>
+      </div>
+      <p className="mt-1 text-xs text-slate-500">
+        When enabled, platform-admin sign-in requires an account with MFA already turned on.
+      </p>
+      <p className="mt-1 text-xs text-slate-500">
+        Password policy applies to platform-user creation and password resets.
+      </p>
 
       <div className="mt-4 flex items-center gap-3">
         <button

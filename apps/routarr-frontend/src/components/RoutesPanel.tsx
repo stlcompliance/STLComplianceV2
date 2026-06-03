@@ -18,6 +18,9 @@ interface RoutesPanelProps {
   stopLabel: string
   stopAddress: string
   stopType: string
+  stopGeofenceAnchorLatitude: string
+  stopGeofenceAnchorLongitude: string
+  stopGeofenceRadiusMeters: string
   isLoading: boolean
   isDetailLoading: boolean
   isCreating: boolean
@@ -30,6 +33,9 @@ interface RoutesPanelProps {
   onStopLabelChange: (value: string) => void
   onStopAddressChange: (value: string) => void
   onStopTypeChange: (value: string) => void
+  onStopGeofenceAnchorLatitudeChange: (value: string) => void
+  onStopGeofenceAnchorLongitudeChange: (value: string) => void
+  onStopGeofenceRadiusMetersChange: (value: string) => void
   onCreateRoute: () => void
   onLinkTrip: () => void
   onUpdateStopStatus: (stopId: string, status: string) => void
@@ -56,6 +62,9 @@ export function RoutesPanel({
   stopLabel,
   stopAddress,
   stopType,
+  stopGeofenceAnchorLatitude,
+  stopGeofenceAnchorLongitude,
+  stopGeofenceRadiusMeters,
   isLoading,
   isDetailLoading,
   isCreating,
@@ -68,6 +77,9 @@ export function RoutesPanel({
   onStopLabelChange,
   onStopAddressChange,
   onStopTypeChange,
+  onStopGeofenceAnchorLatitudeChange,
+  onStopGeofenceAnchorLongitudeChange,
+  onStopGeofenceRadiusMetersChange,
   onCreateRoute,
   onLinkTrip,
   onUpdateStopStatus,
@@ -180,6 +192,36 @@ export function RoutesPanel({
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopAddress}
               onChange={(event) => onStopAddressChange(event.target.value)}
+            />
+          </label>
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-geofence-latitude">
+            Geofence latitude
+            <input
+              id="routes-stop-geofence-latitude"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={stopGeofenceAnchorLatitude}
+              onChange={(event) => onStopGeofenceAnchorLatitudeChange(event.target.value)}
+              placeholder="Optional anchor latitude"
+            />
+          </label>
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-geofence-longitude">
+            Geofence longitude
+            <input
+              id="routes-stop-geofence-longitude"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={stopGeofenceAnchorLongitude}
+              onChange={(event) => onStopGeofenceAnchorLongitudeChange(event.target.value)}
+              placeholder="Optional anchor longitude"
+            />
+          </label>
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-geofence-radius">
+            Geofence radius meters
+            <input
+              id="routes-stop-geofence-radius"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={stopGeofenceRadiusMeters}
+              onChange={(event) => onStopGeofenceRadiusMetersChange(event.target.value)}
+              placeholder="Defaults to 250"
             />
           </label>
           <div className="md:col-span-2">

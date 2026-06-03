@@ -648,7 +648,13 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
         Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationIssuePublicationJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
+        Assert.Contains(
             StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationIssuePublicationJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec,

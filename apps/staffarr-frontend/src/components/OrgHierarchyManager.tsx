@@ -1,5 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { OrgUnitResponse } from '../api/types'
 
 interface OrgHierarchyManagerProps {
@@ -89,6 +89,16 @@ export function OrgHierarchyManager({
   const selectableParents = selected
     ? rows.filter((x) => x.node.orgUnitId !== selected.orgUnitId).map((x) => x.node)
     : rows.map((x) => x.node)
+  const parentOptions = useMemo<PickerOption[]>(
+    () => rows.map(({ node }) => ({ value: node.orgUnitId, label: node.name })),
+    [rows],
+  )
+  const selectableParentOptions = useMemo<PickerOption[]>(
+    () => selectableParents.map((unit) => ({ value: unit.orgUnitId, label: unit.name })),
+    [selectableParents],
+  )
+  const createParentSelectedOption = parentOptions.find((option) => option.value === createParentId)
+  const editParentSelectedOption = selectableParentOptions.find((option) => option.value === editParentId)
 
   const handlePickForEdit = (orgUnit: OrgUnitResponse) => {
     setSelectedOrgUnitId(orgUnit.orgUnitId)
@@ -194,21 +204,18 @@ export function OrgHierarchyManager({
                 required
               />
             </label>
-            <label htmlFor="create-org-unit-parent" className="block text-sm text-slate-300">
+            <label className="block text-sm text-slate-300">
               Parent org unit
-              <select
-                id="create-org-unit-parent"
-                value={createParentId}
-                onChange={(event) => setCreateParentId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              >
-              <option value="">No parent (root)</option>
-              {rows.map(({ node }) => (
-                <option key={node.orgUnitId} value={node.orgUnitId}>
-                  {node.name}
-                </option>
-              ))}
-              </select>
+              <div className="mt-1">
+                <StaticSearchPicker
+                  value={createParentId}
+                  onChange={setCreateParentId}
+                  options={parentOptions}
+                  selectedOption={createParentSelectedOption}
+                  placeholder="No parent (root)"
+                  testId="create-org-unit-parent"
+                />
+              </div>
             </label>
             <button
               type="submit"
@@ -244,22 +251,18 @@ export function OrgHierarchyManager({
                 required
               />
             </label>
-            <label htmlFor="edit-org-unit-parent" className="block text-sm text-slate-300">
+            <label className="block text-sm text-slate-300">
               Parent org unit
-              <select
-                id="edit-org-unit-parent"
-                value={editParentId}
-                onChange={(event) => setEditParentId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                disabled={!selected}
-              >
-              <option value="">No parent (root)</option>
-              {selectableParents.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-              </select>
+              <div className="mt-1">
+                <StaticSearchPicker
+                  value={editParentId}
+                  onChange={setEditParentId}
+                  options={selectableParentOptions}
+                  selectedOption={editParentSelectedOption}
+                  placeholder="No parent (root)"
+                  testId="edit-org-unit-parent"
+                />
+              </div>
             </label>
             <div className="flex gap-3">
               <button

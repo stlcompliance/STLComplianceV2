@@ -12,6 +12,7 @@ import type {
   TrainingDefinitionStepBranchResponse,
   CreateTrainingEvidenceRequest,
   CreateTrainingProgramRequest,
+  GenerateTrainingProgramDraftRequest,
   HandoffSessionResponse,
   StaffarrIncidentRemediationResponse,
   TrainArrMeResponse,
@@ -23,14 +24,19 @@ import type {
   PublishTrainingAssignmentMaterialDemandRequest,
   PublishTrainingAssignmentMaterialDemandResponse,
   TrainingAssignmentMaterialDemandStatusEventResponse,
+  CreateTrainingAssignmentLaborEntryRequest,
+  TrainingAssignmentLaborEntryResponse,
   TrainingDefinitionResponse,
   TrainingDefinitionStepResponse,
   TrainingAssignmentStepProgressResponse,
   SubmitTrainingAssignmentStepRequest,
   TrainingEvidenceResponse,
   TrainingProgramDetailResponse,
+  TrainingProgramDraftResponse,
   TrainingProgramSummaryResponse,
   TrainingProgramVersionSummaryResponse,
+  CreateTrainingProgramContentReferenceRequest,
+  TrainingProgramContentReferenceResponse,
   StartProgramRevisionRequest,
   TrainingMatrixViewResponse,
   CreateTrainingMatrixEntryRequest,
@@ -62,6 +68,9 @@ import type {
   TrainingRulePackRequirementResponse,
   AssessRulePackImpactRequest,
   RulePackImpactAssessmentResponse,
+  QualificationWalletCredentialResponse,
+  QualificationWalletVerificationRequest,
+  QualificationWalletVerificationResponse,
   TrainingNotificationDispatchesResponse,
   TrainingNotificationSettingsResponse,
   UpsertTrainingNotificationSettingsRequest,
@@ -107,6 +116,7 @@ import type {
   IntegrationProbesResponse,
   AssignmentReportSummaryResponse,
   QualificationReportSummaryResponse,
+  QualificationPointInTimeReportResponse,
   ComplianceReportSummaryResponse,
   EntityExportManifestResponse,
 } from './types'
@@ -506,6 +516,18 @@ export async function createTrainingProgram(
   return parseJsonResponse<TrainingProgramDetailResponse>(response, 'Failed to create training program')
 }
 
+export async function generateTrainingProgramDraft(
+  accessToken: string,
+  payload: GenerateTrainingProgramDraftRequest,
+): Promise<TrainingProgramDraftResponse> {
+  const response = await fetch(`${apiBase}/api/training-programs/draft`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingProgramDraftResponse>(response, 'Failed to generate training program draft')
+}
+
 export async function updateTrainingProgram(
   accessToken: string,
   programId: string,
@@ -527,6 +549,98 @@ export async function getTrainingProgram(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<TrainingProgramDetailResponse>(response, 'Failed to load training program')
+}
+
+export async function getTrainingProgramContentReferences(
+  accessToken: string,
+  programId: string,
+): Promise<TrainingProgramContentReferenceResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-programs/${programId}/content-references`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingProgramContentReferenceResponse[]>(
+    response,
+    'Failed to load program content references',
+  )
+}
+
+export async function attachTrainingProgramContentReference(
+  accessToken: string,
+  programId: string,
+  payload: CreateTrainingProgramContentReferenceRequest,
+): Promise<TrainingProgramContentReferenceResponse> {
+  const response = await fetch(`${apiBase}/api/training-programs/${programId}/content-references`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingProgramContentReferenceResponse>(
+    response,
+    'Failed to attach program content reference',
+  )
+}
+
+export async function removeTrainingProgramContentReference(
+  accessToken: string,
+  programId: string,
+  contentReferenceId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/training-programs/${programId}/content-references/${contentReferenceId}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to remove program content reference')
+  }
+}
+
+export async function getTrainingAssignmentLaborEntries(
+  accessToken: string,
+  assignmentId: string,
+): Promise<TrainingAssignmentLaborEntryResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-assignments/${assignmentId}/labor`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingAssignmentLaborEntryResponse[]>(
+    response,
+    'Failed to load assignment labor entries',
+  )
+}
+
+export async function createTrainingAssignmentLaborEntry(
+  accessToken: string,
+  assignmentId: string,
+  payload: CreateTrainingAssignmentLaborEntryRequest,
+): Promise<TrainingAssignmentLaborEntryResponse> {
+  const response = await fetch(`${apiBase}/api/training-assignments/${assignmentId}/labor`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingAssignmentLaborEntryResponse>(
+    response,
+    'Failed to create assignment labor entry',
+  )
+}
+
+export async function removeTrainingAssignmentLaborEntry(
+  accessToken: string,
+  assignmentId: string,
+  laborEntryId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/labor/${laborEntryId}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to remove assignment labor entry')
+  }
 }
 
 export async function getTrainingProgramVersions(
@@ -676,6 +790,37 @@ export async function getQualificationIssueHistory(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse(response, 'Failed to load qualification issue history')
+}
+
+export async function getQualificationWalletCredential(
+  accessToken: string,
+  qualificationIssueId: string,
+): Promise<QualificationWalletCredentialResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/qualifications/${qualificationIssueId}/wallet-credential`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<QualificationWalletCredentialResponse>(
+    response,
+    'Failed to load qualification wallet credential',
+  )
+}
+
+export async function verifyQualificationWalletCredential(
+  accessToken: string,
+  payload: QualificationWalletVerificationRequest,
+): Promise<QualificationWalletVerificationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/qualifications/wallet/verify`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<QualificationWalletVerificationResponse>(
+    response,
+    'Failed to verify qualification wallet credential',
+  )
 }
 
 export async function getTrainingEvidence(
@@ -1886,6 +2031,31 @@ export async function exportQualificationReportSummaryCsv(
     throw await toApiError(response, 'Qualification report export failed')
   }
   return response.blob()
+}
+
+export async function getPointInTimeQualificationReport(
+  accessToken: string,
+  options: { staffarrPersonId: string; qualificationKey: string; actionTask: string; asOfDate?: string },
+): Promise<QualificationPointInTimeReportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/qualifications/point-in-time${buildReportQuery({
+      staffarrPersonId: options.staffarrPersonId,
+      qualificationKey: options.qualificationKey,
+      actionTask: options.actionTask,
+      asOfUtc: options.asOfDate ? new Date(`${options.asOfDate}T23:59:59.999Z`).toISOString() : undefined,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<QualificationPointInTimeReportResponse>(
+    response,
+    'Failed to load point-in-time qualification report',
+  )
+}
+
+export async function listQualificationIssuesForReport(
+  accessToken: string,
+): Promise<QualificationIssueListItemResponse[]> {
+  return listQualificationIssues(accessToken)
 }
 
 export async function getComplianceReportSummary(

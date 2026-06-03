@@ -1,5 +1,45 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { RulePackImpactPanel } from './RulePackImpactPanel'
 
 describe('RulePackImpactPanel', () => {
@@ -24,6 +64,7 @@ describe('RulePackImpactPanel', () => {
 
     expect(screen.getByRole('button', { name: /run impact assessment/i })).toBeDisabled()
     expect(screen.getByTestId('rule-pack-impact-key')).toBeInTheDocument()
+    expect(screen.getByLabelText('Rule pack')).toBeInTheDocument()
   })
 
   it('shows assessment summary and recommended actions', () => {

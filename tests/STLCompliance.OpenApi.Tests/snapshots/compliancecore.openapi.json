@@ -2821,6 +2821,90 @@
         }
       }
     },
+    "/api/reports/audit-readiness/summary": {
+      "get": {
+        "tags": [
+          "AuditReadinessReports"
+        ],
+        "operationId": "GetComplianceCoreAuditReadinessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "readinessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/audit-readiness/summary/export": {
+      "get": {
+        "tags": [
+          "AuditReadinessReports"
+        ],
+        "operationId": "ExportComplianceCoreAuditReadinessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "readinessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/evidence/missing/summary": {
       "get": {
         "tags": [
@@ -2869,6 +2953,78 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/exception-exemptions/summary": {
+      "get": {
+        "tags": [
+          "ExceptionExemptionReports"
+        ],
+        "operationId": "GetComplianceCoreExceptionExemptionReportSummary",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "effectType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/exception-exemptions/summary/export": {
+      "get": {
+        "tags": [
+          "ExceptionExemptionReports"
+        ],
+        "operationId": "ExportComplianceCoreExceptionExemptionReportSummary",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "effectType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -2951,6 +3107,32 @@
         }
       }
     },
+    "/api/reports/integration-health/summary": {
+      "get": {
+        "tags": [
+          "IntegrationHealthReports"
+        ],
+        "operationId": "GetComplianceCoreProductIntegrationHealthReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/integration-health/summary/export": {
+      "get": {
+        "tags": [
+          "IntegrationHealthReports"
+        ],
+        "operationId": "ExportComplianceCoreProductIntegrationHealthReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/operator/alerts": {
       "get": {
         "tags": [
@@ -2998,6 +3180,176 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/remediation-queue/summary": {
+      "get": {
+        "tags": [
+          "RemediationQueueReports"
+        ],
+        "operationId": "GetComplianceCoreRemediationQueueReportSummary",
+        "parameters": [
+          {
+            "name": "queueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/remediation-queue/summary/export": {
+      "get": {
+        "tags": [
+          "RemediationQueueReports"
+        ],
+        "operationId": "ExportComplianceCoreRemediationQueueReportSummary",
+        "parameters": [
+          {
+            "name": "queueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/waivers/summary": {
+      "get": {
+        "tags": [
+          "WaiverReports"
+        ],
+        "operationId": "GetComplianceCoreWaiverReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/waivers/summary/export": {
+      "get": {
+        "tags": [
+          "WaiverReports"
+        ],
+        "operationId": "ExportComplianceCoreWaiverReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -7102,6 +7454,90 @@
         }
       }
     },
+    "/api/v1/reports/audit-readiness/summary": {
+      "get": {
+        "tags": [
+          "AuditReadinessReports"
+        ],
+        "operationId": "GetComplianceCoreAuditReadinessReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "readinessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/audit-readiness/summary/export": {
+      "get": {
+        "tags": [
+          "AuditReadinessReports"
+        ],
+        "operationId": "ExportComplianceCoreAuditReadinessReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "readinessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/evidence/missing/summary": {
       "get": {
         "tags": [
@@ -7150,6 +7586,78 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/exception-exemptions/summary": {
+      "get": {
+        "tags": [
+          "ExceptionExemptionReports"
+        ],
+        "operationId": "GetComplianceCoreExceptionExemptionReportSummaryV1",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "effectType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/exception-exemptions/summary/export": {
+      "get": {
+        "tags": [
+          "ExceptionExemptionReports"
+        ],
+        "operationId": "ExportComplianceCoreExceptionExemptionReportSummaryV1",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "effectType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -7232,6 +7740,32 @@
         }
       }
     },
+    "/api/v1/reports/integration-health/summary": {
+      "get": {
+        "tags": [
+          "IntegrationHealthReports"
+        ],
+        "operationId": "GetComplianceCoreProductIntegrationHealthReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/integration-health/summary/export": {
+      "get": {
+        "tags": [
+          "IntegrationHealthReports"
+        ],
+        "operationId": "ExportComplianceCoreProductIntegrationHealthReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/operator/alerts": {
       "get": {
         "tags": [
@@ -7279,6 +7813,176 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/remediation-queue/summary": {
+      "get": {
+        "tags": [
+          "RemediationQueueReports"
+        ],
+        "operationId": "GetComplianceCoreRemediationQueueReportSummaryV1",
+        "parameters": [
+          {
+            "name": "queueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/remediation-queue/summary/export": {
+      "get": {
+        "tags": [
+          "RemediationQueueReports"
+        ],
+        "operationId": "ExportComplianceCoreRemediationQueueReportSummaryV1",
+        "parameters": [
+          {
+            "name": "queueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/waivers/summary": {
+      "get": {
+        "tags": [
+          "WaiverReports"
+        ],
+        "operationId": "GetComplianceCoreWaiverReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/waivers/summary/export": {
+      "get": {
+        "tags": [
+          "WaiverReports"
+        ],
+        "operationId": "ExportComplianceCoreWaiverReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -13653,6 +14357,21 @@
     },
     {
       "name": "MissingEvidenceReports"
+    },
+    {
+      "name": "WaiverReports"
+    },
+    {
+      "name": "ExceptionExemptionReports"
+    },
+    {
+      "name": "IntegrationHealthReports"
+    },
+    {
+      "name": "AuditReadinessReports"
+    },
+    {
+      "name": "RemediationQueueReports"
     },
     {
       "name": "EntityExports"

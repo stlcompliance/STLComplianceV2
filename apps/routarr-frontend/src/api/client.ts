@@ -37,6 +37,10 @@ import type {
   CorrectTripProofRequest,
   DriverPortalScheduleResponse,
   DriverPortalReportExceptionRequest,
+  DriverTimeEntryResponse,
+  DriverTimeTrackingResponse,
+  CreateDriverTimeEntryRequest,
+  UpdateDriverTimeEntryRequest,
   SubmitTripDvirRequest,
   TripExecutionSummaryResponse,
   TripCaptureReadinessResponse,
@@ -71,6 +75,7 @@ import type {
   TripDetailResponse,
   HandoffSessionResponse,
   LinkRouteTripRequest,
+  CheckRouteStopGeofenceRequest,
   RoutArrMeResponse,
   RoutArrSessionBootstrapResponse,
   RouteCalendarResponse,
@@ -462,6 +467,17 @@ export async function linkRouteTrip(
   return parseJsonResponse<RouteDetailResponse>(response, 'Failed to link route to trip')
 }
 
+export async function optimizeRouteStops(
+  accessToken: string,
+  routeId: string,
+): Promise<RouteDetailResponse> {
+  const response = await fetch(`${apiBase}/api/routes/${routeId}/optimize`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteDetailResponse>(response, 'Failed to optimize route stops')
+}
+
 export async function updateRouteStopStatus(
   accessToken: string,
   stopId: string,
@@ -473,6 +489,19 @@ export async function updateRouteStopStatus(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<RouteStopSummaryResponse>(response, 'Failed to update stop status')
+}
+
+export async function checkRouteStopGeofence(
+  accessToken: string,
+  stopId: string,
+  payload: CheckRouteStopGeofenceRequest,
+): Promise<RouteStopSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/routes/stops/${stopId}/geofence-check`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RouteStopSummaryResponse>(response, 'Failed to check stop geofence')
 }
 
 export async function getUnassignedWorkQueue(
@@ -503,6 +532,58 @@ export async function getDriverPortalSchedule(
   return parseJsonResponse<DriverPortalScheduleResponse>(
     response,
     'Failed to load driver schedule',
+  )
+}
+
+export async function getDriverPortalTimeTracking(
+  accessToken: string,
+  date?: string,
+): Promise<DriverTimeTrackingResponse> {
+  const params = new URLSearchParams()
+  if (date) {
+    params.set('date', date)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/driver-portal/time-tracking${query ? `?${query}` : ''}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<DriverTimeTrackingResponse>(
+    response,
+    'Failed to load driver time tracking',
+  )
+}
+
+export async function createDriverPortalTimeEntry(
+  accessToken: string,
+  payload: CreateDriverTimeEntryRequest,
+): Promise<DriverTimeEntryResponse> {
+  const response = await fetch(`${apiBase}/api/driver-portal/time-tracking`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DriverTimeEntryResponse>(
+    response,
+    'Failed to create driver time entry',
+  )
+}
+
+export async function updateDriverPortalTimeEntry(
+  accessToken: string,
+  entryId: string,
+  payload: UpdateDriverTimeEntryRequest,
+): Promise<DriverTimeEntryResponse> {
+  const response = await fetch(`${apiBase}/api/driver-portal/time-tracking/${entryId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DriverTimeEntryResponse>(
+    response,
+    'Failed to update driver time entry',
   )
 }
 

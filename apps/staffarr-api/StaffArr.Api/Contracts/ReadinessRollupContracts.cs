@@ -9,6 +9,8 @@ public sealed record ReadinessRollupSummaryResponse(
     int NotReadyCount,
     int OverrideCount,
     decimal ReadyPercent,
+    string ConfidenceLevel,
+    int ConfidenceScore,
     DateTimeOffset ComputedAt);
 
 public sealed record ReadinessRollupMemberResponse(

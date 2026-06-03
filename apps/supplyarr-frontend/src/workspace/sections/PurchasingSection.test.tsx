@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PurchasingSection } from './PurchasingSection'
@@ -23,6 +24,10 @@ vi.mock('../../components/RfqPanel', () => ({
   RfqPanel: () => null,
 }))
 
+vi.mock('../../components/VendorEmailInboxPanel', () => ({
+  VendorEmailInboxPanel: () => <div data-testid="supplyarr-vendor-email-inbox-panel" />,
+}))
+
 vi.mock('../../components/ProcurementCoordinationPanel', () => ({
   ProcurementCoordinationPanel: () => null,
 }))
@@ -39,9 +44,14 @@ vi.mock('../../components/ProcurementExceptionsPanel', () => ({
   ProcurementExceptionsPanel: () => null,
 }))
 
+vi.mock('../../components/ContractsImportPanel', () => ({
+  ContractsImportPanel: () => <div data-testid="supplyarr-contract-import-panel" />,
+}))
+
 const baseState = {
   accessToken: 'token',
   vendors: [],
+  vendorsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   purchaseRequestsQuery: { data: [], isLoading: false },
   purchaseOrdersQuery: { data: [], isLoading: false },
@@ -91,8 +101,14 @@ const baseState = {
 
 describe('PurchasingSection', () => {
   it('renders purchase order workflow panel on purchasing section', () => {
-    render(<PurchasingSection state={baseState} />)
+    render(
+      <MemoryRouter initialEntries={['/purchasing/procurement']}>
+        <PurchasingSection state={baseState} />
+      </MemoryRouter>,
+    )
     expect(screen.getByTestId('supplyarr-purchasing-po-workspace')).toBeInTheDocument()
     expect(screen.getByTestId('supplyarr-purchasing-pr-workspace')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-vendor-email-inbox-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-contract-import-panel')).toBeInTheDocument()
   })
 })

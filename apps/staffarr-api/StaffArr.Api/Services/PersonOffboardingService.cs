@@ -221,7 +221,11 @@ public sealed class PersonOffboardingService(
             cancellationToken);
 
         var activeRoleAssignments = await db.PersonRoleAssignments
-            .Where(x => x.TenantId == tenantId && x.PersonId == record.PersonId && x.Status == "active")
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == record.PersonId
+                && x.Status == "active"
+                && (x.ExpiresAt == null || x.ExpiresAt > now))
             .ToListAsync(cancellationToken);
         foreach (var assignment in activeRoleAssignments)
         {
@@ -515,6 +519,7 @@ public sealed class PersonOffboardingService(
         Guid personId,
         CancellationToken cancellationToken)
     {
+        var now = DateTimeOffset.UtcNow;
         var activeDirectReportCount = await db.People.CountAsync(
             x => x.TenantId == tenantId
                 && x.ManagerPersonId == personId
@@ -524,7 +529,11 @@ public sealed class PersonOffboardingService(
             x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "open",
             cancellationToken);
         var activeRoleAssignmentCount = await db.PersonRoleAssignments.CountAsync(
-            x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active",
+            x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && x.Status == "active"
+                && (x.ExpiresAt == null || x.ExpiresAt > now),
             cancellationToken);
         var activeOrgAssignmentCount = await db.OrgUnitAssignments.CountAsync(
             x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active",

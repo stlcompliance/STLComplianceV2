@@ -277,17 +277,19 @@ public sealed class RoleTemplateService(
         CancellationToken cancellationToken = default)
     {
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        var asOf = DateTimeOffset.UtcNow;
         var assignments = await db.PersonRoleAssignments
             .AsNoTracking()
             .Where(x =>
                 x.TenantId == tenantId
                 && x.PersonId == personId
-                && x.Status == "active")
+                && x.Status == "active"
+                && (x.ExpiresAt == null || x.ExpiresAt > asOf))
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
         if (assignments.Count == 0)
         {
-            return new EffectivePermissionProjectionResponse(personId, DateTimeOffset.UtcNow, []);
+            return new EffectivePermissionProjectionResponse(personId, asOf, []);
         }
 
         var roleIds = assignments.Select(x => x.RoleTemplateId).Distinct().ToArray();
@@ -375,7 +377,7 @@ public sealed class RoleTemplateService(
             })
             .ToList();
 
-        return new EffectivePermissionProjectionResponse(personId, DateTimeOffset.UtcNow, permissions);
+        return new EffectivePermissionProjectionResponse(personId, asOf, permissions);
     }
 
     public async Task<IReadOnlyList<PermissionHistoryTimelineEntryResponse>> ListPermissionHistoryTimelineAsync(
@@ -420,6 +422,7 @@ public sealed class RoleTemplateService(
     {
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
         await EnsureRoleTemplateExistsAsync(tenantId, request.RoleTemplateId, requireActive: true, cancellationToken);
+        ValidateExpiresAt(request.ExpiresAt);
         var (scopeType, scopeValue) = await NormalizeScopeAsync(
             tenantId,
             request.ScopeType,
@@ -433,7 +436,8 @@ public sealed class RoleTemplateService(
                 && x.PersonId == personId
                 && x.RoleTemplateId == request.RoleTemplateId
                 && x.ScopeType == scopeType
-                && x.ScopeValue == scopeValue,
+                && x.ScopeValue == scopeValue
+                && x.ExpiresAt == request.ExpiresAt,
             cancellationToken);
         if (duplicateExists)
         {
@@ -443,6 +447,8 @@ public sealed class RoleTemplateService(
                 409);
         }
 
+        var initialStatus = await DetermineInitialAssignmentStatusAsync(tenantId, request.RoleTemplateId, cancellationToken);
+
         var assignment = new PersonRoleAssignment
         {
             Id = Guid.NewGuid(),
@@ -451,7 +457,8 @@ public sealed class RoleTemplateService(
             RoleTemplateId = request.RoleTemplateId,
             ScopeType = scopeType,
             ScopeValue = scopeValue,
-            Status = "active",
+            Status = initialStatus,
+            ExpiresAt = request.ExpiresAt,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -577,6 +584,7 @@ public sealed class RoleTemplateService(
         Guid personId,
         CancellationToken cancellationToken)
     {
+        var asOf = DateTimeOffset.UtcNow;
         var assignments = await db.PersonRoleAssignments
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.PersonId == personId)
@@ -606,6 +614,8 @@ public sealed class RoleTemplateService(
                     assignment.ScopeType,
                     assignment.ScopeValue,
                     assignment.Status,
+                    GetEffectiveStatus(assignment, asOf),
+                    assignment.ExpiresAt,
                     assignment.CreatedAt,
                     assignment.UpdatedAt);
             })
@@ -618,11 +628,13 @@ public sealed class RoleTemplateService(
         Guid roleTemplateId,
         CancellationToken cancellationToken)
     {
+        var asOf = DateTimeOffset.UtcNow;
         var activeAssignments = await db.PersonRoleAssignments
             .Where(x =>
                 x.TenantId == tenantId
                 && x.RoleTemplateId == roleTemplateId
-                && x.Status == "active")
+                && x.Status == "active"
+                && (x.ExpiresAt == null || x.ExpiresAt > asOf))
             .ToListAsync(cancellationToken);
         foreach (var assignment in activeAssignments)
         {
@@ -712,6 +724,37 @@ public sealed class RoleTemplateService(
 
         db.PermissionHistoryEvents.AddRange(events);
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string GetEffectiveStatus(PersonRoleAssignment assignment, DateTimeOffset asOf)
+    {
+        if (!string.Equals(assignment.Status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            return assignment.Status;
+        }
+
+        if (assignment.ExpiresAt is DateTimeOffset expiresAt && expiresAt <= asOf)
+        {
+            return "expired";
+        }
+
+        return assignment.Status;
+    }
+
+    private static void ValidateExpiresAt(DateTimeOffset? expiresAt)
+    {
+        if (expiresAt is not DateTimeOffset value)
+        {
+            return;
+        }
+
+        if (value <= DateTimeOffset.UtcNow)
+        {
+            throw new StlApiException(
+                "role_assignment.validation",
+                "Role assignment expiration must be in the future.",
+                400);
+        }
     }
 
     private async Task EnsurePersonExistsAsync(Guid tenantId, Guid personId, CancellationToken cancellationToken)
@@ -902,5 +945,25 @@ public sealed class RoleTemplateService(
         }
 
         return normalized;
+    }
+
+    private async Task<string> DetermineInitialAssignmentStatusAsync(
+        Guid tenantId,
+        Guid roleTemplateId,
+        CancellationToken cancellationToken)
+    {
+        var sensitivePermissions = await db.RoleTemplatePermissions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.RoleTemplateId == roleTemplateId)
+            .Join(
+                db.PermissionTemplates.AsNoTracking(),
+                mapping => mapping.PermissionTemplateId,
+                permission => permission.Id,
+                (mapping, permission) => permission.Sensitivity)
+            .AnyAsync(sensitivity =>
+                !string.Equals(sensitivity, "standard", StringComparison.OrdinalIgnoreCase),
+                cancellationToken);
+
+        return sensitivePermissions ? "pending_review" : "active";
     }
 }

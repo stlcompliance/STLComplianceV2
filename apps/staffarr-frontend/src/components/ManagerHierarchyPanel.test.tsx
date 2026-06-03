@@ -2,6 +2,40 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { formatManagerMutationError, ManagerHierarchyPanel } from './ManagerHierarchyPanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      value,
+      onChange,
+      options,
+      testId,
+      placeholder,
+    }: {
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      testId?: string
+      placeholder?: string
+    }) => (
+      <label>
+        {placeholder}
+        <input
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 const people = [
   {
     personId: 'person-1',
@@ -90,7 +124,9 @@ describe('ManagerHierarchyPanel', () => {
       />,
     )
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'person-1' } })
+    fireEvent.change(screen.getByTestId('manager-hierarchy-manager'), {
+      target: { value: 'person-1' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Update manager' }))
 
     expect(onUpdateManager).toHaveBeenCalledWith('person-1')

@@ -45,6 +45,7 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     {
         var response = await _client.GetAsync("/health");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        AssertSecurityHeaders(response);
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
@@ -57,6 +58,7 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     {
         var response = await _client.GetAsync("/api/v1/health");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        AssertSecurityHeaders(response);
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
@@ -69,6 +71,7 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     {
         var response = await _client.GetAsync("/health/ready");
         Assert.True(response.IsSuccessStatusCode);
+        AssertSecurityHeaders(response);
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
@@ -82,11 +85,21 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     {
         var response = await _client.GetAsync("/api/v1/health/ready");
         Assert.True(response.IsSuccessStatusCode);
+        AssertSecurityHeaders(response);
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
         Assert.Equal(expectedProductKey, payload.Product);
         Assert.NotNull(payload.Checks);
         Assert.Contains("self", payload.Checks.Keys);
+    }
+
+    private static void AssertSecurityHeaders(HttpResponseMessage response)
+    {
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
+        Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
+        Assert.Equal("camera=(), microphone=(), geolocation=()", response.Headers.GetValues("Permissions-Policy").Single());
+        Assert.Equal("default-src 'none'; base-uri 'none'; frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());
     }
 }

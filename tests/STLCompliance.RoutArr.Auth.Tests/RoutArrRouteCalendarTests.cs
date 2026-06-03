@@ -124,7 +124,16 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
             "Linked route for calendar",
             trip.TripId,
             [
-                new CreateRouteStopRequest("stop-cal-1", "Pickup yard", "North depot", "pickup", 1, dayStart.AddHours(10)),
+                new CreateRouteStopRequest(
+                    "stop-cal-1",
+                    "Pickup yard",
+                    "North depot",
+                    "pickup",
+                    1,
+                    null,
+                    null,
+                    null,
+                    dayStart.AddHours(10)),
             ]));
         (await _routarrClient.SendAsync(createRouteRequest)).EnsureSuccessStatusCode();
 

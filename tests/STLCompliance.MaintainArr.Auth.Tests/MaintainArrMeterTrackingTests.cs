@@ -337,6 +337,38 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Meter_pm_forecast_uses_usage_velocity_and_confidence()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+
+        var meter = await CreateMeterAsync(token, assetId, 1000m);
+        _ = await CreateMeterPmScheduleAsync(token, assetId, meter.AssetMeterId, intervalUsage: 200m, nextDueAtUsage: 1200m);
+
+        var now = DateTimeOffset.UtcNow;
+
+        var firstReadingRequest = Authorized(HttpMethod.Post, $"/api/meters/{meter.AssetMeterId}/readings", token);
+        firstReadingRequest.Content = JsonContent.Create(new RecordMeterReadingRequest(1000m, now.AddDays(-20), string.Empty, false));
+        (await _maintainarrClient.SendAsync(firstReadingRequest)).EnsureSuccessStatusCode();
+
+        var secondReadingRequest = Authorized(HttpMethod.Post, $"/api/meters/{meter.AssetMeterId}/readings", token);
+        secondReadingRequest.Content = JsonContent.Create(new RecordMeterReadingRequest(1080m, now, string.Empty, false));
+        (await _maintainarrClient.SendAsync(secondReadingRequest)).EnsureSuccessStatusCode();
+
+        var forecastResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/meters/{meter.AssetMeterId}/pm-forecast", token));
+        forecastResponse.EnsureSuccessStatusCode();
+        var forecast = (await forecastResponse.Content.ReadFromJsonAsync<MeterPmForecastResponse>())!;
+
+        Assert.Equal(4m, forecast.UsageVelocityPerDay);
+        Assert.Equal(120m, forecast.PredictedUsageUntilDue);
+        Assert.Equal(30m, forecast.PredictedDaysUntilDue);
+        Assert.NotNull(forecast.PredictedDueAt);
+        Assert.True(forecast.ConfidenceScore >= 70m);
+        Assert.True(forecast.IsDueSoon);
+    }
+
+    [Fact]
     public async Task Record_reading_rejects_regression_without_correction()
     {
         var token = await RedeemMaintainArrTokenAsync();

@@ -38,6 +38,8 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
 
     public DbSet<TrainingAssignment> TrainingAssignments => Set<TrainingAssignment>();
+    public DbSet<TrainingAssignmentLaborEntry> TrainingAssignmentLaborEntries =>
+        Set<TrainingAssignmentLaborEntry>();
 
     public DbSet<TrainingAssignmentMaterialDemandLine> TrainingAssignmentMaterialDemandLines =>
         Set<TrainingAssignmentMaterialDemandLine>();
@@ -52,6 +54,9 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
 
     public DbSet<TrainingProgramDefinition> TrainingProgramDefinitions => Set<TrainingProgramDefinition>();
+
+    public DbSet<TrainingProgramContentReference> TrainingProgramContentReferences =>
+        Set<TrainingProgramContentReference>();
 
     public DbSet<TrainingProgramVersion> TrainingProgramVersions => Set<TrainingProgramVersion>();
 
@@ -378,6 +383,22 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
         });
 
+        modelBuilder.Entity<TrainingAssignmentLaborEntry>(entity =>
+        {
+            entity.ToTable("trainarr_training_assignment_labor_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LaborTypeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.HoursWorked).HasPrecision(18, 2);
+            entity.Property(x => x.CostPerHour).HasPrecision(18, 2);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId, x.LoggedAt });
+            entity.HasOne(x => x.TrainingAssignment)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<TrainingAssignmentMaterialDemandLine>(entity =>
         {
             entity.ToTable("trainarr_training_assignment_material_demand_lines");
@@ -453,6 +474,14 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
             entity.HasIndex(x => new { x.TenantId, x.ProgramKey }).IsUnique();
 
+            entity.HasMany(x => x.ContentReferences)
+
+                .WithOne(x => x.TrainingProgram)
+
+                .HasForeignKey(x => x.TrainingProgramId)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
         });
 
 
@@ -482,6 +511,42 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => new { x.TrainingProgramId, x.SortOrder });
+
+        });
+
+        modelBuilder.Entity<TrainingProgramContentReference>(entity =>
+
+        {
+
+            entity.ToTable("trainarr_training_program_content_references");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.ContentType).HasMaxLength(64).IsRequired();
+
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+
+            entity.Property(x => x.ReferenceValue).HasMaxLength(1024).IsRequired();
+
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+
+            entity.Property(x => x.LocaleTag).HasMaxLength(32);
+
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.ContentType, x.ReferenceValue, x.LocaleTag })
+
+                .IsUnique();
+
+            entity.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.CreatedAt });
+
+            entity.HasOne(x => x.TrainingProgram)
+
+                .WithMany(x => x.ContentReferences)
+
+                .HasForeignKey(x => x.TrainingProgramId)
+
+                .OnDelete(DeleteBehavior.Cascade);
 
         });
 

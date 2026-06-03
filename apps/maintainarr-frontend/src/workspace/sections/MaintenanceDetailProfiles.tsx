@@ -219,6 +219,10 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
   const readings = s.meterReadingsQuery?.data ?? []
   const forecast = s.meterForecastQuery?.data ?? null
   const dueForecasts = forecast?.linkedSchedules.filter((item) => item.dueStatus === 'due' || item.isDueFromUsage) ?? []
+  const forecastVelocityLabel = forecast?.usageVelocityPerDay != null
+    ? `${forecast.usageVelocityPerDay.toFixed(1)} ${forecast.unit}/day`
+    : 'No trend yet'
+  const forecastConfidenceLabel = `${Math.round(forecast?.confidenceScore ?? 0)}%`
 
   return (
     <ProfileDetailsLayout
@@ -239,6 +243,8 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
         { label: 'Readings', value: readings.length, hint: `Last ${formatDate(meter.lastReadingAt)}`, icon: <Activity className="h-5 w-5" />, tone: 'neutral' },
         { label: 'PM links', value: forecast?.linkedSchedules.length ?? 0, hint: 'Usage-based schedules', icon: <ListChecks className="h-5 w-5" />, tone: 'neutral' },
         { label: 'Due from usage', value: dueForecasts.length, hint: 'Forecasted due items', icon: <CalendarClock className="h-5 w-5" />, tone: dueForecasts.length > 0 ? 'warn' : 'good' },
+        { label: 'Usage velocity', value: forecastVelocityLabel, hint: 'Recent readings trend', icon: <Route className="h-5 w-5" />, tone: forecast?.usageVelocityPerDay ? 'info' : 'neutral' },
+        { label: 'Confidence', value: forecastConfidenceLabel, hint: 'Forecast confidence', icon: <BadgeCheck className="h-5 w-5" />, tone: forecast?.confidenceScore && forecast.confidenceScore >= 70 ? 'good' : forecast?.confidenceScore && forecast.confidenceScore >= 45 ? 'warn' : 'neutral' },
       ]}
       tabs={['Overview', 'Readings', 'Forecast', 'PM Links', 'History']}
       snapshotTitle="Meter snapshot"
@@ -277,12 +283,12 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
         </section>
       )}
       decisionTitle="Meter decision"
-      decisionBadge={{ label: dueForecasts.length > 0 ? 'Due watch' : 'Current', tone: dueForecasts.length > 0 ? 'warn' : 'good' }}
-      decisionIcon={dueForecasts.length > 0 ? <AlertTriangle className="h-5 w-5 text-amber-300" /> : <CheckCircle2 className="h-5 w-5 text-emerald-300" />}
-      decisionSummary={dueForecasts.length > 0 ? 'Usage threshold approaching' : 'Meter readings support PM forecast'}
-      decisionDetail={dueForecasts.length > 0 ? 'One or more linked schedules are due from usage and should be reviewed.' : 'Latest reading and forecast data support normal PM planning.'}
-      allowedChecks={[meter.status === 'active', readings.length > 0, dueForecasts.length === 0].filter(Boolean).length}
-      blockedChecks={[meter.status !== 'active', dueForecasts.length > 0].filter(Boolean).length}
+      decisionBadge={{ label: forecast?.isDueSoon || dueForecasts.length > 0 ? 'Due watch' : 'Current', tone: forecast?.isDueSoon || dueForecasts.length > 0 ? 'warn' : 'good' }}
+      decisionIcon={(forecast?.isDueSoon || dueForecasts.length > 0) ? <AlertTriangle className="h-5 w-5 text-amber-300" /> : <CheckCircle2 className="h-5 w-5 text-emerald-300" />}
+      decisionSummary={forecast?.isDueSoon || dueForecasts.length > 0 ? 'Usage threshold approaching' : 'Meter readings support PM forecast'}
+      decisionDetail={forecast?.isDueSoon || dueForecasts.length > 0 ? 'One or more linked schedules are due from usage and should be reviewed.' : 'Latest reading and forecast data support normal PM planning.'}
+      allowedChecks={[meter.status === 'active', readings.length > 0, !(forecast?.isDueSoon || dueForecasts.length > 0)].filter(Boolean).length}
+      blockedChecks={[meter.status !== 'active', forecast?.isDueSoon || dueForecasts.length > 0].filter(Boolean).length}
       railSections={[
         {
           title: 'Linked PM forecast',
@@ -302,6 +308,36 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
               </div>
             ),
           }),
+        },
+        {
+          title: 'Predictive maintenance',
+          icon: <Route className="h-5 w-5" />,
+          content: forecast ? (
+            <div className="space-y-3 text-sm text-slate-300">
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Velocity</p>
+                <p className="mt-1 text-white">{forecastVelocityLabel}</p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Predicted due</p>
+                <p className="mt-1 text-white">
+                  {forecast.predictedDueAt ? new Date(forecast.predictedDueAt).toLocaleString() : 'Not predicted'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {forecast.predictedDaysUntilDue != null ? `${forecast.predictedDaysUntilDue.toFixed(1)} days remaining` : 'Forecast confidence too low to project a date.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Confidence</p>
+                <p className="mt-1 text-white">{forecastConfidenceLabel}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {forecast.isDueSoon ? 'Due soon prediction raised from current usage trend.' : 'No due-soon warning from the current meter trend.'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No PM forecast is available for this meter yet.</p>
+          ),
         },
       ]}
     />

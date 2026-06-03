@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type {
   ExternalPartyResponse,
   PartResponse,
@@ -118,6 +122,54 @@ export function ReturnsPanel({
         label: `${po.orderKey} · line ${line.lineNumber} · ${line.partKey} (${line.quantityReceived} received)`,
       })),
   )
+  const vendorOptions = useMemo<PickerOption[]>(
+    () =>
+      vendors.map((vendor) => ({
+        value: vendor.partyId,
+        label: `${vendor.displayName} (${vendor.partyKey})`,
+      })),
+    [vendors],
+  )
+  const selectedVendorOption = useMemo<PickerOption | undefined>(
+    () => vendorOptions.find((option) => option.value === selectedVendorPartyId),
+    [selectedVendorPartyId, vendorOptions],
+  )
+  const partOptions = useMemo<PickerOption[]>(
+    () =>
+      parts.map((part) => ({
+        value: part.partId,
+        label: `${part.displayName} (${part.partKey})`,
+      })),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedReturnPartId),
+    [partOptions, selectedReturnPartId],
+  )
+  const inventoryBinOptions = useMemo<PickerOption[]>(
+    () =>
+      inventoryBins.map((bin) => ({
+        value: bin.binId,
+        label: bin.label,
+      })),
+    [inventoryBins],
+  )
+  const selectedInventoryBinOption = useMemo<PickerOption | undefined>(
+    () => inventoryBinOptions.find((option) => option.value === selectedInventoryBinId),
+    [inventoryBinOptions, selectedInventoryBinId],
+  )
+  const poLineOptions = useMemo<PickerOption[]>(
+    () =>
+      poLines.map((line) => ({
+        value: line.purchaseOrderLineId,
+        label: line.label,
+      })),
+    [poLines],
+  )
+  const selectedPoLineOption = useMemo<PickerOption | undefined>(
+    () => poLineOptions.find((option) => option.value === selectedReturnPoLineId),
+    [poLineOptions, selectedReturnPoLineId],
+  )
   const selectedVendorLabel =
     vendors.find((vendor) => vendor.partyId === selectedVendorPartyId)?.displayName ?? ''
   const selectedPartLabel =
@@ -222,74 +274,50 @@ export function ReturnsPanel({
               label="Return key"
               disabled={isCreating}
             />
-            <label htmlFor="vendor-return-inventory-bin" className="block text-sm text-slate-400">
-              Inventory bin
-              <select
-                id="vendor-return-inventory-bin"
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={selectedInventoryBinId}
-                onChange={(e) => onSelectedInventoryBinIdChange(e.target.value)}
-              >
-                <option value="">Select bin…</option>
-                {inventoryBins.map((bin) => (
-                  <option key={bin.binId} value={bin.binId}>
-                    {bin.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="vendor-return-inventory-bin"
+              label="Inventory bin"
+              value={selectedInventoryBinId}
+              onChange={onSelectedInventoryBinIdChange}
+              options={inventoryBinOptions}
+              selectedOption={selectedInventoryBinOption}
+              placeholder="Search bins…"
+              testId="vendor-return-bin-picker"
+            />
             {returnSource === 'stock' ? (
               <>
-                <label htmlFor="vendor-return-vendor" className="block text-sm text-slate-400">
-                  Return vendor
-                  <select
-                    id="vendor-return-vendor"
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                    value={selectedVendorPartyId}
-                    onChange={(e) => onSelectedVendorPartyIdChange(e.target.value)}
-                  >
-                    <option value="">Select vendor…</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor.partyId} value={vendor.partyId}>
-                        {vendor.displayName} ({vendor.partyKey})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label htmlFor="vendor-return-part" className="block text-sm text-slate-400">
-                  Return part
-                  <select
-                    id="vendor-return-part"
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                    value={selectedReturnPartId}
-                    onChange={(e) => onSelectedReturnPartIdChange(e.target.value)}
-                  >
-                    <option value="">Select part…</option>
-                    {parts.map((part) => (
-                      <option key={part.partId} value={part.partId}>
-                        {part.displayName} ({part.partKey})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <StaticSearchPicker
+                  id="vendor-return-vendor"
+                  label="Return vendor"
+                  value={selectedVendorPartyId}
+                  onChange={onSelectedVendorPartyIdChange}
+                  options={vendorOptions}
+                  selectedOption={selectedVendorOption}
+                  placeholder="Search vendors…"
+                  testId="vendor-return-vendor-picker"
+                />
+                <StaticSearchPicker
+                  id="vendor-return-part"
+                  label="Return part"
+                  value={selectedReturnPartId}
+                  onChange={onSelectedReturnPartIdChange}
+                  options={partOptions}
+                  selectedOption={selectedPartOption}
+                  placeholder="Search parts…"
+                  testId="vendor-return-part-picker"
+                />
               </>
             ) : (
-              <label htmlFor="vendor-return-po-line" className="block text-sm text-slate-400">
-                Return PO line
-                <select
-                  id="vendor-return-po-line"
-                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                  value={selectedReturnPoLineId}
-                  onChange={(e) => onSelectedReturnPoLineIdChange(e.target.value)}
-                >
-                  <option value="">Select line…</option>
-                  {poLines.map((line) => (
-                    <option key={line.purchaseOrderLineId} value={line.purchaseOrderLineId}>
-                      {line.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StaticSearchPicker
+                id="vendor-return-po-line"
+                label="Return PO line"
+                value={selectedReturnPoLineId}
+                onChange={onSelectedReturnPoLineIdChange}
+                options={poLineOptions}
+                selectedOption={selectedPoLineOption}
+                placeholder="Search PO lines…"
+                testId="vendor-return-po-line-picker"
+              />
             )}
             <label htmlFor="vendor-return-quantity" className="block text-sm text-slate-400">
               Return quantity

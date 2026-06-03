@@ -1,5 +1,6 @@
 import { PartCatalogPanel } from '../../components/PartCatalogPanel'
 import { PartSubstitutionsPanel } from '../../components/PartSubstitutionsPanel'
+import { VendorCatalogApiPanel } from '../../components/VendorCatalogApiPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -57,6 +58,17 @@ export function CatalogSection({ state: s }: Props) {
         canRead={s.canReadPartsInventoryReports}
         selectedPartId={s.substitutionPartId}
         onSelectedPartIdChange={s.setSubstitutionPartId}
+      />
+
+      <VendorCatalogApiPanel
+        accessToken={s.accessToken}
+        canManage={s.canManageCatalog}
+        parts={s.partsQuery.data ?? []}
+        vendors={s.vendors.map((v) => ({
+          partyId: v.partyId,
+          displayName: v.displayName,
+          partyKey: v.partyKey,
+        }))}
       />
     </div>
   )

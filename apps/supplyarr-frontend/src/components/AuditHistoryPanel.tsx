@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { ScrollText } from 'lucide-react'
-import { ApiErrorCallout, ControlledSelect, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  StaticSearchPicker,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 
 import { listAuditHistory } from '../api/client'
 
@@ -86,6 +91,18 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       .map((value) => ({ value, label: value }))
   }, [auditItems, targetTypeFilter])
 
+  const selectedTargetTypeOption = useMemo<PickerOption | undefined>(
+    () =>
+      targetTypeOptions.find((option) => option.value === targetTypeFilter) ??
+      (targetTypeFilter
+        ? {
+            value: targetTypeFilter,
+            label: targetTypeFilter,
+          }
+        : undefined),
+    [targetTypeFilter, targetTypeOptions],
+  )
+
   const targetIdOptions = useMemo(() => {
     const values = new Set<string>()
     for (const item of auditItems) {
@@ -106,6 +123,18 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       .sort((left, right) => left.localeCompare(right))
       .map((value) => ({ value, label: value }))
   }, [auditItems, targetIdFilter, targetTypeFilter])
+
+  const selectedTargetIdOption = useMemo<PickerOption | undefined>(
+    () =>
+      targetIdOptions.find((option) => option.value === targetIdFilter) ??
+      (targetIdFilter
+        ? {
+            value: targetIdFilter,
+            label: targetIdFilter,
+          }
+        : undefined),
+    [targetIdFilter, targetIdOptions],
+  )
 
   return (
     <section
@@ -136,7 +165,7 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             }}
           />
         </label>
-        <ControlledSelect
+        <StaticSearchPicker
           id="audit-history-target-type-filter"
           label="Target type"
           value={targetTypeFilter}
@@ -147,11 +176,11 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             setTargetIdFilter('')
           }}
           options={targetTypeOptions}
-          emptyLabel="Any"
+          selectedOption={selectedTargetTypeOption}
+          placeholder="Search target types…"
           testId="audit-history-target-type-filter"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
         />
-        <ControlledSelect
+        <StaticSearchPicker
           id="audit-history-target-id-filter"
           label="Target id"
           value={targetIdFilter}
@@ -161,9 +190,9 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             setTargetIdFilter(value)
           }}
           options={targetIdOptions}
-          emptyLabel="Any"
+          selectedOption={selectedTargetIdOption}
+          placeholder="Search target ids…"
           testId="audit-history-target-id-filter"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
         />
         <label htmlFor="audit-history-result-filter" className="text-xs text-slate-400">
           Audit result filter

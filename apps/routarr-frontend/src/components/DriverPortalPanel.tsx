@@ -14,9 +14,24 @@ import {
   startDriverPortalTrip,
   submitDriverPortalTripDvir,
 } from '../api/client'
-import type { DriverPortalTripRow } from '../api/types'
+import type {
+  DispatchExceptionSummaryResponse,
+  DriverPortalTripRow,
+  TripDvirInspectionResponse,
+  TripProofRecordResponse,
+} from '../api/types'
+import {
+  enqueueDriverPortalOfflineAction,
+  formatDriverPortalOfflineAction,
+  isDriverPortalOfflineError,
+  loadDriverPortalOfflineActions,
+  removeDriverPortalOfflineAction,
+  replayDriverPortalOfflineAction,
+  type DriverPortalOfflineAction,
+} from '../lib/driverPortalOfflineQueue'
 import { TripCaptureAttachmentPanel } from './TripCaptureAttachmentPanel'
 import { TripDvirSubmitForm } from './TripDvirSubmitForm'
+import { DriverTimeTrackingPanel } from './DriverTimeTrackingPanel'
 
 type Props = {
   accessToken: string
@@ -37,10 +52,12 @@ function DriverPortalExceptionSection({
   accessToken,
   trip,
   onReported,
+  onOfflineQueueChanged,
 }: {
   accessToken: string
   trip: DriverPortalTripRow
   onReported: () => void
+  onOfflineQueueChanged: (message: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -48,25 +65,65 @@ function DriverPortalExceptionSection({
   const [exceptionType, setExceptionType] = useState('traffic_delay')
   const [reportError, setReportError] = useState<string | null>(null)
   const [reportedKey, setReportedKey] = useState<string | null>(null)
+  const [offlineNotice, setOfflineNotice] = useState<string | null>(null)
 
   if (!REPORTABLE_EXCEPTION_STATUSES.has(trip.dispatchStatus)) {
     return null
   }
 
   const reportMutation = useMutation({
-    mutationFn: () =>
-      reportDriverPortalTripException(accessToken, trip.tripId, {
+    mutationFn: async () => {
+      const payload = {
         title,
         description,
         exceptionType,
-      }),
+      }
+      try {
+        if (typeof window !== 'undefined' && window.navigator.onLine === false) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'exception',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        return await reportDriverPortalTripException(accessToken, trip.tripId, payload)
+      } catch (err) {
+        if (isDriverPortalOfflineError(err)) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'exception',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        throw err
+      }
+    },
     onSuccess: (created) => {
       setReportError(null)
-      setReportedKey(created.exceptionKey)
+      if ('queued' in created && created.queued) {
+        setOfflineNotice('Exception saved offline and will sync when you reconnect.')
+        setReportedKey(null)
+      } else {
+        setOfflineNotice(null)
+        const onlineCreated = created as DispatchExceptionSummaryResponse
+        setReportedKey(onlineCreated.exceptionKey)
+        onReported()
+      }
       setTitle('')
       setDescription('')
       setOpen(false)
-      onReported()
     },
     onError: (err: Error) => setReportError(err.message),
   })
@@ -76,7 +133,9 @@ function DriverPortalExceptionSection({
       className="mt-3 border-t border-slate-700 pt-3"
       data-testid={`driver-portal-exception-${trip.tripId}`}
     >
-      {reportedKey ? (
+      {offlineNotice ? (
+        <p className="text-xs text-emerald-400">{offlineNotice}</p>
+      ) : reportedKey ? (
         <p className="text-xs text-emerald-400">
           Exception {reportedKey} reported to dispatch.
         </p>
@@ -153,15 +212,18 @@ function TripProofDvirSection({
   accessToken,
   trip,
   onUpdated,
+  onOfflineQueueChanged,
 }: {
   accessToken: string
   trip: DriverPortalTripRow
   onUpdated: () => void
+  onOfflineQueueChanged: (message: string) => void
 }) {
   const [proofType, setProofType] = useState<'pickup' | 'delivery'>('pickup')
   const [referenceKey, setReferenceKey] = useState('')
   const [notes, setNotes] = useState('')
   const [dvirError, setDvirError] = useState<string | null>(null)
+  const [captureNotice, setCaptureNotice] = useState<string | null>(null)
 
   const executionQuery = useQuery({
     queryKey: ['driver-portal-execution', trip.tripId],
@@ -181,39 +243,125 @@ function TripProofDvirSection({
       trip.dispatchStatus === 'in_progress' || trip.dispatchStatus === 'dispatched',
   })
 
-  const proofMutation = useMutation({
-    mutationFn: (type: 'pickup' | 'delivery') =>
-      createDriverPortalTripProof(accessToken, trip.tripId, {
+  const proofMutation = useMutation<
+    TripProofRecordResponse | { queued: true },
+    Error,
+    'pickup' | 'delivery'
+  >({
+    mutationFn: async (type: 'pickup' | 'delivery') => {
+      const payload = {
         proofType: type,
         referenceKey: referenceKey || undefined,
         notes: notes || undefined,
         vehicleRefKey: trip.vehicleRefKey,
-      }),
-    onSuccess: () => {
+      }
+      try {
+        if (typeof window !== 'undefined' && window.navigator.onLine === false) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'proof',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        return await createDriverPortalTripProof(accessToken, trip.tripId, payload)
+      } catch (err) {
+        if (isDriverPortalOfflineError(err)) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'proof',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        throw err
+      }
+    },
+    onSuccess: (result) => {
       setReferenceKey('')
       setNotes('')
-      onUpdated()
+      setCaptureNotice(
+        'queued' in result && result.queued
+          ? 'Pickup proof saved offline and will sync when you reconnect.'
+          : null,
+      )
+      if (!('queued' in result && result.queued)) {
+        onUpdated()
+      }
     },
   })
 
-  const dvirMutation = useMutation({
-    mutationFn: (payload: {
+  const dvirMutation = useMutation<
+    TripDvirInspectionResponse | { queued: true },
+    Error,
+    {
       phase: 'pre_trip' | 'post_trip'
       result: string
       odometerReading?: number
       defectNotes?: string
       vehicleRefKey?: string
-    }) =>
-      submitDriverPortalTripDvir(accessToken, trip.tripId, {
+    }
+  >({
+    mutationFn: async (payload) => {
+      const request = {
         phase: payload.phase,
         result: payload.result,
         vehicleRefKey: payload.vehicleRefKey ?? trip.vehicleRefKey ?? undefined,
         odometerReading: payload.odometerReading,
         defectNotes: payload.defectNotes,
-      }),
-    onSuccess: () => {
+      }
+      try {
+        if (typeof window !== 'undefined' && window.navigator.onLine === false) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'dvir',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload: request,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        return await submitDriverPortalTripDvir(accessToken, trip.tripId, request)
+      } catch (err) {
+        if (isDriverPortalOfflineError(err)) {
+          const queued = enqueueDriverPortalOfflineAction({
+            kind: 'dvir',
+            tripId: trip.tripId,
+            tripNumber: trip.tripNumber,
+            tripTitle: trip.title,
+            payload: request,
+          })
+          onOfflineQueueChanged(
+            `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+          )
+          return { queued: true as const }
+        }
+        throw err
+      }
+    },
+    onSuccess: (result) => {
       setDvirError(null)
-      onUpdated()
+      setCaptureNotice(
+        'queued' in result && result.queued
+          ? 'DVIR saved offline and will sync when you reconnect.'
+          : null,
+      )
+      if (!('queued' in result && result.queued)) {
+        onUpdated()
+      }
     },
     onError: (err: Error) => setDvirError(err.message),
   })
@@ -285,6 +433,8 @@ function TripProofDvirSection({
           onUploaded={onUpdated}
         />
       ))}
+
+      {captureNotice ? <p className="mt-2 text-xs text-emerald-400">{captureNotice}</p> : null}
 
       {showCapture ? (
         <div className="mt-2 space-y-3">
@@ -379,12 +529,14 @@ function TripCard({
   onAction,
   onProofDvirUpdated,
   pendingTripId,
+  onOfflineQueueChanged,
 }: {
   trip: DriverPortalTripRow
   accessToken: string
   onAction: (tripId: string, action: 'dispatch' | 'start' | 'complete' | 'close') => void
   onProofDvirUpdated: () => void
   pendingTripId: string | null
+  onOfflineQueueChanged: (message: string) => void
 }) {
   const busy = pendingTripId === trip.tripId
   const startTitle =
@@ -458,12 +610,14 @@ function TripCard({
         accessToken={accessToken}
         trip={trip}
         onReported={onProofDvirUpdated}
+        onOfflineQueueChanged={onOfflineQueueChanged}
       />
 
       <TripProofDvirSection
         accessToken={accessToken}
         trip={trip}
         onUpdated={onProofDvirUpdated}
+        onOfflineQueueChanged={onOfflineQueueChanged}
       />
     </li>
   )
@@ -477,6 +631,7 @@ function TripList({
   onAction,
   onProofDvirUpdated,
   pendingTripId,
+  onOfflineQueueChanged,
 }: {
   title: string
   trips: DriverPortalTripRow[]
@@ -485,6 +640,7 @@ function TripList({
   onAction: (tripId: string, action: 'dispatch' | 'start' | 'complete' | 'close') => void
   onProofDvirUpdated: () => void
   pendingTripId: string | null
+  onOfflineQueueChanged: (message: string) => void
 }) {
   return (
     <section className="mt-6" data-testid={`driver-portal-${title.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -501,6 +657,7 @@ function TripList({
               onAction={onAction}
               onProofDvirUpdated={onProofDvirUpdated}
               pendingTripId={pendingTripId}
+              onOfflineQueueChanged={onOfflineQueueChanged}
             />
           ))}
         </ul>
@@ -513,11 +670,24 @@ export function DriverPortalPanel({ accessToken }: Props) {
   const queryClient = useQueryClient()
   const [pendingTripId, setPendingTripId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [offlineActions, setOfflineActions] = useState<DriverPortalOfflineAction[]>(
+    () => loadDriverPortalOfflineActions(),
+  )
+  const [offlineNotice, setOfflineNotice] = useState<string | null>(null)
 
   const scheduleQuery = useQuery({
     queryKey: ['driver-portal-schedule'],
     queryFn: () => getDriverPortalSchedule(accessToken),
   })
+
+  const refreshOfflineActions = () => {
+    setOfflineActions(loadDriverPortalOfflineActions())
+  }
+
+  const onOfflineQueueChanged = (message: string) => {
+    refreshOfflineActions()
+    setOfflineNotice(message)
+  }
 
   const invalidateProofQueries = async () => {
     await queryClient.invalidateQueries({ queryKey: ['driver-portal-schedule'] })
@@ -525,7 +695,9 @@ export function DriverPortalPanel({ accessToken }: Props) {
     await queryClient.invalidateQueries({ queryKey: ['driver-portal-capture-readiness'] })
   }
 
-  const mutation = useMutation({
+  const scheduleTrips = [...(scheduleQuery.data?.todayTrips ?? []), ...(scheduleQuery.data?.upcomingTrips ?? [])]
+
+  const mutation = useMutation<unknown, Error, { tripId: string; action: 'dispatch' | 'start' | 'complete' | 'close' }>({
     mutationFn: async ({
       tripId,
       action,
@@ -535,12 +707,52 @@ export function DriverPortalPanel({ accessToken }: Props) {
     }) => {
       setPendingTripId(tripId)
       setActionError(null)
-      if (action === 'dispatch') return dispatchDriverPortalTrip(accessToken, tripId)
-      if (action === 'start') return startDriverPortalTrip(accessToken, tripId)
-      if (action === 'complete') return completeDriverPortalTrip(accessToken, tripId)
-      return closeDriverPortalTrip(accessToken, tripId)
+      try {
+        if (typeof window !== 'undefined' && window.navigator.onLine === false) {
+          const trip = scheduleTrips.find((item) => item.tripId === tripId)
+          if (trip) {
+            const queued = enqueueDriverPortalOfflineAction({
+              kind: 'trip',
+              tripId: trip.tripId,
+              tripNumber: trip.tripNumber,
+              tripTitle: trip.title,
+              action,
+            })
+            onOfflineQueueChanged(
+              `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+            )
+          }
+          return { queued: true as const }
+        }
+
+        if (action === 'dispatch') return await dispatchDriverPortalTrip(accessToken, tripId)
+        if (action === 'start') return await startDriverPortalTrip(accessToken, tripId)
+        if (action === 'complete') return await completeDriverPortalTrip(accessToken, tripId)
+        return await closeDriverPortalTrip(accessToken, tripId)
+      } catch (err) {
+        if (isDriverPortalOfflineError(err)) {
+          const trip = scheduleTrips.find((item) => item.tripId === tripId)
+          if (trip) {
+            const queued = enqueueDriverPortalOfflineAction({
+              kind: 'trip',
+              tripId: trip.tripId,
+              tripNumber: trip.tripNumber,
+              tripTitle: trip.title,
+              action,
+            })
+            onOfflineQueueChanged(
+              `Saved ${formatDriverPortalOfflineAction(queued)} offline and queued it for sync.`,
+            )
+          }
+          return { queued: true as const }
+        }
+        throw err
+      }
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
+      if (typeof result === 'object' && result !== null && 'queued' in result) {
+        return
+      }
       await invalidateProofQueries()
       await queryClient.invalidateQueries({ queryKey: ['trips'] })
       await queryClient.invalidateQueries({ queryKey: ['dispatch-active-trips'] })
@@ -564,6 +776,30 @@ export function DriverPortalPanel({ accessToken }: Props) {
   }
 
   const schedule = scheduleQuery.data!
+  const hasOfflineActions = offlineActions.length > 0
+
+  const handleResyncOfflineActions = async () => {
+    setActionError(null)
+    setOfflineNotice(null)
+
+    for (const action of [...offlineActions]) {
+      try {
+        await replayDriverPortalOfflineAction(accessToken, action)
+        removeDriverPortalOfflineAction(action.id)
+        refreshOfflineActions()
+      } catch (err) {
+        setActionError(
+          getErrorMessage(err, 'One or more offline entries could not be resynced yet.'),
+        )
+        return
+      }
+    }
+
+    await invalidateProofQueries()
+    await queryClient.invalidateQueries({ queryKey: ['trips'] })
+    await queryClient.invalidateQueries({ queryKey: ['dispatch-active-trips'] })
+    setOfflineNotice('All pending offline entries were resynced.')
+  }
 
   return (
     <div data-testid="driver-portal-panel">
@@ -583,6 +819,49 @@ export function DriverPortalPanel({ accessToken }: Props) {
         </p>
       ) : null}
 
+      {offlineNotice ? (
+        <p className="mt-3 text-sm text-emerald-400" role="status">
+          {offlineNotice}
+        </p>
+      ) : null}
+
+      <section className="mt-4 rounded border border-slate-700 bg-slate-950/50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">Offline queue</h3>
+            <p className="text-xs text-slate-500">
+              Capture form entries while offline, then resync them when connectivity returns.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+            disabled={!hasOfflineActions}
+            onClick={() => void handleResyncOfflineActions()}
+          >
+            Resync pending entries
+          </button>
+        </div>
+        {hasOfflineActions ? (
+          <ul className="mt-3 space-y-1 text-xs text-slate-400" data-testid="driver-portal-offline-queue">
+            {offlineActions.map((action) => (
+              <li key={action.id} className="rounded border border-slate-800 bg-slate-950/60 px-2 py-1">
+                {formatDriverPortalOfflineAction(action)}
+                <span className="ml-2 text-slate-600">{formatTimestamp(action.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-xs text-slate-500" data-testid="driver-portal-offline-empty">
+            No pending offline entries.
+          </p>
+        )}
+      </section>
+
+      <div className="mt-4">
+        <DriverTimeTrackingPanel accessToken={accessToken} />
+      </div>
+
       <TripList
         title="Today"
         trips={schedule.todayTrips}
@@ -591,6 +870,7 @@ export function DriverPortalPanel({ accessToken }: Props) {
         onAction={(tripId, action) => mutation.mutate({ tripId, action })}
         onProofDvirUpdated={() => void invalidateProofQueries()}
         pendingTripId={pendingTripId}
+        onOfflineQueueChanged={onOfflineQueueChanged}
       />
 
       <TripList
@@ -601,6 +881,7 @@ export function DriverPortalPanel({ accessToken }: Props) {
         onAction={(tripId, action) => mutation.mutate({ tripId, action })}
         onProofDvirUpdated={() => void invalidateProofQueries()}
         pendingTripId={pendingTripId}
+        onOfflineQueueChanged={onOfflineQueueChanged}
       />
     </div>
   )

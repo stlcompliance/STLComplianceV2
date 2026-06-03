@@ -1,6 +1,12 @@
 namespace NexArr.Api.Contracts;
 
-public sealed record LoginRequest(string Email, string Password, Guid? TenantId, bool RememberDevice = false);
+public sealed record LoginRequest(
+    string Email,
+    string Password,
+    Guid? TenantId,
+    bool RememberDevice = false,
+    string? MfaCode = null,
+    string? RecoveryCode = null);
 
 public sealed record RenewSessionRequest(string RefreshToken);
 

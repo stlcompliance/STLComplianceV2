@@ -1,8 +1,13 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
 import { InspectionTemplateBuilderPanel } from './InspectionTemplateBuilderPanel'
 
 describe('InspectionTemplateBuilderPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   const baseProps = {
     canManage: true,
     templates: [
@@ -105,6 +110,8 @@ describe('InspectionTemplateBuilderPanel', () => {
     onCreateItem: vi.fn(),
     onSaveAssetTypes: vi.fn(),
     onActivateTemplate: vi.fn(),
+    onCloneTemplate: vi.fn(),
+    onImportTemplateJson: vi.fn(async () => {}),
     isCreatingTemplate: false,
     isSavingBuilder: false,
   }
@@ -116,6 +123,34 @@ describe('InspectionTemplateBuilderPanel', () => {
     expect(screen.getByText('Daily Walkaround')).toBeInTheDocument()
     expect(screen.getByText('Horn operates correctly')).toBeInTheDocument()
     expect(screen.getByText('Forklift (vehicles)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clone template' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export JSON' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Template JSON')).toBeInTheDocument()
+  })
+
+  it('downloads the selected template JSON export', () => {
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:template-json')
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const originalCreateElement = document.createElement.bind(document)
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation(((tagName: string) => {
+      const element = originalCreateElement(tagName)
+      if (tagName.toLowerCase() === 'a') {
+        return { ...element, click } as unknown as HTMLAnchorElement
+      }
+      return element
+    }) as typeof document.createElement)
+
+    render(<InspectionTemplateBuilderPanel {...baseProps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Export JSON' }))
+
+    expect(createObjectUrl).toHaveBeenCalledTimes(1)
+    expect(click).toHaveBeenCalledTimes(1)
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:template-json')
+
+    createObjectUrl.mockRestore()
+    revokeObjectUrl.mockRestore()
+    createElementSpy.mockRestore()
   })
 
   it('shows empty state when no templates exist', () => {
@@ -130,5 +165,30 @@ describe('InspectionTemplateBuilderPanel', () => {
     )
 
     expect(screen.getByText('No inspection templates yet.')).toBeInTheDocument()
+  })
+
+  it('submits imported JSON with key override', async () => {
+    const onImportTemplateJson = vi.fn(async () => {})
+    render(
+      <InspectionTemplateBuilderPanel
+        {...baseProps}
+        onImportTemplateJson={onImportTemplateJson}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Imported template key override'), {
+      target: { value: 'imported-walkaround' },
+    })
+    fireEvent.change(screen.getByLabelText('Template JSON'), {
+      target: { value: JSON.stringify(baseProps.selectedTemplate, null, 2) },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Import template' }))
+
+    await vi.waitFor(() => {
+      expect(onImportTemplateJson).toHaveBeenCalledWith(
+        JSON.stringify(baseProps.selectedTemplate, null, 2),
+        'imported-walkaround',
+      )
+    })
   })
 })

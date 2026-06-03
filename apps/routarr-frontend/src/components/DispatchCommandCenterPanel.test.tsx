@@ -3,6 +3,45 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DispatchCommandCenterPanel } from './DispatchCommandCenterPanel'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 vi.mock('../api/client', () => ({
   getDispatchCommandCenter: vi.fn(),
   upsertDispatchBoardState: vi.fn(),
@@ -115,7 +154,7 @@ describe('DispatchCommandCenterPanel', () => {
     expect(screen.getByTestId('command-center-driver-chips')).toBeTruthy()
   })
 
-  it('previews assignment before assigning driver from select', async () => {
+  it('previews assignment before assigning driver from picker', async () => {
     vi.stubGlobal('confirm', vi.fn(() => true))
     vi.mocked(client.getDispatchCommandCenter).mockResolvedValue({
       generatedAt: new Date().toISOString(),
@@ -210,8 +249,8 @@ describe('DispatchCommandCenterPanel', () => {
     vi.mocked(client.assignTripDriver).mockResolvedValue({} as never)
 
     renderPanel(true)
-    await screen.findByTestId('command-center-driver-select-t1')
-    fireEvent.change(screen.getByTestId('command-center-driver-select-t1'), {
+    await screen.findByTestId('command-center-driver-picker-t1')
+    fireEvent.change(screen.getByTestId('command-center-driver-picker-t1'), {
       target: { value: 'person-12345678' },
     })
     fireEvent.click(screen.getByTestId('command-center-assign-t1'))

@@ -53,6 +53,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `compliancecore-m12-worker-settings-smoke.spec.ts` | Compliance Core Admin M12 analytics worker settings save (W231/W232) |
 | `compliancecore-audit-delivery-orchestration-smoke.spec.ts` | Compliance Core Admin audit delivery orchestration panel: status sections + trigger controls visible (W240/W242; no live triggers) |
 | `trainarr-assignment-material-demand-smoke.spec.ts` | TrainArr handoff → assignment workspace material demand panel: lines, optional publish, procurement badge/timeline (W233/W234) |
+| `trainarr-routarr-qualification-issue-publication-journey-smoke.spec.ts` | TrainArr handoff → `/assignments/{id}` completion: evaluation + signoffs issue a qualification grant publication, then RoutArr `/dispatch` assign confirms driver eligibility stays unlocked (W330; browser-completed publication chain) |
 | `routarr-dispatch-command-center-smoke.spec.ts` | RoutArr handoff → `/dispatch` command center panel: daily/weekly scope toggle, status columns or empty state (W209/W235) |
 | `routarr-dispatch-exception-queue-smoke.spec.ts` | RoutArr handoff → `/dispatch` exception queue panel: heading, create form when triage allowed, open rows or empty state (W210/W243) |
 | `routarr-dispatch-exception-triage-depth-smoke.spec.ts` | RoutArr handoff → `/dispatch` exception queue triage depth: bulk actions panel, resolution template picker, row selection enables bulk controls, overdue filter + SLA badge when fixture seeded (W254/W256; no bulk assign/resolve clicks) |

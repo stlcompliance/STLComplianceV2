@@ -2,6 +2,47 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider } from '../../feedback'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div>
+          {options.map((option) => (
+            <button key={option.value} type="button" onClick={() => onChange(option.value)}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
+
 import * as nexarr from '../../api/nexarrClient'
 import { PlatformUsersPage } from './PlatformUsersPage'
 
@@ -119,6 +160,12 @@ describe('PlatformUsersPage', () => {
           slug: 'main',
           displayName: 'Main Tenant',
           status: 'active',
+          subscriptionTier: 'standard',
+          billingCustomerId: null,
+          billingSubscriptionId: null,
+          billingGraceDays: null,
+          isTrial: false,
+          isInternalTenant: false,
           createdAt: '2026-06-01T00:00:00Z',
           modifiedAt: '2026-06-02T00:00:00Z',
         },
@@ -127,6 +174,12 @@ describe('PlatformUsersPage', () => {
           slug: 'backup',
           displayName: 'Backup Tenant',
           status: 'active',
+          subscriptionTier: 'standard',
+          billingCustomerId: null,
+          billingSubscriptionId: null,
+          billingGraceDays: null,
+          isTrial: false,
+          isInternalTenant: false,
           createdAt: '2026-06-01T00:00:00Z',
           modifiedAt: '2026-06-02T00:00:00Z',
         },
@@ -247,6 +300,9 @@ describe('PlatformUsersPage', () => {
       isMfaEnabled: true,
       wasAlreadySet: false,
       modifiedAt: '2026-06-03T12:00:00Z',
+      mfaSecret: 'JBSWY3DPEHPK3PXP',
+      provisioningUri: 'otpauth://totp/STL%20Compliance%20Suite:user%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=STL%20Compliance%20Suite&digits=6&period=30',
+      recoveryCodes: ['ABCD-EFGH-IJKL', 'MNOP-QRST-UVWX'],
     })
     vi.mocked(nexarr.disablePlatformUser).mockResolvedValue({
       userId: '11111111-1111-1111-1111-111111111111',
@@ -352,6 +408,10 @@ describe('PlatformUsersPage', () => {
         true,
       )
     })
+    expect(await screen.findByText('Secret')).toBeInTheDocument()
+    expect(screen.getByText('JBSWY3DPEHPK3PXP')).toBeInTheDocument()
+    expect(screen.getByText('ABCD-EFGH-IJKL')).toBeInTheDocument()
+    expect(screen.getByText('MNOP-QRST-UVWX')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Revoke' }))
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
@@ -395,20 +455,23 @@ describe('PlatformUsersPage', () => {
       )
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Assign membership' }))
+    const membershipSection = screen.getByText('Tenant memberships').closest('section')
+    expect(membershipSection).toBeTruthy()
+    expect(within(membershipSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
+    expect(within(membershipSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()
+    fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Backup Tenant (backup)' }))
+    fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Assign membership' }))
 
     await waitFor(() => {
       expect(nexarr.assignPlatformUserTenantMembership).toHaveBeenCalledWith(
         '11111111-1111-1111-1111-111111111111',
         {
-          tenantId: '33333333-3333-3333-3333-333333333333',
+          tenantId: '55555555-5555-5555-5555-555555555555',
           roleKey: 'tenant_user',
         },
       )
     })
 
-    const membershipSection = screen.getByText('Tenant memberships').closest('section')
-    expect(membershipSection).toBeTruthy()
     fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Remove' }))
     fireEvent.click(screen.getByRole('button', { name: 'Remove membership' }))
 
@@ -419,20 +482,23 @@ describe('PlatformUsersPage', () => {
       )
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Assign role' }))
+    const roleSection = screen.getByText('Platform roles').closest('section')
+    expect(roleSection).toBeTruthy()
+    expect(within(roleSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
+    expect(within(roleSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()
+    fireEvent.click(within(roleSection!).getByRole('button', { name: 'Backup Tenant (backup)' }))
+    fireEvent.click(within(roleSection!).getByRole('button', { name: 'Assign role' }))
 
     await waitFor(() => {
       expect(nexarr.assignPlatformUserRole).toHaveBeenCalledWith(
         '11111111-1111-1111-1111-111111111111',
         {
           roleKey: 'platform_support',
-          tenantId: null,
+          tenantId: '55555555-5555-5555-5555-555555555555',
         },
       )
     })
 
-    const roleSection = screen.getByText('Platform roles').closest('section')
-    expect(roleSection).toBeTruthy()
     fireEvent.click(within(roleSection!).getAllByRole('button', { name: 'Remove' })[0])
     fireEvent.click(screen.getByRole('button', { name: 'Remove role' }))
 

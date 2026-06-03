@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   Activity,
   AlertTriangle,
   Boxes,
   CheckCircle2,
+  BarChart3,
   ClipboardCheck,
   ClipboardList,
   DatabaseZap,
@@ -22,9 +24,18 @@ import {
   ControlledSelect,
   FormField,
   ProductAppShell,
+  buildProductLaunchUrlMap,
+  formatProductLaunchError,
+  getLaunchCatalog,
+  resolveProductWorkspaceBootstrapError,
+  resolveSuiteHomeUrl,
+  useProductWorkspaceLaunch,
   type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
+import { getSessionBootstrap } from './api/client'
+import { clearSession, loadSession } from './auth/sessionStorage'
+import { ReportsPanel } from './components/ReportsPanel'
 
 type LoadArrMetrics = {
   activeLocations: number
@@ -509,11 +520,16 @@ type TruckStockFormState = {
 
 type KitFormState = {
   kitId: string
+  operation: string
   quantity: string
   personId: string
   reasonCode: string
   evidenceSummary: string
+  targetPersonId: string
+  targetLocationId: string
 }
+
+type KitOperation = 'build' | 'reserve' | 'pick' | 'break' | 'replenish' | 'inspect' | 'assign' | 'return' | 'expire-components' | 'track-location'
 
 type ViewKey =
   | 'inventory'
@@ -523,6 +539,7 @@ type ViewKey =
   | 'kits'
   | 'locations'
   | 'counts'
+  | 'reports'
   | 'tasks'
   | 'holds'
   | 'unexplained'
@@ -546,6 +563,7 @@ const loadarrRoutes: LoadArrRoute[] = [
   { key: 'truckstock', label: 'Truck Stock', path: '/truck-stock', icon: Truck as NavIcon },
   { key: 'locations', label: 'Locations', path: '/locations', icon: MapPin as NavIcon },
   { key: 'counts', label: 'Counts', path: '/counts', icon: Activity as NavIcon },
+  { key: 'reports', label: 'Reports', path: '/reports', icon: BarChart3 as NavIcon },
   {
     key: 'tasks',
     label: 'Tasks',
@@ -575,6 +593,10 @@ const productNavItems: ProductNavItem[] = loadarrRoutes
   }))
 
 const loadarrRouteByPath = new Map(loadarrRoutes.map((route) => [route.path, route.key]))
+
+const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
+const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
+const apiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
 
 const fallbackSummary: LoadArrWorkspaceSummary = {
   generatedAt: '2026-06-03T14:00:00Z',
@@ -1096,6 +1118,27 @@ const kitReasonOptions: PickerOption[] = [
   { value: 'route_replenishment', label: 'Route replenishment' },
 ]
 
+const kitOperationOptions: PickerOption[] = [
+  { value: 'build', label: 'Build' },
+  { value: 'reserve', label: 'Reserve' },
+  { value: 'pick', label: 'Pick' },
+  { value: 'break', label: 'Break' },
+  { value: 'replenish', label: 'Replenish' },
+  { value: 'inspect', label: 'Inspect' },
+  { value: 'assign', label: 'Assign' },
+  { value: 'return', label: 'Return' },
+  { value: 'expire-components', label: 'Expire components' },
+  { value: 'track-location', label: 'Track location' },
+]
+
+const kitPersonOptions: PickerOption[] = [
+  { value: 'person-route-stock-lead', label: 'Jordan Reed' },
+  { value: 'person-hazmat-reviewer', label: 'Taylor Brooks' },
+  { value: 'person-hazmat-supervisor', label: 'Riley Quinn' },
+  { value: 'person-inventory-clerk', label: 'Avery Morgan' },
+  { value: 'person-inventory-supervisor', label: 'Morgan Patel' },
+]
+
 const holdTypeOptions: PickerOption[] = [
   { value: 'compliance', label: 'Compliance' },
   { value: 'quality', label: 'Quality' },
@@ -1291,15 +1334,19 @@ const initialTruckStockForm: TruckStockFormState = {
 
 const initialKitForm: KitFormState = {
   kitId: 'kit-pm-emergency-17',
+  operation: 'build',
   quantity: '1',
   personId: 'person-route-stock-lead',
   reasonCode: 'kit_build',
   evidenceSummary: 'Kit lifecycle action captured from the warehouse shell',
+  targetPersonId: 'person-hazmat-reviewer',
+  targetLocationId: 'loc-truck-17',
 }
 
 export function App() {
   const location = useLocation()
   const navigate = useNavigate()
+  const session = loadSession()
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
   const [query, setQuery] = useState('')
@@ -1343,6 +1390,20 @@ export function App() {
   const [kitForm, setKitForm] = useState<KitFormState>(initialKitForm)
   const [kitStatus, setKitStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [kitResult, setKitResult] = useState<LoadArrKitMutation | null>(null)
+  const sessionQuery = useQuery({
+    queryKey: ['loadarr-session', session?.accessToken],
+    queryFn: () => getSessionBootstrap(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
+  const launchCatalogQuery = useQuery({
+    queryKey: ['loadarr-launch-catalog', session?.accessToken],
+    queryFn: () => getLaunchCatalog(apiBase, session!.accessToken, 'loadarr'),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
   const normalizedPathname = location.pathname.replace(/\/+$/, '') || '/'
   const activeView = useMemo<ViewKey>(() => {
     if (normalizedPathname === '/') {
@@ -1362,6 +1423,18 @@ export function App() {
       navigate('/inventory', { replace: true })
     }
   }, [navigate, normalizedPathname])
+
+  useEffect(() => {
+    if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
+      clearSession()
+    }
+  }, [sessionQuery.error, sessionQuery.isError])
+
+  useEffect(() => {
+    if (launchCatalogQuery.isError && resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)) {
+      clearSession()
+    }
+  }, [launchCatalogQuery.error, launchCatalogQuery.isError])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1715,6 +1788,8 @@ export function App() {
         ...current,
         kitId: fallback.id,
         personId: fallback.assignedPersonId,
+        targetPersonId: fallback.assignedPersonId,
+        targetLocationId: fallback.locationId,
       }))
     }
   }, [kitForm.kitId, kitRecords])
@@ -2191,7 +2266,7 @@ export function App() {
     }
   }
 
-  const performKitAction = async (action: 'build' | 'break' | 'replenish') => {
+  const performKitAction = async () => {
     const record = selectedKit
     if (!record) {
       return
@@ -2199,16 +2274,38 @@ export function App() {
 
     setKitStatus('submitting')
 
-    const payload = {
-      kitId: kitForm.kitId,
-      quantity: toPositiveNumber(kitForm.quantity),
-      personId: kitForm.personId,
-      reasonCode: kitForm.reasonCode,
-      evidenceSummary: kitForm.evidenceSummary || null,
-    }
+    const operation = kitForm.operation as KitOperation
+    const quantity = toPositiveNumber(kitForm.quantity)
+    const targetPersonNameSnapshot =
+      kitPersonOptions.find((option) => option.value === kitForm.targetPersonId)?.label ?? kitForm.targetPersonId
+    const targetLocationNameSnapshot =
+      summary.locations.find((location) => location.id === kitForm.targetLocationId)?.name ?? kitForm.targetLocationId
+
+    const payload =
+      operation === 'assign'
+        ? {
+            personId: kitForm.personId,
+            targetPersonId: kitForm.targetPersonId,
+            targetPersonNameSnapshot,
+            reasonCode: kitForm.reasonCode,
+            evidenceSummary: kitForm.evidenceSummary || null,
+          }
+        : operation === 'track-location'
+          ? {
+              personId: kitForm.personId,
+              targetLocationId: kitForm.targetLocationId,
+              reasonCode: kitForm.reasonCode,
+              evidenceSummary: kitForm.evidenceSummary || null,
+            }
+          : {
+              personId: kitForm.personId,
+              quantity,
+              reasonCode: kitForm.reasonCode,
+              evidenceSummary: kitForm.evidenceSummary || null,
+            }
 
     try {
-      const response = await fetch(`/api/v1/kits/${record.id}/${action}`, {
+      const response = await fetch(`/api/v1/kits/${record.id}/${operation}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -2219,7 +2316,7 @@ export function App() {
       })
 
       if (!response.ok) {
-        throw new Error(`Kit ${action} failed: ${response.status}`)
+        throw new Error(`Kit ${operation} failed: ${response.status}`)
       }
 
       const data = (await response.json()) as LoadArrKitMutation
@@ -2227,7 +2324,7 @@ export function App() {
       setKitResult(data)
       setKitStatus('completed')
     } catch {
-      const fallback = createLocalKitMutation(action, kitForm, record)
+      const fallback = createLocalKitMutation(operation, kitForm, record, targetPersonNameSnapshot, targetLocationNameSnapshot)
       setKitRecords((current) => current.map((item) => (item.id === fallback.kit.id ? fallback.kit : item)))
       setKitResult(fallback)
       setKitStatus('completed')
@@ -2396,13 +2493,55 @@ export function App() {
     }
   }
 
+  const bootstrapError = sessionQuery.isError
+    ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
+    : null
+
+  const workspaceSession =
+    session && sessionQuery.data && !bootstrapError
+      ? {
+          userDisplayName: session.displayName,
+          tenantDisplayName: session.tenantDisplayName,
+          tenantSlug: session.tenantSlug,
+        }
+      : null
+
+  const switcherEntitlements =
+    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
+    sessionQuery.data?.entitlements ??
+    []
+
+  const productLaunch = useProductWorkspaceLaunch({
+    apiBase,
+    accessToken: session?.accessToken ?? '',
+    currentProductKey: 'loadarr',
+    suiteHomeUrl,
+    productLaunchUrls,
+  })
+
   return (
     <ProductAppShell
       productName="LoadArr"
       productKey="loadarr"
       workspaceSubtitle="Warehouse execution and inventory custody"
       navItems={productNavItems}
-      entitlements={['loadarr']}
+      tenantDisplayName={workspaceSession?.tenantDisplayName}
+      tenantSlug={workspaceSession?.tenantSlug}
+      userDisplayName={workspaceSession?.userDisplayName}
+      entitlements={switcherEntitlements}
+      suiteHomeUrl={suiteHomeUrl}
+      productLaunchUrls={productLaunchUrls}
+      onSelectProduct={(productKey) => {
+        if (session?.accessToken) {
+          void productLaunch.mutate(productKey)
+        }
+      }}
+      onSignOut={() => {
+        clearSession()
+        window.location.assign(suiteHomeUrl)
+      }}
+      isProductLaunchPending={productLaunch.isPending}
+      productLaunchError={productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null}
     >
       <div className="shell">
         <section className="workspace" aria-label="LoadArr workspace">
@@ -3011,6 +3150,20 @@ export function App() {
                   />
                 </FormField>
 
+                <FormField label="Operation" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={kitForm.operation}
+                    onChange={(value) =>
+                      setKitForm((current) => ({
+                        ...current,
+                        operation: value,
+                      }))
+                    }
+                    options={kitOperationOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
                 <FormField label="Kit location" className={fieldClassName} labelClassName={fieldLabelClassName}>
                   <input className={fieldControlClassName} value={selectedKit?.locationNameSnapshot ?? ''} readOnly />
                 </FormField>
@@ -3027,6 +3180,36 @@ export function App() {
                     onChange={(event) => setKitForm((current) => ({ ...current, quantity: event.target.value }))}
                   />
                 </FormField>
+
+                {(kitForm.operation === 'assign' || kitForm.operation === 'track-location') && (
+                  <FormField label={kitForm.operation === 'assign' ? 'Target person' : 'Target location'} className={fieldClassName} labelClassName={fieldLabelClassName}>
+                    {kitForm.operation === 'assign' ? (
+                      <ControlledSelect
+                        value={kitForm.targetPersonId}
+                        onChange={(value) =>
+                          setKitForm((current) => ({
+                            ...current,
+                            targetPersonId: value,
+                          }))
+                        }
+                        options={kitPersonOptions}
+                        className={fieldControlClassName}
+                      />
+                    ) : (
+                      <ControlledSelect
+                        value={kitForm.targetLocationId}
+                        onChange={(value) =>
+                          setKitForm((current) => ({
+                            ...current,
+                            targetLocationId: value,
+                          }))
+                        }
+                        options={receivingLocationOptions}
+                        className={fieldControlClassName}
+                      />
+                    )}
+                  </FormField>
+                )}
 
                 <FormField label="Reason code" className={fieldClassName} labelClassName={fieldLabelClassName}>
                   <ControlledSelect
@@ -3058,17 +3241,13 @@ export function App() {
               </div>
 
               <div className="button-row">
-                <button type="button" className="primary-action" onClick={() => void performKitAction('build')} disabled={kitStatus === 'submitting'}>
+                <button type="button" className="primary-action" onClick={() => void performKitAction()} disabled={kitStatus === 'submitting'}>
                   <PackageCheck aria-hidden="true" />
-                  <span>{kitStatus === 'submitting' ? 'Building' : 'Build kit'}</span>
-                </button>
-                <button type="button" className="secondary-action" onClick={() => void performKitAction('break')} disabled={kitStatus === 'submitting'}>
-                  <AlertTriangle aria-hidden="true" />
-                  <span>{kitStatus === 'submitting' ? 'Breaking' : 'Break kit'}</span>
-                </button>
-                <button type="button" className="secondary-action" onClick={() => void performKitAction('replenish')} disabled={kitStatus === 'submitting'}>
-                  <PackagePlus aria-hidden="true" />
-                  <span>{kitStatus === 'submitting' ? 'Replenishing' : 'Replenish kit'}</span>
+                  <span>
+                    {kitStatus === 'submitting'
+                      ? 'Working'
+                      : kitOperationOptions.find((option) => option.value === kitForm.operation)?.label ?? 'Run kit action'}
+                  </span>
                 </button>
               </div>
             </article>
@@ -3552,6 +3731,10 @@ export function App() {
               </button>
             </aside>
           </section>
+        )}
+
+        {activeView === 'reports' && (
+          <ReportsPanel summary={summary} counts={counts} adjustments={adjustments} />
         )}
 
         {activeView === 'tasks' && (
@@ -4486,9 +4669,11 @@ function createLocalTruckStockMutation(
 }
 
 function createLocalKitMutation(
-  action: 'build' | 'break' | 'replenish',
+  action: KitOperation,
   form: KitFormState,
   record: LoadArrKit | undefined,
+  targetPersonNameSnapshot?: string,
+  targetLocationNameSnapshot?: string,
 ): LoadArrKitMutation {
   const current = record ?? fallbackKits[0]
   const quantity = toPositiveNumber(form.quantity) || 1
@@ -4496,16 +4681,36 @@ function createLocalKitMutation(
   const timestamp = new Date().toISOString()
 
   const nextQuantity =
-    action === 'break'
+    action === 'break' || action === 'pick' || action === 'reserve'
       ? Math.max(0, current.quantityOnHand - quantity)
-      : current.quantityOnHand + quantity
+      : action === 'expire-components'
+        ? 0
+        : action === 'return' || action === 'replenish' || action === 'build'
+          ? current.quantityOnHand + quantity
+          : current.quantityOnHand
 
   const status =
-    nextQuantity === 0
-      ? 'broken'
-      : nextQuantity < current.minimumQuantity
-        ? 'needs_replenishment'
-        : 'built'
+    action === 'assign'
+      ? 'assigned'
+      : action === 'track-location'
+        ? 'tracked'
+        : action === 'inspect'
+          ? (current.quantityOnHand < current.minimumQuantity ? 'needs_replenishment' : 'inspected')
+          : action === 'expire-components'
+            ? 'expired'
+            : action === 'reserve'
+              ? (nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'reserved')
+              : action === 'pick'
+                ? (nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'picked')
+                : action === 'return'
+                  ? (nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'returned')
+                  : action === 'replenish'
+                    ? (nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'built')
+                    : action === 'build'
+                      ? (nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'built')
+                      : action === 'break'
+                        ? (nextQuantity === 0 ? 'broken' : nextQuantity < current.minimumQuantity ? 'needs_replenishment' : 'built')
+                        : 'tracked'
 
   const kit: LoadArrKit = {
     ...current,
@@ -4518,8 +4723,30 @@ function createLocalKitMutation(
         ? `Built ${quantity} kit(s) from LoadArr components.`
         : action === 'break'
           ? `Broke down ${quantity} kit(s) for component recovery.`
-          : `Replenished ${quantity} kit(s) at the warehouse.`,
+          : action === 'replenish'
+            ? `Replenished ${quantity} kit(s) at the warehouse.`
+            : action === 'reserve'
+              ? `Reserved ${quantity} kit(s) for controlled use.`
+              : action === 'pick'
+                ? `Picked ${quantity} kit(s) from controlled stock.`
+                : action === 'inspect'
+                  ? `Inspected by ${form.personId} for readiness and condition.`
+                  : action === 'assign'
+                    ? `Assigned kit to ${targetPersonNameSnapshot ?? form.targetPersonId}.`
+                    : action === 'return'
+                      ? `Returned ${quantity} kit(s) to stock.`
+                      : action === 'expire-components'
+                        ? 'Expired kit components as of controlled review.'
+                        : `Tracked kit location to ${targetLocationNameSnapshot ?? current.locationNameSnapshot}.`,
     traceTags: [...current.traceTags, `kit:${action}:${now}`],
+    assignedPersonId:
+      action === 'assign' ? form.targetPersonId : current.assignedPersonId,
+    assignedPersonNameSnapshot:
+      action === 'assign' ? (targetPersonNameSnapshot ?? form.targetPersonId) : current.assignedPersonNameSnapshot,
+    locationId:
+      action === 'track-location' ? (form.targetLocationId || current.locationId) : current.locationId,
+    locationNameSnapshot:
+      action === 'track-location' ? (targetLocationNameSnapshot ?? current.locationNameSnapshot) : current.locationNameSnapshot,
   }
 
   return {

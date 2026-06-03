@@ -173,6 +173,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<IntegrationInboxEvent> IntegrationInboxEvents => Set<IntegrationInboxEvent>();
 
+    public DbSet<VendorEmailInboxMessage> VendorEmailInboxMessages => Set<VendorEmailInboxMessage>();
+
     public DbSet<IntegrationEventProcessingRun> IntegrationEventProcessingRuns =>
         Set<IntegrationEventProcessingRun>();
 
@@ -1334,6 +1336,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.ToTable("supplyarr_tenant_procurement_exception_escalation_settings");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId).IsUnique();
+            entity.Property(x => x.EscalationCooldownHours).HasDefaultValue(ProcurementExceptionEscalationDefaults.EscalationCooldownHours);
+            entity.Property(x => x.MaxEscalationsPerException).HasDefaultValue(ProcurementExceptionEscalationDefaults.MaxEscalationsPerException);
+            entity.Property(x => x.NotifyOnProcurementExceptionSlaEscalation).HasDefaultValue(true);
+            entity.Property(x => x.AutoCloseCompletedExceptionsEnabled).HasDefaultValue(false);
+            entity.Property(x => x.AutoCloseCompletedExceptionsAfterHours).HasDefaultValue(
+                ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours);
         });
 
         modelBuilder.Entity<ProcurementExceptionEscalationEvent>(entity =>
@@ -1422,6 +1430,30 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.ProcessingStatus, x.NextRetryAt });
         });
 
+        modelBuilder.Entity<VendorEmailInboxMessage>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_email_inbox_messages");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.MessageKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MessageKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SenderEmail).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SenderName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Subject).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.BodyPreview).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.MatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.MatchReason).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.VendorPartyKey).HasMaxLength(128);
+            entity.Property(x => x.VendorDisplayName).HasMaxLength(256);
+            entity.Property(x => x.LinkedReferenceType).HasMaxLength(64);
+            entity.Property(x => x.LinkedReferenceKey).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.MessageKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.MessageKind, x.ReceivedAt });
+            entity.HasIndex(x => new { x.TenantId, x.MatchStatus, x.ReceivedAt });
+            entity.HasIndex(x => new { x.TenantId, x.VendorPartyId, x.ReceivedAt });
+            entity.HasIndex(x => new { x.TenantId, x.LinkedReferenceType, x.LinkedReferenceId });
+        });
+
         modelBuilder.Entity<IntegrationEventProcessingRun>(entity =>
         {
             entity.ToTable("supplyarr_integration_event_processing_runs");
@@ -1458,8 +1490,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.ToTable("supplyarr_rfq_vendor_invitations");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.PortalAccessCode).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PortalAccessCodeIssuedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.PortalAccessCodeExpiresAt).HasColumnType("timestamp with time zone");
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RfqId, x.VendorPartyId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.RfqId, x.PortalAccessCode }).IsUnique();
             entity.HasOne(x => x.Rfq).WithMany(x => x.VendorInvitations).HasForeignKey(x => x.RfqId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(x => x.VendorParty).WithMany().HasForeignKey(x => x.VendorPartyId).OnDelete(DeleteBehavior.Restrict);
         });

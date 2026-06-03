@@ -63,6 +63,12 @@ public sealed record MeterPmForecastResponse(
     string MeterKey,
     string Unit,
     decimal CurrentReading,
+    decimal? UsageVelocityPerDay,
+    decimal? PredictedUsageUntilDue,
+    decimal? PredictedDaysUntilDue,
+    DateTimeOffset? PredictedDueAt,
+    decimal ConfidenceScore,
+    bool IsDueSoon,
     IReadOnlyList<MeterPmForecastItem> LinkedSchedules);
 
 public sealed record MeterMissingReadingAlertResponse(

@@ -259,6 +259,79 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_telematics_ingestion_history_returns_asset_linked_routarr_events()
+    {
+        var assetTag = "TELEM-001";
+        var assetId = await SeedActiveAssetAsync(assetTag);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var processedSourceEventId = Guid.NewGuid();
+        var processedRequest = new IngestRoutarrEventRequest(
+            PlatformSeeder.DemoTenantId,
+            processedSourceEventId,
+            "driver_reported_defect.created",
+            "vehicle_telemetry",
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new RoutarrEventPayload(
+                PlatformSeeder.DemoTenantId,
+                "Telematics defect detected",
+                Guid.NewGuid(),
+                "TRIP-900",
+                "driver-77",
+                assetTag,
+                "in_progress",
+                DvirResult: "fail",
+                DefectNotes: "Low tire pressure detected"));
+        var processedHttpRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-events", _routarrEventToken);
+        processedHttpRequest.Content = JsonContent.Create(processedRequest);
+        var processedResponse = await _maintainarrClient.SendAsync(processedHttpRequest);
+        processedResponse.EnsureSuccessStatusCode();
+
+        var ignoredSourceEventId = Guid.NewGuid();
+        var ignoredRequest = new IngestRoutarrEventRequest(
+            PlatformSeeder.DemoTenantId,
+            ignoredSourceEventId,
+            "incident.created",
+            "vehicle_diagnostics",
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new RoutarrEventPayload(
+                PlatformSeeder.DemoTenantId,
+                "Routine telematics health ping",
+                Guid.NewGuid(),
+                "TRIP-901",
+                "driver-77",
+                assetTag,
+                "in_progress",
+                IncidentType: "idle_check",
+                IncidentSeverity: "low"));
+        var ignoredHttpRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-events", _routarrEventToken);
+        ignoredHttpRequest.Content = JsonContent.Create(ignoredRequest);
+        var ignoredResponse = await _maintainarrClient.SendAsync(ignoredHttpRequest);
+        ignoredResponse.EnsureSuccessStatusCode();
+
+        var historyResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/assets/{assetId}/telematics-ingestion?limit=8", token));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<AssetTelematicsIngestionResponse>())!;
+
+        Assert.Equal(assetId, history.AssetId);
+        Assert.Equal(assetTag, history.AssetTag);
+        Assert.Equal(2, history.TotalCount);
+        Assert.Equal(1, history.ProcessedCount);
+        Assert.Equal(1, history.IgnoredCount);
+        Assert.Equal(1, history.DefectCount);
+        Assert.Equal(2, history.Items.Count);
+        Assert.Equal("ignored", history.Items[0].Outcome);
+        Assert.Contains("Routine telematics health ping", history.Items[0].Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("processed", history.Items[1].Outcome);
+        Assert.Contains("Telematics defect detected", history.Items[1].Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("TELEM-001", history.Items[0].VehicleRefKey);
+        Assert.NotNull(history.Items[1].CreatedDefectId);
+    }
+
+    [Fact]
     public async Task Defect_lifecycle_enqueues_platform_events()
     {
         var assetId = await SeedActiveAssetAsync("DEFECT-EVT-001");

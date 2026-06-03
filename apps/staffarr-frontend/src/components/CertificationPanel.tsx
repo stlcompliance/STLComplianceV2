@@ -1,5 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type {
   CertificationDefinitionResponse,
   PersonCertificationResponse,
@@ -152,6 +152,15 @@ export function CertificationPanel({
       (definition) => !activeCertificationDefinitionIds.has(definition.certificationDefinitionId),
     )
   }, [activeDefinitions, certifications])
+  const definitionOptions = useMemo<PickerOption[]>(
+    () =>
+      grantableDefinitions.map((definition) => ({
+        value: definition.certificationDefinitionId,
+        label: `${definition.name} (${definition.certificationKey})`,
+      })),
+    [grantableDefinitions],
+  )
+  const selectedDefinitionOption = definitionOptions.find((option) => option.value === selectedDefinitionId)
 
   async function handleGrantSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -280,22 +289,18 @@ export function CertificationPanel({
 
       {canManage && !isLoading && !isError ? (
         <form className="mt-6 grid gap-3 border-t border-slate-700 pt-4 md:grid-cols-2" onSubmit={handleGrantSubmit}>
-          <label htmlFor="certification-grant-definition" className="grid gap-1 text-xs text-slate-400 md:col-span-2">
+          <label className="grid gap-1 text-xs text-slate-400 md:col-span-2">
             Certification definition
-            <select
-              id="certification-grant-definition"
-              value={selectedDefinitionId}
-              onChange={(event) => setSelectedDefinitionId(event.target.value)}
-              className="rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-            >
-              <option value="">Select definition</option>
-              {grantableDefinitions.map((definition) => (
-                <option key={definition.certificationDefinitionId} value={definition.certificationDefinitionId}>
-                  {definition.name} ({definition.certificationKey})
-                </option>
-              ))}
-            </select>
+            <div className="mt-1">
+              <StaticSearchPicker
+                value={selectedDefinitionId}
+                onChange={setSelectedDefinitionId}
+                options={definitionOptions}
+                selectedOption={selectedDefinitionOption}
+                placeholder="Select definition"
+                testId="certification-grant-definition"
+              />
+            </div>
           </label>
           <label htmlFor="certification-grant-expires-at" className="grid gap-1 text-xs text-slate-400">
             Expiration override (optional)

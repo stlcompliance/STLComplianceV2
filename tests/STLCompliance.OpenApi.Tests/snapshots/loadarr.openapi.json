@@ -495,6 +495,39 @@
         }
       }
     },
+    "/api/v1/kits/{id}/assign": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "AssignLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitAssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/kits/{id}/break": {
       "post": {
         "tags": [
@@ -561,6 +594,105 @@
         }
       }
     },
+    "/api/v1/kits/{id}/expire-components": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ExpireKitComponents",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/inspect": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "InspectLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/pick": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "PickLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/kits/{id}/replenish": {
       "post": {
         "tags": [
@@ -582,6 +714,105 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/KitMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/reserve": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ReserveLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/return": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ReturnLoadArrKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/kits/{id}/track-location": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "TrackLoadArrKitLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KitTrackLocationRequest"
               }
             }
           },
@@ -2465,6 +2696,67 @@
           }
         }
       },
+      "KitAssignRequest": {
+        "required": [
+          "personId",
+          "targetPersonId",
+          "targetPersonNameSnapshot",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "targetPersonId": {
+            "type": "string"
+          },
+          "targetPersonNameSnapshot": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "KitLifecycleActionRequest": {
+        "required": [
+          "personId",
+          "quantity",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "KitMutationRequest": {
         "required": [
           "personId",
@@ -2484,6 +2776,32 @@
               "string"
             ],
             "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "KitTrackLocationRequest": {
+        "required": [
+          "personId",
+          "targetLocationId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "targetLocationId": {
+            "type": "string"
           },
           "reasonCode": {
             "type": "string"

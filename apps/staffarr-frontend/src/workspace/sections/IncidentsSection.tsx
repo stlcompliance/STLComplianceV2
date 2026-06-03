@@ -42,10 +42,18 @@ export function IncidentsSection({ state }: Props) {
       canManage={s.canManagePersonIncidents}
       isSubmitting={s.createIncidentMutation.isPending}
       isRouting={s.routeIncidentToTrainarrMutation.isPending}
+      isUpdatingStatus={s.updateIncidentStatusMutation.isPending}
+      isCreatingIncidentNote={s.createIncidentNoteMutation.isPending}
+      isUpdatingIncidentNoteStatus={s.updateIncidentNoteStatusMutation.isPending}
+      isCreatingIncidentAttachment={s.createIncidentAttachmentMutation.isPending}
       actionErrorMessage={
         s.incidentMutationError
           ? getErrorMessage(s.incidentMutationError, 'Failed to save personnel incident changes.')
-          : null
+          : s.incidentNoteMutationError
+            ? getErrorMessage(s.incidentNoteMutationError, 'Failed to save incident note changes.')
+            : s.incidentAttachmentMutationError
+              ? getErrorMessage(s.incidentAttachmentMutationError, 'Failed to save incident attachment.')
+              : null
       }
       onSelectIncident={s.setSelectedIncidentId}
       onCreateIncident={async (payload) => {
@@ -53,6 +61,21 @@ export function IncidentsSection({ state }: Props) {
       }}
       onRouteToTrainarr={async (incidentId) => {
         await s.routeIncidentToTrainarrMutation.mutateAsync(incidentId)
+      }}
+      onUpdateIncidentStatus={async (incidentId, status) => {
+        await s.updateIncidentStatusMutation.mutateAsync({ incidentId, status })
+      }}
+      onCreateIncidentNote={async (incidentId, request) => {
+        await s.createIncidentNoteMutation.mutateAsync({ incidentId, request })
+      }}
+      onUpdateIncidentNoteStatus={async (incidentId, noteId, request) => {
+        await s.updateIncidentNoteStatusMutation.mutateAsync({ incidentId, noteId, request })
+      }}
+      onCreateIncidentAttachment={async (incidentId, request) => {
+        await s.createIncidentAttachmentMutation.mutateAsync({ incidentId, request })
+      }}
+      onDownloadIncidentAttachment={async (incidentId, attachmentId) => {
+        await s.downloadIncidentAttachment(incidentId, attachmentId)
       }}
     />
   )

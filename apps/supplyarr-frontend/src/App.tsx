@@ -8,6 +8,7 @@ import { PlanningPage } from './pages/planning/PlanningPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { PricingPage } from './pages/pricing/PricingPage'
 import { PurchasingPage } from './pages/purchasing/PurchasingPage'
+import { VendorPortalPage } from './pages/vendor-portal/VendorPortalPage'
 import { ReceivingPage } from './pages/receiving/ReceivingPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
@@ -30,6 +31,7 @@ export default function App() {
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
+          <Route path="/vendor-portal" element={<VendorPortalPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/parties" replace />} />
             <Route path="/parties" element={<PartiesPage />} />

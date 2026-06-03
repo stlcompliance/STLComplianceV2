@@ -1,5 +1,40 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      value,
+      onChange,
+      options,
+      testId,
+      placeholder,
+    }: {
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      testId?: string
+      placeholder?: string
+    }) => (
+      <label>
+        {placeholder}
+        <input
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 import { CreatePersonPanel } from './CreatePersonPanel'
 
 describe('CreatePersonPanel', () => {
@@ -17,13 +52,19 @@ describe('CreatePersonPanel', () => {
     expect(container.innerHTML).toBe('')
   })
 
-  it('submits create person request', () => {
+  it('submits create person request using searchable selectors', async () => {
     const onCreate = vi.fn().mockResolvedValue(undefined)
 
     render(
       <CreatePersonPanel
-        orgUnits={[]}
-        peopleOptions={[]}
+        orgUnits={[
+          { orgUnitId: 'site-1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
+          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-1', status: 'active' },
+        ]}
+        peopleOptions={[
+          { personId: 'person-1', displayName: 'Alex Worker' },
+          { personId: 'person-2', displayName: 'Taylor Manager' },
+        ]}
         canManage
         isSubmitting={false}
         errorMessage={null}
@@ -34,16 +75,24 @@ describe('CreatePersonPanel', () => {
     fireEvent.change(screen.getByLabelText(/Given name/i), { target: { value: 'Ada' } })
     fireEvent.change(screen.getByLabelText(/Family name/i), { target: { value: 'Lovelace' } })
     fireEvent.change(screen.getByLabelText(/Primary email/i), { target: { value: 'ada@example.com' } })
+    fireEvent.change(screen.getByTestId('create-person-primary-org-unit'), {
+      target: { value: 'site-1' },
+    })
+    fireEvent.change(screen.getByTestId('create-person-manager'), {
+      target: { value: 'person-2' },
+    })
     fireEvent.click(screen.getByRole('button', { name: /Create person/i }))
 
-    expect(onCreate).toHaveBeenCalledWith({
-      givenName: 'Ada',
-      familyName: 'Lovelace',
-      primaryEmail: 'ada@example.com',
-      employmentStatus: 'active',
-      primaryOrgUnitId: null,
-      managerPersonId: null,
-      jobTitle: null,
+    await waitFor(() => {
+      expect(onCreate).toHaveBeenCalledWith({
+        givenName: 'Ada',
+        familyName: 'Lovelace',
+        primaryEmail: 'ada@example.com',
+        employmentStatus: 'active',
+        primaryOrgUnitId: 'site-1',
+        managerPersonId: 'person-2',
+        jobTitle: null,
+      })
     })
   })
 

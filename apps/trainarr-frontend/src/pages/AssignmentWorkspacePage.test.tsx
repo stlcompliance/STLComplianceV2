@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AssignmentWorkspacePage } from './AssignmentWorkspacePage'
 
-const { mockAssignment } = vi.hoisted(() => ({
+const { mockAssignment, mockSteps } = vi.hoisted(() => ({
   mockAssignment: {
     assignmentId: '00000000-0000-0000-0000-000000000099',
     staffarrPersonId: '00000000-0000-0000-0000-000000000001',
@@ -30,6 +30,32 @@ const { mockAssignment } = vi.hoisted(() => ({
     completionRequirementsMet: false,
     qualificationIssue: null,
   },
+  mockSteps: [
+    {
+      progressId: '00000000-0000-0000-0000-0000000000a1',
+      trainingAssignmentId: '00000000-0000-0000-0000-000000000099',
+      stepId: '00000000-0000-0000-0000-0000000000b1',
+      stepKey: 'practical-check',
+      name: 'Practical check',
+      description: 'Demonstrate the procedure under observation.',
+      stepType: 'practical',
+      configJson: JSON.stringify(
+        {
+          skillTaskName: 'Demonstrate the procedure under observation.',
+          passCriteria: 'Perform the procedure safely and in the correct sequence.',
+          observationPrompts: ['Setup', 'Execution', 'Shutdown'],
+        },
+        null,
+        2,
+      ),
+      sortOrder: 0,
+      status: 'pending',
+      isVisible: true,
+      quizScorePercent: null,
+      responseJson: null,
+      completedAt: null,
+    },
+  ],
 }))
 
 vi.mock('../api/client', () => ({
@@ -41,8 +67,12 @@ vi.mock('../api/client', () => ({
     isPlatformAdmin: false,
   }),
   getTrainingAssignment: vi.fn().mockResolvedValue(mockAssignment),
+  getTrainingAssignmentSteps: vi.fn().mockResolvedValue(mockSteps),
+  getTrainingAssignmentLaborEntries: vi.fn().mockResolvedValue([]),
   getTrainingEvidence: vi.fn().mockResolvedValue([]),
   createTrainingEvidence: vi.fn(),
+  createTrainingAssignmentLaborEntry: vi.fn(),
+  removeTrainingAssignmentLaborEntry: vi.fn(),
   submitTrainingEvaluation: vi.fn(),
   submitTrainingSignoff: vi.fn(),
   completeTrainingAssignment: vi.fn(),
@@ -51,7 +81,7 @@ vi.mock('../api/client', () => ({
 vi.mock('../auth/sessionStorage', () => ({
   canCompleteAssignment: () => false,
   canManageAssignments: () => false,
-  canSubmitEvaluation: () => false,
+  canSubmitEvaluation: () => true,
   canSubmitTraineeSignoff: () => true,
   canSubmitTrainerSignoff: () => false,
   canUploadEvidence: () => true,
@@ -88,6 +118,9 @@ describe('AssignmentWorkspacePage', () => {
     expect(await screen.findByTestId('assignment-workspace')).toBeInTheDocument()
     expect(screen.getByText('Hazmat annual')).toBeInTheDocument()
     expect(screen.getByTestId('assignment-evidence-section')).toBeInTheDocument()
+    expect(screen.getByTestId('assignment-labor-panel')).toBeInTheDocument()
+    expect(await screen.findByLabelText('Practical result')).toBeInTheDocument()
+    expect(await screen.findByLabelText('Observation notes')).toBeInTheDocument()
   })
 
   it('renders evidence section on evidence deep link route', async () => {

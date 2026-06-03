@@ -203,6 +203,54 @@ function mockProfileFetches() {
     if (url === '/api/assets/asset-1/meters') {
       return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
+    if (url === '/api/v1/assets/asset-1/telematics-ingestion?limit=8') {
+      return new Response(JSON.stringify({
+        assetId: 'asset-1',
+        assetTag: 'TRK-100',
+        assetName: 'Truck 100',
+        totalCount: 2,
+        limit: 8,
+        processedCount: 1,
+        ignoredCount: 1,
+        defectCount: 1,
+        items: [
+          {
+            inboundEventId: 'event-2',
+            sourceEventId: 'source-2',
+            sourceProduct: 'routarr',
+            eventKind: 'incident.created',
+            outcome: 'ignored',
+            summary: 'Driver inspection ping · Vehicle TRK-100 · Incident idle_check',
+            vehicleRefKey: 'TRK-100',
+            tripNumber: 'TRIP-200',
+            incidentType: 'idle_check',
+            incidentSeverity: 'low',
+            dvirResult: null,
+            createdDefectId: null,
+            correlationId: 'corr-2',
+            occurredAt: '2026-06-01T02:00:00Z',
+            createdAt: '2026-06-01T02:00:05Z',
+          },
+          {
+            inboundEventId: 'event-1',
+            sourceEventId: 'source-1',
+            sourceProduct: 'routarr',
+            eventKind: 'driver_reported_defect.created',
+            outcome: 'processed',
+            summary: 'Driver-reported defect · Trip TRIP-100 · Vehicle TRK-100 · DVIR fail',
+            vehicleRefKey: 'TRK-100',
+            tripNumber: 'TRIP-100',
+            incidentType: null,
+            incidentSeverity: null,
+            dvirResult: 'fail',
+            createdDefectId: 'defect-1',
+            correlationId: 'corr-1',
+            occurredAt: '2026-06-01T01:30:00Z',
+            createdAt: '2026-06-01T01:30:05Z',
+          },
+        ],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
     return new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } })
   })
 }
@@ -236,6 +284,12 @@ describe('AssetProfilePage', () => {
     expect((await screen.findAllByText('Truck 100')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('TRK-100').length).toBeGreaterThan(0)
     expect(screen.getByText('VIN not recorded')).toBeInTheDocument()
+    expect(screen.getByTestId('asset-shop-floor-card')).toBeInTheDocument()
+    expect(screen.getByTestId('asset-shop-floor-scan-code')).toHaveTextContent('maintainarr://asset/asset-1')
+    expect(screen.getByTestId('asset-telematics-ingestion-card')).toBeInTheDocument()
+    expect(screen.getByText('Telematics / diagnostics ingestion')).toBeInTheDocument()
+    expect(screen.getByText('1 processed')).toBeInTheDocument()
+    expect(screen.getByText('Driver-reported defect · Trip TRIP-100 · Vehicle TRK-100 · DVIR fail')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /edit asset/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /save asset/i })).not.toBeInTheDocument()
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   createPurchaseRequestFromRfq,
@@ -71,6 +71,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
   })
 
   const selectedRfq: RfqResponse | undefined = rfqDetailQuery.data
+  const portalOrigin = typeof window === 'undefined' ? '' : window.location.origin
   const draftQuotes = useMemo(
     () => selectedRfq?.quotes.filter((q) => q.status === 'draft') ?? [],
     [selectedRfq],
@@ -220,6 +221,26 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
   const quoteVendor = selectedRfq?.invitations.find((invite) => invite.vendorPartyId === quoteVendorId)
   const quoteKeySource = quoteVendor ? `${selectedRfq?.rfqKey ?? ''}-${quoteVendor.vendorDisplayName}` : ''
   const prKeySource = selectedRfq?.title ?? ''
+  const vendorPortalLinks = useMemo(
+    () =>
+      (selectedRfq?.invitations ?? []).map((invite) => ({
+        ...invite,
+        portalHref: invite.portalUrl ? `${portalOrigin}${invite.portalUrl}` : '',
+      })),
+    [portalOrigin, selectedRfq?.invitations],
+  )
+  const rfqOptions = useMemo<PickerOption[]>(
+    () =>
+      (rfqsQuery.data ?? []).map((rfq) => ({
+        value: rfq.rfqId,
+        label: `${rfq.rfqKey} · ${rfq.status} · ${rfq.title}`,
+      })),
+    [rfqsQuery.data],
+  )
+  const selectedRfqOption = useMemo<PickerOption | undefined>(
+    () => rfqOptions.find((option) => option.value === selectedRfqId),
+    [rfqOptions, selectedRfqId],
+  )
   const vendorPickerOptions = useMemo(
     () =>
       vendors.map((vendor) => {
@@ -302,22 +323,18 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
 
       {rfqsQuery.isLoading && <p className="mt-3 text-sm text-slate-500">Loading RFQs…</p>}
       {rfqsQuery.data && rfqsQuery.data.length > 0 && (
-        <label htmlFor="rfq-select" className="mt-4 block text-sm text-slate-400">
-          Select RFQ
-          <select
+        <div className="mt-4">
+          <StaticSearchPicker
             id="rfq-select"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
+            label="Select RFQ"
             value={selectedRfqId}
-            onChange={(e) => setSelectedRfqId(e.target.value)}
-          >
-            <option value="">Select RFQ</option>
-            {rfqsQuery.data.map((r) => (
-              <option key={r.rfqId} value={r.rfqId}>
-                {r.rfqKey} · {r.status} · {r.title}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setSelectedRfqId}
+            options={rfqOptions}
+            selectedOption={selectedRfqOption}
+            placeholder="Search RFQs…"
+            testId="rfq-picker"
+          />
+        </div>
       )}
 
       {selectedRfq && (
@@ -519,6 +536,60 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
             </div>
           )}
 
+          {vendorPortalLinks.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase text-slate-400">Vendor portal access</h3>
+              <ul className="mt-2 grid gap-2">
+                {vendorPortalLinks.map((invite) => (
+                  <li key={invite.invitationId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-slate-100">{invite.vendorDisplayName}</div>
+                        <div className="text-xs text-slate-500">
+                          Portal code issued {formatDateTime(invite.portalAccessCodeIssuedAt)} · expires{' '}
+                          {formatDateTime(invite.portalAccessExpiresAt)}
+                        </div>
+                      </div>
+                      <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+                        {invite.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <label className="block text-xs text-slate-400">
+                        Access code
+                        <input
+                          readOnly
+                          className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200"
+                          value={invite.portalAccessCode}
+                        />
+                      </label>
+                      <label className="block text-xs text-slate-400">
+                        Portal link
+                        <input
+                          readOnly
+                          className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200"
+                          value={invite.portalHref}
+                        />
+                      </label>
+                    </div>
+                    {invite.portalHref && (
+                      <div className="mt-2">
+                        <a
+                          className="text-xs text-sky-400 underline"
+                          href={invite.portalHref}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open vendor portal
+                        </a>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {selectedRfq.status === 'submitted' && canAward && (
             <div className="flex flex-wrap items-end gap-2">
               <label htmlFor="rfq-winning-quote" className="block text-xs text-slate-400">
@@ -584,4 +655,13 @@ function formatDays(value: number | null): string {
   }
   const rounded = Math.round(value * 10) / 10
   return `${rounded} day${rounded === 1 ? '' : 's'}`
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString()
 }

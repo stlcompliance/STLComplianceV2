@@ -11,12 +11,34 @@ vi.mock('../api/client', () => ({
     escalationCooldownHours: 24,
     maxEscalationsPerException: 5,
     notifyOnProcurementExceptionSlaEscalation: true,
+    autoCloseCompletedExceptionsEnabled: true,
+    autoCloseCompletedExceptionsAfterHours: 48,
     updatedAt: null,
   }),
   getPendingProcurementExceptionEscalations: vi.fn().mockResolvedValue({
     asOfUtc: new Date().toISOString(),
     batchSize: 25,
     items: [],
+  }),
+  getPendingProcurementExceptionAutoCloses: vi.fn().mockResolvedValue({
+    asOfUtc: new Date().toISOString(),
+    batchSize: 25,
+    items: [
+      {
+        procurementExceptionId: 'ex-close-1',
+        exceptionKey: 'PEX-CLOSE-1',
+        subjectType: 'purchase_request',
+        subjectId: 'subject-1',
+        subjectKey: 'pr-close-1',
+        title: 'Auto-close candidate',
+        status: 'resolved',
+        resolvedAt: new Date().toISOString(),
+        waivedAt: null,
+        completedAt: new Date().toISOString(),
+        hoursCompleted: 50,
+        hoursUntilAutoClose: 0,
+      },
+    ],
   }),
   getProcurementExceptionEscalationRuns: vi.fn().mockResolvedValue({ items: [] }),
   getProcurementExceptionEscalationEvents: vi.fn().mockResolvedValue({
@@ -47,6 +69,7 @@ describe('ProcurementExceptionEscalationSettingsPanel', () => {
       await screen.findByTestId('procurement-exception-escalation-settings-panel'),
     ).toBeInTheDocument()
     expect(screen.getByText('Procurement exception SLA escalation')).toBeInTheDocument()
+    expect(screen.getByTestId('procurement-exception-auto-close-enabled')).toBeInTheDocument()
   })
 
   it('renders escalation event rows with exception key test ids', async () => {
@@ -59,6 +82,18 @@ describe('ProcurementExceptionEscalationSettingsPanel', () => {
     const eventRow = await screen.findByTestId('procurement-exception-escalation-event-PEX-E2E-1')
     expect(eventRow).toBeInTheDocument()
     expect(eventRow).toHaveTextContent('Level 1')
+  })
+
+  it('renders auto-close preview rows with exception key test ids', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ProcurementExceptionEscalationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    const rows = await screen.findAllByTestId('procurement-exception-auto-close-pending-PEX-CLOSE-1')
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows[0]).toHaveTextContent('50h completed')
   })
 
   it('returns null when user cannot manage settings', () => {

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -53,6 +54,24 @@ export function EntitlementAdminPanel() {
   const tenants = tenantsQuery.data?.items ?? []
   const products = (productsQuery.data ?? []).filter((product) => product.isActive)
   const entitlements = entitlementsQuery.data?.items ?? []
+  const tenantOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.displayName} (${tenant.slug})`,
+        inactive: tenant.status !== 'Active',
+      })),
+    [tenants],
+  )
+  const productOptions = useMemo<PickerOption[]>(
+    () =>
+      products.map((product) => ({
+        value: product.productKey,
+        label: product.displayName,
+        inactive: !product.isActive,
+      })),
+    [products],
+  )
 
   return (
     <section
@@ -69,41 +88,25 @@ export function EntitlementAdminPanel() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label htmlFor="entitlement-admin-tenant" className="block text-sm text-slate-300">
-          Entitlement tenant
-          <select
-            id="entitlement-admin-tenant"
-            value={tenantId}
-            onChange={(event) => setTenantId(event.target.value)}
-            data-testid="entitlement-admin-tenant"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          >
-            <option value="">Select tenant…</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.tenantId} value={tenant.tenantId}>
-                {tenant.displayName} ({tenant.slug})
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          label="Entitlement tenant"
+          id="entitlement-admin-tenant"
+          value={tenantId}
+          onChange={setTenantId}
+          options={tenantOptions}
+          placeholder="Search tenants"
+          testId="entitlement-admin-tenant"
+        />
 
-        <label htmlFor="entitlement-admin-product" className="block text-sm text-slate-300">
-          Product to grant
-          <select
-            id="entitlement-admin-product"
-            value={productKey}
-            onChange={(event) => setProductKey(event.target.value)}
-            data-testid="entitlement-admin-product"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          >
-            <option value="">Select product…</option>
-            {products.map((product) => (
-              <option key={product.productKey} value={product.productKey}>
-                {product.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          label="Product to grant"
+          id="entitlement-admin-product"
+          value={productKey}
+          onChange={setProductKey}
+          options={productOptions}
+          placeholder="Search products"
+          testId="entitlement-admin-product"
+        />
       </div>
 
       <button

@@ -11,6 +11,7 @@ import {
   Loader2,
   MapPin,
   MoreHorizontal,
+  Radar,
   ShieldCheck,
   Truck,
   Wrench,
@@ -22,6 +23,7 @@ import {
   getAssetFieldContext,
   getAssetMeters,
   getAssetReadiness,
+  getAssetTelematicsIngestion,
   getDefects,
   getMe,
   getPmSchedules,
@@ -33,6 +35,7 @@ import type {
   FieldMetadataResponse,
   FieldsetResponse,
   PmScheduleResponse,
+  AssetTelematicsIngestionResponse,
 } from '../../api/types'
 import { canCreateWorkOrders, canManageAssets, loadSession } from '../../auth/sessionStorage'
 import {
@@ -79,6 +82,21 @@ function humanize(value: string | null | undefined): string {
 function compactNumber(value: number | null | undefined): string {
   if (value == null) return 'No reading'
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(value)
+}
+
+function telematicsOutcomeTone(outcome: string): DetailTone {
+  switch (outcome.toLowerCase()) {
+    case 'processed':
+      return 'good'
+    case 'ignored':
+      return 'neutral'
+    default:
+      return 'warn'
+  }
+}
+
+function humanizeEventKind(value: string): string {
+  return value.replace(/[._-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -178,6 +196,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
   const [displayValues, setDisplayValues] = useState<Record<string, string>>({})
   const [savedSnapshot, setSavedSnapshot] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
+  const [scanCopied, setScanCopied] = useState(false)
 
   const created = searchParams.get('created') === '1'
 
@@ -236,6 +255,12 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
     enabled: Boolean(session?.accessToken && assetId),
   })
 
+  const telematicsQuery = useQuery<AssetTelematicsIngestionResponse>({
+    queryKey: ['maintainarr-asset-telematics-ingestion', assetId],
+    queryFn: () => getAssetTelematicsIngestion(session!.accessToken, assetId!),
+    enabled: Boolean(session?.accessToken && assetId),
+  })
+
   const fieldset = fieldsetQuery.data
   const asset = assetQuery.data
   const validationErrors = fieldset ? validateAssetValues(fieldset, values) : {}
@@ -250,6 +275,10 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
   useEffect(() => {
     setIsEditing(editModeDefault)
   }, [editModeDefault, assetId])
+
+  useEffect(() => {
+    setScanCopied(false)
+  }, [assetId])
 
   useEffect(() => {
     if (!asset || !fieldset) return
@@ -324,6 +353,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
   const readiness = readinessQuery.data
   const meters = metersQuery.data ?? []
   const latest = latestMeter(meters)
+  const telematics = telematicsQuery.data
   const assetPmSchedules = (pmSchedulesQuery.data ?? [])
     .filter((schedule) => schedule.assetId === assetId)
     .sort((a, b) => Date.parse(a.nextDueAt) - Date.parse(b.nextDueAt))
@@ -356,6 +386,8 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
       ? 'No hard out-of-service blockers. Track advisory signals before the next route.'
       : 'No current blockers or advisory maintenance signals are recorded.'
   const readinessDecisionTone: DetailTone = readinessBlocked ? 'bad' : readinessAdvisory ? 'warn' : 'good'
+  const shopFloorScanCode = asset ? `maintainarr://asset/${asset.assetId}` : ''
+  const latestTelematicsEvent = telematics?.items[0] ?? null
 
   return (
     <div className="w-full max-w-[1500px] space-y-6 pb-10" data-testid="asset-profile-page">
@@ -522,6 +554,44 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                 />
               ) : (
                 <>
+                  <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4" data-testid="asset-shop-floor-card">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold text-white">Shop-floor scan card</h3>
+                        <p className="mt-1 text-sm text-slate-400">
+                          Display this payload on a kiosk or mobile device so technicians can open the asset context directly.
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+                        Mobile / QR ready
+                      </span>
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                      <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Scan payload</p>
+                        <p className="mt-1 break-all font-mono text-sm text-sky-100" data-testid="asset-shop-floor-scan-code">
+                          {shopFloorScanCode}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {asset.assetTag} · {asset.name} · {humanize(asset.lifecycleStatus)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard?.writeText(shopFloorScanCode)
+                          } finally {
+                            setScanCopied(true)
+                          }
+                        }}
+                      >
+                        {scanCopied ? 'Copied' : 'Copy payload'}
+                      </button>
+                    </div>
+                  </section>
+
                   <div className="grid gap-4 lg:grid-cols-2">
                     <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
                       <div className="flex items-start justify-between gap-3">
@@ -566,6 +636,85 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                         <p className="text-sm font-medium text-slate-100">{new Date(asset.updatedAt).toLocaleString()}</p>
                       </div>
                     </div>
+                  </section>
+
+                  <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4" data-testid="asset-telematics-ingestion-card">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <Radar className="mt-1 h-5 w-5 text-sky-300" />
+                        <div>
+                          <h3 className="font-bold text-white">Telematics / diagnostics ingestion</h3>
+                          <p className="mt-1 text-sm text-slate-400">
+                            Recent RoutArr inbound events linked to this asset, including telemetry signals and diagnostic outcomes.
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        label={telematics ? `${telematics.processedCount} processed` : 'No history'}
+                        tone={telematics && telematics.totalCount > 0 ? 'info' : 'neutral'}
+                      />
+                    </div>
+
+                    {telematicsQuery.isLoading ? (
+                      <p className="mt-4 text-sm text-slate-400">Loading telematics ingestion history…</p>
+                    ) : telematicsQuery.isError ? (
+                      <p className="mt-4 text-sm text-red-200">
+                        Unable to load telematics ingestion history.
+                      </p>
+                    ) : telematics ? (
+                      <>
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                            <p className="text-xs text-slate-500">Total events</p>
+                            <p className="text-sm font-medium text-slate-100">{telematics.totalCount}</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                            <p className="text-xs text-slate-500">Processed</p>
+                            <p className="text-sm font-medium text-slate-100">{telematics.processedCount}</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                            <p className="text-xs text-slate-500">Defect-linked</p>
+                            <p className="text-sm font-medium text-slate-100">{telematics.defectCount}</p>
+                          </div>
+                        </div>
+
+                        {telematics.items.length === 0 ? (
+                          <p className="mt-4 text-sm text-slate-400">No telematics or diagnostic events recorded yet for this asset.</p>
+                        ) : (
+                          <ul className="mt-4 space-y-3">
+                            {telematics.items.map((item) => (
+                              <li key={item.inboundEventId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge label={humanizeEventKind(item.eventKind)} tone="info" />
+                                  <Badge label={item.outcome} tone={telematicsOutcomeTone(item.outcome)} />
+                                  <span className="text-xs text-slate-500">{item.sourceProduct}</span>
+                                </div>
+                                <p className="mt-2 text-sm font-medium text-white">{item.summary}</p>
+                                <div className="mt-2 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
+                                  <p>Occurred: {new Date(item.occurredAt).toLocaleString()}</p>
+                                  <p>Correlation: {item.correlationId}</p>
+                                  {item.vehicleRefKey ? <p>Vehicle ref: {item.vehicleRefKey}</p> : null}
+                                  {item.tripNumber ? <p>Trip: {item.tripNumber}</p> : null}
+                                  {item.incidentType ? <p>Incident: {item.incidentType}</p> : null}
+                                  {item.incidentSeverity ? <p>Severity: {item.incidentSeverity}</p> : null}
+                                  {item.dvirResult ? <p>DVIR: {item.dvirResult}</p> : null}
+                                  {item.createdDefectId ? <p>Defect: {item.createdDefectId}</p> : null}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {latestTelematicsEvent ? (
+                          <p className="mt-3 text-xs text-slate-500">
+                            Latest event: {humanizeEventKind(latestTelematicsEvent.eventKind)} ·{' '}
+                            {new Date(latestTelematicsEvent.occurredAt).toLocaleString()}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-400">Telematics ingestion history unavailable.</p>
+                    )}
                   </section>
                 </>
               )}

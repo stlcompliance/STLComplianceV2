@@ -16,6 +16,10 @@ public sealed record VendorReportSummaryItemResponse(
     int PostedReceivingReceiptCount,
     int OpenBackorderCount,
     decimal OpenPurchaseOrderLineQuantity,
+    int? AverageLeadTimeDays,
+    int LeadTimeSampleCount,
+    int? OnTimeDeliveryRate,
+    int OnTimeDeliverySampleCount,
     DateTimeOffset? LastPurchaseOrderAt,
     DateTimeOffset? LastReceivingPostedAt);
 

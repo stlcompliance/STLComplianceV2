@@ -29,11 +29,26 @@ public sealed record SupplyReadinessAttentionItemResponse(
     string? RelatedEntityType,
     Guid? RelatedEntityId);
 
+public sealed record SupplyReadinessPredictiveStockoutResponse(
+    Guid PartId,
+    string PartKey,
+    string DisplayName,
+    decimal QuantityAvailable,
+    decimal OpenDemandQuantity,
+    decimal OpenBackorderQuantity,
+    decimal ProjectedQuantity,
+    decimal ShortageQuantity,
+    decimal? ReorderPoint,
+    string RiskLevel,
+    string Reason,
+    DateTimeOffset? SourceTimestamp);
+
 public sealed record SupplyReadinessDashboardResponse(
     DateTimeOffset GeneratedAt,
     SupplyReadinessTotalsResponse Totals,
     IReadOnlyList<SupplyReadinessDemandRefSourceCountResponse> DemandRefsBySource,
-    IReadOnlyList<SupplyReadinessAttentionItemResponse> AttentionItems);
+    IReadOnlyList<SupplyReadinessAttentionItemResponse> AttentionItems,
+    IReadOnlyList<SupplyReadinessPredictiveStockoutResponse> PredictiveStockoutItems);
 
 public sealed record SupplyReadinessBlockerResponse(
     string ReasonCode,

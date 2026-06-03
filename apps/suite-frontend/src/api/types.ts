@@ -12,6 +12,9 @@ export interface LoginRequest {
   email: string
   password: string
   tenantId: string | null
+  rememberDevice: boolean
+  mfaCode?: string | null
+  recoveryCode?: string | null
 }
 
 export interface ForgotPasswordResponse {
@@ -67,6 +70,7 @@ export interface UserSessionSummary {
   activeTenantId: string | null
   isCurrent: boolean
   isActive: boolean
+  isRemembered: boolean
 }
 
 export interface UserSessionsResponse {
@@ -203,17 +207,50 @@ export interface TenantDetailResponse {
   slug: string
   displayName: string
   status: string
+  subscriptionTier: string
+  billingCustomerId: string | null
+  billingSubscriptionId: string | null
+  billingGraceDays: number | null
+  isTrial: boolean
+  isInternalTenant: boolean
   createdAt: string
   modifiedAt: string
+}
+
+export interface TenantMemberResponse {
+  membershipId: string
+  userId: string
+  email: string
+  displayName: string
+  roleKey: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface TenantMembersListResponse {
+  tenantId: string
+  members: TenantMemberResponse[]
 }
 
 export interface CreateTenantRequest {
   slug: string
   displayName: string
+  subscriptionTier: string
+  billingCustomerId: string | null
+  billingSubscriptionId: string | null
+  billingGraceDays: number | null
+  isTrial: boolean
+  isInternalTenant: boolean
 }
 
 export interface UpdateTenantRequest {
   displayName: string
+  subscriptionTier: string
+  billingCustomerId: string | null
+  billingSubscriptionId: string | null
+  billingGraceDays: number | null
+  isTrial: boolean
+  isInternalTenant: boolean
 }
 
 export interface UpdateTenantStatusRequest {
@@ -243,6 +280,18 @@ export interface ProductDetailResponse {
   displayName: string
   sortOrder: number
   isActive: boolean
+  productCategory: string
+  productOwner: string
+  productStatus: string
+  canonicalCallbackPath: string
+  apiBaseUrl: string
+  healthUrl: string
+  serviceAudience: string
+  marketingUrl: string
+  documentationUrl: string
+  supportUrl: string
+  environmentKey: string
+  entitlementDependencyRules: string
 }
 
 export interface PlatformUserListItemResponse {
@@ -326,6 +375,9 @@ export interface PlatformUserMfaResponse {
   isMfaEnabled: boolean
   wasAlreadySet: boolean
   modifiedAt: string
+  mfaSecret: string | null
+  provisioningUri: string | null
+  recoveryCodes: string[] | null
 }
 
 export interface PlatformUserSessionItemResponse {
@@ -529,6 +581,23 @@ export interface ProductManifestResponse {
   dataPlaneProfiles: ProductManifestDataPlaneProfileResponse[]
 }
 
+export interface CallbackAllowlistEntryResponse {
+  entryId: string
+  productKey: string
+  tenantId: string | null
+  urlPattern: string
+  patternType: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface CreateCallbackAllowlistEntryRequest {
+  productKey: string
+  tenantId: string | null
+  urlPattern: string
+  patternType: string
+}
+
 export interface CreateProductRequest {
   productKey: string
   displayName: string
@@ -658,6 +727,9 @@ export interface PlatformSessionSettings {
   accessTokenMinutes: number
   refreshTokenDays: number
   rememberedRefreshTokenDays: number
+  requirePlatformAdminMfa: boolean
+  passwordMinLength: number
+  requirePasswordComplexity: boolean
   updatedAt: string | null
 }
 
@@ -781,6 +853,20 @@ export interface PlatformLifecycleOverviewResponse {
   workers: PlatformLifecycleWorkerStatus[]
 }
 
+export interface PlatformHealthResponse {
+  status: string
+  timestampUtc: string
+  products: ProductHealthProbeResult[]
+}
+
+export interface HealthResponse {
+  status: string
+  product: string
+  version: string
+  timestampUtc: string
+  checks?: Record<string, unknown> | null
+}
+
 export interface ProductHealthProbeResult {
   productKey: string
   status: string
@@ -788,6 +874,7 @@ export interface ProductHealthProbeResult {
   latencyMs: number | null
   errorCode: string | null
   errorMessage: string | null
+  detail?: HealthResponse | null
 }
 
 export interface PlatformServiceTokenInventorySummary {
@@ -956,6 +1043,14 @@ export interface ServiceTokenSummary {
   createdAt: string
 }
 
+export interface ServiceTokenDiscoveryResponse {
+  issuer: string
+  audience: string
+  jwksUri: string
+  supportedAlgorithms: string[]
+  publicKeyAvailable: boolean
+}
+
 export interface DataPlaneProfile {
   profileId: string
   tenantId: string
@@ -977,6 +1072,24 @@ export interface UpsertDataPlaneProfileRequest {
   dataEndpointUrl?: string | null
   trustStatus: string
   notes?: string | null
+}
+
+export interface ValidateDataPlaneProfileRequest {
+  tenantId: string
+  productKey: string
+  deploymentMode: string
+  dataEndpointUrl?: string | null
+  notes?: string | null
+}
+
+export interface ValidateDataPlaneProfileResponse {
+  profile: DataPlaneProfile
+  validationStatus: string
+  readyUrl: string | null
+  latencyMs: number | null
+  errorCode: string | null
+  errorMessage: string | null
+  validatedAt: string
 }
 
 export interface EffectiveDataPlaneProfile {

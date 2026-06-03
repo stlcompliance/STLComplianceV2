@@ -2113,6 +2113,29 @@
         }
       }
     },
+    "/api/platform-admin/data-plane/validate": {
+      "post": {
+        "tags": [
+          "HybridDataPlane"
+        ],
+        "operationId": "ValidateDataPlaneProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateDataPlaneProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/data-plane/{tenantId}/{productKey}": {
       "delete": {
         "tags": [
@@ -7931,6 +7954,39 @@
           },
           "displayName": {
             "type": "string"
+          },
+          "subscriptionTier": {
+            "type": "string",
+            "default": "standard"
+          },
+          "billingCustomerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "billingSubscriptionId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "billingGraceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isTrial": {
+            "type": "boolean",
+            "default": false
+          },
+          "isInternalTenant": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -8094,6 +8150,18 @@
           "rememberDevice": {
             "type": "boolean",
             "default": false
+          },
+          "mfaCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recoveryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8689,12 +8757,48 @@
       },
       "UpdateTenantRequest": {
         "required": [
-          "displayName"
+          "displayName",
+          "subscriptionTier",
+          "billingCustomerId",
+          "billingSubscriptionId",
+          "billingGraceDays",
+          "isTrial",
+          "isInternalTenant"
         ],
         "type": "object",
         "properties": {
           "displayName": {
             "type": "string"
+          },
+          "subscriptionTier": {
+            "type": "string"
+          },
+          "billingCustomerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "billingSubscriptionId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "billingGraceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isTrial": {
+            "type": "boolean"
+          },
+          "isInternalTenant": {
+            "type": "boolean"
           }
         }
       },
@@ -8847,7 +8951,10 @@
         "required": [
           "accessTokenMinutes",
           "refreshTokenDays",
-          "rememberedRefreshTokenDays"
+          "rememberedRefreshTokenDays",
+          "requirePlatformAdminMfa",
+          "passwordMinLength",
+          "requirePasswordComplexity"
         ],
         "type": "object",
         "properties": {
@@ -8874,6 +8981,20 @@
               "string"
             ],
             "format": "int32"
+          },
+          "requirePlatformAdminMfa": {
+            "type": "boolean"
+          },
+          "passwordMinLength": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requirePasswordComplexity": {
+            "type": "boolean"
           }
         }
       },
@@ -9036,6 +9157,40 @@
             "type": "string"
           },
           "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ValidateDataPlaneProfileRequest": {
+        "required": [
+          "tenantId",
+          "productKey",
+          "deploymentMode",
+          "dataEndpointUrl",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "deploymentMode": {
+            "type": "string"
+          },
+          "dataEndpointUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
             "type": [
               "null",
               "string"

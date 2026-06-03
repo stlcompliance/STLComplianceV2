@@ -1,4 +1,4 @@
-import { buildSemanticKey } from '@stl/shared-ui'
+import { buildSemanticKey, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { TrainingDefinitionResponse, TrainingDefinitionStepResponse } from '../api/types'
 
@@ -39,14 +39,29 @@ const DEFAULT_QUIZ_CONFIG = JSON.stringify(
 
 const DEFAULT_PRACTICAL_CONFIG = JSON.stringify(
   {
-    evaluationRubric: 'Demonstrate the required procedure under evaluator observation.',
+    skillTaskName: 'Demonstrate the required procedure under evaluator observation.',
+    passCriteria: 'Complete the task safely, in the correct order, without critical errors.',
+    observationPrompts: ['Setup', 'Execution', 'Shutdown'],
     requiresEvaluatorSignoff: true,
+    requireTraineeAcknowledgement: true,
+    requireFailureComments: true,
+    requireRetestOnFailure: true,
   },
   null,
   2,
 )
 
-const DEFAULT_CONTENT_CONFIG = JSON.stringify({ body: 'Review the assigned training material.' }, null, 2)
+const DEFAULT_CONTENT_CONFIG = JSON.stringify(
+  {
+    title: 'Lesson overview',
+    body: 'Review the assigned training material.',
+    mediaUrl: '',
+    externalUrl: '',
+    requireAcknowledgement: true,
+  },
+  null,
+  2,
+)
 
 function defaultConfigForType(stepType: 'content' | 'quiz' | 'practical'): string {
   if (stepType === 'quiz') {
@@ -74,6 +89,16 @@ export function StepBuilderPanel({
   const [stepType, setStepType] = useState<'content' | 'quiz' | 'practical'>('content')
   const [configJson, setConfigJson] = useState(DEFAULT_CONTENT_CONFIG)
   const [sortOrder, setSortOrder] = useState('0')
+  const definitionOptions = useMemo<PickerOption[]>(
+    () => definitions.map((definition) => ({ value: definition.trainingDefinitionId, label: definition.name })),
+    [definitions],
+  )
+  const selectedDefinitionOption = useMemo<PickerOption | undefined>(
+    () =>
+      definitionOptions.find((option) => option.value === selectedDefinitionId) ??
+      (selectedDefinitionId ? { value: selectedDefinitionId, label: selectedDefinitionId } : undefined),
+    [definitionOptions, selectedDefinitionId],
+  )
 
   const generatedStepKey = useMemo(
     () =>
@@ -127,22 +152,18 @@ export function StepBuilderPanel({
         </p>
       </header>
 
-      <label htmlFor="step-builder-definition" className="mt-4 block text-sm text-slate-300">
-        Training definition
-        <select
+      <div className="mt-4 block text-sm text-slate-300">
+        <StaticSearchPicker
           id="step-builder-definition"
+          label="Training definition"
           value={selectedDefinitionId ?? ''}
-          onChange={(event) => onSelectDefinition(event.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-        >
-          <option value="">Select definition…</option>
-          {definitions.map((definition) => (
-            <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-              {definition.name}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={onSelectDefinition}
+          options={definitionOptions}
+          selectedOption={selectedDefinitionOption}
+          placeholder="Search training definitions…"
+          testId="step-builder-definition"
+        />
+      </div>
 
       {selectedDefinitionId ? (
         <>

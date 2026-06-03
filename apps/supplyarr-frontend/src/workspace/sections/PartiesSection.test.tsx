@@ -36,6 +36,30 @@ const supplier = {
   updatedAt: '2026-06-01T00:00:00Z',
 }
 
+const contract = {
+  contractId: 'contract-1',
+  contractKey: 'SC-2048',
+  contractType: 'master_supply_agreement',
+  title: 'Supply Agreement 2026',
+  vendorPartyId: 'supplier-1',
+  vendorPartyKey: 'sup-2048',
+  vendorDisplayName: 'Midwest Fleet Parts & Service',
+  effectiveAt: '2026-01-15T00:00:00Z',
+  expiresAt: '2026-12-31T00:00:00Z',
+  renewalAt: '2026-11-01T00:00:00Z',
+  paymentTerms: 'Net 30',
+  freightTerms: 'FOB destination',
+  warrantyTerms: '12 months from receipt',
+  minimumSpend: 25000,
+  serviceLevelAgreement: '95% on-time shipment rate',
+  approvalStatus: 'approved',
+  status: 'active',
+  notes: 'Priority partner contract',
+  createdByUserId: 'user-1',
+  createdAt: '2026-01-10T00:00:00Z',
+  updatedAt: '2026-06-02T00:00:00Z',
+}
+
 const baseState = {
   accessToken: '',
   canManage: true,
@@ -49,6 +73,7 @@ const baseState = {
   vendorsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [], isLoading: false },
   dealersQuery: { data: [], isLoading: false },
+  contractsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   purchaseOrdersQuery: { data: [], isLoading: false },
   purchaseRequestsQuery: { data: [], isLoading: false },
@@ -120,11 +145,15 @@ describe('PartiesSection', () => {
     renderPartiesSection('/parties/details', {
       ...baseState,
       suppliersQuery: { data: [supplier], isLoading: false },
+      contractsQuery: { data: [contract], isLoading: false },
     } as never)
 
     expect(screen.getByTestId('supplyarr-party-profile')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Midwest Fleet Parts & Service' })).toBeInTheDocument()
     expect(screen.getByText('Supplier snapshot')).toBeInTheDocument()
+    expect(screen.getByText('Contracts & purchasing terms')).toBeInTheDocument()
+    expect(screen.getByText('SC-2048')).toBeInTheDocument()
+    expect(screen.getAllByText('Net 30')).toHaveLength(2)
     expect(screen.getByText('Supplier decision')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
   })

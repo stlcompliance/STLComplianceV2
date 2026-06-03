@@ -1,15 +1,46 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { ProductCatalogAdminPanel } from '../../components/platform-admin/ProductCatalogAdminPanel'
 
 export function ProductOverviewPage() {
+  const [manifestProductKey, setManifestProductKey] = useState('')
+  const [manifestTenantId, setManifestTenantId] = useState('')
+
   const overviewQuery = useQuery({
     queryKey: ['platform-admin-product-overview'],
     queryFn: () => nexarr.getPlatformAdminProductOverview(),
   })
 
-  if (overviewQuery.isLoading) {
+  const manifestsQuery = useQuery({
+    queryKey: ['platform-admin-product-manifests', manifestProductKey, manifestTenantId],
+    queryFn: () =>
+      nexarr.getPlatformAdminProductManifests({
+        productKey: manifestProductKey || undefined,
+        tenantId: manifestTenantId || undefined,
+        page: 1,
+        pageSize: 20,
+      }),
+  })
+
+  const serviceClientsQuery = useQuery({
+    queryKey: ['platform-admin-service-clients'],
+    queryFn: () => nexarr.listServiceClients(1, 100),
+  })
+
+  const launchAttemptsQuery = useQuery({
+    queryKey: ['platform-admin-product-launch-attempts', manifestProductKey],
+    queryFn: () =>
+      nexarr.getPlatformAdminLaunchAttempts({
+        productKey: manifestProductKey || undefined,
+        page: 1,
+        pageSize: 10,
+      }),
+    enabled: Boolean(manifestProductKey.trim()),
+  })
+
+  if (overviewQuery.isLoading || manifestsQuery.isLoading) {
     return <p className="text-sm text-slate-500">Loading products…</p>
   }
 
@@ -25,42 +56,239 @@ export function ProductOverviewPage() {
 
   const products = overviewQuery.data!
 
+  const manifests = manifestsQuery.data?.items ?? []
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-      <table className="min-w-full text-left text-sm">
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-          <tr>
-            <th className="px-3 py-2">Product</th>
-            <th className="px-3 py-2">Active</th>
-            <th className="px-3 py-2">Entitlements</th>
-            <th className="px-3 py-2">Launch profile</th>
-            <th className="px-3 py-2">Base URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.productKey} className="border-b border-slate-100">
-              <td className="px-3 py-2">
-                <span className="font-medium text-stl-navy">{product.displayName}</span>
-                <span className="block text-xs text-slate-500">{product.productKey}</span>
-              </td>
-              <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
-              <td className="px-3 py-2">{product.activeEntitlementCount}</td>
-              <td className="px-3 py-2">
-                {product.launchProfileActive
-                  ? 'Active'
-                  : product.hasLaunchProfile
-                    ? 'Inactive'
-                    : 'Missing'}
-              </td>
-              <td className="px-3 py-2 font-mono text-xs text-slate-600">
-                {product.baseUrl ?? '—'}
-              </td>
+    <div className="space-y-6">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <table className="min-w-full text-left text-sm">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+            <tr>
+              <th className="px-3 py-2">Product</th>
+              <th className="px-3 py-2">Active</th>
+              <th className="px-3 py-2">Entitlements</th>
+              <th className="px-3 py-2">Launch profile</th>
+              <th className="px-3 py-2">Base URL</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product.productKey} className="border-b border-slate-100">
+                <td className="px-3 py-2">
+                  <span className="font-medium text-stl-navy">{product.displayName}</span>
+                  <span className="block text-xs text-slate-500">{product.productKey}</span>
+                </td>
+                <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
+                <td className="px-3 py-2">{product.activeEntitlementCount}</td>
+                <td className="px-3 py-2">
+                  {product.launchProfileActive
+                    ? 'Active'
+                    : product.hasLaunchProfile
+                      ? 'Inactive'
+                      : 'Missing'}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                  {product.baseUrl ?? '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-stl-navy">Product manifest explorer</h3>
+            <p className="text-sm text-slate-500">
+              Inspect launch profile, callback allowlist, and data-plane metadata known to NexArr.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <label className="block text-sm text-slate-700">
+            Filter by product key
+            <input
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              value={manifestProductKey}
+              onChange={(event) => setManifestProductKey(event.target.value)}
+              placeholder="staffarr"
+            />
+          </label>
+          <label className="block text-sm text-slate-700">
+            Filter by tenant ID
+            <input
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              value={manifestTenantId}
+              onChange={(event) => setManifestTenantId(event.target.value)}
+              placeholder="tenant GUID"
+            />
+          </label>
+        </div>
+
+        {manifestsQuery.isError ? (
+          <ApiErrorCallout
+            message={getErrorMessage(manifestsQuery.error, 'Failed to load product manifests.')}
+            onRetry={() => void manifestsQuery.refetch()}
+            retryLabel="Retry manifests"
+          />
+        ) : manifests.length ? (
+          <div className="mt-4 space-y-3">
+            {manifests.map((manifest) => (
+              <div key={`${manifest.productKey}-${manifest.launchProfileModifiedAt ?? 'none'}`} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-stl-navy">{manifest.displayName}</h4>
+                    <p className="text-xs text-slate-500">
+                      {manifest.productKey} · {manifest.productOwner} · {manifest.productStatus}
+                    </p>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Launch profile {manifest.launchProfileModifiedAt ? `updated ${new Date(manifest.launchProfileModifiedAt).toLocaleString()}` : 'not modified'}
+                  </p>
+                </div>
+
+                <dl className="mt-3 grid gap-2 md:grid-cols-2">
+                  <DetailRow label="Launch URL" value={manifest.launchUrl ?? '—'} mono />
+                  <DetailRow label="Launch base URL" value={manifest.launchBaseUrl ?? '—'} mono />
+                  <DetailRow label="Launch path" value={manifest.launchPath ?? '—'} mono />
+                  <DetailRow label="Callback path" value={manifest.canonicalCallbackPath} mono />
+                  <DetailRow label="API base URL" value={manifest.apiBaseUrl} mono />
+                  <DetailRow label="Health URL" value={manifest.healthUrl} mono />
+                  <DetailRow label="Service audience" value={manifest.serviceAudience} mono />
+                  <DetailRow label="Environment" value={manifest.environmentKey} />
+                  <DetailRow label="Dependency rules" value={manifest.entitlementDependencyRules} />
+                  <DetailRow label="Product dependency metadata" value={manifest.productDependencyMetadata || '—'} />
+                </dl>
+
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <DetailList
+                    label={`Callback allowlist (${manifest.callbackAllowlist.length})`}
+                    items={manifest.callbackAllowlist.map((entry) => `${entry.urlPattern} [${entry.patternType}]${entry.tenantId ? ` · tenant ${entry.tenantId}` : ''}`)}
+                  />
+                  <DetailList
+                    label={`Data plane profiles (${manifest.dataPlaneProfiles.length})`}
+                    items={manifest.dataPlaneProfiles.map((profile) => `${profile.tenantId} · ${profile.deploymentMode} · ${profile.trustStatus}${profile.dataEndpointUrl ? ` · ${profile.dataEndpointUrl}` : ''}`)}
+                  />
+                </div>
+
+                <div className="mt-3">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Service clients
+                  </h5>
+                  {serviceClientsQuery.isLoading ? (
+                    <p className="mt-2 text-xs text-slate-500">Loading service clients…</p>
+                  ) : serviceClientsQuery.isError ? (
+                    <p className="mt-2 text-xs text-rose-600">Failed to load service clients.</p>
+                  ) : (() => {
+                    const productClients = (serviceClientsQuery.data?.items ?? []).filter(
+                      (client) =>
+                        client.sourceProductKey === manifest.productKey ||
+                        client.allowedProductKeys.includes(manifest.productKey),
+                    )
+
+                    return productClients.length ? (
+                      <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                        {productClients.map((client) => (
+                          <li
+                            key={client.serviceClientId}
+                            className="rounded-md border border-slate-200 bg-white px-3 py-2"
+                          >
+                            <div className="font-medium text-stl-navy">{client.displayName}</div>
+                            <p className="mt-1 text-slate-500">{client.clientKey}</p>
+                            <p className="mt-1 text-slate-500">
+                              {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
+                              {client.lastUsedAt ? new Date(client.lastUsedAt).toLocaleString() : 'never'}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-500">No service clients found for this product.</p>
+                    )
+                  })()}
+                </div>
+
+                <div className="mt-3">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Launch activity
+                  </h5>
+                  {!manifestProductKey.trim() ? (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Enter a product key filter above to inspect recent launch attempts.
+                    </p>
+                  ) : launchAttemptsQuery.isLoading ? (
+                    <p className="mt-2 text-xs text-slate-500">Loading launch activity…</p>
+                  ) : launchAttemptsQuery.isError ? (
+                    <p className="mt-2 text-xs text-rose-600">Failed to load launch activity.</p>
+                  ) : launchAttemptsQuery.data?.items.length ? (
+                    <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                      {launchAttemptsQuery.data.items.map((attempt) => (
+                        <li key={attempt.auditEventId} className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                          <div className="font-medium text-stl-navy">
+                            {attempt.tenantDisplayName ?? attempt.tenantSlug ?? 'Unknown tenant'}
+                          </div>
+                          <p className="mt-1 text-slate-500">
+                            {attempt.action} · {attempt.result}
+                            {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
+                          </p>
+                          <p className="mt-1 text-slate-500">
+                            {new Date(attempt.occurredAt).toLocaleString()}
+                            {attempt.reasonCode ? ` · ${attempt.reasonCode}` : ''}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-500">No launch activity found for this product filter.</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-slate-500">No product manifests found for the current filters.</p>
+        )}
+      </section>
+
       <ProductCatalogAdminPanel />
+    </div>
+  )
+}
+
+function DetailRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-[8rem_1fr] gap-3">
+      <dt className="font-medium text-slate-600">{label}</dt>
+      <dd className={mono ? 'font-mono text-xs break-all text-slate-700' : 'text-slate-700'}>{value || '—'}</dd>
+    </div>
+  )
+}
+
+function DetailList({ label, items }: { label: string; items: string[] }) {
+  return (
+    <div>
+      <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</h5>
+      {items.length ? (
+        <ul className="mt-2 space-y-1 text-xs text-slate-700">
+          {items.map((item) => (
+            <li key={item} className="rounded-md border border-slate-200 bg-white px-3 py-2 font-mono break-all">
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">None</p>
+      )}
     </div>
   )
 }

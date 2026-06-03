@@ -305,6 +305,16 @@ export function useComplianceCoreWorkspaceState() {
 
   })
 
+  const allRuleEvaluationsQuery = useQuery({
+
+    queryKey: ['compliancecore-rule-evaluations', session?.accessToken, 'all'],
+
+    queryFn: () => getRuleEvaluations(session!.accessToken),
+
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+
+  })
+
 
 
   const findingsQuery = useQuery({
@@ -1152,6 +1162,7 @@ export function useComplianceCoreWorkspaceState() {
     regulatoryMappingsQuery,
     rulePackContentQuery,
     ruleEvaluationsQuery,
+    allRuleEvaluationsQuery,
     findingsQuery,
     workflowGatesQuery,
     seedMutation,

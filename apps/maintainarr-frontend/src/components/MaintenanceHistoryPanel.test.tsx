@@ -1,6 +1,52 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+      disabled,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+      disabled?: boolean
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 import { MaintenanceHistoryPanel } from './MaintenanceHistoryPanel'
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('MaintenanceHistoryPanel', () => {
   const assets = [
@@ -68,6 +114,28 @@ describe('MaintenanceHistoryPanel', () => {
     expect(screen.getByText('2 events total for FL-001')).toBeTruthy()
   })
 
+  it('allows selecting an asset through the searchable picker', () => {
+    const onSelectedAssetIdChange = vi.fn()
+
+    render(
+      <MaintenanceHistoryPanel
+        assets={assets}
+        selectedAssetId=""
+        summary={null}
+        entries={[]}
+        totalCount={0}
+        isLoading={false}
+        onSelectedAssetIdChange={onSelectedAssetIdChange}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Asset'), {
+      target: { value: '11111111-1111-1111-1111-111111111111' },
+    })
+
+    expect(onSelectedAssetIdChange).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111')
+  })
+
   it('shows empty prompt when no asset is selected', () => {
     render(
       <MaintenanceHistoryPanel
@@ -81,7 +149,7 @@ describe('MaintenanceHistoryPanel', () => {
       />,
     )
 
-    expect(screen.getByText('Choose an asset to view its maintenance history.')).toBeTruthy()
+    expect(screen.getAllByText('Choose an asset to view its maintenance history.').length).toBeGreaterThan(0)
   })
 
   it('shows empty state when asset has no events', () => {

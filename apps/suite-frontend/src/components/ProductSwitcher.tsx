@@ -51,8 +51,8 @@ export function ProductSwitcher() {
   const CurrentIcon = getProductIcon(currentProductKey)
 
   const navigationQuery = useQuery({
-    queryKey: ['navigation', me?.tenantId],
-    queryFn: () => nexarr.getNavigation(),
+    queryKey: ['navigation', me?.tenantId, currentProductKey],
+    queryFn: () => nexarr.getNavigation(currentProductKey),
     enabled: me !== undefined,
   })
 
@@ -61,9 +61,11 @@ export function ProductSwitcher() {
     hasProductEntitlement(entitlements, product.productKey),
   )
   const currentProduct =
+    entitledProducts.find((product) => product.isCurrent) ??
     entitledProducts.find(
       (product) => normalizeProductKey(product.productKey) === currentProductKey,
-    ) ?? entitledProducts[0]
+    ) ??
+    entitledProducts[0]
 
   useEffect(() => {
     if (!open) {
@@ -127,9 +129,7 @@ export function ProductSwitcher() {
       >
         <CurrentIcon className="h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
         <span className="min-w-0 truncate font-medium">
-          {currentProductKey === 'nexarr'
-            ? 'Suite'
-            : (currentProduct?.displayName ?? 'Suite')}
+          {currentProductKey === 'nexarr' ? 'Suite' : (currentProduct?.displayName ?? 'Suite')}
         </span>
         <ChevronDown
           className={['h-4 w-4 shrink-0 text-slate-300 transition-transform', open ? 'rotate-180' : ''].join(
@@ -148,7 +148,8 @@ export function ProductSwitcher() {
         >
           {entitledProducts.map((product) => {
             const Icon = getProductIcon(product.productKey)
-            const isCurrent = normalizeProductKey(product.productKey) === currentProductKey
+            const isCurrent =
+              Boolean(product.isCurrent) || normalizeProductKey(product.productKey) === currentProductKey
 
             return (
               <li key={product.productKey} role="none">

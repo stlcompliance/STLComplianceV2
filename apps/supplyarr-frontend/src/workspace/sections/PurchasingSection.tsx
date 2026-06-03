@@ -7,6 +7,8 @@ import { ProcurementApprovalAuthorityBanner } from '../../components/Procurement
 import { PurchaseRequestPanel } from '../../components/PurchaseRequestPanel'
 import { RfqPanel } from '../../components/RfqPanel'
 import { EmergencyPurchasePanel } from '../../components/EmergencyPurchasePanel'
+import { ContractsImportPanel } from '../../components/ContractsImportPanel'
+import { VendorEmailInboxPanel } from '../../components/VendorEmailInboxPanel'
 import { useLocation } from 'react-router-dom'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -49,6 +51,7 @@ export function PurchasingSection({ state: s }: Props) {
         vendors={vendors}
         vendorDirectory={s.vendorsQuery.data ?? []}
       />
+      <VendorEmailInboxPanel accessToken={s.accessToken} canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo} />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}
         parts={s.partsQuery.data ?? []}
@@ -133,6 +136,7 @@ export function PurchasingSection({ state: s }: Props) {
           purchaseOrders={s.purchaseOrdersQuery.data ?? []}
         />
       ) : null}
+      <ContractsImportPanel accessToken={s.accessToken} canManage={s.canCreatePr} />
     </div>
   )
 }

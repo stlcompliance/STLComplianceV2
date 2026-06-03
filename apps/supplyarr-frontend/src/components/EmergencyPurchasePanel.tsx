@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
-import { ControlledSelect } from '@stl/shared-ui'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   createEmergencyPurchase,
@@ -78,6 +78,22 @@ export function EmergencyPurchasePanel({
   const existingRequestKeys = useMemo(
     () => (listQuery.data ?? []).map((item) => item.requestKey),
     [listQuery.data],
+  )
+  const vendorOptions = useMemo<PickerOption[]>(
+    () => toPartyPickerOptions(vendors),
+    [vendors],
+  )
+  const selectedVendorOption = useMemo<PickerOption | undefined>(
+    () => vendorOptions.find((option) => option.value === vendorId),
+    [vendorId, vendorOptions],
+  )
+  const partOptions = useMemo<PickerOption[]>(
+    () => toPartPickerOptions(parts),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === partId),
+    [partId, partOptions],
   )
   const orderKeySource = selected ? `${selected.requestKey}-po` : ''
 
@@ -193,19 +209,25 @@ export function EmergencyPurchasePanel({
               onChange={(e) => setEmergencyReason(e.target.value)}
             />
           </label>
-          <ControlledSelect
+          <StaticSearchPicker
             label="Vendor"
+            id="emergency-purchase-vendor"
             value={vendorId}
+            options={vendorOptions}
+            selectedOption={selectedVendorOption}
             onChange={setVendorId}
-            options={toPartyPickerOptions(vendors)}
-            emptyLabel="Select vendor…"
+            placeholder="Search vendors…"
+            testId="emergency-purchase-vendor-picker"
           />
-          <ControlledSelect
+          <StaticSearchPicker
             label="Part"
+            id="emergency-purchase-part"
             value={partId}
+            options={partOptions}
+            selectedOption={selectedPartOption}
             onChange={setPartId}
-            options={toPartPickerOptions(parts)}
-            emptyLabel="Select part…"
+            placeholder="Search parts…"
+            testId="emergency-purchase-part-picker"
           />
           <button
             type="button"

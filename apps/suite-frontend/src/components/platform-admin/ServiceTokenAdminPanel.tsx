@@ -9,7 +9,7 @@ import {
 } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
-import type { ServiceTokenIssueResult } from '../../api/types'
+import type { ServiceTokenDiscoveryResponse, ServiceTokenIssueResult } from '../../api/types'
 import { ConfirmDialog } from '../../feedback'
 import { ServiceClientsCard } from './service-token/ServiceClientsCard'
 import { ServiceTokensCard } from './service-token/ServiceTokensCard'
@@ -47,6 +47,12 @@ export function ServiceTokenAdminPanel() {
   const tokensQuery = useQuery({
     queryKey: ['platform-service-tokens', tokensPage],
     queryFn: () => nexarr.listServiceTokens(undefined, tokensPage, 25),
+  })
+
+  const discoveryQuery = useQuery<ServiceTokenDiscoveryResponse>({
+    queryKey: ['platform-service-token-discovery'],
+    queryFn: () => nexarr.getServiceTokenDiscovery(),
+    staleTime: 60_000,
   })
 
   const auditQuery = useQuery({
@@ -273,6 +279,48 @@ export function ServiceTokenAdminPanel() {
           {errorMessage}
         </p>
       ) : null}
+
+      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-medium text-slate-200">Service token discovery</h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Public trust metadata for product token validation and service-client bootstrap.
+            </p>
+          </div>
+          <span
+            className={[
+              'rounded-full px-2 py-0.5 text-xs font-medium',
+              discoveryQuery.data?.publicKeyAvailable
+                ? 'bg-emerald-950/50 text-emerald-300'
+                : 'bg-amber-950/50 text-amber-300',
+            ].join(' ')}
+            data-testid="service-token-discovery-key-status"
+          >
+            {discoveryQuery.data?.publicKeyAvailable ? 'JWKS available' : 'HS256 only'}
+          </span>
+        </div>
+
+        {discoveryQuery.isLoading ? (
+          <p className="mt-3 text-sm text-slate-400">Loading discovery metadata…</p>
+        ) : discoveryQuery.isError ? (
+          <p className="mt-3 text-sm text-rose-400" data-testid="service-token-discovery-error">
+            {discoveryQuery.error instanceof Error
+              ? discoveryQuery.error.message
+              : 'Failed to load service token discovery.'}
+          </p>
+        ) : discoveryQuery.data ? (
+          <dl className="mt-3 grid gap-3 md:grid-cols-2">
+            <DiscoveryRow label="Issuer" value={discoveryQuery.data.issuer} />
+            <DiscoveryRow label="Audience" value={discoveryQuery.data.audience} />
+            <DiscoveryRow label="JWKS URI" value={discoveryQuery.data.jwksUri} mono />
+            <DiscoveryRow
+              label="Supported algorithms"
+              value={discoveryQuery.data.supportedAlgorithms.join(', ')}
+            />
+          </dl>
+        ) : null}
+      </div>
 
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Register service client</h3>
@@ -595,5 +643,16 @@ export function ServiceTokenAdminPanel() {
         </div>
       </div>
     </section>
+  )
+}
+
+function DiscoveryRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className={['mt-1 text-sm text-slate-100', mono ? 'break-all font-mono text-xs' : ''].join(' ')}>
+        {value}
+      </div>
+    </div>
   )
 }

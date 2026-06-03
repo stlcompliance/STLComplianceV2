@@ -1822,6 +1822,8 @@ export function HomePage() {
 
           parts={partsQuery.data ?? []}
 
+          vendors={vendorsQuery.data ?? []}
+
           pricingSnapshots={pricingSnapshotsQuery.data ?? []}
 
           leadTimeSnapshots={leadTimeSnapshotsQuery.data ?? []}

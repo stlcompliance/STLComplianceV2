@@ -86,6 +86,7 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
     public async Task Executive_report_summary_returns_kpis()
     {
         await SeedReliabilityDowntimeAsync();
+        await SeedPartsDemandForecastAsync();
 
         var response = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/reports/executive/summary", _managerToken));
@@ -105,6 +106,11 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         Assert.True(summary.Reliability.MeanTimeToRepairHours > 0);
         Assert.True(summary.Reliability.MeanTimeBetweenFailuresHours > 0);
         Assert.Contains(summary.Reliability.ChronicAssets, x => x.AssetTag == "REL-001");
+        Assert.Equal(3, summary.PartsDemandForecast.OpenLineCount);
+        Assert.Equal(2, summary.PartsDemandForecast.DistinctPartCount);
+        Assert.True(summary.PartsDemandForecast.ForecastQuantity > 0);
+        Assert.Contains(summary.PartsDemandForecast.TopParts, x => x.PartNumber == "BRK-001");
+        Assert.Equal(2, summary.PartsDemandForecast.TopParts.Single(x => x.PartNumber == "BRK-001").OpenLineCount);
     }
 
     [Fact]
@@ -132,6 +138,9 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
     [Fact]
     public async Task Executive_report_summary_export_returns_csv()
     {
+        await SeedReliabilityDowntimeAsync();
+        await SeedPartsDemandForecastAsync();
+
         var response = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/reports/executive/summary/export", _managerToken));
         response.EnsureSuccessStatusCode();
@@ -142,6 +151,7 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         Assert.Contains("downtime,current_hours", csv, StringComparison.Ordinal);
         Assert.Contains("reliability,mean_time_to_repair_hours", csv, StringComparison.Ordinal);
         Assert.Contains("supplyarr,published_demand_lines", csv, StringComparison.Ordinal);
+        Assert.Contains("parts_demand_forecast,forecast_quantity", csv, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -332,6 +342,147 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
             CreatedAt = now,
             UpdatedAt = now,
         });
+
+        await db.SaveChangesAsync();
+    }
+
+    private async Task SeedPartsDemandForecastAsync()
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var assetClass = new AssetClass
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ClassKey = $"forecast-class-{Guid.NewGuid():N}",
+            Name = "Forecast Class",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var assetType = new AssetType
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetClassId = assetClass.Id,
+            TypeKey = $"forecast-type-{Guid.NewGuid():N}",
+            Name = "Forecast Type",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetTypeId = assetType.Id,
+            AssetTag = "FORECAST-001",
+            Name = "Forecast Asset",
+            LifecycleStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var manualWorkOrder = new WorkOrder
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetId = asset.Id,
+            WorkOrderNumber = "WO-FORECAST-1",
+            Title = "Replace brake pads",
+            Description = "Forecast manual maintenance work order",
+            Priority = WorkOrderPriorities.High,
+            Status = WorkOrderStatuses.Open,
+            Source = WorkOrderSources.Manual,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddDays(-2),
+            UpdatedAt = now,
+        };
+        var pmWorkOrder = new WorkOrder
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetId = asset.Id,
+            PmScheduleId = Guid.NewGuid(),
+            WorkOrderNumber = "WO-FORECAST-2",
+            Title = "PM inspection",
+            Description = "Forecast PM maintenance work order",
+            Priority = WorkOrderPriorities.Medium,
+            Status = WorkOrderStatuses.InProgress,
+            Source = WorkOrderSources.PmSchedule,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddDays(-1),
+            UpdatedAt = now,
+        };
+
+        db.AssetClasses.Add(assetClass);
+        db.AssetTypes.Add(assetType);
+        db.Assets.Add(asset);
+        db.WorkOrders.AddRange(manualWorkOrder, pmWorkOrder);
+        var brakePartId = Guid.NewGuid();
+        var oilPartId = Guid.NewGuid();
+        db.WorkOrderPartsDemandLines.AddRange(
+            new WorkOrderPartsDemandLine
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                WorkOrderId = manualWorkOrder.Id,
+                LineNumber = 1,
+                SupplyarrPartId = brakePartId,
+                PartNumber = "BRK-001",
+                Description = "Brake pads",
+                QuantityRequested = 2m,
+                UnitOfMeasure = "each",
+                Notes = "Front axle",
+                Status = WorkOrderPartsDemandStatuses.Pending,
+                ProcurementStatus = WorkOrderPartsDemandProcurementStatuses.AwaitingProcurement,
+                QuantityReceived = 0m,
+                CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now.AddDays(-2),
+                UpdatedAt = now.AddDays(-2),
+            },
+            new WorkOrderPartsDemandLine
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                WorkOrderId = pmWorkOrder.Id,
+                LineNumber = 1,
+                SupplyarrPartId = brakePartId,
+                PartNumber = "BRK-001",
+                Description = "Brake pads",
+                QuantityRequested = 1m,
+                UnitOfMeasure = "each",
+                Notes = "Rear axle",
+                Status = WorkOrderPartsDemandStatuses.Published,
+                MaintainarrPublicationId = Guid.NewGuid(),
+                SupplyarrDemandRefId = Guid.NewGuid(),
+                PublishedAt = now.AddDays(-1),
+                ProcurementStatus = WorkOrderPartsDemandProcurementStatuses.PrSubmitted,
+                QuantityReceived = 0m,
+                CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now.AddDays(-1),
+                UpdatedAt = now,
+            },
+            new WorkOrderPartsDemandLine
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                WorkOrderId = pmWorkOrder.Id,
+                LineNumber = 2,
+                SupplyarrPartId = oilPartId,
+                PartNumber = "OIL-123",
+                Description = "Hydraulic oil",
+                QuantityRequested = 4m,
+                UnitOfMeasure = "liter",
+                Notes = "Top-off",
+                Status = WorkOrderPartsDemandStatuses.Pending,
+                ProcurementStatus = WorkOrderPartsDemandProcurementStatuses.AwaitingProcurement,
+                QuantityReceived = 1m,
+                CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now.AddDays(-1),
+                UpdatedAt = now,
+            });
 
         await db.SaveChangesAsync();
     }

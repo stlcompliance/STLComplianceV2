@@ -177,7 +177,9 @@ public sealed record PersonnelIncidentDetailResponse(
     Guid? SourceIncidentId = null,
     string? SourceEventKind = null,
     string? SourceReferenceKey = null,
-    ProductSourceReferenceSnapshotResponse? SourceSnapshot = null);
+    ProductSourceReferenceSnapshotResponse? SourceSnapshot = null,
+    IReadOnlyList<IncidentNoteSummaryResponse>? Notes = null,
+    IReadOnlyList<IncidentAttachmentSummaryResponse>? Attachments = null);
 
 public sealed record RouteIncidentToTrainarrResponse(
     Guid IncidentId,
@@ -185,3 +187,47 @@ public sealed record RouteIncidentToTrainarrResponse(
     string ReasonCategoryKey,
     string Status,
     IncidentTrainarrRoutingResponse TrainarrRouting);
+
+public sealed record UpdatePersonnelIncidentStatusRequest(
+    string Status);
+
+public sealed record CreateIncidentNoteRequest(
+    string NoteTypeKey,
+    string Subject,
+    string Body,
+    DateTimeOffset? DueAt = null);
+
+public sealed record UpdateIncidentNoteStatusRequest(
+    string Status);
+
+public sealed record IncidentNoteSummaryResponse(
+    Guid NoteId,
+    Guid IncidentId,
+    string NoteTypeKey,
+    string Subject,
+    string Body,
+    string Status,
+    DateTimeOffset? DueAt,
+    DateTimeOffset? CompletedAt,
+    Guid CreatedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateIncidentAttachmentRequest(
+    string Title,
+    string FileName,
+    string ContentType,
+    string ContentBase64,
+    string? Description = null);
+
+public sealed record IncidentAttachmentSummaryResponse(
+    Guid AttachmentId,
+    Guid IncidentId,
+    string Title,
+    string FileName,
+    string ContentType,
+    long SizeBytes,
+    string? Description,
+    Guid UploadedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

@@ -79,6 +79,31 @@ public sealed class ComplianceCoreEntityBulkExportService(
                     "/api/reports/evidence/missing/summary/export",
                     "Missing evidence report CSV",
                     "Missing evidence warnings by severity and reason."),
+                new(
+                    "waivers",
+                    "/api/reports/waivers/summary/export",
+                    "Waiver report CSV",
+                    "Compliance waivers and exception approvals with lifecycle filters."),
+                new(
+                    "exception_exemptions",
+                    "/api/reports/exception-exemptions/summary/export",
+                    "Exception exemption report CSV",
+                    "Regulatory exception and exemption definitions with lifecycle filters."),
+                new(
+                    "integration_health",
+                    "/api/reports/integration-health/summary/export",
+                    "Product integration health report CSV",
+                    "Product API sync health by source with status, freshness, and failure details."),
+                new(
+                    "audit_readiness",
+                    "/api/reports/audit-readiness/summary/export",
+                    "Audit readiness report CSV",
+                    "Readiness forecast rollups with risk, effectiveness, and missing-evidence detail."),
+                new(
+                    "remediation_queue",
+                    "/api/reports/remediation-queue/summary/export",
+                    "Remediation queue report CSV",
+                    "Open remediation items derived from missing evidence warnings with recommended actions."),
             ],
             AuditPackageFormats: ["json", "zip"]);
 

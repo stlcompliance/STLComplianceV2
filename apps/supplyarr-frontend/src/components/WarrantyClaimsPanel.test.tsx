@@ -1,9 +1,51 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
 import { WarrantyClaimsPanel } from './WarrantyClaimsPanel'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+      disabled,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+      disabled?: boolean
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
 
 vi.mock('../api/client', () => ({
   listWarrantyClaims: vi.fn().mockResolvedValue([
@@ -53,6 +95,10 @@ vi.mock('../api/client', () => ({
   cancelWarrantyClaim: vi.fn(),
 }))
 
+afterEach(() => {
+  cleanup()
+})
+
 describe('WarrantyClaimsPanel', () => {
   function renderPanel() {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -98,7 +144,47 @@ describe('WarrantyClaimsPanel', () => {
               updatedAt: '',
             },
           ]}
-          issuedPurchaseOrders={[]}
+          issuedPurchaseOrders={[
+            {
+              purchaseOrderId: 'po-1',
+              orderKey: 'PO-001',
+              title: 'Replacement widgets',
+              notes: '',
+              status: 'issued',
+              purchaseRequestId: 'pr-1',
+              purchaseRequestKey: 'PR-001',
+              vendorPartyId: '22222222-2222-2222-2222-222222222222',
+              vendorPartyKey: 'V-1',
+              vendorDisplayName: 'Acme Vendor',
+              createdByUserId: '44444444-4444-4444-4444-444444444444',
+              approvedAt: '2026-05-28T10:00:00Z',
+              approvedByUserId: '44444444-4444-4444-4444-444444444444',
+              issuedAt: '2026-05-28T10:10:00Z',
+              issuedByUserId: '44444444-4444-4444-4444-444444444444',
+              cancelledAt: null,
+              cancelledByUserId: null,
+              cancellationReason: '',
+              lines: [
+                {
+                  lineId: 'po-line-1',
+                  lineNumber: 1,
+                  purchaseRequestLineId: 'prl-1',
+                  partId: '33333333-3333-3333-3333-333333333333',
+                  partKey: 'PART-1',
+                  partDisplayName: 'Widget',
+                  quantityOrdered: 4,
+                  quantityReceived: 0,
+                  quantityRemaining: 4,
+                  unitOfMeasure: 'each',
+                  notes: '',
+                  createdAt: '2026-05-28T10:00:00Z',
+                  updatedAt: '2026-05-28T10:00:00Z',
+                },
+              ],
+              createdAt: '2026-05-28T10:00:00Z',
+              updatedAt: '2026-05-28T10:10:00Z',
+            },
+          ]}
         />
       </QueryClientProvider>,
     )
@@ -153,6 +239,36 @@ describe('WarrantyClaimsPanel', () => {
           reason: 'Duplicate claim: Already tracked as WC-000.',
         },
       ),
+    )
+  })
+
+  it('renders searchable claim creation pickers for vendor, part, PO, and PO line', async () => {
+    renderPanel()
+
+    expect(await screen.findByTestId('warranty-claims-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('warranty-claim-vendor-picker-options')).toHaveTextContent(
+      'Acme Vendor (V-1)',
+    )
+    expect(screen.getByTestId('warranty-claim-part-picker-options')).toHaveTextContent(
+      'PART-1 — Widget',
+    )
+    expect(screen.getByTestId('warranty-claim-po-picker-options')).toHaveTextContent('PO-001 —')
+
+    fireEvent.change(screen.getByTestId('warranty-claim-vendor-picker'), {
+      target: { value: '22222222-2222-2222-2222-222222222222' },
+    })
+    fireEvent.change(screen.getByTestId('warranty-claim-part-picker'), {
+      target: { value: '33333333-3333-3333-3333-333333333333' },
+    })
+    fireEvent.change(screen.getByTestId('warranty-claim-po-picker'), {
+      target: { value: 'po-1' },
+    })
+    fireEvent.change(screen.getByTestId('warranty-claim-po-line-picker'), {
+      target: { value: 'po-line-1' },
+    })
+
+    expect(screen.getByTestId('warranty-claim-po-line-picker-options')).toHaveTextContent(
+      'Line 1 · PART-1 · qty 4',
     )
   })
 })

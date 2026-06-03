@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   approveProcurementExceptionWaive,
@@ -140,24 +140,53 @@ export function ProcurementExceptionsPanel({
     enabled: canManage && subjectType === 'rfq',
   })
 
-  const subjectOptions = useMemo(() => {
+  const subjectOptions = useMemo<PickerOption[]>(() => {
     if (subjectType === 'purchase_request') {
       return purchaseRequests.map((pr) => ({
-        id: pr.purchaseRequestId,
+        value: pr.purchaseRequestId,
         label: `${pr.requestKey} — ${pr.title}`,
       }))
     }
     if (subjectType === 'purchase_order') {
       return purchaseOrders.map((po) => ({
-        id: po.purchaseOrderId,
+        value: po.purchaseOrderId,
         label: po.orderKey,
       }))
     }
     return (rfqsQuery.data ?? []).map((rfq) => ({
-      id: rfq.rfqId,
+      value: rfq.rfqId,
       label: rfq.rfqKey,
     }))
   }, [subjectType, purchaseRequests, purchaseOrders, rfqsQuery.data])
+  const selectedSubjectOption = useMemo<PickerOption | undefined>(
+    () => subjectOptions.find((option) => option.value === subjectId),
+    [subjectId, subjectOptions],
+  )
+
+  const linkedPrOptions = useMemo<PickerOption[]>(
+    () =>
+      purchaseRequests.map((pr) => ({
+        value: pr.purchaseRequestId,
+        label: `${pr.requestKey} — ${pr.title}`,
+      })),
+    [purchaseRequests],
+  )
+  const linkedPoOptions = useMemo<PickerOption[]>(
+    () =>
+      purchaseOrders.map((po) => ({
+        value: po.purchaseOrderId,
+        label: `${po.orderKey} — ${po.title}`,
+      })),
+    [purchaseOrders],
+  )
+  const selectedLinkedPrOption = useMemo<PickerOption | undefined>(
+    () => linkedPrOptions.find((option) => option.value === linkedPrId),
+    [linkedPrId, linkedPrOptions],
+  )
+  const selectedLinkedPoOption = useMemo<PickerOption | undefined>(
+    () => linkedPoOptions.find((option) => option.value === linkedPoId),
+    [linkedPoId, linkedPoOptions],
+  )
 
   const subjectExceptionsQuery = useQuery({
     queryKey: ['supplyarr-subject-procurement-exceptions', accessToken, subjectType, subjectId],
@@ -331,13 +360,14 @@ export function ProcurementExceptionsPanel({
           emptyLabel="Select type…"
         />
 
-        <ControlledSelect
+        <StaticSearchPicker
           id="procurement-exception-subject-record"
           label="Subject record"
           value={subjectId}
           onChange={setSubjectId}
-          options={subjectOptions.map((option) => ({ value: option.id, label: option.label }))}
-          emptyLabel="Select record…"
+          options={subjectOptions}
+          selectedOption={selectedSubjectOption}
+          placeholder="Search records…"
           testId="procurement-exception-subject-record"
         />
 
@@ -482,37 +512,27 @@ export function ProcurementExceptionsPanel({
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <label htmlFor="procurement-exception-link-pr" className="block text-xs text-slate-400">
               Link follow-up PR
-              <select
+              <StaticSearchPicker
                 id="procurement-exception-link-pr"
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-                data-testid="procurement-exception-link-pr"
                 value={linkedPrId}
-                onChange={(event) => setLinkedPrId(event.target.value)}
-              >
-                <option value="">None</option>
-                {purchaseRequests.map((pr) => (
-                  <option key={pr.purchaseRequestId} value={pr.purchaseRequestId}>
-                    {pr.requestKey}
-                  </option>
-                ))}
-              </select>
+                options={linkedPrOptions}
+                selectedOption={selectedLinkedPrOption}
+                onChange={setLinkedPrId}
+                placeholder="Search purchase requests…"
+                testId="procurement-exception-link-pr"
+              />
             </label>
             <label htmlFor="procurement-exception-link-po" className="block text-xs text-slate-400">
               Link follow-up PO
-              <select
+              <StaticSearchPicker
                 id="procurement-exception-link-po"
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-                data-testid="procurement-exception-link-po"
                 value={linkedPoId}
-                onChange={(event) => setLinkedPoId(event.target.value)}
-              >
-                <option value="">None</option>
-                {purchaseOrders.map((po) => (
-                  <option key={po.purchaseOrderId} value={po.purchaseOrderId}>
-                    {po.orderKey}
-                  </option>
-                ))}
-              </select>
+                options={linkedPoOptions}
+                selectedOption={selectedLinkedPoOption}
+                onChange={setLinkedPoId}
+                placeholder="Search purchase orders…"
+                testId="procurement-exception-link-po"
+              />
             </label>
           </div>
 

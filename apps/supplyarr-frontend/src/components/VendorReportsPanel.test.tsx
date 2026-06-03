@@ -23,6 +23,10 @@ vi.mock('../api/client', () => ({
         postedReceivingReceiptCount: 3,
         openBackorderCount: 0,
         openPurchaseOrderLineQuantity: 10,
+        averageLeadTimeDays: 4,
+        leadTimeSampleCount: 2,
+        onTimeDeliveryRate: 100,
+        onTimeDeliverySampleCount: 1,
         lastPurchaseOrderAt: new Date().toISOString(),
         lastReceivingPostedAt: new Date().toISOString(),
       },
@@ -187,6 +191,10 @@ vi.mock('../api/client', () => ({
       postedReceivingReceiptCount: 3,
       openBackorderCount: 1,
       openPurchaseOrderLineQuantity: 10,
+      averageLeadTimeDays: 4,
+      leadTimeSampleCount: 2,
+      onTimeDeliveryRate: 100,
+      onTimeDeliverySampleCount: 1,
       lastPurchaseOrderAt: '2026-06-03T00:00:00Z',
       lastReceivingPostedAt: '2026-06-03T00:00:00Z',
     },
@@ -306,6 +314,11 @@ describe('VendorReportsPanel', () => {
     expect(screen.getAllByText(/Healthy/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Recent fill rate/i)).toBeInTheDocument()
     expect(screen.getAllByText(/86%/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Average lead time/i)).toBeInTheDocument()
+    expect(screen.getByText(/4 days/i)).toBeInTheDocument()
+    expect(screen.getByText(/On-time delivery/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/100%/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Lead-time coverage/i)).toBeInTheDocument()
     expect(screen.getByText(/Quote competitiveness/i)).toBeInTheDocument()
     expect(screen.getAllByText(/50%/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Avg quote response/i)).toBeInTheDocument()

@@ -5,6 +5,45 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SupplierOnboardingPanel } from './SupplierOnboardingPanel'
 import * as clientApi from '../api/client'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
+
 vi.mock('../api/client', () => ({
   getSupplierOnboardingDocumentRequirements: vi.fn().mockResolvedValue({
     requirements: [
@@ -149,5 +188,62 @@ describe('SupplierOnboardingPanel', () => {
 
     expect(await screen.findByText('start failed')).toBeInTheDocument()
     expect(screen.getByTestId('supplier-onboarding-action-error')).toBeInTheDocument()
+  })
+
+  it('uses a searchable party picker for onboarding selection', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <SupplierOnboardingPanel
+          accessToken="token"
+          canManage={true}
+          canReview={true}
+          onboardableParties={[
+            {
+              partyId: 'p1',
+              partyKey: 'V-1',
+              partyType: 'vendor',
+              displayName: 'Vendor One',
+              legalName: '',
+              taxIdentifier: null,
+              approvalStatus: 'pending',
+              status: 'active',
+              notes: '',
+              contacts: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+            {
+              partyId: 'p2',
+              partyKey: 'S-1',
+              partyType: 'supplier',
+              displayName: 'Supplier Two',
+              legalName: '',
+              taxIdentifier: null,
+              approvalStatus: 'pending',
+              status: 'active',
+              notes: '',
+              contacts: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+          ]}
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByTestId('supplier-onboarding-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
+      'Vendor One (vendor)',
+    )
+    expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
+      'Supplier Two (supplier)',
+    )
+
+    fireEvent.change(screen.getByTestId('supplier-onboarding-party-picker'), {
+      target: { value: 'p2' },
+    })
+
+    expect(await screen.findByLabelText('Onboarding notes')).toBeInTheDocument()
   })
 })

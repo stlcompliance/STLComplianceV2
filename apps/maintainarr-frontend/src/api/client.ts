@@ -35,6 +35,7 @@ import type {
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
   AssetReadinessHistoryResponse,
+  AssetTelematicsIngestionResponse,
   AuditPackageExportResponse,
   AuditPackageGenerationJobResponse,
   AuditPackageManifestResponse,
@@ -493,6 +494,17 @@ export async function activateInspectionTemplate(
     body: JSON.stringify({ status: 'active' }),
   })
   return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to activate inspection template')
+}
+
+export async function cloneInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/clone`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to clone inspection template')
 }
 
 export async function getInspectionRuns(accessToken: string): Promise<InspectionRunSummaryResponse[]> {
@@ -1039,6 +1051,21 @@ export async function getAssetReadinessHistory(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessHistoryResponse>(response, 'Failed to load asset readiness history')
+}
+
+export async function getAssetTelematicsIngestion(
+  accessToken: string,
+  assetId: string,
+  limit = 8,
+): Promise<AssetTelematicsIngestionResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/telematics-ingestion?${search.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetTelematicsIngestionResponse>(
+    response,
+    'Failed to load asset telematics ingestion history',
+  )
 }
 
 export async function getMaintenanceNotificationSettings(

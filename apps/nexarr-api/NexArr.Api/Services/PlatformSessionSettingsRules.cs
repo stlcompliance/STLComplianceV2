@@ -13,6 +13,8 @@ public static class PlatformSessionSettingsRules
     public const int MaxRefreshTokenDays = 90;
     public const int MinRememberedRefreshTokenDays = 1;
     public const int MaxRememberedRefreshTokenDays = 365;
+    public const int MinPasswordLength = 8;
+    public const int MaxPasswordLength = 128;
 
     public static int ResolveConfiguredAccessTokenMinutes(StlJwtOptions options) =>
         NormalizeAccessTokenMinutes(null, options.AccessTokenMinutes > 0
@@ -31,6 +33,23 @@ public static class PlatformSessionSettingsRules
             options.RememberedRefreshTokenDays,
             refreshTokenDays,
             refreshTokenDays);
+
+    public static bool ResolveConfiguredRequirePlatformAdminMfa(StlJwtOptions options)
+    {
+        var configuredValue =
+            Environment.GetEnvironmentVariable("AUTH_REQUIRE_PLATFORM_ADMIN_MFA")
+            ?? Environment.GetEnvironmentVariable("Auth__RequirePlatformAdminMfa")
+            ?? options.RequirePlatformAdminMfa?.ToString()
+            ?? string.Empty;
+
+        return bool.TryParse(configuredValue, out var requireMfa) && requireMfa;
+    }
+
+    public static int NormalizePasswordMinLength(int passwordMinLength, int fallbackLength) =>
+        Math.Clamp(
+            passwordMinLength > 0 ? passwordMinLength : fallbackLength,
+            MinPasswordLength,
+            MaxPasswordLength);
 
     public static int NormalizeAccessTokenMinutes(int? accessTokenMinutes, int fallbackMinutes) =>
         Math.Clamp(

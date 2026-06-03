@@ -39,6 +39,7 @@ export function ExecutiveReportsPanel({
   const ops = summaryQuery.data?.operationalTotals
   const downtime = summaryQuery.data?.downtimeTrend
   const supply = summaryQuery.data?.supplyDemand
+  const forecast = summaryQuery.data?.partsDemandForecast
 
   return (
     <section
@@ -49,8 +50,8 @@ export function ExecutiveReportsPanel({
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Executive summary</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Fleet readiness, operational KPIs, and SupplyArr parts-demand rollups (read-only local
-            refs).
+            Fleet readiness, operational KPIs, and SupplyArr parts-demand forecast rollups (read-only
+            local refs).
           </p>
         </div>
         {canExport ? (
@@ -91,7 +92,7 @@ export function ExecutiveReportsPanel({
         </div>
       )}
 
-      {summaryQuery.data && fleet && ops && downtime && supply && (
+      {summaryQuery.data && fleet && ops && downtime && supply && forecast && (
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
             <MetricCard label="Fleet ready %" value={`${fleet.readyPercent.toFixed(1)}%`} />
@@ -114,6 +115,9 @@ export function ExecutiveReportsPanel({
               label="SupplyArr open procurement"
               value={String(supply.openProcurementLines)}
             />
+            <MetricCard label="Forecast parts" value={String(forecast.distinctPartCount)} />
+            <MetricCard label="Forecast demand lines" value={String(forecast.openLineCount)} />
+            <MetricCard label="Forecast qty" value={forecast.forecastQuantity.toFixed(1)} />
           </div>
 
           <div
@@ -168,6 +172,58 @@ export function ExecutiveReportsPanel({
               </p>
             ) : null}
           </div>
+
+          {forecast.topParts.length > 0 ? (
+            <div
+              className="mt-4 overflow-x-auto rounded-lg border border-slate-700 bg-slate-950/50 p-4"
+              data-testid="parts-demand-forecast-panel"
+            >
+              <h3 className="text-sm font-semibold text-slate-100">Parts-demand forecast</h3>
+              <p className="mt-1 text-xs text-slate-400">
+                Outstanding parts demand across active maintenance work orders and PM-sourced work
+                orders, grouped by part.
+              </p>
+              <table className="mt-3 min-w-full text-left text-sm">
+                <thead className="border-b border-slate-800 text-slate-500">
+                  <tr>
+                    <th className="px-2 py-2 font-medium">Part</th>
+                    <th className="px-2 py-2 font-medium">Forecast qty</th>
+                    <th className="px-2 py-2 font-medium">Lines</th>
+                    <th className="px-2 py-2 font-medium">Work orders</th>
+                    <th className="px-2 py-2 font-medium">Sources</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {forecast.topParts.map((part) => (
+                    <tr
+                      key={`${part.supplyarrPartId ?? part.partNumber}-${part.unitOfMeasure}`}
+                      className="border-t border-slate-800"
+                    >
+                      <td className="px-2 py-2 text-slate-100">
+                        <div className="font-medium">{part.partNumber}</div>
+                        <div className="text-xs text-slate-500">
+                          {part.description || 'No description'}
+                        </div>
+                      </td>
+                      <td className="px-2 py-2 text-slate-200">
+                        {part.forecastQuantity.toFixed(1)} {part.unitOfMeasure}
+                      </td>
+                      <td className="px-2 py-2 text-slate-300">{part.openLineCount}</td>
+                      <td className="px-2 py-2 text-slate-300">{part.openWorkOrderCount}</td>
+                      <td className="px-2 py-2 text-slate-300">
+                        PM {part.pmWorkOrderCount} · defect {part.defectWorkOrderCount} · manual{' '}
+                        {part.manualWorkOrderCount}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-400">
+              No forecasted parts demand lines are currently open.
+            </div>
+          )}
 
           {summaryQuery.data.scopeReadiness.length > 0 ? (
             <div className="mt-4 overflow-x-auto">

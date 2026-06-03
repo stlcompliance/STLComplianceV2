@@ -1,4 +1,4 @@
-import { buildSemanticKey } from '@stl/shared-ui'
+import { buildSemanticKey, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   TrainingDefinitionResponse,
@@ -57,6 +57,30 @@ export function StepBranchBuilderPanel({
   const [sortOrder, setSortOrder] = useState('0')
 
   const selectedStep = steps.find((step) => step.stepId === selectedStepId) ?? null
+  const definitionOptions = useMemo<PickerOption[]>(
+    () => definitions.map((definition) => ({ value: definition.trainingDefinitionId, label: definition.name })),
+    [definitions],
+  )
+  const selectedDefinitionOption = useMemo<PickerOption | undefined>(
+    () =>
+      definitionOptions.find((option) => option.value === selectedDefinitionId) ??
+      (selectedDefinitionId ? { value: selectedDefinitionId, label: selectedDefinitionId } : undefined),
+    [definitionOptions, selectedDefinitionId],
+  )
+  const stepOptions = useMemo<PickerOption[]>(
+    () =>
+      steps.map((step) => ({
+        value: step.stepId,
+        label: `${step.sortOrder}. ${step.name} (${step.stepType})`,
+      })),
+    [steps],
+  )
+  const selectedStepOption = useMemo<PickerOption | undefined>(
+    () =>
+      stepOptions.find((option) => option.value === selectedStepId) ??
+      (selectedStepId ? { value: selectedStepId, label: selectedStepId } : undefined),
+    [selectedStepId, stepOptions],
+  )
   const generatedBranchKey = useMemo(
     () =>
       buildSemanticKey({
@@ -116,41 +140,33 @@ export function StepBranchBuilderPanel({
         </p>
       </header>
 
-      <label htmlFor="branch-builder-definition" className="mt-4 block text-sm text-slate-300">
-        Training definition
-        <select
+      <div className="mt-4 block text-sm text-slate-300">
+        <StaticSearchPicker
           id="branch-builder-definition"
+          label="Training definition"
           value={selectedDefinitionId ?? ''}
-          onChange={(event) => onSelectDefinition(event.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-        >
-          <option value="">Select definition…</option>
-          {definitions.map((definition) => (
-            <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-              {definition.name}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={onSelectDefinition}
+          options={definitionOptions}
+          selectedOption={selectedDefinitionOption}
+          placeholder="Search training definitions…"
+          testId="branch-builder-definition"
+        />
+      </div>
 
       {selectedDefinitionId ? (
         <>
-          <label htmlFor="branch-builder-step" className="mt-4 block text-sm text-slate-300">
-            Training step
-            <select
+          <div className="mt-4 block text-sm text-slate-300">
+            <StaticSearchPicker
               id="branch-builder-step"
+              label="Training step"
               value={selectedStepId ?? ''}
-              onChange={(event) => onSelectStep(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">Select step…</option>
-              {steps.map((step) => (
-                <option key={step.stepId} value={step.stepId}>
-                  {step.sortOrder}. {step.name} ({step.stepType})
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={onSelectStep}
+              options={stepOptions}
+              selectedOption={selectedStepOption}
+              placeholder="Search training steps…"
+              testId="branch-builder-step"
+            />
+          </div>
 
           {selectedStepId ? (
             <>

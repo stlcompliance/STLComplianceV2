@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type {
   AssetResponse,
   TechnicianRefResponse,
@@ -120,6 +122,22 @@ function statusOptionsFor(currentStatus: string, canClose: boolean): string[] {
   return [currentStatus]
 }
 
+function assetToOption(asset: AssetResponse): PickerOption {
+  return {
+    value: asset.assetId,
+    label: `${asset.assetTag} — ${asset.name}`,
+  }
+}
+
+function technicianToOption(ref: TechnicianRefResponse): PickerOption {
+  const statusLabel = ref.activeStatus ? ` · ${ref.activeStatus}` : ''
+  const siteLabel = ref.primarySite ? ` · ${ref.primarySite}` : ''
+  return {
+    value: ref.personId,
+    label: `${ref.displayName}${statusLabel}${siteLabel}`,
+  }
+}
+
 export function WorkOrdersPanel({
   canCreate,
   canPerform,
@@ -196,6 +214,17 @@ export function WorkOrdersPanel({
   supplyReadiness,
   isSupplyReadinessLoading,
 }: WorkOrdersPanelProps) {
+  const assetOptions = useMemo(() => assets.map(assetToOption), [assets])
+  const selectedAssetOption = useMemo(
+    () => assetOptions.find((option) => option.value === selectedAssetId),
+    [assetOptions, selectedAssetId],
+  )
+  const technicianOptions = useMemo(() => technicianRefs.map(technicianToOption), [technicianRefs])
+  const selectedTechnicianOption = useMemo(
+    () => technicianOptions.find((option) => option.value === assignedPersonId),
+    [assignedPersonId, technicianOptions],
+  )
+
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-6"
@@ -231,22 +260,16 @@ export function WorkOrdersPanel({
 
       {canCreate ? (
         <div className="mb-6 grid gap-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4 md:grid-cols-2">
-          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-asset">
-            <span className="text-slate-300">Asset for work order</span>
-            <select
-              id="work-order-create-asset"
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              value={selectedAssetId}
-              onChange={(event) => onSelectedAssetIdChange(event.target.value)}
-            >
-              <option value="">Select asset…</option>
-              {assets.map((asset) => (
-                <option key={asset.assetId} value={asset.assetId}>
-                  {asset.assetTag} — {asset.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="work-order-create-asset"
+            label="Asset for work order"
+            value={selectedAssetId}
+            onChange={onSelectedAssetIdChange}
+            options={assetOptions}
+            placeholder="Search assets…"
+            testId="work-order-create-asset-picker"
+            selectedOption={selectedAssetOption}
+          />
 
           <label className="block text-sm md:col-span-2" htmlFor="work-order-create-title">
             <span className="text-slate-300">Work order title</span>
@@ -284,31 +307,20 @@ export function WorkOrdersPanel({
             </select>
           </label>
 
-          <label className="block text-sm" htmlFor="work-order-create-assigned-technician">
-            <span className="text-slate-300">Assigned technician</span>
-            <select
-              id="work-order-create-assigned-technician"
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              value={assignedPersonId}
-              onChange={(event) => onAssignedPersonIdChange(event.target.value)}
-            >
-              <option value="">Unassigned</option>
-              <option value={sessionPersonId}>Me ({sessionPersonId})</option>
-              {technicianRefs
-                .filter((ref) => ref.personId !== sessionPersonId)
-                .map((ref) => {
-                  const statusLabel = ref.activeStatus ? ` · ${ref.activeStatus}` : ''
-                  const siteLabel = ref.primarySite ? ` · ${ref.primarySite}` : ''
-                  return (
-                    <option key={ref.personId} value={ref.personId}>
-                      {ref.displayName}
-                      {statusLabel}
-                      {siteLabel}
-                    </option>
-                  )
-                })}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="work-order-create-assigned-technician"
+            label="Assigned technician"
+            value={assignedPersonId}
+            onChange={onAssignedPersonIdChange}
+            options={[
+              { value: '', label: 'Unassigned' },
+              { value: sessionPersonId, label: `Me (${sessionPersonId})` },
+              ...technicianOptions.filter((option) => option.value !== sessionPersonId),
+            ]}
+            placeholder="Search technicians…"
+            testId="work-order-create-assigned-technician-picker"
+            selectedOption={selectedTechnicianOption}
+          />
 
           <div className="flex items-end md:col-span-2">
             <button

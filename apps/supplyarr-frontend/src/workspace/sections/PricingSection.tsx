@@ -9,6 +9,7 @@ export function PricingSection({ state: s }: Props) {
     <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-pricing-snapshots-workspace">
       <PricingLeadTimePanel
         parts={s.partsQuery.data ?? []}
+        vendors={s.vendorsQuery.data ?? []}
         pricingSnapshots={s.pricingSnapshotsQuery.data ?? []}
         leadTimeSnapshots={s.leadTimeSnapshotsQuery.data ?? []}
         canManage={s.canManageCatalog}

@@ -48,12 +48,18 @@ export function InspectionTemplatesSection({ state }: Props) {
         onCreateItem={() => s.createItemMutation.mutate()}
         onSaveAssetTypes={() => s.saveAssetTypesMutation.mutate()}
         onActivateTemplate={() => s.activateTemplateMutation.mutate()}
+        onCloneTemplate={() => s.cloneTemplateMutation.mutate()}
+        onImportTemplateJson={async (json, templateKeyOverride) => {
+          await s.importTemplateMutation.mutateAsync({ json, templateKeyOverride })
+        }}
         isCreatingTemplate={s.createTemplateMutation.isPending}
         isSavingBuilder={
           s.createCategoryMutation.isPending ||
           s.createItemMutation.isPending ||
           s.saveAssetTypesMutation.isPending ||
-          s.activateTemplateMutation.isPending
+          s.activateTemplateMutation.isPending ||
+          s.cloneTemplateMutation.isPending ||
+          s.importTemplateMutation.isPending
         }
       />
     </div>

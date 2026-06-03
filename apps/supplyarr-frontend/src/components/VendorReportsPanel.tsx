@@ -84,6 +84,12 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
         const summary = detailQuery.data.summary
         const returnCount = vendorReturnsQuery.data?.length ?? 0
         const warrantyClaimCount = warrantyClaimsQuery.data?.length ?? 0
+        const averageLeadTimeDays = summary.averageLeadTimeDays
+        const onTimeDeliveryRate = summary.onTimeDeliveryRate
+        const leadTimeCoverage =
+          summary.partVendorLinkCount > 0
+            ? Math.round((summary.leadTimeSampleCount / summary.partVendorLinkCount) * 100)
+            : 0
         const vendorRfqs = (rfqsQuery.data ?? []).filter(
           (rfq) =>
             rfq.invitations.some((invite) => invite.vendorPartyId === selectedVendorId) ||
@@ -200,6 +206,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               Math.min(8, Math.max(0, 10 - (averageQuoteResponseDays ?? 10))) +
               Math.min(10, activityBonus) +
               Math.min(10, summary.postedReceivingReceiptCount * 2) -
+              Math.min(10, Math.max(0, 15 - (averageLeadTimeDays ?? 15))) +
+              Math.min(10, Math.floor((onTimeDeliveryRate ?? 0) / 10)) +
+              Math.min(5, Math.floor(leadTimeCoverage / 20)) -
               summary.openBackorderCount * 6 -
               returnCount * 4 -
               warrantyClaimCount * 5 -
@@ -219,6 +228,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           fullyReceivedOrderRate,
           returnRate,
           warrantyClaimRate,
+          averageLeadTimeDays,
+          onTimeDeliveryRate,
+          leadTimeCoverage,
           quoteCompetitiveness,
           averageQuoteResponseDays,
           openCommitments,
@@ -247,7 +259,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Vendor reports</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Procurement activity, catalog links, and receiving rollups per vendor.
+            Procurement activity, catalog links, lead time, and receiving rollups per vendor.
           </p>
         </div>
         {canExport ? (
@@ -404,6 +416,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                 <Metric label="Catalog coverage" value={`${scorecard.catalogCoverage}%`} />
                 <Metric label="Recent fill rate" value={formatPercent(scorecard.recentFillRate)} />
                 <Metric label="Fully received PO rate" value={formatPercent(scorecard.fullyReceivedOrderRate)} />
+                <Metric label="Average lead time" value={formatDays(scorecard.averageLeadTimeDays)} />
+                <Metric label="On-time delivery" value={formatPercent(scorecard.onTimeDeliveryRate)} />
+                <Metric label="Lead-time coverage" value={formatPercent(scorecard.leadTimeCoverage)} />
                 <Metric label="Quote competitiveness" value={formatPercent(scorecard.quoteCompetitiveness)} />
                 <Metric label="Avg quote response" value={formatDays(scorecard.averageQuoteResponseDays)} />
                 <Metric label="Return rate" value={formatPercent(scorecard.returnRate)} />

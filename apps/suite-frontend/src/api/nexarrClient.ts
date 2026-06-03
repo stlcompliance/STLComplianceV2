@@ -18,6 +18,8 @@ import type {
   LaunchDiagnosticsResponse,
   ForgotPasswordResponse,
   LoginRequest,
+  CallbackAllowlistEntryResponse,
+  CreateCallbackAllowlistEntryRequest,
   EntitlementSummary,
   MeResponse,
   NavigationResponse,
@@ -43,6 +45,7 @@ import type {
   TenantLifecycleRunsResponse,
   PendingTenantLifecycleResponse,
   PlatformLifecycleOverviewResponse,
+  PlatformHealthResponse,
   PlatformWorkerHealthOrchestrationStatusResponse,
   TriggerEntitlementReconciliationOrchestrationResponse,
   TriggerServiceTokenCleanupOrchestrationResponse,
@@ -54,6 +57,7 @@ import type {
   TriggerPlatformOutboxPublisherOrchestrationResponse,
   TenantOverviewRow,
   TenantDetailResponse,
+  TenantMembersListResponse,
   CreateTenantRequest,
   UpdateTenantRequest,
   UpdateTenantStatusRequest,
@@ -91,10 +95,13 @@ import type {
   RegisterServiceClientRequest,
   IssueServiceTokenRequest,
   ServiceTokenIssueResult,
+  ServiceTokenDiscoveryResponse,
   ServiceTokenSummary,
   DataPlaneProfile,
   UpsertDataPlaneProfileRequest,
   EffectiveDataPlaneProfile,
+  ValidateDataPlaneProfileRequest,
+  ValidateDataPlaneProfileResponse,
   UserSessionsResponse,
 } from './types'
 import { NexarrApiError } from './types'
@@ -334,6 +341,47 @@ export async function createHandoff(
   return (await response.json()) as HandoffCreatedResponse
 }
 
+export async function listCallbackAllowlist(
+  productKey: string,
+  tenantId?: string | null,
+): Promise<CallbackAllowlistEntryResponse[]> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams({ productKey })
+  if (tenantId) {
+    search.set('tenantId', tenantId)
+  }
+  const response = await fetchWithAuth(`/api/v1/launch/callback-allowlist?${search.toString()}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as CallbackAllowlistEntryResponse[]
+}
+
+export async function createCallbackAllowlistEntry(
+  request: CreateCallbackAllowlistEntryRequest,
+): Promise<CallbackAllowlistEntryResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/launch/callback-allowlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as CallbackAllowlistEntryResponse
+}
+
+export async function deleteCallbackAllowlistEntry(entryId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/launch/callback-allowlist/${entryId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
 export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboardResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/dashboard')
@@ -350,6 +398,14 @@ export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleO
     throw await parseError(response)
   }
   return (await response.json()) as PlatformLifecycleOverviewResponse
+}
+
+export async function getPlatformHealth(): Promise<PlatformHealthResponse> {
+  const response = await fetch(apiUrl('/api/platform/health'))
+  if (!response.ok && response.status !== 503) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformHealthResponse
 }
 
 export async function getPlatformWorkerHealthOrchestration(): Promise<PlatformWorkerHealthOrchestrationStatusResponse> {
@@ -578,6 +634,24 @@ export async function listTenants(page = 1, pageSize = 50): Promise<PagedResult<
   return (await response.json()) as PagedResult<TenantDetailResponse>
 }
 
+export async function getTenant(tenantId: string): Promise<TenantDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/tenants/${tenantId}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantDetailResponse
+}
+
+export async function getTenantMembers(tenantId: string): Promise<TenantMembersListResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/tenants/${tenantId}/members`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantMembersListResponse
+}
+
 export async function createTenant(request: CreateTenantRequest): Promise<TenantDetailResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/tenants', {
@@ -663,6 +737,15 @@ export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult
     throw await parseError(response)
   }
   return (await response.json()) as PagedResult<ProductDetailResponse>
+}
+
+export async function getProduct(productKey: string): Promise<ProductDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/products/${encodeURIComponent(productKey)}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductDetailResponse
 }
 
 export async function listPlatformUsers(
@@ -1020,6 +1103,28 @@ export async function updateProduct(
   return (await response.json()) as ProductDetailResponse
 }
 
+export async function enableProduct(productKey: string): Promise<ProductDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/products/${encodeURIComponent(productKey)}/enable`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductDetailResponse
+}
+
+export async function disableProduct(productKey: string): Promise<ProductDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/products/${encodeURIComponent(productKey)}/disable`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductDetailResponse
+}
+
 function buildPlatformAuditPackageQuery(
   options?: PlatformAuditPackageScope & {
     format?: string
@@ -1272,7 +1377,12 @@ export async function getPlatformSessionSettings(): Promise<PlatformSessionSetti
 export async function upsertPlatformSessionSettings(
   payload: Pick<
     PlatformSessionSettings,
-    'accessTokenMinutes' | 'refreshTokenDays' | 'rememberedRefreshTokenDays'
+    | 'accessTokenMinutes'
+    | 'refreshTokenDays'
+    | 'rememberedRefreshTokenDays'
+    | 'requirePlatformAdminMfa'
+    | 'passwordMinLength'
+    | 'requirePasswordComplexity'
   >,
 ): Promise<PlatformSessionSettings> {
   await ensureValidAccessToken()
@@ -1439,6 +1549,39 @@ export async function listEntitlements(
   return (await response.json()) as PagedResult<EntitlementDetail>
 }
 
+export async function grantTenantEntitlement(
+  tenantId: string,
+  productKey: string,
+): Promise<EntitlementDetail> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/tenants/${tenantId}/entitlements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tenantId, productKey }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementDetail
+}
+
+export async function revokeTenantEntitlement(
+  tenantId: string,
+  productKey: string,
+): Promise<EntitlementDetail> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/entitlements/${encodeURIComponent(productKey)}`,
+    {
+      method: 'DELETE',
+    },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementDetail
+}
+
 export async function grantEntitlement(
   body: GrantEntitlementRequest,
 ): Promise<EntitlementDetail> {
@@ -1560,6 +1703,15 @@ export async function listServiceTokens(
   return (await response.json()) as PagedResult<ServiceTokenSummary>
 }
 
+export async function getServiceTokenDiscovery(): Promise<ServiceTokenDiscoveryResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/.well-known/service-token-configuration')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceTokenDiscoveryResponse
+}
+
 export async function issueServiceToken(
   body: IssueServiceTokenRequest,
 ): Promise<ServiceTokenIssueResult> {
@@ -1636,6 +1788,20 @@ export async function upsertDataPlaneProfile(
     throw await parseError(response)
   }
   return (await response.json()) as DataPlaneProfile
+}
+
+export async function validateDataPlaneProfile(
+  body: ValidateDataPlaneProfileRequest,
+): Promise<ValidateDataPlaneProfileResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/data-plane/validate', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ValidateDataPlaneProfileResponse
 }
 
 export async function deleteDataPlaneProfile(

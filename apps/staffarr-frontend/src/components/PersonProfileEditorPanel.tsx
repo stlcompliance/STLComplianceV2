@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { OrgUnitResponse, StaffPersonDetailResponse } from '../api/types'
 
 interface PersonProfileEditorPanelProps {
@@ -67,6 +67,16 @@ export function PersonProfileEditorPanel({
   }
 
   const managerChoices = peopleOptions.filter((person) => person.personId !== profile.personId)
+  const orgUnitOptions = orgUnits.map((unit) => ({
+    value: unit.orgUnitId,
+    label: `${unit.unitType} · ${unit.name}`,
+  }))
+  const selectedOrgUnitOption = orgUnitOptions.find((option) => option.value === primaryOrgUnitId)
+  const managerOptions: PickerOption[] = managerChoices.map((person) => ({
+    value: person.personId,
+    label: person.displayName,
+  }))
+  const selectedManagerOption = managerOptions.find((option) => option.value === managerPersonId)
 
   return (
     <section className="mt-6 space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -118,35 +128,29 @@ export function PersonProfileEditorPanel({
           </label>
           <label htmlFor="edit-person-primary-org-unit" className="block text-sm text-slate-300">
             Primary org unit
-            <select
+            <StaticSearchPicker
               id="edit-person-primary-org-unit"
+              label="Primary org unit"
               value={primaryOrgUnitId}
-              onChange={(event) => setPrimaryOrgUnitId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">Unassigned</option>
-              {orgUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.unitType} · {unit.name}
-                </option>
-              ))}
-            </select>
+              onChange={setPrimaryOrgUnitId}
+              options={orgUnitOptions}
+              placeholder="Search org units…"
+              testId="edit-person-primary-org-unit-picker"
+              selectedOption={selectedOrgUnitOption}
+            />
           </label>
           <label htmlFor="edit-person-manager" className="block text-sm text-slate-300">
             Manager
-            <select
+            <StaticSearchPicker
               id="edit-person-manager"
+              label="Manager"
               value={managerPersonId}
-              onChange={(event) => setManagerPersonId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">None</option>
-              {managerChoices.map((person) => (
-                <option key={person.personId} value={person.personId}>
-                  {person.displayName}
-                </option>
-              ))}
-            </select>
+              onChange={setManagerPersonId}
+              options={managerOptions}
+              placeholder="Search managers…"
+              testId="edit-person-manager-picker"
+              selectedOption={selectedManagerOption}
+            />
           </label>
           <label htmlFor="edit-person-job-title" className="block text-sm text-slate-300 md:col-span-2">
             Job title

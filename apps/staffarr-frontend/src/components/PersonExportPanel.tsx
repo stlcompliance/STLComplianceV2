@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   exportPeopleCsv,
@@ -73,6 +74,21 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     queryFn: () => getPersonExportDeliveryNotifications(accessToken, 5),
     enabled: canExport,
   })
+
+  const orgUnitPickerOptions = useMemo<PickerOption[]>(
+    () =>
+      (orgUnitsQuery.data ?? [])
+        .filter((unit) => unit.status === 'active')
+        .map((unit) => ({
+          value: unit.orgUnitId,
+          label: `${unit.unitType} · ${unit.name}`,
+        })),
+    [orgUnitsQuery.data],
+  )
+  const selectedOrgUnitOption = useMemo(
+    () => orgUnitPickerOptions.find((option) => option.value === orgUnitId),
+    [orgUnitPickerOptions, orgUnitId],
+  )
 
   useEffect(() => {
     if (scheduleInitialized || exportScheduleQuery.isLoading || !exportScheduleQuery.data) {
@@ -366,23 +382,18 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             </select>
           </label>
 
-          <label htmlFor="person-export-org-unit" className="block text-sm text-slate-300">
+          <label className="block text-sm text-slate-300">
             Primary org unit filter (optional)
-            <select
-              id="person-export-org-unit"
-              value={orgUnitId}
-              onChange={(event) => setOrgUnitId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">All org units</option>
-              {(orgUnitsQuery.data ?? [])
-                .filter((unit) => unit.status === 'active')
-                .map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.unitType} · {unit.name}
-                  </option>
-                ))}
-            </select>
+            <div className="mt-1">
+              <StaticSearchPicker
+                value={orgUnitId}
+                onChange={setOrgUnitId}
+                options={orgUnitPickerOptions}
+                selectedOption={selectedOrgUnitOption}
+                placeholder="All org units"
+                testId="person-export-org-unit"
+              />
+            </div>
           </label>
 
           <div className="flex flex-wrap gap-2">

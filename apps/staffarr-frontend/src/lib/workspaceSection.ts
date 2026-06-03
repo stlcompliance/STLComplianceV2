@@ -56,7 +56,7 @@ export const workspaceSectionHeaders: Record<
   },
   reports: {
     title: 'Reports',
-    subtitle: 'Personnel, readiness, and incident rollups with data exports',
+    subtitle: 'Personnel, readiness, certification, and incident rollups with data exports',
   },
   admin: {
     title: 'Admin',

@@ -152,6 +152,69 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Rfq_vendor_portal_can_create_update_and_submit_quote()
+    {
+        var (vendorA, _, part) = await SeedVendorAndPartAsync();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/rfqs", _userToken);
+        createRequest.Content = JsonContent.Create(new CreateRfqRequest(
+            $"RFQ-{Guid.NewGuid():N}"[..12].ToUpperInvariant(),
+            "Portal RFQ",
+            "Vendor portal flow",
+            [new CreateRfqLineRequest(part.PartId, 5m, "line")]));
+
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var rfq = (await createResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
+
+        (await _supplyarrClient.SendAsync(Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/submit", _userToken)))
+            .EnsureSuccessStatusCode();
+
+        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-vendors", _userToken);
+        inviteRequest.Content = JsonContent.Create(new InviteRfqVendorsRequest([vendorA.PartyId]));
+        var inviteResponse = await _supplyarrClient.SendAsync(inviteRequest);
+        inviteResponse.EnsureSuccessStatusCode();
+        var invited = (await inviteResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
+        var invitation = invited.Invitations.Single();
+        Assert.False(string.IsNullOrWhiteSpace(invitation.PortalAccessCode));
+        Assert.Contains("/vendor-portal", invitation.PortalUrl);
+
+        var portalResponse = await _supplyarrClient.GetAsync(
+            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}");
+        portalResponse.EnsureSuccessStatusCode();
+        var portal = (await portalResponse.Content.ReadFromJsonAsync<VendorPortalRfqResponse>())!;
+        Assert.Equal(vendorA.PartyId, portal.VendorPartyId);
+        Assert.Null(portal.VendorQuoteId);
+        Assert.Single(portal.Lines);
+
+        var createPortalQuote = await _supplyarrClient.PostAsJsonAsync(
+            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            new VendorPortalCreateQuoteRequest("PORTAL-QUOTE-1", "USD", "Portal response"));
+        createPortalQuote.EnsureSuccessStatusCode();
+        var createdQuote = (await createPortalQuote.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        Assert.Equal("draft", createdQuote.Status);
+
+        var upsertLine = await _supplyarrClient.PutAsJsonAsync(
+            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.VendorQuoteId}/lines?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            new UpsertVendorQuoteLineRequest(
+                portal.Lines[0].RfqLineId,
+                7.5m,
+                5m,
+                4,
+                "Vendor portal line note"));
+        upsertLine.EnsureSuccessStatusCode();
+
+        var submitQuote = await _supplyarrClient.PostAsync(
+            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.VendorQuoteId}/submit?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            null);
+        submitQuote.EnsureSuccessStatusCode();
+        var submitted = (await submitQuote.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        Assert.Equal("submitted", submitted.Status);
+        Assert.Equal(37.5m, submitted.TotalAmount);
+        Assert.Equal(4, submitted.LeadTimeDays);
+    }
+
+    [Fact]
     public async Task Rfq_create_rejects_duplicate_key()
     {
         var (_, _, part) = await SeedVendorAndPartAsync();

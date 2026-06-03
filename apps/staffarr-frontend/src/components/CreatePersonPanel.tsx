@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { ApiErrorCallout, ControlledSelect } from '@stl/shared-ui'
+import { ApiErrorCallout, ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { OrgUnitResponse } from '../api/types'
 
 const EMPLOYMENT_STATUS_OPTIONS = [
@@ -125,37 +125,29 @@ export function CreatePersonPanel({
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
           />
         </label>
-        <label htmlFor="create-person-primary-org-unit" className="block text-sm text-slate-300">
+        <label className="block text-sm text-slate-300">
           Primary org unit
-          <select
-            id="create-person-primary-org-unit"
-            value={primaryOrgUnitId}
-            onChange={(event) => setPrimaryOrgUnitId(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          >
-            <option value="">Unassigned</option>
-            {orgUnits.map((orgUnit) => (
-              <option key={orgUnit.orgUnitId} value={orgUnit.orgUnitId}>
-                {orgUnit.name} ({orgUnit.unitType})
-              </option>
-            ))}
-          </select>
+          <div className="mt-1">
+            <OrgUnitPicker
+              value={primaryOrgUnitId}
+              onChange={setPrimaryOrgUnitId}
+              orgUnits={orgUnits}
+              testId="create-person-primary-org-unit"
+              emptyLabel="Unassigned"
+            />
+          </div>
         </label>
-        <label htmlFor="create-person-manager" className="block text-sm text-slate-300">
+        <label className="block text-sm text-slate-300">
           Manager
-          <select
-            id="create-person-manager"
-            value={managerPersonId}
-            onChange={(event) => setManagerPersonId(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          >
-            <option value="">None</option>
-            {peopleOptions.map((person) => (
-              <option key={person.personId} value={person.personId}>
-                {person.displayName}
-              </option>
-            ))}
-          </select>
+          <div className="mt-1">
+            <PersonPicker
+              value={managerPersonId}
+              onChange={setManagerPersonId}
+              peopleOptions={peopleOptions}
+              testId="create-person-manager"
+              emptyLabel="None"
+            />
+          </div>
         </label>
         <div className="md:col-span-2">
           {errorMessage ? (
@@ -173,5 +165,67 @@ export function CreatePersonPanel({
         </div>
       </form>
     </section>
+  )
+}
+
+function OrgUnitPicker({
+  value,
+  onChange,
+  orgUnits,
+  testId,
+  emptyLabel,
+}: {
+  value: string
+  onChange: (value: string) => void
+  orgUnits: OrgUnitResponse[]
+  testId: string
+  emptyLabel: string
+}) {
+  const options = orgUnits.map((orgUnit) => ({
+    value: orgUnit.orgUnitId,
+    label: `${orgUnit.name} (${orgUnit.unitType})`,
+  })) satisfies PickerOption[]
+  const selectedOption = options.find((option) => option.value === value)
+
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      selectedOption={selectedOption}
+      placeholder={emptyLabel}
+      testId={testId}
+    />
+  )
+}
+
+function PersonPicker({
+  value,
+  onChange,
+  peopleOptions,
+  testId,
+  emptyLabel,
+}: {
+  value: string
+  onChange: (value: string) => void
+  peopleOptions: Array<{ personId: string; displayName: string }>
+  testId: string
+  emptyLabel: string
+}) {
+  const options = peopleOptions.map((person) => ({
+    value: person.personId,
+    label: person.displayName,
+  })) satisfies PickerOption[]
+  const selectedOption = options.find((option) => option.value === value)
+
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      selectedOption={selectedOption}
+      placeholder={emptyLabel}
+      testId={testId}
+    />
   )
 }

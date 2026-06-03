@@ -23,7 +23,14 @@ interface AuthContextValue {
   me: MeResponse | undefined
   isAuthenticated: boolean
   isBootstrapping: boolean
-  login: (email: string, password: string, tenantId: string | null) => Promise<void>
+  login: (
+    email: string,
+    password: string,
+    tenantId: string | null,
+    rememberDevice?: boolean,
+    mfaCode?: string | null,
+    recoveryCode?: string | null,
+  ) => Promise<void>
   logout: () => Promise<void>
   refreshMe: () => Promise<void>
 }
@@ -68,8 +75,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, meQuery.isLoading, meQuery.isError])
 
   const login = useCallback(
-    async (email: string, password: string, tenantId: string | null) => {
-      const next = await nexarr.login({ email, password, tenantId })
+    async (
+      email: string,
+      password: string,
+      tenantId: string | null,
+      rememberDevice = false,
+      mfaCode?: string | null,
+      recoveryCode?: string | null,
+    ) => {
+      const next = await nexarr.login({
+        email,
+        password,
+        tenantId,
+        rememberDevice,
+        mfaCode,
+        recoveryCode,
+      })
       setSession(next)
       await queryClient.invalidateQueries({ queryKey: ['me'] })
       await queryClient.invalidateQueries({ queryKey: ['navigation'] })

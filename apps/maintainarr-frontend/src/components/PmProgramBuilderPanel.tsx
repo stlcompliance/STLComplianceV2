@@ -1,4 +1,4 @@
-import { buildSemanticKey } from '@stl/shared-ui'
+import { buildSemanticKey, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type {
@@ -79,6 +79,26 @@ export function PmProgramBuilderPanel({
   const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
   void programKey
   const existingProgramKeys = programs.map((program) => program.programKey)
+  const assetTypeOptions = useMemo<PickerOption[]>(
+    () => assetTypes.map((type) => ({ value: type.assetTypeId, label: type.name })),
+    [assetTypes],
+  )
+  const selectedAssetTypeOption = useMemo<PickerOption | undefined>(
+    () => assetTypeOptions.find((option) => option.value === selectedAssetTypeId),
+    [assetTypeOptions, selectedAssetTypeId],
+  )
+  const scopedAssets =
+    scopeType === 'asset_type' && selectedAssetTypeId
+      ? assets.filter((asset) => asset.assetTypeId === selectedAssetTypeId)
+      : assets
+  const assetOptions = useMemo<PickerOption[]>(
+    () => scopedAssets.map((asset) => ({ value: asset.assetId, label: `${asset.assetTag} — ${asset.name}` })),
+    [scopedAssets],
+  )
+  const selectedAssetOption = useMemo<PickerOption | undefined>(
+    () => assetOptions.find((option) => option.value === selectedAssetId),
+    [assetOptions, selectedAssetId],
+  )
   const generatedProgramKey = useMemo(
     () =>
       buildSemanticKey({
@@ -106,11 +126,6 @@ export function PmProgramBuilderPanel({
     }
     onSelectedScheduleIdsChange([...selectedScheduleIds, scheduleId])
   }
-
-  const scopedAssets =
-    scopeType === 'asset_type' && selectedAssetTypeId
-      ? assets.filter((asset) => asset.assetTypeId === selectedAssetTypeId)
-      : assets
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -162,37 +177,27 @@ export function PmProgramBuilderPanel({
             </select>
           </label>
           {scopeType === 'asset_type' ? (
-            <label className="block text-sm md:col-span-2" htmlFor="pmprogrambuilder-asset-type">
-          <span className="text-slate-300">Asset type</span>
-          <select id="pmprogrambuilder-asset-type"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-                value={selectedAssetTypeId}
-                onChange={(e) => onSelectedAssetTypeIdChange(e.target.value)}
-              >
-                <option value="">Select asset type…</option>
-                {assetTypes.map((type) => (
-                  <option key={type.assetTypeId} value={type.assetTypeId}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="pmprogrambuilder-asset-type"
+              label="Asset type"
+              value={selectedAssetTypeId}
+              onChange={onSelectedAssetTypeIdChange}
+              options={assetTypeOptions}
+              placeholder="Search asset types…"
+              testId="pmprogrambuilder-asset-type-picker"
+              selectedOption={selectedAssetTypeOption}
+            />
           ) : (
-            <label className="block text-sm md:col-span-2" htmlFor="pmprogrambuilder-asset">
-          <span className="text-slate-300">Asset</span>
-          <select id="pmprogrambuilder-asset"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-                value={selectedAssetId}
-                onChange={(e) => onSelectedAssetIdChange(e.target.value)}
-              >
-                <option value="">Select asset…</option>
-                {scopedAssets.map((asset) => (
-                  <option key={asset.assetId} value={asset.assetId}>
-                    {asset.assetTag} — {asset.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="pmprogrambuilder-asset"
+              label="Asset"
+              value={selectedAssetId}
+              onChange={onSelectedAssetIdChange}
+              options={assetOptions}
+              placeholder="Search assets…"
+              testId="pmprogrambuilder-asset-picker"
+              selectedOption={selectedAssetOption}
+            />
           )}
           <div className="md:col-span-3">
             <button

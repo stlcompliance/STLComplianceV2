@@ -1,7 +1,43 @@
 import { render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      placeholder,
+      value,
+      options,
+      onChange,
+    }: {
+      placeholder?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+    }) => (
+      <select
+        aria-label={placeholder ?? 'Static search picker'}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">{placeholder ?? 'Select…'}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    ),
+  }
+})
 
 import { AvailabilitySnapshotsPanel } from './AvailabilitySnapshotsPanel'
+
+afterEach(() => {
+  cleanup()
+})
 
 const baseProps = {
   parts: [
@@ -91,5 +127,6 @@ describe('AvailabilitySnapshotsPanel', () => {
     expect(within(panel).getByText('avail-2026-q2')).toBeInTheDocument()
     expect(within(panel).getByText(/qty 120/)).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Record availability' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Search vendor part links…')).toBeInTheDocument()
   })
 })

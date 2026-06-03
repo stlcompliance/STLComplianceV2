@@ -766,6 +766,15 @@ namespace NexArr.Api.Migrations
                     b.Property<int>("RememberedRefreshTokenDays")
                         .HasColumnType("integer");
 
+                    b.Property<bool?>("RequirePlatformAdminMfa")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PasswordMinLength")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequirePasswordComplexity")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1167,6 +1176,17 @@ namespace NexArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BillingCustomerId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int?>("BillingGraceDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BillingSubscriptionId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1174,6 +1194,16 @@ namespace NexArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsInternalTenant")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsTrial")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTimeOffset>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1184,6 +1214,11 @@ namespace NexArr.Api.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SubscriptionTier")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
@@ -1468,6 +1503,14 @@ namespace NexArr.Api.Migrations
 
                     b.Property<DateTimeOffset?>("LockedUntil")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MfaRecoveryCodeHashesJson")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("MfaSecret")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset>("PasswordChangedAt")
                         .HasColumnType("timestamp with time zone");

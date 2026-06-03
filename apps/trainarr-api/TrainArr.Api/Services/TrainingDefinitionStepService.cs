@@ -280,8 +280,38 @@ public sealed class TrainingDefinitionStepService(
         switch (step.StepType)
         {
             case TrainingStepTypes.Content:
+                var contentAcknowledged = request.ContentAcknowledged ?? false;
+                var contentConfig = ParseConfigJson(step.ConfigJson);
+                var contentRoot = contentConfig.RootElement;
+                var requireAcknowledgement = contentRoot.TryGetProperty("requireAcknowledgement", out var requireAcknowledgementElement)
+                    && requireAcknowledgementElement.ValueKind == JsonValueKind.True;
+                if (requireAcknowledgement && !contentAcknowledged)
+                {
+                    throw new StlApiException(
+                        "training_steps.validation",
+                        "Content steps require acknowledgement before completion.",
+                        400);
+                }
+
                 progress.Status = "completed";
-                progress.ResponseJson = notes is null ? null : JsonSerializer.Serialize(new { notes });
+                progress.ResponseJson = JsonSerializer.Serialize(new
+                {
+                    acknowledged = contentAcknowledged,
+                    notes,
+                    contentTitle = contentRoot.TryGetProperty("title", out var titleElement) && titleElement.ValueKind == JsonValueKind.String
+                        ? titleElement.GetString()
+                        : null,
+                    contentBody = contentRoot.TryGetProperty("body", out var bodyElement) && bodyElement.ValueKind == JsonValueKind.String
+                        ? bodyElement.GetString()
+                        : null,
+                    mediaUrl = contentRoot.TryGetProperty("mediaUrl", out var mediaUrlElement) && mediaUrlElement.ValueKind == JsonValueKind.String
+                        ? mediaUrlElement.GetString()
+                        : null,
+                    externalUrl = contentRoot.TryGetProperty("externalUrl", out var externalUrlElement) && externalUrlElement.ValueKind == JsonValueKind.String
+                        ? externalUrlElement.GetString()
+                        : null,
+                    requireAcknowledgement,
+                });
                 break;
 
             case TrainingStepTypes.Quiz:
@@ -307,6 +337,29 @@ public sealed class TrainingDefinitionStepService(
                 }
 
                 var practicalResult = NormalizePracticalResult(request.PracticalResult);
+                var practicalObservationNotes = NormalizeOptionalText(request.PracticalObservationNotes);
+                var failureComments = NormalizeOptionalText(request.FailureComments);
+                var safetyCriticalFailure = request.SafetyCriticalFailure ?? false;
+                var traineeAcknowledged = request.TraineeAcknowledged ?? false;
+                var retestRequired = request.RetestRequired ?? string.Equals(practicalResult, "fail", StringComparison.OrdinalIgnoreCase);
+
+                if (string.Equals(practicalResult, "pass", StringComparison.OrdinalIgnoreCase) && safetyCriticalFailure)
+                {
+                    throw new StlApiException(
+                        "training_steps.validation",
+                        "Safety-critical failure cannot be marked on a passing practical evaluation.",
+                        400);
+                }
+
+                if (string.Equals(practicalResult, "fail", StringComparison.OrdinalIgnoreCase)
+                    && string.IsNullOrWhiteSpace(failureComments))
+                {
+                    throw new StlApiException(
+                        "training_steps.validation",
+                        "Failure comments are required when a practical evaluation fails.",
+                        400);
+                }
+
                 progress.Status = string.Equals(practicalResult, "pass", StringComparison.OrdinalIgnoreCase)
                     ? "completed"
                     : "failed";
@@ -314,6 +367,11 @@ public sealed class TrainingDefinitionStepService(
                 {
                     practicalResult,
                     notes,
+                    practicalObservationNotes,
+                    safetyCriticalFailure,
+                    failureComments,
+                    traineeAcknowledged,
+                    retestRequired,
                 });
                 break;
 
@@ -755,6 +813,15 @@ public sealed class TrainingDefinitionStepService(
         return normalized;
     }
 
+    private static string? NormalizeOptionalText(string? value)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
+
+    private static JsonDocument ParseConfigJson(string configJson) =>
+        JsonDocument.Parse(configJson);
+
     private static void ValidateConfigJson(string stepType, string configJson)
     {
         if (string.IsNullOrWhiteSpace(configJson))
@@ -767,10 +834,34 @@ public sealed class TrainingDefinitionStepService(
 
         try
         {
-            using var document = JsonDocument.Parse(configJson);
+            using var document = ParseConfigJson(configJson);
+            var root = document.RootElement;
+            if (stepType == TrainingStepTypes.Content)
+            {
+                var hasBody =
+                    root.TryGetProperty("body", out var body)
+                    && body.ValueKind == JsonValueKind.String
+                    && !string.IsNullOrWhiteSpace(body.GetString());
+                var hasMediaUrl =
+                    root.TryGetProperty("mediaUrl", out var mediaUrl)
+                    && mediaUrl.ValueKind == JsonValueKind.String
+                    && !string.IsNullOrWhiteSpace(mediaUrl.GetString());
+                var hasExternalUrl =
+                    root.TryGetProperty("externalUrl", out var externalUrl)
+                    && externalUrl.ValueKind == JsonValueKind.String
+                    && !string.IsNullOrWhiteSpace(externalUrl.GetString());
+
+                if (!hasBody && !hasMediaUrl && !hasExternalUrl)
+                {
+                    throw new StlApiException(
+                        "training_steps.validation",
+                        "Content steps require a body, mediaUrl, or externalUrl in configJson.",
+                        400);
+                }
+            }
+
             if (stepType == TrainingStepTypes.Quiz)
             {
-                var root = document.RootElement;
                 if (!root.TryGetProperty("questions", out var questions)
                     || questions.ValueKind != JsonValueKind.Array
                     || questions.GetArrayLength() == 0)

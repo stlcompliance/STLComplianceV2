@@ -11,6 +11,7 @@ await StlApiHost.RunAsync<LoadArrDbContext>(
     LoadArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
+        app.MapLoadArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapLoadArrWorkspaceEndpoints();
         app.MapLoadArrInventoryManagementEndpoints();

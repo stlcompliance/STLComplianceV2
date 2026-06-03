@@ -28,6 +28,26 @@ public sealed record ExecutiveReportSupplyDemandSummary(
     int FulfilledLines,
     IReadOnlyList<ExecutiveReportCountItem> ProcurementStatusCounts);
 
+public sealed record ExecutiveReportPartsDemandForecastItem(
+    Guid? SupplyarrPartId,
+    string PartNumber,
+    string Description,
+    string UnitOfMeasure,
+    decimal ForecastQuantity,
+    int OpenLineCount,
+    int OpenWorkOrderCount,
+    int PmWorkOrderCount,
+    int DefectWorkOrderCount,
+    int ManualWorkOrderCount,
+    DateTimeOffset? OldestCreatedAt,
+    DateTimeOffset? NewestCreatedAt);
+
+public sealed record ExecutiveReportPartsDemandForecastSummary(
+    int OpenLineCount,
+    int DistinctPartCount,
+    decimal ForecastQuantity,
+    IReadOnlyList<ExecutiveReportPartsDemandForecastItem> TopParts);
+
 public sealed record ExecutiveReportOperationalTotals(
     int TotalAssetCount,
     int ActiveAssetCount,
@@ -85,6 +105,7 @@ public sealed record ExecutiveReportSummaryResponse(
     ExecutiveReportDowntimeTrend DowntimeTrend,
     ExecutiveReportReliabilitySummary Reliability,
     ExecutiveReportSupplyDemandSummary SupplyDemand,
+    ExecutiveReportPartsDemandForecastSummary PartsDemandForecast,
     IReadOnlyList<ExecutiveReportScopeReadinessItem> ScopeReadiness,
     IReadOnlyList<ExecutiveReportCountItem> WorkOrderStatusCounts,
     IReadOnlyList<ExecutiveReportCountItem> DefectSeverityCounts);

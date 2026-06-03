@@ -1,4 +1,4 @@
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMemo } from 'react'
 
 import type {
@@ -12,7 +12,6 @@ import type {
 import {
   LOCATION_TYPE_OPTIONS,
   toBinPickerOptions,
-  toLocationPickerOptions,
   toPartPickerOptions,
 } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
@@ -128,6 +127,58 @@ export function InventoryPanel({
 }: InventoryPanelProps) {
   const locationKeys = useMemo(() => locations.map((location) => location.locationKey), [locations])
   const binKeys = useMemo(() => bins.map((bin) => bin.binKey), [bins])
+  const locationOptions = useMemo<PickerOption[]>(
+    () =>
+      locations.map((location) => ({
+        value: location.locationId,
+        label: `${location.locationKey} · ${location.name}`,
+      })),
+    [locations],
+  )
+  const selectedLocationOption = useMemo<PickerOption | undefined>(
+    () => locationOptions.find((option) => option.value === selectedLocationId),
+    [locationOptions, selectedLocationId],
+  )
+  const partOptions = useMemo<PickerOption[]>(
+    () => toPartPickerOptions(parts),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedPartId),
+    [partOptions, selectedPartId],
+  )
+  const binOptions = useMemo<PickerOption[]>(
+    () => toBinPickerOptions(bins),
+    [bins],
+  )
+  const selectedBinOption = useMemo<PickerOption | undefined>(
+    () => binOptions.find((option) => option.value === selectedBinId),
+    [binOptions, selectedBinId],
+  )
+  const transferPartOptions = useMemo<PickerOption[]>(
+    () => toPartPickerOptions(parts),
+    [parts],
+  )
+  const selectedTransferPartOption = useMemo<PickerOption | undefined>(
+    () => transferPartOptions.find((option) => option.value === transferPartId),
+    [transferPartOptions, transferPartId],
+  )
+  const transferFromBinOptions = useMemo<PickerOption[]>(
+    () => toBinPickerOptions(transferBins),
+    [transferBins],
+  )
+  const selectedTransferFromBinOption = useMemo<PickerOption | undefined>(
+    () => transferFromBinOptions.find((option) => option.value === transferFromBinId),
+    [transferFromBinOptions, transferFromBinId],
+  )
+  const transferToBinOptions = useMemo<PickerOption[]>(
+    () => toBinPickerOptions(transferBins),
+    [transferBins],
+  )
+  const selectedTransferToBinOption = useMemo<PickerOption | undefined>(
+    () => transferToBinOptions.find((option) => option.value === transferToBinId),
+    [transferToBinOptions, transferToBinId],
+  )
   const transferSourceLabel = useMemo(() => {
     const part = parts.find((item) => item.partId === transferPartId)
     const fromBin = transferBins.find((item) => item.binId === transferFromBinId)
@@ -313,12 +364,15 @@ export function InventoryPanel({
 
           <div>
             <h3 className="text-sm font-medium text-slate-300">Add bin</h3>
-            <ControlledSelect
+            <StaticSearchPicker
               label="Location"
+              id="inventory-bin-location"
               value={selectedLocationId}
+              options={locationOptions}
+              selectedOption={selectedLocationOption}
               onChange={onSelectedLocationIdChange}
-              options={toLocationPickerOptions(locations)}
-              emptyLabel="Select location"
+              placeholder="Select location"
+              testId="inventory-bin-location-picker"
             />
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <label htmlFor="inventory-bin-name" className="block text-sm text-slate-400 sm:col-span-2">
@@ -354,19 +408,25 @@ export function InventoryPanel({
           <div>
             <h3 className="text-sm font-medium text-slate-300">Set stock on hand</h3>
             <div className="mt-2 grid gap-2">
-              <ControlledSelect
+              <StaticSearchPicker
                 label="Part"
+                id="inventory-stock-part"
                 value={selectedPartId}
+                options={partOptions}
+                selectedOption={selectedPartOption}
                 onChange={onSelectedPartIdChange}
-                options={toPartPickerOptions(parts)}
-                emptyLabel="Select part"
+                placeholder="Select part"
+                testId="inventory-stock-part-picker"
               />
-              <ControlledSelect
+              <StaticSearchPicker
                 label="Bin"
+                id="inventory-stock-bin"
                 value={selectedBinId}
+                options={binOptions}
+                selectedOption={selectedBinOption}
                 onChange={onSelectedBinIdChange}
-                options={toBinPickerOptions(bins)}
-                emptyLabel="Select bin"
+                placeholder="Select bin"
+                testId="inventory-stock-bin-picker"
               />
               <label htmlFor="inventory-stock-quantity" className="block text-sm text-slate-400">
                 Quantity on hand
@@ -399,26 +459,35 @@ export function InventoryPanel({
               Move on-hand inventory from one bin to another and write a ledger trail.
             </p>
             <div className="mt-2 grid gap-2">
-              <ControlledSelect
+              <StaticSearchPicker
                 label="Part"
+                id="inventory-transfer-part"
                 value={transferPartId}
+                options={transferPartOptions}
+                selectedOption={selectedTransferPartOption}
                 onChange={onTransferPartIdChange}
-                options={toPartPickerOptions(parts)}
-                emptyLabel="Select part"
+                placeholder="Select part"
+                testId="inventory-transfer-part-picker"
               />
-              <ControlledSelect
+              <StaticSearchPicker
                 label="From bin"
+                id="inventory-transfer-from-bin"
                 value={transferFromBinId}
+                options={transferFromBinOptions}
+                selectedOption={selectedTransferFromBinOption}
                 onChange={onTransferFromBinIdChange}
-                options={toBinPickerOptions(transferBins)}
-                emptyLabel="Select source bin"
+                placeholder="Select source bin"
+                testId="inventory-transfer-from-bin-picker"
               />
-              <ControlledSelect
+              <StaticSearchPicker
                 label="To bin"
+                id="inventory-transfer-to-bin"
                 value={transferToBinId}
+                options={transferToBinOptions}
+                selectedOption={selectedTransferToBinOption}
                 onChange={onTransferToBinIdChange}
-                options={toBinPickerOptions(transferBins)}
-                emptyLabel="Select destination bin"
+                placeholder="Select destination bin"
+                testId="inventory-transfer-to-bin-picker"
               />
               <label htmlFor="inventory-transfer-quantity" className="block text-sm text-slate-400">
                 Quantity

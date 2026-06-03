@@ -1,4 +1,4 @@
-import { ControlledSelect } from '@stl/shared-ui'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -141,8 +141,8 @@ export function OutboundShipmentsPanel({
     [destinationAddressSnapshot, shipmentKeySource],
   )
 
-  const lineOptions = toBinPickerOptions(bins)
-  const linePartOptions = toPartPickerOptions(parts)
+  const lineOptions = useMemo<PickerOption[]>(() => toBinPickerOptions(bins), [bins])
+  const linePartOptions = useMemo<PickerOption[]>(() => toPartPickerOptions(parts), [parts])
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
@@ -282,8 +282,9 @@ export function OutboundShipmentsPanel({
                   ) : null}
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                  <ControlledSelect
+                  <StaticSearchPicker
                     label="Part"
+                    id={`outbound-shipment-part-${line.id}`}
                     value={line.partId}
                     onChange={(value) =>
                       setLines((current) =>
@@ -291,10 +292,13 @@ export function OutboundShipmentsPanel({
                       )
                     }
                     options={linePartOptions}
-                    emptyLabel="Select part"
+                    selectedOption={linePartOptions.find((option) => option.value === line.partId)}
+                    placeholder="Select part"
+                    testId={`outbound-shipment-part-picker-${line.id}`}
                   />
-                  <ControlledSelect
+                  <StaticSearchPicker
                     label="From bin"
+                    id={`outbound-shipment-bin-${line.id}`}
                     value={line.fromBinId}
                     onChange={(value) =>
                       setLines((current) =>
@@ -302,7 +306,9 @@ export function OutboundShipmentsPanel({
                       )
                     }
                     options={lineOptions}
-                    emptyLabel="Select bin"
+                    selectedOption={lineOptions.find((option) => option.value === line.fromBinId)}
+                    placeholder="Select bin"
+                    testId={`outbound-shipment-bin-picker-${line.id}`}
                   />
                   <label htmlFor={`outbound-shipment-qty-${line.id}`} className="block text-sm text-slate-400">
                     Quantity

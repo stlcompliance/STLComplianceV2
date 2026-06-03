@@ -87,6 +87,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
             entity.Property(x => x.IsEmailVerified).HasDefaultValue(true);
             entity.Property(x => x.IsMfaEnabled).HasDefaultValue(false);
+            entity.Property(x => x.MfaSecret).HasMaxLength(128);
+            entity.Property(x => x.MfaRecoveryCodeHashesJson).HasMaxLength(4096);
             entity.Property(x => x.FailedLoginCount).HasDefaultValue(0);
             entity.HasOne(x => x.User).WithOne(x => x.Credential).HasForeignKey<UserCredential>(x => x.UserId);
         });
@@ -109,6 +111,12 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.Slug).HasMaxLength(64).IsRequired();
             entity.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SubscriptionTier).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.BillingCustomerId).HasMaxLength(128);
+            entity.Property(x => x.BillingSubscriptionId).HasMaxLength(128);
+            entity.Property(x => x.BillingGraceDays);
+            entity.Property(x => x.IsTrial).HasDefaultValue(false);
+            entity.Property(x => x.IsInternalTenant).HasDefaultValue(false);
             entity.HasIndex(x => x.Slug).IsUnique();
         });
 

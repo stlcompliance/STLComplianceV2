@@ -24,6 +24,8 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<PartRegistryService>();
         builder.Services.AddScoped<PartCatalogCsvImportService>();
         builder.Services.AddScoped<VendorCatalogCsvImportService>();
+        builder.Services.AddScoped<VendorCatalogApiService>();
+        builder.Services.AddScoped<VendorEmailInboxService>();
         builder.Services.AddScoped<VendorDocumentsCsvImportService>();
         builder.Services.AddScoped<InventoryCountsCsvImportService>();
         builder.Services.AddScoped<PriceListCsvImportService>();
@@ -64,6 +66,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ApprovalReminderService>();
         builder.Services.AddScoped<ProcurementExceptionEscalationSettingsService>();
         builder.Services.AddScoped<ProcurementExceptionEscalationWorkerService>();
+        builder.Services.AddScoped<ProcurementExceptionAutomationWorkerService>();
         builder.Services.AddScoped<DemandProcessingSettingsService>();
         builder.Services.AddScoped<DemandProcessingWorkerService>();
         builder.Services.AddScoped<DemandProcessingService>();

@@ -475,6 +475,31 @@ progress::-moz-progress-bar {
   box-shadow: 0 10px 24px rgba(23, 39, 41, 0.06);
 }
 
+.reports-layout {
+  display: block;
+}
+
+.report-stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.report-section {
+  display: grid;
+  gap: 12px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.search-field.compact {
+  min-height: 40px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

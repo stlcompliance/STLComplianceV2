@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { LaunchDiagnosticRow } from '../../../api/types'
 
 type Props = {
@@ -5,9 +7,17 @@ type Props = {
   tenantId: string
   productKey: string
   result: string
+  userId: string
+  correlationId: string
+  fromUtc: string
+  toUtc: string
   onTenantIdChange: (value: string) => void
   onProductKeyChange: (value: string) => void
   onResultChange: (value: string) => void
+  onUserIdChange: (value: string) => void
+  onCorrelationIdChange: (value: string) => void
+  onFromUtcChange: (value: string) => void
+  onToUtcChange: (value: string) => void
   onReset: () => void
 }
 
@@ -16,9 +26,17 @@ export function LaunchFiltersBar({
   tenantId,
   productKey,
   result,
+  userId,
+  correlationId,
+  fromUtc,
+  toUtc,
   onTenantIdChange,
   onProductKeyChange,
   onResultChange,
+  onUserIdChange,
+  onCorrelationIdChange,
+  onFromUtcChange,
+  onToUtcChange,
   onReset,
 }: Props) {
   const tenants = [...new Map(rows.map((row) => [row.tenantId, row])).values()].sort((a, b) =>
@@ -27,40 +45,44 @@ export function LaunchFiltersBar({
   const products = [...new Map(rows.map((row) => [row.productKey, row])).values()].sort((a, b) =>
     a.productDisplayName.localeCompare(b.productDisplayName),
   )
+  const tenantOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.tenantDisplayName} (${tenant.tenantSlug})`,
+      })),
+    [tenants],
+  )
+  const productOptions = useMemo<PickerOption[]>(
+    () =>
+      products.map((product) => ({
+        value: product.productKey,
+        label: product.productDisplayName,
+      })),
+    [products],
+  )
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="grid gap-3 md:grid-cols-4">
-        <label className="text-xs font-medium text-slate-600">
-          Filter tenant
-          <select
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-            value={tenantId}
-            onChange={(event) => onTenantIdChange(event.target.value)}
-          >
-            <option value="">All tenants</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.tenantId} value={tenant.tenantId}>
-                {tenant.tenantDisplayName} ({tenant.tenantSlug})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs font-medium text-slate-600">
-          Filter product
-          <select
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-            value={productKey}
-            onChange={(event) => onProductKeyChange(event.target.value)}
-          >
-            <option value="">All products</option>
-            {products.map((product) => (
-              <option key={product.productKey} value={product.productKey}>
-                {product.productDisplayName}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
+        <StaticSearchPicker
+          label="Filter tenant"
+          id="launch-filter-tenant"
+          value={tenantId}
+          onChange={onTenantIdChange}
+          options={tenantOptions}
+          placeholder="All tenants"
+          testId="launch-filter-tenant"
+        />
+        <StaticSearchPicker
+          label="Filter product"
+          id="launch-filter-product"
+          value={productKey}
+          onChange={onProductKeyChange}
+          options={productOptions}
+          placeholder="All products"
+          testId="launch-filter-product"
+        />
         <label className="text-xs font-medium text-slate-600">
           Launch result
           <select
@@ -73,6 +95,42 @@ export function LaunchFiltersBar({
             <option value="denied">Denied</option>
             <option value="error">Error</option>
           </select>
+        </label>
+        <label className="text-xs font-medium text-slate-600">
+          Actor user ID
+          <input
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            value={userId}
+            onChange={(event) => onUserIdChange(event.target.value)}
+            placeholder="User UUID"
+          />
+        </label>
+        <label className="text-xs font-medium text-slate-600">
+          Correlation ID
+          <input
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            value={correlationId}
+            onChange={(event) => onCorrelationIdChange(event.target.value)}
+            placeholder="Correlation UUID"
+          />
+        </label>
+        <label className="text-xs font-medium text-slate-600">
+          From
+          <input
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            type="datetime-local"
+            value={fromUtc}
+            onChange={(event) => onFromUtcChange(event.target.value)}
+          />
+        </label>
+        <label className="text-xs font-medium text-slate-600">
+          To
+          <input
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            type="datetime-local"
+            value={toUtc}
+            onChange={(event) => onToUtcChange(event.target.value)}
+          />
         </label>
         <div className="flex items-end">
           <button

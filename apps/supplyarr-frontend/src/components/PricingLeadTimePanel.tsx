@@ -1,6 +1,7 @@
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
+  ExternalPartyResponse,
   LeadTimeSnapshotResponse,
   PartResponse,
   PricingSnapshotResponse,
@@ -10,6 +11,7 @@ import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PricingLeadTimePanelProps {
   parts: PartResponse[]
+  vendors: ExternalPartyResponse[]
   pricingSnapshots: PricingSnapshotResponse[]
   leadTimeSnapshots: LeadTimeSnapshotResponse[]
   canManage: boolean
@@ -40,6 +42,7 @@ interface PricingLeadTimePanelProps {
 
 export function PricingLeadTimePanel({
   parts,
+  vendors,
   pricingSnapshots,
   leadTimeSnapshots,
   canManage,
@@ -67,6 +70,7 @@ export function PricingLeadTimePanel({
   isCreatingPricing,
   isCreatingLeadTime,
 }: PricingLeadTimePanelProps) {
+  const vendorsById = new Map(vendors.map((vendor) => [vendor.partyId, vendor]))
   const vendorLinks = parts.flatMap((part) =>
     part.vendorLinks.map((link) => ({
       linkId: link.linkId,
@@ -81,8 +85,22 @@ export function PricingLeadTimePanel({
       catalogUnitPrice: link.catalogUnitPrice,
       catalogLeadTimeDays: link.catalogLeadTimeDays,
       label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
+      vendorApprovalStatus: vendorsById.get(link.partyId)?.approvalStatus ?? 'unknown',
+      vendorStatus: vendorsById.get(link.partyId)?.status ?? 'unknown',
     })),
   )
+  const vendorLinkOptions: PickerOption[] = vendorLinks.map((link) => ({
+    value: link.linkId,
+    label: link.label,
+    description: `${link.partKey} · ${link.vendorDisplayName} · ${link.vendorPartNumber}`,
+    keywords: [
+      link.partKey,
+      link.partDisplayName,
+      link.vendorPartyKey,
+      link.vendorDisplayName,
+      link.vendorPartNumber,
+    ],
+  }))
   const selectedLink = vendorLinks.find((link) => link.linkId === selectedVendorLinkId)
   const selectedPart = selectedLink ? parts.find((part) => part.partId === selectedLink.partId) : null
   const pricingKeySource = selectedLink ? `${selectedLink.label}-price` : ''
@@ -93,6 +111,8 @@ export function PricingLeadTimePanel({
     ? vendorLinks.filter((link) => link.partId === selectedPart.partId)
     : []
   const linkMetrics = selectedPartLinks.map((link) => {
+    const isApprovedAndActive =
+      link.vendorApprovalStatus === 'approved' && link.vendorStatus === 'active'
     const currentPricingSnapshot =
       pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId && snapshot.isCurrent) ??
       pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId)
@@ -104,24 +124,126 @@ export function PricingLeadTimePanel({
     const priceScore = unitPrice == null ? 1000 : unitPrice
     const leadTimeScore = leadTimeDays == null ? 1000 : leadTimeDays * 0.25
     const preferredBonus = link.isPreferred ? -5 : 0
+    const compliancePenalty = isApprovedAndActive ? 0 : 100
     return {
       ...link,
       unitPrice,
       leadTimeDays,
       currentPricingSnapshot,
       currentLeadTimeSnapshot,
-      combinedScore: priceScore + leadTimeScore + preferredBonus,
+      combinedScore: priceScore + leadTimeScore + preferredBonus + compliancePenalty,
+      isApprovedAndActive,
+      needsApprovalReason:
+        link.vendorApprovalStatus !== 'approved'
+          ? `Vendor approval is ${link.vendorApprovalStatus}.`
+          : link.vendorStatus !== 'active'
+            ? `Vendor status is ${link.vendorStatus}.`
+            : null,
     }
   })
-  const recommendedLink = linkMetrics.length
-    ? [...linkMetrics].sort((a, b) => a.combinedScore - b.combinedScore)[0]
+  const eligibleLinks = linkMetrics.filter((link) => link.isApprovedAndActive)
+  const overallPool = eligibleLinks.length ? eligibleLinks : linkMetrics
+  const recommendedLink = overallPool.length
+    ? [...overallPool].sort((a, b) => a.combinedScore - b.combinedScore)[0]
     : null
   const bestPriceLink =
-    [...linkMetrics].filter((link) => link.unitPrice != null).sort((a, b) => (a.unitPrice! - b.unitPrice!))[0] ??
-    null
+    [...(eligibleLinks.length ? eligibleLinks : linkMetrics)]
+      .filter((link) => link.unitPrice != null)
+      .sort((a, b) => (a.unitPrice! - b.unitPrice!))[0] ?? null
   const bestLeadTimeLink =
-    [...linkMetrics].filter((link) => link.leadTimeDays != null).sort((a, b) => (a.leadTimeDays! - b.leadTimeDays!))[0] ??
+    [...(eligibleLinks.length ? eligibleLinks : linkMetrics)]
+      .filter((link) => link.leadTimeDays != null)
+      .sort((a, b) => (a.leadTimeDays! - b.leadTimeDays!))[0] ?? null
+  const preferredLink =
+    [...(eligibleLinks.length ? eligibleLinks : linkMetrics)]
+      .filter((link) => link.isPreferred)
+      .sort((a, b) => a.combinedScore - b.combinedScore)[0] ??
     null
+  const complianceSafeLink =
+    [...linkMetrics].filter((link) => link.isApprovedAndActive).sort((a, b) => a.combinedScore - b.combinedScore)[0] ??
+    null
+  const emergencyLink =
+    [...linkMetrics]
+      .filter((link) => link.leadTimeDays != null)
+      .sort((a, b) => (a.leadTimeDays! - b.leadTimeDays!))[0] ?? null
+  const needsApprovalLink =
+    [...linkMetrics]
+      .filter((link) => !link.isApprovedAndActive)
+      .sort((a, b) => a.combinedScore - b.combinedScore)[0] ?? null
+  const notRecommendedLink =
+    [...linkMetrics]
+      .filter((link) => !link.isApprovedAndActive || link.unitPrice == null || link.leadTimeDays == null)
+      .sort((a, b) => a.combinedScore - b.combinedScore)[0] ??
+    null
+
+  const sourceRecommendations = [
+    {
+      label: 'Best overall',
+      link: recommendedLink,
+      reason: recommendedLink
+        ? recommendedLink.isApprovedAndActive
+          ? 'Balanced price, lead time, and preferred-vendor status.'
+          : 'Best current score, but compliance approval is still needed.'
+        : 'No source links available.',
+    },
+    {
+      label: 'Lowest cost',
+      link: bestPriceLink,
+      reason: bestPriceLink
+        ? bestPriceLink.isApprovedAndActive
+          ? 'Lowest current price among approved active sources.'
+          : 'Lowest current price, but approval is still needed.'
+        : 'No priced source links available.',
+    },
+    {
+      label: 'Fastest delivery',
+      link: bestLeadTimeLink,
+      reason: bestLeadTimeLink
+        ? bestLeadTimeLink.isApprovedAndActive
+          ? 'Shortest current lead time among approved active sources.'
+          : 'Shortest current lead time, but approval is still needed.'
+        : 'No lead-time data available.',
+    },
+    {
+      label: 'Preferred vendor',
+      link: preferredLink,
+      reason: preferredLink
+        ? preferredLink.isApprovedAndActive
+          ? 'Preferred vendor with the strongest current source score.'
+          : 'Preferred vendor, but approval is still needed.'
+        : 'No preferred vendor source is available.',
+    },
+    {
+      label: 'Compliance safest',
+      link: complianceSafeLink,
+      reason: complianceSafeLink
+        ? 'Approved and active vendor source with acceptable current metrics.'
+        : 'No approved active vendor source is available.',
+    },
+    {
+      label: 'Emergency option',
+      link: emergencyLink,
+      reason: emergencyLink
+        ? emergencyLink.isApprovedAndActive
+          ? 'Fastest available source for urgent procurement.'
+          : 'Fastest available source, but approval is still needed.'
+        : 'No emergency-capable source exists yet.',
+    },
+    {
+      label: 'Needs approval',
+      link: needsApprovalLink,
+      reason: needsApprovalLink
+        ? needsApprovalLink.needsApprovalReason ?? 'This source still requires approval.'
+        : 'All current sources are approved and active.',
+    },
+    {
+      label: 'Not recommended reason',
+      link: notRecommendedLink,
+      reason: notRecommendedLink
+        ? notRecommendedLink.needsApprovalReason ?? 'Missing pricing or lead-time data.'
+        : 'All current sources are eligible.',
+    },
+  ] as const
 
   const filteredPricing = currentOnlyFilter
     ? pricingSnapshots.filter((row) => row.isCurrent)
@@ -221,7 +343,7 @@ export function PricingLeadTimePanel({
         </div>
       </div>
 
-      {selectedPart && recommendedLink ? (
+      {selectedPart && sourceRecommendations.some((item) => item.link) ? (
         <div className="mt-6 rounded-lg border border-sky-800/60 bg-sky-950/30 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -232,7 +354,7 @@ export function PricingLeadTimePanel({
                 Recommended source for {selectedPart.partKey} · {selectedPart.displayName}
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                Based on current price, current lead time, and preferred-vendor status.
+                Based on current price, current lead time, preferred-vendor status, and vendor approval.
               </p>
             </div>
             <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-200">
@@ -240,32 +362,45 @@ export function PricingLeadTimePanel({
             </span>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Metric
-              label="Recommended vendor"
-              value={`${recommendedLink.vendorPartyKey} · ${recommendedLink.vendorDisplayName}`}
-            />
-            <Metric label="Unit price" value={formatMoney(recommendedLink.unitPrice)} />
-            <Metric label="Lead time" value={formatDays(recommendedLink.leadTimeDays)} />
-            <Metric
-              label="Reason"
-              value={
-                recommendedLink.linkId === bestPriceLink?.linkId && recommendedLink.linkId === bestLeadTimeLink?.linkId
-                  ? 'Best price and lead time'
-                  : recommendedLink.linkId === bestPriceLink?.linkId
-                    ? 'Lowest current price'
-                    : recommendedLink.linkId === bestLeadTimeLink?.linkId
-                      ? 'Shortest current lead time'
-                      : recommendedLink.isPreferred
-                        ? 'Preferred vendor with balanced current metrics'
-                        : 'Balanced current source score'
-              }
-            />
-            <Metric label="Part source" value={recommendedLink.vendorPartNumber} />
-            <Metric
-              label="Current snapshots"
-              value={`${recommendedLink.currentPricingSnapshot ? 'price' : 'no price'} · ${recommendedLink.currentLeadTimeSnapshot ? 'lead time' : 'no lead time'}`}
-            />
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {sourceRecommendations.map((item) => (
+              <div
+                key={item.label}
+                className={`rounded-lg border p-4 ${
+                  item.link
+                    ? item.link.isApprovedAndActive
+                      ? 'border-sky-500/40 bg-sky-950/20'
+                      : 'border-amber-500/40 bg-amber-950/20'
+                    : 'border-slate-800 bg-slate-950/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-100">{item.label}</h4>
+                    <p className="mt-1 text-xs text-slate-400">{item.reason}</p>
+                  </div>
+                  <span className="rounded-full bg-slate-800 px-2 py-1 text-[11px] uppercase tracking-wide text-slate-300">
+                    {item.link ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                {item.link ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <Metric label="Vendor" value={`${item.link.vendorPartyKey} · ${item.link.vendorDisplayName}`} />
+                    <Metric label="Part source" value={item.link.vendorPartNumber} />
+                    <Metric label="Unit price" value={formatMoney(item.link.unitPrice)} />
+                    <Metric label="Lead time" value={formatDays(item.link.leadTimeDays)} />
+                    <Metric
+                      label="Approval"
+                      value={`${item.link.vendorApprovalStatus} · ${item.link.vendorStatus}`}
+                    />
+                    <Metric
+                      label="Snapshots"
+                      value={`${item.link.currentPricingSnapshot ? 'price' : 'no price'} · ${item.link.currentLeadTimeSnapshot ? 'lead time' : 'no lead time'}`}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ))}
           </div>
 
           {selectedPartLinks.length > 1 ? (
@@ -278,7 +413,7 @@ export function PricingLeadTimePanel({
                   <li
                     key={link.linkId}
                     className={`rounded-md border px-3 py-2 ${
-                      link.linkId === recommendedLink.linkId
+                      link.linkId === recommendedLink?.linkId
                         ? 'border-sky-500/50 bg-sky-950/40'
                         : 'border-slate-800 bg-slate-950/50'
                     }`}
@@ -291,9 +426,10 @@ export function PricingLeadTimePanel({
                         <div className="mt-1 text-xs text-slate-500">
                           {link.vendorPartNumber}
                           {link.isPreferred ? ' · preferred' : ''}
+                          {link.isApprovedAndActive ? '' : ' · approval needed'}
                         </div>
                       </div>
-                      {link.linkId === recommendedLink.linkId ? (
+                      {link.linkId === recommendedLink?.linkId ? (
                         <span className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                           Recommended
                         </span>
@@ -312,22 +448,18 @@ export function PricingLeadTimePanel({
 
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-          <label htmlFor="pricing-lead-time-vendor-link" className="block text-sm text-slate-400">
-            Vendor part link
-            <select
+          <div>
+            <label className="mb-1 block text-sm text-slate-400" htmlFor="pricing-lead-time-vendor-link">
+              Vendor part link
+            </label>
+            <StaticSearchPicker
               id="pricing-lead-time-vendor-link"
-              className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+              placeholder="Search vendor part links…"
               value={selectedVendorLinkId}
-              onChange={(e) => onSelectedVendorLinkIdChange(e.target.value)}
-            >
-              <option value="">Select link…</option>
-              {vendorLinks.map((link) => (
-                <option key={link.linkId} value={link.linkId}>
-                  {link.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={vendorLinkOptions}
+              onChange={onSelectedVendorLinkIdChange}
+            />
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <GeneratedKeyFieldGroup

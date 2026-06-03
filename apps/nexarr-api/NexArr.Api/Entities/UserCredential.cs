@@ -12,6 +12,10 @@ public sealed class UserCredential
 
     public bool IsMfaEnabled { get; set; }
 
+    public string? MfaSecret { get; set; }
+
+    public string? MfaRecoveryCodeHashesJson { get; set; }
+
     public int FailedLoginCount { get; set; }
 
     public DateTimeOffset? LockedUntil { get; set; }

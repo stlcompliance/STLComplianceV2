@@ -730,6 +730,10 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var enabled = (await enableResponse.Content.ReadFromJsonAsync<PlatformUserMfaResponse>())!;
         Assert.True(enabled.IsMfaEnabled);
         Assert.False(enabled.WasAlreadySet);
+        Assert.False(string.IsNullOrWhiteSpace(enabled.MfaSecret));
+        Assert.False(string.IsNullOrWhiteSpace(enabled.ProvisioningUri));
+        Assert.NotNull(enabled.RecoveryCodes);
+        Assert.NotEmpty(enabled.RecoveryCodes!);
 
         var disableRequest = AuthorizedWithConfirmation(
             HttpMethod.Post,
@@ -740,6 +744,9 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         disableResponse.EnsureSuccessStatusCode();
         var disabled = (await disableResponse.Content.ReadFromJsonAsync<PlatformUserMfaResponse>())!;
         Assert.False(disabled.IsMfaEnabled);
+        Assert.Null(disabled.MfaSecret);
+        Assert.Null(disabled.ProvisioningUri);
+        Assert.Null(disabled.RecoveryCodes);
 
         var detailResponse = await _client.SendAsync(
             Authorized(HttpMethod.Get, $"/api/platform-admin/users/{created.UserId}", adminToken));

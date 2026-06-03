@@ -546,6 +546,96 @@ public sealed class InspectionTemplateService(
 
     }
 
+    public async Task<InspectionTemplateDetailResponse> CloneAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid inspectionTemplateId,
+        CancellationToken cancellationToken = default)
+    {
+        var source = await GetAsync(tenantId, inspectionTemplateId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var cloneKey = await GenerateCloneTemplateKeyAsync(tenantId, source.TemplateKey, cancellationToken);
+
+        var clone = new InspectionTemplate
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            TemplateKey = cloneKey,
+            Name = $"{source.Name} Copy",
+            Description = source.Description,
+            Version = 1,
+            Status = InspectionTemplateStatuses.Draft,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.InspectionTemplates.Add(clone);
+        await db.SaveChangesAsync(cancellationToken);
+
+        var categoryMap = new Dictionary<Guid, Guid>();
+        foreach (var category in source.Categories.OrderBy(x => x.SortOrder).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            var clonedCategory = new InspectionTemplateCategory
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                InspectionTemplateId = clone.Id,
+                CategoryKey = category.CategoryKey,
+                Name = category.Name,
+                SortOrder = category.SortOrder,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            categoryMap[category.CategoryId] = clonedCategory.Id;
+            db.InspectionTemplateCategories.Add(clonedCategory);
+        }
+
+        foreach (var item in source.ChecklistItems.OrderBy(x => x.SortOrder).ThenBy(x => x.ItemKey, StringComparer.OrdinalIgnoreCase))
+        {
+            db.InspectionChecklistItems.Add(new InspectionChecklistItem
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                InspectionTemplateId = clone.Id,
+                CategoryId = item.CategoryId.HasValue && categoryMap.TryGetValue(item.CategoryId.Value, out var mappedCategoryId)
+                    ? mappedCategoryId
+                    : null,
+                ItemKey = item.ItemKey,
+                Prompt = item.Prompt,
+                ItemType = item.ItemType,
+                IsRequired = item.IsRequired,
+                SortOrder = item.SortOrder,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
+
+        foreach (var assetTypeLink in source.LinkedAssetTypes)
+        {
+            var assetTypeId = assetTypeLink.AssetTypeId;
+            db.InspectionTemplateAssetTypes.Add(new InspectionTemplateAssetType
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                InspectionTemplateId = clone.Id,
+                AssetTypeId = assetTypeId,
+                CreatedAt = now
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "inspection_template.clone",
+            tenantId,
+            actorUserId,
+            "inspection_template",
+            clone.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, clone.Id, cancellationToken);
+    }
+
 
 
     public async Task<InspectionTemplateCategoryResponse> CreateCategoryAsync(
@@ -1256,6 +1346,48 @@ public sealed class InspectionTemplateService(
 
         template.UpdatedAt = DateTimeOffset.UtcNow;
 
+    }
+
+    private async Task<string> GenerateCloneTemplateKeyAsync(
+        Guid tenantId,
+        string sourceTemplateKey,
+        CancellationToken cancellationToken)
+    {
+        var normalizedSource = NormalizeTemplateKey(sourceTemplateKey);
+        var candidate = BuildCloneKey(normalizedSource, "copy");
+        var suffixIndex = 2;
+
+        while (await db.InspectionTemplates.AnyAsync(
+            x => x.TenantId == tenantId && x.TemplateKey == candidate,
+            cancellationToken))
+        {
+            candidate = BuildCloneKey(normalizedSource, $"copy-{suffixIndex++}");
+        }
+
+        return candidate;
+    }
+
+    private static string BuildCloneKey(string normalizedSource, string suffix)
+    {
+        const int maxLength = 128;
+        var normalized = normalizedSource.Trim().ToLowerInvariant();
+        var normalizedSuffix = suffix.Trim().ToLowerInvariant();
+        var separator = "-";
+        var availableSourceLength = maxLength - separator.Length - normalizedSuffix.Length;
+
+        if (availableSourceLength <= 0)
+        {
+            return normalizedSuffix.Length <= maxLength
+                ? normalizedSuffix[..maxLength]
+                : normalizedSuffix[..maxLength];
+        }
+
+        var trimmedSource = normalized.Length > availableSourceLength
+            ? normalized[..availableSourceLength]
+            : normalized;
+
+        var candidate = $"{trimmedSource}{separator}{normalizedSuffix}";
+        return candidate.Length <= maxLength ? candidate : candidate[..maxLength];
     }
 
 

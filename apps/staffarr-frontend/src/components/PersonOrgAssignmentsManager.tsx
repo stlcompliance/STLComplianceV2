@@ -1,5 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { OrgUnitAssignmentResponse, OrgUnitResponse } from '../api/types'
 
 interface PersonOrgAssignmentsManagerProps {
@@ -40,6 +40,13 @@ function byType(orgUnits: OrgUnitResponse[], unitType: string): OrgUnitResponse[
 
 function displayUnitName(orgUnits: OrgUnitResponse[], orgUnitId: string): string {
   return orgUnits.find((x) => x.orgUnitId === orgUnitId)?.name ?? orgUnitId
+}
+
+function toPickerOptions(orgUnits: OrgUnitResponse[]): PickerOption[] {
+  return orgUnits.map((unit) => ({
+    value: unit.orgUnitId,
+    label: unit.name,
+  }))
 }
 
 export function formatAssignmentMutationError(errorMessage: string | null): string | null {
@@ -83,6 +90,10 @@ export function PersonOrgAssignmentsManager({
   const departmentUnits = useMemo(() => byType(orgUnits, 'department'), [orgUnits])
   const teamUnits = useMemo(() => byType(orgUnits, 'team'), [orgUnits])
   const positionUnits = useMemo(() => byType(orgUnits, 'position'), [orgUnits])
+  const siteOptions = useMemo(() => toPickerOptions(siteUnits), [siteUnits])
+  const departmentOptions = useMemo(() => toPickerOptions(departmentUnits), [departmentUnits])
+  const teamOptions = useMemo(() => toPickerOptions(teamUnits), [teamUnits])
+  const positionOptions = useMemo(() => toPickerOptions(positionUnits), [positionUnits])
   const normalizedError = formatAssignmentMutationError(actionErrorMessage)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null)
 
@@ -99,6 +110,39 @@ export function PersonOrgAssignmentsManager({
   const selected = selectedAssignmentId
     ? assignments.find((x) => x.assignmentId === selectedAssignmentId) ?? null
     : null
+
+  const selectedCreateSiteOption = useMemo(
+    () => siteOptions.find((option) => option.value === createSiteId),
+    [createSiteId, siteOptions],
+  )
+  const selectedCreateDepartmentOption = useMemo(
+    () => departmentOptions.find((option) => option.value === createDepartmentId),
+    [createDepartmentId, departmentOptions],
+  )
+  const selectedCreateTeamOption = useMemo(
+    () => teamOptions.find((option) => option.value === createTeamId),
+    [createTeamId, teamOptions],
+  )
+  const selectedCreatePositionOption = useMemo(
+    () => positionOptions.find((option) => option.value === createPositionId),
+    [createPositionId, positionOptions],
+  )
+  const selectedEditSiteOption = useMemo(
+    () => siteOptions.find((option) => option.value === editSiteId),
+    [editSiteId, siteOptions],
+  )
+  const selectedEditDepartmentOption = useMemo(
+    () => departmentOptions.find((option) => option.value === editDepartmentId),
+    [editDepartmentId, departmentOptions],
+  )
+  const selectedEditTeamOption = useMemo(
+    () => teamOptions.find((option) => option.value === editTeamId),
+    [editTeamId, teamOptions],
+  )
+  const selectedEditPositionOption = useMemo(
+    () => positionOptions.find((option) => option.value === editPositionId),
+    [editPositionId, positionOptions],
+  )
 
   const hasAllUnitTypes =
     siteUnits.length > 0 && departmentUnits.length > 0 && teamUnits.length > 0 && positionUnits.length > 0
@@ -194,78 +238,50 @@ export function PersonOrgAssignmentsManager({
             {!hasAllUnitTypes ? (
               <p className="text-xs text-amber-300">Create active site/department/team/position org units first.</p>
             ) : null}
-            <label htmlFor="create-assignment-site" className="block text-sm text-slate-300">
-              Site
-              <select
-                id="create-assignment-site"
-                value={createSiteId}
-                onChange={(event) => setCreateSiteId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!hasAllUnitTypes}
-              >
-                <option value="">Select site</option>
-                {siteUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="create-assignment-department" className="block text-sm text-slate-300">
-              Department
-              <select
-                id="create-assignment-department"
-                value={createDepartmentId}
-                onChange={(event) => setCreateDepartmentId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!hasAllUnitTypes}
-              >
-                <option value="">Select department</option>
-                {departmentUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="create-assignment-team" className="block text-sm text-slate-300">
-              Team
-              <select
-                id="create-assignment-team"
-                value={createTeamId}
-                onChange={(event) => setCreateTeamId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!hasAllUnitTypes}
-              >
-                <option value="">Select team</option>
-                {teamUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="create-assignment-position" className="block text-sm text-slate-300">
-              Position
-              <select
-                id="create-assignment-position"
-                value={createPositionId}
-                onChange={(event) => setCreatePositionId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!hasAllUnitTypes}
-              >
-                <option value="">Select position</option>
-                {positionUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="create-assignment-site"
+              label="Site"
+              value={createSiteId}
+              onChange={setCreateSiteId}
+              options={siteOptions}
+              placeholder="Search sites…"
+              testId="create-assignment-site-picker"
+              selectedOption={selectedCreateSiteOption}
+              disabled={!hasAllUnitTypes}
+            />
+            <StaticSearchPicker
+              id="create-assignment-department"
+              label="Department"
+              value={createDepartmentId}
+              onChange={setCreateDepartmentId}
+              options={departmentOptions}
+              placeholder="Search departments…"
+              testId="create-assignment-department-picker"
+              selectedOption={selectedCreateDepartmentOption}
+              disabled={!hasAllUnitTypes}
+            />
+            <StaticSearchPicker
+              id="create-assignment-team"
+              label="Team"
+              value={createTeamId}
+              onChange={setCreateTeamId}
+              options={teamOptions}
+              placeholder="Search teams…"
+              testId="create-assignment-team-picker"
+              selectedOption={selectedCreateTeamOption}
+              disabled={!hasAllUnitTypes}
+            />
+            <StaticSearchPicker
+              id="create-assignment-position"
+              label="Position"
+              value={createPositionId}
+              onChange={setCreatePositionId}
+              options={positionOptions}
+              placeholder="Search positions…"
+              testId="create-assignment-position-picker"
+              selectedOption={selectedCreatePositionOption}
+              disabled={!hasAllUnitTypes}
+            />
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -278,78 +294,50 @@ export function PersonOrgAssignmentsManager({
           <form className="space-y-3" onSubmit={handleUpdate}>
             <h3 className="text-sm font-medium text-slate-300">Edit selected assignment</h3>
             {!selected ? <p className="text-sm text-slate-500">Select an assignment from the list to edit.</p> : null}
-            <label htmlFor="edit-assignment-site" className="block text-sm text-slate-300">
-              Site
-              <select
-                id="edit-assignment-site"
-                value={editSiteId}
-                onChange={(event) => setEditSiteId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!selected}
-              >
-                <option value="">Select site</option>
-                {siteUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="edit-assignment-department" className="block text-sm text-slate-300">
-              Department
-              <select
-                id="edit-assignment-department"
-                value={editDepartmentId}
-                onChange={(event) => setEditDepartmentId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!selected}
-              >
-                <option value="">Select department</option>
-                {departmentUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="edit-assignment-team" className="block text-sm text-slate-300">
-              Team
-              <select
-                id="edit-assignment-team"
-                value={editTeamId}
-                onChange={(event) => setEditTeamId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!selected}
-              >
-                <option value="">Select team</option>
-                {teamUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="edit-assignment-position" className="block text-sm text-slate-300">
-              Position
-              <select
-                id="edit-assignment-position"
-                value={editPositionId}
-                onChange={(event) => setEditPositionId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-                disabled={!selected}
-              >
-                <option value="">Select position</option>
-                {positionUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="edit-assignment-site"
+              label="Site"
+              value={editSiteId}
+              onChange={setEditSiteId}
+              options={siteOptions}
+              placeholder="Search sites…"
+              testId="edit-assignment-site-picker"
+              selectedOption={selectedEditSiteOption}
+              disabled={!selected}
+            />
+            <StaticSearchPicker
+              id="edit-assignment-department"
+              label="Department"
+              value={editDepartmentId}
+              onChange={setEditDepartmentId}
+              options={departmentOptions}
+              placeholder="Search departments…"
+              testId="edit-assignment-department-picker"
+              selectedOption={selectedEditDepartmentOption}
+              disabled={!selected}
+            />
+            <StaticSearchPicker
+              id="edit-assignment-team"
+              label="Team"
+              value={editTeamId}
+              onChange={setEditTeamId}
+              options={teamOptions}
+              placeholder="Search teams…"
+              testId="edit-assignment-team-picker"
+              selectedOption={selectedEditTeamOption}
+              disabled={!selected}
+            />
+            <StaticSearchPicker
+              id="edit-assignment-position"
+              label="Position"
+              value={editPositionId}
+              onChange={setEditPositionId}
+              options={positionOptions}
+              placeholder="Search positions…"
+              testId="edit-assignment-position-picker"
+              selectedOption={selectedEditPositionOption}
+              disabled={!selected}
+            />
             <div className="flex gap-3">
               <button
                 type="submit"

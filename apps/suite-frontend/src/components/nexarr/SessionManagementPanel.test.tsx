@@ -55,6 +55,7 @@ describe('SessionManagementPanel', () => {
           activeTenantId: '11111111-1111-1111-1111-111111111101',
           isCurrent: true,
           isActive: true,
+          isRemembered: true,
         },
       ],
     })
@@ -62,7 +63,7 @@ describe('SessionManagementPanel', () => {
     renderPanel()
 
     await waitFor(() => {
-      expect(screen.getByText(/Current session/)).toBeInTheDocument()
+      expect(screen.getByText(/Current remembered session/)).toBeInTheDocument()
     })
     expect(screen.getByText('Vitest browser')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign out this device' })).toBeInTheDocument()
@@ -82,6 +83,7 @@ describe('SessionManagementPanel', () => {
           activeTenantId: '11111111-1111-1111-1111-111111111101',
           isCurrent: false,
           isActive: true,
+          isRemembered: false,
         },
       ],
     })
@@ -123,6 +125,7 @@ describe('SessionManagementPanel', () => {
           activeTenantId: '11111111-1111-1111-1111-111111111101',
           isCurrent: true,
           isActive: true,
+          isRemembered: false,
         },
       ],
     })

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { useMemo, useState } from 'react'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import {
   applyBulkDispatch,
@@ -110,19 +110,17 @@ function TripRow({
       {canAssign ? (
         <div className="mt-2 space-y-2">
           <div className="flex flex-wrap gap-1">
-            <select id="unassignedworkqueue-select-field-2"
-              className="min-w-0 flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
+            <StaticSearchPicker
+              label={`Assign driver for ${trip.title}`}
               value={driverId}
-              onChange={(e) => setDriverId(e.target.value)}
-              aria-label={`Assign driver for ${trip.title}`}
-            >
-              <option value="">Assign driver…</option>
-              {driverOptions.map((d) => (
-                <option key={d.personId} value={d.personId}>
-                  {d.displayName}
-                </option>
-              ))}
-            </select>
+              onChange={setDriverId}
+              options={driverOptions.map((driver) => ({
+                value: driver.personId,
+                label: driver.displayName,
+              }))}
+              placeholder="Search drivers…"
+              testId={`unassigned-driver-picker-${trip.tripId}`}
+            />
             <button
               type="button"
               className="rounded bg-violet-700 px-2 py-1 text-xs text-white disabled:opacity-50"
@@ -276,6 +274,21 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
     },
   })
 
+  const queue = queueQuery.data!
+  const driverOptions = queue?.driverRefs.items.map((d) => ({
+    personId: d.personId,
+    displayName: d.displayName,
+  })) ?? []
+  const driverPickerOptions = useMemo<PickerOption[]>(
+    () =>
+      driverOptions.map((driver) => ({
+        value: driver.personId,
+        label: driver.displayName,
+      })),
+    [driverOptions],
+  )
+  const isPending = assignMutation.isPending || bulkMutation.isPending
+
   if (queueQuery.isLoading) {
     return <p className="text-sm text-slate-400">Loading unassigned work queue…</p>
   }
@@ -292,13 +305,6 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       />
     )
   }
-
-  const queue = queueQuery.data!
-  const driverOptions = queue.driverRefs.items.map((d) => ({
-    personId: d.personId,
-    displayName: d.displayName,
-  }))
-  const isPending = assignMutation.isPending || bulkMutation.isPending
 
   const toggleTrip = (tripId: string) => {
     setSelectedIds((prev) => {
@@ -345,19 +351,14 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       {canAssign && queue.items.length > 0 ? (
         <div className="mt-4 space-y-3 rounded-lg border border-slate-700 bg-slate-900/50 p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <select id="unassignedworkqueue-select-field"
-              className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
+            <StaticSearchPicker
+              label="Bulk assign driver"
               value={bulkDriverId}
-              onChange={(e) => setBulkDriverId(e.target.value)}
-              aria-label="Bulk assign driver"
-            >
-              <option value="">Bulk assign driver…</option>
-              {driverOptions.map((d) => (
-                <option key={d.personId} value={d.personId}>
-                  {d.displayName}
-                </option>
-              ))}
-            </select>
+              onChange={setBulkDriverId}
+              options={driverPickerOptions}
+              placeholder="Search drivers…"
+              testId="unassigned-bulk-driver-picker"
+            />
             <button
               type="button"
               className="rounded bg-violet-700 px-3 py-1 text-sm text-white disabled:opacity-50"

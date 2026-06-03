@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type { ReorderSuggestionResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
@@ -54,6 +58,18 @@ export function ReorderEvaluationPanel({
   isSavingPolicy,
   isCreatingPurchaseRequest,
 }: ReorderEvaluationPanelProps) {
+  const partOptions = useMemo<PickerOption[]>(
+    () =>
+      parts.map((part) => ({
+        value: part.partId,
+        label: `${part.partKey} · ${part.displayName}`,
+      })),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedPartId),
+    [partOptions, selectedPartId],
+  )
   const selectedPartLabels = suggestions
     .filter((suggestion) => selectedSuggestionPartIds.includes(suggestion.partId))
     .map((suggestion) => suggestion.partKey)
@@ -90,22 +106,16 @@ export function ReorderEvaluationPanel({
 
       {canManagePolicy ? (
         <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <label htmlFor="reorder-policy-part" className="block text-sm text-slate-400 md:col-span-2">
-            Reorder policy part
-            <select
-              id="reorder-policy-part"
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
-              value={selectedPartId}
-              onChange={(event) => onSelectedPartIdChange(event.target.value)}
-            >
-              <option value="">Select part…</option>
-              {parts.map((part) => (
-                <option key={part.partId} value={part.partId}>
-                  {part.partKey} · {part.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="reorder-policy-part"
+            label="Reorder policy part"
+            value={selectedPartId}
+            onChange={onSelectedPartIdChange}
+            options={partOptions}
+            selectedOption={selectedPartOption}
+            placeholder="Search parts…"
+            testId="reorder-policy-part-picker"
+          />
           <label htmlFor="reorder-policy-point" className="block text-sm text-slate-400">
             Reorder point
             <input

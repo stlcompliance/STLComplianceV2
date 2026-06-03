@@ -41,6 +41,8 @@ interface InspectionTemplateBuilderPanelProps {
   onCreateItem: () => void
   onSaveAssetTypes: () => void
   onActivateTemplate: () => void
+  onCloneTemplate: () => void
+  onImportTemplateJson: (json: string, templateKeyOverride: string) => Promise<void>
   isCreatingTemplate: boolean
   isSavingBuilder: boolean
 }
@@ -79,12 +81,16 @@ export function InspectionTemplateBuilderPanel({
   onCreateItem,
   onSaveAssetTypes,
   onActivateTemplate,
+  onCloneTemplate,
+  onImportTemplateJson,
   isCreatingTemplate,
   isSavingBuilder,
 }: InspectionTemplateBuilderPanelProps) {
   const [showTemplateKeyPolicy, setShowTemplateKeyPolicy] = useState(false)
   const [showCategoryKeyPolicy, setShowCategoryKeyPolicy] = useState(false)
   const [showItemKeyPolicy, setShowItemKeyPolicy] = useState(false)
+  const [importJson, setImportJson] = useState('')
+  const [importTemplateKey, setImportTemplateKey] = useState('')
   const existingTemplateKeys = templates.map((template) => template.templateKey)
   const existingCategoryKeys = selectedTemplate?.categories.map((category) => category.categoryKey) ?? []
   const existingItemKeys = selectedTemplate?.checklistItems.map((item) => item.itemKey) ?? []
@@ -121,6 +127,20 @@ export function InspectionTemplateBuilderPanel({
       }),
     [existingItemKeys, itemPrompt],
   )
+
+  const exportSelectedTemplateJson = () => {
+    if (!selectedTemplate) {
+      return
+    }
+
+    const blob = new Blob([JSON.stringify(selectedTemplate, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${selectedTemplate.templateKey}-template.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => {
     onTemplateKeyChange(generatedTemplateKey)
@@ -244,11 +264,30 @@ export function InspectionTemplateBuilderPanel({
       {selectedTemplate && canManage ? (
         <div className="mt-6 space-y-6 border-t border-slate-800 pt-6">
           <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-medium text-slate-300">
               Editing: {selectedTemplate.name}{' '}
               <span className="text-slate-500">({selectedTemplate.status}, v{selectedTemplate.version})</span>
             </h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded bg-slate-700 px-3 py-1 text-xs text-white hover:bg-slate-600 disabled:opacity-50"
+                disabled={isSavingBuilder}
+                onClick={onCloneTemplate}
+              >
+                Clone template
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-600 px-3 py-1 text-xs text-slate-100 hover:bg-slate-800 disabled:opacity-50"
+                onClick={exportSelectedTemplateJson}
+              >
+                Export JSON
+              </button>
+            </div>
           </div>
+        </div>
 
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
             <div className="space-y-1 text-sm">
@@ -289,6 +328,48 @@ export function InspectionTemplateBuilderPanel({
                 onClick={onCreateCategory}
               >
                 Add category
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-4">
+            <h3 className="text-sm font-medium text-slate-300">Import template JSON</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Paste an exported template payload, optionally override the template key, and import it as a new draft.
+            </p>
+            <label htmlFor="inspectiontemplatebuilder-import-key" className="mt-3 block text-sm text-slate-300">
+              Imported template key override
+              <input
+                id="inspectiontemplatebuilder-import-key"
+                value={importTemplateKey}
+                onChange={(event) => setImportTemplateKey(event.target.value)}
+                placeholder="Leave blank to reuse the exported key"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+              />
+            </label>
+            <label htmlFor="inspectiontemplatebuilder-import-json" className="mt-3 block text-sm text-slate-300">
+              Template JSON
+              <textarea
+                id="inspectiontemplatebuilder-import-json"
+                value={importJson}
+                onChange={(event) => setImportJson(event.target.value)}
+                rows={8}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 font-mono text-xs"
+                placeholder="Paste exported template JSON here"
+              />
+            </label>
+            <div className="mt-3">
+              <button
+                type="button"
+                className="rounded bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+                disabled={isSavingBuilder || !importJson.trim()}
+                onClick={async () => {
+                  await onImportTemplateJson(importJson, importTemplateKey)
+                  setImportJson('')
+                  setImportTemplateKey('')
+                }}
+              >
+                Import template
               </button>
             </div>
           </div>

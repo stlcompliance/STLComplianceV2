@@ -191,6 +191,109 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Route_optimize_reorders_stops_by_scheduled_arrival()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Optimization test route",
+            "Route used to verify stop optimization support.",
+            null,
+            [
+                new CreateRouteStopRequest(
+                    "late",
+                    "Late pickup",
+                    "Site A",
+                    "pickup",
+                    1,
+                    null,
+                    null,
+                    null,
+                    DateTimeOffset.Parse("2026-05-27T11:00:00Z")),
+                new CreateRouteStopRequest(
+                    "early",
+                    "Early delivery",
+                    "Site B",
+                    "delivery",
+                    2,
+                    null,
+                    null,
+                    null,
+                    DateTimeOffset.Parse("2026-05-27T09:00:00Z")),
+            ]));
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        createRouteResponse.EnsureSuccessStatusCode();
+        var created = (await createRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(["late", "early"], created.Stops.Select(x => x.StopKey).ToArray());
+
+        var optimizeRequest = Authorized(HttpMethod.Post, $"/api/routes/{created.RouteId}/optimize", dispatcherToken);
+        var optimizeResponse = await _routarrClient.SendAsync(optimizeRequest);
+        optimizeResponse.EnsureSuccessStatusCode();
+        var optimized = (await optimizeResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(["early", "late"], optimized.Stops.Select(x => x.StopKey).ToArray());
+
+        var getRouteResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/routes/{created.RouteId}", dispatcherToken));
+        getRouteResponse.EnsureSuccessStatusCode();
+        var fetched = (await getRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(["early", "late"], fetched.Stops.Select(x => x.StopKey).ToArray());
+    }
+
+    [Fact]
+    public async Task Route_geofence_check_records_result_and_updates_stop()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Geofence test route",
+            "Route used to verify stop geofence checks.",
+            null,
+            [
+                new CreateRouteStopRequest(
+                    "anchor",
+                    "Warehouse gate",
+                    "Site A",
+                    "pickup",
+                    1,
+                    40.0001m,
+                    -105.0002m,
+                    250),
+            ]));
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        createRouteResponse.EnsureSuccessStatusCode();
+        var route = (await createRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        var stop = Assert.Single(route.Stops);
+        Assert.Equal(40.0001m, stop.GeofenceAnchorLatitude);
+        Assert.Equal(-105.0002m, stop.GeofenceAnchorLongitude);
+        Assert.Equal(250, stop.GeofenceRadiusMeters);
+
+        var geofenceRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/routes/stops/{stop.StopId}/geofence-check",
+            dispatcherToken);
+        geofenceRequest.Content = JsonContent.Create(new CheckRouteStopGeofenceRequest(40.0002m, -105.0001m));
+        var geofenceResponse = await _routarrClient.SendAsync(geofenceRequest);
+        geofenceResponse.EnsureSuccessStatusCode();
+        var checkedStop = (await geofenceResponse.Content.ReadFromJsonAsync<RouteStopSummaryResponse>())!;
+
+        Assert.Equal(stop.StopId, checkedStop.StopId);
+        Assert.Equal("inside", checkedStop.LastGeofenceResult);
+        Assert.NotNull(checkedStop.LastGeofenceCheckAt);
+        Assert.Equal(40.0002m, checkedStop.LastGeofenceReportedLatitude);
+        Assert.Equal(-105.0001m, checkedStop.LastGeofenceReportedLongitude);
+        Assert.NotNull(checkedStop.LastGeofenceDistanceMeters);
+        Assert.True(checkedStop.LastGeofenceDistanceMeters <= 250);
+
+        var routeResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/routes/{route.RouteId}", dispatcherToken));
+        routeResponse.EnsureSuccessStatusCode();
+        var updatedRoute = (await routeResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal("inside", updatedRoute.Stops.Single().LastGeofenceResult);
+    }
+
+    [Fact]
     public async Task Route_v1_alias_create_and_get_return_v1_location()
     {
         var dispatcherToken = await RedeemRoutArrTokenAsync();
@@ -235,14 +338,16 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
                     "pickup",
                     1,
                     null,
+                    null,
+                    null,
+                    null,
                     _staffarrSiteOrgUnitId),
                 new CreateRouteStopRequest(
                     "delivery",
                     "Delivery",
                     "123 Customer Ave",
                     "delivery",
-                    2,
-                    null),
+                    2),
             ]));
         var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
         createRouteResponse.EnsureSuccessStatusCode();
@@ -274,6 +379,9 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
                     "Internal depot",
                     "pickup",
                     1,
+                    null,
+                    null,
+                    null,
                     null,
                     Guid.NewGuid()),
             ]));

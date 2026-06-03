@@ -1,5 +1,44 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
 
 import { PurchaseOrderPanel } from './PurchaseOrderPanel'
 
@@ -130,7 +169,38 @@ describe('PurchaseOrderPanel', () => {
     expect(screen.getByText('po-2026-001')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve PO' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create purchase order' })).toBeInTheDocument()
+    expect(screen.getByTestId('purchase-order-create-pr-picker')).toHaveValue('pr-1')
+    expect(screen.getByTestId('purchase-order-create-pr-picker-options')).toHaveTextContent(
+      'pr-2026-001 — Shop restock · Acme Supply',
+    )
     expect(screen.getByTestId('purchase-order-line-line-1')).toHaveTextContent('6 each ordered')
+  })
+
+  it('updates the selected approved purchase request through the searchable picker', async () => {
+    render(
+      <PurchaseOrderPanel
+        {...baseProps}
+        approvedPurchaseRequests={[
+          baseProps.approvedPurchaseRequests[0]!,
+          {
+            ...baseProps.approvedPurchaseRequests[0]!,
+            purchaseRequestId: 'pr-2',
+            requestKey: 'pr-2026-002',
+            title: 'Emergency repair kit',
+            vendorPartyId: 'vendor-2',
+            vendorPartyKey: 'vendor-b',
+            vendorDisplayName: 'Bravo Supply',
+          },
+        ]}
+        selectedPurchaseRequestId=""
+      />,
+    )
+
+    fireEvent.change(screen.getByTestId('purchase-order-create-pr-picker'), {
+      target: { value: 'pr-2026-002' },
+    })
+
+    expect(baseProps.onSelectedPurchaseRequestIdChange).toHaveBeenLastCalledWith('pr-2026-002')
   })
 
   it('shows cancel controls for draft purchase orders', () => {

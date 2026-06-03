@@ -80,7 +80,10 @@ public sealed record PlatformUserMfaResponse(
     Guid UserId,
     bool IsMfaEnabled,
     bool WasAlreadySet,
-    DateTimeOffset ModifiedAt);
+    DateTimeOffset ModifiedAt,
+    string? MfaSecret = null,
+    string? ProvisioningUri = null,
+    IReadOnlyList<string>? RecoveryCodes = null);
 
 public sealed record PlatformUsersListResponse(
     int TotalCount,

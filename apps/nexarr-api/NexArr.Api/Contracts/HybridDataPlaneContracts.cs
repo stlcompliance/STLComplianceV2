@@ -21,6 +21,22 @@ public sealed record UpsertDataPlaneProfileRequest(
     string TrustStatus,
     string? Notes);
 
+public sealed record ValidateDataPlaneProfileRequest(
+    Guid TenantId,
+    string ProductKey,
+    string DeploymentMode,
+    string? DataEndpointUrl,
+    string? Notes);
+
+public sealed record ValidateDataPlaneProfileResponse(
+    DataPlaneProfileResponse Profile,
+    string ValidationStatus,
+    string? ReadyUrl,
+    double? LatencyMs,
+    string? ErrorCode,
+    string? ErrorMessage,
+    DateTimeOffset ValidatedAt);
+
 public sealed record DataPlaneDefaultProfileResponse(
     Guid TenantId,
     string ProductKey,

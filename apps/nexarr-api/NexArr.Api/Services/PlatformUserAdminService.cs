@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
@@ -14,7 +15,9 @@ public sealed class PlatformUserAdminService(
     IPasswordHasher passwordHasher,
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    MfaService mfaService,
+    PlatformSessionSettingsService sessionSettingsService)
 {
     private static readonly HashSet<string> AllowedTenantRoleKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -142,7 +145,7 @@ public sealed class PlatformUserAdminService(
 
         var email = NormalizeEmail(request.Email);
         var displayName = NormalizeDisplayName(request.DisplayName);
-        ValidatePassword(request.Password);
+        await ValidatePasswordAsync(request.Password, cancellationToken);
 
         var exists = await db.Users.AnyAsync(u => u.Email == email, cancellationToken);
         if (exists)
@@ -573,7 +576,7 @@ public sealed class PlatformUserAdminService(
     {
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
         RequireSensitiveActionConfirmation(confirmationToken);
-        ValidatePassword(request.NewPassword);
+        await ValidatePasswordAsync(request.NewPassword, cancellationToken);
 
         var user = await db.Users
             .Include(u => u.Credential)
@@ -681,11 +684,44 @@ public sealed class PlatformUserAdminService(
         var actorUserId = principal.GetUserId();
         var now = DateTimeOffset.UtcNow;
         var wasAlreadySet = user.Credential.IsMfaEnabled == request.IsEnabled;
+        string? mfaSecret = null;
+        IReadOnlyList<string>? recoveryCodes = null;
+
         if (!wasAlreadySet)
         {
             user.Credential.IsMfaEnabled = request.IsEnabled;
+            if (request.IsEnabled)
+            {
+                mfaSecret = mfaService.GenerateSecret();
+                recoveryCodes = mfaService.GenerateRecoveryCodes();
+                user.Credential.MfaSecret = mfaSecret;
+                user.Credential.MfaRecoveryCodeHashesJson =
+                    JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
+            }
+            else
+            {
+                user.Credential.MfaSecret = null;
+                user.Credential.MfaRecoveryCodeHashesJson = null;
+            }
             user.ModifiedAt = now;
             await db.SaveChangesAsync(cancellationToken);
+        }
+        else if (request.IsEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(user.Credential.MfaSecret))
+            {
+                mfaSecret = mfaService.GenerateSecret();
+                recoveryCodes = mfaService.GenerateRecoveryCodes();
+                user.Credential.MfaSecret = mfaSecret;
+                user.Credential.MfaRecoveryCodeHashesJson =
+                    JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
+                user.ModifiedAt = now;
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                mfaSecret = user.Credential.MfaSecret;
+            }
         }
 
         var action = request.IsEnabled ? "user.mfa_enabled" : "user.mfa_disabled";
@@ -716,7 +752,12 @@ public sealed class PlatformUserAdminService(
             user.Id,
             user.Credential.IsMfaEnabled,
             wasAlreadySet,
-            user.ModifiedAt);
+            user.ModifiedAt,
+            mfaSecret,
+            request.IsEnabled && !string.IsNullOrWhiteSpace(mfaSecret)
+                ? mfaService.BuildProvisioningUri("STL Compliance Suite", user.Email, mfaSecret)
+                : null,
+            recoveryCodes);
     }
 
     public async Task<PlatformUserTenantMembershipsResponse> ListTenantMembershipsAsync(
@@ -1457,13 +1498,19 @@ public sealed class PlatformUserAdminService(
         return normalized.Length <= 200 ? normalized : normalized[..200];
     }
 
-    private static void ValidatePassword(string password)
+    private async Task ValidatePasswordAsync(string password, CancellationToken cancellationToken)
     {
-        if (!PasswordResetRules.MeetsPasswordPolicy(password))
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+        if (!PasswordResetRules.MeetsPasswordPolicy(
+                password,
+                settings.PasswordMinLength,
+                settings.RequirePasswordComplexity))
         {
             throw new StlApiException(
                 "auth.password_policy",
-                PasswordResetRules.PasswordPolicyMessage(),
+                PasswordResetRules.PasswordPolicyMessage(
+                    settings.PasswordMinLength,
+                    settings.RequirePasswordComplexity),
                 400);
         }
     }

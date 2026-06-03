@@ -49,6 +49,7 @@ public sealed class TrainingProgramVersionService(TrainArrDbContext db, ITrainAr
         var program = await db.TrainingPrograms
             .Include(x => x.ProgramDefinitions)
             .ThenInclude(x => x.TrainingDefinition)
+            .Include(x => x.ContentReferences)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == request.TrainingProgramId, cancellationToken);
 
         if (program is null)

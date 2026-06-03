@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type { BackorderResponse, PurchaseOrderResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
@@ -79,16 +83,23 @@ export function BackordersPanel({
   isCancelling,
 }: BackordersPanelProps) {
   const selected = backorders.find((bo) => bo.backorderId === selectedBackorderId)
-  const poLines = issuedPurchaseOrders.flatMap((po) =>
-    po.lines
-      .filter((line) => line.quantityRemaining > 0)
-      .map((line) => ({
-        purchaseOrderLineId: line.lineId,
-        label: `${po.orderKey} · line ${line.lineNumber} · ${line.partKey} (${line.quantityRemaining} remaining)`,
-      })),
+  const poLineOptions = useMemo<PickerOption[]>(
+    () =>
+      issuedPurchaseOrders.flatMap((po) =>
+        po.lines
+          .filter((line) => line.quantityRemaining > 0)
+          .map((line) => ({
+            value: line.lineId,
+            label: `${po.orderKey} · line ${line.lineNumber} · ${line.partKey} (${line.quantityRemaining} remaining)`,
+          })),
+      ),
+    [issuedPurchaseOrders],
   )
-  const selectedPoLineLabel =
-    poLines.find((line) => line.purchaseOrderLineId === selectedPurchaseOrderLineId)?.label ?? ''
+  const selectedPoLineOption = useMemo<PickerOption | undefined>(
+    () => poLineOptions.find((line) => line.value === selectedPurchaseOrderLineId),
+    [poLineOptions, selectedPurchaseOrderLineId],
+  )
+  const selectedPoLineLabel = selectedPoLineOption?.label ?? ''
   const backorderKeySource = selectedPoLineLabel ? `${selectedPoLineLabel} backorder` : ''
   const existingBackorderKeys = backorders.map((backorder) => backorder.backorderKey)
 
@@ -160,19 +171,15 @@ export function BackordersPanel({
             <h3 className="text-sm font-medium text-slate-300">Record from PO line</h3>
             <label htmlFor="backorder-po-line" className="block text-sm text-slate-400">
               Backorder PO line
-              <select
+              <StaticSearchPicker
                 id="backorder-po-line"
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+                placeholder="Search purchase order lines…"
                 value={selectedPurchaseOrderLineId}
-                onChange={(e) => onSelectedPurchaseOrderLineIdChange(e.target.value)}
-              >
-                <option value="">Select line…</option>
-                {poLines.map((line) => (
-                  <option key={line.purchaseOrderLineId} value={line.purchaseOrderLineId}>
-                    {line.label}
-                  </option>
-                ))}
-              </select>
+                options={poLineOptions}
+                selectedOption={selectedPoLineOption}
+                onChange={onSelectedPurchaseOrderLineIdChange}
+                testId="backorder-po-line-picker"
+              />
             </label>
             <GeneratedKeyFieldGroup
               sourceLabel={backorderKeySource}

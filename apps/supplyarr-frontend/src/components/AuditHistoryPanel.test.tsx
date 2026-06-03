@@ -2,6 +2,45 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { AuditHistoryPanel } from './AuditHistoryPanel'
 
 vi.mock('../api/client', () => ({
@@ -34,6 +73,8 @@ describe('AuditHistoryPanel', () => {
     )
 
     expect(await screen.findByTestId('audit-history-panel')).toBeInTheDocument()
+    expect(screen.getByLabelText('Target type')).toBeInTheDocument()
+    expect(screen.getByLabelText('Target id')).toBeInTheDocument()
     expect(await screen.findByText('supplyarr.parties.create')).toBeInTheDocument()
   })
 

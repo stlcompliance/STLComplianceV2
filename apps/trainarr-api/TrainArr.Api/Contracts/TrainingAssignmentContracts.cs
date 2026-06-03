@@ -114,4 +114,31 @@ public sealed record CompleteTrainingAssignmentResponse(
 
     QualificationIssueResponse QualificationIssue);
 
+public static class TrainingAssignmentLaborTypes
+{
+    public const string Delivery = "delivery";
+    public const string Preparation = "preparation";
+    public const string Review = "review";
+    public const string Administration = "administration";
+    public const string Travel = "travel";
+}
+
+public sealed record CreateTrainingAssignmentLaborEntryRequest(
+    string LaborTypeKey,
+    decimal HoursWorked,
+    decimal CostPerHour,
+    string? Notes = null);
+
+public sealed record TrainingAssignmentLaborEntryResponse(
+    Guid LaborEntryId,
+    Guid TrainingAssignmentId,
+    string LaborTypeKey,
+    decimal HoursWorked,
+    decimal CostPerHour,
+    decimal TotalCost,
+    string? Notes,
+    Guid? LoggedByUserId,
+    DateTimeOffset LoggedAt,
+    DateTimeOffset CreatedAt);
+
 

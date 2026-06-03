@@ -18,12 +18,15 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrSettingsEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
+        app.MapSupplyArrVendorCatalogApiEndpoints();
+        app.MapSupplyArrVendorEmailInboxEndpoints();
         app.MapSupplyArrPartAliasEndpoints();
         app.MapSupplyArrExternalReferenceEndpoints();
         app.MapSupplyArrInventoryEndpoints();
         app.MapSupplyArrStockReservationEndpoints();
         app.MapSupplyArrWmsMovementEndpoints();
         app.MapSupplyArrRfqEndpoints();
+        app.MapSupplyArrVendorPortalEndpoints();
         app.MapSupplyArrQuoteAliasEndpoints();
         app.MapSupplyArrSupplierOnboardingEndpoints();
         app.MapSupplyArrVendorDocumentEndpoints();
@@ -65,6 +68,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrApprovalReminderEndpoints();
         app.MapSupplyArrProcurementExceptionEscalationSettingsEndpoints();
         app.MapSupplyArrInternalProcurementExceptionEscalationEndpoints();
+        app.MapSupplyArrInternalProcurementExceptionAutomationEndpoints();
         app.MapSupplyArrDemandProcessingSettingsEndpoints();
         app.MapSupplyArrInternalDemandProcessingEndpoints();
         app.MapSupplyArrDemandProcessingEndpoints();

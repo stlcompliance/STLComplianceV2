@@ -1,5 +1,44 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 import { WorkOrderLaborEvidencePanel } from './WorkOrderLaborEvidencePanel'
 
 const baseProps = {
@@ -74,5 +113,7 @@ describe('WorkOrderLaborEvidencePanel', () => {
     expect(screen.getByText('Evidence')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-evidence-type')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Log labor' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Technician for labor')).toBeInTheDocument()
+    expect(screen.getByLabelText('Linked task line')).toBeInTheDocument()
   })
 })

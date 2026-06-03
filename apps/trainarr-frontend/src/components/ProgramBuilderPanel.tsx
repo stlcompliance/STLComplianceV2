@@ -1,14 +1,18 @@
+import { useMutation } from '@tanstack/react-query'
 import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
+import { generateTrainingProgramDraft } from '../api/client'
 import type {
   TrainingDefinitionResponse,
+  TrainingProgramDraftResponse,
   TrainingProgramDetailResponse,
   TrainingProgramSummaryResponse,
   TrainingProgramVersionSummaryResponse,
 } from '../api/types'
 
 interface ProgramBuilderPanelProps {
+  accessToken: string
   mode: 'drawer' | 'details' | 'create'
   programs: TrainingProgramSummaryResponse[]
   definitions: TrainingDefinitionResponse[]
@@ -38,6 +42,7 @@ interface ProgramBuilderPanelProps {
 }
 
 export function ProgramBuilderPanel({
+  accessToken,
   mode,
   programs,
   definitions,
@@ -75,6 +80,8 @@ export function ProgramBuilderPanel({
   ]
   const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
   const [selectedColumns, setSelectedColumns] = useState<ProgramColumnKey[]>(['name', 'definitions', 'status', 'publishedVersions'])
+  const [draftPrompt, setDraftPrompt] = useState('')
+  const [draftSuggestion, setDraftSuggestion] = useState<TrainingProgramDraftResponse | null>(null)
   void programKey
   const isEditing = Boolean(selectedProgramId)
   const editStatus = selectedProgramDetail?.status ?? 'draft'
@@ -109,6 +116,45 @@ export function ProgramBuilderPanel({
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(selectedColumns))
   }, [selectedColumns])
+
+  const generateDraftMutation = useMutation({
+    mutationFn: async () => {
+      const prompt = draftPrompt.trim()
+      if (!prompt) {
+        throw new Error('Enter a training scenario before generating a draft.')
+      }
+      return generateTrainingProgramDraft(accessToken, { prompt })
+    },
+    onSuccess: (result) => {
+      setDraftSuggestion(result)
+    },
+  })
+
+  const applyDraftSuggestion = () => {
+    if (!draftSuggestion) {
+      return
+    }
+
+    onProgramNameChange(draftSuggestion.name)
+    onProgramDescriptionChange(draftSuggestion.description)
+
+    const targetIds = new Set(draftSuggestion.trainingDefinitionIds)
+    const selectedIds = new Set(selectedDefinitionIds)
+    for (const definitionId of selectedDefinitionIds) {
+      if (!targetIds.has(definitionId)) {
+        onToggleDefinition(definitionId)
+      }
+    }
+    for (const definitionId of draftSuggestion.trainingDefinitionIds) {
+      if (!selectedIds.has(definitionId)) {
+        onToggleDefinition(definitionId)
+      }
+    }
+
+    if (draftSuggestion.trainingDefinitionIds.length > 0) {
+      onSelectDefinitionForCitations(draftSuggestion.trainingDefinitionIds[0])
+    }
+  }
 
   const canPublish =
     isEditing &&
@@ -195,6 +241,72 @@ export function ProgramBuilderPanel({
 
       {mode === 'create' ? (
         <>
+          <section className="mt-4 rounded-xl border border-violet-700/40 bg-violet-950/20 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-100">AI-assisted draft</h3>
+                <p className="mt-1 text-sm text-violet-50/80">
+                  Describe the audience, role, or compliance need. The assistant suggests a draft name, description,
+                  and active definitions to seed the program.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded bg-violet-500 px-3 py-1.5 text-sm font-medium text-slate-950 hover:bg-violet-400 disabled:opacity-50"
+                disabled={generateDraftMutation.isPending || !draftPrompt.trim()}
+                onClick={() => generateDraftMutation.mutate()}
+              >
+                {generateDraftMutation.isPending ? 'Generating…' : 'Generate draft'}
+              </button>
+            </div>
+            <label htmlFor="program-builder-ai-prompt" className="mt-4 block text-xs text-violet-100/80">
+              Draft prompt
+              <textarea
+                id="program-builder-ai-prompt"
+                className="mt-1 w-full rounded border border-violet-700/40 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                rows={3}
+                value={draftPrompt}
+                onChange={(e) => setDraftPrompt(e.target.value)}
+                placeholder="Example: Create an onboarding program for hazmat drivers with forklift and annual compliance refreshers."
+              />
+            </label>
+            {draftSuggestion ? (
+              <div className="mt-4 rounded-lg border border-violet-700/40 bg-slate-950/60 p-4 text-sm text-slate-200">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-violet-200/70">Suggested draft</p>
+                    <h4 className="mt-1 text-lg font-semibold text-white">{draftSuggestion.name}</h4>
+                    <p className="mt-1 text-sm text-slate-300">{draftSuggestion.summary}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded border border-violet-500 px-3 py-1.5 text-xs font-medium text-violet-100 hover:bg-violet-950/50"
+                    onClick={applyDraftSuggestion}
+                  >
+                    Apply draft
+                  </button>
+                </div>
+                <p className="mt-3 whitespace-pre-line text-sm text-slate-300">{draftSuggestion.description}</p>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div className="rounded border border-slate-700 bg-slate-900/70 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Prompt</p>
+                    <p className="mt-1 text-sm text-slate-200">{draftSuggestion.prompt}</p>
+                  </div>
+                  <div className="rounded border border-slate-700 bg-slate-900/70 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Selected definitions</p>
+                    <ul className="mt-2 space-y-1 text-sm text-slate-200">
+                      {draftSuggestion.matchedDefinitions.map((definition) => (
+                        <li key={definition.trainingDefinitionId} className="rounded border border-slate-700 bg-slate-950/50 px-3 py-2">
+                          <p className="font-medium text-white">{definition.name}</p>
+                          <p className="mt-1 text-xs text-slate-400">{definition.matchReason}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </section>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <p className="text-xs text-slate-400">Reference is auto-generated from program name.</p>

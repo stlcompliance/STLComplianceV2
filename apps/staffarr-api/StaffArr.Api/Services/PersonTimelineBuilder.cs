@@ -39,6 +39,121 @@ public static class PersonTimelineBuilder
                 incident.SourceIncidentId?.ToString()));
         }
 
+        var incidentIdStrings = incidents.Select(x => x.Id.ToString()).ToArray();
+        var incidentStatusUpdates = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.Action == "incident.status_update"
+                && incidentIdStrings.Contains(x.TargetId))
+            .OrderBy(x => x.OccurredAt)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var statusUpdate in incidentStatusUpdates)
+        {
+            if (!Guid.TryParse(statusUpdate.TargetId, out var incidentId))
+            {
+                continue;
+            }
+
+            var incident = incidents.FirstOrDefault(x => x.Id == incidentId);
+            if (incident is null)
+            {
+                continue;
+            }
+
+            var status = string.IsNullOrWhiteSpace(statusUpdate.ReasonCode)
+                ? incident.Status
+                : statusUpdate.ReasonCode!;
+            var eventType = string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase)
+                ? "incident_closed"
+                : string.Equals(status, "open", StringComparison.OrdinalIgnoreCase)
+                    ? "incident_reopened"
+                    : "incident_status_updated";
+
+            entries.Add(new PersonTimelineEntryResponse(
+                $"incident:{incident.Id}:status:{statusUpdate.Id}",
+                personId,
+                "incident",
+                eventType,
+                string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase)
+                    ? $"Incident closed: {incident.Title}"
+                    : string.Equals(status, "open", StringComparison.OrdinalIgnoreCase)
+                        ? $"Incident reopened: {incident.Title}"
+                        : $"Incident status updated: {incident.Title}",
+                $"{incident.ReasonCategoryKey} · {incident.Severity} · {status}",
+                statusUpdate.OccurredAt,
+                statusUpdate.ActorUserId,
+                "personnel_incident",
+                incident.Id.ToString(),
+                incident.SourceIncidentId?.ToString()));
+        }
+
+        var incidentIds = incidents.Select(x => x.Id).ToArray();
+        var incidentNotes = await db.IncidentNotes
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && incidentIds.Contains(x.IncidentId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var note in incidentNotes)
+        {
+            var noteEventType = string.Equals(note.NoteTypeKey, "corrective_action", StringComparison.OrdinalIgnoreCase)
+                ? "incident_corrective_action_added"
+                : "incident_note_added";
+            entries.Add(new PersonTimelineEntryResponse(
+                $"incident:{note.IncidentId}:note:{note.Id}:created",
+                personId,
+                "incident",
+                noteEventType,
+                string.Equals(note.NoteTypeKey, "corrective_action", StringComparison.OrdinalIgnoreCase)
+                    ? $"Corrective action added: {note.Subject}"
+                    : $"Incident note added: {note.Subject}",
+                $"{note.NoteTypeKey} · {note.Status}",
+                note.CreatedAt,
+                note.CreatedByUserId,
+                "personnel_incident",
+                note.IncidentId.ToString(),
+                note.Id.ToString()));
+
+            if (string.Equals(note.NoteTypeKey, "corrective_action", StringComparison.OrdinalIgnoreCase)
+                && note.CompletedAt is DateTimeOffset completedAt)
+            {
+                entries.Add(new PersonTimelineEntryResponse(
+                    $"incident:{note.IncidentId}:note:{note.Id}:completed",
+                    personId,
+                    "incident",
+                    "incident_corrective_action_completed",
+                    $"Corrective action completed: {note.Subject}",
+                    $"{note.NoteTypeKey} · completed",
+                    completedAt,
+                    note.CreatedByUserId,
+                    "personnel_incident",
+                    note.IncidentId.ToString(),
+                    note.Id.ToString()));
+            }
+        }
+
+        var incidentAttachments = await db.IncidentAttachments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && incidentIds.Contains(x.IncidentId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var attachment in incidentAttachments)
+        {
+            entries.Add(new PersonTimelineEntryResponse(
+                $"incident:{attachment.IncidentId}:attachment:{attachment.Id}",
+                personId,
+                "incident",
+                "incident_attachment_uploaded",
+                $"Incident attachment uploaded: {attachment.Title}",
+                $"{attachment.FileName} · {attachment.ContentType}",
+                attachment.CreatedAt,
+                attachment.UploadedByUserId,
+                "personnel_incident",
+                attachment.IncidentId.ToString(),
+                attachment.Id.ToString()));
+        }
+
         var routings = await (
             from routing in db.IncidentTrainarrRoutings.AsNoTracking()
             join incident in db.PersonnelIncidents.AsNoTracking()

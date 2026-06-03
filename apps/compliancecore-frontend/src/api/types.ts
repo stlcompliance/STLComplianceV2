@@ -553,12 +553,111 @@ export interface AuditPackageExportResponse {
   generatedAt: string
   dateRange: { from: string | null; to: string | null } | null
   counts: AuditPackageCountsResponse
-  auditEvents: unknown[]
-  findings: unknown[]
-  evaluationRuns: unknown[]
-  workflowGateChecks: unknown[]
-  waivers: unknown[]
-  rulePacks: unknown[]
+  auditEvents: AuditEventExportItem[]
+  findings: AuditPackageFindingItem[]
+  evaluationRuns: AuditPackageEvaluationRunItem[]
+  workflowGateChecks: AuditPackageWorkflowGateCheckItem[]
+  waivers: AuditPackageWaiverItem[]
+  rulePacks: AuditPackageRulePackItem[]
+}
+
+export interface AuditEventExportItem {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface AuditPackageFindingItem {
+  findingId: string
+  rulePackId: string
+  packKey: string
+  ruleEvaluationRunId: string | null
+  findingKey: string
+  severity: string
+  status: string
+  ruleKey: string | null
+  factKey: string | null
+  title: string
+  message: string
+  reasonCode: string
+  createdAt: string
+}
+
+export interface AuditPackageEvaluationRunItem {
+  evaluationRunId: string
+  rulePackId: string
+  packKey: string
+  actorUserId: string | null
+  status: string
+  overallResult: string
+  factInputsJson: string
+  ruleResultsJson: string
+  appliedWaiverId: string | null
+  appliedWaiverKey: string | null
+  createdAt: string
+}
+
+export interface AuditPackageWorkflowGateCheckItem {
+  checkResultId: string
+  gateKey: string
+  rulePackId: string
+  packKey: string
+  ruleEvaluationRunId: string | null
+  outcome: string
+  reasonCode: string
+  message: string
+  appliedWaiverId: string | null
+  appliedWaiverKey: string | null
+  checkedAt: string
+}
+
+export interface AuditPackageWaiverItem {
+  waiverId: string
+  waiverKey: string
+  rulePackId: string
+  packKey: string
+  ruleKey: string | null
+  gateKey: string | null
+  subjectScopeKey: string
+  reasonCode: string
+  explanation: string
+  status: string
+  effectiveAt: string
+  expiresAt: string | null
+  approvedByUserId: string | null
+  approvedAt: string | null
+  createdAt: string
+}
+
+export interface AuditPackageRulePackItem {
+  rulePackId: string
+  packKey: string
+  label: string
+  description: string
+  versionNumber: number
+  status: string
+  isActive: boolean
+  regulatoryProgramId: string
+  programKey: string
+  hasRuleContent: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RuleEvaluationAuditExportResponse {
+  exportId: string
+  tenantId: string
+  generatedAt: string
+  evaluationRun: AuditPackageEvaluationRunItem
+  workflowGateChecks: AuditPackageWorkflowGateCheckItem[]
+  findings: AuditPackageFindingItem[]
+  waivers: AuditPackageWaiverItem[]
 }
 
 export interface CsvBundleManifestResponse {
@@ -1189,6 +1288,40 @@ export interface ReadinessForecastSummaryResponse {
   generatedAt: string
 }
 
+export interface AuditReadinessReportSummaryResponse extends ReadinessForecastSummaryResponse {
+  forecasts: ReadinessForecastResponse[]
+}
+
+export interface RemediationQueueItemResponse {
+  warningId: string
+  runId: string
+  rulePackId: string
+  packKey: string
+  factKey: string
+  warningType: string
+  severity: string
+  reasonCode: string
+  queueState: string
+  recommendedAction: string
+  hasMirrorAtScope: boolean
+  isRequiredInRule: boolean
+  isRequiredInCatalog: boolean
+  summary: string
+  evaluatedAt: string
+}
+
+export interface RemediationQueueReportSummaryResponse {
+  totalWarnings: number
+  queuedCount: number
+  criticalCount: number
+  highCount: number
+  mediumCount: number
+  lowCount: number
+  lastEvaluatedAt: string | null
+  generatedAt: string
+  queueItems: RemediationQueueItemResponse[]
+}
+
 export interface RuleChangeMonitoringSummaryResponse {
   totalEvents: number
   eventsLast24Hours: number
@@ -1270,6 +1403,8 @@ export interface FactSourceSyncHealthResponse {
   pendingCount: number
   sources: FactSourceSyncHealthItem[]
 }
+
+export interface ProductIntegrationHealthReportSummaryResponse extends FactSourceSyncHealthResponse {}
 
 export interface ScheduledRuleEvaluationRunSummary {
   runId: string
@@ -1401,6 +1536,54 @@ export interface OperatorReportSummaryResponse {
   rulePackDraftCount: number
   attentionItemCount: number
   recentEvaluations: OperatorReportSummaryItem[]
+}
+
+export interface WaiverReportSummaryItem {
+  waiverId: string
+  waiverKey: string
+  packKey: string
+  subjectScopeKey: string
+  status: string
+  reasonCode: string
+  effectiveAt: string
+  expiresAt: string | null
+  updatedAt: string
+}
+
+export interface WaiverReportSummaryResponse {
+  totalWaivers: number
+  pendingCount: number
+  approvedCount: number
+  rejectedCount: number
+  revokedCount: number
+  expiredCount: number
+  expiringSoonCount: number
+  recentWaivers: WaiverReportSummaryItem[]
+}
+
+export interface ExceptionExemptionReportSummaryItem {
+  exceptionExemptionId: string
+  key: string
+  label: string
+  type: string
+  effectType: string
+  packKey: string
+  citationKey: string | null
+  activeState: string
+  effectiveAt: string | null
+  expiresAt: string | null
+  updatedAt: string
+}
+
+export interface ExceptionExemptionReportSummaryResponse {
+  totalExceptionExemptions: number
+  activeCount: number
+  inactiveCount: number
+  waiverTypeCount: number
+  varianceTypeCount: number
+  specialPermitTypeCount: number
+  expiringSoonCount: number
+  recentExceptionExemptions: ExceptionExemptionReportSummaryItem[]
 }
 
 export interface EntityExportFormatDescriptor {

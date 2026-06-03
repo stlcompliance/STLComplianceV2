@@ -11,6 +11,10 @@ export function LaunchDiagnosticsPage() {
   const [tenantIdFilter, setTenantIdFilter] = useState('')
   const [productKeyFilter, setProductKeyFilter] = useState('')
   const [resultFilter, setResultFilter] = useState('')
+  const [userIdFilter, setUserIdFilter] = useState('')
+  const [correlationIdFilter, setCorrelationIdFilter] = useState('')
+  const [fromUtcFilter, setFromUtcFilter] = useState('')
+  const [toUtcFilter, setToUtcFilter] = useState('')
 
   const diagnosticsQuery = useQuery({
     queryKey: ['platform-admin-launch-diagnostics', tenantIdFilter, productKeyFilter],
@@ -23,18 +27,31 @@ export function LaunchDiagnosticsPage() {
       }),
   })
   const attemptsQuery = useQuery({
-    queryKey: ['platform-admin-launch-attempts', tenantIdFilter, productKeyFilter, resultFilter],
+    queryKey: [
+      'platform-admin-launch-attempts',
+      tenantIdFilter,
+      productKeyFilter,
+      resultFilter,
+      userIdFilter,
+      correlationIdFilter,
+      fromUtcFilter,
+      toUtcFilter,
+    ],
     queryFn: () =>
       nexarr.getPlatformAdminLaunchAttempts({
         tenantId: tenantIdFilter || undefined,
         productKey: productKeyFilter || undefined,
         result: resultFilter || undefined,
+        userId: userIdFilter || undefined,
+        correlationId: correlationIdFilter || undefined,
+        fromUtc: fromUtcFilter ? new Date(fromUtcFilter).toISOString() : undefined,
+        toUtc: toUtcFilter ? new Date(toUtcFilter).toISOString() : undefined,
         page: 1,
         pageSize: 25,
       }),
   })
 
-  if (diagnosticsQuery.isLoading || attemptsQuery.isLoading) {
+  if (diagnosticsQuery.isLoading || (!diagnosticsQuery.data && attemptsQuery.isLoading)) {
     return <p className="text-sm text-slate-500">Loading launch diagnostics…</p>
   }
 
@@ -58,17 +75,30 @@ export function LaunchDiagnosticsPage() {
         tenantId={tenantIdFilter}
         productKey={productKeyFilter}
         result={resultFilter}
+        userId={userIdFilter}
+        correlationId={correlationIdFilter}
+        fromUtc={fromUtcFilter}
+        toUtc={toUtcFilter}
         onTenantIdChange={setTenantIdFilter}
         onProductKeyChange={setProductKeyFilter}
         onResultChange={setResultFilter}
+        onUserIdChange={setUserIdFilter}
+        onCorrelationIdChange={setCorrelationIdFilter}
+        onFromUtcChange={setFromUtcFilter}
+        onToUtcChange={setToUtcFilter}
         onReset={() => {
           setTenantIdFilter('')
           setProductKeyFilter('')
           setResultFilter('')
+          setUserIdFilter('')
+          setCorrelationIdFilter('')
+          setFromUtcFilter('')
+          setToUtcFilter('')
         }}
       />
       <LaunchIssuesAndReadiness diagnostics={diagnostics} />
       <LaunchAttemptsTable
+        isLoading={attemptsQuery.isLoading && !attemptsQuery.data}
         attemptsResult={attemptsQuery.data}
         isError={attemptsQuery.isError}
         error={attemptsQuery.error as Error | null}

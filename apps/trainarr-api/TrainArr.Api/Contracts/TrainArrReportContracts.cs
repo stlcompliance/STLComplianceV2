@@ -6,7 +6,21 @@ public sealed record AssignmentReportSummaryResponse(
     int CompletedAssignments,
     int OverdueAssignments,
     decimal CompletionRatePercent,
+    AssignmentEffectivenessAnalyticsResponse Analytics,
     IReadOnlyList<AssignmentReportSummaryItem> RecentAssignments);
+
+public sealed record AssignmentEffectivenessAnalyticsResponse(
+    decimal? AverageCompletionDays,
+    decimal? EvaluationPassRatePercent,
+    decimal? AverageEvaluationScore,
+    decimal EvidenceCoveragePercent,
+    decimal SignoffCoveragePercent,
+    decimal TotalLaborHours,
+    decimal TotalLaborCost,
+    decimal? AverageLaborHoursPerCompletedAssignment,
+    decimal? AverageLaborCostPerCompletedAssignment,
+    int LocalizedContentReferenceCount,
+    int DistinctContentLocaleCount);
 
 public sealed record AssignmentReportSummaryItem(
     Guid AssignmentId,
@@ -49,6 +63,81 @@ public sealed record QualificationExpiringReportResponse(
     int TotalExpiringQualifications,
     IReadOnlyList<QualificationReportSummaryItem> Items);
 
+public sealed record QualificationPointInTimeReportResponse(
+    DateTimeOffset GeneratedAt,
+    Guid StaffarrPersonId,
+    string ActionTask,
+    string QualificationKey,
+    string QualificationName,
+    DateTimeOffset AsOfUtc,
+    bool IsQualified,
+    string StatusOnDate,
+    string QualificationMessage,
+    QualificationPointInTimeSourceCertificateResponse? SourceCertificate,
+    QualificationPointInTimeProgramVersionResponse? ProgramVersion,
+    QualificationPointInTimeExpirationStateResponse ExpirationState,
+    IReadOnlyList<string> Restrictions,
+    IReadOnlyList<QualificationPointInTimeEvidenceResponse> Evidence,
+    IReadOnlyList<QualificationPointInTimeSignoffResponse> Signoffs,
+    IReadOnlyList<QualificationPointInTimeAuditTrailItemResponse> AuditTrail);
+
+public sealed record QualificationPointInTimeSourceCertificateResponse(
+    Guid QualificationIssueId,
+    Guid TrainingAssignmentId,
+    Guid GrantPublicationId,
+    DateTimeOffset IssuedAt,
+    DateTimeOffset? ExpiresAt,
+    string StatusOnDate,
+    string? LifecycleReason,
+    Guid? LifecyclePublicationId);
+
+public sealed record QualificationPointInTimeProgramVersionResponse(
+    Guid TrainingProgramVersionId,
+    Guid TrainingProgramId,
+    string ProgramKey,
+    string ProgramName,
+    int VersionNumber,
+    string Status,
+    DateTimeOffset? PublishedAt,
+    Guid TrainingDefinitionId,
+    string DefinitionKey,
+    string DefinitionName);
+
+public sealed record QualificationPointInTimeExpirationStateResponse(
+    DateTimeOffset? ExpiresAt,
+    bool IsExpired,
+    int? DaysUntilExpiration,
+    string Message);
+
+public sealed record QualificationPointInTimeEvidenceResponse(
+    Guid EvidenceId,
+    Guid TrainingAssignmentId,
+    string EvidenceTypeKey,
+    string FileName,
+    string ContentType,
+    long SizeBytes,
+    string? Notes,
+    Guid UploadedByUserId,
+    DateTimeOffset CreatedAt);
+
+public sealed record QualificationPointInTimeSignoffResponse(
+    Guid SignoffId,
+    Guid TrainingAssignmentId,
+    string SignoffRole,
+    Guid SignedByUserId,
+    string? Notes,
+    DateTimeOffset SignedAt);
+
+public sealed record QualificationPointInTimeAuditTrailItemResponse(
+    Guid AuditEventId,
+    string Action,
+    string TargetType,
+    string? TargetId,
+    string Result,
+    string? ReasonCode,
+    Guid? ActorUserId,
+    DateTimeOffset OccurredAt);
+
 public sealed record TrainingGapReportItem(
     Guid AssignmentId,
     Guid StaffarrPersonId,
@@ -66,6 +155,25 @@ public sealed record TrainingGapReportResponse(
     DateTimeOffset GeneratedAt,
     int TotalGaps,
     IReadOnlyList<TrainingGapReportItem> Items);
+
+public sealed record AssignmentLaborReportItem(
+    Guid LaborEntryId,
+    Guid TrainingAssignmentId,
+    string AssignmentDefinitionName,
+    string LaborTypeKey,
+    decimal HoursWorked,
+    decimal CostPerHour,
+    decimal TotalCost,
+    string? Notes,
+    Guid? LoggedByUserId,
+    DateTimeOffset LoggedAt);
+
+public sealed record AssignmentLaborReportResponse(
+    DateTimeOffset GeneratedAt,
+    int TotalEntries,
+    decimal TotalLaborHours,
+    decimal TotalLaborCost,
+    IReadOnlyList<AssignmentLaborReportItem> Items);
 
 public sealed record ProgramCitationGapReportItem(
     Guid TrainingProgramId,

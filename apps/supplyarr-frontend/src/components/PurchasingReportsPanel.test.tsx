@@ -19,6 +19,17 @@ vi.mock('../api/client', () => ({
       openPurchaseOrderLineQuantity: 10,
       purchaseOrderQuantityReceived: 4,
     },
+    analytics: {
+      pendingPurchaseRequestCount: 1,
+      emergencyPurchaseRequestCount: 1,
+      activeProcurementExceptionCount: 1,
+      openReceivingExceptionCount: 1,
+      openWarrantyClaimCount: 1,
+      vendorDocumentExpiringSoonCount: 1,
+      blockedVendorCount: 1,
+      averageLeadTimeDays: 8,
+      estimatedSpendThisMonth: 25,
+    },
     purchaseRequestStatusCounts: [{ status: 'submitted', count: 1 }],
     purchaseOrderStatusCounts: [{ status: 'issued', count: 1 }],
     documents: [
@@ -67,6 +78,9 @@ describe('PurchasingReportsPanel', () => {
     expect(await screen.findByTestId('purchasing-reports-panel')).toBeInTheDocument()
     expect(await screen.findByText(/PR PR-001 · Shop restock/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
+    expect(screen.getByText('Pending approvals')).toBeInTheDocument()
+    expect(screen.getByText('Open receiving exceptions')).toBeInTheDocument()
+    expect(screen.getByText('$25')).toBeInTheDocument()
   })
 
   it('returns null when user cannot read reports', () => {

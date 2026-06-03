@@ -3,6 +3,45 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { AssetDowntimePanel } from './AssetDowntimePanel'
 
 vi.mock('../api/client', () => ({
@@ -90,6 +129,7 @@ describe('AssetDowntimePanel', () => {
     expect(await screen.findByTestId('maintainarr-fleet-availability-summary')).toBeInTheDocument()
     expect(await screen.findByText('98.3%')).toBeInTheDocument()
     expect(await screen.findByText('restricted_use')).toBeInTheDocument()
+    expect(screen.getByLabelText('Asset')).toBeInTheDocument()
   })
 
   it('hides manual form when user cannot manage downtime', async () => {

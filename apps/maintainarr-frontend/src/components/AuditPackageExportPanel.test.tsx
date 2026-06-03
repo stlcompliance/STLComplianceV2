@@ -1,9 +1,51 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
 import { AuditPackageExportPanel } from './AuditPackageExportPanel'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+      disabled,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+      disabled?: boolean
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
@@ -47,7 +89,7 @@ describe('AuditPackageExportPanel', () => {
       actions: ['work_order.create'],
       results: ['success'],
       targetTypes: ['work_order'],
-      actorUserIds: [],
+      actorUserIds: ['44444444-4444-4444-4444-444444444444'],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {
@@ -83,6 +125,10 @@ describe('AuditPackageExportPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('maintainarr-audit-summary-counts').textContent).toContain('3 audit events')
     })
+    fireEvent.change(screen.getByLabelText('Actor user'), {
+      target: { value: '44444444-4444-4444-4444-444444444444' },
+    })
+    expect(screen.getByLabelText('Actor user')).toBeTruthy()
     expect(screen.getByTestId('maintainarr-audit-download-csv')).toBeTruthy()
     expect(screen.getByRole('button', { name: /Download ZIP package/i })).toBeTruthy()
   })

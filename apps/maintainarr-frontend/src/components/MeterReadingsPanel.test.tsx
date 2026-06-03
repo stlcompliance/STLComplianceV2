@@ -1,5 +1,48 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+      disabled,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+      disabled?: boolean
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { MeterReadingsPanel } from './MeterReadingsPanel'
 
 const sampleAsset = {
@@ -63,6 +106,12 @@ describe('MeterReadingsPanel', () => {
           meterKey: 'engine-hours',
           unit: 'hours',
           currentReading: 1050,
+          usageVelocityPerDay: 5,
+          predictedUsageUntilDue: 50,
+          predictedDaysUntilDue: 10,
+          predictedDueAt: '2026-06-06T12:00:00Z',
+          confidenceScore: 82,
+          isDueSoon: true,
           linkedSchedules: [
             {
               pmScheduleId: '66666666-6666-6666-6666-666666666666',
@@ -104,7 +153,10 @@ describe('MeterReadingsPanel', () => {
     expect(screen.getByText('Meter readings')).toBeInTheDocument()
     expect(screen.getByText('1050')).toBeInTheDocument()
     expect(screen.getByText('PM usage forecast')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Record reading' })).toBeInTheDocument()
+    expect(screen.getByText('Usage velocity')).toBeInTheDocument()
+    expect(screen.getByText('Confidence')).toBeInTheDocument()
+    expect(screen.getByLabelText('Asset')).toBeInTheDocument()
+    expect(screen.getByLabelText('Meter')).toBeInTheDocument()
   })
 
   it('shows empty reading history', () => {

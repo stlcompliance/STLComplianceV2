@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ControlledSelect } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker } from '@stl/shared-ui'
 
 import type { PartResponse, PurchaseRequestResponse } from '../api/types'
 import {
@@ -110,6 +110,12 @@ export function PurchaseRequestPanel({
 
   const selected = purchaseRequests.find((pr) => pr.purchaseRequestId === selectedPurchaseRequestId)
   const existingRequestKeys = purchaseRequests.map((pr) => pr.requestKey)
+  const vendorOptions = toPartyPickerOptions(vendors)
+  const partOptions = toPartPickerOptions(parts)
+  const selectedVendorOption = vendorOptions.find((option) => option.value === selectedVendorId)
+    ?? (selectedVendorId ? { value: selectedVendorId, label: selectedVendorId } : undefined)
+  const selectedPartOption = partOptions.find((option) => option.value === selectedPartId)
+    ?? (selectedPartId ? { value: selectedPartId, label: selectedPartId } : undefined)
 
   return (
     <section
@@ -303,21 +309,27 @@ export function PurchaseRequestPanel({
                 onChange={(e) => onNotesChange(e.target.value)}
               />
             </label>
-            <ControlledSelect
+            <StaticSearchPicker
+              id="purchase-request-create-vendor"
               label="Vendor (optional)"
               value={selectedVendorId}
               onChange={onSelectedVendorIdChange}
-              options={toPartyPickerOptions(vendors)}
-              emptyLabel="Vendor (optional)"
+              options={vendorOptions}
+              selectedOption={selectedVendorOption}
+              placeholder="Search vendors…"
+              testId="purchase-request-create-vendor"
             />
             <div className="grid gap-2 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <ControlledSelect
+                <StaticSearchPicker
+                  id="purchase-request-create-part"
                   label="Part for first line"
                   value={selectedPartId}
                   onChange={onSelectedPartIdChange}
-                  options={toPartPickerOptions(parts)}
-                  emptyLabel="Part for first line"
+                  options={partOptions}
+                  selectedOption={selectedPartOption}
+                  placeholder="Search parts…"
+                  testId="purchase-request-create-part"
                 />
               </div>
               <label htmlFor="purchase-request-line-qty" className="block text-xs text-slate-500">

@@ -1,4 +1,5 @@
-import { ControlledSelect } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
   TechnicianRefResponse,
@@ -91,6 +92,38 @@ export function WorkOrderLaborEvidencePanel({
   }
 
   const editable = workOrderEditable(workOrder.status)
+  const technicianOptions = useMemo<PickerOption[]>(
+    () => [
+      { value: sessionPersonId, label: `Me (${sessionPersonId})` },
+      ...technicianRefs
+        .filter((ref) => ref.personId !== sessionPersonId)
+        .map((ref) => ({
+          value: ref.personId,
+          label: ref.displayName,
+        })),
+    ],
+    [sessionPersonId, technicianRefs],
+  )
+  const taskOptions = useMemo<PickerOption[]>(
+    () =>
+      tasks.map((task) => ({
+        value: task.taskLineId,
+        label: task.title,
+      })),
+    [tasks],
+  )
+  const selectedTechnicianOption = useMemo<PickerOption | undefined>(
+    () =>
+      technicianOptions.find((option) => option.value === laborPersonId) ??
+      (laborPersonId ? { value: laborPersonId, label: laborPersonId } : undefined),
+    [laborPersonId, technicianOptions],
+  )
+  const selectedTaskOption = useMemo<PickerOption | undefined>(
+    () =>
+      taskOptions.find((option) => option.value === selectedTaskLineId) ??
+      (selectedTaskLineId ? { value: selectedTaskLineId, label: selectedTaskLineId } : undefined),
+    [selectedTaskLineId, taskOptions],
+  )
 
   return (
     <div
@@ -155,25 +188,16 @@ export function WorkOrderLaborEvidencePanel({
         )}
         {canPerform && editable ? (
           <div className="mt-3 grid gap-2 md:grid-cols-2">
-            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-technician">
-              Technician for labor
-              <select
-                id="work-order-labor-technician"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-                value={laborPersonId}
-                onChange={(event) => onLaborPersonIdChange(event.target.value)}
-              >
-              <option value="">Select technician…</option>
-              <option value={sessionPersonId}>Me ({sessionPersonId})</option>
-              {technicianRefs
-                .filter((ref) => ref.personId !== sessionPersonId)
-                .map((ref) => (
-                  <option key={ref.personId} value={ref.personId}>
-                    {ref.displayName}
-                  </option>
-                ))}
-            </select>
-            </label>
+            <StaticSearchPicker
+              id="work-order-labor-technician"
+              label="Technician for labor"
+              value={laborPersonId}
+              onChange={onLaborPersonIdChange}
+              options={technicianOptions}
+              selectedOption={selectedTechnicianOption}
+              placeholder="Search technicians…"
+              testId="work-order-labor-technician"
+            />
             <label className="block text-sm text-slate-300" htmlFor="work-order-labor-hours">
               Labor hours
               <input
@@ -199,22 +223,16 @@ export function WorkOrderLaborEvidencePanel({
               <option value="travel">Travel</option>
             </select>
             </label>
-            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-task-link">
-              Linked task line
-              <select
-                id="work-order-labor-task-link"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-                value={selectedTaskLineId}
-                onChange={(event) => onSelectedTaskLineIdChange(event.target.value)}
-              >
-              <option value="">No task link</option>
-              {tasks.map((task) => (
-                <option key={task.taskLineId} value={task.taskLineId}>
-                  {task.title}
-                </option>
-              ))}
-            </select>
-            </label>
+            <StaticSearchPicker
+              id="work-order-labor-task-link"
+              label="Linked task line"
+              value={selectedTaskLineId}
+              onChange={onSelectedTaskLineIdChange}
+              options={taskOptions}
+              selectedOption={selectedTaskOption}
+              placeholder="Search task lines…"
+              testId="work-order-labor-task-link"
+            />
             <button
               type="button"
               className="rounded bg-sky-800 px-3 py-1 text-sm text-white hover:bg-sky-700 disabled:opacity-50 md:col-span-2"

@@ -270,6 +270,55 @@ describe('routarr api client', () => {
     expect(panel.records[0]?.reason).toBe('PTO')
   })
 
+  it('parses driver time tracking success response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          date: '2026-05-27',
+          windowStart: '2026-05-27T00:00:00Z',
+          windowEnd: '2026-05-28T00:00:00Z',
+          summary: {
+            entryCount: 1,
+            onDutyMinutes: 240,
+            offDutyMinutes: 120,
+            breakMinutes: 30,
+            openEntryCount: 0,
+            workdayStartAt: '2026-05-27T08:00:00Z',
+            workdayEndAt: '2026-05-27T12:30:00Z',
+            shortHaulCandidate: true,
+            shortHaulException: false,
+            summaryNote: 'Operational time logs are within the short-haul-style threshold.',
+          },
+          entries: [
+            {
+              entryId: 'entry-1',
+              personId: 'driver-1',
+              entryType: 'on_duty',
+              startsAt: '2026-05-27T08:00:00Z',
+              endsAt: '2026-05-27T12:00:00Z',
+              notes: 'Morning route',
+              editReason: 'Initial entry',
+              isOpen: false,
+              durationMinutes: 240,
+              createdByUserId: 'user-1',
+              updatedByUserId: null,
+              createdAt: '2026-05-27T08:00:00Z',
+              updatedAt: '2026-05-27T08:00:00Z',
+            },
+          ],
+          generatedAt: '2026-05-27T12:00:00Z',
+        }),
+      }),
+    )
+
+    const { getDriverPortalTimeTracking } = await import('./client')
+    const panel = await getDriverPortalTimeTracking('token', '2026-05-27')
+    expect(panel.summary.onDutyMinutes).toBe(240)
+    expect(panel.entries[0]?.entryType).toBe('on_duty')
+  })
+
   it('parses equipment availability panel success response', async () => {
     vi.stubGlobal(
       'fetch',

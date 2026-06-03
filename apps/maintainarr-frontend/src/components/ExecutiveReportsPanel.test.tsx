@@ -63,6 +63,27 @@ vi.mock('../api/client', () => ({
       fulfilledLines: 1,
       procurementStatusCounts: [{ key: 'awaiting_procurement', count: 1 }],
     },
+    partsDemandForecast: {
+      openLineCount: 3,
+      distinctPartCount: 2,
+      forecastQuantity: 5,
+      topParts: [
+        {
+          supplyarrPartId: 'part-1',
+          partNumber: 'BRK-001',
+          description: 'Brake pads',
+          unitOfMeasure: 'each',
+          forecastQuantity: 3,
+          openLineCount: 2,
+          openWorkOrderCount: 2,
+          pmWorkOrderCount: 1,
+          defectWorkOrderCount: 0,
+          manualWorkOrderCount: 1,
+          oldestCreatedAt: new Date(Date.now() - 86400000).toISOString(),
+          newestCreatedAt: new Date().toISOString(),
+        },
+      ],
+    },
     scopeReadiness: [
       {
         scopeType: 'site',
@@ -102,6 +123,9 @@ describe('ExecutiveReportsPanel', () => {
     expect(await screen.findByText(/Downtime trend/i)).toBeInTheDocument()
     expect(await screen.findByText(/\+16\.0h/i)).toBeInTheDocument()
     expect(await screen.findByText(/SupplyArr demand lines:/i)).toBeInTheDocument()
+    expect(await screen.findByTestId('parts-demand-forecast-panel')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /Parts-demand forecast/i })).toBeInTheDocument()
+    expect(await screen.findByText(/BRK-001/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
   })
 

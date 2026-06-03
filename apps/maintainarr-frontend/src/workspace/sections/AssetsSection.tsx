@@ -2,7 +2,7 @@ import { AssetReadinessDetailPanel } from '../../components/AssetReadinessDetail
 import { AssetDetailsPage } from '../../components/AssetDetailsPage'
 import { AssetRegistryPanel } from '../../components/AssetRegistryPanel'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ControlledSelect } from '@stl/shared-ui'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
@@ -16,6 +16,16 @@ export function AssetsSection({ state }: Props) {
       ? 'details'
       : 'drawer'
   const selectedAsset = (s.assetsQuery.data ?? []).find((item) => item.assetId === s.selectedAssetId)
+  const assetOptions = (s.assetsQuery.data ?? []).map((item) => ({
+    value: item.assetId,
+    label: `${item.assetTag} · ${item.name}`,
+  }))
+  const selectedAssetOption: PickerOption | undefined = selectedAsset
+    ? {
+        value: selectedAsset.assetId,
+        label: `${selectedAsset.assetTag} · ${selectedAsset.name}`,
+      }
+    : undefined
   const selectedAssetLabel = selectedAsset
     ? `${selectedAsset.assetTag} · ${selectedAsset.name}`
     : null
@@ -57,15 +67,14 @@ export function AssetsSection({ state }: Props) {
             <h2 className="text-lg font-medium text-white">Asset details</h2>
             <p className="mt-1 text-sm text-slate-400">Select an asset to open details context.</p>
             <div className="mt-4 max-w-xl">
-              <ControlledSelect
+              <StaticSearchPicker
                 label="Asset"
                 value={s.selectedAssetId ?? ''}
                 onChange={s.setSelectedAssetId}
-                options={(s.assetsQuery.data ?? []).map((item) => ({
-                  value: item.assetId,
-                  label: `${item.assetTag} · ${item.name}`,
-                }))}
-                emptyLabel="Select an asset"
+                options={assetOptions}
+                selectedOption={selectedAssetOption}
+                placeholder="Select an asset"
+                testId="maintainarr-assets-picker"
               />
             </div>
           </section>

@@ -13,6 +13,8 @@ import { LaunchDiagnosticsPage } from '../pages/platform-admin/LaunchDiagnostics
 import { PlatformAdminDashboardPage } from '../pages/platform-admin/PlatformAdminDashboardPage'
 import { ProductOverviewPage } from '../pages/platform-admin/ProductOverviewPage'
 import { PlatformAuditExportPage } from '../pages/platform-admin/PlatformAuditExportPage'
+import { PlatformStatusPage } from '../pages/platform-admin/PlatformStatusPage'
+import { CallbackAllowlistPage } from '../pages/platform-admin/CallbackAllowlistPage'
 import { ServiceTokenCleanupPage } from '../pages/platform-admin/ServiceTokenCleanupPage'
 import { EntitlementReconciliationPage } from '../pages/platform-admin/EntitlementReconciliationPage'
 import { TenantLifecyclePage } from '../pages/platform-admin/TenantLifecyclePage'
@@ -42,6 +44,8 @@ export function AppRoutes() {
                 <Route path="tenants" element={<TenantOverviewPage />} />
                 <Route path="users" element={<PlatformUsersPage />} />
                 <Route path="products" element={<ProductOverviewPage />} />
+                <Route path="callback-allowlist" element={<CallbackAllowlistPage />} />
+                <Route path="status" element={<PlatformStatusPage />} />
                 <Route path="data-plane" element={<HybridDataPlanePage />} />
                 <Route path="audit-export" element={<PlatformAuditExportPage />} />
                 <Route path="sessions" element={<PlatformSessionSettingsPage />} />

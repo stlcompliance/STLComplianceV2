@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -152,6 +153,43 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Login_requests_are_rate_limited_by_ip()
+    {
+        var limitedFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Auth:LoginRateLimitPermitLimit", "1");
+            builder.UseSetting("Auth:LoginRateLimitWindowSeconds", "60");
+            builder.ConfigureServices(services =>
+            {
+                var descriptors = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                        || d.ServiceType == typeof(NexArrDbContext))
+                    .ToList();
+                foreach (var descriptor in descriptors)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddDbContext<NexArrDbContext>(options =>
+                    options.UseInMemoryDatabase("NexArrAuthTests-LoginRateLimit"));
+            });
+        });
+
+        await SeedDatabaseAsync(limitedFactory);
+        var client = limitedFactory.CreateClient();
+
+        var firstResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+
+        var secondResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.TooManyRequests, secondResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_login_requires_mfa_when_enforced()
     {
         var mfaFactory = CreateMfaRequiredFactory("NexArrAuthTests-MfaRequired-Denied");
@@ -172,19 +210,71 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         var client = mfaFactory.CreateClient();
         await SeedDatabaseAsync(mfaFactory);
 
+        string mfaCode;
         using (var scope = mfaFactory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var mfaService = scope.ServiceProvider.GetRequiredService<MfaService>();
             var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
             credential.IsMfaEnabled = true;
+            credential.MfaSecret = mfaService.GenerateSecret();
+            credential.MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(
+                mfaService.HashRecoveryCodes(mfaService.GenerateRecoveryCodes()));
+            await db.SaveChangesAsync();
+            mfaCode = mfaService.GenerateTotpCode(credential.MfaSecret, DateTimeOffset.UtcNow);
+        }
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId,
+                MfaCode: mfaCode));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_login_with_recovery_code_consumes_it()
+    {
+        var mfaFactory = CreateMfaRequiredFactory("NexArrAuthTests-MfaRequired-Recovery");
+        var client = mfaFactory.CreateClient();
+        await SeedDatabaseAsync(mfaFactory);
+
+        string recoveryCode;
+        using (var scope = mfaFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var mfaService = scope.ServiceProvider.GetRequiredService<MfaService>();
+            var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+            credential.IsMfaEnabled = true;
+            credential.MfaSecret = mfaService.GenerateSecret();
+            var recoveryCodes = mfaService.GenerateRecoveryCodes();
+            recoveryCode = recoveryCodes[0];
+            credential.MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
             await db.SaveChangesAsync();
         }
 
         var response = await client.PostAsJsonAsync(
             "/api/auth/login",
-            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId,
+                RecoveryCode: recoveryCode));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var secondResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId,
+                RecoveryCode: recoveryCode));
+
+        Assert.Equal(HttpStatusCode.Forbidden, secondResponse.StatusCode);
     }
 
     [Fact]

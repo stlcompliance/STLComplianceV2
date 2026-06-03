@@ -313,12 +313,19 @@ public sealed class ReadinessRollupService(
             snapshots.Add(new PersonReadinessRollupSnapshot(
                 personId,
                 readiness.ReadinessStatus,
-                readiness.ActiveOverride is not null));
+                readiness.ActiveOverride is not null,
+                readiness.ConfidenceLevel));
         }
 
         var (readyCount, notReadyCount, overrideCount) = ReadinessRollupRules.AggregateCounts(snapshots);
         var totalMembers = snapshots.Count;
         var readyPercent = ReadinessRollupRules.ComputeReadyPercent(totalMembers, readyCount);
+        var confidenceScore = ComputeConfidenceScore(snapshots);
+        var confidenceLevel = confidenceScore >= 80
+            ? "high"
+            : confidenceScore >= 50
+                ? "medium"
+                : "low";
 
         var existing = await db.ReadinessRollups.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.ScopeType == scopeType && x.OrgUnitId == orgUnitId,
@@ -344,6 +351,8 @@ public sealed class ReadinessRollupService(
         existing.NotReadyCount = notReadyCount;
         existing.OverrideCount = overrideCount;
         existing.ReadyPercent = readyPercent;
+        existing.ConfidenceScore = confidenceScore;
+        existing.ConfidenceLevel = confidenceLevel;
         existing.ComputedAt = asOfUtc;
         existing.UpdatedAt = now;
 
@@ -443,6 +452,8 @@ public sealed class ReadinessRollupService(
             rollup.NotReadyCount,
             rollup.OverrideCount,
             rollup.ReadyPercent,
+            rollup.ConfidenceLevel,
+            rollup.ConfidenceScore,
             rollup.ComputedAt);
 
     private static ReadinessRollupMemberResponse MapMember(
@@ -482,4 +493,21 @@ public sealed class ReadinessRollupService(
         Guid OrgUnitId,
         string OrgUnitName,
         DateTimeOffset? LastComputedAt);
+
+    private static int ComputeConfidenceScore(IReadOnlyList<PersonReadinessRollupSnapshot> snapshots)
+    {
+        if (snapshots.Count == 0)
+        {
+            return 0;
+        }
+
+        var total = snapshots.Sum(snapshot => snapshot.ConfidenceLevel switch
+        {
+            "high" => 100,
+            "medium" => 65,
+            _ => 25,
+        });
+
+        return (int)Math.Round((double)total / snapshots.Count, MidpointRounding.AwayFromZero);
+    }
 }

@@ -1,4 +1,10 @@
-import { ApiErrorCallout, buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  buildSemanticKey,
+  GeneratedKeyField,
+  StaticSearchPicker,
+  type PickerOption,
+} from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   OrgUnitResponse,
@@ -38,6 +44,7 @@ interface RoleTemplateAssignmentPanelProps {
     roleTemplateId: string
     scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
     scopeValue: string | null
+    expiresAt: string | null
   }) => Promise<void>
   onUpdateRoleAssignmentStatus: (assignmentId: string, status: 'active' | 'inactive') => Promise<void>
 }
@@ -121,9 +128,36 @@ export function RoleTemplateAssignmentPanel({
   const [assignmentRoleTemplateId, setAssignmentRoleTemplateId] = useState('')
   const [assignmentScopeType, setAssignmentScopeType] = useState<(typeof SCOPE_TYPES)[number]>('tenant')
   const [assignmentScopeValue, setAssignmentScopeValue] = useState('')
+  const [assignmentExpiresAt, setAssignmentExpiresAt] = useState('')
 
   const roleScopeUnits = useMemo(() => unitsForScope(orgUnits, roleScopeType), [orgUnits, roleScopeType])
   const assignmentScopeUnits = useMemo(() => unitsForScope(orgUnits, assignmentScopeType), [orgUnits, assignmentScopeType])
+  const activeRoleTemplateOptions = useMemo<PickerOption[]>(
+    () =>
+      roleTemplates
+        .filter((role) => role.status === 'active')
+        .map((role) => ({
+          value: role.roleTemplateId,
+          label: `${role.name} (${role.roleKey})`,
+        })),
+    [roleTemplates],
+  )
+  const roleScopeUnitOptions = useMemo<PickerOption[]>(
+    () =>
+      roleScopeUnits.map((unit) => ({
+        value: unit.orgUnitId,
+        label: unit.name,
+      })),
+    [roleScopeUnits],
+  )
+  const assignmentScopeUnitOptions = useMemo<PickerOption[]>(
+    () =>
+      assignmentScopeUnits.map((unit) => ({
+        value: unit.orgUnitId,
+        label: unit.name,
+      })),
+    [assignmentScopeUnits],
+  )
   const generatedPermissionKey = useMemo(
     () =>
       buildSemanticKey({
@@ -184,7 +218,9 @@ export function RoleTemplateAssignmentPanel({
       roleTemplateId: assignmentRoleTemplateId,
       scopeType: assignmentScopeType,
       scopeValue: assignmentScopeType === 'tenant' ? null : assignmentScopeValue || null,
+      expiresAt: assignmentExpiresAt ? new Date(assignmentExpiresAt).toISOString() : null,
     })
+    setAssignmentExpiresAt('')
   }
 
   return (
@@ -284,24 +320,53 @@ export function RoleTemplateAssignmentPanel({
                   <p className="text-white">{assignment.roleName}</p>
                   <p className="text-xs text-slate-400">
                     {assignment.roleKey} · {scopeLabel(assignment.scopeType, assignment.scopeValue, orgUnits)}
+                    {assignment.expiresAt ? ` · expires ${new Date(assignment.expiresAt).toLocaleString()}` : ''}
+                    {assignment.status === 'pending_review'
+                      ? ' · pending review'
+                      : assignment.effectiveStatus !== assignment.status
+                        ? ` · ${assignment.effectiveStatus}`
+                        : ''}
                   </p>
                 </div>
-                {canManage ? (
-                  <button
-                    type="button"
-                    className="rounded bg-amber-700 px-2 py-1 text-xs text-white disabled:opacity-50"
-                    onClick={() =>
-                      onUpdateRoleAssignmentStatus(
-                        assignment.assignmentId,
-                        assignment.status === 'active' ? 'inactive' : 'active',
-                      )
-                    }
-                    disabled={isSubmitting}
-                  >
-                    {assignment.status === 'active' ? 'Deactivate' : 'Activate'}
-                  </button>
+                {canManage && assignment.effectiveStatus !== 'expired' ? (
+                  assignment.status === 'pending_review' ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="rounded bg-emerald-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+                        onClick={() => onUpdateRoleAssignmentStatus(assignment.assignmentId, 'active')}
+                        disabled={isSubmitting}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded bg-amber-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+                        onClick={() => onUpdateRoleAssignmentStatus(assignment.assignmentId, 'inactive')}
+                        disabled={isSubmitting}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="rounded bg-amber-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+                      onClick={() =>
+                        onUpdateRoleAssignmentStatus(
+                          assignment.assignmentId,
+                          assignment.status === 'active' ? 'inactive' : 'active',
+                        )
+                      }
+                      disabled={isSubmitting}
+                    >
+                      {assignment.status === 'active' ? 'Deactivate' : 'Activate'}
+                    </button>
+                  )
                 ) : (
-                  <span className="text-xs uppercase tracking-wide text-slate-500">{assignment.status}</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                    {assignment.effectiveStatus === 'expired' ? 'expired' : assignment.status}
+                  </span>
                 )}
               </li>
             ))}
@@ -422,23 +487,14 @@ export function RoleTemplateAssignmentPanel({
               </select>
             </label>
             {roleScopeType === 'tenant' ? null : (
-              <label htmlFor="role-template-scope-value" className="block text-sm text-slate-300">
-                Permission scope unit
-                <select
-                  id="role-template-scope-value"
-                  value={roleScopeValue}
-                  onChange={(event) => setRoleScopeValue(event.target.value)}
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                  required
-                >
-                  <option value="">Select scope unit</option>
-                  {roleScopeUnits.map((unit) => (
-                    <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StaticSearchPicker
+                id="role-template-scope-value"
+                label="Permission scope unit"
+                value={roleScopeValue}
+                onChange={setRoleScopeValue}
+                options={roleScopeUnitOptions}
+                placeholder="Search permission scope units"
+              />
             )}
             <fieldset className="max-h-32 overflow-y-auto rounded border border-slate-700 p-2">
               <legend className="px-1 text-xs text-slate-400">Permission mappings</legend>
@@ -479,25 +535,14 @@ export function RoleTemplateAssignmentPanel({
 
           <form className="space-y-3" onSubmit={handleRoleAssignmentSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Assign role to person</h3>
-            <label htmlFor="role-assignment-template" className="block text-sm text-slate-300">
-              Role template
-              <select
-                id="role-assignment-template"
-                value={assignmentRoleTemplateId}
-                onChange={(event) => setAssignmentRoleTemplateId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
-              >
-                <option value="">Select role template</option>
-                {roleTemplates
-                  .filter((role) => role.status === 'active')
-                  .map((role) => (
-                    <option key={role.roleTemplateId} value={role.roleTemplateId}>
-                      {role.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="role-assignment-template"
+              label="Role template"
+              value={assignmentRoleTemplateId}
+              onChange={setAssignmentRoleTemplateId}
+              options={activeRoleTemplateOptions}
+              placeholder="Search active role templates"
+            />
             <label htmlFor="role-assignment-scope-type" className="block text-sm text-slate-300">
               Assignment scope type
               <select
@@ -514,24 +559,25 @@ export function RoleTemplateAssignmentPanel({
               </select>
             </label>
             {assignmentScopeType === 'tenant' ? null : (
-              <label htmlFor="role-assignment-scope-value" className="block text-sm text-slate-300">
-                Assignment scope unit
-                <select
-                  id="role-assignment-scope-value"
-                  value={assignmentScopeValue}
-                  onChange={(event) => setAssignmentScopeValue(event.target.value)}
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                  required
-                >
-                  <option value="">Select scope unit</option>
-                  {assignmentScopeUnits.map((unit) => (
-                    <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StaticSearchPicker
+                id="role-assignment-scope-value"
+                label="Assignment scope unit"
+                value={assignmentScopeValue}
+                onChange={setAssignmentScopeValue}
+                options={assignmentScopeUnitOptions}
+                placeholder="Search assignment scope units"
+              />
             )}
+            <label htmlFor="role-assignment-expires-at" className="block text-sm text-slate-300">
+              Expiration (optional)
+              <input
+                id="role-assignment-expires-at"
+                type="datetime-local"
+                value={assignmentExpiresAt}
+                onChange={(event) => setAssignmentExpiresAt(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+            </label>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"

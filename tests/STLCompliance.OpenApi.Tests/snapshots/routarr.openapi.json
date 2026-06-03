@@ -1472,6 +1472,83 @@
         }
       }
     },
+    "/api/driver-portal/time-tracking": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "GetDriverPortalTimeTracking",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalCreateTimeTrackingEntry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDriverTimeEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/time-tracking/{entryId}": {
+      "patch": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalUpdateTimeTrackingEntry",
+        "parameters": [
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDriverTimeEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/driver-portal/trips/{tripId}/accept": {
       "post": {
         "tags": [
@@ -3537,6 +3614,40 @@
         }
       }
     },
+    "/api/routes/stops/{stopId}/geofence-check": {
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "CheckRouteStopGeofence",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRouteStopGeofenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/routes/{routeId}": {
       "get": {
         "tags": [
@@ -3588,6 +3699,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes/{routeId}/optimize": {
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "OptimizeRouteStops",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6588,8 +6723,7 @@
           "label",
           "addressLabel",
           "stopType",
-          "sequenceNumber",
-          "scheduledArrivalAt"
+          "sequenceNumber"
         ],
         "type": "object",
         "properties": {
@@ -6608,6 +6742,33 @@
           "sequenceNumber": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "geofenceAnchorLatitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceAnchorLongitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceRadiusMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
               "integer",
               "string"
             ],
@@ -6852,6 +7013,31 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CheckRouteStopGeofenceRequest": {
+        "required": [
+          "reportedLatitude",
+          "reportedLongitude"
+        ],
+        "type": "object",
+        "properties": {
+          "reportedLatitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reportedLongitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -7107,6 +7293,37 @@
           }
         }
       },
+      "CreateDriverTimeEntryRequest": {
+        "required": [
+          "entryType",
+          "startsAt",
+          "endsAt",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "entryType": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateEquipmentAvailabilityRequest": {
         "required": [
           "vehicleRefKey",
@@ -7185,8 +7402,7 @@
           "label",
           "addressLabel",
           "stopType",
-          "sequenceNumber",
-          "scheduledArrivalAt"
+          "sequenceNumber"
         ],
         "type": "object",
         "properties": {
@@ -7205,6 +7421,33 @@
           "sequenceNumber": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "geofenceAnchorLatitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceAnchorLongitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceRadiusMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
               "integer",
               "string"
             ],
@@ -8106,6 +8349,47 @@
           }
         }
       },
+      "UpdateDriverTimeEntryRequest": {
+        "required": [
+          "entryType",
+          "startsAt",
+          "endsAt",
+          "notes",
+          "editReason"
+        ],
+        "type": "object",
+        "properties": {
+          "entryType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "editReason": {
+            "type": "string"
+          }
+        }
+      },
       "UpdateEquipmentAvailabilityRequest": {
         "required": [
           "availabilityStatus",
@@ -8537,6 +8821,9 @@
       "name": "TripCaptureAttachments"
     },
     {
+      "name": "DriverPortal"
+    },
+    {
       "name": "TripPartsDemand"
     },
     {
@@ -8544,9 +8831,6 @@
     },
     {
       "name": "DispatchMessages"
-    },
-    {
-      "name": "DriverPortal"
     },
     {
       "name": "DispatchReports"

@@ -88,6 +88,12 @@ public sealed class RfqVendorInvitation : IHasTenant
 
     public Guid InvitedByUserId { get; set; }
 
+    public string PortalAccessCode { get; set; } = string.Empty;
+
+    public DateTimeOffset PortalAccessCodeIssuedAt { get; set; }
+
+    public DateTimeOffset PortalAccessCodeExpiresAt { get; set; }
+
     public Rfq Rfq { get; set; } = null!;
 
     public ExternalParty VendorParty { get; set; } = null!;

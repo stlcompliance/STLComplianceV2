@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   activateInspectionTemplate,
+  cloneInspectionTemplate,
   completeInspectionRun,
   createDefect,
   createDefectsFromInspectionRun,
@@ -65,6 +66,11 @@ import {
   updateDefectStatus,
   updateWorkOrderStatus,
 } from '../api/client'
+import type {
+  InspectionChecklistItemResponse,
+  InspectionTemplateAssetTypeLinkResponse,
+  InspectionTemplateCategoryResponse,
+} from '../api/types'
 import {
   canCloseWorkOrders,
   canCreateWorkOrders,
@@ -90,6 +96,15 @@ async function fileToBase64(file: File): Promise<string> {
     binary += String.fromCharCode(byte)
   })
   return btoa(binary)
+}
+
+type InspectionTemplateImportPayload = {
+  templateKey: string
+  name: string
+  description: string
+  categories: InspectionTemplateCategoryResponse[]
+  checklistItems: InspectionChecklistItemResponse[]
+  linkedAssetTypes: InspectionTemplateAssetTypeLinkResponse[]
 }
 
 export function useMaintainArrWorkspaceState() {
@@ -620,6 +635,68 @@ export function useMaintainArrWorkspaceState() {
       await invalidateTemplates(selectedTemplateId)
     },
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to activate template'),
+  })
+
+  const cloneTemplateMutation = useMutation({
+    mutationFn: () => cloneInspectionTemplate(accessToken, selectedTemplateId),
+    onSuccess: async (cloned) => {
+      setSelectedTemplateId(cloned.inspectionTemplateId)
+      setApiError(null)
+      await invalidateTemplates(cloned.inspectionTemplateId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to clone template'),
+  })
+
+  const importTemplateMutation = useMutation({
+    mutationFn: async (payload: { json: string; templateKeyOverride: string }) => {
+      const parsed = JSON.parse(payload.json) as InspectionTemplateImportPayload
+      const templateKey = payload.templateKeyOverride.trim() || parsed.templateKey
+
+      const created = await createInspectionTemplate(accessToken, {
+        templateKey,
+        name: parsed.name,
+        description: parsed.description,
+      })
+
+      const categoryIdMap = new Map<string, string>()
+      for (const category of parsed.categories.sort((left, right) => left.sortOrder - right.sortOrder)) {
+        const createdTemplate = await createInspectionTemplateCategory(accessToken, created.inspectionTemplateId, {
+          categoryKey: category.categoryKey,
+          name: category.name,
+          sortOrder: category.sortOrder,
+        })
+        const createdCategory = createdTemplate.categories.find((entry) => entry.categoryKey === category.categoryKey)
+        if (createdCategory) {
+          categoryIdMap.set(category.categoryId, createdCategory.categoryId)
+        }
+      }
+
+      const orderedItems = [...parsed.checklistItems].sort((left, right) => left.sortOrder - right.sortOrder)
+      for (const item of orderedItems) {
+        await createInspectionChecklistItem(accessToken, created.inspectionTemplateId, {
+          itemKey: item.itemKey,
+          prompt: item.prompt,
+          itemType: item.itemType,
+          isRequired: item.isRequired,
+          sortOrder: item.sortOrder,
+          categoryId: item.categoryId ? categoryIdMap.get(item.categoryId) ?? null : null,
+        })
+      }
+
+      await replaceInspectionTemplateAssetTypes(
+        accessToken,
+        created.inspectionTemplateId,
+        parsed.linkedAssetTypes.map((assetType) => assetType.assetTypeId),
+      )
+
+      return created.inspectionTemplateId
+    },
+    onSuccess: async (importedTemplateId) => {
+      setSelectedTemplateId(importedTemplateId)
+      setApiError(null)
+      await invalidateTemplates(importedTemplateId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to import inspection template'),
   })
 
   const startRunMutation = useMutation({
@@ -1279,6 +1356,8 @@ export function useMaintainArrWorkspaceState() {
     createItemMutation,
     saveAssetTypesMutation,
     activateTemplateMutation,
+    cloneTemplateMutation,
+    importTemplateMutation,
     startRunMutation,
     submitAnswersMutation,
     completeRunMutation,

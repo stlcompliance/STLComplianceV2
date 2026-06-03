@@ -13,6 +13,26 @@ vi.mock('../../components/OperatorReportsPanel', () => ({
   OperatorReportsPanel: () => <div data-testid="operator-reports-panel" />,
 }))
 
+vi.mock('../../components/WaiverReportsPanel', () => ({
+  WaiverReportsPanel: () => <div data-testid="waiver-reports-panel" />,
+}))
+
+vi.mock('../../components/ExceptionExemptionReportsPanel', () => ({
+  ExceptionExemptionReportsPanel: () => <div data-testid="exception-exemption-reports-panel" />,
+}))
+
+vi.mock('../../components/AuditReadinessReportsPanel', () => ({
+  AuditReadinessReportsPanel: () => <div data-testid="audit-readiness-reports-panel" />,
+}))
+
+vi.mock('../../components/RemediationQueueReportsPanel', () => ({
+  RemediationQueueReportsPanel: () => <div data-testid="remediation-queue-reports-panel" />,
+}))
+
+vi.mock('../../components/ProductIntegrationHealthReportsPanel', () => ({
+  ProductIntegrationHealthReportsPanel: () => <div data-testid="product-integration-health-reports-panel" />,
+}))
+
 vi.mock('../../components/DataExportsPanel', () => ({
   DataExportsPanel: () => <div data-testid="data-exports-panel" />,
 }))
@@ -61,6 +81,11 @@ describe('ReportsSection', () => {
     expect(screen.getByTestId('compliancecore-reports-workspace')).toBeTruthy()
     expect(screen.getByTestId('compliance-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('operator-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('waiver-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('exception-exemption-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('remediation-queue-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('audit-readiness-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('product-integration-health-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('data-exports-panel')).toBeTruthy()
   })
 

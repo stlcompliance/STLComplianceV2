@@ -3,6 +3,42 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonOffboardingPanel } from './PersonOffboardingPanel'
 import type { PersonOffboardingResponse } from '../api/types'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      testId,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      options: { value: string; label: string }[]
+      testId?: string
+    }) => (
+      <label htmlFor={testId ?? 'mock-static-search-picker'}>
+        {label}
+        <input
+          id={testId ?? 'mock-static-search-picker'}
+          aria-label={label}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <ul>
+          {options.map((option) => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </label>
+    ),
+  }
+})
+
 const peopleOptions = [
   { personId: 'person-1', displayName: 'Alex Worker' },
   { personId: 'person-2', displayName: 'Taylor Manager' },
@@ -32,7 +68,7 @@ const inProgressOffboarding: PersonOffboardingResponse = {
       completedAt: null,
     },
   ],
-  activeDirectReportCount: 0,
+  activeDirectReportCount: 2,
   openIncidentCount: 0,
   activeRoleAssignmentCount: 1,
   activeOrgAssignmentCount: 1,
@@ -70,6 +106,7 @@ describe('PersonOffboardingPanel', () => {
     fireEvent.change(screen.getByLabelText(/Separation reason/i), {
       target: { value: 'Voluntary separation' },
     })
+    expect(screen.getAllByText('Taylor Manager').length).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('button', { name: /Start offboarding/i }))
 
     await waitFor(() => {
@@ -109,6 +146,33 @@ describe('PersonOffboardingPanel', () => {
     await waitFor(() => {
       expect(onExecute).toHaveBeenCalledWith({ newManagerPersonIdForReports: null })
     })
+  })
+
+  it('uses searchable pickers for replacement manager selection', () => {
+    render(
+      <PersonOffboardingPanel
+        personId="person-1"
+        personDisplayName="Alex Worker"
+        peopleOptions={peopleOptions}
+        offboarding={inProgressOffboarding}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onStart={vi.fn().mockResolvedValue(undefined)}
+        onExecute={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getAllByText('Taylor Manager').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('execute-offboarding-manager-picker')).toBeTruthy()
+    fireEvent.change(screen.getByTestId('execute-offboarding-manager-picker'), {
+      target: { value: 'person-2' },
+    })
+    expect((screen.getByTestId('execute-offboarding-manager-picker') as HTMLInputElement).value).toBe('person-2')
   })
 
   it('renders offboarding action errors in shared callout', () => {

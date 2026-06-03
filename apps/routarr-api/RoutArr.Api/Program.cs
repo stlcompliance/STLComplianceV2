@@ -17,6 +17,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrTripProofDvirEndpoints();
         app.MapRoutArrTripCaptureAttachmentEndpoints();
+        app.MapGroup("/api/driver-portal").MapRoutArrDriverPortalTimeTrackingEndpoints();
         app.MapRoutArrTripPartsDemandEndpoints();
         app.MapRoutArrIntegrationEndpoints();
         app.MapRoutArrRouteEndpoints();

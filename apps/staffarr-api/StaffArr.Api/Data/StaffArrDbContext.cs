@@ -30,6 +30,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonnelIncident> PersonnelIncidents => Set<PersonnelIncident>();
 
+    public DbSet<IncidentNote> IncidentNotes => Set<IncidentNote>();
+
+    public DbSet<IncidentAttachment> IncidentAttachments => Set<IncidentAttachment>();
+
     public DbSet<IncidentSupplyDemandLine> IncidentSupplyDemandLines => Set<IncidentSupplyDemandLine>();
 
     public DbSet<IncidentSupplyDemandStatusEvent> IncidentSupplyDemandStatusEvents => Set<IncidentSupplyDemandStatusEvent>();
@@ -189,8 +193,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ScopeValue).HasMaxLength(128);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ExpiresAt);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status, x.ExpiresAt });
             entity.HasIndex(x => new
             {
                 x.TenantId,
@@ -343,6 +349,36 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 
+        modelBuilder.Entity<IncidentNote>(entity =>
+        {
+            entity.ToTable("staffarr_incident_notes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.NoteTypeKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Body).HasMaxLength(8192).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DueAt);
+            entity.Property(x => x.CompletedAt);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId, x.Status });
+            entity.HasOne<PersonnelIncident>().WithMany().HasForeignKey(x => x.IncidentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IncidentAttachment>(entity =>
+        {
+            entity.ToTable("staffarr_incident_attachments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId, x.CreatedAt });
+            entity.HasOne<PersonnelIncident>().WithMany().HasForeignKey(x => x.IncidentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<IncidentSupplyDemandLine>(entity =>
         {
             entity.ToTable("staffarr_incident_supply_demand_lines");
@@ -428,6 +464,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasKey(x => x.Id);
             entity.Property(x => x.ScopeType).HasMaxLength(16).IsRequired();
             entity.Property(x => x.OrgUnitName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ConfidenceLevel).HasMaxLength(16).IsRequired().HasDefaultValue("low");
             entity.Property(x => x.ReadyPercent).HasPrecision(5, 1);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.OrgUnitId }).IsUnique();

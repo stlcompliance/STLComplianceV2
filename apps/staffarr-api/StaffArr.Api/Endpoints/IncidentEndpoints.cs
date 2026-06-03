@@ -80,6 +80,111 @@ public static class IncidentEndpoints
                 return Results.Ok(result);
             })
             .WithName($"RoutePersonnelIncidentToTrainarr{suffix}");
+
+            incidents.MapPatch("/{incidentId:guid}/status", async (
+                Guid incidentId,
+                UpdatePersonnelIncidentStatusRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await service.UpdateIncidentStatusAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    request,
+                cancellationToken));
+            })
+            .WithName($"UpdatePersonnelIncidentStatus{suffix}");
+
+            incidents.MapPost("/{incidentId:guid}/notes", async (
+                Guid incidentId,
+                CreateIncidentNoteRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await service.CreateIncidentNoteAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(detail);
+            })
+            .WithName($"CreatePersonnelIncidentNote{suffix}");
+
+            incidents.MapPatch("/{incidentId:guid}/notes/{noteId:guid}/status", async (
+                Guid incidentId,
+                Guid noteId,
+                UpdateIncidentNoteStatusRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await service.UpdateIncidentNoteStatusAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    noteId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(detail);
+            })
+            .WithName($"UpdatePersonnelIncidentNoteStatus{suffix}");
+
+            incidents.MapPost("/{incidentId:guid}/attachments", async (
+                Guid incidentId,
+                CreateIncidentAttachmentRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await service.CreateIncidentAttachmentAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(detail);
+            })
+            .WithName($"CreatePersonnelIncidentAttachment{suffix}");
+
+            incidents.MapGet("/{incidentId:guid}/attachments/{attachmentId:guid}/content", async (
+                Guid incidentId,
+                Guid attachmentId,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService service,
+                CancellationToken cancellationToken) =>
+            {
+                var tenantId = context.User.GetTenantId();
+                var detail = await service.GetIncidentAsync(tenantId, incidentId, cancellationToken);
+                authorization.RequireIncidentsRead(context.User, detail.PersonId);
+                var (metadata, stream) = await service.OpenIncidentAttachmentContentAsync(
+                    tenantId,
+                    incidentId,
+                    attachmentId,
+                    cancellationToken);
+                return Results.File(stream, metadata.ContentType, metadata.FileName);
+            })
+            .WithName($"DownloadPersonnelIncidentAttachmentContent{suffix}");
         }
     }
 }

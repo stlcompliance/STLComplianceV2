@@ -13,7 +13,8 @@ public sealed class PasswordResetService(
     NexArrDbContext db,
     IPasswordHasher passwordHasher,
     IPlatformAuditService audit,
-    IHostEnvironment hostEnvironment)
+    IHostEnvironment hostEnvironment,
+    PlatformSessionSettingsService sessionSettingsService)
 {
     public async Task<ForgotPasswordResponse> RequestForgotAsync(
         ForgotPasswordRequest request,
@@ -77,11 +78,17 @@ public sealed class PasswordResetService(
         ResetPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!PasswordResetRules.MeetsPasswordPolicy(request.NewPassword))
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+        if (!PasswordResetRules.MeetsPasswordPolicy(
+                request.NewPassword,
+                settings.PasswordMinLength,
+                settings.RequirePasswordComplexity))
         {
             throw new StlApiException(
                 "auth.password_policy",
-                PasswordResetRules.PasswordPolicyMessage(),
+                PasswordResetRules.PasswordPolicyMessage(
+                    settings.PasswordMinLength,
+                    settings.RequirePasswordComplexity),
                 400);
         }
 

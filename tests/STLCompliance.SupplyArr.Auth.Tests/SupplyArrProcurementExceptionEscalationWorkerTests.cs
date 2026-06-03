@@ -22,6 +22,7 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
     private HttpClient _nexarrClient = null!;
     private HttpClient _supplyarrClient = null!;
     private string _sharedWorkerToSupplyArrToken = null!;
+    private string _sharedWorkerToSupplyArrAutoCloseToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -50,8 +51,15 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
         _sharedWorkerToSupplyArrToken = await IssueServiceTokenAsync(
             adminToken,
             "shared-worker",
+            "proc-exception-escalation-test",
             ["supplyarr"],
             ProcurementExceptionEscalationWorkerService.ProcessProcurementExceptionEscalationsActionScope);
+        _sharedWorkerToSupplyArrAutoCloseToken = await IssueServiceTokenAsync(
+            adminToken,
+            "shared-worker",
+            "proc-exception-auto-close-test",
+            ["supplyarr"],
+            ProcurementExceptionAutomationWorkerService.ProcessProcurementExceptionAutoClosesActionScope);
 
         _supplyarrFactory = new WebApplicationFactory<global::SupplyArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -145,6 +153,77 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
     }
 
     [Fact]
+    public async Task Pending_auto_close_preview_lists_due_completed_exceptions()
+    {
+        var exceptionId = await SeedCompletedProcurementExceptionAsync(
+            ProcurementExceptionStatuses.Resolved,
+            DateTimeOffset.UtcNow.AddHours(-72));
+        await UpsertEscalationSettingsAsync(autoCloseEnabled: true, autoCloseAfterHours: 48);
+
+        var adminToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/v1/procurement-exception-escalation-settings/auto-close/pending",
+                adminToken));
+
+        pendingResponse.EnsureSuccessStatusCode();
+        var pending = (await pendingResponse.Content.ReadFromJsonAsync<PendingProcurementExceptionAutoClosesResponse>())!;
+        Assert.Contains(pending.Items, x => x.ProcurementExceptionId == exceptionId);
+        var item = pending.Items.Single(x => x.ProcurementExceptionId == exceptionId);
+        Assert.Equal("resolved", item.Status);
+        Assert.Equal(72d, Math.Round(item.HoursCompleted));
+    }
+
+    [Fact]
+    public async Task Process_auto_close_batch_closes_completed_exception()
+    {
+        var exceptionId = await SeedCompletedProcurementExceptionAsync(
+            ProcurementExceptionStatuses.Resolved,
+            DateTimeOffset.UtcNow.AddHours(-72));
+        await UpsertEscalationSettingsAsync(autoCloseEnabled: true, autoCloseAfterHours: 48);
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/procurement-exception-automation/process-batch",
+            _sharedWorkerToSupplyArrAutoCloseToken);
+        processRequest.Content = JsonContent.Create(new ProcessProcurementExceptionAutoClosesRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            25));
+
+        var processResponse = await _supplyarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+        var body = (await processResponse.Content.ReadFromJsonAsync<ProcessProcurementExceptionAutoClosesResponse>())!;
+        Assert.Equal(1, body.CandidatesFound);
+        Assert.Equal(1, body.ClosedCount);
+        Assert.Empty(body.Skipped);
+        Assert.Single(body.Closed);
+        Assert.Equal("closed", body.Closed[0].Status);
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var exception = await db.ProcurementExceptions.SingleAsync(x => x.Id == exceptionId);
+        Assert.Equal(ProcurementExceptionStatuses.Closed, exception.Status);
+        Assert.NotNull(exception.ClosedAt);
+        Assert.Equal(ProcurementExceptionAutomationWorkerService.WorkerActorUserId, exception.ClosedByUserId);
+
+        var auditEvent = await db.AuditEvents.SingleAsync(
+            x => x.Action == "supplyarr.procurement_exception_auto_close.batch"
+                && x.TenantId == PlatformSeeder.DemoTenantId);
+        Assert.Equal(ProcurementExceptionAutomationWorkerService.WorkerActorUserId, auditEvent.ActorUserId);
+    }
+
+    [Fact]
+    public async Task Process_auto_close_batch_rejects_missing_service_token()
+    {
+        var response = await _supplyarrClient.PostAsJsonAsync(
+            "/api/internal/procurement-exception-automation/process-batch",
+            new ProcessProcurementExceptionAutoClosesRequest(PlatformSeeder.DemoTenantId, DateTimeOffset.UtcNow, 25));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Escalation_settings_requires_admin()
     {
         var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
@@ -213,7 +292,74 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
         return exceptionId;
     }
 
-    private async Task UpsertEscalationSettingsAsync()
+    private async Task<Guid> SeedCompletedProcurementExceptionAsync(string status, DateTimeOffset completedAt)
+    {
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var vendorId = Guid.NewGuid();
+        var prId = Guid.NewGuid();
+        var exceptionId = Guid.NewGuid();
+
+        db.ExternalParties.Add(new ExternalParty
+        {
+            Id = vendorId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
+            PartyType = "vendor",
+            DisplayName = "Completed Vendor",
+            LegalName = "Completed Vendor LLC",
+            ApprovalStatus = "approved",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PurchaseRequests.Add(new PurchaseRequest
+        {
+            Id = prId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            RequestKey = $"pr-{Guid.NewGuid():N}"[..16],
+            Title = "Completed PR",
+            Notes = string.Empty,
+            Status = PurchaseRequestStatuses.Draft,
+            VendorPartyId = vendorId,
+            RequestedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.ProcurementExceptions.Add(new ProcurementException
+        {
+            Id = exceptionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            ExceptionKey = $"PEX-{Guid.NewGuid():N}"[..16],
+            SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
+            SubjectId = prId,
+            SubjectKey = "pr-completed",
+            VendorPartyId = vendorId,
+            ExceptionCategory = ProcurementExceptionCategories.PolicyViolation,
+            Title = "Completed exception",
+            Description = "Completed exception for auto-close worker test.",
+            Status = status,
+            ResolvedAt = string.Equals(status, ProcurementExceptionStatuses.Resolved, StringComparison.OrdinalIgnoreCase)
+                ? completedAt
+                : null,
+            WaivedAt = string.Equals(status, ProcurementExceptionStatuses.Waived, StringComparison.OrdinalIgnoreCase)
+                ? completedAt
+                : null,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = completedAt.AddHours(-24),
+            UpdatedAt = completedAt,
+        });
+
+        await db.SaveChangesAsync();
+        return exceptionId;
+    }
+
+    private async Task UpsertEscalationSettingsAsync(
+        bool autoCloseEnabled = false,
+        int autoCloseAfterHours = ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours)
     {
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
@@ -226,6 +372,8 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
             EscalationCooldownHours = 24,
             MaxEscalationsPerException = 5,
             NotifyOnProcurementExceptionSlaEscalation = true,
+            AutoCloseCompletedExceptionsEnabled = autoCloseEnabled,
+            AutoCloseCompletedExceptionsAfterHours = autoCloseAfterHours,
             CreatedAt = now,
             UpdatedAt = now,
         });
@@ -303,12 +451,13 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
     private async Task<string> IssueServiceTokenAsync(
         string adminToken,
         string sourceProduct,
+        string clientSuffix,
         string[] allowedProducts,
         string actionScope)
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
-            $"{sourceProduct}-proc-exception-escalation-test",
+            $"{sourceProduct}-{clientSuffix}",
             $"{sourceProduct} procurement exception escalation test",
             sourceProduct,
             allowedProducts));

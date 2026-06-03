@@ -299,6 +299,14 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
   const purchaseRequests = (s.purchaseRequestsQuery?.data ?? []).filter(
     (request) => request.vendorPartyId === selectedParty.partyId,
   )
+  const contractRecords = (s.contractsQuery?.data ?? []).filter(
+    (contract) => contract.vendorPartyId === selectedParty.partyId,
+  )
+  const activeContract =
+    contractRecords.find((contract) => contract.status === 'active') ??
+    contractRecords.find((contract) => contract.status === 'expiring_soon') ??
+    contractRecords[0] ??
+    null
   const openOrders = purchaseOrders.filter((order) => !['cancelled', 'received', 'closed'].includes(order.status))
   const waitingShipmentCount = purchaseOrders.filter((order) =>
     order.lines.some((line) => line.quantityRemaining > 0),
@@ -553,7 +561,11 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         { label: 'Supplier category', value: humanize(selectedParty.partyType), source: 'Selectable catalog' },
         { label: 'Primary site', value: 'Not recorded', source: 'StaffArr site reference' },
         { label: 'Supplier owner', value: 'Not assigned', source: 'StaffArr personId' },
-        { label: 'Payment terms', value: 'Not recorded', source: 'Approved terms' },
+        { label: 'Payment terms', value: activeContract?.paymentTerms || 'Not recorded', source: 'Approved terms' },
+        { label: 'Freight terms', value: activeContract?.freightTerms || 'Not recorded', source: 'Approved terms' },
+        { label: 'Warranty', value: activeContract?.warrantyTerms || 'Not recorded', source: 'Approved terms' },
+        { label: 'Minimum spend', value: activeContract?.minimumSpend == null ? 'Not recorded' : formatCurrency(activeContract.minimumSpend), source: 'Approved terms' },
+        { label: 'Contract records', value: contractRecords.length > 0 ? contractRecords.length : 'None', source: 'Contract registry' },
         { label: 'Tax status', value: selectedParty.taxIdentifier ? 'Tax identifier on file' : 'Not recorded', source: 'Document evidence' },
         { label: 'Insurance', value: documents.some((document) => document.title.toLowerCase().includes('insurance')) ? 'Document on file' : 'Not recorded', source: 'Document watch' },
         { label: 'Risk tier', value: isBlocked ? 'High' : hasWatchItems ? 'Medium' : 'Low', source: 'Supplier review' },
@@ -562,7 +574,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         { label: 'Website', value: 'Not recorded', source: 'Supplier profile' },
       ]}
       mainContent={(
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-3">
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-white">Supplied items</h3>
@@ -604,6 +616,58 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                   </div>
                 </div>
               )) : <EmptyPanel text="No purchase orders yet." />}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-white">Contracts & purchasing terms</h3>
+                <p className="mt-1 text-xs text-slate-400">Current vendor agreements and commercial terms.</p>
+              </div>
+              <Badge label={`${contractRecords.length} record${contractRecords.length === 1 ? '' : 's'}`} tone={contractRecords.length > 0 ? 'info' : 'neutral'} />
+            </div>
+            <div className="space-y-3">
+              {contractRecords.length > 0 ? contractRecords.slice(0, 3).map((contract) => (
+                <div key={contract.contractId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{contract.contractKey}</h4>
+                      <p className="mt-2 text-sm text-sky-100/80">{contract.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {humanize(contract.contractType)} · {formatDate(contract.effectiveAt)} to {contract.expiresAt ? formatDate(contract.expiresAt) : 'open-ended'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge label={humanize(contract.status)} tone={statusTone(contract.status)} />
+                      <Badge label={humanize(contract.approvalStatus)} tone={statusTone(contract.approvalStatus)} />
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Payment terms</p>
+                      <p className="mt-1 text-sm text-white">{contract.paymentTerms || 'Not recorded'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Freight terms</p>
+                      <p className="mt-1 text-sm text-white">{contract.freightTerms || 'Not recorded'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Warranty</p>
+                      <p className="mt-1 text-sm text-white">{contract.warrantyTerms || 'Not recorded'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Minimum spend</p>
+                      <p className="mt-1 text-sm text-white">{contract.minimumSpend == null ? 'Not recorded' : formatCurrency(contract.minimumSpend)}</p>
+                    </div>
+                  </div>
+                  {contract.serviceLevelAgreement ? (
+                    <p className="mt-4 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300">
+                      SLA: {contract.serviceLevelAgreement}
+                    </p>
+                  ) : null}
+                </div>
+              )) : <EmptyPanel text="No contract records on file." />}
             </div>
           </section>
         </div>

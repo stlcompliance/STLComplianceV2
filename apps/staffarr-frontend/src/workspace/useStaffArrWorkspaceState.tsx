@@ -24,7 +24,12 @@ import {
   getPersonCertifications,
   clearPersonReadinessOverride,
   createPersonnelIncident,
+  createIncidentNote,
+  updateIncidentNoteStatus,
+  createIncidentAttachment,
+  getIncidentAttachmentContent,
   routePersonnelIncidentToTrainarr,
+  updatePersonnelIncidentStatus,
   getPersonnelIncident,
   listPersonnelNotes,
   getPersonnelNote,
@@ -489,6 +494,7 @@ export function useStaffArrWorkspaceState() {
       roleTemplateId: string
       scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
       scopeValue: string | null
+      expiresAt: string | null
     }) => createPersonRoleAssignment(session!.accessToken, payload.personId, payload),
     onSuccess: async () => {
       await Promise.all([
@@ -735,6 +741,73 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
+  const updateIncidentStatusMutation = useMutation({
+    mutationFn: (payload: { incidentId: string; status: 'open' | 'closed' }) =>
+      updatePersonnelIncidentStatus(session!.accessToken, payload.incidentId, { status: payload.status }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-incident-detail', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-history-summary', session?.accessToken] }),
+      ])
+    },
+  })
+  const createIncidentNoteMutation = useMutation({
+    mutationFn: (payload: { incidentId: string; request: Parameters<typeof createIncidentNote>[2] }) =>
+      createIncidentNote(session!.accessToken, payload.incidentId, payload.request),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-incident-detail', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-history-summary', session?.accessToken] }),
+      ])
+    },
+  })
+  const updateIncidentNoteStatusMutation = useMutation({
+    mutationFn: (payload: {
+      incidentId: string
+      noteId: string
+      request: Parameters<typeof updateIncidentNoteStatus>[3]
+    }) => updateIncidentNoteStatus(session!.accessToken, payload.incidentId, payload.noteId, payload.request),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-incident-detail', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-history-summary', session?.accessToken] }),
+      ])
+    },
+  })
+  const createIncidentAttachmentMutation = useMutation({
+    mutationFn: (payload: {
+      incidentId: string
+      request: Parameters<typeof createIncidentAttachment>[2]
+    }) => createIncidentAttachment(session!.accessToken, payload.incidentId, payload.request),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-incident-detail', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-history-summary', session?.accessToken] }),
+      ])
+    },
+  })
+  const downloadIncidentAttachment = async (incidentId: string, attachmentId: string) => {
+    const { blob, fileName, contentType } = await getIncidentAttachmentContent(
+      session!.accessToken,
+      incidentId,
+      attachmentId,
+    )
+    const url = URL.createObjectURL(new Blob([blob], { type: contentType }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = fileName
+    anchor.rel = 'noopener'
+    anchor.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
   const createNoteMutation = useMutation({
     mutationFn: (payload: Parameters<typeof createPersonnelNote>[2]) =>
       createPersonnelNote(session!.accessToken, effectivePersonId!, payload),
@@ -810,7 +883,10 @@ export function useStaffArrWorkspaceState() {
   const readinessOverrideMutationError =
     grantReadinessOverrideMutation.error ?? clearReadinessOverrideMutation.error ?? null
   const incidentMutationError =
-    createIncidentMutation.error ?? routeIncidentToTrainarrMutation.error ?? null
+    createIncidentMutation.error ??
+    routeIncidentToTrainarrMutation.error ??
+    updateIncidentStatusMutation.error ??
+    null
   const noteMutationError = createNoteMutation.error ?? null
   const documentMutationError = uploadDocumentMutation.error ?? null
   const personProfileMutationError =
@@ -910,6 +986,11 @@ export function useStaffArrWorkspaceState() {
     clearReadinessOverrideMutation,
     createIncidentMutation,
     routeIncidentToTrainarrMutation,
+    updateIncidentStatusMutation,
+    createIncidentNoteMutation,
+    updateIncidentNoteStatusMutation,
+    createIncidentAttachmentMutation,
+    downloadIncidentAttachment,
     createNoteMutation,
     uploadDocumentMutation,
     personNotesQuery,
@@ -961,6 +1042,8 @@ export function useStaffArrWorkspaceState() {
     certificationMutationError,
     readinessOverrideMutationError,
     incidentMutationError,
+    incidentNoteMutationError: createIncidentNoteMutation.error ?? updateIncidentNoteStatusMutation.error ?? null,
+    incidentAttachmentMutationError: createIncidentAttachmentMutation.error ?? null,
     noteMutationError,
     documentMutationError,
     personProfileMutationError,

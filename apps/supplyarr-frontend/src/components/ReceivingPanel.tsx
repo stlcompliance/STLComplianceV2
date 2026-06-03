@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type {
   InventoryBinResponse,
   PurchaseOrderResponse,
@@ -150,6 +152,44 @@ export function ReceivingPanel({
   const selectedPo = issuedPurchaseOrders.find((po) => po.purchaseOrderId === selectedPurchaseOrderId)
   const selectedLine = selectedReceipt?.lines.find((line) => line.lineId === selectedLineId)
   const selectedBin = bins.find((bin) => bin.binId === selectedBinId) ?? null
+  const purchaseOrderOptions = useMemo<PickerOption[]>(
+    () =>
+      issuedPurchaseOrders.map((po) => ({
+        value: po.purchaseOrderId,
+        label: `${po.orderKey} — ${po.title}`,
+      })),
+    [issuedPurchaseOrders],
+  )
+  const selectedPurchaseOrderOption = useMemo<PickerOption | undefined>(
+    () =>
+      purchaseOrderOptions.find((option) => option.value === selectedPurchaseOrderId) ??
+      (selectedPo
+        ? {
+            value: selectedPo.purchaseOrderId,
+            label: `${selectedPo.orderKey} — ${selectedPo.title}`,
+          }
+        : undefined),
+    [purchaseOrderOptions, selectedPurchaseOrderId, selectedPo],
+  )
+  const binOptions = useMemo<PickerOption[]>(
+    () =>
+      bins.map((bin) => ({
+        value: bin.binId,
+        label: `${bin.locationKey}/${bin.binKey} — ${bin.name}`,
+      })),
+    [bins],
+  )
+  const selectedBinOption = useMemo<PickerOption | undefined>(
+    () =>
+      binOptions.find((option) => option.value === selectedBinId) ??
+      (selectedBin
+        ? {
+            value: selectedBin.binId,
+            label: `${selectedBin.locationKey}/${selectedBin.binKey} — ${selectedBin.name}`,
+          }
+        : undefined),
+    [binOptions, selectedBin, selectedBinId],
+  )
   const receiptKeySource =
     selectedPo && selectedBin
       ? `${selectedPo.orderKey} ${selectedBin.binKey} receiving receipt`
@@ -502,23 +542,17 @@ export function ReceivingPanel({
           data-testid="receiving-create-form"
         >
           <h3 className="text-sm font-medium text-slate-300">Create draft receipt</h3>
-          <label htmlFor="receiving-create-po-select" className="block text-xs text-slate-500">
-            Issued purchase order
-            <select
-              id="receiving-create-po-select"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
-              value={selectedPurchaseOrderId}
-              onChange={(e) => onSelectedPurchaseOrderIdChange(e.target.value)}
-              data-testid="receiving-create-po-select"
-            >
-              <option value="">Select PO…</option>
-              {issuedPurchaseOrders.map((po) => (
-                <option key={po.purchaseOrderId} value={po.purchaseOrderId}>
-                  {po.orderKey} — {po.title}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="receiving-create-po-select"
+            label="Issued purchase order"
+            value={selectedPurchaseOrderId}
+            onChange={onSelectedPurchaseOrderIdChange}
+            options={purchaseOrderOptions}
+            selectedOption={selectedPurchaseOrderOption}
+            placeholder="Search issued purchase orders…"
+            disabled={isLoading}
+            testId="receiving-create-po-picker"
+          />
           {selectedPo ? (
             <p className="text-xs text-slate-500">
               {selectedPo.lines.length} line(s);{' '}
@@ -535,23 +569,17 @@ export function ReceivingPanel({
             label="Receipt key"
             disabled={isCreating}
           />
-          <label htmlFor="receiving-create-bin-select" className="block text-xs text-slate-500">
-            Destination bin
-            <select
-              id="receiving-create-bin-select"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
-              value={selectedBinId}
-              onChange={(e) => onSelectedBinIdChange(e.target.value)}
-              data-testid="receiving-create-bin-select"
-            >
-              <option value="">Select bin…</option>
-              {bins.map((bin) => (
-                <option key={bin.binId} value={bin.binId}>
-                  {bin.binKey} — {bin.name} ({bin.locationKey})
-                </option>
-              ))}
-            </select>
-          </label>
+          <StaticSearchPicker
+            id="receiving-create-bin-select"
+            label="Destination bin"
+            value={selectedBinId}
+            onChange={onSelectedBinIdChange}
+            options={binOptions}
+            selectedOption={selectedBinOption}
+            placeholder="Search bins…"
+            disabled={isLoading}
+            testId="receiving-create-bin-picker"
+          />
           <button
             type="button"
             className="rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"

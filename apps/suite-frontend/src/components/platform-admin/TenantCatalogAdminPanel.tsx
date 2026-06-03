@@ -1,8 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
-import { type FormEvent, useState } from 'react'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import { type FormEvent, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
+
+function normalizeTenantStatus(status: string | null | undefined): string {
+  switch ((status ?? '').trim().toLowerCase()) {
+    case 'active':
+      return 'active'
+    case 'trial':
+      return 'trial'
+    case 'suspended':
+    case 'inactive':
+      return 'suspended'
+    case 'archived':
+      return 'archived'
+    default:
+      return 'active'
+  }
+}
+
+function parseBillingGraceDays(value: string): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return null
+  }
+
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
+}
 
 export function TenantCatalogAdminPanel() {
   const queryClient = useQueryClient()
@@ -11,6 +37,12 @@ export function TenantCatalogAdminPanel() {
   const [displayName, setDisplayName] = useState('')
   const [editDisplayName, setEditDisplayName] = useState('')
   const [status, setStatus] = useState('active')
+  const [subscriptionTier, setSubscriptionTier] = useState('standard')
+  const [billingCustomerId, setBillingCustomerId] = useState('')
+  const [billingSubscriptionId, setBillingSubscriptionId] = useState('')
+  const [billingGraceDays, setBillingGraceDays] = useState('')
+  const [isTrial, setIsTrial] = useState(false)
+  const [isInternalTenant, setIsInternalTenant] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const tenantsQuery = useQuery({
@@ -20,13 +52,38 @@ export function TenantCatalogAdminPanel() {
 
   const tenants = tenantsQuery.data?.items ?? []
   const selectedTenant = tenants.find((tenant) => tenant.tenantId === selectedTenantId) ?? null
+  const tenantOptions = useMemo<PickerOption[]>(
+    () =>
+      tenants.map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.displayName} (${tenant.slug})`,
+        inactive: tenant.status !== 'active',
+      })),
+    [tenants],
+  )
 
   const createMutation = useMutation({
-    mutationFn: () => nexarr.createTenant({ slug: slug.trim(), displayName: displayName.trim() }),
+    mutationFn: () =>
+      nexarr.createTenant({
+        slug: slug.trim(),
+        displayName: displayName.trim(),
+        subscriptionTier: subscriptionTier.trim() || 'standard',
+        billingCustomerId: billingCustomerId.trim() || null,
+        billingSubscriptionId: billingSubscriptionId.trim() || null,
+        billingGraceDays: parseBillingGraceDays(billingGraceDays),
+        isTrial,
+        isInternalTenant,
+      }),
     onSuccess: () => {
       setErrorMessage(null)
       setSlug('')
       setDisplayName('')
+      setSubscriptionTier('standard')
+      setBillingCustomerId('')
+      setBillingSubscriptionId('')
+      setBillingGraceDays('')
+      setIsTrial(false)
+      setIsInternalTenant(false)
       void queryClient.invalidateQueries({ queryKey: ['platform-tenants-admin'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-overview'] })
     },
@@ -34,7 +91,16 @@ export function TenantCatalogAdminPanel() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: () => nexarr.updateTenant(selectedTenantId, { displayName: editDisplayName.trim() }),
+    mutationFn: () =>
+      nexarr.updateTenant(selectedTenantId, {
+        displayName: editDisplayName.trim(),
+        subscriptionTier: subscriptionTier.trim() || 'standard',
+        billingCustomerId: billingCustomerId.trim() || null,
+        billingSubscriptionId: billingSubscriptionId.trim() || null,
+        billingGraceDays: parseBillingGraceDays(billingGraceDays),
+        isTrial,
+        isInternalTenant,
+      }),
     onSuccess: () => {
       setErrorMessage(null)
       void queryClient.invalidateQueries({ queryKey: ['platform-tenants-admin'] })
@@ -103,6 +169,66 @@ export function TenantCatalogAdminPanel() {
             required
           />
         </label>
+        <label htmlFor="tenant-catalog-create-subscription-tier" className="block text-sm text-slate-700">
+          Subscription tier
+          <input
+            id="tenant-catalog-create-subscription-tier"
+            value={subscriptionTier}
+            onChange={(event) => setSubscriptionTier(event.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="standard"
+          />
+        </label>
+        <label htmlFor="tenant-catalog-create-billing-customer" className="block text-sm text-slate-700">
+          Billing customer ID
+          <input
+            id="tenant-catalog-create-billing-customer"
+            value={billingCustomerId}
+            onChange={(event) => setBillingCustomerId(event.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="cus_123"
+          />
+        </label>
+        <label htmlFor="tenant-catalog-create-billing-subscription" className="block text-sm text-slate-700">
+          Billing subscription ID
+          <input
+            id="tenant-catalog-create-billing-subscription"
+            value={billingSubscriptionId}
+            onChange={(event) => setBillingSubscriptionId(event.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="sub_123"
+          />
+        </label>
+        <label htmlFor="tenant-catalog-create-billing-grace-days" className="block text-sm text-slate-700">
+          Billing grace days
+          <input
+            id="tenant-catalog-create-billing-grace-days"
+            type="number"
+            min={0}
+            value={billingGraceDays}
+            onChange={(event) => setBillingGraceDays(event.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="7"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            id="tenant-catalog-create-is-trial"
+            type="checkbox"
+            checked={isTrial}
+            onChange={(event) => setIsTrial(event.target.checked)}
+          />
+          Trial tenant
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            id="tenant-catalog-create-is-internal"
+            type="checkbox"
+            checked={isInternalTenant}
+            onChange={(event) => setIsInternalTenant(event.target.checked)}
+          />
+          Internal/free tenant
+        </label>
         <div className="md:col-span-3">
           <button
             type="submit"
@@ -115,28 +241,26 @@ export function TenantCatalogAdminPanel() {
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label htmlFor="tenant-catalog-selected-tenant" className="block text-sm text-slate-700">
-          Tenant to edit
-          <select
-            id="tenant-catalog-selected-tenant"
-            value={selectedTenantId}
-            onChange={(event) => {
-              const tenantId = event.target.value
-              setSelectedTenantId(tenantId)
-              const tenant = tenants.find((item) => item.tenantId === tenantId)
-              setEditDisplayName(tenant?.displayName ?? '')
-              setStatus(tenant?.status ?? 'active')
-            }}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            <option value="">Select tenant…</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.tenantId} value={tenant.tenantId}>
-                {tenant.displayName} ({tenant.slug})
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          label="Tenant to edit"
+          id="tenant-catalog-selected-tenant"
+          value={selectedTenantId}
+          onChange={(tenantId) => {
+            setSelectedTenantId(tenantId)
+            const tenant = tenants.find((item) => item.tenantId === tenantId)
+            setEditDisplayName(tenant?.displayName ?? '')
+            setStatus(normalizeTenantStatus(tenant?.status))
+            setSubscriptionTier(tenant?.subscriptionTier ?? 'standard')
+            setBillingCustomerId(tenant?.billingCustomerId ?? '')
+            setBillingSubscriptionId(tenant?.billingSubscriptionId ?? '')
+            setBillingGraceDays(tenant?.billingGraceDays?.toString() ?? '')
+            setIsTrial(tenant?.isTrial ?? false)
+            setIsInternalTenant(tenant?.isInternalTenant ?? false)
+          }}
+          options={tenantOptions}
+          placeholder="Search tenants"
+          testId="tenant-catalog-selected-tenant"
+        />
         {selectedTenant ? (
           <>
             <label htmlFor="tenant-catalog-edit-display-name" className="block text-sm text-slate-700">
@@ -157,9 +281,71 @@ export function TenantCatalogAdminPanel() {
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="active">active</option>
+                <option value="trial">trial</option>
                 <option value="inactive">inactive</option>
                 <option value="suspended">suspended</option>
+                <option value="archived">archived</option>
               </select>
+            </label>
+            <label htmlFor="tenant-catalog-edit-subscription-tier" className="block text-sm text-slate-700">
+              Subscription tier
+              <input
+                id="tenant-catalog-edit-subscription-tier"
+                value={subscriptionTier}
+                onChange={(event) => setSubscriptionTier(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                placeholder="standard"
+              />
+            </label>
+            <label htmlFor="tenant-catalog-edit-billing-customer" className="block text-sm text-slate-700">
+              Billing customer ID
+              <input
+                id="tenant-catalog-edit-billing-customer"
+                value={billingCustomerId}
+                onChange={(event) => setBillingCustomerId(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                placeholder="cus_123"
+              />
+            </label>
+            <label htmlFor="tenant-catalog-edit-billing-subscription" className="block text-sm text-slate-700">
+              Billing subscription ID
+              <input
+                id="tenant-catalog-edit-billing-subscription"
+                value={billingSubscriptionId}
+                onChange={(event) => setBillingSubscriptionId(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                placeholder="sub_123"
+              />
+            </label>
+            <label htmlFor="tenant-catalog-edit-billing-grace-days" className="block text-sm text-slate-700">
+              Billing grace days
+              <input
+                id="tenant-catalog-edit-billing-grace-days"
+                type="number"
+                min={0}
+                value={billingGraceDays}
+                onChange={(event) => setBillingGraceDays(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                placeholder="7"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                id="tenant-catalog-edit-is-trial"
+                type="checkbox"
+                checked={isTrial}
+                onChange={(event) => setIsTrial(event.target.checked)}
+              />
+              Trial tenant
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                id="tenant-catalog-edit-is-internal"
+                type="checkbox"
+                checked={isInternalTenant}
+                onChange={(event) => setIsInternalTenant(event.target.checked)}
+              />
+              Internal/free tenant
             </label>
             <div className="flex flex-wrap gap-2 md:col-span-2">
               <button
@@ -182,6 +368,41 @@ export function TenantCatalogAdminPanel() {
           </>
         ) : null}
       </div>
+
+      {selectedTenant ? (
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <h3 className="text-sm font-semibold text-stl-navy">Billing readiness</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Placeholder metadata for future billing integration and subscription-driven entitlement flows.
+          </p>
+          <dl className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Subscription tier</dt>
+              <dd className="text-slate-700">{selectedTenant.subscriptionTier || '—'}</dd>
+            </div>
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Trial tenant</dt>
+              <dd className="text-slate-700">{selectedTenant.isTrial ? 'Yes' : 'No'}</dd>
+            </div>
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Internal tenant</dt>
+              <dd className="text-slate-700">{selectedTenant.isInternalTenant ? 'Yes' : 'No'}</dd>
+            </div>
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Billing customer ID</dt>
+              <dd className="font-mono text-xs break-all text-slate-700">{selectedTenant.billingCustomerId ?? '—'}</dd>
+            </div>
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Billing subscription ID</dt>
+              <dd className="font-mono text-xs break-all text-slate-700">{selectedTenant.billingSubscriptionId ?? '—'}</dd>
+            </div>
+            <div className="grid grid-cols-[10rem_1fr] gap-3">
+              <dt className="font-medium text-slate-600">Grace days</dt>
+              <dd className="text-slate-700">{selectedTenant.billingGraceDays ?? '—'}</dd>
+            </div>
+          </dl>
+        </div>
+      ) : null}
     </section>
   )
 }

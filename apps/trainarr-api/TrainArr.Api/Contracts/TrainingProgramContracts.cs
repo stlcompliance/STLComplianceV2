@@ -14,6 +14,12 @@ public sealed record CreateTrainingProgramRequest(
 
 
 
+public sealed record GenerateTrainingProgramDraftRequest(
+
+    string Prompt);
+
+
+
 public sealed record UpdateTrainingProgramRequest(
 
     string Name,
@@ -72,8 +78,46 @@ public sealed record TrainingProgramDetailResponse(
 
     IReadOnlyList<TrainingProgramDefinitionLinkResponse> Definitions,
 
+    IReadOnlyList<TrainingProgramContentReferenceResponse> ContentReferences,
+
     DateTimeOffset CreatedAt,
 
     DateTimeOffset UpdatedAt);
+
+
+
+public sealed record TrainingProgramDraftMatchResponse(
+
+    Guid TrainingDefinitionId,
+
+    string DefinitionKey,
+
+    string Name,
+
+    string QualificationKey,
+
+    string QualificationName,
+
+    int Score,
+
+    string MatchReason);
+
+
+
+public sealed record TrainingProgramDraftResponse(
+
+    DateTimeOffset GeneratedAt,
+
+    string Prompt,
+
+    string Name,
+
+    string Description,
+
+    IReadOnlyList<Guid> TrainingDefinitionIds,
+
+    IReadOnlyList<TrainingProgramDraftMatchResponse> MatchedDefinitions,
+
+    string Summary);
 
 

@@ -24,6 +24,10 @@ public sealed class ReadinessRollup : IHasTenant
 
     public decimal ReadyPercent { get; set; }
 
+    public string ConfidenceLevel { get; set; } = "low";
+
+    public int ConfidenceScore { get; set; }
+
     public DateTimeOffset ComputedAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

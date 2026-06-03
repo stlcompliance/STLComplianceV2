@@ -209,6 +209,78 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_template_clone_copies_structure_as_new_draft()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "clone-walkaround",
+            "Clone Walkaround",
+            "Template to clone"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createCategoryRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/categories",
+            token);
+        createCategoryRequest.Content = JsonContent.Create(new CreateInspectionTemplateCategoryRequest(
+            "body",
+            "Body",
+            10));
+        var createCategoryResponse = await _maintainarrClient.SendAsync(createCategoryRequest);
+        createCategoryResponse.EnsureSuccessStatusCode();
+        var category = (await createCategoryResponse.Content.ReadFromJsonAsync<InspectionTemplateCategoryResponse>())!;
+
+        var createItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "lights",
+            "Lights operate correctly",
+            "pass_fail",
+            true,
+            10,
+            category.CategoryId));
+        var createItemResponse = await _maintainarrClient.SendAsync(createItemRequest);
+        createItemResponse.EnsureSuccessStatusCode();
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var cloneRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/clone",
+            token);
+        var cloneResponse = await _maintainarrClient.SendAsync(cloneRequest);
+        cloneResponse.EnsureSuccessStatusCode();
+        var clone = (await cloneResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        Assert.NotEqual(template.InspectionTemplateId, clone.InspectionTemplateId);
+        Assert.NotEqual(template.TemplateKey, clone.TemplateKey);
+        Assert.EndsWith("-copy", clone.TemplateKey);
+        Assert.Equal("draft", clone.Status);
+        Assert.Equal(1, clone.Version);
+        Assert.Equal($"{template.Name} Copy", clone.Name);
+        Assert.Equal(template.Description, clone.Description);
+        Assert.Single(clone.Categories);
+        Assert.Equal("body", clone.Categories[0].CategoryKey);
+        Assert.Single(clone.ChecklistItems);
+        Assert.Equal("lights", clone.ChecklistItems[0].ItemKey);
+        Assert.Single(clone.LinkedAssetTypes);
+        Assert.Equal(assetTypeId, clone.LinkedAssetTypes[0].AssetTypeId);
+    }
+
+    [Fact]
     public async Task Activate_template_without_checklist_items_returns_bad_request()
     {
         var token = await RedeemMaintainArrTokenAsync();

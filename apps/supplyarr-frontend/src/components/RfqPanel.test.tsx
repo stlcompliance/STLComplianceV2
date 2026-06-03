@@ -5,6 +5,45 @@ import { within } from '@testing-library/dom'
 
 import { RfqPanel } from './RfqPanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
+
 const mockData = vi.hoisted(() => ({
   rfq: {
     rfqId: 'rfq-1',
@@ -41,6 +80,10 @@ const mockData = vi.hoisted(() => ({
         vendorDisplayName: 'Acme Supply',
         status: 'invited',
         invitedAt: '2026-05-01T00:00:00Z',
+        portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
+        portalAccessExpiresAt: '2026-05-15T00:00:00Z',
+        portalAccessCode: 'portal-code-1',
+        portalUrl: '/vendor-portal?rfqId=rfq-1&accessCode=portal-code-1',
       },
       {
         invitationId: 'inv-2',
@@ -49,6 +92,10 @@ const mockData = vi.hoisted(() => ({
         vendorDisplayName: 'Beta Parts',
         status: 'invited',
         invitedAt: '2026-05-01T00:00:00Z',
+        portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
+        portalAccessExpiresAt: '2026-05-15T00:00:00Z',
+        portalAccessCode: 'portal-code-2',
+        portalUrl: '/vendor-portal?rfqId=rfq-1&accessCode=portal-code-2',
       },
     ],
     quotes: [
@@ -208,8 +255,11 @@ describe('RfqPanel', () => {
     </QueryClientProvider>,
   )
     expect(await screen.findByTestId('rfq-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('rfq-picker-options')).toHaveTextContent(
+      'RFQ-001 · submitted · Oil filters',
+    )
 
-    fireEvent.change(await screen.findByLabelText(/Select RFQ/i), { target: { value: 'rfq-1' } })
+    fireEvent.change(screen.getByTestId('rfq-picker'), { target: { value: 'rfq-1' } })
     expect(await screen.findByText(/Quote analytics/i)).toBeInTheDocument()
     const inviteVendorSelect = screen.getByLabelText(/Invite vendor/i)
     expect(within(inviteVendorSelect).getByRole('option', { name: /Acme Supply \(ACME\)/i })).not.toBeDisabled()
@@ -225,6 +275,8 @@ describe('RfqPanel', () => {
     expect(screen.getByText(/Response time 4 days/i)).toBeInTheDocument()
     expect(screen.getByText(/Approved source/i)).toBeInTheDocument()
     expect(screen.getByText(/Source attention: restricted/i)).toBeInTheDocument()
+    expect(screen.getByText(/Vendor portal access/i)).toBeInTheDocument()
+    expect(screen.getByDisplayValue('portal-code-1')).toBeInTheDocument()
   })
 
   it('returns null when user cannot manage', () => {

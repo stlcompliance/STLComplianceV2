@@ -3098,6 +3098,17 @@ namespace SupplyArr.Api.Migrations
                     b.Property<Guid>("InvitedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("PortalAccessCode")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("PortalAccessCodeExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("PortalAccessCodeIssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("RfqId")
                         .HasColumnType("uuid");
 
@@ -3119,6 +3130,9 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("VendorPartyId");
+
+                    b.HasIndex("TenantId", "RfqId", "PortalAccessCode")
+                        .IsUnique();
 
                     b.HasIndex("TenantId", "RfqId", "VendorPartyId")
                         .IsUnique();
@@ -4066,20 +4080,36 @@ namespace SupplyArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("AutoCloseCompletedExceptionsAfterHours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(48);
+
+                    b.Property<bool>("AutoCloseCompletedExceptionsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("EscalationCooldownHours")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(24);
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MaxEscalationsPerException")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(5);
 
                     b.Property<bool>("NotifyOnProcurementExceptionSlaEscalation")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -4311,6 +4341,107 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId", "DemandRefId", "LineNumber");
 
                     b.ToTable("supplyarr_trainarr_demand_ref_lines", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorEmailInboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BodyPreview")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LinkedReferenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LinkedReferenceKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("LinkedReferenceType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MatchReason")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("MatchStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("MessageKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VendorDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("VendorPartyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VendorPartyKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "MessageKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "LinkedReferenceType", "LinkedReferenceId");
+
+                    b.HasIndex("TenantId", "MatchStatus", "ReceivedAt");
+
+                    b.HasIndex("TenantId", "MessageKind", "ReceivedAt");
+
+                    b.HasIndex("TenantId", "VendorPartyId", "ReceivedAt");
+
+                    b.ToTable("supplyarr_vendor_email_inbox_messages", (string)null);
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.VendorQuote", b =>

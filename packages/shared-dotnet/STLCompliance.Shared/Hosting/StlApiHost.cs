@@ -66,6 +66,11 @@ public static class StlApiHost
 
             var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
                 ?? builder.Configuration[$"{StlJwtOptions.SectionName}:SigningKey"];
+            if (builder.Environment.IsProduction() && (string.IsNullOrWhiteSpace(signingKey) || signingKey.Length < 32))
+            {
+                throw new InvalidOperationException(
+                    "AUTH_SIGNING_KEY must be configured with at least 32 characters before starting in Production.");
+            }
             var jwtEnabled = !string.IsNullOrWhiteSpace(signingKey) && signingKey.Length >= 32;
 
             var app = builder.Build();
@@ -114,6 +119,7 @@ public static class StlApiHost
             }
 
             app.UseStlCorrelationId();
+            app.UseStlSecurityHeaders();
             configurePipeline?.Invoke(app);
             app.UseMiddleware<ApiExceptionMiddleware>();
             if (jwtEnabled)

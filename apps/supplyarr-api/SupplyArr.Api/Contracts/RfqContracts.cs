@@ -18,7 +18,11 @@ public sealed record RfqVendorInvitationResponse(
     string VendorPartyKey,
     string VendorDisplayName,
     string Status,
-    DateTimeOffset InvitedAt);
+    DateTimeOffset InvitedAt,
+    DateTimeOffset PortalAccessCodeIssuedAt,
+    DateTimeOffset PortalAccessExpiresAt,
+    string PortalAccessCode,
+    string PortalUrl);
 
 public sealed record VendorQuoteLineResponse(
     Guid QuoteLineId,
@@ -97,6 +101,51 @@ public sealed record InviteRfqVendorsRequest(
 
 public sealed record CreateVendorQuoteRequest(
     Guid VendorPartyId,
+    string QuoteKey,
+    string CurrencyCode,
+    string Notes);
+
+public sealed record VendorPortalRfqLineResponse(
+    Guid RfqLineId,
+    int LineNumber,
+    Guid PartId,
+    string PartKey,
+    string PartDisplayName,
+    decimal QuantityRequested,
+    string UnitOfMeasure,
+    string Notes,
+    Guid? QuoteLineId,
+    decimal? UnitPrice,
+    decimal? QuantityQuoted,
+    int? LeadTimeDays,
+    string QuoteNotes);
+
+public sealed record VendorPortalRfqResponse(
+    Guid RfqId,
+    string RfqKey,
+    string Title,
+    string Notes,
+    string Status,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName,
+    Guid InvitationId,
+    string InvitationStatus,
+    DateTimeOffset InvitedAt,
+    DateTimeOffset PortalAccessExpiresAt,
+    Guid? VendorQuoteId,
+    string? QuoteKey,
+    string? QuoteStatus,
+    string? CurrencyCode,
+    decimal? TotalAmount,
+    int? LeadTimeDays,
+    string? QuoteNotes,
+    DateTimeOffset? SubmittedAt,
+    IReadOnlyList<VendorPortalRfqLineResponse> Lines,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record VendorPortalCreateQuoteRequest(
     string QuoteKey,
     string CurrencyCode,
     string Notes);

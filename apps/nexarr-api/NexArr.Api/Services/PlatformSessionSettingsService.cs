@@ -56,6 +56,11 @@ public sealed class PlatformSessionSettingsService(
             request.RememberedRefreshTokenDays,
             entity.RefreshTokenDays,
             defaults.RememberedRefreshTokenDays);
+        entity.RequirePlatformAdminMfa = request.RequirePlatformAdminMfa;
+        entity.PasswordMinLength = PlatformSessionSettingsRules.NormalizePasswordMinLength(
+            request.PasswordMinLength,
+            defaults.PasswordMinLength);
+        entity.RequirePasswordComplexity = request.RequirePasswordComplexity;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -88,6 +93,9 @@ public sealed class PlatformSessionSettingsService(
                 AccessTokenMinutes = defaults.AccessTokenMinutes,
                 RefreshTokenDays = defaults.RefreshTokenDays,
                 RememberedRefreshTokenDays = defaults.RememberedRefreshTokenDays,
+                RequirePlatformAdminMfa = defaults.RequirePlatformAdminMfa,
+                PasswordMinLength = defaults.PasswordMinLength,
+                RequirePasswordComplexity = defaults.RequirePasswordComplexity,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
             };
@@ -109,6 +117,10 @@ public sealed class PlatformSessionSettingsService(
             settings.RememberedRefreshTokenDays,
             settings.RefreshTokenDays,
             defaults.RememberedRefreshTokenDays);
+        settings.RequirePlatformAdminMfa ??= defaults.RequirePlatformAdminMfa;
+        settings.PasswordMinLength = PlatformSessionSettingsRules.NormalizePasswordMinLength(
+            settings.PasswordMinLength,
+            defaults.PasswordMinLength);
         return settings;
     }
 
@@ -120,11 +132,17 @@ public sealed class PlatformSessionSettingsService(
         var rememberedRefreshTokenDays = PlatformSessionSettingsRules.ResolveConfiguredRememberedRefreshTokenDays(
             options,
             refreshTokenDays);
+        var requirePlatformAdminMfa = PlatformSessionSettingsRules.ResolveConfiguredRequirePlatformAdminMfa(options);
+        var passwordMinLength = PasswordResetRules.ResolveConfiguredMinPasswordLength();
+        var requirePasswordComplexity = PasswordResetRules.ResolveConfiguredRequirePasswordComplexity();
 
         return new PlatformSessionSettingsDefaults(
             accessTokenMinutes,
             refreshTokenDays,
-            rememberedRefreshTokenDays);
+            rememberedRefreshTokenDays,
+            requirePlatformAdminMfa,
+            passwordMinLength,
+            requirePasswordComplexity);
     }
 
     private static PlatformSessionSettingsResponse MapResponse(PlatformSessionSettings settings) =>
@@ -132,10 +150,16 @@ public sealed class PlatformSessionSettingsService(
             settings.AccessTokenMinutes,
             settings.RefreshTokenDays,
             settings.RememberedRefreshTokenDays,
+            settings.RequirePlatformAdminMfa ?? false,
+            settings.PasswordMinLength,
+            settings.RequirePasswordComplexity,
             settings.UpdatedAt == default ? null : settings.UpdatedAt);
 
     private sealed record PlatformSessionSettingsDefaults(
         int AccessTokenMinutes,
         int RefreshTokenDays,
-        int RememberedRefreshTokenDays);
+        int RememberedRefreshTokenDays,
+        bool RequirePlatformAdminMfa,
+        int PasswordMinLength,
+        bool RequirePasswordComplexity);
 }

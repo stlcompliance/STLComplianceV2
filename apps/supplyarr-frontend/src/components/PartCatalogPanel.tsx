@@ -1,4 +1,4 @@
-import { ControlledSelect, normalizeUom } from '@stl/shared-ui'
+import { ControlledSelect, StaticSearchPicker, normalizeUom, type PickerOption } from '@stl/shared-ui'
 import { useMemo } from 'react'
 
 import type { PartCatalogResponse, PartResponse } from '../api/types'
@@ -99,6 +99,30 @@ export function PartCatalogPanel({
   const catalogKeys = useMemo(() => catalogs.map((catalog) => catalog.catalogKey), [catalogs])
   const partKeys = useMemo(() => parts.map((part) => part.partKey), [parts])
   const categoryOptions = useMemo(() => distinctCategoryOptions(parts), [parts])
+  const catalogOptions = useMemo<PickerOption[]>(
+    () => toCatalogPickerOptions(catalogs),
+    [catalogs],
+  )
+  const selectedCatalogOption = useMemo<PickerOption | undefined>(
+    () => catalogOptions.find((option) => option.value === selectedCatalogId),
+    [catalogOptions, selectedCatalogId],
+  )
+  const partOptions = useMemo<PickerOption[]>(
+    () => toPartPickerOptions(parts),
+    [parts],
+  )
+  const selectedPartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedPartId),
+    [partOptions, selectedPartId],
+  )
+  const vendorOptions = useMemo<PickerOption[]>(
+    () => toPartyPickerOptions(vendors),
+    [vendors],
+  )
+  const selectedVendorOption = useMemo<PickerOption | undefined>(
+    () => vendorOptions.find((option) => option.value === selectedVendorId),
+    [selectedVendorId, vendorOptions],
+  )
 
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading part catalog…</p>
@@ -215,13 +239,15 @@ export function PartCatalogPanel({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Add part SKU</h3>
-            <ControlledSelect
+            <StaticSearchPicker
               id="part-catalog-select"
               label="Part catalog"
               value={selectedCatalogId}
               onChange={onSelectedCatalogIdChange}
-              options={toCatalogPickerOptions(catalogs)}
-              emptyLabel="No catalog"
+              options={catalogOptions}
+              selectedOption={selectedCatalogOption}
+              placeholder="No catalog"
+              testId="part-catalog-picker"
             />
             <label htmlFor="part-display-name" className="block text-sm text-slate-400">
               Part display name
@@ -289,21 +315,25 @@ export function PartCatalogPanel({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Link vendor</h3>
-            <ControlledSelect
+            <StaticSearchPicker
               id="vendor-link-part"
               label="Part to link"
               value={selectedPartId}
               onChange={onSelectedPartIdChange}
-              options={toPartPickerOptions(parts)}
-              emptyLabel="Select part"
+              options={partOptions}
+              selectedOption={selectedPartOption}
+              placeholder="Select part"
+              testId="vendor-link-part-picker"
             />
-            <ControlledSelect
+            <StaticSearchPicker
               id="vendor-link-vendor"
               label="Vendor party"
               value={selectedVendorId}
               onChange={onSelectedVendorIdChange}
-              options={toPartyPickerOptions(vendors)}
-              emptyLabel="Select vendor"
+              options={vendorOptions}
+              selectedOption={selectedVendorOption}
+              placeholder="Select vendor"
+              testId="vendor-link-vendor-picker"
             />
             <label htmlFor="vendor-part-number" className="block text-sm text-slate-400">
               Vendor part number

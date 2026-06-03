@@ -12,6 +12,12 @@ public sealed class PlatformSessionSettings
 
     public int RememberedRefreshTokenDays { get; set; } = 7;
 
+    public bool? RequirePlatformAdminMfa { get; set; }
+
+    public int PasswordMinLength { get; set; } = 12;
+
+    public bool RequirePasswordComplexity { get; set; } = true;
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

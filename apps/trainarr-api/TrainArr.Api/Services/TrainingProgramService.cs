@@ -324,6 +324,8 @@ public sealed class TrainingProgramService(
 
             .ThenInclude(x => x.TrainingDefinition)
 
+            .Include(x => x.ContentReferences)
+
             .Where(x => x.TenantId == tenantId && x.Id == programId);
 
 
@@ -444,6 +446,32 @@ public sealed class TrainingProgramService(
                     x.TrainingDefinition.Name,
 
                     x.SortOrder))
+
+                .ToList(),
+
+            program.ContentReferences
+
+                .OrderBy(x => x.CreatedAt)
+
+                .Select(x => new TrainingProgramContentReferenceResponse(
+
+                    x.Id,
+
+                    x.TrainingProgramId,
+
+                    x.ContentType,
+
+                    x.Title,
+
+                    x.ReferenceValue,
+
+                    x.Notes,
+
+                    x.LocaleTag,
+
+                    x.CreatedByUserId,
+
+                    x.CreatedAt))
 
                 .ToList(),
 

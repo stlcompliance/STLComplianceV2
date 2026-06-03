@@ -52,6 +52,14 @@ public static class HybridDataPlaneEndpoints
         })
         .WithName("UpsertDataPlaneProfile");
 
+        group.MapPost("/validate", async (
+            ValidateDataPlaneProfileRequest request,
+            HttpContext context,
+            HybridDataPlaneService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.ValidateAsync(context.User, request, cancellationToken)))
+        .WithName("ValidateDataPlaneProfile");
+
         group.MapDelete("/{tenantId:guid}/{productKey}", async (
             Guid tenantId,
             string productKey,

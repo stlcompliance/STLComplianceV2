@@ -1,11 +1,14 @@
 import { type FormEvent, useState } from 'react'
 import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
+  CreateIncidentAttachmentRequest,
+  CreateIncidentNoteRequest,
   CreatePersonnelIncidentRequest,
   PersonnelIncidentDetailResponse,
   PersonnelIncidentReasonCategory,
   PersonnelIncidentSeverity,
   PersonnelIncidentSummaryResponse,
+  UpdateIncidentNoteStatusRequest,
 } from '../api/types'
 
 interface IncidentsPanelProps {
@@ -28,7 +31,23 @@ interface IncidentsPanelProps {
   onSelectIncident: (incidentId: string) => void
   onCreateIncident: (request: CreatePersonnelIncidentRequest) => Promise<void>
   onRouteToTrainarr?: (incidentId: string) => Promise<void>
+  onUpdateIncidentStatus?: (incidentId: string, status: 'open' | 'closed') => Promise<void>
+  onCreateIncidentNote?: (incidentId: string, request: CreateIncidentNoteRequest) => Promise<void>
+  onUpdateIncidentNoteStatus?: (
+    incidentId: string,
+    noteId: string,
+    request: UpdateIncidentNoteStatusRequest,
+  ) => Promise<void>
+  onCreateIncidentAttachment?: (
+    incidentId: string,
+    request: CreateIncidentAttachmentRequest,
+  ) => Promise<void>
+  onDownloadIncidentAttachment?: (incidentId: string, attachmentId: string) => Promise<void>
   isRouting?: boolean
+  isUpdatingStatus?: boolean
+  isCreatingIncidentNote?: boolean
+  isUpdatingIncidentNoteStatus?: boolean
+  isCreatingIncidentAttachment?: boolean
 }
 
 export function isIncidentRoutableToTrainarr(reasonCategoryKey: string): boolean {
@@ -78,6 +97,21 @@ function severityBadgeClass(severity: string): string {
   }
 }
 
+function noteTypeLabel(noteTypeKey: string): string {
+  return noteTypeKey === 'corrective_action' ? 'Corrective action' : 'Note'
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const result = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file.'))
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.readAsDataURL(file)
+  })
+
+  return result.includes(',') ? result.split(',')[1] ?? '' : result
+}
+
 export function IncidentsPanel({
   personId,
   personDisplayName,
@@ -98,13 +132,31 @@ export function IncidentsPanel({
   onSelectIncident,
   onCreateIncident,
   onRouteToTrainarr,
+  onUpdateIncidentStatus,
+  onCreateIncidentNote,
+  onUpdateIncidentNoteStatus,
+  onCreateIncidentAttachment,
+  onDownloadIncidentAttachment,
   isRouting = false,
+  isUpdatingStatus = false,
+  isCreatingIncidentNote = false,
+  isUpdatingIncidentNoteStatus = false,
+  isCreatingIncidentAttachment = false,
 }: IncidentsPanelProps) {
   const [reasonCategoryKey, setReasonCategoryKey] = useState<PersonnelIncidentReasonCategory>('safety')
   const [severity, setSeverity] = useState<PersonnelIncidentSeverity>('medium')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16))
+  const [noteTypeKey, setNoteTypeKey] = useState<'note' | 'corrective_action'>('note')
+  const [noteSubject, setNoteSubject] = useState('')
+  const [noteBody, setNoteBody] = useState('')
+  const [noteDueAt, setNoteDueAt] = useState('')
+  const [attachmentTitle, setAttachmentTitle] = useState('')
+  const [attachmentDescription, setAttachmentDescription] = useState('')
+  const [attachmentFileName, setAttachmentFileName] = useState('')
+  const [attachmentContentType, setAttachmentContentType] = useState('application/octet-stream')
+  const [attachmentContentBase64, setAttachmentContentBase64] = useState('')
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -118,6 +170,59 @@ export function IncidentsPanel({
     })
     setTitle('')
     setDescription('')
+  }
+
+  const handleNoteSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!onCreateIncidentNote || !selectedIncident) {
+      return
+    }
+
+    await onCreateIncidentNote(selectedIncident.incidentId, {
+      noteTypeKey,
+      subject: noteSubject,
+      body: noteBody,
+      dueAt: noteDueAt ? new Date(noteDueAt).toISOString() : null,
+    })
+
+    setNoteSubject('')
+    setNoteBody('')
+    setNoteDueAt('')
+    setNoteTypeKey('note')
+  }
+
+  const handleAttachmentFileChange = async (file: File | null) => {
+    if (!file) {
+      setAttachmentFileName('')
+      setAttachmentContentType('application/octet-stream')
+      setAttachmentContentBase64('')
+      return
+    }
+
+    setAttachmentFileName(file.name)
+    setAttachmentContentType(file.type || 'application/octet-stream')
+    setAttachmentContentBase64(await fileToBase64(file))
+  }
+
+  const handleAttachmentSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!onCreateIncidentAttachment || !selectedIncident) {
+      return
+    }
+
+    await onCreateIncidentAttachment(selectedIncident.incidentId, {
+      title: attachmentTitle,
+      fileName: attachmentFileName || attachmentTitle || 'attachment.bin',
+      contentType: attachmentContentType,
+      contentBase64: attachmentContentBase64,
+      description: attachmentDescription || null,
+    })
+
+    setAttachmentTitle('')
+    setAttachmentDescription('')
+    setAttachmentFileName('')
+    setAttachmentContentType('application/octet-stream')
+    setAttachmentContentBase64('')
   }
 
   return (
@@ -225,6 +330,10 @@ export function IncidentsPanel({
                       <dt className="uppercase tracking-wide">Reported</dt>
                       <dd className="text-slate-200">{new Date(selectedIncident.reportedAt).toLocaleString()}</dd>
                     </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Status</dt>
+                      <dd className="text-slate-200">{selectedIncident.status}</dd>
+                    </div>
                     {selectedIncident.trainarrRouting ? (
                       <div className="sm:col-span-2">
                         <dt className="uppercase tracking-wide">TrainArr routing</dt>
@@ -235,7 +344,229 @@ export function IncidentsPanel({
                         </dd>
                       </div>
                     ) : null}
-                  </dl>
+                      </dl>
+                  {canManage && onUpdateIncidentStatus ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={() =>
+                          void onUpdateIncidentStatus(
+                            selectedIncident.incidentId,
+                            selectedIncident.status === 'closed' ? 'open' : 'closed',
+                          )
+                        }
+                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                      >
+                        {isUpdatingStatus
+                          ? 'Updating status…'
+                          : selectedIncident.status === 'closed'
+                            ? 'Reopen incident'
+                            : 'Close incident'}
+                      </button>
+                      <span className="text-xs text-slate-400">
+                        {selectedIncident.status === 'closed'
+                          ? 'Closed incidents can be reopened when follow-up is required.'
+                          : 'Close the incident when follow-up is complete.'}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                    <section className="rounded-md border border-slate-700 bg-slate-900/50 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                          Notes and corrective actions
+                        </h4>
+                        <span className="text-xs text-slate-400">
+                          {selectedIncident.notes?.length ?? 0} records
+                        </span>
+                      </div>
+                      {selectedIncident.notes && selectedIncident.notes.length > 0 ? (
+                        <ul className="mt-3 space-y-2">
+                          {selectedIncident.notes.map((note) => (
+                            <li key={note.noteId} className="rounded-md border border-slate-700 bg-slate-950/50 p-3">
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-medium text-slate-100">
+                                    {noteTypeLabel(note.noteTypeKey)} · {note.subject}
+                                  </p>
+                                  <p className="mt-1 text-xs text-slate-400">
+                                    {note.status}
+                                    {note.dueAt ? ` · due ${new Date(note.dueAt).toLocaleString()}` : ''}
+                                    {note.completedAt ? ` · completed ${new Date(note.completedAt).toLocaleString()}` : ''}
+                                  </p>
+                                </div>
+                                {note.noteTypeKey === 'corrective_action' && onUpdateIncidentNoteStatus ? (
+                                  <button
+                                    type="button"
+                                    disabled={isUpdatingIncidentNoteStatus}
+                                    onClick={() =>
+                                      void onUpdateIncidentNoteStatus(selectedIncident.incidentId, note.noteId, {
+                                        status: note.status === 'completed' ? 'open' : 'completed',
+                                      })
+                                    }
+                                    className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+                                  >
+                                    {isUpdatingIncidentNoteStatus
+                                      ? 'Updating…'
+                                      : note.status === 'completed'
+                                        ? 'Reopen corrective action'
+                                        : 'Mark complete'}
+                                  </button>
+                                ) : null}
+                              </div>
+                              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{note.body}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-3 text-sm text-slate-400">No notes or corrective actions yet.</p>
+                      )}
+
+                      {canManage && onCreateIncidentNote ? (
+                        <form className="mt-4 space-y-3" onSubmit={handleNoteSubmit}>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-sm text-slate-300">
+                              Note type
+                              <select
+                                value={noteTypeKey}
+                                onChange={(event) => setNoteTypeKey(event.target.value as 'note' | 'corrective_action')}
+                                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                              >
+                                <option value="note">Note</option>
+                                <option value="corrective_action">Corrective action</option>
+                              </select>
+                            </label>
+                            <label className="block text-sm text-slate-300">
+                              Due date
+                              <input
+                                type="datetime-local"
+                                value={noteDueAt}
+                                onChange={(event) => setNoteDueAt(event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                              />
+                            </label>
+                          </div>
+                          <label className="block text-sm text-slate-300">
+                            Subject
+                            <input
+                              value={noteSubject}
+                              onChange={(event) => setNoteSubject(event.target.value)}
+                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-300">
+                            Body
+                            <textarea
+                              rows={4}
+                              value={noteBody}
+                              onChange={(event) => setNoteBody(event.target.value)}
+                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            disabled={isCreatingIncidentNote}
+                            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                          >
+                            {isCreatingIncidentNote ? 'Saving note…' : 'Add note'}
+                          </button>
+                        </form>
+                      ) : null}
+                    </section>
+
+                    <section className="rounded-md border border-slate-700 bg-slate-900/50 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                          Attachments
+                        </h4>
+                        <span className="text-xs text-slate-400">
+                          {selectedIncident.attachments?.length ?? 0} files
+                        </span>
+                      </div>
+                      {selectedIncident.attachments && selectedIncident.attachments.length > 0 ? (
+                        <ul className="mt-3 space-y-2">
+                          {selectedIncident.attachments.map((attachment) => (
+                            <li
+                              key={attachment.attachmentId}
+                              className="rounded-md border border-slate-700 bg-slate-950/50 p-3"
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-medium text-slate-100">{attachment.title}</p>
+                                  <p className="mt-1 text-xs text-slate-400">
+                                    {attachment.fileName} · {attachment.contentType} · {Math.round(attachment.sizeBytes / 1024)} KB
+                                  </p>
+                                </div>
+                                {onDownloadIncidentAttachment ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void onDownloadIncidentAttachment(
+                                        selectedIncident.incidentId,
+                                        attachment.attachmentId,
+                                      )
+                                    }
+                                    className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-600"
+                                  >
+                                    Download
+                                  </button>
+                                ) : null}
+                              </div>
+                              {attachment.description ? (
+                                <p className="mt-2 text-sm text-slate-300">{attachment.description}</p>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-3 text-sm text-slate-400">No attachments uploaded yet.</p>
+                      )}
+
+                      {canManage && onCreateIncidentAttachment ? (
+                        <form className="mt-4 space-y-3" onSubmit={handleAttachmentSubmit}>
+                          <label className="block text-sm text-slate-300">
+                            Title
+                            <input
+                              value={attachmentTitle}
+                              onChange={(event) => setAttachmentTitle(event.target.value)}
+                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-300">
+                            Description
+                            <textarea
+                              rows={3}
+                              value={attachmentDescription}
+                              onChange={(event) => setAttachmentDescription(event.target.value)}
+                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-slate-100"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-300">
+                            File
+                            <input
+                              type="file"
+                              onChange={(event) => void handleAttachmentFileChange(event.target.files?.[0] ?? null)}
+                              className="mt-1 block w-full text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-2 file:text-white hover:file:bg-slate-600"
+                            />
+                          </label>
+                          {attachmentFileName ? (
+                            <p className="text-xs text-slate-400">
+                              Selected {attachmentFileName} · {attachmentContentType}
+                            </p>
+                          ) : null}
+                          <button
+                            type="submit"
+                            disabled={isCreatingIncidentAttachment}
+                            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                          >
+                            {isCreatingIncidentAttachment ? 'Uploading…' : 'Upload attachment'}
+                          </button>
+                        </form>
+                      ) : null}
+                    </section>
+                  </div>
+
                   {selectedIncident.sourceProduct ||
                   selectedIncident.sourceIncidentId ||
                   selectedIncident.sourceEventKind ||
@@ -328,6 +659,7 @@ export function IncidentsPanel({
                   {canManage &&
                   onRouteToTrainarr &&
                   isIncidentRoutableToTrainarr(selectedIncident.reasonCategoryKey) &&
+                  selectedIncident.status !== 'closed' &&
                   !selectedIncident.trainarrRouting ? (
                     <button
                       type="button"

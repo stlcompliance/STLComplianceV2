@@ -1,6 +1,45 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { PurchaseRequestPanel } from './PurchaseRequestPanel'
 
 afterEach(() => {
@@ -119,6 +158,8 @@ describe('PurchaseRequestPanel', () => {
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByTestId('purchase-request-line-line-1')).toHaveTextContent('6 each requested')
     expect(screen.getByTestId('purchase-request-create-form')).toBeInTheDocument()
+    expect(screen.getByLabelText('Vendor (optional)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Part for first line')).toBeInTheDocument()
   })
 
   it('shows reject controls for submitted purchase requests', () => {
@@ -126,7 +167,7 @@ describe('PurchaseRequestPanel', () => {
 
     const detail = screen.getByTestId('purchase-request-detail')
     expect(within(detail).getByTestId('purchase-request-reject-button')).toBeInTheDocument()
-    expect(within(detail).getByTestId('purchase-request-rejection-reason-input')).toBeInTheDocument()
+    expect(within(detail).getByLabelText('Rejection reason code')).toBeInTheDocument()
     expect(within(detail).getByTestId('purchase-request-workflow-timeline')).toBeInTheDocument()
   })
 

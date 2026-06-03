@@ -1,4 +1,5 @@
-import { buildSemanticKey } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { buildSemanticKey, DetailBadge as Badge, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type { AssetMeterResponse, AssetResponse, MeterPmForecastResponse, MeterReadingResponse } from '../api/types'
 
@@ -62,6 +63,40 @@ export function MeterReadingsPanel({
   onRecordReading,
 }: MeterReadingsPanelProps) {
   const selectedMeter = meters.find((m) => m.assetMeterId === selectedMeterId)
+  const assetOptions = useMemo<PickerOption[]>(
+    () =>
+      assets.map((asset) => ({
+        value: asset.assetId,
+        label: `${asset.assetTag} — ${asset.name}`,
+      })),
+    [assets],
+  )
+  const meterOptions = useMemo<PickerOption[]>(
+    () =>
+      meters.map((meter) => ({
+        value: meter.assetMeterId,
+        label: `${meter.name} (${meter.currentReading} ${meter.unit})`,
+      })),
+    [meters],
+  )
+  const selectedAssetOption = useMemo<PickerOption | undefined>(
+    () =>
+      assetOptions.find((option) => option.value === selectedAssetId) ??
+      (selectedAssetId ? { value: selectedAssetId, label: selectedAssetId } : undefined),
+    [assetOptions, selectedAssetId],
+  )
+  const selectedMeterOption = useMemo<PickerOption | undefined>(
+    () =>
+      meterOptions.find((option) => option.value === selectedMeterId) ??
+      (selectedMeterId ? { value: selectedMeterId, label: selectedMeterId } : undefined),
+    [meterOptions, selectedMeterId],
+  )
+  const forecastVelocityLabel = forecast?.usageVelocityPerDay != null
+    ? `${forecast.usageVelocityPerDay.toFixed(1)} ${forecast.unit}/day`
+    : 'No trend yet'
+  const forecastConfidenceLabel = `${Math.round(forecast?.confidenceScore ?? 0)}%`
+  const forecastDueSoon = Boolean(forecast?.isDueSoon)
+  const predictedDueAtLabel = forecast?.predictedDueAt ? new Date(forecast.predictedDueAt).toLocaleDateString() : 'Not predicted'
   const generatedMeterKey = buildSemanticKey({
     domain: 'asset',
     kind: 'meter',
@@ -86,38 +121,28 @@ export function MeterReadingsPanel({
       ) : (
         <>
           <div className="mb-6 grid gap-4 md:grid-cols-2">
-            <label className="block text-sm" htmlFor="meterreadings-asset">
-          <span className="text-slate-300">Asset</span>
-          <select id="meterreadings-asset"
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-                value={selectedAssetId}
-                onChange={(e) => onSelectedAssetIdChange(e.target.value)}
-              >
-                <option value="">Select asset…</option>
-                {assets.map((asset) => (
-                  <option key={asset.assetId} value={asset.assetId}>
-                    {asset.assetTag} — {asset.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="meterreadings-asset"
+              label="Asset"
+              value={selectedAssetId}
+              onChange={onSelectedAssetIdChange}
+              options={assetOptions}
+              selectedOption={selectedAssetOption}
+              placeholder="Search assets…"
+              testId="meterreadings-asset"
+            />
 
-            <label className="block text-sm" htmlFor="meterreadings-meter">
-          <span className="text-slate-300">Meter</span>
-          <select id="meterreadings-meter"
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-                value={selectedMeterId}
-                onChange={(e) => onSelectedMeterIdChange(e.target.value)}
-                disabled={!selectedAssetId}
-              >
-                <option value="">Select meter…</option>
-                {meters.map((meter) => (
-                  <option key={meter.assetMeterId} value={meter.assetMeterId}>
-                    {meter.name} ({meter.currentReading} {meter.unit})
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StaticSearchPicker
+              id="meterreadings-meter"
+              label="Meter"
+              value={selectedMeterId}
+              onChange={onSelectedMeterIdChange}
+              options={meterOptions}
+              selectedOption={selectedMeterOption}
+              placeholder="Search meters…"
+              disabled={!selectedAssetId}
+              testId="meterreadings-meter"
+            />
           </div>
 
           {selectedMeter ? (
@@ -201,6 +226,29 @@ export function MeterReadingsPanel({
           {mode !== 'drawer' && forecast && forecast.linkedSchedules.length > 0 ? (
             <div className="mb-6 overflow-x-auto">
               <h3 className="mb-2 text-sm font-medium text-slate-200">PM usage forecast</h3>
+              <div className="mb-3 grid gap-3 md:grid-cols-4">
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                  <p className="text-xs text-slate-500">Usage velocity</p>
+                  <p className="mt-1 text-sm font-medium text-slate-100">{forecastVelocityLabel}</p>
+                </div>
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                  <p className="text-xs text-slate-500">Predicted due</p>
+                  <p className="mt-1 text-sm font-medium text-slate-100">{predictedDueAtLabel}</p>
+                </div>
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                  <p className="text-xs text-slate-500">Confidence</p>
+                  <p className="mt-1 text-sm font-medium text-slate-100">{forecastConfidenceLabel}</p>
+                </div>
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                  <p className="text-xs text-slate-500">Due soon</p>
+                  <div className="mt-1">
+                    <Badge
+                      label={forecastDueSoon ? 'Yes' : 'No'}
+                      tone={forecastDueSoon ? 'warn' : 'good'}
+                    />
+                  </div>
+                </div>
+              </div>
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-slate-700 text-slate-400">
                   <tr>

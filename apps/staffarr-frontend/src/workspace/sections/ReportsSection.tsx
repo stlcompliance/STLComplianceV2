@@ -1,4 +1,5 @@
 import { AuditPackageExportPanel } from '../../components/AuditPackageExportPanel'
+import { CertificationReportsPanel } from '../../components/CertificationReportsPanel'
 import { DataExportsPanel } from '../../components/DataExportsPanel'
 import { IncidentReportsPanel } from '../../components/IncidentReportsPanel'
 import { PersonnelReportsPanel } from '../../components/PersonnelReportsPanel'
@@ -26,6 +27,11 @@ export function ReportsSection({ state }: Props) {
             canExport={canExport}
           />
           <ReadinessReportsPanel
+            accessToken={state.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <CertificationReportsPanel
             accessToken={state.accessToken}
             canRead={canRead}
             canExport={canExport}

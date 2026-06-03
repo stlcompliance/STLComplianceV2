@@ -1667,6 +1667,55 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_assignments", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentLaborEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CostPerHour")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("HoursWorked")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("LaborTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("LoggedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LoggedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingAssignmentId");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId", "LoggedAt");
+
+                    b.ToTable("trainarr_training_assignment_labor_entries", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentMaterialDemandLine", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2545,6 +2594,62 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_programs", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramContentReference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LocaleTag")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ReferenceValue")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("TrainingProgramId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingProgramId");
+
+                    b.HasIndex("TenantId", "TrainingProgramId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "TrainingProgramId", "ContentType", "ReferenceValue", "LocaleTag")
+                        .IsUnique()
+                        .HasDatabaseName("IX_trainarr_training_program_content_references_TenantId_Trai~1");
+
+                    b.ToTable("trainarr_training_program_content_references", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramDefinition", b =>
                 {
                     b.Property<Guid>("TrainingProgramId")
@@ -2833,6 +2938,17 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("TrainingDefinition");
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentLaborEntry", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingAssignment", "TrainingAssignment")
+                        .WithMany()
+                        .HasForeignKey("TrainingAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingAssignment");
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentMaterialDemandLine", b =>
                 {
                     b.HasOne("TrainArr.Api.Entities.TrainingAssignment", "TrainingAssignment")
@@ -2936,6 +3052,17 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("TrainingProgram");
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramContentReference", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingProgram", "TrainingProgram")
+                        .WithMany("ContentReferences")
+                        .HasForeignKey("TrainingProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingProgram");
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramDefinition", b =>
                 {
                     b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
@@ -3034,6 +3161,8 @@ namespace TrainArr.Api.Migrations
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgram", b =>
                 {
+                    b.Navigation("ContentReferences");
+
                     b.Navigation("ProgramDefinitions");
                 });
 

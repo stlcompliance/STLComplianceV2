@@ -1,5 +1,45 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { InspectionRunnerPanel } from './InspectionRunnerPanel'
 
 describe('InspectionRunnerPanel', () => {
@@ -135,6 +175,8 @@ describe('InspectionRunnerPanel', () => {
     expect(screen.getAllByText('Brakes operate correctly').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Complete run' })).toBeInTheDocument()
     expect(screen.getByTestId('inspection-run-evidence-panel')).toBeInTheDocument()
+    expect(screen.getByLabelText('Asset for inspection')).toBeInTheDocument()
+    expect(screen.getByLabelText('Active inspection template')).toBeInTheDocument()
   })
 
   it('shows empty runs message when no history', () => {

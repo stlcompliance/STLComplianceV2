@@ -16,6 +16,7 @@ using RoutArrIntegration = RoutArr.Api.Endpoints.IntegrationEndpoints;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Services;
+using SupplyArrWmsIntegration = SupplyArr.Api.Endpoints.WmsMovementEndpoints;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
@@ -23,6 +24,15 @@ using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionRespon
 using SupplyArrRedeemRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 using SupplyArrIntegration = SupplyArr.Api.Endpoints.IntegrationEndpoints;
+using CreateInventoryLocationRequest = SupplyArr.Api.Contracts.CreateInventoryLocationRequest;
+using CreateInventoryBinRequest = SupplyArr.Api.Contracts.CreateInventoryBinRequest;
+using InventoryBinResponse = SupplyArr.Api.Contracts.InventoryBinResponse;
+using InventoryLocationResponse = SupplyArr.Api.Contracts.InventoryLocationResponse;
+using UpsertPartStockLevelRequest = SupplyArr.Api.Contracts.UpsertPartStockLevelRequest;
+using CreateOutboundShipmentRequest = SupplyArr.Api.Contracts.CreateOutboundShipmentRequest;
+using CreateOutboundShipmentLineRequest = SupplyArr.Api.Contracts.CreateOutboundShipmentLineRequest;
+using OutboundShipmentResponse = SupplyArr.Api.Contracts.OutboundShipmentResponse;
+using RoutArrShipmentStatusUpdateRequest = SupplyArr.Api.Contracts.RoutArrShipmentStatusUpdateRequest;
 
 namespace STLCompliance.RoutArr.Auth.Tests;
 
@@ -36,6 +46,10 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     private HttpClient _supplyarrClient = null!;
     private string _supplyarrIntegrationToken = null!;
     private string _routarrStatusCallbackToken = null!;
+    private string _routarrShipmentCreateToken = null!;
+    private string _routarrShipmentStatusToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("b7262502-7b20-4f4a-8d92-6e76f1d2d3b7");
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -72,8 +86,19 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
             "supplyarr",
             ["routarr"],
             RoutArrIntegration.SupplyarrDemandStatusIngestActionScope);
+        _routarrShipmentCreateToken = await IssueServiceTokenAsync(
+            adminToken,
+            "supplyarr",
+            ["routarr"],
+            RoutArrIntegration.SupplyarrShipmentCreateActionScope);
+        _routarrShipmentStatusToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["supplyarr"],
+            SupplyArrWmsIntegration.RoutarrShipmentStatusWriteActionScope);
         var routarrHandoffToken = await IssueServiceTokenAsync(adminToken, "routarr", ["routarr"], "launch.redeem");
         var supplyarrHandoffToken = await IssueServiceTokenAsync(adminToken, "supplyarr", ["supplyarr"], "launch.redeem");
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(_staffarrSiteOrgUnitId);
 
         WebApplicationFactory<global::SupplyArr.Api.Program>? supplyarrFactoryRef = null;
 
@@ -111,6 +136,9 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
             builder.UseSetting("Handoff:ServiceToken", supplyarrHandoffToken);
             builder.UseSetting("RoutArr:BaseUrl", _routarrFactory.Server.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("RoutArr:ServiceToken", _routarrStatusCallbackToken);
+            builder.UseSetting("RoutArr:ShipmentServiceToken", _routarrShipmentCreateToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "supplyarr-to-staffarr-sites");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<SupplyArrDbContext>(services);
@@ -120,6 +148,10 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<RoutArrDemandStatusClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _routarrFactory.Server.CreateHandler());
+                services.AddHttpClient<RoutArrShipmentClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _routarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -231,7 +263,7 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
         var listDemandRefsResponse = await _supplyarrClient.SendAsync(listDemandRefsRequest);
         listDemandRefsResponse.EnsureSuccessStatusCode();
         var demandRefs = (await listDemandRefsResponse.Content.ReadFromJsonAsync<List<RoutArrDemandRefResponse>>())!;
-        Assert.Single(demandRefs.Where(x => x.RoutarrPublicationId == first.PublicationId));
+        Assert.Single(demandRefs, x => x.RoutarrPublicationId == first.PublicationId);
     }
 
     [Fact]
@@ -378,6 +410,89 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supplyarr_wms_outbound_shipment_creates_routarr_intent_is_idempotent_and_accepts_status_callback()
+    {
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var location = await CreateInventoryLocationAsync(supplyarrToken, "wms-bridge-wh", "WMS Bridge Warehouse");
+        var bin = await CreateInventoryBinAsync(supplyarrToken, location.LocationId, "wms-bridge-bin", "Bridge Bin");
+        await SeedPartStockAsync(supplyarrToken, partId, bin.BinId, 10m);
+
+        var createShipmentRequest = Authorized(HttpMethod.Post, "/api/v1/wms/outbound-shipments", supplyarrToken);
+        createShipmentRequest.Content = JsonContent.Create(new CreateOutboundShipmentRequest(
+            "wms-bridge-001",
+            "wms-bridge-001",
+            "routarr",
+            "Bridge Customer",
+            "123 Bridge Ave",
+            [
+                new CreateOutboundShipmentLineRequest(partId, bin.BinId, 3m)
+            ]));
+        var createShipmentResponse = await _supplyarrClient.SendAsync(createShipmentRequest);
+        createShipmentResponse.EnsureSuccessStatusCode();
+        var created = (await createShipmentResponse.Content.ReadFromJsonAsync<OutboundShipmentResponse>())!;
+        Assert.Equal("created", created.Status);
+        Assert.Equal("routarr", created.ShipVia);
+        Assert.NotEqual(Guid.Empty, created.RoutarrShipmentIntentId);
+        Assert.Equal("created", created.RoutarrStatus);
+        Assert.Single(created.Lines);
+        Assert.Equal(3m, created.Lines[0].QuantityRequested);
+
+        var replayShipmentRequest = Authorized(HttpMethod.Post, "/api/v1/wms/outbound-shipments", supplyarrToken);
+        replayShipmentRequest.Content = JsonContent.Create(new CreateOutboundShipmentRequest(
+            "wms-bridge-001",
+            "wms-bridge-001",
+            "routarr",
+            "Bridge Customer",
+            "123 Bridge Ave",
+            [
+                new CreateOutboundShipmentLineRequest(partId, bin.BinId, 3m)
+            ]));
+        var replayShipmentResponse = await _supplyarrClient.SendAsync(replayShipmentRequest);
+        replayShipmentResponse.EnsureSuccessStatusCode();
+        var replayed = (await replayShipmentResponse.Content.ReadFromJsonAsync<OutboundShipmentResponse>())!;
+        Assert.Equal(created.ShipmentId, replayed.ShipmentId);
+        Assert.Equal(created.RoutarrShipmentIntentId, replayed.RoutarrShipmentIntentId);
+        Assert.Equal(created.IdempotencyKey, replayed.IdempotencyKey);
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/routarr-shipment-status",
+            _routarrShipmentStatusToken);
+        callbackRequest.Content = JsonContent.Create(new RoutArrShipmentStatusUpdateRequest(
+            PlatformSeeder.DemoTenantId,
+            created.ShipmentId,
+            "delivered",
+            Guid.NewGuid(),
+            "Delivered at destination",
+            DateTimeOffset.UtcNow));
+        var callbackResponse = await _supplyarrClient.SendAsync(callbackRequest);
+        callbackResponse.EnsureSuccessStatusCode();
+        var updated = (await callbackResponse.Content.ReadFromJsonAsync<OutboundShipmentResponse>())!;
+        Assert.Equal("shipped", updated.Status);
+        Assert.Equal("delivered", updated.RoutarrStatus);
+        Assert.Equal(created.RoutarrShipmentIntentId, updated.RoutarrShipmentIntentId);
+    }
+
+    [Fact]
+    public async Task Routarr_shipment_intent_rejects_empty_lines()
+    {
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/integrations/supplyarr-shipments", _routarrShipmentCreateToken);
+        request.Content = JsonContent.Create(new CreateSupplyArrShipmentIntentRequest(
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            "wms-empty-lines",
+            "Empty lines customer",
+            "123 Bridge Ave",
+            Array.Empty<SupplyArrShipmentLinePayload>()));
+
+        var response = await _routarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("shipment line", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Supplyarr_demand_status_callback_supports_v1_alias_for_routarr()
     {
         var routarrToken = await RedeemRoutArrTokenAsync();
@@ -494,6 +609,48 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
         return part.PartId;
     }
 
+    private async Task<InventoryLocationResponse> CreateInventoryLocationAsync(
+        string token,
+        string locationKey,
+        string name)
+    {
+        var request = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        request.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            locationKey,
+            name,
+            "warehouse",
+            "123 Bridge Ave",
+            _staffarrSiteOrgUnitId));
+        var response = await _supplyarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
+    }
+
+    private async Task<InventoryBinResponse> CreateInventoryBinAsync(
+        string token,
+        Guid locationId,
+        string binKey,
+        string binName)
+    {
+        var request = Authorized(HttpMethod.Post, $"/api/v1/inventory/locations/{locationId}/bins", token);
+        request.Content = JsonContent.Create(new CreateInventoryBinRequest(binKey, binName));
+        var response = await _supplyarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
+    }
+
+    private async Task SeedPartStockAsync(
+        string token,
+        Guid partId,
+        Guid binId,
+        decimal quantity)
+    {
+        var request = Authorized(HttpMethod.Post, "/api/v1/inventory/stock", token);
+        request.Content = JsonContent.Create(new UpsertPartStockLevelRequest(partId, binId, quantity));
+        var response = await _supplyarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task<string> RedeemRoutArrTokenAsync()
     {
         var handoffCode = await CreateHandoffAsync("routarr", "http://localhost:5180/launch");
@@ -599,5 +756,35 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Bridge Yard",
+                null,
+                "active");
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

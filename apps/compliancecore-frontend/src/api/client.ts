@@ -30,6 +30,7 @@ import type {
   ComplianceFindingResponse,
   CreateWorkflowGateDefinitionRequest,
   RuleEvaluationRunResponse,
+  RuleEvaluationAuditExportResponse,
   RulePackContentResponse,
   RulePackResponse,
   AuditPackageExportResponse,
@@ -65,6 +66,9 @@ import type {
   FactSourceSyncWorkerSettingsResponse,
   UpsertFactSourceSyncWorkerSettingsRequest,
   FactSourceSyncHealthResponse,
+  ProductIntegrationHealthReportSummaryResponse,
+  AuditReadinessReportSummaryResponse,
+  RemediationQueueReportSummaryResponse,
   AuditDeliveryOrchestrationStatusResponse,
   TriggerM12AnalyticsBatchResponse,
   TriggerScheduledRuleEvaluationResponse,
@@ -91,6 +95,8 @@ import type {
   ComplianceWaiverResponse,
   CreateComplianceWaiverRequest,
   RenewComplianceWaiverRequest,
+  WaiverReportSummaryResponse,
+  ExceptionExemptionReportSummaryResponse,
   CommitPreviewResponse,
   EvidenceOptionProposalResponse,
   ImportCompletionReportResponse,
@@ -598,6 +604,22 @@ export async function getRuleEvaluations(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RuleEvaluationRunResponse[]>(response, 'Failed to load rule evaluations')
+}
+
+export async function getRuleEvaluationAuditExport(
+  accessToken: string,
+  evaluationRunId: string,
+): Promise<RuleEvaluationAuditExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/rule-evaluations/${encodeURIComponent(evaluationRunId)}/audit-export`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RuleEvaluationAuditExportResponse>(
+    response,
+    'Failed to load rule evaluation audit export',
+  )
 }
 
 export async function getFindings(
@@ -1323,6 +1345,138 @@ export async function evaluateReadinessForecast(
   )
 }
 
+export async function getAuditReadinessReportSummary(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    readinessLevel?: string
+    limit?: number
+  },
+): Promise<AuditReadinessReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.readinessLevel) {
+    params.set('readinessLevel', options.readinessLevel)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/audit-readiness/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<AuditReadinessReportSummaryResponse>(
+    response,
+    'Failed to load audit readiness report summary',
+  )
+}
+
+export async function exportAuditReadinessReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    readinessLevel?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.readinessLevel) {
+    params.set('readinessLevel', options.readinessLevel)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/audit-readiness/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export audit readiness report')
+  }
+  return response.blob()
+}
+
+export async function getRemediationQueueReportSummary(
+  accessToken: string,
+  options?: {
+    queueOnly?: boolean
+    scopeKey?: string
+    rulePackKey?: string
+    severity?: string
+    limit?: number
+  },
+): Promise<RemediationQueueReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.queueOnly === false) {
+    params.set('queueOnly', 'false')
+  }
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.severity) {
+    params.set('severity', options.severity)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/remediation-queue/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<RemediationQueueReportSummaryResponse>(
+    response,
+    'Failed to load remediation queue report summary',
+  )
+}
+
+export async function exportRemediationQueueReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    queueOnly?: boolean
+    scopeKey?: string
+    rulePackKey?: string
+    severity?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.queueOnly === false) {
+    params.set('queueOnly', 'false')
+  }
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.severity) {
+    params.set('severity', options.severity)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/remediation-queue/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export remediation queue report')
+  }
+  return response.blob()
+}
+
 export async function getControlEffectivenessSummary(
   accessToken: string,
 ): Promise<ControlEffectivenessSummaryResponse> {
@@ -1546,6 +1700,30 @@ export async function getFactSourceSyncHealth(
   )
 }
 
+export async function getProductIntegrationHealthReportSummary(
+  accessToken: string,
+): Promise<ProductIntegrationHealthReportSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/reports/integration-health/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProductIntegrationHealthReportSummaryResponse>(
+    response,
+    'Failed to load product integration health report summary',
+  )
+}
+
+export async function exportProductIntegrationHealthReportSummaryCsv(
+  accessToken: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/reports/integration-health/summary/export`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export product integration health report')
+  }
+  return response.blob()
+}
+
 export async function getM12AnalyticsWorkerSettings(
   accessToken: string,
 ): Promise<M12AnalyticsWorkerSettingsResponse> {
@@ -1648,6 +1826,82 @@ export async function exportFindingsReportSummaryCsv(
   )
   if (!response.ok) {
     throw await toApiError(response, 'Failed to export findings report')
+  }
+  return response.blob()
+}
+
+export async function getWaiverReportSummary(
+  accessToken: string,
+  params: { status?: string; packKey?: string; scopeKey?: string } = {},
+): Promise<WaiverReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.packKey) search.set('packKey', params.packKey)
+  if (params.scopeKey) search.set('scopeKey', params.scopeKey)
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/waivers/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<WaiverReportSummaryResponse>(
+    response,
+    'Failed to load waiver report summary',
+  )
+}
+
+export async function exportWaiverReportSummaryCsv(
+  accessToken: string,
+  params: { status?: string; packKey?: string; scopeKey?: string } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.packKey) search.set('packKey', params.packKey)
+  if (params.scopeKey) search.set('scopeKey', params.scopeKey)
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/waivers/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export waiver report')
+  }
+  return response.blob()
+}
+
+export async function getExceptionExemptionReportSummary(
+  accessToken: string,
+  params: { type?: string; effectType?: string; activeOnly?: boolean } = {},
+): Promise<ExceptionExemptionReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (params.type) search.set('type', params.type)
+  if (params.effectType) search.set('effectType', params.effectType)
+  if (params.activeOnly) search.set('activeOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/exception-exemptions/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ExceptionExemptionReportSummaryResponse>(
+    response,
+    'Failed to load exception exemption report summary',
+  )
+}
+
+export async function exportExceptionExemptionReportSummaryCsv(
+  accessToken: string,
+  params: { type?: string; effectType?: string; activeOnly?: boolean } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.type) search.set('type', params.type)
+  if (params.effectType) search.set('effectType', params.effectType)
+  if (params.activeOnly) search.set('activeOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/exception-exemptions/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export exception exemption report')
   }
   return response.blob()
 }

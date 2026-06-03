@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
@@ -55,6 +56,15 @@ export function AuthorizationCheckOperationsPanel({
   personPickerOptions,
   onRunCheck,
 }: AuthorizationCheckOperationsPanelProps) {
+  const definitionOptions = useMemo<PickerOption[]>(
+    () => definitions.map((definition) => ({ value: definition.trainingDefinitionId, label: `${definition.name} · ${definition.qualificationKey}` })),
+    [definitions],
+  )
+  const selectedDefinitionOption = useMemo<PickerOption | undefined>(
+    () => definitionOptions.find((option) => option.value === selectedDefinitionId),
+    [definitionOptions, selectedDefinitionId],
+  )
+
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
@@ -85,22 +95,16 @@ export function AuthorizationCheckOperationsPanel({
           label="StaffArr person (advanced)"
           testId="authorization-check-person-advanced"
         />
-        <label htmlFor="authorization-check-definition" className="block text-xs text-slate-400">
-          Training definition
-          <select
-            id="authorization-check-definition"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-            value={selectedDefinitionId}
-            onChange={(e) => onSelectDefinition(e.target.value)}
-          >
-            <option value="">Select definition…</option>
-            {definitions.map((definition) => (
-              <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-                {definition.name} · {definition.qualificationKey}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="authorization-check-definition"
+          label="Training definition"
+          value={selectedDefinitionId}
+          onChange={onSelectDefinition}
+          options={definitionOptions}
+          placeholder="Search training definitions…"
+          testId="authorization-check-definition-picker"
+          selectedOption={selectedDefinitionOption}
+        />
       </div>
 
       <QualificationCheckPanel

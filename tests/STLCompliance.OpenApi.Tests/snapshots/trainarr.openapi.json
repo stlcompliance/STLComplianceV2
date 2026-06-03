@@ -2594,6 +2594,29 @@
         }
       }
     },
+    "/api/qualification-issues/wallet/verify": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "VerifyQualificationWalletCredential",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationWalletVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/qualification-issues/{qualificationIssueId}": {
       "get": {
         "tags": [
@@ -2771,6 +2794,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-issues/{qualificationIssueId}/wallet-credential": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationWalletCredential",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3111,6 +3158,54 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/point-in-time": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationPointInTimeReport",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionTask",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ],
@@ -3697,6 +3792,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/labor": {
+      "get": {
+        "tags": [
+          "TrainingAssignmentLabor"
+        ],
+        "operationId": "ListTrainingAssignmentLabor",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingAssignmentLabor"
+        ],
+        "operationId": "CreateTrainingAssignmentLabor",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingAssignmentLaborEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/labor/{laborEntryId}": {
+      "delete": {
+        "tags": [
+          "TrainingAssignmentLabor"
+        ],
+        "operationId": "RemoveTrainingAssignmentLabor",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "laborEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4803,6 +4987,29 @@
         }
       }
     },
+    "/api/training-programs/draft": {
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "GenerateTrainingProgramDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTrainingProgramDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-programs/{entityId}/citations": {
       "get": {
         "tags": [
@@ -5062,6 +5269,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-programs/{programId}/content-references": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "ListTrainingProgramContentReferences",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "AttachTrainingProgramContentReference",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingProgramContentReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-programs/{programId}/content-references/{contentReferenceId}": {
+      "delete": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "RemoveTrainingProgramContentReference",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "contentReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6679,6 +6975,29 @@
         }
       }
     },
+    "/api/v1/programs/draft": {
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "GenerateTrainingProgramDraftV1Programs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTrainingProgramDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/programs/{programId}": {
       "get": {
         "tags": [
@@ -6728,6 +7047,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{programId}/content-references": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "ListTrainingProgramContentReferencesV1Programs",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "AttachTrainingProgramContentReferenceV1Programs",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingProgramContentReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{programId}/content-references/{contentReferenceId}": {
+      "delete": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "RemoveTrainingProgramContentReferenceV1Programs",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "contentReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6844,6 +7252,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/wallet/verify": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "VerifyQualificationWalletCredentialV1QualificationIssues",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationWalletVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7035,6 +7466,30 @@
         }
       }
     },
+    "/api/v1/qualification-issues/{qualificationIssueId}/wallet-credential": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationWalletCredentialV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/qualifications": {
       "get": {
         "tags": [
@@ -7139,6 +7594,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateBatchQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/wallet/verify": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "VerifyQualificationWalletCredentialV1Qualifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationWalletVerificationRequest"
               }
             }
           },
@@ -7328,6 +7806,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/wallet-credential": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationWalletCredentialV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7687,6 +8189,54 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/point-in-time": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationPointInTimeReportV1",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionTask",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ],
@@ -8124,6 +8674,29 @@
         }
       }
     },
+    "/api/v1/training-programs/draft": {
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "GenerateTrainingProgramDraftV1TrainingPrograms",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTrainingProgramDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/training-programs/{programId}": {
       "get": {
         "tags": [
@@ -8173,6 +8746,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-programs/{programId}/content-references": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "ListTrainingProgramContentReferencesV1TrainingPrograms",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "AttachTrainingProgramContentReferenceV1TrainingPrograms",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingProgramContentReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-programs/{programId}/content-references/{contentReferenceId}": {
+      "delete": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "RemoveTrainingProgramContentReferenceV1TrainingPrograms",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "contentReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -8667,6 +9329,41 @@
           }
         }
       },
+      "CreateTrainingAssignmentLaborEntryRequest": {
+        "required": [
+          "laborTypeKey",
+          "hoursWorked",
+          "costPerHour"
+        ],
+        "type": "object",
+        "properties": {
+          "laborTypeKey": {
+            "type": "string"
+          },
+          "hoursWorked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "costPerHour": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateTrainingAssignmentMaterialDemandLineRequest": {
         "required": [
           "supplyarrPartId",
@@ -8964,6 +9661,37 @@
           }
         }
       },
+      "CreateTrainingProgramContentReferenceRequest": {
+        "required": [
+          "contentType",
+          "title",
+          "referenceValue"
+        ],
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "referenceValue": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "localeTag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateTrainingProgramRequest": {
         "required": [
           "programKey",
@@ -9058,6 +9786,17 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "GenerateTrainingProgramDraftRequest": {
+        "required": [
+          "prompt"
+        ],
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string"
           }
         }
       },
@@ -9728,6 +10467,17 @@
           }
         }
       },
+      "QualificationWalletVerificationRequest": {
+        "required": [
+          "credentialToken"
+        ],
+        "type": "object",
+        "properties": {
+          "credentialToken": {
+            "type": "string"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -9912,6 +10662,42 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "contentAcknowledged": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "practicalObservationNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "safetyCriticalFailure": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "failureComments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "traineeAcknowledged": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "retestRequired": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }
@@ -10656,6 +11442,9 @@
     },
     {
       "name": "TrainingAssignmentMaterialDemand"
+    },
+    {
+      "name": "TrainingAssignmentLabor"
     },
     {
       "name": "TrainingEvidence"

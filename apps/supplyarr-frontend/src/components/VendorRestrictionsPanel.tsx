@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import {
   createPartyVendorRestriction,
   getPartyVendorRestrictionEnforcement,
@@ -58,6 +60,18 @@ export function VendorRestrictionsPanel({
     () => restrictableParties.find((p) => p.partyId === selectedPartyId),
     [restrictableParties, selectedPartyId],
   )
+  const partyOptions = useMemo<PickerOption[]>(
+    () =>
+      restrictableParties.map((party) => ({
+        value: party.partyId,
+        label: `${party.partyType} · ${party.partyKey} · ${party.displayName}`,
+      })),
+    [restrictableParties],
+  )
+  const selectedPartyOption = useMemo<PickerOption | undefined>(
+    () => partyOptions.find((option) => option.value === selectedPartyId),
+    [partyOptions, selectedPartyId],
+  )
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-restrictions', accessToken] })
@@ -111,22 +125,16 @@ export function VendorRestrictionsPanel({
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label htmlFor="vendor-restriction-party" className="block text-sm text-slate-400 md:col-span-2">
-          Vendor or supplier party
-          <select
-            id="vendor-restriction-party"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={selectedPartyId}
-            onChange={(event) => setSelectedPartyId(event.target.value)}
-          >
-            <option value="">Select vendor or supplier…</option>
-            {restrictableParties.map((party) => (
-              <option key={party.partyId} value={party.partyId}>
-                {party.partyType} · {party.partyKey} · {party.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaticSearchPicker
+          id="vendor-restriction-party"
+          label="Vendor or supplier party"
+          value={selectedPartyId}
+          onChange={setSelectedPartyId}
+          options={partyOptions}
+          selectedOption={selectedPartyOption}
+          placeholder="Search vendors or suppliers…"
+          testId="vendor-restriction-party-picker"
+        />
 
         {selectedParty && enforcementQuery.data && (
           <div className="md:col-span-2 rounded-md border border-slate-800 p-3 text-sm">

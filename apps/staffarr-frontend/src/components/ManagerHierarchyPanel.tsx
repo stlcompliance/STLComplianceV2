@@ -1,5 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import type {
   ManagerChainEntryResponse,
   StaffPersonSummaryResponse,
@@ -94,6 +94,11 @@ export function ManagerHierarchyPanel({
         .sort((left, right) => left.displayName.localeCompare(right.displayName)),
     [people, selectedPersonId],
   )
+  const managerOptions = useMemo<PickerOption[]>(
+    () => managerCandidates.map((candidate) => ({ value: candidate.personId, label: candidate.displayName })),
+    [managerCandidates],
+  )
+  const selectedManagerOption = managerOptions.find((option) => option.value === managerPersonId)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -214,21 +219,18 @@ export function ManagerHierarchyPanel({
         {canManage ? (
           <form className="space-y-3" onSubmit={handleSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Update selected person manager</h3>
-            <label htmlFor="manager-hierarchy-manager" className="block text-sm text-slate-300">
+            <label className="block text-sm text-slate-300">
               Manager
-              <select
-                id="manager-hierarchy-manager"
-                value={managerPersonId}
-                onChange={(event) => setManagerPersonId(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              >
-              <option value="">No manager</option>
-              {managerCandidates.map((candidate) => (
-                <option key={candidate.personId} value={candidate.personId}>
-                  {candidate.displayName}
-                </option>
-              ))}
-              </select>
+              <div className="mt-1">
+                <StaticSearchPicker
+                  value={managerPersonId}
+                  onChange={setManagerPersonId}
+                  options={managerOptions}
+                  selectedOption={selectedManagerOption}
+                  placeholder="No manager"
+                  testId="manager-hierarchy-manager"
+                />
+              </div>
             </label>
             <button
               type="submit"

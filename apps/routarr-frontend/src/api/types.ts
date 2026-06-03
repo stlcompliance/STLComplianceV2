@@ -580,6 +580,14 @@ export interface RouteStopSummaryResponse {
   stopType: string
   stopStatus: string
   sequenceNumber: number
+  geofenceAnchorLatitude: number | null
+  geofenceAnchorLongitude: number | null
+  geofenceRadiusMeters: number | null
+  lastGeofenceCheckAt: string | null
+  lastGeofenceResult: string | null
+  lastGeofenceDistanceMeters: number | null
+  lastGeofenceReportedLatitude: number | null
+  lastGeofenceReportedLongitude: number | null
   scheduledArrivalAt: string | null
   arrivedAt: string | null
   completedAt: string | null
@@ -624,6 +632,9 @@ export interface CreateRouteStopRequest {
   addressLabel: string
   stopType: string
   sequenceNumber: number
+  geofenceAnchorLatitude?: number | null
+  geofenceAnchorLongitude?: number | null
+  geofenceRadiusMeters?: number | null
   scheduledArrivalAt?: string | null
 }
 
@@ -640,6 +651,11 @@ export interface LinkRouteTripRequest {
 
 export interface UpdateRouteStopStatusRequest {
   stopStatus: string
+}
+
+export interface CheckRouteStopGeofenceRequest {
+  reportedLatitude: number
+  reportedLongitude: number
 }
 
 export interface DispatchBoardTripsSummary {
@@ -1100,6 +1116,59 @@ export interface DriverPortalReportExceptionRequest {
   title: string
   description: string
   exceptionType?: string
+}
+
+export interface DriverTimeTrackingSummaryResponse {
+  entryCount: number
+  onDutyMinutes: number
+  offDutyMinutes: number
+  breakMinutes: number
+  openEntryCount: number
+  workdayStartAt: string | null
+  workdayEndAt: string | null
+  shortHaulCandidate: boolean
+  shortHaulException: boolean
+  summaryNote: string
+}
+
+export interface DriverTimeEntryResponse {
+  entryId: string
+  personId: string
+  entryType: string
+  startsAt: string
+  endsAt: string | null
+  notes: string
+  editReason: string
+  isOpen: boolean
+  durationMinutes: number
+  createdByUserId: string
+  updatedByUserId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DriverTimeTrackingResponse {
+  date: string
+  windowStart: string
+  windowEnd: string
+  summary: DriverTimeTrackingSummaryResponse
+  entries: DriverTimeEntryResponse[]
+  generatedAt: string
+}
+
+export interface CreateDriverTimeEntryRequest {
+  entryType: string
+  startsAt: string
+  endsAt?: string | null
+  notes?: string | null
+}
+
+export interface UpdateDriverTimeEntryRequest {
+  entryType?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+  notes?: string | null
+  editReason: string
 }
 
 export interface DispatchReportCountItem {

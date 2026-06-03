@@ -1,7 +1,46 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { StockReservationsPanel } from './StockReservationsPanel'
+
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      options,
+      placeholder,
+      testId,
+    }: {
+      label: string
+      value: string
+      onChange: (value: string) => void
+      options: Array<{ value: string; label: string }>
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        <span>{label}</span>
+        <input
+          aria-label={label}
+          data-testid={testId}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <div data-testid={`${testId ?? 'picker'}-options`}>
+          {options.map((option) => (
+            <span key={option.value}>{option.label}</span>
+          ))}
+        </div>
+      </label>
+    ),
+  }
+})
 
 const baseProps = {
   reservations: [
@@ -81,6 +120,10 @@ const baseProps = {
 }
 
 describe('StockReservationsPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders active reservation with fulfill action', () => {
     render(<StockReservationsPanel {...baseProps} />)
     expect(screen.getByText('RSV-WO-001')).toBeInTheDocument()
@@ -90,5 +133,37 @@ describe('StockReservationsPanel', () => {
   it('shows empty state when no reservations', () => {
     render(<StockReservationsPanel {...baseProps} reservations={[]} selectedReservationId="" />)
     expect(screen.getByText('No stock reservations yet.')).toBeInTheDocument()
+  })
+
+  it('uses searchable pickers for new reservation part and bin selection', () => {
+    const onSelectedReservationPartIdChange = vi.fn()
+    const onSelectedReservationBinIdChange = vi.fn()
+
+    render(
+      <StockReservationsPanel
+        {...baseProps}
+        selectedReservationPartId=""
+        selectedReservationBinId=""
+        onSelectedReservationPartIdChange={onSelectedReservationPartIdChange}
+        onSelectedReservationBinIdChange={onSelectedReservationBinIdChange}
+      />,
+    )
+
+    expect(screen.getByTestId('stock-reservation-part-picker-options')).toHaveTextContent(
+      'Oil filter (filter-001)',
+    )
+    expect(screen.getByTestId('stock-reservation-bin-picker-options')).toHaveTextContent(
+      'wh-1/main-bin — Main Bin',
+    )
+
+    fireEvent.change(screen.getByTestId('stock-reservation-part-picker'), {
+      target: { value: 'part-1' },
+    })
+    fireEvent.change(screen.getByTestId('stock-reservation-bin-picker'), {
+      target: { value: 'bin-1' },
+    })
+
+    expect(onSelectedReservationPartIdChange).toHaveBeenCalledWith('part-1')
+    expect(onSelectedReservationBinIdChange).toHaveBeenCalledWith('bin-1')
   })
 })

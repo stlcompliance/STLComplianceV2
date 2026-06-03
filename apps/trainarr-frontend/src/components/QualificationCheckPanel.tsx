@@ -1,4 +1,5 @@
-import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { useMemo } from 'react'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type { QualificationCheckResponse } from '../api/types'
 
@@ -34,17 +35,25 @@ export function QualificationCheckPanel({
   onRulePackKeyChange,
   rulePackOptions,
 }: QualificationCheckPanelProps) {
+  const selectedRulePackOption = useMemo<PickerOption | undefined>(
+    () =>
+      rulePackOptions.find((option) => option.value === rulePackKey) ??
+      (rulePackKey ? { value: rulePackKey, label: rulePackKey } : undefined),
+    [rulePackKey, rulePackOptions],
+  )
+
   return (
     <div className="mt-3 space-y-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Authorization check</p>
-      <ControlledSelect
+      <StaticSearchPicker
+        id="qualification-check-rule-pack"
         label="Compliance Core rule pack key"
         value={rulePackKey}
         onChange={onRulePackKeyChange}
         options={rulePackOptions}
-        emptyLabel="Select rule pack…"
+        selectedOption={selectedRulePackOption}
+        placeholder="Search rule packs…"
         testId="qualification-check-rule-pack"
-        className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
       />
       <button
         type="button"

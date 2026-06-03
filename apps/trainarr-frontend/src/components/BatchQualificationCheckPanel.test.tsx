@@ -1,5 +1,45 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { BatchQualificationCheckPanel } from './BatchQualificationCheckPanel'
 
 const rulePackOptions = [{ value: 'driver_qualification', label: 'driver_qualification' }]
@@ -35,6 +75,8 @@ describe('BatchQualificationCheckPanel', () => {
     expect(screen.getByRole('button', { name: /run batch qualification check/i })).toBeEnabled()
     expect(screen.getByTestId('batch-qualification-key')).toBeInTheDocument()
     expect(screen.getByTestId('batch-qualification-rule-pack')).toBeInTheDocument()
+    expect(screen.getByLabelText('Qualification key')).toBeInTheDocument()
+    expect(screen.getByLabelText('Compliance Core rule pack key')).toBeInTheDocument()
   })
 
   it('shows batch summary and per-person outcomes', () => {

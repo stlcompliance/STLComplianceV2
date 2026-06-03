@@ -100,6 +100,11 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
         Assert.Contains(feed.Items, x => x.EventKind == "permission.revoked");
         Assert.Contains(feed.Items, x => x.EventKind == "override.revoked");
         Assert.Contains(feed.Items, x => x.EventKind == "incident.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "incident.note.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "incident.corrective_action.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "incident.corrective_action.completed");
+        Assert.Contains(feed.Items, x => x.EventKind == "incident.attachment.uploaded");
+        Assert.Contains(feed.Items, x => x.EventKind == "incident.closed");
     }
 
     [Fact]
@@ -128,6 +133,9 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
         var assignmentId = Guid.NewGuid();
         var overrideId = Guid.NewGuid();
         var incidentId = Guid.NewGuid();
+        var noteId = Guid.NewGuid();
+        var correctiveActionId = Guid.NewGuid();
+        var attachmentId = Guid.NewGuid();
 
         db.People.Add(new StaffPerson
         {
@@ -180,13 +188,80 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
             UpdatedAt = now.AddMinutes(2)
         });
 
+        db.PersonnelIncidents.Add(new PersonnelIncident
+        {
+            Id = incidentId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            PersonId = personId,
+            ReasonCategoryKey = "safety",
+            Severity = "medium",
+            Status = "closed",
+            Title = "Warehouse dock slip",
+            Description = "A dock slip incident with follow-up completed.",
+            OccurredAt = now,
+            ReportedAt = now,
+            ReportedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        db.IncidentNotes.Add(new IncidentNote
+        {
+            Id = noteId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            IncidentId = incidentId,
+            NoteTypeKey = "note",
+            Subject = "Initial follow-up",
+            Body = "Supervisor began following up on the dock slip.",
+            Status = "open",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddMinutes(5),
+            UpdatedAt = now.AddMinutes(5)
+        });
+
+        db.IncidentNotes.Add(new IncidentNote
+        {
+            Id = correctiveActionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            IncidentId = incidentId,
+            NoteTypeKey = "corrective_action",
+            Subject = "Replace dock mat",
+            Body = "Dock mat should be replaced to reduce slip risk.",
+            Status = "completed",
+            CompletedAt = now.AddMinutes(6),
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddMinutes(5),
+            UpdatedAt = now.AddMinutes(6)
+        });
+
+        db.IncidentAttachments.Add(new IncidentAttachment
+        {
+            Id = attachmentId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            IncidentId = incidentId,
+            Title = "Dock photo",
+            FileName = "dock-photo.txt",
+            ContentType = "text/plain",
+            SizeBytes = 24,
+            StorageKey = "seed/incident-attachment.txt",
+            Description = "Photo evidence uploaded.",
+            UploadedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddMinutes(7),
+            UpdatedAt = now.AddMinutes(7)
+        });
+
         db.AuditEvents.AddRange(
             BuildAudit("person.create", "person", personId, now),
             BuildAudit("person.employment_status_update", "person", personId, now.AddMinutes(1)),
             BuildAudit("org_unit.create", "org_unit", siteId, now.AddMinutes(2)),
             BuildAudit("person_role_assignment.status_update", "person_role_assignment", assignmentId, now.AddMinutes(3)),
             BuildAudit("readiness_override.clear", "person_readiness_override", overrideId, now.AddMinutes(4)),
-            BuildAudit("incident.product_intake", "personnel_incident", incidentId, now.AddMinutes(5)));
+            BuildAudit("incident.product_intake", "personnel_incident", incidentId, now.AddMinutes(5)),
+            BuildAudit("incident.note.create", "personnel_incident", incidentId, now.AddMinutes(6), "note"),
+            BuildAudit("incident.corrective_action.create", "personnel_incident", incidentId, now.AddMinutes(7), "corrective_action"),
+            BuildAudit("incident.corrective_action.status_update", "personnel_incident", incidentId, now.AddMinutes(8), "completed"),
+            BuildAudit("incident.attachment.upload", "personnel_incident", incidentId, now.AddMinutes(9)),
+            BuildAudit("incident.status_update", "personnel_incident", incidentId, now.AddMinutes(10), "closed"));
 
         await db.SaveChangesAsync();
     }
@@ -195,7 +270,8 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
         string action,
         string targetType,
         Guid targetId,
-        DateTimeOffset occurredAt) =>
+        DateTimeOffset occurredAt,
+        string? reasonCode = null) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -205,6 +281,7 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
             TargetType = targetType,
             TargetId = targetId.ToString(),
             Result = "Succeeded",
+            ReasonCode = reasonCode,
             CorrelationId = Guid.NewGuid(),
             OccurredAt = occurredAt
         };

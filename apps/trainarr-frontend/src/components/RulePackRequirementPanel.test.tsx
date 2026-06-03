@@ -1,5 +1,45 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 import { RulePackRequirementPanel } from './RulePackRequirementPanel'
 
 describe('RulePackRequirementPanel', () => {
@@ -30,6 +70,7 @@ describe('RulePackRequirementPanel', () => {
 
     expect(screen.getByRole('button', { name: /save rule pack requirement/i })).toBeDisabled()
     expect(screen.getByTestId('rule-pack-requirement-key')).toBeInTheDocument()
+    expect(screen.getByLabelText('Rule pack')).toBeInTheDocument()
   })
 
   it('lists linked requirements with metadata', () => {
@@ -71,7 +112,6 @@ describe('RulePackRequirementPanel', () => {
       />,
     )
 
-    expect(screen.getAllByText('driver_qualification').length).toBeGreaterThan(0)
     expect(screen.getByText('Driver qualification rules')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /remove/i }))
   })

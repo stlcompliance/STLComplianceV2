@@ -39,6 +39,20 @@ public static class AssetEndpoints
         })
         .WithName($"GetAsset{nameSuffix}");
 
+        group.MapGet("/{assetId:guid}/telematics-ingestion", async (
+            Guid assetId,
+            int? limit,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            AssetTelematicsIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, assetId, limit, cancellationToken));
+        })
+        .WithName($"ListAssetTelematicsIngestion{nameSuffix}");
+
         if (nameSuffix == "V1")
         {
             group.MapPost("/", async (

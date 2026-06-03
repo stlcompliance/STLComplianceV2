@@ -5,15 +5,18 @@ import { PageHeader } from '@stl/shared-ui'
 import {
   completeTrainingAssignment,
   createTrainingAssignmentMaterialDemandLine,
+  createTrainingAssignmentLaborEntry,
   createTrainingEvidence,
   getMe,
   getTrainingAssignment,
   getTrainingAssignmentMaterialDemand,
   getTrainingAssignmentMaterialDemandStatusEvents,
+  getTrainingAssignmentLaborEntries,
   getTrainingAssignmentSteps,
   getTrainingEvidence,
   getTrainingEvaluationHistory,
   publishTrainingAssignmentMaterialDemand,
+  removeTrainingAssignmentLaborEntry,
   submitTrainingAssignmentStep,
   submitTrainingEvaluation,
   submitTrainingSignoff,
@@ -28,6 +31,7 @@ import {
   loadSession,
 } from '../auth/sessionStorage'
 import { AssignmentMaterialDemandPanel } from '../components/AssignmentMaterialDemandPanel'
+import { AssignmentLaborPanel } from '../components/AssignmentLaborPanel'
 import { AssignmentStepsPanel } from '../components/AssignmentStepsPanel'
 import { EvidenceCapturePanel } from '../components/EvidenceCapturePanel'
 import { SignoffEvaluationPanel } from '../components/SignoffEvaluationPanel'
@@ -71,6 +75,11 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
   const [demandUnitOfMeasure, setDemandUnitOfMeasure] = useState('each')
   const [demandNotes, setDemandNotes] = useState('')
   const [createPurchaseRequestDraft, setCreatePurchaseRequestDraft] = useState(false)
+  const [laborTypeKey, setLaborTypeKey] = useState('delivery')
+  const [laborHoursWorked, setLaborHoursWorked] = useState('1')
+  const [laborCostPerHour, setLaborCostPerHour] = useState('0')
+  const [laborNotes, setLaborNotes] = useState('')
+  const [removingLaborEntryId, setRemovingLaborEntryId] = useState<string | null>(null)
 
   const meQuery = useQuery({
     queryKey: ['trainarr-me', session?.accessToken],
@@ -107,6 +116,12 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     queryKey: ['trainarr-material-demand-status-events', session?.accessToken, assignmentId],
     queryFn: () =>
       getTrainingAssignmentMaterialDemandStatusEvents(session!.accessToken, assignmentId!),
+    enabled: Boolean(session?.accessToken && assignmentId),
+  })
+
+  const laborQuery = useQuery({
+    queryKey: ['trainarr-assignment-labor', session?.accessToken, assignmentId],
+    queryFn: () => getTrainingAssignmentLaborEntries(session!.accessToken, assignmentId!),
     enabled: Boolean(session?.accessToken && assignmentId),
   })
 
@@ -208,7 +223,17 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
       payload,
     }: {
       stepId: string
-      payload: { selectedOptionIndexes?: number[]; practicalResult?: string; notes?: string }
+      payload: {
+        selectedOptionIndexes?: number[]
+        practicalResult?: string
+        notes?: string
+        contentAcknowledged?: boolean
+        practicalObservationNotes?: string
+        safetyCriticalFailure?: boolean
+        failureComments?: string
+        traineeAcknowledged?: boolean
+        retestRequired?: boolean
+      }
     }) => submitTrainingAssignmentStep(session!.accessToken, assignmentId!, stepId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -257,6 +282,52 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
         createPurchaseRequestDraft,
       }),
     onSuccess: () => invalidateMaterialDemand(),
+  })
+
+  const addLaborEntryMutation = useMutation({
+    mutationFn: async () => {
+      if (!assignmentId) {
+        throw new Error('Assignment is required.')
+      }
+      const hoursWorked = Number(laborHoursWorked)
+      const costPerHour = Number(laborCostPerHour)
+      if (!Number.isFinite(hoursWorked) || hoursWorked <= 0) {
+        throw new Error('Labor hours must be greater than zero.')
+      }
+      if (!Number.isFinite(costPerHour) || costPerHour < 0) {
+        throw new Error('Cost per hour must be zero or greater.')
+      }
+      return createTrainingAssignmentLaborEntry(session!.accessToken, assignmentId, {
+        laborTypeKey,
+        hoursWorked,
+        costPerHour,
+        notes: laborNotes.trim() || null,
+      })
+    },
+    onSuccess: () => {
+      setLaborHoursWorked('1')
+      setLaborCostPerHour('0')
+      setLaborNotes('')
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment-labor', session?.accessToken, assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment-report-summary', session?.accessToken] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, assignmentId] })
+    },
+  })
+
+  const removeLaborEntryMutation = useMutation({
+    mutationFn: async (laborEntryId: string) => {
+      if (!assignmentId) {
+        throw new Error('Assignment is required.')
+      }
+      setRemovingLaborEntryId(laborEntryId)
+      await removeTrainingAssignmentLaborEntry(session!.accessToken, assignmentId, laborEntryId)
+    },
+    onSettled: () => {
+      setRemovingLaborEntryId(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment-labor', session?.accessToken, assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment-report-summary', session?.accessToken] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, assignmentId] })
+    },
   })
 
   const assignment = assignmentDetailQuery.data
@@ -423,6 +494,25 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
             canSubmitEvaluation={canEvaluate}
             canSubmitTraineeSignoff={Boolean(canTraineeSign)}
             canSubmitTrainerSignoff={canTrainerSign}
+          />
+
+          <AssignmentLaborPanel
+            laborEntries={laborQuery.data ?? []}
+            canManage={Boolean(canManageDemand)}
+            laborTypeKey={laborTypeKey}
+            hoursWorked={laborHoursWorked}
+            costPerHour={laborCostPerHour}
+            notes={laborNotes}
+            onLaborTypeKeyChange={setLaborTypeKey}
+            onHoursWorkedChange={setLaborHoursWorked}
+            onCostPerHourChange={setLaborCostPerHour}
+            onNotesChange={setLaborNotes}
+            onAddLaborEntry={() => addLaborEntryMutation.mutate()}
+            onRemoveLaborEntry={async (laborEntryId) => {
+              await removeLaborEntryMutation.mutateAsync(laborEntryId)
+            }}
+            isAdding={addLaborEntryMutation.isPending}
+            removingId={removingLaborEntryId}
           />
 
           <AssignmentMaterialDemandPanel

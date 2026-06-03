@@ -131,6 +131,25 @@ public static class RouteEndpoints
         })
         .WithName("ReorderRouteStops");
 
+        routes.MapPost("/{routeId:guid}/optimize", async (
+            Guid routeId,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoutesCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await service.OptimizeStopsAsync(
+                tenantId,
+                actorUserId,
+                routeId,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("OptimizeRouteStops");
+
         routes.MapPost("/{routeId:guid}/stops", async (
             Guid routeId,
             AddRouteStopRequest request,
@@ -151,6 +170,27 @@ public static class RouteEndpoints
             return Results.Ok(updated);
         })
         .WithName("AddRouteStop");
+
+        routes.MapPost("/stops/{stopId:guid}/geofence-check", async (
+            Guid stopId,
+            CheckRouteStopGeofenceRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await service.CheckStopGeofenceAsync(
+                tenantId,
+                actorUserId,
+                stopId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("CheckRouteStopGeofence");
 
         var stops = app.MapGroup("/api/stops").WithTags("Stops").RequireAuthorization();
 

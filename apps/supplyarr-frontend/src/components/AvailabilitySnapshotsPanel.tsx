@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type { AvailabilitySnapshotResponse, PartResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
@@ -50,14 +54,21 @@ export function AvailabilitySnapshotsPanel({
   onCreateAvailabilitySnapshot,
   isCreating,
 }: AvailabilitySnapshotsPanelProps) {
-  const vendorLinks = parts.flatMap((part) =>
-    part.vendorLinks.map((link) => ({
-      linkId: link.linkId,
-      label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
-    })),
+  const vendorLinkOptions = useMemo<PickerOption[]>(
+    () =>
+      parts.flatMap((part) =>
+        part.vendorLinks.map((link) => ({
+          value: link.linkId,
+          label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
+        })),
+      ),
+    [parts],
   )
-  const selectedVendorLinkLabel =
-    vendorLinks.find((link) => link.linkId === selectedVendorLinkId)?.label ?? ''
+  const selectedVendorLinkOption = useMemo<PickerOption | undefined>(
+    () => vendorLinkOptions.find((link) => link.value === selectedVendorLinkId),
+    [selectedVendorLinkId, vendorLinkOptions],
+  )
+  const selectedVendorLinkLabel = selectedVendorLinkOption?.label ?? ''
   const snapshotKeySource = selectedVendorLinkLabel
     ? `${selectedVendorLinkLabel} ${availabilityStatus} snapshot`
     : ''
@@ -126,19 +137,15 @@ export function AvailabilitySnapshotsPanel({
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
           <label htmlFor="availability-vendor-link" className="block text-sm text-slate-400">
             Vendor part link
-            <select
+            <StaticSearchPicker
               id="availability-vendor-link"
-              className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+              placeholder="Search vendor part links…"
               value={selectedVendorLinkId}
-              onChange={(e) => onSelectedVendorLinkIdChange(e.target.value)}
-            >
-              <option value="">Select link…</option>
-              {vendorLinks.map((link) => (
-                <option key={link.linkId} value={link.linkId}>
-                  {link.label}
-                </option>
-              ))}
-            </select>
+              options={vendorLinkOptions}
+              selectedOption={selectedVendorLinkOption}
+              onChange={onSelectedVendorLinkIdChange}
+              testId="availability-vendor-link-picker"
+            />
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">

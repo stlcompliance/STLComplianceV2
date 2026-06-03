@@ -20,7 +20,9 @@ public sealed class ProcurementExceptionEscalationRulesTests
             IsEnabled: true,
             EscalationCooldownHours: 24,
             MaxEscalationsPerException: 5,
-            NotifyOnProcurementExceptionSlaEscalation: true);
+            NotifyOnProcurementExceptionSlaEscalation: true,
+            AutoCloseCompletedExceptionsEnabled: false,
+            AutoCloseCompletedExceptionsAfterHours: ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours);
 
         Assert.True(ProcurementExceptionEscalationRules.IsDueForEscalation(
             entity,
@@ -42,7 +44,9 @@ public sealed class ProcurementExceptionEscalationRulesTests
             IsEnabled: true,
             EscalationCooldownHours: 24,
             MaxEscalationsPerException: 5,
-            NotifyOnProcurementExceptionSlaEscalation: true);
+            NotifyOnProcurementExceptionSlaEscalation: true,
+            AutoCloseCompletedExceptionsEnabled: false,
+            AutoCloseCompletedExceptionsAfterHours: ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours);
 
         Assert.False(ProcurementExceptionEscalationRules.IsDueForEscalation(
             entity,
@@ -65,7 +69,9 @@ public sealed class ProcurementExceptionEscalationRulesTests
             IsEnabled: true,
             EscalationCooldownHours: 24,
             MaxEscalationsPerException: 5,
-            NotifyOnProcurementExceptionSlaEscalation: true);
+            NotifyOnProcurementExceptionSlaEscalation: true,
+            AutoCloseCompletedExceptionsEnabled: false,
+            AutoCloseCompletedExceptionsAfterHours: ProcurementExceptionEscalationDefaults.AutoCloseCompletedExceptionsAfterHours);
 
         Assert.False(ProcurementExceptionEscalationRules.IsDueForEscalation(entity, settings, asOf));
         Assert.True(ProcurementExceptionEscalationRules.IsDueForEscalation(
