@@ -20,12 +20,33 @@ export type ProductCategoryKey =
   | 'compliance'
   | 'field'
 
+export type CapabilityKey =
+  | 'secureAccess'
+  | 'workforce'
+  | 'training'
+  | 'maintenance'
+  | 'dispatch'
+  | 'supply'
+  | 'warehouse'
+  | 'complianceRules'
+  | 'auditEvidence'
+  | 'fieldInbox'
+
+export type CapabilityLevel = 'primary' | 'connected' | 'none'
+
 export type MarketingProduct = {
   productKey: string
   displayName: string
   tagline: string
+  overview: string
   owns: string
   doesNotOwn: string
+  primaryWorkflows: string[]
+  recordsManaged: string[]
+  readinessChecks: string[]
+  evidenceOutputs: string[]
+  handoffs: string[]
+  checklist: Record<CapabilityKey, CapabilityLevel>
   icon: LucideIcon
   sortOrder: number
   category: ProductCategoryKey
@@ -41,13 +62,86 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
   field: 'Field work',
 }
 
+export const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
+  secureAccess: 'Secure access',
+  workforce: 'Workforce records',
+  training: 'Training and qualifications',
+  maintenance: 'Maintenance and inspections',
+  dispatch: 'Routes and dispatch',
+  supply: 'Vendors and purchasing',
+  warehouse: 'Warehouse and inventory',
+  complianceRules: 'Rules and checks',
+  auditEvidence: 'Audit evidence',
+  fieldInbox: 'Field inbox',
+}
+
+export const CAPABILITY_ORDER: CapabilityKey[] = [
+  'secureAccess',
+  'workforce',
+  'training',
+  'maintenance',
+  'dispatch',
+  'supply',
+  'warehouse',
+  'complianceRules',
+  'auditEvidence',
+  'fieldInbox',
+]
+
+const noneChecklist: Record<CapabilityKey, CapabilityLevel> = {
+  secureAccess: 'none',
+  workforce: 'none',
+  training: 'none',
+  maintenance: 'none',
+  dispatch: 'none',
+  supply: 'none',
+  warehouse: 'none',
+  complianceRules: 'none',
+  auditEvidence: 'none',
+  fieldInbox: 'none',
+}
+
+function checklist(
+  primary: CapabilityKey[],
+  connected: CapabilityKey[] = [],
+): Record<CapabilityKey, CapabilityLevel> {
+  return {
+    ...noneChecklist,
+    ...Object.fromEntries(connected.map((key) => [key, 'connected'])),
+    ...Object.fromEntries(primary.map((key) => [key, 'primary'])),
+  } as Record<CapabilityKey, CapabilityLevel>
+}
+
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     productKey: 'nexarr',
     displayName: 'NexArr',
     tagline: 'One secure front door for users, companies, products, and access.',
+    overview:
+      'NexArr is the suite control plane. It handles company-level access, user sign-in, product launch, administrator setup, and product entitlement so teams do not manage separate entry points for each operational tool.',
     owns: PRODUCT_OWNERSHIP.nexarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
+    primaryWorkflows: [
+      'Authenticate users and route them to the products their organization has licensed.',
+      'Manage customer companies, administrators, product access, and suite-level launch settings.',
+      'Keep user entry, product switching, and account-level configuration in one secure front door.',
+    ],
+    recordsManaged: ['Customer companies', 'Users', 'Product entitlements', 'Access roles', 'Suite launch profiles'],
+    readinessChecks: [
+      'Confirms whether a user belongs to the right company before product launch.',
+      'Checks whether a user has access to the requested product.',
+      'Keeps administration separate from daily work records owned by product apps.',
+    ],
+    evidenceOutputs: [
+      'Access and administration context',
+      'Product entitlement history',
+      'User and company setup records',
+    ],
+    handoffs: [
+      'Launches StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Companion.',
+      'Provides the suite-level identity context used by product workspaces.',
+    ],
+    checklist: checklist(['secureAccess'], ['auditEvidence']),
     icon: ShieldCheck,
     sortOrder: 0,
     category: 'control-plane',
@@ -58,8 +152,42 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'staffarr',
     displayName: 'StaffArr',
     tagline: 'People, sites, roles, permissions, incidents, and readiness in one place.',
+    overview:
+      'StaffArr is the workforce system of record for frontline operations. It keeps people, sites, departments, roles, certifications, readiness signals, incidents, and personnel history connected to the operational work those people are allowed to perform.',
     owns: PRODUCT_OWNERSHIP.staffarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.staffarr.doesNotOwn,
+    primaryWorkflows: [
+      'Maintain employee profiles, site assignments, departments, roles, and permissions.',
+      'Track certifications, readiness status, personnel history, and workforce incidents.',
+      'Use training proof, incident context, and operational requirements to help supervisors understand who is eligible for work.',
+    ],
+    recordsManaged: [
+      'People',
+      'Sites',
+      'Departments',
+      'Roles and permissions',
+      'Certifications',
+      'Incidents',
+      'Readiness history',
+    ],
+    readinessChecks: [
+      'Shows whether required certifications or qualifications are current.',
+      'Connects TrainArr qualification proof back to people and readiness.',
+      'Supports workforce eligibility decisions before assignment, dispatch, or operational handoff.',
+    ],
+    evidenceOutputs: [
+      'Personnel history',
+      'Certification records',
+      'Incident records',
+      'Readiness snapshots',
+      'People export and audit package inputs',
+    ],
+    handoffs: [
+      'Receives training and qualification proof from TrainArr.',
+      'Provides person, role, site, and readiness context to operational products.',
+      'Feeds people-related evidence into audit and reporting workflows.',
+    ],
+    checklist: checklist(['workforce', 'auditEvidence'], ['secureAccess', 'training', 'complianceRules']),
     icon: Users,
     sortOrder: 10,
     category: 'workforce',
@@ -70,8 +198,46 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'trainarr',
     displayName: 'TrainArr',
     tagline: 'Training, signoffs, evaluations, certificates, and qualification proof.',
+    overview:
+      'TrainArr manages training programs from publication through assignment, evidence capture, evaluation, signoff, completion, recertification, and qualification proof. It turns learning activity into operational readiness signals instead of leaving training as a disconnected LMS record.',
     owns: PRODUCT_OWNERSHIP.trainarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.trainarr.doesNotOwn,
+    primaryWorkflows: [
+      'Create programs, versions, steps, completion rules, and assignment requirements.',
+      'Assign training, collect evidence, run evaluations, capture acknowledgements, and record signoffs.',
+      'Issue certificates, calculate qualifications, schedule recertification, and preserve training history.',
+    ],
+    recordsManaged: [
+      'Training programs',
+      'Program versions',
+      'Assignments',
+      'Steps',
+      'Evidence',
+      'Evaluations',
+      'Signoffs',
+      'Certificates',
+      'Qualifications',
+    ],
+    readinessChecks: [
+      'Requires completion rules, evaluations, acknowledgements, and signoffs before training closes.',
+      'Calculates whether a person holds the qualification required for work.',
+      'Supports retraining and recertification when qualification proof expires or rules change.',
+    ],
+    evidenceOutputs: [
+      'Assignment history',
+      'Captured evidence',
+      'Evaluation results',
+      'Signoff timeline',
+      'Certificates',
+      'Qualification records',
+      'Training audit packages',
+    ],
+    handoffs: [
+      'Sends qualification proof and training blockers to StaffArr.',
+      'Publishes training-related requirements and evidence into Compliance Core context.',
+      'Creates material or remediation demand signals for connected operations when training reveals a need.',
+    ],
+    checklist: checklist(['training', 'auditEvidence'], ['secureAccess', 'workforce', 'complianceRules', 'fieldInbox']),
     icon: GraduationCap,
     sortOrder: 20,
     category: 'workforce',
@@ -82,8 +248,45 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'maintainarr',
     displayName: 'MaintainArr',
     tagline: 'Assets, inspections, defects, work orders, repairs, and readiness.',
+    overview:
+      'MaintainArr controls the asset side of readiness. It tracks equipment, inspections, defects, preventive maintenance, work orders, repairs, labor notes, parts usage, and asset release so operations can see whether equipment is ready before work starts.',
     owns: PRODUCT_OWNERSHIP.maintainarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.maintainarr.doesNotOwn,
+    primaryWorkflows: [
+      'Manage assets, inspection programs, defect capture, work orders, repair notes, and preventive maintenance.',
+      'Track asset condition, repair activity, labor notes, part usage, and readiness decisions.',
+      'Connect maintenance outcomes to dispatch, supply, compliance, and audit records.',
+    ],
+    recordsManaged: [
+      'Assets',
+      'Inspections',
+      'Defects',
+      'Work orders',
+      'Repairs',
+      'Labor notes',
+      'Part usage',
+      'Preventive maintenance schedules',
+    ],
+    readinessChecks: [
+      'Blocks or flags asset use when inspections, defects, or repairs make equipment unready.',
+      'Connects part usage and supply availability to maintenance execution.',
+      'Preserves inspection and repair proof for compliance review.',
+    ],
+    evidenceOutputs: [
+      'Inspection results',
+      'Defect history',
+      'Work order history',
+      'Repair notes',
+      'Parts usage',
+      'Asset readiness records',
+      'Maintenance audit package inputs',
+    ],
+    handoffs: [
+      'Sends part demand to SupplyArr when maintenance needs materials.',
+      'Provides asset readiness context to RoutArr before vehicle or equipment assignment.',
+      'Provides inspection and repair evidence to Compliance Core.',
+    ],
+    checklist: checklist(['maintenance', 'auditEvidence'], ['secureAccess', 'supply', 'dispatch', 'complianceRules']),
     icon: Wrench,
     sortOrder: 30,
     category: 'operations',
@@ -94,8 +297,45 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'routarr',
     displayName: 'RoutArr',
     tagline: 'Routes, dispatch, drivers, vehicles, trip status, and exceptions.',
+    overview:
+      'RoutArr manages route and dispatch execution. It keeps trips, drivers, vehicles, stops, status changes, inspections, exceptions, and dispatch history tied to workforce and asset readiness so teams can see whether a trip should proceed.',
     owns: PRODUCT_OWNERSHIP.routarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.routarr.doesNotOwn,
+    primaryWorkflows: [
+      'Create trips and routes, assign drivers and vehicles, and manage dispatch status.',
+      'Track stops, trip progress, exceptions, driver portal actions, and route history.',
+      'Check driver, vehicle, inspection, and compliance signals before or during dispatch.',
+    ],
+    recordsManaged: [
+      'Routes',
+      'Trips',
+      'Stops',
+      'Drivers',
+      'Vehicles',
+      'Assignments',
+      'Trip status events',
+      'Dispatch exceptions',
+      'Inspection references',
+    ],
+    readinessChecks: [
+      'Checks whether the assigned driver and vehicle are fit for the trip.',
+      'Supports trip completion controls tied to inspection, proof, or delivery requirements.',
+      'Connects route execution to compliance gates and notification events.',
+    ],
+    evidenceOutputs: [
+      'Trip history',
+      'Dispatch status timeline',
+      'Inspection proof',
+      'Delivery or route evidence',
+      'Exception history',
+      'Dispatch notification records',
+    ],
+    handoffs: [
+      'Uses StaffArr readiness and MaintainArr asset readiness before assignment.',
+      'Creates demand or shipment context for SupplyArr and LoadArr.',
+      'Publishes trip and dispatch evidence to Compliance Core.',
+    ],
+    checklist: checklist(['dispatch', 'auditEvidence'], ['secureAccess', 'workforce', 'maintenance', 'supply', 'complianceRules', 'fieldInbox']),
     icon: Route,
     sortOrder: 40,
     category: 'operations',
@@ -106,8 +346,47 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'supplyarr',
     displayName: 'SupplyArr',
     tagline: 'Vendors, customers, parts, purchasing, approvals, and supply records.',
+    overview:
+      'SupplyArr manages vendors, customers, parts, purchasing, approvals, receiving, pricing snapshots, lead times, vendor restrictions, procurement exceptions, and supply readiness. It makes purchasing and supplier evidence visible to the work that depends on it.',
     owns: PRODUCT_OWNERSHIP.supplyarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.supplyarr.doesNotOwn,
+    primaryWorkflows: [
+      'Maintain vendors, customers, parts, supply contracts, purchase requests, purchase orders, receiving, and approvals.',
+      'Track price snapshots, lead times, supplier incidents, restrictions, warranty claims, and procurement exceptions.',
+      'Coordinate demand from maintenance, routes, training, staff, or warehouse operations.',
+    ],
+    recordsManaged: [
+      'Vendors',
+      'Customers',
+      'Parts',
+      'Purchase requests',
+      'Purchase orders',
+      'Approvals',
+      'Receiving records',
+      'Contracts',
+      'Supplier incidents',
+      'Warranty claims',
+      'Vendor restrictions',
+    ],
+    readinessChecks: [
+      'Checks whether parts, vendors, approvals, or purchasing exceptions affect operational readiness.',
+      'Tracks restricted vendors and supplier incidents before procurement decisions.',
+      'Connects receiving and availability records to downstream work.',
+    ],
+    evidenceOutputs: [
+      'Approval history',
+      'Receiving history',
+      'Vendor and supplier records',
+      'Pricing and lead-time snapshots',
+      'Procurement exception history',
+      'Warranty and return records',
+    ],
+    handoffs: [
+      'Receives demand from MaintainArr, RoutArr, TrainArr, StaffArr, and LoadArr.',
+      'Provides supply availability and procurement evidence back to operational workflows.',
+      'Feeds vendor, purchasing, and receiving evidence into Compliance Core.',
+    ],
+    checklist: checklist(['supply', 'auditEvidence'], ['secureAccess', 'maintenance', 'dispatch', 'warehouse', 'complianceRules']),
     icon: PackageSearch,
     sortOrder: 50,
     category: 'operations',
@@ -118,8 +397,45 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'loadarr',
     displayName: 'LoadArr',
     tagline: 'Warehouse operations, receiving, stock movement, picking, counts, and inventory proof.',
+    overview:
+      'LoadArr manages warehouse execution and inventory proof. It covers locations, receiving, stock movement, reservations, picking, shipments, adjustments, cycle counts, and inventory history so warehouse work is traceable and connected to supply and dispatch needs.',
     owns: PRODUCT_OWNERSHIP.loadarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.loadarr.doesNotOwn,
+    primaryWorkflows: [
+      'Manage warehouse locations, inventory movement, receiving, picking, reservations, shipments, and adjustments.',
+      'Run cycle counts and preserve inventory history for operational and audit review.',
+      'Connect warehouse availability to purchasing, route, and maintenance work.',
+    ],
+    recordsManaged: [
+      'Warehouse locations',
+      'Stock balances',
+      'Reservations',
+      'Receiving events',
+      'Picks',
+      'Shipments',
+      'Adjustments',
+      'Cycle counts',
+      'Inventory history',
+    ],
+    readinessChecks: [
+      'Checks whether stock is available, reserved, picked, received, or adjusted.',
+      'Preserves count and movement history so inventory proof does not live only in spreadsheets.',
+      'Connects warehouse movement to upstream purchasing and downstream route or maintenance work.',
+    ],
+    evidenceOutputs: [
+      'Stock movement history',
+      'Receiving proof',
+      'Pick and shipment records',
+      'Adjustment history',
+      'Cycle count records',
+      'Inventory audit inputs',
+    ],
+    handoffs: [
+      'Uses SupplyArr purchasing and receiving context.',
+      'Provides stock and shipment context to RoutArr and MaintainArr.',
+      'Feeds inventory evidence into Compliance Core when rules or audits require it.',
+    ],
+    checklist: checklist(['warehouse', 'auditEvidence'], ['secureAccess', 'supply', 'dispatch', 'maintenance', 'complianceRules']),
     icon: PackageSearch,
     sortOrder: 60,
     category: 'operations',
@@ -130,8 +446,43 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
     tagline: 'Rules, evidence expectations, citations, and compliance checks.',
+    overview:
+      'Compliance Core is the rules and evidence layer for the suite. It manages rule packs, citations, vocabulary, evidence expectations, findings, checks, and audit packaging so compliance proof is tied to the work that created it.',
     owns: PRODUCT_OWNERSHIP.compliancecore.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.compliancecore.doesNotOwn,
+    primaryWorkflows: [
+      'Maintain regulatory requirements, citations, rule packs, evidence expectations, and approved wording.',
+      'Evaluate operational facts from product workflows against compliance rules.',
+      'Prepare findings, evidence views, and audit package material across connected products.',
+    ],
+    recordsManaged: [
+      'Rule packs',
+      'Citations',
+      'Evidence expectations',
+      'Compliance checks',
+      'Findings',
+      'Vocabulary and aliases',
+      'Audit package jobs',
+    ],
+    readinessChecks: [
+      'Checks whether product facts satisfy rule and evidence expectations.',
+      'Connects findings to the product records that need correction or proof.',
+      'Supports compliance gates before operational work proceeds.',
+    ],
+    evidenceOutputs: [
+      'Rule evaluation results',
+      'Finding history',
+      'Evidence maps',
+      'Citation references',
+      'Audit package exports',
+      'Delivery orchestration records',
+    ],
+    handoffs: [
+      'Receives facts and evidence from StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, and LoadArr.',
+      'Sends rule context, gates, and findings back into product workflows.',
+      'Supports audit package generation for compliance review.',
+    ],
+    checklist: checklist(['complianceRules', 'auditEvidence'], ['secureAccess', 'workforce', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse']),
     icon: ClipboardCheck,
     sortOrder: 70,
     category: 'compliance',
@@ -142,8 +493,31 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     productKey: 'companion',
     displayName: 'Companion',
     tagline: 'A focused field inbox for tasks, messages, and quick handoffs.',
+    overview:
+      'Companion gives frontline workers a focused inbox for tasks, messages, and quick handoffs into the product where action belongs. It is not the system of record for every workflow; it is the practical field surface that helps people find and complete the right work faster.',
     owns: PRODUCT_OWNERSHIP.companion.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.companion.doesNotOwn,
+    primaryWorkflows: [
+      'Show field tasks and messages in one focused inbox.',
+      'Route workers into the product workspace that owns the underlying record.',
+      'Keep quick handoffs visible without duplicating operational systems of record.',
+    ],
+    recordsManaged: ['Inbox items', 'Task handoffs', 'Message context', 'Product launch targets'],
+    readinessChecks: [
+      'Surfaces tasks that need worker attention from connected products.',
+      'Keeps field action tied to the product record that owns the work.',
+      'Reduces missed handoffs between office workflows and field execution.',
+    ],
+    evidenceOutputs: [
+      'Task acknowledgement context',
+      'Message and handoff history',
+      'Navigation trail into product records',
+    ],
+    handoffs: [
+      'Routes users into TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, StaffArr, or Compliance Core as needed.',
+      'Returns field attention to the workflow owner instead of copying the record.',
+    ],
+    checklist: checklist(['fieldInbox'], ['secureAccess', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse', 'auditEvidence']),
     icon: Inbox,
     sortOrder: 80,
     category: 'field',

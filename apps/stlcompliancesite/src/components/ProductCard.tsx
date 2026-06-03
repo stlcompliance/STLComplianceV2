@@ -34,6 +34,14 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
       <p className="mt-3 flex-1 text-sm text-slate-300">{product.tagline}</p>
+      <ul className="mt-4 space-y-2 text-xs text-slate-400">
+        {product.primaryWorkflows.slice(0, 2).map((workflow) => (
+          <li key={workflow} className="flex gap-2">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+            <span>{workflow}</span>
+          </li>
+        ))}
+      </ul>
       <span className="mt-4 text-sm font-medium text-teal-400">See what it does →</span>
     </Link>
   )

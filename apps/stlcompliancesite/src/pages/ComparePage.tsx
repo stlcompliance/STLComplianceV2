@@ -76,9 +76,9 @@ export function ComparePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Side-by-side view</h2>
+        <h2 className="text-xl font-bold text-white">Checklist comparison</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Practical differences, not a feature scorecard. For per-product scope, see the{' '}
+          Concrete operating questions, not abstract positioning. For per-product scope, see the{' '}
           <Link to="/products" className="text-teal-400 hover:text-teal-300">
             products hub
           </Link>

@@ -5,6 +5,27 @@ import { COMPLIANCE_CORE_EDUCATION } from '../content/ownershipBoundaries'
 import { getMarketingProduct } from '../content/products'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
+type DetailListProps = {
+  title: string
+  items: string[]
+}
+
+function DetailList({ title, items }: DetailListProps) {
+  return (
+    <article className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5">
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <ul className="mt-4 space-y-3 text-sm text-slate-300">
+        {items.map((item) => (
+          <li key={item} className="flex gap-3">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  )
+}
+
 export function ProductPage() {
   const { productKey = '' } = useParams()
   const product = getMarketingProduct(productKey)
@@ -57,8 +78,7 @@ export function ProductPage() {
           <p className="text-sm font-semibold uppercase tracking-wide">What it helps with</p>
         </div>
         <p className="mt-3 text-sm text-slate-400" data-testid="product-capability-detail">
-          {product.displayName} is part of the connected STL Compliance operating suite for
-          readiness, execution, and proof.
+          {product.overview}
         </p>
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <article className="rounded-2xl border border-teal-500/30 bg-teal-950/20 p-6">
@@ -73,6 +93,34 @@ export function ProductPage() {
         <p className="mt-8 text-sm text-slate-400" data-testid="ownership-source-doc">
           Customers use the secure suite login for real records and daily workflows.
         </p>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">What {product.displayName} actually does</h2>
+        <p className="mt-2 max-w-3xl text-sm text-slate-400">
+          The checklist below is the practical operating surface: what teams do in the product,
+          which records it owns, which checks it supports, and what proof it produces.
+        </p>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <DetailList title="Primary workflows" items={product.primaryWorkflows} />
+          <DetailList title="Records it manages" items={product.recordsManaged} />
+          <DetailList title="Checks and gates" items={product.readinessChecks} />
+          <DetailList title="Evidence and outputs" items={product.evidenceOutputs} />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <article className="rounded-2xl border border-slate-700 bg-slate-900/60 p-6">
+          <h2 className="text-lg font-semibold text-white">How it connects to the suite</h2>
+          <ul className="mt-4 space-y-3 text-sm text-slate-300">
+            {product.handoffs.map((handoff) => (
+              <li key={handoff} className="flex gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />
+                <span>{handoff}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
       </section>
 
       {isComplianceCore ? (

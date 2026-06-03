@@ -7,10 +7,11 @@ export type AlternativeScenario = {
 
 export type ComparisonDimension = {
   id: string
-  dimension: string
+  checklistItem: string
   spreadsheets: string
   pointTools: string
   stlSuite: string
+  stlAnswer: 'Native' | 'Connected' | 'Manual outside suite'
 }
 
 export const COMPARE_DISCLAIMER =
@@ -41,49 +42,73 @@ export const ALTERNATIVE_SCENARIOS: AlternativeScenario[] = [
 export const COMPARISON_DIMENSIONS: ComparisonDimension[] = [
   {
     id: 'records',
-    dimension: 'Connected records',
-    spreadsheets: 'One workbook spans everything; boundaries are informal.',
-    pointTools: 'Each tool tracks its own slice; your team reconciles overlaps.',
+    checklistItem: 'Can the system connect people, assets, training, supply, dispatch, and proof without re-keying the same facts?',
+    spreadsheets: 'Usually manual. One workbook can hold many columns, but ownership and change history are informal.',
+    pointTools: 'Partial. Each tool tracks its own slice; cross-tool reconciliation becomes your team’s job.',
     stlSuite:
-      'Each product focuses on its part of the work, while the suite keeps the important people, asset, training, supply, and proof connections visible.',
+      'Connected. Each product owns its records while suite links keep the important people, asset, training, supply, dispatch, and proof relationships visible.',
+    stlAnswer: 'Connected',
   },
   {
     id: 'access',
-    dimension: 'Access',
-    spreadsheets: 'File share access is easy to lose track of.',
-    pointTools: 'Separate accounts and roles in each tool.',
+    checklistItem: 'Can users sign in once and reach only the products and records they are allowed to use?',
+    spreadsheets: 'Manual. File share access is easy to lose track of as teams, folders, and copies multiply.',
+    pointTools: 'Partial. Strong tools have roles, but each product often has its own account and permission model.',
     stlSuite: 'NexArr gives customers one secure place to sign in and reach the products they use.',
+    stlAnswer: 'Native',
   },
   {
     id: 'compliance',
-    dimension: 'Compliance proof',
-    spreadsheets: 'Rules live in cells, macros, or side documents.',
-    pointTools: 'Often limited to the checklist inside one tool.',
+    checklistItem: 'Can rules, citations, evidence expectations, and product records be evaluated together?',
+    spreadsheets: 'Manual. Rules live in cells, macros, side documents, or individual reviewer knowledge.',
+    pointTools: 'Partial. A point tool may validate its own workflow but rarely sees the full operational chain.',
     stlSuite:
       'Compliance Core connects rules and evidence expectations to the work captured across the suite.',
+    stlAnswer: 'Native',
   },
   {
     id: 'readiness',
-    dimension: 'Workforce readiness',
-    spreadsheets: 'Manual status columns updated after email or paper signoff.',
-    pointTools: 'Training tools may not tell supervisors who is ready for real work.',
+    checklistItem: 'Can a supervisor see whether a person is qualified before assigning real work?',
+    spreadsheets: 'Manual. Status columns are updated after email, paper signoff, or a separate training export.',
+    pointTools: 'Partial. Training tools may prove course completion without linking that proof to assignment decisions.',
     stlSuite: 'TrainArr captures training proof, and StaffArr turns that proof into readiness.',
+    stlAnswer: 'Connected',
   },
   {
-    id: 'operations',
-    dimension: 'Daily operations',
-    spreadsheets: 'Dispatch, receiving, and work orders live in separate tabs or files.',
-    pointTools: 'Strong in one lane; weak handoffs to training, supply, or compliance.',
+    id: 'asset-readiness',
+    checklistItem: 'Can asset condition, inspection status, defects, work orders, and repair proof affect operational release?',
+    spreadsheets: 'Manual. Inspection and repair status often sit in separate sheets, forms, or messages.',
+    pointTools: 'Partial. CMMS tools go deep on maintenance, but handoffs to dispatch, training, and compliance still need integration.',
     stlSuite:
-      'MaintainArr, RoutArr, SupplyArr, LoadArr, and Companion keep daily work moving while preserving the proof behind it.',
+      'MaintainArr manages assets, inspections, defects, work orders, repairs, and asset readiness while sharing context with dispatch, supply, and compliance workflows.',
+    stlAnswer: 'Native',
+  },
+  {
+    id: 'route-readiness',
+    checklistItem: 'Can dispatch see whether the worker, vehicle, inspection state, documentation, and exceptions support a trip?',
+    spreadsheets: 'Manual. Dispatchers often check multiple files, messages, or systems before releasing work.',
+    pointTools: 'Partial. TMS and telematics tools are strong for route execution but may not own training, maintenance, or audit evidence.',
+    stlSuite:
+      'RoutArr manages routes, drivers, vehicles, trip status, exceptions, and dispatch proof while consuming readiness signals from StaffArr, TrainArr, MaintainArr, and Compliance Core.',
+    stlAnswer: 'Connected',
+  },
+  {
+    id: 'supply-warehouse',
+    checklistItem: 'Can purchasing, supplier restrictions, receiving, inventory movement, and stock proof stay tied to operations?',
+    spreadsheets: 'Manual. Purchase requests, receiving, and inventory changes are easy to split across files.',
+    pointTools: 'Partial. Procurement or WMS tools are strong in their own lane but usually need integration to maintenance, route, and compliance decisions.',
+    stlSuite:
+      'SupplyArr manages vendors, purchasing, approvals, receiving, and supply records; LoadArr manages warehouse movement, reservations, picking, counts, and inventory history.',
+    stlAnswer: 'Connected',
   },
   {
     id: 'audit',
-    dimension: 'Audits and evidence',
-    spreadsheets: 'Hard to prove who changed what, when, and why.',
-    pointTools: 'Varies by vendor; cross-team audit packages are often assembled by hand.',
+    checklistItem: 'Can audit evidence be exported from actual workflow history instead of rebuilt later?',
+    spreadsheets: 'Manual. It is hard to prove who changed what, when, and why across copied files.',
+    pointTools: 'Partial. Vendor exports can help, but cross-team audit packages are often assembled by hand.',
     stlSuite:
       'Actions, approvals, changes, and evidence are captured inside the workflows instead of reconstructed later.',
+    stlAnswer: 'Native',
   },
 ]
 
