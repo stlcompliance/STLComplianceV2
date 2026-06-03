@@ -1970,6 +1970,27 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("ReviewNotes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("pending_review");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -1992,6 +2013,8 @@ namespace RoutArr.Api.Migrations
                     b.HasIndex("TenantId", "TripId");
 
                     b.HasIndex("TenantId", "TripId", "CapturedAt");
+
+                    b.HasIndex("TenantId", "TripId", "ReviewStatus");
 
                     b.ToTable("routarr_trip_proof_records", (string)null);
                 });

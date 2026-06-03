@@ -126,6 +126,7 @@ export interface MyTeamMemberResponse {
   summary: SubordinateSummaryResponse
   readinessStatus: string
   blockerCount: number
+  missingCertificationCount: number
   expiringCertificationCount: number
   openIncidentCount: number
   pendingUpdateRequestCount: number
@@ -135,6 +136,7 @@ export interface MyTeamMemberResponse {
 export interface MyTeamDashboardResponse {
   directReportCount: number
   notReadyCount: number
+  missingCertificationCount: number
   expiringCertificationCount: number
   openIncidentCount: number
   pendingUpdateRequestCount: number
@@ -626,6 +628,31 @@ export interface EffectivePermissionProjectionResponse {
   permissions: EffectivePermissionResponse[]
 }
 
+export interface PermissionCheckGrantResponse {
+  permissionKey: string
+  permissionName: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+  roleKey: string
+  roleName: string
+}
+
+export interface PermissionCheckItemResponse {
+  permissionKey: string
+  granted: boolean
+  grants: PermissionCheckGrantResponse[]
+}
+
+export interface PermissionCheckResponse {
+  personId: string
+  externalUserId: string | null
+  isPersonActive: boolean
+  computedAt: string
+  isAuthorizedAll: boolean
+  isAuthorizedAny: boolean
+  checks: PermissionCheckItemResponse[]
+}
+
 export interface PermissionHistoryTimelineEntryResponse {
   eventId: string
   personId: string
@@ -735,6 +762,11 @@ export interface PersonReadinessResponse {
   readinessStatus: 'ready' | 'not_ready'
   readinessBasis: 'certifications' | 'manual_override' | 'training_blockers'
   calculatedAt: string
+  sourceTimestamp: string
+  snapshotAgeMinutes: number
+  snapshotFreshnessStatus: 'fresh' | 'aging' | 'stale'
+  confidenceLevel: 'high' | 'medium' | 'low'
+  reasonCodes: string[]
   requirements: ReadinessRequirementStatusResponse[]
   blockers: ReadinessBlockerResponse[]
   activeOverride: ReadinessOverrideSummaryResponse | null
@@ -1181,6 +1213,7 @@ export interface AuditPackageAppliedFilters {
   result: string | null
   targetType: string | null
   actorUserId: string | null
+  personId: string | null
 }
 
 export interface AuditPackageFilterOptions {
@@ -1210,6 +1243,7 @@ export interface AuditPackageScope {
   result?: string
   targetType?: string
   actorUserId?: string
+  personId?: string
 }
 
 export interface AuditPackageCountsResponse {

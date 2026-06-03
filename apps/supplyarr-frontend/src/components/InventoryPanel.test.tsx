@@ -29,6 +29,18 @@ const baseProps = {
       updatedAt: '2026-01-01T00:00:00Z',
     },
   ],
+  transferBins: [
+    {
+      binId: 'bin-1',
+      locationId: 'loc-1',
+      locationKey: 'main-wh',
+      binKey: 'a-01',
+      name: 'Aisle 01',
+      status: 'active',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+  ],
   stockLevels: [
     {
       stockLevelId: 'stock-1',
@@ -46,6 +58,35 @@ const baseProps = {
       quantityAvailable: 12,
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
+    },
+  ],
+  stockLedger: [
+    {
+      ledgerEntryId: 'ledger-1',
+      movementGroupId: 'move-1',
+      idempotencyKey: 'inventory-transfer-oil-filter',
+      movementType: 'transfer_out',
+      partId: 'part-1',
+      partKey: 'filter-001',
+      partDisplayName: 'Oil Filter',
+      inventoryBinId: 'bin-1',
+      binKey: 'a-01',
+      binName: 'Aisle 01',
+      locationId: 'loc-1',
+      locationKey: 'main-wh',
+      locationName: 'Main Warehouse',
+      staffarrSiteOrgUnitId: null,
+      staffarrSiteNameSnapshot: '',
+      relatedInventoryBinId: null,
+      quantityOnHandDelta: -2,
+      quantityReservedDelta: 0,
+      quantityOnHandAfter: 10,
+      quantityReservedAfter: 0,
+      sourceType: 'manual',
+      sourceReferenceId: null,
+      notes: 'Relocate parts',
+      createdByUserId: null,
+      createdAt: '2026-01-01T00:00:00Z',
     },
   ],
   parts: [
@@ -69,7 +110,7 @@ const baseProps = {
       updatedAt: '2026-01-01T00:00:00Z',
     },
   ],
-  canManage: false,
+  canManage: true,
   isLoading: false,
   locationKey: '',
   locationName: '',
@@ -81,6 +122,13 @@ const baseProps = {
   selectedPartId: '',
   selectedBinId: '',
   stockQuantity: '',
+  transferKey: 'inventory-transfer-oil-filter',
+  transferPartId: 'part-1',
+  transferFromBinId: 'bin-1',
+  transferToBinId: 'bin-1',
+  transferQuantity: '',
+  transferNotes: '',
+  lastTransferResult: null,
   onLocationKeyChange: () => {},
   onLocationNameChange: () => {},
   onLocationTypeChange: () => {},
@@ -91,12 +139,20 @@ const baseProps = {
   onSelectedPartIdChange: () => {},
   onSelectedBinIdChange: () => {},
   onStockQuantityChange: () => {},
+  onTransferKeyChange: () => {},
+  onTransferPartIdChange: () => {},
+  onTransferFromBinIdChange: () => {},
+  onTransferToBinIdChange: () => {},
+  onTransferQuantityChange: () => {},
+  onTransferNotesChange: () => {},
   onCreateLocation: () => {},
   onCreateBin: () => {},
   onUpsertStock: () => {},
+  onTransferStock: () => {},
   isCreatingLocation: false,
   isCreatingBin: false,
   isUpsertingStock: false,
+  isTransferring: false,
 }
 
 describe('InventoryPanel', () => {
@@ -104,8 +160,10 @@ describe('InventoryPanel', () => {
     render(<InventoryPanel {...baseProps} />)
 
     expect(screen.getAllByText(/Main Warehouse/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/Aisle 01/i)).toBeTruthy()
-    expect(screen.getByText(/Oil Filter/i)).toBeTruthy()
+    expect(screen.getAllByText(/Aisle 01/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Oil Filter/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/on hand 12/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Transfer stock/i })).toBeTruthy()
+    expect(screen.getByTestId('stock-ledger-row-ledger-1')).toBeTruthy()
   })
 })

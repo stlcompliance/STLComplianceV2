@@ -110,6 +110,8 @@ using ReceivingReceiptResponse = SupplyArr.Api.Contracts.ReceivingReceiptRespons
 using ReceivingExceptionResponse = SupplyArr.Api.Contracts.ReceivingExceptionResponse;
 using CreateReceivingReceiptFromPurchaseOrderRequest = SupplyArr.Api.Contracts.CreateReceivingReceiptFromPurchaseOrderRequest;
 using CreateReceivingExceptionRequest = SupplyArr.Api.Contracts.CreateReceivingExceptionRequest;
+using CancelReceivingExceptionRequest = SupplyArr.Api.Contracts.CancelReceivingExceptionRequest;
+using ReopenReceivingExceptionRequest = SupplyArr.Api.Contracts.ReopenReceivingExceptionRequest;
 using UpdateReceivingReceiptLineRequest = SupplyArr.Api.Contracts.UpdateReceivingReceiptLineRequest;
 using UpdateReceivingPackingSlipRequest = SupplyArr.Api.Contracts.UpdateReceivingPackingSlipRequest;
 using UpdateReceivingInvoiceRequest = SupplyArr.Api.Contracts.UpdateReceivingInvoiceRequest;
@@ -4994,6 +4996,69 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             x => x.FactKey == SupplyArrComplianceCoreFactKeys.ReceivingDiscrepancyRecorded
                 && x.BooleanValue == true
                 && x.ScopeKey == $"receiving_exception:{receivingException.ReceivingExceptionId:D}".ToLowerInvariant());
+    }
+
+    [Fact]
+    public async Task Receiving_exception_cancel_and_reopen_updates_status_and_reason_history()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-cancel-reopen-001",
+            "po-rcv-cancel-reopen-001",
+            "rcv-cancel-reopen",
+            2m);
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-cancel-reopen-001");
+
+        var createRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{receipt.Lines[0].LineId}/exceptions",
+            token);
+        createRequest.Content = JsonContent.Create(
+            new CreateReceivingExceptionRequest("short", 1m, "Missing unit from shipment."));
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ReceivingExceptionResponse>())!;
+
+        var cancelRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/exceptions/{created.ReceivingExceptionId}/cancel",
+            token);
+        cancelRequest.Content = JsonContent.Create(new CancelReceivingExceptionRequest("No longer needed."));
+        var cancelResponse = await _supplyarrClient.SendAsync(cancelRequest);
+        cancelResponse.EnsureSuccessStatusCode();
+        var cancelled = (await cancelResponse.Content.ReadFromJsonAsync<ReceivingExceptionResponse>())!;
+        Assert.Equal("cancelled", cancelled.Status);
+        Assert.Equal("No longer needed.", cancelled.CancellationReason);
+        Assert.NotNull(cancelled.CancelledAt);
+
+        var reopenRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/exceptions/{created.ReceivingExceptionId}/reopen",
+            token);
+        reopenRequest.Content = JsonContent.Create(new ReopenReceivingExceptionRequest("Shipment review confirmed the issue remains."));
+        var reopenResponse = await _supplyarrClient.SendAsync(reopenRequest);
+        reopenResponse.EnsureSuccessStatusCode();
+        var reopened = (await reopenResponse.Content.ReadFromJsonAsync<ReceivingExceptionResponse>())!;
+        Assert.Equal("open", reopened.Status);
+        Assert.Equal(1, reopened.ReopenCount);
+        Assert.Equal("Shipment review confirmed the issue remains.", reopened.LastReopenReason);
+        Assert.NotNull(reopened.ReopenedAt);
+
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/exceptions",
+            token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var exceptions = (await listResponse.Content.ReadFromJsonAsync<List<ReceivingExceptionResponse>>())!;
+        var listed = Assert.Single(exceptions, x => x.ReceivingExceptionId == created.ReceivingExceptionId);
+        Assert.Equal("open", listed.Status);
+        Assert.Equal(1, listed.ReopenCount);
     }
 
     [Fact]

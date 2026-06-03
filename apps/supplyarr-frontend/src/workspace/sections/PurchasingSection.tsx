@@ -47,6 +47,7 @@ export function PurchasingSection({ state: s }: Props) {
         canAward={s.canApprovePr}
         parts={s.partsQuery.data ?? []}
         vendors={vendors}
+        vendorDirectory={s.vendorsQuery.data ?? []}
       />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}

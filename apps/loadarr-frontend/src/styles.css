@@ -246,6 +246,13 @@ h2 {
   padding: 16px;
 }
 
+.panel.selected-panel {
+  border-color: rgba(29, 77, 76, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(29, 77, 76, 0.18),
+    0 16px 28px rgba(23, 39, 41, 0.09);
+}
+
 .panel-title-row,
 .row-heading,
 .section-heading {

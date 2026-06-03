@@ -34,6 +34,7 @@ import type {
   MaintainArrSessionBootstrapResponse,
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
+  AssetReadinessHistoryResponse,
   AuditPackageExportResponse,
   AuditPackageGenerationJobResponse,
   AuditPackageManifestResponse,
@@ -1023,6 +1024,21 @@ export async function getAssetReadinessFleet(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessSummaryResponse[]>(response, 'Failed to load asset readiness fleet')
+}
+
+export async function getAssetReadinessHistory(
+  accessToken: string,
+  assetId: string,
+  limit = 15,
+): Promise<AssetReadinessHistoryResponse> {
+  const search = new URLSearchParams({
+    assetId,
+    limit: String(limit),
+  })
+  const response = await fetch(`${apiBase}/api/v1/readiness/history?${search.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetReadinessHistoryResponse>(response, 'Failed to load asset readiness history')
 }
 
 export async function getMaintenanceNotificationSettings(

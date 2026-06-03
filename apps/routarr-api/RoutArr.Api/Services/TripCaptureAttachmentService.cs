@@ -220,7 +220,9 @@ public sealed class TripCaptureAttachmentService(
 
         var proofIdsByType = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.TripId == tripId)
+            .Where(x => x.TenantId == tenantId
+                && x.TripId == tripId
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => new { x.Id, x.ProofType })
             .ToListAsync(cancellationToken);
 
@@ -277,7 +279,10 @@ public sealed class TripCaptureAttachmentService(
         var exists = subjectType switch
         {
             TripCaptureAttachmentSubjects.Proof => await db.TripProofRecords.AnyAsync(
-                x => x.TenantId == tenantId && x.TripId == tripId && x.Id == subjectId,
+                x => x.TenantId == tenantId
+                    && x.TripId == tripId
+                    && x.Id == subjectId
+                    && x.ReviewStatus != TripProofReviewStatuses.Rejected,
                 cancellationToken),
             TripCaptureAttachmentSubjects.Dvir => await db.TripDvirInspections.AnyAsync(
                 x => x.TenantId == tenantId && x.TripId == tripId && x.Id == subjectId,

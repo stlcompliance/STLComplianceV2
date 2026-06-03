@@ -54,6 +54,7 @@ describe('AuditPackageExportPanel', () => {
         result: null,
         targetType: null,
         actorUserId: null,
+        personId: null,
       },
       counts: {
         auditEvents: 2,
@@ -180,6 +181,7 @@ describe('AuditPackageExportPanel', () => {
         result: null,
         targetType: null,
         actorUserId: null,
+        personId: null,
       },
       counts: {
         auditEvents: 0,
@@ -209,6 +211,82 @@ describe('AuditPackageExportPanel', () => {
     expect(screen.getByRole('button', { name: 'Retry timeline' })).toBeTruthy()
   })
 
+  it('refilters the audit package by person id', async () => {
+    vi.mocked(client.getAuditPackageManifest).mockResolvedValue({ packageVersion: '2', sections: [] })
+    vi.mocked(client.getAuditPackageFilterOptions).mockResolvedValue({
+      actions: [],
+      results: [],
+      targetTypes: [],
+      actorUserIds: [],
+    })
+    vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+        personId: null,
+      },
+      counts: {
+        auditEvents: 1,
+        people: 1,
+        permissionHistory: 0,
+        personCertifications: 0,
+        personnelIncidents: 1,
+        readinessOverrides: 0,
+        trainingBlockers: 0,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(client.getAuditPackageTimeline).mockResolvedValue({
+      items: [
+        {
+          auditEventId: 'evt-1',
+          actorUserId: null,
+          action: 'person.update',
+          targetType: 'person',
+          targetId: 'person-1',
+          result: 'success',
+          reasonCode: null,
+          correlationId: 'corr-1',
+          occurredAt: '2026-01-15T12:00:00Z',
+        },
+      ],
+      page: 1,
+      pageSize: 15,
+      totalCount: 1,
+      hasNextPage: false,
+    })
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(await screen.findByTestId('staffarr-audit-filter-person'), {
+      target: { value: 'person-1' },
+    })
+
+    await waitFor(() => {
+      expect(vi.mocked(client.getAuditPackageExportSummary)).toHaveBeenLastCalledWith(
+        'token',
+        expect.objectContaining({ personId: 'person-1' }),
+      )
+    })
+    await waitFor(() => {
+      expect(vi.mocked(client.getAuditPackageTimeline)).toHaveBeenLastCalledWith(
+        'token',
+        expect.objectContaining({ personId: 'person-1' }),
+      )
+    })
+  })
+
   it('renders export mutation failures in shared callout', async () => {
     vi.mocked(client.getAuditPackageManifest).mockResolvedValue({ packageVersion: '2', sections: [] })
     vi.mocked(client.getAuditPackageFilterOptions).mockResolvedValue({
@@ -225,6 +303,7 @@ describe('AuditPackageExportPanel', () => {
         result: null,
         targetType: null,
         actorUserId: null,
+        personId: null,
       },
       counts: {
         auditEvents: 0,
@@ -279,6 +358,7 @@ describe('AuditPackageExportPanel', () => {
         result: null,
         targetType: null,
         actorUserId: null,
+        personId: null,
       },
       counts: {
         auditEvents: 0,

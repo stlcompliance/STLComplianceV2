@@ -42,7 +42,9 @@ public sealed class DispatchReportService(RoutArrDbContext db)
 
         var proofTypesByTrip = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Where(x => x.TenantId == tenantId
+                && tripIds.Contains(x.TripId)
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => new { x.TripId, x.ProofType })
             .ToListAsync(cancellationToken);
         var proofLookup = proofTypesByTrip
@@ -159,7 +161,9 @@ public sealed class DispatchReportService(RoutArrDbContext db)
 
         var proofTypes = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.TripId == tripId)
+            .Where(x => x.TenantId == tenantId
+                && x.TripId == tripId
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => x.ProofType)
             .ToListAsync(cancellationToken);
         var missingRequiredProofCount = DispatchBoardRules.CountMissingRequiredProof(

@@ -916,6 +916,25 @@ export interface AssetReadinessSummaryResponse {
   primaryBlockerMessage: string | null
 }
 
+export interface AssetReadinessHistoryItemResponse {
+  entryId: string
+  statusFieldKey: string
+  statusValueKey: string
+  notes: string | null
+  changedByPersonId: string | null
+  changedAt: string
+  createdAt: string
+}
+
+export interface AssetReadinessHistoryResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  totalCount: number
+  limit: number
+  items: AssetReadinessHistoryItemResponse[]
+}
+
 export interface MaintenanceNotificationSettingsResponse {
   isEnabled: boolean
   notificationWebhookUrl: string | null

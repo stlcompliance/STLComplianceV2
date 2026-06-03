@@ -3,11 +3,13 @@ import { useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
+  correctProofDvirReportProof,
   exportProofDvirReportSummaryCsv,
   getProofDvirReportDvirDetail,
   getProofDvirReportProofDetail,
   getProofDvirReportSummary,
   getProofDvirReportTripDetail,
+  rejectProofDvirReportProof,
 } from '../api/client'
 
 type Props = {
@@ -30,6 +32,9 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
   const [selectedProofId, setSelectedProofId] = useState<string | null>(null)
   const [selectedDvirId, setSelectedDvirId] = useState<string | null>(null)
+  const [proofReviewReason, setProofReviewReason] = useState('')
+  const [correctedReferenceKey, setCorrectedReferenceKey] = useState('')
+  const [correctedNotes, setCorrectedNotes] = useState('')
 
   const summaryQuery = useQuery({
     queryKey: ['routarr-proof-dvir-report-summary', accessToken, scope],
@@ -64,6 +69,50 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
       anchor.download = `routarr-proof-dvir-report-${new Date().toISOString().slice(0, 10)}.csv`
       anchor.click()
       URL.revokeObjectURL(url)
+    },
+  })
+
+  const rejectProofMutation = useMutation({
+    mutationFn: ({ tripId, proofId, reason }: { tripId: string; proofId: string; reason: string }) =>
+      rejectProofDvirReportProof(accessToken, tripId, proofId, { reason }),
+    onSuccess: async () => {
+      setProofReviewReason('')
+      await summaryQuery.refetch()
+      await proofDetailQuery.refetch()
+      if (selectedTripId) {
+        await tripDetailQuery.refetch()
+      }
+    },
+  })
+
+  const correctProofMutation = useMutation({
+    mutationFn: ({
+      tripId,
+      proofId,
+      reason,
+      referenceKey,
+      notes,
+    }: {
+      tripId: string
+      proofId: string
+      reason: string
+      referenceKey: string
+      notes: string
+    }) =>
+      correctProofDvirReportProof(accessToken, tripId, proofId, {
+        reason,
+        referenceKey: referenceKey || null,
+        notes: notes || null,
+      }),
+    onSuccess: async () => {
+      setProofReviewReason('')
+      setCorrectedReferenceKey('')
+      setCorrectedNotes('')
+      await summaryQuery.refetch()
+      await proofDetailQuery.refetch()
+      if (selectedTripId) {
+        await tripDetailQuery.refetch()
+      }
     },
   })
 
@@ -193,23 +242,27 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
               ) : (
                 <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-sm">
                   {summaryQuery.data.recentProofs.map((proof) => (
-                    <li key={proof.proofId}>
-                      <button
-                        type="button"
-                        className={`w-full rounded px-2 py-1 text-left hover:bg-slate-800 ${
-                          selectedProofId === proof.proofId ? 'bg-slate-800' : ''
+                  <li key={proof.proofId}>
+                    <button
+                      type="button"
+                      className={`w-full rounded px-2 py-1 text-left hover:bg-slate-800 ${
+                        selectedProofId === proof.proofId ? 'bg-slate-800' : ''
                         }`}
-                        onClick={() => {
-                          setSelectedProofId(proof.proofId)
-                          setSelectedTripId(null)
-                          setSelectedDvirId(null)
-                        }}
-                      >
-                        {proof.tripNumber} — {proof.proofType}
-                        {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
-                      </button>
-                    </li>
-                  ))}
+                      onClick={() => {
+                        setSelectedProofId(proof.proofId)
+                        setSelectedTripId(null)
+                        setSelectedDvirId(null)
+                        setProofReviewReason('')
+                        setCorrectedReferenceKey('')
+                        setCorrectedNotes('')
+                      }}
+                    >
+                      {proof.tripNumber} — {proof.proofType}
+                      {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
+                      <span className="ml-2 text-xs text-slate-500">{proof.reviewStatus}</span>
+                    </button>
+                  </li>
+                ))}
                 </ul>
               )}
             </div>
@@ -274,6 +327,73 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
             {proofDetailQuery.data.referenceKey}
             {proofDetailQuery.data.notes ? ` · ${proofDetailQuery.data.notes}` : ''}
           </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Review status: {proofDetailQuery.data.reviewStatus}
+            {proofDetailQuery.data.reviewedByPersonId ? ` · by ${proofDetailQuery.data.reviewedByPersonId}` : ''}
+            {proofDetailQuery.data.reviewNotes ? ` · ${proofDetailQuery.data.reviewNotes}` : ''}
+          </p>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <label className="block text-xs text-slate-400">
+              Review reason
+              <input
+                value={proofReviewReason}
+                onChange={(event) => setProofReviewReason(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
+                placeholder="Why is this being rejected or corrected?"
+              />
+            </label>
+            <label className="block text-xs text-slate-400">
+              Corrected reference key
+              <input
+                value={correctedReferenceKey}
+                onChange={(event) => setCorrectedReferenceKey(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
+                placeholder="Optional corrected reference"
+              />
+            </label>
+            <label className="block text-xs text-slate-400 md:col-span-2">
+              Corrected notes
+              <textarea
+                value={correctedNotes}
+                onChange={(event) => setCorrectedNotes(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
+                rows={3}
+                placeholder="Optional updated notes"
+              />
+            </label>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded bg-rose-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+              disabled={rejectProofMutation.isPending || !proofReviewReason.trim()}
+              onClick={() =>
+                rejectProofMutation.mutate({
+                  tripId: proofDetailQuery.data.tripId,
+                  proofId: proofDetailQuery.data.proofId,
+                  reason: proofReviewReason.trim(),
+                })
+              }
+            >
+              {rejectProofMutation.isPending ? 'Rejecting…' : 'Reject proof'}
+            </button>
+            <button
+              type="button"
+              className="rounded bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+              disabled={correctProofMutation.isPending}
+              onClick={() =>
+                correctProofMutation.mutate({
+                  tripId: proofDetailQuery.data.tripId,
+                  proofId: proofDetailQuery.data.proofId,
+                  reason: proofReviewReason.trim() || 'Proof corrected',
+                  referenceKey: correctedReferenceKey.trim(),
+                  notes: correctedNotes.trim(),
+                })
+              }
+            >
+              {correctProofMutation.isPending ? 'Correcting…' : 'Mark corrected'}
+            </button>
+          </div>
         </div>
       ) : null}
 

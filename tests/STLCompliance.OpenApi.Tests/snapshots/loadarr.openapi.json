@@ -79,6 +79,251 @@
         }
       }
     },
+    "/api/v1/adjustments": {
+      "get": {
+        "tags": [
+          "Adjustments"
+        ],
+        "operationId": "ListLoadArrAdjustments",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "adjustmentType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Adjustments"
+        ],
+        "operationId": "CreateLoadArrAdjustment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrAdjustmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/adjustments/{id}": {
+      "get": {
+        "tags": [
+          "Adjustments"
+        ],
+        "operationId": "GetLoadArrAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/adjustments/{id}/approve": {
+      "post": {
+        "tags": [
+          "Adjustments"
+        ],
+        "operationId": "ApproveLoadArrAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveLoadArrAdjustmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/counts": {
+      "get": {
+        "tags": [
+          "Counts"
+        ],
+        "operationId": "ListLoadArrCounts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "countType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Counts"
+        ],
+        "operationId": "CreateLoadArrCount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadArrCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/counts/{id}": {
+      "get": {
+        "tags": [
+          "Counts"
+        ],
+        "operationId": "GetLoadArrCount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/counts/{id}/approve-variance": {
+      "post": {
+        "tags": [
+          "Counts"
+        ],
+        "operationId": "ApproveLoadArrCountVariance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveLoadArrCountVarianceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/counts/{id}/complete": {
+      "post": {
+        "tags": [
+          "Counts"
+        ],
+        "operationId": "CompleteLoadArrCount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLoadArrCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -249,6 +494,29 @@
           "Launch"
         ],
         "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations/{id}/utilization": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "GetLoadArrLocationUtilization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1141,6 +1409,127 @@
           }
         }
       },
+      "ApproveLoadArrAdjustmentRequest": {
+        "required": [
+          "adjustmentType",
+          "staffarrSiteOrgUnitId",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "quantityDelta",
+          "createdByPersonId",
+          "approvedByPersonId",
+          "reasonCode",
+          "evidenceSummary",
+          "complianceEvaluationId"
+        ],
+        "type": "object",
+        "properties": {
+          "adjustmentType": {
+            "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "quantityDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          },
+          "approvedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ApproveLoadArrCountVarianceRequest": {
+        "required": [
+          "countType",
+          "staffarrSiteOrgUnitId",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "countedQuantity",
+          "approvedByPersonId",
+          "reasonCode",
+          "evidenceSummary",
+          "complianceEvaluationId"
+        ],
+        "type": "object",
+        "properties": {
+          "countType": {
+            "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "countedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "approvedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceEvaluationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CancelLoadArrReceivingSessionRequest": {
         "required": [
           "canceledByPersonId",
@@ -1178,6 +1567,69 @@
             "type": "string"
           },
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CompleteLoadArrCountRequest": {
+        "required": [
+          "countType",
+          "staffarrSiteOrgUnitId",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "countedQuantity",
+          "countedByPersonId",
+          "reasonCode",
+          "evidenceSummary",
+          "complianceEvaluationId"
+        ],
+        "type": "object",
+        "properties": {
+          "countType": {
+            "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "countedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "countedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceEvaluationId": {
             "type": [
               "null",
               "string"
@@ -1340,6 +1792,101 @@
               "null",
               "string"
             ]
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateLoadArrAdjustmentRequest": {
+        "required": [
+          "adjustmentType",
+          "staffarrSiteOrgUnitId",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "quantityDelta",
+          "createdByPersonId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "adjustmentType": {
+            "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "quantityDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateLoadArrCountRequest": {
+        "required": [
+          "countType",
+          "staffarrSiteOrgUnitId",
+          "warehouseLocationId",
+          "supplyarrItemId",
+          "expectedQuantity",
+          "countedByPersonId",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "countType": {
+            "type": "string"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": "string"
+          },
+          "warehouseLocationId": {
+            "type": "string"
+          },
+          "supplyarrItemId": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "countedByPersonId": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
           },
           "evidenceSummary": {
             "type": [
@@ -1741,6 +2288,15 @@
     },
     {
       "name": "Unexplained Inventory"
+    },
+    {
+      "name": "Locations"
+    },
+    {
+      "name": "Counts"
+    },
+    {
+      "name": "Adjustments"
     }
   ]
 }

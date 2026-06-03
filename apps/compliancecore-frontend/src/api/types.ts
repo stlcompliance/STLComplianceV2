@@ -25,6 +25,14 @@ export interface ComplianceCoreMeResponse {
   productKey: string
   hasComplianceCoreEntitlement: boolean
   entitlements: string[]
+  canManageVocabulary: boolean
+  canExportAuditPackage: boolean
+  canEvaluateRiskScores: boolean
+  canEvaluateMissingEvidenceWarnings: boolean
+  canEvaluateControlEffectiveness: boolean
+  canEvaluateReadinessForecast: boolean
+  canReadReports: boolean
+  canExportReports: boolean
 }
 
 export interface ComplianceCoreSessionBootstrapResponse {
@@ -37,6 +45,14 @@ export interface ComplianceCoreSessionBootstrapResponse {
   productKey: string
   hasComplianceCoreEntitlement: boolean
   entitlements: string[]
+  canManageVocabulary: boolean
+  canExportAuditPackage: boolean
+  canEvaluateRiskScores: boolean
+  canEvaluateMissingEvidenceWarnings: boolean
+  canEvaluateControlEffectiveness: boolean
+  canEvaluateReadinessForecast: boolean
+  canReadReports: boolean
+  canExportReports: boolean
 }
 
 export interface VocabularyTypeResponse {
@@ -1513,6 +1529,12 @@ export interface CreateComplianceWaiverRequest {
   expiresAt?: string | null
   ruleKey?: string | null
   gateKey?: string | null
+}
+
+export interface RenewComplianceWaiverRequest {
+  effectiveAt: string
+  expiresAt?: string | null
+  notes?: string | null
 }
 
 export interface TheoreticalOptionResponse {

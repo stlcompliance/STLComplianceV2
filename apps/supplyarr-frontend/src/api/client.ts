@@ -16,7 +16,13 @@ import type {
   InventoryLocationResponse,
   PartCatalogResponse,
   PartResponse,
+  SubstitutionItemResponse,
   PartStockLevelResponse,
+  TransferStockRequest,
+  WmsMovementResponse,
+  WmsStockLedgerEntryResponse,
+  OutboundShipmentResponse,
+  CreateOutboundShipmentRequest,
   StockReservationResponse,
   CreateStockReservationRequest,
   ReleaseStockReservationRequest,
@@ -28,6 +34,7 @@ import type {
   CreatePurchaseRequestRequest,
   BackorderResponse,
   CancelBackorderRequest,
+  CancelReceivingExceptionRequest,
   CancelPurchaseOrderRequest,
   CancelVendorReturnRequest,
   CreateBackorderFromPurchaseOrderLineRequest,
@@ -48,6 +55,7 @@ import type {
   PurchaseRequestResponse,
   ReceivingExceptionResponse,
   ReceivingReceiptResponse,
+  ReopenReceivingExceptionRequest,
   RejectPurchaseRequestRequest,
   UpdateReceivingReceiptLineRequest,
   PricingSnapshotResponse,
@@ -392,6 +400,17 @@ export async function getParts(accessToken: string): Promise<PartResponse[]> {
   return parseJsonResponse<PartResponse[]>(response, 'Failed to load parts')
 }
 
+export async function getSubstitutions(
+  accessToken: string,
+  partId?: string,
+): Promise<SubstitutionItemResponse[]> {
+  const query = partId ? `?partId=${encodeURIComponent(partId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/substitutions${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SubstitutionItemResponse[]>(response, 'Failed to load substitutions')
+}
+
 export async function createPartCatalog(
   accessToken: string,
   request: CreatePartCatalogRequest,
@@ -440,9 +459,10 @@ export async function getInventoryLocations(
 
 export async function getInventoryBins(
   accessToken: string,
-  locationId: string,
+  locationId?: string,
 ): Promise<InventoryBinResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/locations/${locationId}/bins`, {
+  const query = locationId ? `?locationId=${encodeURIComponent(locationId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/inventory/bins${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<InventoryBinResponse[]>(response, 'Failed to load inventory bins')
@@ -559,6 +579,58 @@ export async function upsertPartStockLevel(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PartStockLevelResponse>(response, 'Failed to save stock level')
+}
+
+export async function getStockLedger(
+  accessToken: string,
+  options?: { partId?: string; binId?: string; locationId?: string },
+): Promise<WmsStockLedgerEntryResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.partId) {
+    params.set('partId', options.partId)
+  }
+  if (options?.binId) {
+    params.set('binId', options.binId)
+  }
+  if (options?.locationId) {
+    params.set('locationId', options.locationId)
+  }
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/wms/stock-ledger${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WmsStockLedgerEntryResponse[]>(response, 'Failed to load stock ledger')
+}
+
+export async function transferStock(
+  accessToken: string,
+  request: TransferStockRequest,
+): Promise<WmsMovementResponse> {
+  const response = await fetch(`${apiBase}/api/v1/wms/transfer`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<WmsMovementResponse>(response, 'Failed to transfer stock')
+}
+
+export async function getOutboundShipments(accessToken: string): Promise<OutboundShipmentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/wms/outbound-shipments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<OutboundShipmentResponse[]>(response, 'Failed to load outbound shipments')
+}
+
+export async function createOutboundShipment(
+  accessToken: string,
+  request: CreateOutboundShipmentRequest,
+): Promise<OutboundShipmentResponse> {
+  const response = await fetch(`${apiBase}/api/v1/wms/outbound-shipments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OutboundShipmentResponse>(response, 'Failed to create outbound shipment')
 }
 
 export async function getPurchaseRequests(
@@ -933,6 +1005,44 @@ export async function resolveReceivingException(
   return parseJsonResponse<ReceivingExceptionResponse>(
     response,
     'Failed to resolve receiving exception',
+  )
+}
+
+export async function cancelReceivingException(
+  accessToken: string,
+  receivingExceptionId: string,
+  request: CancelReceivingExceptionRequest,
+): Promise<ReceivingExceptionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/cancel`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(request),
+    },
+  )
+  return parseJsonResponse<ReceivingExceptionResponse>(
+    response,
+    'Failed to cancel receiving exception',
+  )
+}
+
+export async function reopenReceivingException(
+  accessToken: string,
+  receivingExceptionId: string,
+  request: ReopenReceivingExceptionRequest,
+): Promise<ReceivingExceptionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/reopen`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(request),
+    },
+  )
+  return parseJsonResponse<ReceivingExceptionResponse>(
+    response,
+    'Failed to reopen receiving exception',
   )
 }
 

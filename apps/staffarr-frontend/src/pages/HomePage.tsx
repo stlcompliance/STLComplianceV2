@@ -253,7 +253,9 @@ export function HomePage() {
     canViewReadinessRollups(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
   const [readinessRollupSiteFilterId, setReadinessRollupSiteFilterId] = useState<string | null>(null)
   const [selectedReadinessRollup, setSelectedReadinessRollup] = useState<ReadinessRollupSelection | null>(null)
-  const [readinessRollupMemberFilter, setReadinessRollupMemberFilter] = useState<'all' | 'not_ready'>('all')
+  const [readinessRollupMemberFilter, setReadinessRollupMemberFilter] = useState<
+    'all' | 'not_ready' | 'missing_certifications'
+  >('all')
   useEffect(() => {
     setSelectedReadinessRollup(null)
   }, [readinessRollupSiteFilterId])
@@ -281,7 +283,7 @@ export function HomePage() {
         session!.accessToken,
         selectedReadinessRollup!.scopeType,
         selectedReadinessRollup!.orgUnitId,
-        readinessRollupMemberFilter === 'not_ready' ? 'not_ready' : undefined,
+        readinessRollupMemberFilter === 'all' ? undefined : readinessRollupMemberFilter,
       ),
     enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && selectedReadinessRollup),
   })

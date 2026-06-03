@@ -23,6 +23,7 @@ public sealed record ProofDvirReportProofRow(
     string CapturedByPersonId,
     string? VehicleRefKey,
     string ReferenceKey,
+    string ReviewStatus,
     DateTimeOffset CapturedAt);
 
 public sealed record ProofDvirReportDvirRow(
@@ -81,6 +82,10 @@ public sealed record ProofDvirReportProofDetailResponse(
     string? VehicleRefKey,
     string ReferenceKey,
     string Notes,
+    string ReviewStatus,
+    string? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string ReviewNotes,
     DateTimeOffset CapturedAt,
     DateTimeOffset CreatedAt);
 

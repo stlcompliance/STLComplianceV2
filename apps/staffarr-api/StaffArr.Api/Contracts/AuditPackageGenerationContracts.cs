@@ -7,7 +7,8 @@ public sealed record CreateAuditPackageGenerationJobRequest(
     string? Action = null,
     string? Result = null,
     string? TargetType = null,
-    Guid? ActorUserId = null);
+    Guid? ActorUserId = null,
+    Guid? PersonId = null);
 
 public sealed record AuditPackageGenerationJobResponse(
     Guid JobId,

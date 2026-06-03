@@ -24,6 +24,8 @@ export function ReceivingSection({ state: s }: Props) {
         exceptionType={s.exceptionType}
         exceptionQuantity={s.exceptionQuantity}
         exceptionNotes={s.exceptionNotes}
+        exceptionCancelReason={s.exceptionCancelReason}
+        exceptionReopenReason={s.exceptionReopenReason}
         onReceiptKeyChange={s.setReceiptKey}
         onSelectedPurchaseOrderIdChange={s.setReceiveSourcePurchaseOrderId}
         onSelectedReceivingReceiptIdChange={s.setSelectedReceivingReceiptId}
@@ -33,15 +35,21 @@ export function ReceivingSection({ state: s }: Props) {
         onExceptionTypeChange={s.setExceptionType}
         onExceptionQuantityChange={s.setExceptionQuantity}
         onExceptionNotesChange={s.setExceptionNotes}
+        onExceptionCancelReasonChange={s.setExceptionCancelReason}
+        onExceptionReopenReasonChange={s.setExceptionReopenReason}
         onCreateFromPurchaseOrder={() => s.createReceivingReceiptMutation.mutate()}
         onUpdateLineQuantity={() => s.updateReceivingLineMutation.mutate()}
         onCreateException={() => s.createReceivingExceptionMutation.mutate()}
         onResolveException={(id) => s.resolveReceivingExceptionMutation.mutate(id)}
+        onCancelException={(payload) => s.cancelReceivingExceptionMutation.mutate(payload)}
+        onReopenException={(payload) => s.reopenReceivingExceptionMutation.mutate(payload)}
         onPost={() => s.postReceivingReceiptMutation.mutate()}
         isCreating={s.createReceivingReceiptMutation.isPending}
         isUpdatingLine={s.updateReceivingLineMutation.isPending}
         isCreatingException={s.createReceivingExceptionMutation.isPending}
         isResolvingException={s.resolveReceivingExceptionMutation.isPending}
+        isCancellingException={s.cancelReceivingExceptionMutation.isPending}
+        isReopeningException={s.reopenReceivingExceptionMutation.isPending}
         isPosting={s.postReceivingReceiptMutation.isPending}
       />
       <BackordersPanel

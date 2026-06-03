@@ -25,6 +25,7 @@ import {
   type DetailRailSectionConfig,
   type DetailTone,
 } from '@stl/shared-ui'
+import { WorkOrderSupplyReadinessPanel } from '../../components/WorkOrderSupplyReadinessPanel'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 function humanize(value: string | null | undefined): string {
@@ -361,23 +362,32 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
         { label: 'Created', value: formatDate(order.createdAt), source: 'Audit trail' },
       ]}
       mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Execution tasks</h3>
-          <div className="mt-4">
-            {listPanel({
-              items: tasks.slice(0, 5),
-              emptyText: 'No task lines logged yet.',
-              render: (task) => (
-                <div key={task.taskLineId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="font-semibold text-white">{task.title}</h4>
-                    <DetailBadge label={humanize(task.status)} tone={statusTone(task.status)} />
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Execution tasks</h3>
+            <div className="mt-4">
+              {listPanel({
+                items: tasks.slice(0, 5),
+                emptyText: 'No task lines logged yet.',
+                render: (task) => (
+                  <div key={task.taskLineId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="font-semibold text-white">{task.title}</h4>
+                      <DetailBadge label={humanize(task.status)} tone={statusTone(task.status)} />
+                    </div>
                   </div>
-                </div>
-              ),
-            })}
-          </div>
-        </section>
+                ),
+              })}
+            </div>
+          </section>
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Supply readiness</h3>
+            <WorkOrderSupplyReadinessPanel
+              readiness={s.workOrderSupplyReadinessQuery?.data ?? null}
+              isLoading={s.workOrderSupplyReadinessQuery?.isLoading ?? false}
+            />
+          </section>
+        </div>
       )}
       decisionTitle="Work order decision"
       decisionBadge={{ label: blocked ? 'Attention' : 'Executable', tone: blocked ? 'warn' : 'good' }}

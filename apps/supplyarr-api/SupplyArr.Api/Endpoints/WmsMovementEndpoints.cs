@@ -129,6 +129,19 @@ public static class WmsMovementEndpoints
                 return Results.Created($"/api/v1/wms/outbound-shipments/{created.ShipmentId}", created);
             })
             .WithName($"CreateWmsOutboundShipment{nameSuffix}");
+
+            group.MapGet("/outbound-shipments", async (
+                HttpContext context,
+                SupplyArrAuthorizationService authorization,
+                WmsMovementService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireInventoryRead(context.User);
+                return Results.Ok(await service.ListOutboundShipmentsAsync(
+                    context.User.GetTenantId(),
+                    cancellationToken));
+            })
+            .WithName($"ListWmsOutboundShipments{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/wms"), string.Empty);

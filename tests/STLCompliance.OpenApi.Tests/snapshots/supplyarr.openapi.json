@@ -3057,6 +3057,29 @@
         }
       }
     },
+    "/api/inventory/bins": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListAllInventoryBins",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inventory/bins/{binId}": {
       "put": {
         "tags": [
@@ -4337,6 +4360,39 @@
           "PartyComplianceDocuments"
         ],
         "operationId": "ApprovePartyComplianceDocument",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/compliance-documents/{documentId}/content": {
+      "get": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "DownloadPartyComplianceDocument",
         "parameters": [
           {
             "name": "partyId",
@@ -6541,6 +6597,74 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/exceptions/{receivingExceptionId}/cancel": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CancelReceivingException",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/exceptions/{receivingExceptionId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingException",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReopenReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -12737,6 +12861,29 @@
         }
       }
     },
+    "/api/v1/inventory/bins": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListAllInventoryBinsV1",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/inventory/bins/{binId}": {
       "put": {
         "tags": [
@@ -14030,6 +14177,39 @@
           "PartyComplianceDocuments"
         ],
         "operationId": "ApprovePartyComplianceDocumentV1",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parties/{partyId}/compliance-documents/{documentId}/content": {
+      "get": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "DownloadPartyComplianceDocumentV1",
         "parameters": [
           {
             "name": "partyId",
@@ -16504,6 +16684,74 @@
         }
       }
     },
+    "/api/v1/receipts/exceptions/{receivingExceptionId}/cancel": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CancelReceivingExceptionV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/exceptions/{receivingExceptionId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingExceptionV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReopenReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receipts/exceptions/{receivingExceptionId}/resolve": {
       "post": {
         "tags": [
@@ -17110,6 +17358,74 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/exceptions/{receivingExceptionId}/cancel": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CancelReceivingExceptionV1",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/exceptions/{receivingExceptionId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingExceptionV1",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReopenReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -20212,6 +20528,30 @@
         }
       }
     },
+    "/api/v1/vendor-documents/{documentId}/content": {
+      "get": {
+        "tags": [
+          "VendorDocuments"
+        ],
+        "operationId": "DownloadVendorDocumentV1",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vendor-documents/{documentId}/reject": {
       "post": {
         "tags": [
@@ -20929,6 +21269,17 @@
             "description": "OK"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ListWmsOutboundShipmentsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/wms/pick": {
@@ -21113,6 +21464,30 @@
           "VendorDocuments"
         ],
         "operationId": "ApproveVendorDocument",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-documents/{documentId}/content": {
+      "get": {
+        "tags": [
+          "VendorDocuments"
+        ],
+        "operationId": "DownloadVendorDocument",
         "parameters": [
           {
             "name": "documentId",
@@ -21796,6 +22171,17 @@
             "description": "OK"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "WMS"
+        ],
+        "operationId": "ListWmsOutboundShipments",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/wms/pick": {
@@ -22122,6 +22508,17 @@
         }
       },
       "CancelPurchaseOrderRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelReceivingExceptionRequest": {
         "required": [
           "reason"
         ],
@@ -25149,6 +25546,12 @@
           },
           "notes": {
             "type": "string"
+          },
+          "contentBase64": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -25272,6 +25675,17 @@
         }
       },
       "ReopenProcurementExceptionRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ReopenReceivingExceptionRequest": {
         "required": [
           "reason"
         ],

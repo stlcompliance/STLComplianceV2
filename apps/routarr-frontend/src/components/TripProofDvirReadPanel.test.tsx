@@ -67,6 +67,10 @@ describe('TripProofDvirReadPanel', () => {
           vehicleRefKey: 'VEH-1',
           referenceKey: 'BOL-9',
           notes: 'Signed',
+          reviewStatus: 'pending_review',
+          reviewedByPersonId: null,
+          reviewedAt: null,
+          reviewNotes: '',
           capturedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           attachments: [
@@ -132,6 +136,10 @@ describe('TripProofDvirReadPanel', () => {
           vehicleRefKey: 'VEH-1',
           referenceKey: 'BOL-10',
           notes: '',
+          reviewStatus: 'pending_review',
+          reviewedByPersonId: null,
+          reviewedAt: null,
+          reviewNotes: '',
           capturedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           attachments: [
@@ -191,6 +199,10 @@ describe('TripProofDvirReadPanel', () => {
           vehicleRefKey: 'VEH-1',
           referenceKey: 'BOL-11',
           notes: '',
+          reviewStatus: 'pending_review',
+          reviewedByPersonId: null,
+          reviewedAt: null,
+          reviewNotes: '',
           capturedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           attachments: [

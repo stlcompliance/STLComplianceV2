@@ -26,7 +26,15 @@ public sealed record ComplianceCoreSessionBootstrapResponse(
     bool IsPlatformAdmin,
     string ProductKey,
     bool HasComplianceCoreEntitlement,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    bool CanManageVocabulary,
+    bool CanExportAuditPackage,
+    bool CanEvaluateRiskScores,
+    bool CanEvaluateMissingEvidenceWarnings,
+    bool CanEvaluateControlEffectiveness,
+    bool CanEvaluateReadinessForecast,
+    bool CanReadReports,
+    bool CanExportReports);
 
 public sealed record ComplianceCoreMeResponse(
     Guid UserId,
@@ -38,4 +46,12 @@ public sealed record ComplianceCoreMeResponse(
     bool IsPlatformAdmin,
     string ProductKey,
     bool HasComplianceCoreEntitlement,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    bool CanManageVocabulary,
+    bool CanExportAuditPackage,
+    bool CanEvaluateRiskScores,
+    bool CanEvaluateMissingEvidenceWarnings,
+    bool CanEvaluateControlEffectiveness,
+    bool CanEvaluateReadinessForecast,
+    bool CanReadReports,
+    bool CanExportReports);

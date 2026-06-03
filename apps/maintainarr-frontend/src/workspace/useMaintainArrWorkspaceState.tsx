@@ -53,6 +53,7 @@ import {
   getTechnicianRefs,
   normalizeInspectionVoiceNumeric,
   getAssetReadiness,
+  getAssetReadinessHistory,
   getAssetReadinessFleet,
   getMaintenanceHistory,
   getMaintenanceHistorySummary,
@@ -216,6 +217,12 @@ export function useMaintainArrWorkspaceState() {
   const assetReadinessDetailQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-detail', selectedAssetId],
     queryFn: () => getAssetReadiness(accessToken, selectedAssetId!),
+    enabled: meQuery.isSuccess && Boolean(selectedAssetId),
+  })
+
+  const assetReadinessHistoryQuery = useQuery({
+    queryKey: ['maintainarr-asset-readiness-history', selectedAssetId],
+    queryFn: () => getAssetReadinessHistory(accessToken, selectedAssetId!, 15),
     enabled: meQuery.isSuccess && Boolean(selectedAssetId),
   })
 
@@ -1221,6 +1228,7 @@ export function useMaintainArrWorkspaceState() {
     selectedAssetId,
     assetReadinessFleetQuery,
     assetReadinessDetailQuery,
+    assetReadinessHistoryQuery,
     duePmQuery,
     pmProgramsQuery,
     pmProgramDetailQuery,

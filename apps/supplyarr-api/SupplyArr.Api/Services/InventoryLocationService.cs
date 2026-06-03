@@ -206,6 +206,21 @@ public sealed class InventoryLocationService(
         return bins.Select(MapBin).ToList();
     }
 
+    public async Task<IReadOnlyList<InventoryBinResponse>> ListAllBinsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var bins = await db.InventoryBins
+            .AsNoTracking()
+            .Include(x => x.InventoryLocation)
+            .Where(x => x.TenantId == tenantId)
+            .OrderBy(x => x.InventoryLocation!.LocationKey)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+
+        return bins.Select(MapBin).ToList();
+    }
+
     public async Task<InventoryBinResponse> CreateBinAsync(
         Guid tenantId,
         Guid actorUserId,

@@ -180,6 +180,117 @@ public sealed class ReceivingExceptionService(
         return Map(entity, entity.ReceivingReceiptLine);
     }
 
+    public async Task<ReceivingExceptionResponse> CancelAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingExceptionId,
+        CancelReceivingExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ReceivingExceptions
+            .Include(x => x.ReceivingReceipt)
+            .Include(x => x.ReceivingReceiptLine)
+                .ThenInclude(x => x.Part)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == receivingExceptionId,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving_exception.not_found",
+                "Receiving exception was not found.",
+                404);
+
+        if (string.Equals(entity.Status, ReceivingExceptionStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "receiving_exception.already_cancelled",
+                "Receiving exception is already cancelled.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        entity.Status = ReceivingExceptionStatuses.Cancelled;
+        entity.CancelledByUserId = actorUserId;
+        entity.CancelledAt = now;
+        entity.CancellationReason = NormalizeReason(request.Reason, 512, "Cancellation reason");
+        entity.UpdatedAt = now;
+        entity.ReceivingReceipt.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_exception.cancel",
+            tenantId,
+            actorUserId,
+            "receiving_exception",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.ReceivingExceptionCancelled,
+            "receiving_exception",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Receiving discrepancy cancelled: {entity.ExceptionType}"),
+            cancellationToken: cancellationToken);
+
+        return Map(entity, entity.ReceivingReceiptLine);
+    }
+
+    public async Task<ReceivingExceptionResponse> ReopenAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingExceptionId,
+        ReopenReceivingExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ReceivingExceptions
+            .Include(x => x.ReceivingReceipt)
+            .Include(x => x.ReceivingReceiptLine)
+                .ThenInclude(x => x.Part)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == receivingExceptionId,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving_exception.not_found",
+                "Receiving exception was not found.",
+                404);
+
+        if (!string.Equals(entity.Status, ReceivingExceptionStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "receiving_exception.not_cancelled",
+                "Only cancelled receiving exceptions can be reopened.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        entity.Status = ReceivingExceptionStatuses.Open;
+        entity.ReopenedByUserId = actorUserId;
+        entity.ReopenedAt = now;
+        entity.LastReopenReason = NormalizeReason(request.Reason, 512, "Reopen reason");
+        entity.ReopenCount += 1;
+        entity.UpdatedAt = now;
+        entity.ReceivingReceipt.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_exception.reopen",
+            tenantId,
+            actorUserId,
+            "receiving_exception",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.ReceivingExceptionReopened,
+            "receiving_exception",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Receiving discrepancy reopened: {entity.ExceptionType}"),
+            cancellationToken: cancellationToken);
+
+        return Map(entity, entity.ReceivingReceiptLine);
+    }
+
     internal static void ValidateLineCoverageForPost(
         ReceivingReceiptLine line,
         IReadOnlyList<ReceivingException> exceptions)
@@ -188,9 +299,12 @@ public sealed class ReceivingExceptionService(
         var received = line.QuantityReceived;
         var remainingOnOrder = line.PurchaseOrderLine.QuantityOrdered - line.PurchaseOrderLine.QuantityReceived;
 
-        var shortQty = SumByType(exceptions, ReceivingExceptionTypes.Short);
-        var overQty = SumByType(exceptions, ReceivingExceptionTypes.Over);
-        var damageQty = SumByType(exceptions, ReceivingExceptionTypes.Damage);
+        var activeExceptions = exceptions
+            .Where(x => !string.Equals(x.Status, ReceivingExceptionStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var shortQty = SumByType(activeExceptions, ReceivingExceptionTypes.Short);
+        var overQty = SumByType(activeExceptions, ReceivingExceptionTypes.Over);
+        var damageQty = SumByType(activeExceptions, ReceivingExceptionTypes.Damage);
 
         if (received > remainingOnOrder)
         {
@@ -241,6 +355,13 @@ public sealed class ReceivingExceptionService(
             entity.CreatedByUserId,
             entity.ResolvedByUserId,
             entity.ResolvedAt,
+            entity.CancelledByUserId,
+            entity.CancelledAt,
+            entity.CancellationReason,
+            entity.ReopenedByUserId,
+            entity.ReopenedAt,
+            entity.LastReopenReason,
+            entity.ReopenCount,
             entity.CreatedAt,
             entity.UpdatedAt);
     }
@@ -281,5 +402,19 @@ public sealed class ReceivingExceptionService(
     {
         var notes = (value ?? string.Empty).Trim();
         return notes.Length > 1024 ? notes[..1024] : notes;
+    }
+
+    private static string NormalizeReason(string value, int maxLength, string label)
+    {
+        var reason = (value ?? string.Empty).Trim();
+        if (reason.Length < 3)
+        {
+            throw new StlApiException(
+                "receiving_exception.reason.invalid",
+                $"{label} must be at least 3 characters.",
+                400);
+        }
+
+        return reason.Length > maxLength ? reason[..maxLength] : reason;
     }
 }

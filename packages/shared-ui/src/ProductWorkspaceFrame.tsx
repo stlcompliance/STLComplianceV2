@@ -17,6 +17,7 @@ export type ProductWorkspaceFrameProps = {
   suiteHomeUrl?: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
+  onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
   workspaceSession: ProductWorkspaceSession | null
@@ -55,6 +56,7 @@ export function ProductWorkspaceFrame({
   suiteHomeUrl,
   productLaunchUrls,
   onSelectProduct,
+  onSignOut,
   isProductLaunchPending,
   productLaunchError,
   workspaceSession,
@@ -118,6 +120,7 @@ export function ProductWorkspaceFrame({
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={onSelectProduct}
+      onSignOut={onSignOut}
       isProductLaunchPending={isProductLaunchPending}
       productLaunchError={productLaunchError}
       navItems={navItems}

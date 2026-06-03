@@ -16,7 +16,8 @@ public static class ReadinessRollupRules
     public static readonly IReadOnlySet<string> SupportedMemberReadinessFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "ready",
-        "not_ready"
+        "not_ready",
+        "missing_certifications"
     };
 
     public static int NormalizeBatchSize(int? batchSize) =>

@@ -245,6 +245,249 @@ export interface ProductDetailResponse {
   isActive: boolean
 }
 
+export interface PlatformUserListItemResponse {
+  userId: string
+  email: string
+  displayName: string
+  isActive: boolean
+  isPlatformAdmin: boolean
+  failedLoginCount: number
+  lockedUntil: string | null
+  createdAt: string
+  modifiedAt: string
+  lastLoginAt: string | null
+  lastProductLaunchAt: string | null
+  canLogin: boolean
+  status: string
+  isMfaEnabled: boolean
+}
+
+export interface PlatformUserDetailResponse {
+  userId: string
+  email: string
+  displayName: string
+  isActive: boolean
+  isPlatformAdmin: boolean
+  failedLoginCount: number
+  lockedUntil: string | null
+  createdAt: string
+  modifiedAt: string
+  lastLoginAt: string | null
+  lastProductLaunchAt: string | null
+  canLogin: boolean
+  status: string
+  isMfaEnabled: boolean
+}
+
+export interface CreatePlatformUserRequest {
+  email: string
+  displayName: string
+  password: string
+  isPlatformAdmin?: boolean
+  isActive?: boolean
+  requireEmailVerification?: boolean
+}
+
+export interface InvitePlatformUserRequest {
+  email: string
+  displayName: string
+  isPlatformAdmin?: boolean
+  isActive?: boolean
+}
+
+export interface PlatformUserEnableResponse {
+  userId: string
+  wasAlreadyEnabled: boolean
+}
+
+export interface PlatformUserDisableResponse {
+  userId: string
+  wasAlreadyDisabled: boolean
+}
+
+export interface PlatformUserLockResponse {
+  userId: string
+  wasAlreadyLocked: boolean
+  lockedUntil: string | null
+}
+
+export interface PlatformUserUnlockResponse {
+  userId: string
+  wasAlreadyUnlocked: boolean
+}
+
+export interface AdminResetUserPasswordResponse {
+  userId: string
+  passwordChangedAt: string
+}
+
+export interface PlatformUserMfaResponse {
+  userId: string
+  isMfaEnabled: boolean
+  wasAlreadySet: boolean
+  modifiedAt: string
+}
+
+export interface PlatformUserSessionItemResponse {
+  sessionId: string
+  createdAt: string
+  expiresAt: string
+  revokedAt: string | null
+  userAgent: string | null
+  ipAddress: string | null
+  activeTenantId: string | null
+  isCurrent: boolean
+  isActive: boolean
+  isRemembered: boolean
+}
+
+export interface PlatformUserSessionsResponse {
+  userId: string
+  sessions: PlatformUserSessionItemResponse[]
+}
+
+export interface PlatformUserTenantMembershipItemResponse {
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  roleKey: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface PlatformUserTenantMembershipsResponse {
+  userId: string
+  items: PlatformUserTenantMembershipItemResponse[]
+}
+
+export interface AssignPlatformUserTenantMembershipRequest {
+  tenantId: string
+  roleKey?: string
+}
+
+export interface AssignPlatformUserTenantMembershipResponse {
+  userId: string
+  tenantId: string
+  wasReactivated: boolean
+}
+
+export interface RemovePlatformUserTenantMembershipResponse {
+  userId: string
+  tenantId: string
+  wasAlreadyRemoved: boolean
+}
+
+export interface PlatformUserRoleItemResponse {
+  roleKey: string
+  isAssigned: boolean
+  tenantId: string | null
+}
+
+export interface PlatformUserRolesResponse {
+  userId: string
+  items: PlatformUserRoleItemResponse[]
+}
+
+export interface AssignPlatformUserRoleRequest {
+  roleKey: string
+  tenantId?: string | null
+}
+
+export interface AssignPlatformUserRoleResponse {
+  userId: string
+  roleKey: string
+  wasAlreadyAssigned: boolean
+  tenantId: string | null
+}
+
+export interface RemovePlatformUserRoleResponse {
+  userId: string
+  roleKey: string
+  wasAlreadyRemoved: boolean
+  tenantId: string | null
+}
+
+export interface PlatformUserExternalIdentityProviderMappingItemResponse {
+  mappingId: string
+  userId: string
+  providerKey: string
+  externalSubject: string
+  externalEmail: string | null
+  createdAt: string
+  modifiedAt: string
+}
+
+export interface PlatformUserExternalIdentityProviderMappingsResponse {
+  userId: string
+  items: PlatformUserExternalIdentityProviderMappingItemResponse[]
+}
+
+export interface UpsertPlatformUserExternalIdentityProviderMappingRequest {
+  providerKey: string
+  externalSubject: string
+  externalEmail?: string | null
+}
+
+export interface UpsertPlatformUserExternalIdentityProviderMappingResponse {
+  mappingId: string
+  userId: string
+  providerKey: string
+  externalSubject: string
+  externalEmail: string | null
+  wasUpdated: boolean
+}
+
+export interface RemovePlatformUserExternalIdentityProviderMappingResponse {
+  userId: string
+  mappingId: string
+  wasAlreadyRemoved: boolean
+}
+
+export interface PlatformUserAccessHistoryItemResponse {
+  auditEventId: string
+  userId: string
+  userEmail: string | null
+  userDisplayName: string | null
+  tenantId: string | null
+  tenantSlug: string | null
+  action: string
+  result: string
+  reasonCode: string | null
+  targetType: string
+  targetId: string | null
+  correlationId: string
+  occurredAt: string
+  productKey: string | null
+  productDisplayName: string | null
+}
+
+export interface PlatformUserIdentityAuditHistoryItemResponse {
+  auditEventId: string
+  userId: string
+  userEmail: string | null
+  userDisplayName: string | null
+  tenantId: string | null
+  tenantSlug: string | null
+  actorUserId: string | null
+  actorEmail: string | null
+  actorDisplayName: string | null
+  action: string
+  result: string
+  reasonCode: string | null
+  targetType: string
+  targetId: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface PlatformUsersListResponse {
+  totalCount: number
+  page: number
+  pageSize: number
+  hasNextPage: boolean
+  items: PlatformUserListItemResponse[]
+}
+
 export interface ProductManifestCallbackAllowlistResponse {
   entryId: string
   tenantId: string | null
@@ -669,8 +912,11 @@ export interface ServiceClientSummary {
   displayName: string
   sourceProductKey: string
   allowedProductKeys: string[]
+  allowedTenantIds: string[]
   isActive: boolean
   createdAt: string
+  lastUsedAt: string | null
+  failedAuthenticationAttempts: number
 }
 
 export interface RegisterServiceClientRequest {

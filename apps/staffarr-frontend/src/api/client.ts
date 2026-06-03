@@ -10,6 +10,7 @@ import type {
   OrgUnitResponse,
   PermissionHistoryTimelineEntryResponse,
   PermissionTemplateSummaryResponse,
+  ProductPermissionCatalogItemResponse,
   PersonRoleAssignmentResponse,
   PersonManagerResponse,
   RoleTemplateResponse,
@@ -77,6 +78,7 @@ import type {
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
   PersonnelHistorySummaryResponse,
+  PermissionCheckResponse,
   TrainarrPersonTrainingHistoryResponse,
   WorkforceOnboardingJourneyResponse,
   PersonOffboardingResponse,
@@ -723,6 +725,20 @@ export async function getPermissionTemplates(accessToken: string): Promise<Permi
   return parseJsonResponse<PermissionTemplateSummaryResponse[]>(response, 'Failed to load permission templates')
 }
 
+export async function getProductPermissionCatalog(
+  accessToken: string,
+  productKey?: string,
+): Promise<ProductPermissionCatalogItemResponse[]> {
+  const query = productKey?.trim() ? `?productKey=${encodeURIComponent(productKey.trim())}` : ''
+  const response = await fetch(`${apiBase}/api/permissions/product-catalog${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProductPermissionCatalogItemResponse[]>(
+    response,
+    'Failed to load product permission catalog',
+  )
+}
+
 export async function upsertPermissionTemplate(
   accessToken: string,
   request: UpsertPermissionTemplateRequest,
@@ -823,6 +839,23 @@ export async function getPermissionHistoryTimeline(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PermissionHistoryTimelineEntryResponse[]>(response, 'Failed to load permission history')
+}
+
+export async function checkPersonPermissions(
+  accessToken: string,
+  personId: string,
+  permissionKeys: string[],
+): Promise<PermissionCheckResponse> {
+  const params = new URLSearchParams()
+  permissionKeys.forEach((permissionKey) => {
+    if (permissionKey.trim()) {
+      params.append('permissionKey', permissionKey.trim())
+    }
+  })
+  const response = await fetch(`${apiBase}/api/people/${personId}/permissions/check?${params.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PermissionCheckResponse>(response, 'Failed to check permissions')
 }
 
 export async function getPersonTimeline(
@@ -1027,7 +1060,7 @@ export async function getReadinessRollupMembers(
   accessToken: string,
   scopeType: 'team' | 'site',
   orgUnitId: string,
-  readinessStatus?: 'ready' | 'not_ready',
+  readinessStatus?: 'ready' | 'not_ready' | 'missing_certifications',
 ): Promise<ReadinessRollupMembersResponse> {
   const params = new URLSearchParams()
   if (readinessStatus) {

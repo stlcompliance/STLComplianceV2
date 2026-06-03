@@ -47,6 +47,8 @@ import {
   getSubordinates,
   getPeople,
   getPerson,
+  checkPersonPermissions,
+  getProductPermissionCatalog,
   updatePerson,
   updatePersonEmploymentStatus,
   grantPersonCertification,
@@ -153,6 +155,20 @@ export function useStaffArrWorkspaceState() {
     queryFn: () => getPermissionTemplates(session!.accessToken),
     enabled: Boolean(session?.accessToken),
   })
+  const [productPermissionCatalogProductKey, setProductPermissionCatalogProductKey] = useState('')
+  const productPermissionCatalogQuery = useQuery({
+    queryKey: [
+      'staffarr-product-permission-catalog',
+      session?.accessToken,
+      productPermissionCatalogProductKey,
+    ],
+    queryFn: () =>
+      getProductPermissionCatalog(
+        session!.accessToken,
+        productPermissionCatalogProductKey.trim() || undefined,
+      ),
+    enabled: Boolean(session?.accessToken),
+  })
   const roleTemplatesQuery = useQuery({
     queryKey: ['staffarr-role-templates', session?.accessToken],
     queryFn: () => getRoleTemplates(session!.accessToken),
@@ -173,6 +189,15 @@ export function useStaffArrWorkspaceState() {
     queryFn: () => getPermissionHistoryTimeline(session!.accessToken, effectivePersonId!, 100),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
+  const [permissionCheckInput, setPermissionCheckInput] = useState('staffarr.people.read')
+  const permissionCheckMutation = useMutation({
+    mutationFn: (payload: { personId: string; permissionKeys: string[] }) =>
+      checkPersonPermissions(session!.accessToken, payload.personId, payload.permissionKeys),
+  })
+  useEffect(() => {
+    setPermissionCheckInput('staffarr.people.read')
+    permissionCheckMutation.reset()
+  }, [effectivePersonId])
   const personTimelineQuery = useQuery({
     queryKey: [
       'staffarr-person-timeline',
@@ -237,7 +262,9 @@ export function useStaffArrWorkspaceState() {
     canViewReadinessRollups(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
   const [readinessRollupSiteFilterId, setReadinessRollupSiteFilterId] = useState<string | null>(null)
   const [selectedReadinessRollup, setSelectedReadinessRollup] = useState<ReadinessRollupSelection | null>(null)
-  const [readinessRollupMemberFilter, setReadinessRollupMemberFilter] = useState<'all' | 'not_ready'>('all')
+  const [readinessRollupMemberFilter, setReadinessRollupMemberFilter] = useState<
+    'all' | 'not_ready' | 'missing_certifications'
+  >('all')
   useEffect(() => {
     setSelectedReadinessRollup(null)
   }, [readinessRollupSiteFilterId])
@@ -261,12 +288,12 @@ export function useStaffArrWorkspaceState() {
       readinessRollupMemberFilter,
     ],
     queryFn: () =>
-      getReadinessRollupMembers(
-        session!.accessToken,
-        selectedReadinessRollup!.scopeType,
-        selectedReadinessRollup!.orgUnitId,
-        readinessRollupMemberFilter === 'not_ready' ? 'not_ready' : undefined,
-      ),
+        getReadinessRollupMembers(
+          session!.accessToken,
+          selectedReadinessRollup!.scopeType,
+          selectedReadinessRollup!.orgUnitId,
+          readinessRollupMemberFilter === 'all' ? undefined : readinessRollupMemberFilter,
+        ),
     enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && selectedReadinessRollup),
   })
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
@@ -777,6 +804,7 @@ export function useStaffArrWorkspaceState() {
     createRoleAssignmentMutation.error ??
     updateRoleAssignmentStatusMutation.error ??
     null
+  const permissionCheckMutationError = permissionCheckMutation.error
   const certificationMutationError =
     grantCertificationMutation.error ?? updateCertificationMutation.error ?? null
   const readinessOverrideMutationError =
@@ -827,10 +855,17 @@ export function useStaffArrWorkspaceState() {
     subordinatesQuery,
     subordinateDetailQuery,
     permissionTemplatesQuery,
+    productPermissionCatalogQuery,
+    productPermissionCatalogProductKey,
+    setProductPermissionCatalogProductKey,
     roleTemplatesQuery,
     roleAssignmentsQuery,
     effectivePermissionsQuery,
     permissionHistoryQuery,
+    permissionCheckMutation,
+    permissionCheckMutationError,
+    permissionCheckInput,
+    setPermissionCheckInput,
     personTimelineQuery,
     personHistorySummaryQuery,
     trainarrTrainingHistoryQuery,

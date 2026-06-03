@@ -84,15 +84,7 @@ import type {
   WorkflowGateCheckResponse,
 } from '../api/types'
 
-import {
-  canEvaluateReadinessForecast,
-  canEvaluateControlEffectiveness,
-  canEvaluateMissingEvidenceWarnings,
-  canEvaluateRiskScores,
-  canExportAuditPackage,
-  canManageVocabulary,
-  loadSession,
-} from '../auth/sessionStorage'
+import { loadSession } from '../auth/sessionStorage'
 
 export function useComplianceCoreWorkspaceState() {
 
@@ -1116,25 +1108,15 @@ export function useComplianceCoreWorkspaceState() {
 
   const ready = Boolean(session && meQuery.data)
   const me = meQuery.data!
-  const canManage = meQuery.data
-    ? canManageVocabulary(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
-  const canExportAudit = meQuery.data
-    ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
+  const canManage = meQuery.data ? me.canManageVocabulary : false
+  const canExportAudit = meQuery.data ? me.canExportAuditPackage : false
   const canReadOrchestration = canExportAudit
-  const canEvaluateRisk = meQuery.data
-    ? canEvaluateRiskScores(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
-  const canEvaluateMissingEvidence = meQuery.data
-    ? canEvaluateMissingEvidenceWarnings(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
+  const canEvaluateRisk = meQuery.data ? me.canEvaluateRiskScores : false
+  const canEvaluateMissingEvidence = meQuery.data ? me.canEvaluateMissingEvidenceWarnings : false
   const canEvaluateControlEffectivenessFlag = meQuery.data
-    ? canEvaluateControlEffectiveness(me.tenantRoleKey, me.isPlatformAdmin)
+    ? me.canEvaluateControlEffectiveness
     : false
-  const canEvaluateReadinessForecastFlag = meQuery.data
-    ? canEvaluateReadinessForecast(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
+  const canEvaluateReadinessForecastFlag = meQuery.data ? me.canEvaluateReadinessForecast : false
   const loadingMessage = 'Loading compliance registry…'
 
   return {

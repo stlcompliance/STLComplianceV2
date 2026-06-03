@@ -9,10 +9,47 @@ vi.mock('../api/client', () => ({
   getSupplierOnboardingDocumentRequirements: vi.fn().mockResolvedValue({
     requirements: [
       { documentTypeKey: 'w9', label: 'W-9 tax form', isRequired: true },
+      { documentTypeKey: 'insurance', label: 'Insurance certificate', isRequired: true },
     ],
   }),
   listPendingSupplierOnboarding: vi.fn().mockResolvedValue([]),
-  getSupplierOnboardingByParty: vi.fn(),
+  getSupplierOnboardingByParty: vi.fn().mockResolvedValue(null),
+  listPartyComplianceDocuments: vi.fn().mockResolvedValue([
+    {
+      documentId: 'doc-1',
+      externalPartyId: 'p1',
+      documentKey: 'w9-001',
+      documentTypeKey: 'w9',
+      title: 'W-9 tax form',
+      version: 1,
+      reviewStatus: 'approved',
+      expiresAt: null,
+      effectiveAt: '2026-01-01T00:00:00Z',
+      fileName: 'w9.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1200,
+      notes: '',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+    {
+      documentId: 'doc-2',
+      externalPartyId: 'p1',
+      documentKey: 'coi-001',
+      documentTypeKey: 'insurance',
+      title: 'Insurance certificate',
+      version: 1,
+      reviewStatus: 'pending_review',
+      expiresAt: '2026-07-01T00:00:00Z',
+      effectiveAt: '2026-01-01T00:00:00Z',
+      fileName: 'coi.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1500,
+      notes: '',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+  ]),
   startSupplierOnboarding: vi.fn(),
   submitSupplierOnboarding: vi.fn(),
   approveSupplierOnboarding: vi.fn(),
@@ -103,6 +140,11 @@ describe('SupplierOnboardingPanel', () => {
     )
 
     fireEvent.change(await screen.findByLabelText('Onboarding party'), { target: { value: 'p1' } })
+    expect(await screen.findByRole('heading', { name: 'Compliance documents' })).toBeInTheDocument()
+    expect(await screen.findByText(/2 document\(s\)/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Required documents' })).toBeInTheDocument()
+    expect(screen.getAllByText('approved')).toHaveLength(2)
+    expect(screen.getAllByText('expiring soon')).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: /Start onboarding|Restart \/ start draft/ }))
 
     expect(await screen.findByText('start failed')).toBeInTheDocument()

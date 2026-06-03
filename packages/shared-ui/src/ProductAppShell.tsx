@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { LogOut } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
@@ -24,6 +25,7 @@ export type ProductAppShellProps = {
   suiteHomeUrl?: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
+  onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
   navItems?: ProductNavItem[]
@@ -43,6 +45,7 @@ function WorkspaceTopBar({
   suiteHomeUrl,
   productLaunchUrls,
   onSelectProduct,
+  onSignOut,
   isProductLaunchPending,
   productLaunchError,
 }: {
@@ -56,6 +59,7 @@ function WorkspaceTopBar({
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
+  onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
 }) {
@@ -80,6 +84,16 @@ function WorkspaceTopBar({
           isPending={isProductLaunchPending}
           errorMessage={productLaunchError}
         />
+        {onSignOut ? (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="inline-flex items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+          >
+            <LogOut className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+            <span className="hidden sm:inline">Sign out</span>
+          </button>
+        ) : null}
         <WorkspaceUserChrome
           userDisplayName={userDisplayName}
           tenantDisplayName={tenantDisplayName}
@@ -101,6 +115,7 @@ export function ProductAppShell({
   suiteHomeUrl = 'http://localhost:5174/app',
   productLaunchUrls,
   onSelectProduct,
+  onSignOut,
   isProductLaunchPending,
   productLaunchError,
   navItems = [{ label: 'Workspace', to: '/' }],
@@ -160,6 +175,7 @@ export function ProductAppShell({
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
           onSelectProduct={onSelectProduct}
+          onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
         />
@@ -225,6 +241,7 @@ export function ProductAppShell({
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
           onSelectProduct={onSelectProduct}
+          onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
         />

@@ -90,6 +90,7 @@ import type {
   VocabularyTypeResponse,
   ComplianceWaiverResponse,
   CreateComplianceWaiverRequest,
+  RenewComplianceWaiverRequest,
   CommitPreviewResponse,
   EvidenceOptionProposalResponse,
   ImportCompletionReportResponse,
@@ -1871,6 +1872,19 @@ export async function revokeComplianceWaiver(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to revoke compliance waiver')
+}
+
+export async function renewComplianceWaiver(
+  accessToken: string,
+  waiverId: string,
+  request: RenewComplianceWaiverRequest,
+): Promise<ComplianceWaiverResponse> {
+  const response = await fetch(`${apiBase}/api/v1/waivers/${waiverId}/renew`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to renew compliance waiver')
 }
 
 export async function getTheoreticalSituationKinds(

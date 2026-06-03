@@ -79,6 +79,50 @@ public sealed class AssetReadinessService(
             cancellationToken);
     }
 
+    public async Task<AssetReadinessHistoryResponse> ListHistoryAsync(
+        Guid tenantId,
+        Guid assetId,
+        int? limit,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedLimit = Math.Clamp(limit ?? 15, 1, 100);
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken);
+        if (asset is null)
+        {
+            throw new StlApiException("assets.not_found", "Asset was not found.", 404);
+        }
+
+        var query = db.AssetStatusHistory
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.AssetId == assetId)
+            .OrderByDescending(x => x.ChangedAt)
+            .ThenByDescending(x => x.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Take(normalizedLimit)
+            .Select(x => new AssetReadinessHistoryItemResponse(
+                x.Id,
+                x.StatusFieldKey,
+                x.StatusValueKey,
+                x.Notes,
+                x.ChangedByPersonId,
+                x.ChangedAt,
+                x.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new AssetReadinessHistoryResponse(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            totalCount,
+            normalizedLimit,
+            items);
+    }
+
     public async Task<Asset> ResolveAssetForDispatchAsync(
         Guid tenantId,
         Guid? assetId,

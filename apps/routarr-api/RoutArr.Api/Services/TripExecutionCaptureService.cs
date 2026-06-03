@@ -119,7 +119,9 @@ public sealed class TripExecutionCaptureService(
 
         var proofTypes = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.TripId == tripId)
+            .Where(x => x.TenantId == tenantId
+                && x.TripId == tripId
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => x.ProofType)
             .ToListAsync(cancellationToken);
 

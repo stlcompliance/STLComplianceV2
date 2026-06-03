@@ -36,6 +36,21 @@ const baseProps = {
           catalogAvailabilityStatus: null,
           createdAt: '2026-05-27T00:00:00Z',
         },
+        {
+          linkId: 'link-2',
+          partyId: 'vendor-2',
+          partyKey: 'beta',
+          partyDisplayName: 'Beta Parts',
+          vendorPartNumber: 'V-FLT-02',
+          isPreferred: false,
+          catalogUnitPrice: 11.5,
+          catalogCurrencyCode: 'USD',
+          catalogMinimumOrderQuantity: 5,
+          catalogLeadTimeDays: 10,
+          catalogQuantityAvailable: null,
+          catalogAvailabilityStatus: null,
+          createdAt: '2026-05-27T00:00:00Z',
+        },
       ],
       createdAt: '2026-05-27T00:00:00Z',
       updatedAt: '2026-05-27T00:00:00Z',
@@ -88,6 +103,27 @@ const baseProps = {
       createdAt: '2026-05-27T00:00:00Z',
       updatedAt: '2026-05-27T00:00:00Z',
     },
+    {
+      leadTimeSnapshotId: 'lt-2',
+      snapshotKey: 'lt-2026-q2-beta',
+      partVendorLinkId: 'link-2',
+      partId: 'part-1',
+      partKey: 'filter-01',
+      partDisplayName: 'Oil Filter',
+      vendorPartyId: 'vendor-2',
+      vendorPartyKey: 'beta',
+      vendorDisplayName: 'Beta Parts',
+      vendorPartNumber: 'V-FLT-02',
+      leadTimeDays: 10,
+      effectiveFrom: '2026-05-01T00:00:00Z',
+      effectiveTo: null,
+      source: 'manual',
+      notes: '',
+      isCurrent: true,
+      createdByUserId: 'user-1',
+      createdAt: '2026-05-27T00:00:00Z',
+      updatedAt: '2026-05-27T00:00:00Z',
+    },
   ],
   canManage: true,
   isLoading: false,
@@ -122,7 +158,11 @@ describe('PricingLeadTimePanel', () => {
     expect(screen.getByText('price-2026-q2')).toBeInTheDocument()
     expect(screen.getByText(/12\.5 USD/)).toBeInTheDocument()
     expect(screen.getByText('lt-2026-q2')).toBeInTheDocument()
-    expect(screen.getByText(/14 days/)).toBeInTheDocument()
+    expect(screen.getAllByText(/14 days/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Source recommendations/i)).toBeInTheDocument()
+    expect(screen.getByText(/Recommended vendor/i)).toBeInTheDocument()
+    expect(screen.getByText(/beta · Beta Parts/i)).toBeInTheDocument()
+    expect(screen.getByText(/Best price and lead time|Lowest current price|Shortest current lead time|Preferred vendor with balanced current metrics|Balanced current source score/i)).toBeInTheDocument()
     const panel = screen.getByTestId('pricing-lead-time-panel')
     expect(within(panel).getByRole('button', { name: 'Record pricing' })).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Record lead time' })).toBeInTheDocument()

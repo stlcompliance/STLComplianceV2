@@ -36,7 +36,8 @@ public sealed class AuditPackageGenerationService(
             request.Action,
             request.Result,
             request.TargetType,
-            request.ActorUserId);
+            request.ActorUserId,
+            request.PersonId);
 
         var now = DateTimeOffset.UtcNow;
         var job = new AuditPackageGenerationJob

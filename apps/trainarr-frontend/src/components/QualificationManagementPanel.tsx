@@ -1,4 +1,7 @@
-import type { QualificationIssueListItemResponse } from '../api/types'
+import type {
+  QualificationIssueHistoryItemResponse,
+  QualificationIssueListItemResponse,
+} from '../api/types'
 
 interface QualificationManagementPanelProps {
   issues: QualificationIssueListItemResponse[]
@@ -15,6 +18,8 @@ interface QualificationManagementPanelProps {
   isRevoking: boolean
   isExpiring: boolean
   canManage: boolean
+  history: QualificationIssueHistoryItemResponse[]
+  isLoadingHistory: boolean
 }
 
 export function QualificationManagementPanel({
@@ -32,6 +37,8 @@ export function QualificationManagementPanel({
   isRevoking,
   isExpiring,
   canManage,
+  history,
+  isLoadingHistory,
 }: QualificationManagementPanelProps) {
   const selected = issues.find((i) => i.qualificationIssueId === selectedIssueId) ?? null
 
@@ -143,6 +150,33 @@ export function QualificationManagementPanel({
                 </button>
               </>
             ) : null}
+          </div>
+          <div className="rounded border border-slate-700 bg-slate-950/40 p-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Qualification issue history
+            </h3>
+            {isLoadingHistory ? (
+              <p className="mt-2 text-sm text-slate-400">Loading history…</p>
+            ) : history.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">No qualification history recorded yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {history.map((item) => (
+                  <li
+                    key={`${item.eventType}-${item.occurredAt}`}
+                    className="rounded border border-slate-700 px-3 py-2 text-xs"
+                  >
+                    <p className="font-medium text-slate-100">{item.eventType}</p>
+                    <p className="mt-1 text-slate-400">
+                      {item.status}
+                      {item.reason ? ` · ${item.reason}` : ''}
+                      {item.actorUserId ? ` · actor ${item.actorUserId}` : ''}
+                    </p>
+                    <p className="mt-1 text-slate-500">{new Date(item.occurredAt).toLocaleString()}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       ) : null}

@@ -236,6 +236,95 @@ export function IncidentsPanel({
                       </div>
                     ) : null}
                   </dl>
+                  {selectedIncident.sourceProduct ||
+                  selectedIncident.sourceIncidentId ||
+                  selectedIncident.sourceEventKind ||
+                  selectedIncident.sourceReferenceKey ||
+                  selectedIncident.sourceSnapshot ||
+                  selectedIncident.relatedAssetReference ||
+                  selectedIncident.relatedWorkOrderReference ||
+                  selectedIncident.relatedRouteReference ||
+                  selectedIncident.relatedSupplierReference ||
+                  selectedIncident.relatedDocumentReference ||
+                  selectedIncident.relatedPolicyReference ? (
+                    <div className="mt-4 rounded-md border border-slate-700 bg-slate-900/50 p-3">
+                      <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Source references
+                      </h4>
+                      <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+                        {selectedIncident.sourceProduct ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Source product</dt>
+                            <dd className="text-slate-200">{selectedIncident.sourceProduct}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.sourceIncidentId ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Source incident</dt>
+                            <dd className="text-slate-200">{selectedIncident.sourceIncidentId}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.sourceEventKind ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Source event</dt>
+                            <dd className="text-slate-200">{selectedIncident.sourceEventKind}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.sourceReferenceKey ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Source reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.sourceReferenceKey}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.sourceSnapshot ? (
+                          <div className="sm:col-span-2">
+                            <dt className="uppercase tracking-wide">Source snapshot</dt>
+                            <dd className="text-slate-200">
+                              {selectedIncident.sourceSnapshot.sourceEntity} · {selectedIncident.sourceSnapshot.sourceId}
+                              {' · '}
+                              {selectedIncident.sourceSnapshot.labelSnapshot} · {selectedIncident.sourceSnapshot.statusSnapshot}
+                            </dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedAssetReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Asset reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedAssetReference}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedWorkOrderReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Work order reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedWorkOrderReference}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedRouteReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Route reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedRouteReference}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedSupplierReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Supplier reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedSupplierReference}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedDocumentReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Document reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedDocumentReference}</dd>
+                          </div>
+                        ) : null}
+                        {selectedIncident.relatedPolicyReference ? (
+                          <div>
+                            <dt className="uppercase tracking-wide">Policy reference</dt>
+                            <dd className="text-slate-200">{selectedIncident.relatedPolicyReference}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                    </div>
+                  ) : null}
                   {canManage &&
                   onRouteToTrainarr &&
                   isIncidentRoutableToTrainarr(selectedIncident.reasonCategoryKey) &&

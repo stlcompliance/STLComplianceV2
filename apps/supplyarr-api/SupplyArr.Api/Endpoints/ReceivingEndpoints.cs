@@ -380,6 +380,46 @@ public static class ReceivingEndpoints
                 cancellationToken));
         })
         .WithName($"ResolveReceivingException{nameSuffix}");
+
+        group.MapPost("/exceptions/{receivingExceptionId:guid}/cancel", async (
+            Guid receivingExceptionId,
+            CancelReceivingExceptionRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.CancelAsync(
+                tenantId,
+                actorUserId,
+                receivingExceptionId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"CancelReceivingException{nameSuffix}");
+
+        group.MapPost("/exceptions/{receivingExceptionId:guid}/reopen", async (
+            Guid receivingExceptionId,
+            ReopenReceivingExceptionRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ReopenAsync(
+                tenantId,
+                actorUserId,
+                receivingExceptionId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"ReopenReceivingException{nameSuffix}");
         }
 
         var legacyGroup = app.MapGroup("/api/receiving").WithTags("Receiving").RequireAuthorization();

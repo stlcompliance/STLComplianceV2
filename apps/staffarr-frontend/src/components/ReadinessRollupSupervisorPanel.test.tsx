@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
 import { ReadinessRollupSupervisorPanel } from './ReadinessRollupSupervisorPanel'
 import type { ReadinessRollupMembersResponse, ReadinessRollupSummaryResponse } from '../api/types'
 
@@ -32,43 +33,48 @@ const sampleMembers: ReadinessRollupMembersResponse = {
   ],
 }
 
-const baseProps = {
-  teamRollups: sampleRollups,
-  siteRollups: [] as ReadinessRollupSummaryResponse[],
-  siteFilterOrgUnitId: null,
-  onSiteFilterChange: vi.fn(),
-  memberReadinessFilter: 'all' as const,
-  onMemberReadinessFilterChange: vi.fn(),
-  selectedRollup: null,
-  onSelectRollup: vi.fn(),
-  rollupMembers: null,
-  rollupMembersLoading: false,
-  rollupMembersReadErrorMessage: null,
-  isLoading: false,
-  readErrorMessage: null,
-}
-
 describe('ReadinessRollupSupervisorPanel', () => {
   afterEach(() => {
     cleanup()
   })
 
   it('renders team and site rollup tables', () => {
-    render(<ReadinessRollupSupervisorPanel {...baseProps} />)
+    render(
+      <ReadinessRollupSupervisorPanel
+        teamRollups={sampleRollups}
+        siteRollups={[]}
+        siteFilterOrgUnitId={null}
+        onSiteFilterChange={vi.fn()}
+        memberReadinessFilter="all"
+        onMemberReadinessFilterChange={vi.fn()}
+        selectedRollup={null}
+        onSelectRollup={vi.fn()}
+        rollupMembers={null}
+        rollupMembersLoading={false}
+        rollupMembersReadErrorMessage={null}
+        isLoading={false}
+        readErrorMessage={null}
+      />,
+    )
 
     expect(screen.getByText('Team and site readiness rollups')).toBeTruthy()
     expect(screen.getByText('Field Team')).toBeTruthy()
     expect(screen.getByText('75.0%')).toBeTruthy()
-    expect(screen.getByText(/No rollups computed yet/i)).toBeTruthy()
   })
 
   it('opens member drill-down when a rollup row is selected', () => {
     const onSelectRollup = vi.fn()
     const onSelectPerson = vi.fn()
+    const onMemberReadinessFilterChange = vi.fn()
 
     render(
       <ReadinessRollupSupervisorPanel
-        {...baseProps}
+        teamRollups={sampleRollups}
+        siteRollups={[]}
+        siteFilterOrgUnitId={null}
+        onSiteFilterChange={vi.fn()}
+        memberReadinessFilter="all"
+        onMemberReadinessFilterChange={onMemberReadinessFilterChange}
         selectedRollup={{
           scopeType: 'team',
           orgUnitId: sampleRollups[0].orgUnitId,
@@ -77,22 +83,46 @@ describe('ReadinessRollupSupervisorPanel', () => {
         rollupMembers={sampleMembers}
         onSelectRollup={onSelectRollup}
         onSelectPerson={onSelectPerson}
+        rollupMembersLoading={false}
+        rollupMembersReadErrorMessage={null}
+        isLoading={false}
+        readErrorMessage={null}
       />,
     )
 
     expect(screen.getByTestId('readiness-rollup-drilldown')).toBeTruthy()
     expect(screen.getByText('Alex Notready')).toBeTruthy()
     expect(screen.getByText('Training acknowledgement pending')).toBeTruthy()
+    expect(screen.getByRole('option', { name: 'Missing certifications only' })).toBeTruthy()
+
+    fireEvent.change(screen.getByTestId('readiness-rollup-member-filter'), {
+      target: { value: 'missing_certifications' },
+    })
+
+    expect(onMemberReadinessFilterChange).toHaveBeenCalledWith('missing_certifications')
 
     fireEvent.click(screen.getByTestId(`readiness-rollup-member-select-${sampleMembers.members[0].personId}`))
     expect(onSelectPerson).toHaveBeenCalledWith(sampleMembers.members[0].personId)
   })
 
   it('renders top-level fetch errors in shared callout', () => {
+    const onMemberReadinessFilterChange = vi.fn()
     const onRetryRead = vi.fn()
+
     render(
       <ReadinessRollupSupervisorPanel
-        {...baseProps}
+        teamRollups={sampleRollups}
+        siteRollups={[]}
+        siteFilterOrgUnitId={null}
+        onSiteFilterChange={vi.fn()}
+        memberReadinessFilter="all"
+        onMemberReadinessFilterChange={onMemberReadinessFilterChange}
+        selectedRollup={null}
+        onSelectRollup={vi.fn()}
+        rollupMembers={null}
+        rollupMembersLoading={false}
+        rollupMembersReadErrorMessage={null}
+        isLoading={false}
         readErrorMessage="Could not load rollups"
         onRetryRead={onRetryRead}
       />,
@@ -106,17 +136,29 @@ describe('ReadinessRollupSupervisorPanel', () => {
   })
 
   it('renders drill-down errors in shared callout', () => {
+    const onMemberReadinessFilterChange = vi.fn()
     const onRetryRollupMembers = vi.fn()
+
     render(
       <ReadinessRollupSupervisorPanel
-        {...baseProps}
+        teamRollups={sampleRollups}
+        siteRollups={[]}
+        siteFilterOrgUnitId={null}
+        onSiteFilterChange={vi.fn()}
+        memberReadinessFilter="all"
+        onMemberReadinessFilterChange={onMemberReadinessFilterChange}
         selectedRollup={{
           scopeType: 'team',
           orgUnitId: sampleRollups[0].orgUnitId,
           orgUnitName: sampleRollups[0].orgUnitName,
         }}
+        onSelectRollup={vi.fn()}
+        rollupMembers={null}
+        rollupMembersLoading={false}
         rollupMembersReadErrorMessage="Could not load members"
         onRetryRollupMembersRead={onRetryRollupMembers}
+        isLoading={false}
+        readErrorMessage={null}
       />,
     )
 

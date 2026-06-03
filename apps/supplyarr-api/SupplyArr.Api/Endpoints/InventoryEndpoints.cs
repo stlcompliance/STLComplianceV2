@@ -120,6 +120,24 @@ public static class InventoryEndpoints
         })
         .WithName($"ListInventoryBins{nameSuffix}");
 
+        group.MapGet("/bins", async (
+            Guid? locationId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            if (locationId is Guid selectedLocationId)
+            {
+                return Results.Ok(await service.ListBinsAsync(tenantId, selectedLocationId, cancellationToken));
+            }
+
+            return Results.Ok(await service.ListAllBinsAsync(tenantId, cancellationToken));
+        })
+        .WithName($"ListAllInventoryBins{nameSuffix}");
+
         group.MapPost("/locations/{locationId:guid}/bins", async (
             Guid locationId,
             CreateInventoryBinRequest request,

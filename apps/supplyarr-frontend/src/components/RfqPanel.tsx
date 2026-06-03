@@ -26,9 +26,16 @@ interface RfqPanelProps {
   canAward: boolean
   parts: PartResponse[]
   vendors: { partyId: string; displayName: string; partyKey: string }[]
+  vendorDirectory: {
+    partyId: string
+    displayName: string
+    partyKey: string
+    approvalStatus: string
+    status: string
+  }[]
 }
 
-export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: RfqPanelProps) {
+export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, vendorDirectory }: RfqPanelProps) {
   const queryClient = useQueryClient()
   const [selectedRfqId, setSelectedRfqId] = useState('')
   const [rfqKey, setRfqKey] = useState('')
@@ -68,6 +75,42 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
     () => selectedRfq?.quotes.filter((q) => q.status === 'draft') ?? [],
     [selectedRfq],
   )
+  const quoteAnalytics = useMemo(() => {
+    if (!selectedRfq) {
+      return []
+    }
+
+    return selectedRfq.invitations.map((invite) => {
+      const vendorProfile = vendorDirectory.find((vendor) => vendor.partyId === invite.vendorPartyId)
+      const submittedQuotes = selectedRfq.quotes.filter((quote) => quote.vendorPartyId === invite.vendorPartyId)
+      const submittedQuote =
+        submittedQuotes.find((quote) => quote.status === 'submitted') ?? submittedQuotes[0] ?? null
+      const responseDays =
+        invite.invitedAt && submittedQuote?.submittedAt
+          ? Math.max(0, (new Date(submittedQuote.submittedAt).getTime() - new Date(invite.invitedAt).getTime()) / (1000 * 60 * 60 * 24))
+          : null
+      const bestPriceCount = selectedRfq.quotes
+        .filter((quote) => quote.status === 'submitted' && quote.totalAmount != null)
+        .reduce((count, quote) => {
+          const lowestTotal = Math.min(
+            ...selectedRfq.quotes
+              .filter((candidate) => candidate.status === 'submitted' && candidate.totalAmount != null)
+              .map((candidate) => candidate.totalAmount!),
+          )
+          return count + (quote.vendorPartyId === invite.vendorPartyId && quote.totalAmount === lowestTotal ? 1 : 0)
+        }, 0)
+      return {
+        vendorPartyId: invite.vendorPartyId,
+        vendorDisplayName: invite.vendorDisplayName,
+        approvalStatus: vendorProfile?.approvalStatus ?? 'unknown',
+        vendorStatus: vendorProfile?.status ?? 'unknown',
+        responseDays,
+        submittedQuote,
+        quoteCount: submittedQuotes.filter((quote) => quote.status === 'submitted').length,
+        bestPriceCount,
+      }
+    })
+  }, [selectedRfq, vendorDirectory])
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-rfqs', accessToken] })
@@ -101,18 +144,37 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
   })
 
   const inviteMutation = useMutation({
-    mutationFn: () => inviteRfqVendors(accessToken, selectedRfqId, [inviteVendorId]),
+    mutationFn: () => {
+      const selectedVendor = vendorDirectory.find((vendor) => vendor.partyId === inviteVendorId)
+      if (
+        !selectedVendor ||
+        selectedVendor.approvalStatus !== 'approved' ||
+        selectedVendor.status !== 'active'
+      ) {
+        throw new Error('Select an approved, active vendor')
+      }
+      return inviteRfqVendors(accessToken, selectedRfqId, [inviteVendorId])
+    },
     onSuccess: invalidate,
   })
 
   const createQuoteMutation = useMutation({
-    mutationFn: () =>
-      createVendorQuote(accessToken, selectedRfqId, {
+    mutationFn: () => {
+      const selectedVendor = vendorDirectory.find((vendor) => vendor.partyId === quoteVendorId)
+      if (
+        !selectedVendor ||
+        selectedVendor.approvalStatus !== 'approved' ||
+        selectedVendor.status !== 'active'
+      ) {
+        throw new Error('Select an approved, active vendor')
+      }
+      return createVendorQuote(accessToken, selectedRfqId, {
         vendorPartyId: quoteVendorId,
         quoteKey,
         currencyCode: quoteCurrency,
         notes: '',
-      }),
+      })
+    },
     onSuccess: invalidate,
   })
 
@@ -158,6 +220,36 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
   const quoteVendor = selectedRfq?.invitations.find((invite) => invite.vendorPartyId === quoteVendorId)
   const quoteKeySource = quoteVendor ? `${selectedRfq?.rfqKey ?? ''}-${quoteVendor.vendorDisplayName}` : ''
   const prKeySource = selectedRfq?.title ?? ''
+  const vendorPickerOptions = useMemo(
+    () =>
+      vendors.map((vendor) => {
+        const vendorProfile = vendorDirectory.find((profile) => profile.partyId === vendor.partyId)
+        return {
+          value: vendor.partyId,
+          label: `${vendor.displayName} (${vendor.partyKey})`,
+          inactive:
+            !vendorProfile ||
+            vendorProfile.approvalStatus !== 'approved' ||
+            vendorProfile.status !== 'active',
+        }
+      }),
+    [vendors, vendorDirectory],
+  )
+  const quoteVendorPickerOptions = useMemo(
+    () =>
+      (selectedRfq?.invitations ?? []).map((invite) => {
+        const vendorProfile = vendorDirectory.find((vendor) => vendor.partyId === invite.vendorPartyId)
+        return {
+          value: invite.vendorPartyId,
+          label: `${invite.vendorDisplayName}${vendorProfile ? ` (${vendorProfile.approvalStatus} · ${vendorProfile.status})` : ''}`,
+          inactive:
+            !vendorProfile ||
+            vendorProfile.approvalStatus !== 'approved' ||
+            vendorProfile.status !== 'active',
+        }
+      }),
+    [selectedRfq?.invitations, vendorDirectory],
+  )
 
   if (!canManage) {
     return null
@@ -256,10 +348,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
                 label="Invite vendor"
                 value={inviteVendorId}
                 onChange={setInviteVendorId}
-                options={vendors.map((vendor) => ({
-                  value: vendor.partyId,
-                  label: vendor.displayName,
-                }))}
+                options={vendorPickerOptions}
                 emptyLabel="Invite vendor"
               />
               <button
@@ -279,10 +368,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
                 label="Quote vendor"
                 value={quoteVendorId}
                 onChange={setQuoteVendorId}
-                options={selectedRfq.invitations.map((invite) => ({
-                  value: invite.vendorPartyId,
-                  label: invite.vendorDisplayName,
-                }))}
+                options={quoteVendorPickerOptions}
                 emptyLabel="Quote vendor"
               />
               <ControlledSelect
@@ -395,6 +481,44 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
             </div>
           )}
 
+          {quoteAnalytics.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase text-slate-400">Quote analytics</h3>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                {quoteAnalytics.map((row) => (
+                  <li key={row.vendorPartyId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-slate-100">{row.vendorDisplayName}</div>
+                        <div className="text-xs text-slate-500">
+                          {row.submittedQuote ? `Quote ${row.submittedQuote.quoteKey}` : 'No submitted quote'}
+                        </div>
+                        <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">
+                          {row.approvalStatus} · {row.vendorStatus}
+                        </div>
+                      </div>
+                      {row.bestPriceCount > 0 ? (
+                        <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-emerald-300">
+                          Best price
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">
+                      Response time {formatDays(row.responseDays)} · Submitted quotes {row.quoteCount}
+                    </p>
+                    {row.approvalStatus !== 'approved' || row.vendorStatus !== 'active' ? (
+                      <p className="mt-1 text-xs text-amber-300">
+                        Source attention: {row.approvalStatus} · {row.vendorStatus}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-emerald-300">Approved source</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {selectedRfq.status === 'submitted' && canAward && (
             <div className="flex flex-wrap items-end gap-2">
               <label htmlFor="rfq-winning-quote" className="block text-xs text-slate-400">
@@ -452,4 +576,12 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
       )}
     </section>
   )
+}
+
+function formatDays(value: number | null): string {
+  if (value == null) {
+    return 'n/a'
+  }
+  const rounded = Math.round(value * 10) / 10
+  return `${rounded} day${rounded === 1 ? '' : 's'}`
 }

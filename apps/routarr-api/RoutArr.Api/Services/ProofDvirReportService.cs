@@ -138,7 +138,9 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
 
         var proofs = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.TripId == tripId)
+            .Where(x => x.TenantId == tenantId
+                && x.TripId == tripId
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .OrderByDescending(x => x.CapturedAt)
             .ToListAsync(cancellationToken);
 
@@ -202,6 +204,10 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             proof.VehicleRefKey,
             proof.ReferenceKey,
             proof.Notes,
+            proof.ReviewStatus,
+            proof.ReviewedByPersonId,
+            proof.ReviewedAt,
+            proof.ReviewNotes,
             proof.CapturedAt,
             proof.CreatedAt);
     }
@@ -379,6 +385,7 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             entity.CapturedByPersonId,
             entity.VehicleRefKey,
             entity.ReferenceKey,
+            entity.ReviewStatus,
             entity.CapturedAt);
 
     private static ProofDvirReportDvirRow MapDvirRow(TripDvirInspection entity, string tripNumber) =>
@@ -441,7 +448,9 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
         var tripIds = trips.Select(x => x.Id).ToHashSet();
         var proofTypesByTrip = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Where(x => x.TenantId == tenantId
+                && tripIds.Contains(x.TripId)
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => new { x.TripId, x.ProofType })
             .ToListAsync(cancellationToken);
         var proofLookup = proofTypesByTrip

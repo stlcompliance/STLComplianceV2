@@ -78,6 +78,52 @@ describe('RouteReportsPanel', () => {
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeTruthy()
   })
 
+  it('renders route detail history when a route is selected', async () => {
+    const { getRouteReportRouteDetail } = await import('../api/client')
+    vi.mocked(getRouteReportRouteDetail).mockResolvedValueOnce({
+      routeId: 'route-1',
+      routeNumber: 'RT-RPT',
+      title: 'Report test route',
+      description: 'A route used to verify history rendering.',
+      routeStatus: 'draft',
+      tripId: null,
+      tripNumber: null,
+      tripTitle: null,
+      totalStopCount: 2,
+      pendingStopCount: 1,
+      completedStopCount: 1,
+      skippedStopCount: 0,
+      completionPercent: 50,
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-02T00:00:00Z',
+      activatedAt: '2026-06-01T12:00:00Z',
+      completedAt: null,
+      stops: [],
+      history: [
+        {
+          occurredAt: '2026-06-02T09:00:00Z',
+          action: 'route.updated',
+          result: 'success',
+          reasonCode: null,
+          actorUserId: 'actor-1',
+        },
+      ],
+    })
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <RouteReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('route-reports-panel')
+    await screen.findByText(/RT-RPT — Report test route/i)
+    fireEvent.click(screen.getByText(/RT-RPT — Report test route/i))
+    expect(await screen.findByText('Route history')).toBeInTheDocument()
+    expect(await screen.findByText('route.updated')).toBeInTheDocument()
+  })
+
   it('returns null when user cannot read reports', () => {
     const client = new QueryClient()
     const { container } = render(

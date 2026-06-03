@@ -149,6 +149,110 @@ type SupplyArrItemReference = {
   updatedAtUtc: string
 }
 
+type LoadArrLocationUtilization = {
+  id: string
+  name: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  locationType: string
+  active: boolean
+  capacityPercent: number
+  quantityOnHand: number
+  quantityBlocked: number
+  openTasks: number
+  openHolds: number
+  unexplainedInventory: number
+  itemCount: number
+  inventoryStates: string[]
+  signals: string[]
+  notes: string
+  lastActivityAtUtc: string
+}
+
+type LoadArrCount = {
+  id: string
+  countNumber: string
+  status: string
+  countType: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  warehouseLocationId: string
+  locationNameSnapshot: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  expectedQuantity: number
+  countedQuantity: number
+  varianceQuantity: number
+  unitOfMeasure: string
+  countedByPersonId: string
+  approvedByPersonId: string | null
+  reasonCode: string
+  inventoryAdjustmentId: string | null
+  evidenceSummary: string
+  createdAtUtc: string
+  completedAtUtc: string | null
+  approvedAtUtc: string | null
+  updatedAtUtc: string
+}
+
+type LoadArrCountCompletion = {
+  count: LoadArrCount
+  adjustment: LoadArrAdjustment | null
+  originEvent: {
+    id: string
+    originType: string
+    supplyarrItemId: string
+    quantity: number
+    unitOfMeasure: string
+    locationNameSnapshot: string
+  } | null
+  movement: {
+    id: string
+    movementType: string
+    reasonCode: string
+  } | null
+}
+
+type LoadArrAdjustment = {
+  id: string
+  adjustmentNumber: string
+  status: string
+  adjustmentType: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  warehouseLocationId: string
+  locationNameSnapshot: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  quantityDelta: number
+  unitOfMeasure: string
+  reasonCode: string
+  createdByPersonId: string
+  approvedByPersonId: string | null
+  inventoryOriginEventId: string | null
+  evidenceSummary: string
+  createdAtUtc: string
+  approvedAtUtc: string | null
+  updatedAtUtc: string
+}
+
+type LoadArrAdjustmentMutation = {
+  adjustment: LoadArrAdjustment
+  originEvent: {
+    id: string
+    originType: string
+    supplyarrItemId: string
+    quantity: number
+    unitOfMeasure: string
+    locationNameSnapshot: string
+  } | null
+  movement: {
+    id: string
+    movementType: string
+    reasonCode: string
+  } | null
+}
+
 type LoadArrWorkspaceSummary = {
   generatedAt: string
   metrics: LoadArrMetrics
@@ -308,11 +412,34 @@ type UnexplainedInventoryResolutionFormState = {
   evidenceSummary: string
 }
 
+type CountFormState = {
+  countType: string
+  warehouseLocationId: string
+  supplyarrItemId: string
+  expectedQuantity: string
+  countedQuantity: string
+  countedByPersonId: string
+  reasonCode: string
+  evidenceSummary: string
+}
+
+type AdjustmentFormState = {
+  adjustmentType: string
+  warehouseLocationId: string
+  supplyarrItemId: string
+  quantityDelta: string
+  createdByPersonId: string
+  reasonCode: string
+  evidenceSummary: string
+  approvedByPersonId: string
+}
+
 type ViewKey =
   | 'inventory'
   | 'receiving'
   | 'transfers'
   | 'locations'
+  | 'counts'
   | 'tasks'
   | 'holds'
   | 'unexplained'
@@ -595,11 +722,112 @@ const fallbackSummary: LoadArrWorkspaceSummary = {
   ],
 }
 
+const fallbackCounts: LoadArrCount[] = [
+  {
+    id: 'count-8021',
+    countNumber: 'CNT-260602-1945',
+    status: 'variance_pending_approval',
+    countType: 'cycle_count',
+    staffarrSiteOrgUnitId: 'staff-site-south-depot',
+    staffarrSiteNameSnapshot: 'South Service Depot',
+    warehouseLocationId: 'loc-truck-17',
+    locationNameSnapshot: 'Truck Stock 17',
+    supplyarrItemId: 'SUP-BR-ROTOR-22',
+    itemNameSnapshot: 'Brake rotor assembly',
+    expectedQuantity: 10,
+    countedQuantity: 12,
+    varianceQuantity: 2,
+    unitOfMeasure: 'each',
+    countedByPersonId: 'person-route-stock-lead',
+    approvedByPersonId: null,
+    reasonCode: 'cycle_count_variance',
+    inventoryAdjustmentId: null,
+    evidenceSummary: 'Positive variance waiting supervisor approval',
+    createdAtUtc: '2026-06-02T19:45:00Z',
+    completedAtUtc: '2026-06-02T19:54:00Z',
+    approvedAtUtc: null,
+    updatedAtUtc: '2026-06-02T19:54:00Z',
+  },
+  {
+    id: 'count-adh-49',
+    countNumber: 'CNT-260602-2110',
+    status: 'approved',
+    countType: 'compliance',
+    staffarrSiteOrgUnitId: 'staff-site-stl-north',
+    staffarrSiteNameSnapshot: 'STL North Yard',
+    warehouseLocationId: 'loc-haz-01',
+    locationNameSnapshot: 'Hazmat Cage A',
+    supplyarrItemId: 'SUP-ADH-49',
+    itemNameSnapshot: 'Regulated adhesive cartridge',
+    expectedQuantity: 14,
+    countedQuantity: 14,
+    varianceQuantity: 0,
+    unitOfMeasure: 'case',
+    countedByPersonId: 'person-hazmat-reviewer',
+    approvedByPersonId: 'person-hazmat-supervisor',
+    reasonCode: 'sds_label_mismatch',
+    inventoryAdjustmentId: 'adj-count-adh-49',
+    evidenceSummary: 'SDS and label rule check completed',
+    createdAtUtc: '2026-06-02T21:10:00Z',
+    completedAtUtc: '2026-06-02T21:18:00Z',
+    approvedAtUtc: '2026-06-02T21:20:00Z',
+    updatedAtUtc: '2026-06-02T21:20:00Z',
+  },
+]
+
+const fallbackAdjustments: LoadArrAdjustment[] = [
+  {
+    id: 'adj-count-adh-49',
+    adjustmentNumber: 'ADJ-260602-2118',
+    status: 'approved',
+    adjustmentType: 'loss',
+    staffarrSiteOrgUnitId: 'staff-site-stl-north',
+    staffarrSiteNameSnapshot: 'STL North Yard',
+    warehouseLocationId: 'loc-haz-01',
+    locationNameSnapshot: 'Hazmat Cage A',
+    supplyarrItemId: 'SUP-ADH-49',
+    itemNameSnapshot: 'Regulated adhesive cartridge',
+    quantityDelta: -0.5,
+    unitOfMeasure: 'case',
+    reasonCode: 'sds_label_mismatch',
+    createdByPersonId: 'person-hazmat-reviewer',
+    approvedByPersonId: 'person-hazmat-supervisor',
+    inventoryOriginEventId: null,
+    evidenceSummary: 'SDS and label review correction',
+    createdAtUtc: '2026-06-02T21:18:00Z',
+    approvedAtUtc: '2026-06-02T21:20:00Z',
+    updatedAtUtc: '2026-06-02T21:20:00Z',
+  },
+  {
+    id: 'adj-count-8021',
+    adjustmentNumber: 'ADJ-260602-1954',
+    status: 'open',
+    adjustmentType: 'gain',
+    staffarrSiteOrgUnitId: 'staff-site-south-depot',
+    staffarrSiteNameSnapshot: 'South Service Depot',
+    warehouseLocationId: 'loc-truck-17',
+    locationNameSnapshot: 'Truck Stock 17',
+    supplyarrItemId: 'SUP-BR-ROTOR-22',
+    itemNameSnapshot: 'Brake rotor assembly',
+    quantityDelta: 2,
+    unitOfMeasure: 'each',
+    reasonCode: 'cycle_count_variance',
+    createdByPersonId: 'person-route-stock-lead',
+    approvedByPersonId: null,
+    inventoryOriginEventId: null,
+    evidenceSummary: 'Supervisor approval pending',
+    createdAtUtc: '2026-06-02T19:54:00Z',
+    approvedAtUtc: null,
+    updatedAtUtc: '2026-06-02T19:54:00Z',
+  },
+]
+
 const views: Array<{ key: ViewKey; label: string; icon: typeof Boxes }> = [
   { key: 'inventory', label: 'Inventory', icon: Boxes },
   { key: 'receiving', label: 'Receiving', icon: PackagePlus },
   { key: 'transfers', label: 'Transfers', icon: Route },
   { key: 'locations', label: 'Locations', icon: MapPin },
+  { key: 'counts', label: 'Counts', icon: Activity },
   { key: 'tasks', label: 'Tasks', icon: ClipboardList },
   { key: 'holds', label: 'Holds', icon: ShieldCheck },
   { key: 'unexplained', label: 'Unexplained', icon: AlertTriangle },
@@ -815,6 +1043,28 @@ const initialUnexplainedResolutionForm: UnexplainedInventoryResolutionFormState 
   evidenceSummary: 'Supervisor reviewed count evidence and approved trusted stock resolution.',
 }
 
+const initialCountForm: CountFormState = {
+  countType: 'cycle_count',
+  warehouseLocationId: 'loc-truck-17',
+  supplyarrItemId: 'SUP-BR-ROTOR-22',
+  expectedQuantity: '10',
+  countedQuantity: '12',
+  countedByPersonId: 'person-route-stock-lead',
+  reasonCode: 'cycle_count_variance',
+  evidenceSummary: 'Positive variance waiting supervisor approval',
+}
+
+const initialAdjustmentForm: AdjustmentFormState = {
+  adjustmentType: 'gain',
+  warehouseLocationId: 'loc-truck-17',
+  supplyarrItemId: 'SUP-BR-ROTOR-22',
+  quantityDelta: '2',
+  createdByPersonId: 'person-route-stock-lead',
+  reasonCode: 'cycle_count_variance',
+  evidenceSummary: 'Create adjustment from cycle count variance',
+  approvedByPersonId: 'person-inventory-supervisor',
+}
+
 export function App() {
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
@@ -842,6 +1092,16 @@ export function App() {
   const [supplyArrItemReferences, setSupplyArrItemReferences] = useState<SupplyArrItemReference[]>(
     fallbackSupplyArrItemReferences,
   )
+  const [counts, setCounts] = useState<LoadArrCount[]>(fallbackCounts)
+  const [adjustments, setAdjustments] = useState<LoadArrAdjustment[]>(fallbackAdjustments)
+  const [locationUtilization, setLocationUtilization] = useState<LoadArrLocationUtilization | null>(null)
+  const [selectedLocationId, setSelectedLocationId] = useState(fallbackSummary.locations[0]?.id ?? '')
+  const [countForm, setCountForm] = useState<CountFormState>(initialCountForm)
+  const [countStatus, setCountStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
+  const [countResult, setCountResult] = useState<LoadArrCountCompletion | null>(null)
+  const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentFormState>(initialAdjustmentForm)
+  const [adjustmentStatus, setAdjustmentStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
+  const [adjustmentResult, setAdjustmentResult] = useState<LoadArrAdjustmentMutation | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -871,6 +1131,97 @@ export function App() {
 
     return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch('/api/v1/counts', {
+      credentials: 'include',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Count request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<{ items: LoadArrCount[] }>
+      })
+      .then((data) => {
+        if (data.items.length > 0) {
+          setCounts(data.items)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setCounts(fallbackCounts)
+        }
+      })
+
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch('/api/v1/adjustments', {
+      credentials: 'include',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Adjustment request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<{ items: LoadArrAdjustment[] }>
+      })
+      .then((data) => {
+        if (data.items.length > 0) {
+          setAdjustments(data.items)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setAdjustments(fallbackAdjustments)
+        }
+      })
+
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    if (!selectedLocationId) {
+      setLocationUtilization(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    fetch(`/api/v1/locations/${selectedLocationId}/utilization`, {
+      credentials: 'include',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Location utilization request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<LoadArrLocationUtilization>
+      })
+      .then((data) => {
+        setLocationUtilization(data)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          const location = fallbackSummary.locations.find((candidate) => candidate.id === selectedLocationId)
+          setLocationUtilization(location ? createLocalLocationUtilization(location, fallbackSummary) : null)
+        }
+      })
+
+    return () => controller.abort()
+  }, [selectedLocationId])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1013,6 +1364,11 @@ export function App() {
     [normalizedQuery, summary.unexplainedInventory],
   )
 
+  const selectedLocation = useMemo(
+    () => summary.locations.find((location) => location.id === selectedLocationId) ?? summary.locations[0],
+    [selectedLocationId, summary.locations],
+  )
+
   const selectedReceivingLocation = useMemo(
     () =>
       summary.locations.find((location) => location.id === receivingForm.warehouseLocationId) ??
@@ -1110,6 +1466,16 @@ export function App() {
     [summary.unexplainedInventory, unexplainedResolutionForm.recordId],
   )
 
+  const selectedCount = useMemo(
+    () => counts.find((count) => count.id === countResult?.count.id) ?? counts[0],
+    [countResult?.count.id, counts],
+  )
+
+  const selectedAdjustment = useMemo(
+    () => adjustments.find((adjustment) => adjustment.id === adjustmentResult?.adjustment.id) ?? adjustments[0],
+    [adjustmentResult?.adjustment.id, adjustments],
+  )
+
   const quarantineLocationOptions = useMemo<PickerOption[]>(
     () =>
       summary.locations
@@ -1175,6 +1541,14 @@ export function App() {
     value: string,
   ) => {
     setUnexplainedResolutionForm((current) => ({ ...current, [field]: value }))
+  }
+
+  const updateCountForm = (field: keyof CountFormState, value: string) => {
+    setCountForm((current) => ({ ...current, [field]: value }))
+  }
+
+  const updateAdjustmentForm = (field: keyof AdjustmentFormState, value: string) => {
+    setAdjustmentForm((current) => ({ ...current, [field]: value }))
   }
 
   const completeReceiving = async () => {
@@ -1373,6 +1747,168 @@ export function App() {
         action,
       ))
       setUnexplainedStatus('completed')
+    }
+  }
+
+  const performCount = async () => {
+    setCountStatus('submitting')
+    const createPayload = toCountCreatePayload(countForm)
+    const completePayload = toCountCompletionPayload(countForm)
+
+    try {
+      const createResponse = await fetch('/api/v1/counts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(createPayload),
+      })
+
+      if (!createResponse.ok) {
+        throw new Error(`Count creation failed: ${createResponse.status}`)
+      }
+
+      const createdCount = (await createResponse.json()) as LoadArrCount
+
+      const completeResponse = await fetch(`/api/v1/counts/${createdCount.id}/complete`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completePayload),
+      })
+
+      if (!completeResponse.ok) {
+        throw new Error(`Count completion failed: ${completeResponse.status}`)
+      }
+
+      const data = (await completeResponse.json()) as LoadArrCountCompletion
+      setCountResult(data)
+      setCountStatus('completed')
+    } catch {
+      const fallback = createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences)
+      setCountResult(fallback)
+      setCountStatus('completed')
+    }
+  }
+
+  const approveCountVariance = async () => {
+    const countId = countResult?.count.id ?? selectedCount?.id
+    if (!countId) {
+      return
+    }
+
+    setCountStatus('submitting')
+    const payload = {
+      countType: countForm.countType,
+      staffarrSiteOrgUnitId: selectedLocation?.staffarrSiteOrgUnitId ?? '',
+      warehouseLocationId: countForm.warehouseLocationId,
+      supplyarrItemId: countForm.supplyarrItemId,
+      expectedQuantity: toNonNegativeNumber(countForm.expectedQuantity),
+      approvedByPersonId: countForm.countedByPersonId,
+      countedQuantity: toNonNegativeNumber(countForm.countedQuantity),
+      reasonCode: countForm.reasonCode,
+      evidenceSummary: countForm.evidenceSummary,
+      complianceEvaluationId: '',
+    }
+
+    try {
+      const response = await fetch(`/api/v1/counts/${countId}/approve-variance`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Count variance approval failed: ${response.status}`)
+      }
+
+      const data = (await response.json()) as LoadArrCountCompletion
+      setCountResult(data)
+      setCountStatus('completed')
+    } catch {
+      setCountResult(createLocalCountVarianceApproval(countResult ?? createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences)))
+      setCountStatus('completed')
+    }
+  }
+
+  const createAdjustment = async () => {
+    setAdjustmentStatus('submitting')
+    const payload = toAdjustmentCreatePayload(adjustmentForm)
+
+    try {
+      const response = await fetch('/api/v1/adjustments', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Adjustment creation failed: ${response.status}`)
+      }
+
+      const data = (await response.json()) as LoadArrAdjustment
+      setAdjustmentResult({ adjustment: data, originEvent: null, movement: null })
+      setAdjustmentStatus('completed')
+    } catch {
+      setAdjustmentResult(createLocalAdjustmentMutation(adjustmentForm, selectedLocation, selectedAdjustment, selectedCount, supplyArrItemReferences))
+      setAdjustmentStatus('completed')
+    }
+  }
+
+  const approveAdjustment = async () => {
+    const adjustmentId = adjustmentResult?.adjustment.id ?? selectedAdjustment?.id
+    if (!adjustmentId) {
+      return
+    }
+
+    setAdjustmentStatus('submitting')
+    const payload = {
+      adjustmentType: adjustmentForm.adjustmentType,
+      staffarrSiteOrgUnitId: selectedLocation?.staffarrSiteOrgUnitId ?? '',
+      warehouseLocationId: adjustmentForm.warehouseLocationId,
+      supplyarrItemId: adjustmentForm.supplyarrItemId,
+      quantityDelta: toSignedNumber(adjustmentForm.quantityDelta),
+      createdByPersonId: adjustmentForm.createdByPersonId,
+      approvedByPersonId: adjustmentForm.approvedByPersonId,
+      reasonCode: adjustmentForm.reasonCode,
+      evidenceSummary: adjustmentForm.evidenceSummary,
+      complianceEvaluationId: '',
+    }
+
+    try {
+      const response = await fetch(`/api/v1/adjustments/${adjustmentId}/approve`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Adjustment approval failed: ${response.status}`)
+      }
+
+      const data = (await response.json()) as LoadArrAdjustmentMutation
+      setAdjustmentResult(data)
+      setAdjustmentStatus('completed')
+    } catch {
+      setAdjustmentResult(createLocalAdjustmentApproval(adjustmentResult ?? createLocalAdjustmentMutation(adjustmentForm, selectedLocation, selectedAdjustment, selectedCount, supplyArrItemReferences)))
+      setAdjustmentStatus('completed')
     }
   }
 
@@ -1846,28 +2382,430 @@ export function App() {
         )}
 
         {activeView === 'locations' && (
-          <section className="data-grid location-grid" aria-label="StaffArr locations used by LoadArr">
-            {filteredLocations.map((location) => (
-              <article className="panel" key={location.id}>
-                <div className="panel-title-row">
-                  <div>
-                    <span className="kicker">{location.staffarrSiteNameSnapshot}</span>
-                    <h2>{location.name}</h2>
+          <section className="receiving-layout" aria-label="StaffArr locations used by LoadArr">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <MapPin aria-hidden="true" />
+                <h2>Location list</h2>
+              </div>
+
+              <div className="form-grid single-column">
+                <FormField label="Selected location" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={selectedLocationId}
+                    onChange={(value) => setSelectedLocationId(value)}
+                    options={receivingLocationOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+              </div>
+
+              <section className="data-grid location-grid" aria-label="Location list">
+                {filteredLocations.map((location) => (
+                  <article
+                    className={`panel ${location.id === selectedLocationId ? 'selected-panel' : ''}`}
+                    key={location.id}
+                    onClick={() => setSelectedLocationId(location.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSelectedLocationId(location.id)
+                      }
+                    }}
+                  >
+                    <div className="panel-title-row">
+                      <div>
+                        <span className="kicker">{location.staffarrSiteNameSnapshot}</span>
+                        <h2>{location.name}</h2>
+                      </div>
+                      <StatusChip value={location.locationType} />
+                    </div>
+                    <p className="path">{location.path}</p>
+                    <div className="capacity">
+                      <div>
+                        <span>Capacity</span>
+                        <strong>{location.capacityPercent}%</strong>
+                      </div>
+                      <progress value={location.capacityPercent} max={100} />
+                    </div>
+                    <TagList tags={location.complianceRestrictions} />
+                    <p className="notes">{location.notes}</p>
+                  </article>
+                ))}
+              </section>
+            </article>
+
+            <aside className="side-panel" aria-label="Location utilization">
+              <div className="section-heading">
+                <Activity aria-hidden="true" />
+                <h2>Utilization detail</h2>
+              </div>
+
+              {locationUtilization ? (
+                <div className="completion-stack">
+                  <AuditFact label="Selected location" value={locationUtilization.name} />
+                  <AuditFact
+                    label="Site"
+                    value={`${locationUtilization.staffarrSiteNameSnapshot} · ${locationUtilization.staffarrSiteOrgUnitId}`}
+                  />
+                  <AuditFact
+                    label="Inventory"
+                    value={`${formatNumber.format(locationUtilization.quantityOnHand)} on hand, ${formatNumber.format(locationUtilization.quantityBlocked)} blocked`}
+                  />
+                  <AuditFact
+                    label="Work queue"
+                    value={`${locationUtilization.openTasks} task(s), ${locationUtilization.openHolds} hold(s)`}
+                  />
+                  <AuditFact
+                    label="Unexplained"
+                    value={`${locationUtilization.unexplainedInventory} record(s)`}
+                  />
+                  <AuditFact
+                    label="Last activity"
+                    value={formatDate(locationUtilization.lastActivityAtUtc)}
+                  />
+                  <div className="capacity">
+                    <div>
+                      <span>Capacity</span>
+                      <strong>{locationUtilization.capacityPercent}%</strong>
+                    </div>
+                    <progress value={locationUtilization.capacityPercent} max={100} />
                   </div>
-                  <StatusChip value={location.locationType} />
+                  <TagList tags={[...locationUtilization.inventoryStates, ...locationUtilization.signals]} />
+                  <p className="notes">{locationUtilization.notes}</p>
                 </div>
-                <p className="path">{location.path}</p>
-                <div className="capacity">
-                  <div>
-                    <span>Capacity</span>
-                    <strong>{location.capacityPercent}%</strong>
-                  </div>
-                  <progress value={location.capacityPercent} max={100} />
+              ) : (
+                <div className="empty-state">
+                  <strong>Awaiting utilization</strong>
+                  <span>LoadArr resolves location utilization from the StaffArr-owned location and inventory state.</span>
                 </div>
-                <TagList tags={location.complianceRestrictions} />
-                <p className="notes">{location.notes}</p>
-              </article>
-            ))}
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'counts' && (
+          <section className="receiving-layout" aria-label="Inventory count and adjustment workflow">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Activity aria-hidden="true" />
+                <h2>Count list</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {counts
+                  .filter((count) =>
+                    [
+                      count.countNumber,
+                      count.countType,
+                      count.status,
+                      count.locationNameSnapshot,
+                      count.itemNameSnapshot,
+                      count.reasonCode,
+                    ]
+                      .join(' ')
+                      .toLowerCase()
+                      .includes(normalizedQuery),
+                  )
+                  .map((count) => (
+                    <article className="queue-row" key={count.id}>
+                      <ClipboardCheck aria-hidden="true" />
+                      <div>
+                        <div className="row-heading">
+                          <h2>{count.countNumber}</h2>
+                          <StatusChip value={count.status} />
+                        </div>
+                        <p>
+                          {count.itemNameSnapshot} · variance {formatNumber.format(count.varianceQuantity)}{' '}
+                          {count.unitOfMeasure} · {count.locationNameSnapshot}
+                        </p>
+                        <TagList tags={[count.countType, count.reasonCode, count.staffarrSiteNameSnapshot]} />
+                      </div>
+                      <time dateTime={count.createdAtUtc}>{formatDate(count.createdAtUtc)}</time>
+                    </article>
+                  ))}
+              </div>
+
+              <div className="panel-divider" />
+
+              <div className="form-grid">
+                <FormField label="Count type" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={countForm.countType}
+                    onChange={(value) => updateCountForm('countType', value)}
+                    options={[
+                      { value: 'cycle_count', label: 'Cycle count' },
+                      { value: 'compliance', label: 'Compliance count' },
+                      { value: 'investigation', label: 'Investigation count' },
+                      { value: 'recount', label: 'Recount' },
+                    ]}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="StaffArr location" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={countForm.warehouseLocationId}
+                    onChange={(value) => updateCountForm('warehouseLocationId', value)}
+                    options={receivingLocationOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="SupplyArr item" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={countForm.supplyarrItemId}
+                    onChange={(value) => updateCountForm('supplyarrItemId', value)}
+                    options={supplyArrItemOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Expected quantity" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    inputMode="decimal"
+                    value={countForm.expectedQuantity}
+                    onChange={(event) => updateCountForm('expectedQuantity', event.target.value)}
+                  />
+                </FormField>
+
+                <FormField label="Counted quantity" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    inputMode="decimal"
+                    value={countForm.countedQuantity}
+                    onChange={(event) => updateCountForm('countedQuantity', event.target.value)}
+                  />
+                </FormField>
+
+                <FormField label="Counted by" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    value={countForm.countedByPersonId}
+                    onChange={(event) => updateCountForm('countedByPersonId', event.target.value)}
+                  />
+                </FormField>
+
+                <FormField label="Reason code" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={countForm.reasonCode}
+                    onChange={(value) => updateCountForm('reasonCode', value)}
+                    options={[
+                      { value: 'cycle_count_variance', label: 'Cycle count variance' },
+                      { value: 'paperwork_mismatch', label: 'Paperwork mismatch' },
+                      { value: 'inventory_damage', label: 'Inventory damage' },
+                      { value: 'migration_correction', label: 'Migration correction' },
+                    ]}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Evidence summary" className={wideFieldClassName} labelClassName={fieldLabelClassName}>
+                  <textarea
+                    className={fieldControlClassName}
+                    value={countForm.evidenceSummary}
+                    onChange={(event) => updateCountForm('evidenceSummary', event.target.value)}
+                  />
+                </FormField>
+              </div>
+
+              <button type="button" className="primary-action" onClick={() => void performCount()} disabled={countStatus === 'submitting'}>
+                <CheckCircle2 aria-hidden="true" />
+                <span>{countStatus === 'submitting' ? 'Recording' : 'Record count'}</span>
+              </button>
+            </article>
+
+            <aside className="side-panel" aria-label="Count approval and adjustment detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Variance review</h2>
+              </div>
+
+              {countResult ? (
+                <div className="completion-stack">
+                  <AuditFact
+                    label="Count"
+                    value={`${countResult.count.countNumber} · ${countResult.count.status}`}
+                  />
+                  <AuditFact
+                    label="Variance"
+                    value={`${formatNumber.format(countResult.count.varianceQuantity)} ${countResult.count.unitOfMeasure}`}
+                  />
+                  <AuditFact
+                    label="Location"
+                    value={countResult.count.locationNameSnapshot}
+                  />
+                  <AuditFact
+                    label="Adjustment"
+                    value={countResult.adjustment ? `${countResult.adjustment.adjustmentNumber} · ${countResult.adjustment.status}` : 'No adjustment yet'}
+                  />
+                  <AuditFact
+                    label="Movement"
+                    value={countResult.movement ? `${countResult.movement.movementType} · ${countResult.movement.reasonCode}` : 'No movement yet'}
+                  />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>Awaiting count</strong>
+                  <span>Recording a count creates the audit record that variance approval can resolve into an adjustment.</span>
+                </div>
+              )}
+
+              <div className="panel-divider" />
+
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => void approveCountVariance()}
+                disabled={countStatus === 'submitting' || !countResult || countResult.count.varianceQuantity === 0}
+              >
+                <ShieldCheck aria-hidden="true" />
+                <span>{countStatus === 'submitting' ? 'Approving' : 'Approve variance'}</span>
+              </button>
+
+              <div className="panel-divider" />
+
+              <div className="section-heading">
+                <Activity aria-hidden="true" />
+                <h2>Adjustments</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {adjustments
+                  .filter((adjustment) =>
+                    [
+                      adjustment.adjustmentNumber,
+                      adjustment.adjustmentType,
+                      adjustment.status,
+                      adjustment.locationNameSnapshot,
+                      adjustment.itemNameSnapshot,
+                      adjustment.reasonCode,
+                    ]
+                      .join(' ')
+                      .toLowerCase()
+                      .includes(normalizedQuery),
+                  )
+                  .map((adjustment) => (
+                    <article className="queue-row" key={adjustment.id}>
+                      <ClipboardCheck aria-hidden="true" />
+                      <div>
+                        <div className="row-heading">
+                          <h2>{adjustment.adjustmentNumber}</h2>
+                          <StatusChip value={adjustment.status} />
+                        </div>
+                        <p>
+                          {adjustment.itemNameSnapshot} · delta {formatNumber.format(adjustment.quantityDelta)}{' '}
+                          {adjustment.unitOfMeasure} · {adjustment.locationNameSnapshot}
+                        </p>
+                        <TagList tags={[adjustment.adjustmentType, adjustment.reasonCode, adjustment.staffarrSiteNameSnapshot]} />
+                      </div>
+                      <time dateTime={adjustment.createdAtUtc}>{formatDate(adjustment.createdAtUtc)}</time>
+                    </article>
+                  ))}
+              </div>
+
+              <div className="panel-divider" />
+
+              <div className="form-grid single-column">
+                <FormField label="Adjustment type" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={adjustmentForm.adjustmentType}
+                    onChange={(value) => updateAdjustmentForm('adjustmentType', value)}
+                    options={[
+                      { value: 'gain', label: 'Gain' },
+                      { value: 'loss', label: 'Loss' },
+                      { value: 'status_correction', label: 'Status correction' },
+                      { value: 'condition_correction', label: 'Condition correction' },
+                      { value: 'unit_of_measure_correction', label: 'UOM correction' },
+                      { value: 'migration_correction', label: 'Migration correction' },
+                    ]}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="StaffArr location" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={adjustmentForm.warehouseLocationId}
+                    onChange={(value) => updateAdjustmentForm('warehouseLocationId', value)}
+                    options={receivingLocationOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="SupplyArr item" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={adjustmentForm.supplyarrItemId}
+                    onChange={(value) => updateAdjustmentForm('supplyarrItemId', value)}
+                    options={supplyArrItemOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Quantity delta" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    inputMode="decimal"
+                    value={adjustmentForm.quantityDelta}
+                    onChange={(event) => updateAdjustmentForm('quantityDelta', event.target.value)}
+                  />
+                </FormField>
+
+                <FormField label="Created by" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    value={adjustmentForm.createdByPersonId}
+                    onChange={(event) => updateAdjustmentForm('createdByPersonId', event.target.value)}
+                  />
+                </FormField>
+
+                <FormField label="Reason code" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={adjustmentForm.reasonCode}
+                    onChange={(value) => updateAdjustmentForm('reasonCode', value)}
+                    options={[
+                      { value: 'cycle_count_variance', label: 'Cycle count variance' },
+                      { value: 'migration_correction', label: 'Migration correction' },
+                      { value: 'condition_correction', label: 'Condition correction' },
+                      { value: 'inventory_damage', label: 'Inventory damage' },
+                    ]}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Evidence summary" className={wideFieldClassName} labelClassName={fieldLabelClassName}>
+                  <textarea
+                    className={fieldControlClassName}
+                    value={adjustmentForm.evidenceSummary}
+                    onChange={(event) => updateAdjustmentForm('evidenceSummary', event.target.value)}
+                  />
+                </FormField>
+              </div>
+
+              <button
+                type="button"
+                className="primary-action"
+                onClick={() => void createAdjustment()}
+                disabled={adjustmentStatus === 'submitting'}
+              >
+                <CheckCircle2 aria-hidden="true" />
+                <span>{adjustmentStatus === 'submitting' ? 'Creating' : 'Create adjustment'}</span>
+              </button>
+
+              <div className="panel-divider" />
+
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => void approveAdjustment()}
+                disabled={adjustmentStatus === 'submitting' || (!adjustmentResult && adjustments.length === 0)}
+              >
+                <ShieldCheck aria-hidden="true" />
+                <span>{adjustmentStatus === 'submitting' ? 'Approving' : 'Approve adjustment'}</span>
+              </button>
+            </aside>
           </section>
         )}
 
@@ -2559,6 +3497,47 @@ function toUnexplainedResolutionPayload(
   }
 }
 
+function toCountCreatePayload(form: CountFormState) {
+  return {
+    countType: form.countType,
+    staffarrSiteOrgUnitId: '',
+    warehouseLocationId: form.warehouseLocationId,
+    supplyarrItemId: form.supplyarrItemId,
+    expectedQuantity: toNonNegativeNumber(form.expectedQuantity),
+    countedByPersonId: form.countedByPersonId,
+    reasonCode: form.reasonCode,
+    evidenceSummary: form.evidenceSummary || null,
+  }
+}
+
+function toCountCompletionPayload(form: CountFormState) {
+  return {
+    countType: form.countType,
+    staffarrSiteOrgUnitId: '',
+    warehouseLocationId: form.warehouseLocationId,
+    supplyarrItemId: form.supplyarrItemId,
+    expectedQuantity: toNonNegativeNumber(form.expectedQuantity),
+    countedQuantity: toNonNegativeNumber(form.countedQuantity),
+    countedByPersonId: form.countedByPersonId,
+    reasonCode: form.reasonCode,
+    evidenceSummary: form.evidenceSummary || null,
+    complianceEvaluationId: null,
+  }
+}
+
+function toAdjustmentCreatePayload(form: AdjustmentFormState) {
+  return {
+    adjustmentType: form.adjustmentType,
+    staffarrSiteOrgUnitId: '',
+    warehouseLocationId: form.warehouseLocationId,
+    supplyarrItemId: form.supplyarrItemId,
+    quantityDelta: toSignedNumber(form.quantityDelta),
+    createdByPersonId: form.createdByPersonId,
+    reasonCode: form.reasonCode,
+    evidenceSummary: form.evidenceSummary || null,
+  }
+}
+
 function createLocalReceivingCompletion(
   form: ReceivingFormState,
   location: LoadArrLocation | undefined,
@@ -2881,6 +3860,220 @@ function createLocalUnexplainedResolutionMutation(
   }
 }
 
+function createLocalLocationUtilization(
+  location: LoadArrLocation,
+  workspace: LoadArrWorkspaceSummary,
+): LoadArrLocationUtilization {
+  const inventory = workspace.inventory.filter((item) => item.locationId === location.id)
+  const tasks = workspace.tasks.filter((task) => task.locationNameSnapshot === location.name)
+  const holds = workspace.holds.filter((hold) => hold.locationNameSnapshot === location.name)
+  const unexplained = workspace.unexplainedInventory.filter((record) => record.warehouseLocationId === location.id)
+
+  return {
+    id: location.id,
+    name: location.name,
+    staffarrSiteOrgUnitId: location.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: location.staffarrSiteNameSnapshot,
+    locationType: location.locationType,
+    active: location.active,
+    capacityPercent: location.capacityPercent,
+    quantityOnHand: inventory.reduce((total, item) => total + item.quantityOnHand, 0),
+    quantityBlocked: inventory.reduce((total, item) => total + item.quantityBlocked, 0),
+    openTasks: tasks.length,
+    openHolds: holds.length,
+    unexplainedInventory: unexplained.length,
+    itemCount: inventory.length,
+    inventoryStates: [...new Set(inventory.map((item) => item.state))],
+    signals: [
+      location.complianceRestrictions.length > 0
+        ? location.complianceRestrictions.join(', ')
+        : 'no restrictions',
+      `${tasks.length} task(s) open`,
+      `${holds.length} hold(s) active`,
+    ],
+    notes: location.notes,
+    lastActivityAtUtc:
+      [...workspace.evidence.map((item) => item.capturedAtUtc), ...holds.map((hold) => hold.openedAtUtc), ...unexplained.map((record) => record.discoveredAtUtc)]
+        .sort((left, right) => right.localeCompare(left))[0] ?? workspace.generatedAt,
+  }
+}
+
+function createLocalCountCompletion(
+  form: CountFormState,
+  location: LoadArrLocation | undefined,
+  selectedCount: LoadArrCount | undefined,
+  items: SupplyArrItemReference[],
+): LoadArrCountCompletion {
+  const locationSnapshot = location ?? fallbackSummary.locations[0]
+  const itemSnapshot = items.find((item) => item.supplyarrItemId === form.supplyarrItemId) ?? items[0]
+  const expectedQuantity = toNonNegativeNumber(form.expectedQuantity) || selectedCount?.expectedQuantity || 0
+  const countedQuantity = toNonNegativeNumber(form.countedQuantity)
+  const varianceQuantity = countedQuantity - expectedQuantity
+  const now = Date.now().toString(36)
+  const timestamp = new Date().toISOString()
+  const count: LoadArrCount = {
+    id: selectedCount?.id ?? `count-${now}`,
+    countNumber: selectedCount?.countNumber ?? `CNT-${now.toUpperCase()}`,
+    status: varianceQuantity === 0 ? 'completed' : 'variance_pending_approval',
+    countType: form.countType,
+    staffarrSiteOrgUnitId: locationSnapshot.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: locationSnapshot.staffarrSiteNameSnapshot,
+    warehouseLocationId: locationSnapshot.id,
+    locationNameSnapshot: locationSnapshot.name,
+    supplyarrItemId: itemSnapshot.supplyarrItemId,
+    itemNameSnapshot: itemSnapshot.itemNameSnapshot,
+    expectedQuantity,
+    countedQuantity,
+    varianceQuantity,
+    unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
+    countedByPersonId: form.countedByPersonId,
+    approvedByPersonId: null,
+    reasonCode: form.reasonCode,
+    inventoryAdjustmentId: varianceQuantity === 0 ? null : `adj-${now}`,
+    evidenceSummary: form.evidenceSummary,
+    createdAtUtc: timestamp,
+    completedAtUtc: timestamp,
+    approvedAtUtc: null,
+    updatedAtUtc: timestamp,
+  }
+
+  return {
+    count,
+    adjustment: null,
+    originEvent: null,
+    movement: null,
+  }
+}
+
+function createLocalCountVarianceApproval(result: LoadArrCountCompletion): LoadArrCountCompletion {
+  const now = Date.now().toString(36)
+  const approvedAtUtc = new Date().toISOString()
+  const adjustmentType = result.count.varianceQuantity > 0 ? 'gain' : 'loss'
+  const adjustment: LoadArrAdjustment = {
+    id: result.count.inventoryAdjustmentId ?? `adj-${now}`,
+    adjustmentNumber: `ADJ-${now.toUpperCase()}`,
+    status: 'approved',
+    adjustmentType,
+    staffarrSiteOrgUnitId: result.count.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: result.count.staffarrSiteNameSnapshot,
+    warehouseLocationId: result.count.warehouseLocationId,
+    locationNameSnapshot: result.count.locationNameSnapshot,
+    supplyarrItemId: result.count.supplyarrItemId,
+    itemNameSnapshot: result.count.itemNameSnapshot,
+    quantityDelta: result.count.varianceQuantity,
+    unitOfMeasure: result.count.unitOfMeasure,
+    reasonCode: result.count.reasonCode,
+    createdByPersonId: result.count.countedByPersonId,
+    approvedByPersonId: result.count.countedByPersonId,
+    inventoryOriginEventId: result.count.varianceQuantity > 0 ? `origin-${now}` : null,
+    evidenceSummary: result.count.evidenceSummary,
+    createdAtUtc: approvedAtUtc,
+    approvedAtUtc,
+    updatedAtUtc: approvedAtUtc,
+  }
+
+  return {
+    count: {
+      ...result.count,
+      status: 'approved',
+      approvedByPersonId: result.count.countedByPersonId,
+      approvedAtUtc,
+      inventoryAdjustmentId: adjustment.id,
+      updatedAtUtc: approvedAtUtc,
+    },
+    adjustment,
+    originEvent:
+      result.count.varianceQuantity > 0
+        ? {
+            id: `origin-${now}`,
+            originType: 'cycle_count_gain',
+            supplyarrItemId: result.count.supplyarrItemId,
+            quantity: Math.abs(result.count.varianceQuantity),
+            unitOfMeasure: result.count.unitOfMeasure,
+            locationNameSnapshot: result.count.locationNameSnapshot,
+          }
+        : null,
+    movement: {
+      id: `move-${now}`,
+      movementType: result.count.varianceQuantity > 0 ? 'count_gain' : 'count_loss',
+      reasonCode: result.count.reasonCode,
+    },
+  }
+}
+
+function createLocalAdjustmentMutation(
+  form: AdjustmentFormState,
+  location: LoadArrLocation | undefined,
+  selectedAdjustment: LoadArrAdjustment | undefined,
+  selectedCount: LoadArrCount | undefined,
+  items: SupplyArrItemReference[],
+): LoadArrAdjustmentMutation {
+  const locationSnapshot = location ?? fallbackSummary.locations[0]
+  const itemSnapshot = items.find((item) => item.supplyarrItemId === form.supplyarrItemId) ?? items[0]
+  const now = Date.now().toString(36)
+  const timestamp = new Date().toISOString()
+  const adjustment: LoadArrAdjustment = {
+    id: selectedAdjustment?.id ?? `adj-${now}`,
+    adjustmentNumber: selectedAdjustment?.adjustmentNumber ?? `ADJ-${now.toUpperCase()}`,
+    status: 'open',
+    adjustmentType: form.adjustmentType,
+    staffarrSiteOrgUnitId: locationSnapshot.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: locationSnapshot.staffarrSiteNameSnapshot,
+    warehouseLocationId: locationSnapshot.id,
+    locationNameSnapshot: locationSnapshot.name,
+    supplyarrItemId: itemSnapshot.supplyarrItemId,
+    itemNameSnapshot: itemSnapshot.itemNameSnapshot,
+    quantityDelta: toSignedNumber(form.quantityDelta) || selectedCount?.varianceQuantity || 1,
+    unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
+    reasonCode: form.reasonCode,
+    createdByPersonId: form.createdByPersonId,
+    approvedByPersonId: null,
+    inventoryOriginEventId: null,
+    evidenceSummary: form.evidenceSummary,
+    createdAtUtc: timestamp,
+    approvedAtUtc: null,
+    updatedAtUtc: timestamp,
+  }
+
+  return {
+    adjustment,
+    originEvent: null,
+    movement: null,
+  }
+}
+
+function createLocalAdjustmentApproval(result: LoadArrAdjustmentMutation): LoadArrAdjustmentMutation {
+  const now = Date.now().toString(36)
+  const approvedAtUtc = new Date().toISOString()
+
+  return {
+    adjustment: {
+      ...result.adjustment,
+      status: 'approved',
+      approvedByPersonId: result.adjustment.createdByPersonId,
+      inventoryOriginEventId: result.adjustment.quantityDelta > 0 ? `origin-${now}` : result.adjustment.inventoryOriginEventId,
+      approvedAtUtc,
+      updatedAtUtc: approvedAtUtc,
+    },
+    originEvent:
+      result.adjustment.quantityDelta > 0
+        ? {
+            id: `origin-${now}`,
+            originType: 'manual_adjustment',
+            supplyarrItemId: result.adjustment.supplyarrItemId,
+            quantity: Math.abs(result.adjustment.quantityDelta),
+            unitOfMeasure: result.adjustment.unitOfMeasure,
+            locationNameSnapshot: result.adjustment.locationNameSnapshot,
+          }
+        : null,
+    movement: {
+      id: `move-${now}`,
+      movementType: result.adjustment.quantityDelta >= 0 ? 'count_gain' : 'count_loss',
+      reasonCode: result.adjustment.reasonCode,
+    },
+  }
+}
+
 function toPositiveNumber(value: string) {
   const parsed = Number.parseFloat(value)
 
@@ -2895,6 +4088,16 @@ function toNonNegativeNumber(value: string) {
   const parsed = Number.parseFloat(value)
 
   if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0
+  }
+
+  return parsed
+}
+
+function toSignedNumber(value: string) {
+  const parsed = Number.parseFloat(value)
+
+  if (!Number.isFinite(parsed)) {
     return 0
   }
 

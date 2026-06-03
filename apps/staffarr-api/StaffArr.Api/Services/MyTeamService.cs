@@ -55,6 +55,7 @@ public sealed class MyTeamService(
                 0,
                 0,
                 0,
+                0,
                 [],
                 []);
         }
@@ -125,6 +126,7 @@ public sealed class MyTeamService(
 
         var members = new List<MyTeamMemberResponse>(readinessResults.Length);
         var notReadyCount = 0;
+        var totalMissingCerts = 0;
         var totalExpiringCerts = 0;
         var totalOpenIncidents = 0;
         var totalPendingUpdates = 0;
@@ -133,6 +135,10 @@ public sealed class MyTeamService(
 
         foreach (var (subordinate, readiness) in readinessResults)
         {
+            var missingCertificationCount = readiness.Requirements.Count(x =>
+                string.Equals(x.RequirementStatus, "missing", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.RequirementStatus, "expired", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.RequirementStatus, "revoked", StringComparison.OrdinalIgnoreCase));
             var expiringCount = expiringCertCounts.GetValueOrDefault(subordinate.PersonId);
             var incidentCount = openIncidentCounts.GetValueOrDefault(subordinate.PersonId);
             var updateCount = pendingUpdateCounts.GetValueOrDefault(subordinate.PersonId);
@@ -149,6 +155,7 @@ public sealed class MyTeamService(
                 onboardingInProgressCount++;
             }
 
+            totalMissingCerts += missingCertificationCount;
             totalExpiringCerts += expiringCount;
             totalOpenIncidents += incidentCount;
             totalPendingUpdates += updateCount;
@@ -158,6 +165,7 @@ public sealed class MyTeamService(
                 subordinate,
                 readiness.ReadinessStatus,
                 readiness.Blockers.Count,
+                missingCertificationCount,
                 expiringCount,
                 incidentCount,
                 updateCount,
@@ -167,6 +175,7 @@ public sealed class MyTeamService(
         return new MyTeamDashboardResponse(
             subordinates.Count,
             notReadyCount,
+            totalMissingCerts,
             totalExpiringCerts,
             totalOpenIncidents,
             totalPendingUpdates,

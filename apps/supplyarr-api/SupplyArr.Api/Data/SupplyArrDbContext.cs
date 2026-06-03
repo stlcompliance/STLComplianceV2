@@ -671,6 +671,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.Quantity).HasPrecision(18, 4);
             entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CancellationReason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.LastReopenReason).HasMaxLength(512).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ReceivingReceiptId });
             entity.HasIndex(x => new { x.TenantId, x.ReceivingReceiptLineId });

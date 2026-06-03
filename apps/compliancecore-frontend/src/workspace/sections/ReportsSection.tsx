@@ -1,17 +1,13 @@
 import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
 import { DataExportsPanel } from '../../components/DataExportsPanel'
 import { OperatorReportsPanel } from '../../components/OperatorReportsPanel'
-import { canExportReports, canReadReports } from '../../auth/sessionStorage'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
 export function ReportsSection({ state }: Props) {
-  const roleKey = state.me.tenantRoleKey
-  const isPlatformAdmin = state.me.isPlatformAdmin
-
-  const canRead = canReadReports(roleKey, isPlatformAdmin)
-  const canExport = canExportReports(roleKey, isPlatformAdmin)
+  const canRead = state.me.canReadReports
+  const canExport = state.me.canExportReports
   const showReportsWorkspace = canRead || canExport
 
   if (!showReportsWorkspace) {

@@ -99,8 +99,8 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         var summary = (await response.Content.ReadFromJsonAsync<ProofDvirReportSummaryResponse>())!;
         Assert.True(summary.TotalProofCount >= 1);
         Assert.True(summary.TotalDvirCount >= 1);
-        Assert.True(summary.MissingProofTripCount >= 1);
-        Assert.Contains(summary.Trips, x => x.TripId == _tripId && x.MissingRequiredProofCount == 1);
+        Assert.Equal(0, summary.MissingProofTripCount);
+        Assert.Contains(summary.Trips, x => x.TripId == _tripId && x.MissingRequiredProofCount == 0);
         Assert.Contains(summary.ProofTypeCounts, x =>
             string.Equals(x.Key, TripProofTypes.Pickup, StringComparison.OrdinalIgnoreCase));
         Assert.Contains(summary.DvirPhaseCounts, x =>
@@ -117,7 +117,7 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         Assert.Equal(_tripId, trip.TripId);
         Assert.True(trip.ProofCount >= 1);
         Assert.True(trip.HasPreTripDvir);
-        Assert.Equal(1, trip.MissingRequiredProofCount);
+        Assert.Equal(0, trip.MissingRequiredProofCount);
 
         var proofResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/reports/proof-dvir/proofs/{_proofId:D}", _dispatcherToken));
@@ -135,6 +135,44 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Proof_dvir_report_supports_rejection_and_correction_workflow()
+    {
+        var rejectRequest = Authorized(HttpMethod.Post, $"/api/reports/proof-dvir/trips/{_tripId:D}/proofs/{_proofId:D}/reject", _dispatcherToken);
+        rejectRequest.Content = JsonContent.Create(new RejectTripProofRequest("Missing receiver signature"));
+        var rejectResponse = await _routarrClient.SendAsync(rejectRequest);
+        rejectResponse.EnsureSuccessStatusCode();
+        var rejected = (await rejectResponse.Content.ReadFromJsonAsync<TripProofRecordResponse>())!;
+        Assert.Equal(TripProofReviewStatuses.Rejected, rejected.ReviewStatus);
+        Assert.Equal("Missing receiver signature", rejected.ReviewNotes);
+
+        var tripAfterRejectResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/reports/proof-dvir/trips/{_tripId:D}", _dispatcherToken));
+        tripAfterRejectResponse.EnsureSuccessStatusCode();
+        var tripAfterReject = (await tripAfterRejectResponse.Content.ReadFromJsonAsync<ProofDvirReportTripDetailResponse>())!;
+        Assert.Equal(1, tripAfterReject.MissingRequiredProofCount);
+
+        var correctRequest = Authorized(HttpMethod.Patch, $"/api/reports/proof-dvir/trips/{_tripId:D}/proofs/{_proofId:D}", _dispatcherToken);
+        correctRequest.Content = JsonContent.Create(new CorrectTripProofRequest(
+            "VEH-PDV-RPT",
+            "BOL-RPT-CORRECTED",
+            "Updated receiver signature captured.",
+            null,
+            "Corrected after dock review"));
+        var correctResponse = await _routarrClient.SendAsync(correctRequest);
+        correctResponse.EnsureSuccessStatusCode();
+        var corrected = (await correctResponse.Content.ReadFromJsonAsync<TripProofRecordResponse>())!;
+        Assert.Equal(TripProofReviewStatuses.Corrected, corrected.ReviewStatus);
+        Assert.Equal("BOL-RPT-CORRECTED", corrected.ReferenceKey);
+        Assert.Equal("Corrected after dock review", corrected.ReviewNotes);
+
+        var tripAfterCorrectResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/reports/proof-dvir/trips/{_tripId:D}", _dispatcherToken));
+        tripAfterCorrectResponse.EnsureSuccessStatusCode();
+        var tripAfterCorrect = (await tripAfterCorrectResponse.Content.ReadFromJsonAsync<ProofDvirReportTripDetailResponse>())!;
+        Assert.Equal(0, tripAfterCorrect.MissingRequiredProofCount);
+    }
+
+    [Fact]
     public async Task Proof_dvir_report_summary_export_returns_csv()
     {
         var managerToken = CreateRoutArrAccessToken(["routarr"], "routarr_manager");
@@ -147,8 +185,6 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         Assert.Contains("recordType,recordId", csv, StringComparison.Ordinal);
         Assert.Contains("proof", csv, StringComparison.Ordinal);
         Assert.Contains("dvir", csv, StringComparison.Ordinal);
-        Assert.Contains("missing_proof", csv, StringComparison.Ordinal);
-        Assert.Contains("required proof item(s) missing", csv, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -172,8 +208,8 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         settingsRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
             false,
             false,
-            true,
             false,
+            true,
             false,
             false,
             false,

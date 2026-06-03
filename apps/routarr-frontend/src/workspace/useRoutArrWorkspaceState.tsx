@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import {
+  checkAssetDispatchability,
   assignTripDriver,
   createRoute,
   createTrip,
@@ -62,6 +63,18 @@ export function useRoutArrWorkspaceState() {
     queryKey: ['routarr-trip', session?.accessToken, selectedTripId],
     queryFn: () => getTrip(session!.accessToken, selectedTripId),
     enabled: Boolean(session?.accessToken && selectedTripId),
+  })
+
+  const selectedTripVehicleRefKey =
+    tripDetailQuery.data?.vehicleRefKey ?? tripsQuery.data?.find((trip) => trip.tripId === selectedTripId)?.vehicleRefKey ?? null
+
+  const tripAssetDispatchabilityQuery = useQuery({
+    queryKey: ['routarr-trip-asset-dispatchability', session?.accessToken, selectedTripId, selectedTripVehicleRefKey],
+    queryFn: () =>
+      checkAssetDispatchability(session!.accessToken, {
+        vehicleRefKey: selectedTripVehicleRefKey ?? undefined,
+      }),
+    enabled: Boolean(session?.accessToken && selectedTripId && selectedTripVehicleRefKey),
   })
 
   const routesQuery = useQuery({
@@ -234,9 +247,10 @@ export function useRoutArrWorkspaceState() {
     setApiError,
     meQuery,
     tripsQuery,
-    tripDetailQuery,
-    routesQuery,
-    routeDetailQuery,
+      tripDetailQuery,
+      tripAssetDispatchabilityQuery,
+      routesQuery,
+      routeDetailQuery,
     createTripMutation,
     assignDriverMutation,
     updateStatusMutation,

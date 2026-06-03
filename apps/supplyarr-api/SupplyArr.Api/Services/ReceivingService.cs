@@ -968,7 +968,9 @@ public sealed class ReceivingService(
         Guid actorUserId,
         DateTimeOffset now)
     {
-        var existingOpenOrResolved = line.Exceptions.ToList();
+        var existingOpenOrResolved = line.Exceptions
+            .Where(x => !string.Equals(x.Status, ReceivingExceptionStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+            .ToList();
         var existingShort = existingOpenOrResolved
             .Where(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.Short, StringComparison.OrdinalIgnoreCase))
             .Sum(x => x.Quantity);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   buildSemanticKey,
   CheckboxMultiSelect,
@@ -10,6 +10,7 @@ import {
 
 import * as nexarr from '../../api/nexarrClient'
 import type { ServiceTokenIssueResult } from '../../api/types'
+import { ConfirmDialog } from '../../feedback'
 import { ServiceClientsCard } from './service-token/ServiceClientsCard'
 import { ServiceTokensCard } from './service-token/ServiceTokensCard'
 
@@ -25,8 +26,18 @@ export function ServiceTokenAdminPanel() {
   const [issueLifetimeMinutes, setIssueLifetimeMinutes] = useState('60')
   const [clientsPage, setClientsPage] = useState(1)
   const [tokensPage, setTokensPage] = useState(1)
+  const [auditTenantId, setAuditTenantId] = useState('')
+  const [auditServiceClientId, setAuditServiceClientId] = useState('')
+  const [auditPage, setAuditPage] = useState(1)
   const [issuedToken, setIssuedToken] = useState<ServiceTokenIssueResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [pendingClientAction, setPendingClientAction] = useState<{
+    kind: 'rotate' | 'revoke'
+    serviceClientId: string
+  } | null>(null)
+  const [selectedServiceClientId, setSelectedServiceClientId] = useState('')
+  const [editAllowedProductKeys, setEditAllowedProductKeys] = useState<string[]>([])
+  const [editAllowedTenantIds, setEditAllowedTenantIds] = useState<string[]>([])
 
   const clientsQuery = useQuery({
     queryKey: ['platform-service-clients', clientsPage],
@@ -36,6 +47,17 @@ export function ServiceTokenAdminPanel() {
   const tokensQuery = useQuery({
     queryKey: ['platform-service-tokens', tokensPage],
     queryFn: () => nexarr.listServiceTokens(undefined, tokensPage, 25),
+  })
+
+  const auditQuery = useQuery({
+    queryKey: ['platform-service-token-audit', auditTenantId, auditServiceClientId, auditPage],
+    queryFn: () =>
+      nexarr.getServiceTokenAuditHistory({
+        tenantId: auditTenantId || undefined,
+        serviceClientId: auditServiceClientId || undefined,
+        page: auditPage,
+        pageSize: 10,
+      }),
   })
 
   const tenantsQuery = useQuery({
@@ -94,6 +116,11 @@ export function ServiceTokenAdminPanel() {
     [clientsQuery.data?.items],
   )
 
+  const selectedClient = useMemo(
+    () => (clientsQuery.data?.items ?? []).find((client) => client.serviceClientId === selectedServiceClientId) ?? null,
+    [clientsQuery.data?.items, selectedServiceClientId],
+  )
+
   const registerMutation = useMutation({
     mutationFn: () =>
       nexarr.registerServiceClient({
@@ -137,11 +164,102 @@ export function ServiceTokenAdminPanel() {
     onError: (error: Error) => setErrorMessage(error.message),
   })
 
+  const rotateClientMutation = useMutation({
+    mutationFn: (serviceClientId: string) => nexarr.rotateServiceClient(serviceClientId),
+    onSuccess: () => {
+      setPendingClientAction(null)
+      setErrorMessage(null)
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-clients'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-tokens'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-token-audit'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  const revokeClientMutation = useMutation({
+    mutationFn: (serviceClientId: string) => nexarr.revokeServiceClient(serviceClientId),
+    onSuccess: () => {
+      setPendingClientAction(null)
+      setErrorMessage(null)
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-clients'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-tokens'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-token-audit'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  const updateAudienceMutation = useMutation({
+    mutationFn: () =>
+      nexarr.updateServiceClientAudience(selectedServiceClientId, editAllowedProductKeys),
+    onSuccess: () => {
+      setErrorMessage(null)
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-clients'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-token-audit'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  const updateTenantScopeMutation = useMutation({
+    mutationFn: () =>
+      nexarr.updateServiceClientTenantScope(selectedServiceClientId, editAllowedTenantIds),
+    onSuccess: () => {
+      setErrorMessage(null)
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-clients'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-service-token-audit'] })
+    },
+    onError: (error: Error) => setErrorMessage(error.message),
+  })
+
+  useEffect(() => {
+    if (!selectedServiceClientId) {
+      const fallback = clientsQuery.data?.items?.[0]?.serviceClientId ?? ''
+      if (fallback) {
+        setSelectedServiceClientId(fallback)
+      }
+    }
+  }, [clientsQuery.data?.items, selectedServiceClientId])
+
+  useEffect(() => {
+    if (!selectedClient) {
+      setEditAllowedProductKeys([])
+      setEditAllowedTenantIds([])
+      return
+    }
+
+    setEditAllowedProductKeys(selectedClient.allowedProductKeys ?? [])
+    setEditAllowedTenantIds(selectedClient.allowedTenantIds ?? [])
+  }, [selectedClient])
+
   return (
     <section
       data-testid="service-token-admin-panel"
       className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
     >
+      <ConfirmDialog
+        open={pendingClientAction !== null}
+        title={pendingClientAction?.kind === 'rotate' ? 'Rotate service client?' : 'Revoke service client?'}
+        description={
+          pendingClientAction?.kind === 'rotate'
+            ? 'This revokes active tokens for the client and keeps the client available for future issuance.'
+            : 'This disables the client and revokes active tokens issued to it.'
+        }
+        confirmLabel={pendingClientAction?.kind === 'rotate' ? 'Rotate client' : 'Revoke client'}
+        danger={pendingClientAction?.kind === 'revoke'}
+        loading={rotateClientMutation.isPending || revokeClientMutation.isPending}
+        onCancel={() => {
+          if (!rotateClientMutation.isPending && !revokeClientMutation.isPending) {
+            setPendingClientAction(null)
+          }
+        }}
+        onConfirm={() => {
+          if (!pendingClientAction) return
+          if (pendingClientAction.kind === 'rotate') {
+            rotateClientMutation.mutate(pendingClientAction.serviceClientId)
+          } else {
+            revokeClientMutation.mutate(pendingClientAction.serviceClientId)
+          }
+        }}
+      />
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Service token administration</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -289,7 +407,87 @@ export function ServiceTokenAdminPanel() {
             setClientsPage((value) => value + 1)
           }
         }}
+        selectedServiceClientId={selectedServiceClientId}
+        onSelectClient={setSelectedServiceClientId}
+        onRotate={(serviceClientId) => setPendingClientAction({ kind: 'rotate', serviceClientId })}
+        onRevoke={(serviceClientId) => setPendingClientAction({ kind: 'revoke', serviceClientId })}
+        actionPending={rotateClientMutation.isPending || revokeClientMutation.isPending}
       />
+
+      {selectedClient ? (
+        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-medium text-slate-200">Manage selected client</h3>
+              <p className="mt-1 text-xs text-slate-400">
+                Update audience and tenant scope for {selectedClient.displayName} ({selectedClient.clientKey}).
+              </p>
+            </div>
+            <p className="text-xs text-slate-500">
+              {selectedClient.isActive ? 'Active' : 'Inactive'}
+              {selectedClient.lastUsedAt ? ` · last used ${new Date(selectedClient.lastUsedAt).toLocaleString()}` : ''}
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="space-y-3">
+              <CheckboxMultiSelect
+                label="Allowed products"
+                values={editAllowedProductKeys}
+                onChange={setEditAllowedProductKeys}
+                options={productOptions}
+                testId="service-token-edit-allowed-products"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateAudienceMutation.mutate()}
+                  disabled={updateAudienceMutation.isPending}
+                  className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                >
+                  Save audience
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditAllowedProductKeys(selectedClient.allowedProductKeys ?? [])}
+                  disabled={updateAudienceMutation.isPending}
+                  className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <CheckboxMultiSelect
+                label="Allowed tenants"
+                values={editAllowedTenantIds}
+                onChange={setEditAllowedTenantIds}
+                options={tenantOptions}
+                testId="service-token-edit-allowed-tenants"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateTenantScopeMutation.mutate()}
+                  disabled={updateTenantScopeMutation.isPending}
+                  className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                >
+                  Save tenant scope
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditAllowedTenantIds(selectedClient.allowedTenantIds ?? [])}
+                  disabled={updateTenantScopeMutation.isPending}
+                  className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ServiceTokensCard
         tokensQuery={tokensQuery}
@@ -303,6 +501,99 @@ export function ServiceTokenAdminPanel() {
           }
         }}
       />
+
+      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-medium text-slate-200">Service token audit history</h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Review token issuance, revocation, validation, and service-client activity.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setAuditTenantId('')
+              setAuditServiceClientId('')
+              setAuditPage(1)
+            }}
+            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Clear filters
+          </button>
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <ControlledSelect
+            label="Filter by service client"
+            value={auditServiceClientId}
+            onChange={(value) => {
+              setAuditServiceClientId(value)
+              setAuditPage(1)
+            }}
+            options={clientOptions}
+            emptyLabel="All clients"
+            testId="service-token-audit-client"
+          />
+          <ControlledSelect
+            label="Filter by tenant"
+            value={auditTenantId}
+            onChange={(value) => {
+              setAuditTenantId(value)
+              setAuditPage(1)
+            }}
+            options={tenantOptions}
+            emptyLabel="All tenants"
+            testId="service-token-audit-tenant"
+          />
+        </div>
+
+        {auditQuery.isLoading ? (
+          <p className="mt-3 text-sm text-slate-400">Loading audit history…</p>
+        ) : auditQuery.isError ? (
+          <p className="mt-3 text-sm text-rose-400">{auditQuery.error.message}</p>
+        ) : auditQuery.data?.items.length ? (
+          <ul className="mt-3 space-y-2">
+            {auditQuery.data.items.map((item) => (
+              <li
+                key={item.auditEventId}
+                className="rounded-md border border-slate-800 bg-slate-900/60 p-3 text-sm"
+              >
+                <div className="font-medium text-white">{item.action}</div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {item.result}
+                  {item.targetType ? ` · ${item.targetType}` : ''}
+                  {item.targetId ? ` · ${item.targetId}` : ''}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {new Date(item.occurredAt).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-slate-400">No service token audit events found.</p>
+        )}
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            disabled={auditPage <= 1}
+            onClick={() => setAuditPage((value) => Math.max(1, value - 1))}
+            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={!auditQuery.data?.hasNextPage}
+            onClick={() => setAuditPage((value) => value + 1)}
+            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </section>
   )
 }

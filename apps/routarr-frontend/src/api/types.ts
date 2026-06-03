@@ -1025,6 +1025,10 @@ export interface TripProofRecordResponse {
   vehicleRefKey: string | null
   referenceKey: string
   notes: string
+  reviewStatus: string
+  reviewedByPersonId: string | null
+  reviewedAt: string | null
+  reviewNotes: string
   capturedAt: string
   createdAt: string
   attachments: TripCaptureAttachmentResponse[]
@@ -1036,6 +1040,18 @@ export interface CreateTripProofRequest {
   referenceKey?: string | null
   notes?: string | null
   capturedAt?: string | null
+}
+
+export interface RejectTripProofRequest {
+  reason: string
+}
+
+export interface CorrectTripProofRequest {
+  vehicleRefKey?: string | null
+  referenceKey?: string | null
+  notes?: string | null
+  capturedAt?: string | null
+  reason: string
 }
 
 export interface TripDvirInspectionResponse {
@@ -1273,6 +1289,14 @@ export interface RouteReportStopSummaryRow {
   updatedAt: string
 }
 
+export interface RouteReportAuditHistoryItem {
+  occurredAt: string
+  action: string
+  result: string
+  reasonCode: string | null
+  actorUserId: string | null
+}
+
 export interface RouteReportRouteDetailResponse {
   routeId: string
   routeNumber: string
@@ -1292,6 +1316,7 @@ export interface RouteReportRouteDetailResponse {
   activatedAt: string | null
   completedAt: string | null
   stops: RouteReportStopSummaryRow[]
+  history: RouteReportAuditHistoryItem[]
 }
 
 export interface RouteReportStopDetailResponse {
@@ -1340,6 +1365,7 @@ export interface ProofDvirReportProofRow {
   capturedByPersonId: string
   vehicleRefKey: string | null
   referenceKey: string
+  reviewStatus: string
   capturedAt: string
 }
 
@@ -1400,6 +1426,10 @@ export interface ProofDvirReportProofDetailResponse {
   vehicleRefKey: string | null
   referenceKey: string
   notes: string
+  reviewStatus: string
+  reviewedByPersonId: string | null
+  reviewedAt: string | null
+  reviewNotes: string
   capturedAt: string
   createdAt: string
 }

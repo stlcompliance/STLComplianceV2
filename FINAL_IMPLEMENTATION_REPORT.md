@@ -5,13 +5,13 @@
 **Repository:** `STLComplianceV2`  
 **Consolidation slice:** Worker 353
 
-This report synthesizes recursive implementation from Worker 17 through Worker 352, the milestone masterplan (`docs/implementation/01_MILESTONE_MASTERPLAN.md`), and live build/test catalog runs executed during W353. It is intended for engineering leads, deploy operators, and acceptance reviewers.
+This report synthesizes recursive implementation from Worker 17 through Worker 352 and live build/test catalog runs executed during W353. It is intended for engineering leads, deploy operators, and acceptance reviewers.
 
 ---
 
 ## Executive summary
 
-The Arr suite is **substantially complete** across seven product APIs, nine static frontends (suite + six products + companion + marketing site), shared workers, NexArr platform spine, and Render V1 Blueprint infrastructure. **352 worker slices** are marked complete in `docs/implementation/worker-slices/00_SLICE_STATE.md`. Cross-product closed-loop workflows — especially Compliance Core workflow gates → RoutArr dispatch assign/dispatch/notification journeys (W331–W351) — are implemented with Playwright operator-journey coverage.
+The Arr suite is **substantially complete** across seven product APIs, nine static frontends (suite + six products + companion + marketing site), shared workers, NexArr platform spine, and Render V1 Blueprint infrastructure. **352 worker slices** are marked complete in the synthesis summarized below. Cross-product closed-loop workflows — especially Compliance Core workflow gates → RoutArr dispatch assign/dispatch/notification journeys (W331–W351) — are implemented with Playwright operator-journey coverage.
 
 **Release build succeeds** (`dotnet build STLCompliance.slnx -c Release`, 0 errors). **Ship-gate catalog CI gates pass** (18 catalog tests across Render staging ship gate, Render Blueprint, M13 ship gate, and OpenAPI ship-gate filters). **Full non-Live integration suite** (`Category!=Live`) reports **1,394 passed / 29 failed / 1 skipped (1,424 total)** on W353 run — failures cluster in SupplyArr procurement handoff tests, cross-product demand-status probes, OpenAPI snapshot parity (4 products), and one E2E flow; root causes are documented in [Build & test status](#build--test-status).
 
@@ -323,7 +323,7 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 | W352 | Live Render staging ship-gate validation runbook/scripts |
 | W353 | This consolidation report |
 
-Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
+Detailed slice notes are summarized in the worker sections below.
 
 ---
 

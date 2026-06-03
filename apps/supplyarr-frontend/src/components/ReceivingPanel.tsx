@@ -23,6 +23,8 @@ interface ReceivingPanelProps {
   exceptionType: string
   exceptionQuantity: string
   exceptionNotes: string
+  exceptionCancelReason: string
+  exceptionReopenReason: string
   onReceiptKeyChange: (value: string) => void
   onSelectedPurchaseOrderIdChange: (value: string) => void
   onSelectedReceivingReceiptIdChange: (value: string) => void
@@ -32,19 +34,25 @@ interface ReceivingPanelProps {
   onExceptionTypeChange: (value: string) => void
   onExceptionQuantityChange: (value: string) => void
   onExceptionNotesChange: (value: string) => void
+  onExceptionCancelReasonChange: (value: string) => void
+  onExceptionReopenReasonChange: (value: string) => void
   onCreateFromPurchaseOrder: () => void
   onUpdateLineQuantity: () => void
   onCreateException: () => void
   onResolveException: (receivingExceptionId: string) => void
+  onCancelException: (payload: { receivingExceptionId: string; reason: string }) => void
+  onReopenException: (payload: { receivingExceptionId: string; reason: string }) => void
   onPost: () => void
   isCreating: boolean
   isUpdatingLine: boolean
   isCreatingException: boolean
   isResolvingException: boolean
+  isCancellingException: boolean
+  isReopeningException: boolean
   isPosting: boolean
 }
 
-type ExceptionFilter = 'all' | 'open' | 'resolved'
+type ExceptionFilter = 'all' | 'open' | 'resolved' | 'cancelled'
 
 function statusBadgeClass(status: string): string {
   switch (status) {
@@ -54,6 +62,8 @@ function statusBadgeClass(status: string): string {
       return 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
     case 'resolved':
       return 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
+    case 'cancelled':
+      return 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
     case 'open':
       return 'bg-rose-500/20 text-rose-300 ring-rose-500/40'
     default:
@@ -104,6 +114,8 @@ export function ReceivingPanel({
   exceptionType,
   exceptionQuantity,
   exceptionNotes,
+  exceptionCancelReason,
+  exceptionReopenReason,
   onReceiptKeyChange,
   onSelectedPurchaseOrderIdChange,
   onSelectedReceivingReceiptIdChange,
@@ -113,15 +125,21 @@ export function ReceivingPanel({
   onExceptionTypeChange,
   onExceptionQuantityChange,
   onExceptionNotesChange,
+  onExceptionCancelReasonChange,
+  onExceptionReopenReasonChange,
   onCreateFromPurchaseOrder,
   onUpdateLineQuantity,
   onCreateException,
   onResolveException,
+  onCancelException,
+  onReopenException,
   onPost,
   isCreating,
   isUpdatingLine,
   isCreatingException,
   isResolvingException,
+  isCancellingException,
+  isReopeningException,
   isPosting,
 }: ReceivingPanelProps) {
   const [exceptionFilter, setExceptionFilter] = useState<ExceptionFilter>('all')
@@ -258,6 +276,7 @@ export function ReceivingPanel({
                   <option value="all">All</option>
                   <option value="open">Open</option>
                   <option value="resolved">Resolved</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </label>
             </div>
@@ -303,18 +322,50 @@ export function ReceivingPanel({
                         </div>
                       ) : null}
                     </dl>
-                    {canPerform &&
-                    selectedReceipt.status === 'draft' &&
-                    ex.status === 'open' ? (
-                      <button
-                        type="button"
-                        className="mt-2 rounded-md bg-teal-700 px-2 py-1 text-xs font-medium text-white hover:bg-teal-600 disabled:opacity-50"
-                        onClick={() => onResolveException(ex.receivingExceptionId)}
-                        disabled={isResolvingException}
-                        data-testid={`receiving-exception-resolve-button-${ex.receivingExceptionId}`}
-                      >
-                        {isResolvingException ? 'Resolving…' : 'Resolve exception'}
-                      </button>
+                    {canPerform && selectedReceipt.status === 'draft' && ex.status === 'open' ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded-md bg-teal-700 px-2 py-1 text-xs font-medium text-white hover:bg-teal-600 disabled:opacity-50"
+                          onClick={() => onResolveException(ex.receivingExceptionId)}
+                          disabled={isResolvingException}
+                          data-testid={`receiving-exception-resolve-button-${ex.receivingExceptionId}`}
+                        >
+                          {isResolvingException ? 'Resolving…' : 'Resolve exception'}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-md bg-amber-700 px-2 py-1 text-xs font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                          onClick={() =>
+                            onCancelException({
+                              receivingExceptionId: ex.receivingExceptionId,
+                              reason: exceptionCancelReason || 'Exception cancelled from receiving workspace.',
+                            })
+                          }
+                          disabled={isCancellingException}
+                          data-testid={`receiving-exception-cancel-button-${ex.receivingExceptionId}`}
+                        >
+                          {isCancellingException ? 'Cancelling…' : 'Cancel exception'}
+                        </button>
+                      </div>
+                    ) : null}
+                    {canPerform && ex.status === 'cancelled' ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded-md bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+                          onClick={() =>
+                            onReopenException({
+                              receivingExceptionId: ex.receivingExceptionId,
+                              reason: exceptionReopenReason || 'Exception reopened from receiving workspace.',
+                            })
+                          }
+                          disabled={isReopeningException}
+                          data-testid={`receiving-exception-reopen-button-${ex.receivingExceptionId}`}
+                        >
+                          {isReopeningException ? 'Reopening…' : 'Reopen exception'}
+                        </button>
+                      </div>
                     ) : null}
                   </li>
                 ))}
@@ -405,6 +456,28 @@ export function ReceivingPanel({
                 >
                   {isCreatingException ? 'Recording…' : 'Record exception'}
                 </button>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label htmlFor="receiving-exception-cancel-reason-input" className="block text-xs text-slate-500">
+                    Cancel reason
+                    <input
+                      id="receiving-exception-cancel-reason-input"
+                      className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
+                      value={exceptionCancelReason}
+                      onChange={(e) => onExceptionCancelReasonChange(e.target.value)}
+                      data-testid="receiving-exception-cancel-reason-input"
+                    />
+                  </label>
+                  <label htmlFor="receiving-exception-reopen-reason-input" className="block text-xs text-slate-500">
+                    Reopen reason
+                    <input
+                      id="receiving-exception-reopen-reason-input"
+                      className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
+                      value={exceptionReopenReason}
+                      onChange={(e) => onExceptionReopenReasonChange(e.target.value)}
+                      data-testid="receiving-exception-reopen-reason-input"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           ) : null}

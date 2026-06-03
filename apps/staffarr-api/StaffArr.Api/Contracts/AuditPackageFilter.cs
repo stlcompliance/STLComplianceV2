@@ -6,7 +6,8 @@ public sealed record AuditPackageFilter(
     string? Action = null,
     string? Result = null,
     string? TargetType = null,
-    Guid? ActorUserId = null);
+    Guid? ActorUserId = null,
+    Guid? PersonId = null);
 
 public sealed record AuditPackageAppliedFiltersResponse(
     DateTimeOffset? From,
@@ -14,7 +15,8 @@ public sealed record AuditPackageAppliedFiltersResponse(
     string? Action,
     string? Result,
     string? TargetType,
-    Guid? ActorUserId);
+    Guid? ActorUserId,
+    Guid? PersonId);
 
 public sealed record AuditPackageFilterOptionsResponse(
     IReadOnlyList<string> Actions,

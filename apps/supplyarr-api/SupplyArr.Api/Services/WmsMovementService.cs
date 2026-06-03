@@ -418,6 +418,26 @@ public sealed class WmsMovementService(
         return MapShipment(await LoadShipmentAsync(tenantId, shipment.Id, cancellationToken));
     }
 
+    public async Task<IReadOnlyList<OutboundShipmentResponse>> ListOutboundShipmentsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var shipments = await db.WmsOutboundShipments
+            .AsNoTracking()
+            .Include(x => x.Lines)
+            .ThenInclude(x => x.Part)
+            .Include(x => x.Lines)
+            .ThenInclude(x => x.FromInventoryBin)
+            .ThenInclude(x => x!.InventoryLocation)
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        return shipments.Select(MapShipment).ToList();
+    }
+
     public async Task<OutboundShipmentResponse> UpdateRoutArrStatusAsync(
         RoutArrShipmentStatusUpdateRequest request,
         CancellationToken cancellationToken = default)
@@ -546,6 +566,7 @@ public sealed class WmsMovementService(
             .ThenInclude(x => x.Part)
             .Include(x => x.Lines)
             .ThenInclude(x => x.FromInventoryBin)
+            .ThenInclude(x => x!.InventoryLocation)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == shipmentId, cancellationToken)
         ?? throw new StlApiException("wms.shipments.not_found", "Outbound shipment was not found.", 404);
 

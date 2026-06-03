@@ -32,6 +32,7 @@ import {
   getTrainingProgram,
   getTrainingProgramVersions,
   listQualificationIssues,
+  getQualificationIssueHistory,
   startTrainingProgramRevision,
   updateTrainingProgram,
   expireQualificationIssue,
@@ -220,6 +221,12 @@ export function useTrainArrWorkspaceState() {
         qualificationStatusFilter.trim() || undefined,
       ),
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+  })
+
+  const qualificationIssueHistoryQuery = useQuery({
+    queryKey: ['trainarr-qualification-issue-history', session?.accessToken, selectedQualificationIssueId],
+    queryFn: () => getQualificationIssueHistory(session!.accessToken, selectedQualificationIssueId!),
+    enabled: Boolean(session?.accessToken && selectedQualificationIssueId),
   })
 
   const qualificationCheckHistoryQuery = useQuery({
@@ -1136,6 +1143,7 @@ const me = meQuery.data
     trainingMatrixQuery,
     requirementBuilderQuery,
     qualificationIssuesQuery,
+    qualificationIssueHistoryQuery,
     qualificationCheckHistoryQuery,
     assignmentsQuery,
     remediationsQuery,

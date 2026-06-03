@@ -70,7 +70,9 @@ public sealed class DispatchBoardService(
         var scopedTripIds = scopedTrips.Select(x => x.Id).ToHashSet();
         var proofTypesByTrip = await db.TripProofRecords
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && scopedTripIds.Contains(x.TripId))
+            .Where(x => x.TenantId == tenantId
+                && scopedTripIds.Contains(x.TripId)
+                && x.ReviewStatus != TripProofReviewStatuses.Rejected)
             .Select(x => new { x.TripId, x.ProofType })
             .ToListAsync(cancellationToken);
         var proofLookup = proofTypesByTrip

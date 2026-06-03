@@ -106,6 +106,22 @@ public sealed class RouteReportService(RoutArrDbContext db)
             .OrderBy(x => x.SequenceNumber)
             .ToListAsync(cancellationToken);
 
+        var routeHistory = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.TargetType == "route"
+                && x.TargetId == routeId.ToString())
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(8)
+            .Select(x => new RouteReportAuditHistoryItem(
+                x.OccurredAt,
+                x.Action,
+                x.Result,
+                x.ReasonCode,
+                x.ActorUserId))
+            .ToListAsync(cancellationToken);
+
         var pending = CountStopStatus(stops, RouteStopStatuses.Pending);
         var completed = CountStopStatus(stops, RouteStopStatuses.Completed);
         var skipped = CountStopStatus(stops, RouteStopStatuses.Skipped);
@@ -139,7 +155,8 @@ public sealed class RouteReportService(RoutArrDbContext db)
                 x.ScheduledArrivalAt,
                 x.ArrivedAt,
                 x.CompletedAt,
-                x.UpdatedAt)).ToList());
+                x.UpdatedAt)).ToList(),
+            routeHistory);
     }
 
     public async Task<RouteReportStopDetailResponse> GetStopDetailAsync(

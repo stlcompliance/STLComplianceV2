@@ -76,7 +76,15 @@ public sealed record RouteReportRouteDetailResponse(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ActivatedAt,
     DateTimeOffset? CompletedAt,
-    IReadOnlyList<RouteReportStopSummaryRow> Stops);
+    IReadOnlyList<RouteReportStopSummaryRow> Stops,
+    IReadOnlyList<RouteReportAuditHistoryItem> History);
+
+public sealed record RouteReportAuditHistoryItem(
+    DateTimeOffset OccurredAt,
+    string Action,
+    string Result,
+    string? ReasonCode,
+    Guid? ActorUserId);
 
 public sealed record RouteReportStopDetailResponse(
     Guid StopId,

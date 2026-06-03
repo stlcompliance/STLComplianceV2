@@ -13,6 +13,7 @@ await StlApiHost.RunAsync<LoadArrDbContext>(
     {
         app.MapStlProductLaunchEndpoints();
         app.MapLoadArrWorkspaceEndpoints();
+        app.MapLoadArrInventoryManagementEndpoints();
         await Task.CompletedTask;
     });
 

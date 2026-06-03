@@ -70,14 +70,58 @@ export function PricingLeadTimePanel({
   const vendorLinks = parts.flatMap((part) =>
     part.vendorLinks.map((link) => ({
       linkId: link.linkId,
+      partId: part.partId,
+      partKey: part.partKey,
+      partDisplayName: part.displayName,
+      vendorPartyId: link.partyId,
+      vendorPartyKey: link.partyKey,
+      vendorDisplayName: link.partyDisplayName,
+      vendorPartNumber: link.vendorPartNumber,
+      isPreferred: link.isPreferred,
+      catalogUnitPrice: link.catalogUnitPrice,
+      catalogLeadTimeDays: link.catalogLeadTimeDays,
       label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
     })),
   )
   const selectedLink = vendorLinks.find((link) => link.linkId === selectedVendorLinkId)
+  const selectedPart = selectedLink ? parts.find((part) => part.partId === selectedLink.partId) : null
   const pricingKeySource = selectedLink ? `${selectedLink.label}-price` : ''
   const leadTimeKeySource = selectedLink ? `${selectedLink.label}-lead` : ''
   const existingPricingKeys = pricingSnapshots.map((row) => row.snapshotKey)
   const existingLeadTimeKeys = leadTimeSnapshots.map((row) => row.snapshotKey)
+  const selectedPartLinks = selectedPart
+    ? vendorLinks.filter((link) => link.partId === selectedPart.partId)
+    : []
+  const linkMetrics = selectedPartLinks.map((link) => {
+    const currentPricingSnapshot =
+      pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId && snapshot.isCurrent) ??
+      pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId)
+    const currentLeadTimeSnapshot =
+      leadTimeSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId && snapshot.isCurrent) ??
+      leadTimeSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId)
+    const unitPrice = currentPricingSnapshot?.unitPrice ?? link.catalogUnitPrice
+    const leadTimeDays = currentLeadTimeSnapshot?.leadTimeDays ?? link.catalogLeadTimeDays
+    const priceScore = unitPrice == null ? 1000 : unitPrice
+    const leadTimeScore = leadTimeDays == null ? 1000 : leadTimeDays * 0.25
+    const preferredBonus = link.isPreferred ? -5 : 0
+    return {
+      ...link,
+      unitPrice,
+      leadTimeDays,
+      currentPricingSnapshot,
+      currentLeadTimeSnapshot,
+      combinedScore: priceScore + leadTimeScore + preferredBonus,
+    }
+  })
+  const recommendedLink = linkMetrics.length
+    ? [...linkMetrics].sort((a, b) => a.combinedScore - b.combinedScore)[0]
+    : null
+  const bestPriceLink =
+    [...linkMetrics].filter((link) => link.unitPrice != null).sort((a, b) => (a.unitPrice! - b.unitPrice!))[0] ??
+    null
+  const bestLeadTimeLink =
+    [...linkMetrics].filter((link) => link.leadTimeDays != null).sort((a, b) => (a.leadTimeDays! - b.leadTimeDays!))[0] ??
+    null
 
   const filteredPricing = currentOnlyFilter
     ? pricingSnapshots.filter((row) => row.isCurrent)
@@ -176,6 +220,95 @@ export function PricingLeadTimePanel({
           </ul>
         </div>
       </div>
+
+      {selectedPart && recommendedLink ? (
+        <div className="mt-6 rounded-lg border border-sky-800/60 bg-sky-950/30 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-200">
+                Source recommendations
+              </h3>
+              <p className="mt-1 text-sm text-slate-200">
+                Recommended source for {selectedPart.partKey} · {selectedPart.displayName}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                Based on current price, current lead time, and preferred-vendor status.
+              </p>
+            </div>
+            <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-200">
+              Recommended
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Metric
+              label="Recommended vendor"
+              value={`${recommendedLink.vendorPartyKey} · ${recommendedLink.vendorDisplayName}`}
+            />
+            <Metric label="Unit price" value={formatMoney(recommendedLink.unitPrice)} />
+            <Metric label="Lead time" value={formatDays(recommendedLink.leadTimeDays)} />
+            <Metric
+              label="Reason"
+              value={
+                recommendedLink.linkId === bestPriceLink?.linkId && recommendedLink.linkId === bestLeadTimeLink?.linkId
+                  ? 'Best price and lead time'
+                  : recommendedLink.linkId === bestPriceLink?.linkId
+                    ? 'Lowest current price'
+                    : recommendedLink.linkId === bestLeadTimeLink?.linkId
+                      ? 'Shortest current lead time'
+                      : recommendedLink.isPreferred
+                        ? 'Preferred vendor with balanced current metrics'
+                        : 'Balanced current source score'
+              }
+            />
+            <Metric label="Part source" value={recommendedLink.vendorPartNumber} />
+            <Metric
+              label="Current snapshots"
+              value={`${recommendedLink.currentPricingSnapshot ? 'price' : 'no price'} · ${recommendedLink.currentLeadTimeSnapshot ? 'lead time' : 'no lead time'}`}
+            />
+          </div>
+
+          {selectedPartLinks.length > 1 ? (
+            <div className="mt-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Comparison
+              </h4>
+              <ul className="mt-2 space-y-2 text-sm">
+                {linkMetrics.map((link) => (
+                  <li
+                    key={link.linkId}
+                    className={`rounded-md border px-3 py-2 ${
+                      link.linkId === recommendedLink.linkId
+                        ? 'border-sky-500/50 bg-sky-950/40'
+                        : 'border-slate-800 bg-slate-950/50'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-slate-100">
+                          {link.vendorPartyKey} · {link.vendorDisplayName}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {link.vendorPartNumber}
+                          {link.isPreferred ? ' · preferred' : ''}
+                        </div>
+                      </div>
+                      {link.linkId === recommendedLink.linkId ? (
+                        <span className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+                          Recommended
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">
+                      Price {formatMoney(link.unitPrice)} · Lead time {formatDays(link.leadTimeDays)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
@@ -292,5 +425,22 @@ export function PricingLeadTimePanel({
         </div>
       ) : null}
     </section>
+  )
+}
+
+function formatMoney(value: number | null): string {
+  return value == null ? 'n/a' : value.toFixed(2)
+}
+
+function formatDays(value: number | null): string {
+  return value == null ? 'n/a' : `${value} day${value === 1 ? '' : 's'}`
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-slate-100">{value}</div>
+    </div>
   )
 }

@@ -50,6 +50,8 @@ public sealed class TripProofDvirService(
                 : request.VehicleRefKey.Trim(),
             ReferenceKey = request.ReferenceKey?.Trim() ?? string.Empty,
             Notes = request.Notes?.Trim() ?? string.Empty,
+            ReviewStatus = TripProofReviewStatuses.PendingReview,
+            ReviewNotes = string.Empty,
             CapturedAt = request.CapturedAt ?? now,
             CreatedAt = now,
             UpdatedAt = now,
@@ -71,6 +73,96 @@ public sealed class TripProofDvirService(
         await integrationOutbox.TryEnqueueProofCreatedAsync(entity, trip, cancellationToken);
 
         return MapProof(entity, []);
+    }
+
+    public async Task<TripProofRecordResponse> RejectProofAsync(
+        ClaimsPrincipal principal,
+        Guid tripId,
+        Guid proofId,
+        RejectTripProofRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchReportRead(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var actorPersonId = principal.GetPersonId().ToString();
+
+        var trip = await tripService.GetAsync(tenantId, tripId, cancellationToken);
+        EnsureTripProofAccess(principal, trip.AssignedDriverPersonId, write: false);
+
+        var proof = await RequireProofAsync(tenantId, tripId, proofId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var reason = string.IsNullOrWhiteSpace(request.Reason) ? "Proof rejected" : request.Reason.Trim();
+
+        proof.ReviewStatus = TripProofReviewStatuses.Rejected;
+        proof.ReviewedByPersonId = actorPersonId;
+        proof.ReviewedAt = now;
+        proof.ReviewNotes = reason;
+        proof.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "trip_proof.reject",
+            tenantId,
+            actorUserId,
+            "trip_proof",
+            proof.Id.ToString(),
+            reason,
+            cancellationToken: cancellationToken);
+
+        var attachments = await LoadAttachmentLookupAsync(tenantId, tripId, cancellationToken);
+        return MapProof(proof, attachments.ForSubject(TripCaptureAttachmentSubjects.Proof, proof.Id));
+    }
+
+    public async Task<TripProofRecordResponse> CorrectProofAsync(
+        ClaimsPrincipal principal,
+        Guid tripId,
+        Guid proofId,
+        CorrectTripProofRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchReportRead(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var actorPersonId = principal.GetPersonId().ToString();
+
+        var trip = await tripService.GetAsync(tenantId, tripId, cancellationToken);
+        EnsureTripProofAccess(principal, trip.AssignedDriverPersonId, write: false);
+
+        var proof = await RequireProofAsync(tenantId, tripId, proofId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var reason = string.IsNullOrWhiteSpace(request.Reason) ? "Proof corrected" : request.Reason.Trim();
+
+        proof.VehicleRefKey = string.IsNullOrWhiteSpace(request.VehicleRefKey)
+            ? proof.VehicleRefKey
+            : request.VehicleRefKey.Trim();
+        proof.ReferenceKey = string.IsNullOrWhiteSpace(request.ReferenceKey)
+            ? proof.ReferenceKey
+            : request.ReferenceKey.Trim();
+        proof.Notes = string.IsNullOrWhiteSpace(request.Notes)
+            ? proof.Notes
+            : request.Notes.Trim();
+        proof.CapturedAt = request.CapturedAt ?? proof.CapturedAt;
+        proof.ReviewStatus = TripProofReviewStatuses.Corrected;
+        proof.ReviewedByPersonId = actorPersonId;
+        proof.ReviewedAt = now;
+        proof.ReviewNotes = reason;
+        proof.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "trip_proof.correct",
+            tenantId,
+            actorUserId,
+            "trip_proof",
+            proof.Id.ToString(),
+            reason,
+            cancellationToken: cancellationToken);
+
+        var attachments = await LoadAttachmentLookupAsync(tenantId, tripId, cancellationToken);
+        return MapProof(proof, attachments.ForSubject(TripCaptureAttachmentSubjects.Proof, proof.Id));
     }
 
     public async Task<TripProofListResponse> ListProofsAsync(
@@ -353,6 +445,23 @@ public sealed class TripProofDvirService(
         return normalized;
     }
 
+    private async Task<TripProofRecord> RequireProofAsync(
+        Guid tenantId,
+        Guid tripId,
+        Guid proofId,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.TripProofRecords
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.TripId == tripId && x.Id == proofId, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new StlApiException("trip_proof.not_found", "Trip proof record was not found.", 404);
+        }
+
+        return entity;
+    }
+
     private static TripProofRecordResponse MapProof(
         TripProofRecord entity,
         IReadOnlyList<TripCaptureAttachmentResponse> attachments) =>
@@ -364,6 +473,10 @@ public sealed class TripProofDvirService(
             entity.VehicleRefKey,
             entity.ReferenceKey,
             entity.Notes,
+            entity.ReviewStatus,
+            entity.ReviewedByPersonId,
+            entity.ReviewedAt,
+            entity.ReviewNotes,
             entity.CapturedAt,
             entity.CreatedAt,
             attachments);

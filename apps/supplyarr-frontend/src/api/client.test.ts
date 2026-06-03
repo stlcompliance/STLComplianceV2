@@ -44,6 +44,7 @@ import {
   getReorderEvaluation,
   listWarrantyClaims,
   getParts,
+  getSubstitutions,
   getPurchaseOrders,
   getBackorders,
   getVendorReturns,
@@ -120,6 +121,33 @@ describe('supplyarr api client', () => {
     const parts = await getParts('token')
     expect(parts).toHaveLength(1)
     expect(parts[0].partKey).toBe('filter-001')
+  })
+
+  it('loads substitutions with an optional part filter', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          partId: '33333333-3333-3333-3333-333333333333',
+          partKey: 'filter-001',
+          partDisplayName: 'Primary Oil Filter',
+          aliasId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          aliasKey: 'alias-001',
+          manufacturerName: 'Acme',
+          manufacturerPartNumber: 'A-100',
+          createdAt: '2026-05-27T00:00:00Z',
+        },
+      ],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const substitutions = await getSubstitutions('token', '33333333-3333-3333-3333-333333333333')
+    expect(substitutions).toHaveLength(1)
+    expect(substitutions[0].aliasKey).toBe('alias-001')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/substitutions?partId=33333333-3333-3333-3333-333333333333',
+      expect.any(Object),
+    )
   })
 
   it('loads inventory locations on success', async () => {

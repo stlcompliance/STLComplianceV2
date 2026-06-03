@@ -60,6 +60,31 @@ import type {
   ProductDetailResponse,
   CreateProductRequest,
   UpdateProductRequest,
+  CreatePlatformUserRequest,
+  InvitePlatformUserRequest,
+  PlatformUserDetailResponse,
+  PlatformUserAccessHistoryItemResponse,
+  PlatformUserIdentityAuditHistoryItemResponse,
+  PlatformUserEnableResponse,
+  PlatformUserDisableResponse,
+  PlatformUserLockResponse,
+  PlatformUserUnlockResponse,
+  AdminResetUserPasswordResponse,
+  PlatformUserMfaResponse,
+  PlatformUserSessionsResponse,
+  PlatformUserTenantMembershipsResponse,
+  AssignPlatformUserTenantMembershipRequest,
+  AssignPlatformUserTenantMembershipResponse,
+  RemovePlatformUserTenantMembershipResponse,
+  PlatformUserRolesResponse,
+  AssignPlatformUserRoleRequest,
+  AssignPlatformUserRoleResponse,
+  RemovePlatformUserRoleResponse,
+  PlatformUserExternalIdentityProviderMappingsResponse,
+  UpsertPlatformUserExternalIdentityProviderMappingRequest,
+  UpsertPlatformUserExternalIdentityProviderMappingResponse,
+  RemovePlatformUserExternalIdentityProviderMappingResponse,
+  PlatformUsersListResponse,
   EntitlementDetail,
   GrantEntitlementRequest,
   ServiceClientSummary,
@@ -640,6 +665,332 @@ export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult
   return (await response.json()) as PagedResult<ProductDetailResponse>
 }
 
+export async function listPlatformUsers(
+  search = '',
+  page = 1,
+  pageSize = 50,
+): Promise<PlatformUsersListResponse> {
+  await ensureValidAccessToken()
+  const params = new URLSearchParams()
+  if (search.trim()) {
+    params.set('search', search.trim())
+  }
+  params.set('page', String(page))
+  params.set('pageSize', String(pageSize))
+  const response = await fetchWithAuth(`/api/platform-admin/users?${params.toString()}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUsersListResponse
+}
+
+export async function getPlatformUser(userId: string): Promise<PlatformUserDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserDetailResponse
+}
+
+export async function createPlatformUser(request: CreatePlatformUserRequest): Promise<PlatformUserDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserDetailResponse
+}
+
+export async function invitePlatformUser(request: InvitePlatformUserRequest): Promise<PlatformUserDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/users/invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserDetailResponse
+}
+
+export async function enablePlatformUser(userId: string): Promise<PlatformUserEnableResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/enable`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserEnableResponse
+}
+
+export async function disablePlatformUser(userId: string): Promise<PlatformUserDisableResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/disable`, {
+    method: 'POST',
+    headers: { 'X-Admin-Confirm': 'CONFIRM' },
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserDisableResponse
+}
+
+export async function lockPlatformUser(userId: string): Promise<PlatformUserLockResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/lock`, {
+    method: 'POST',
+    headers: { 'X-Admin-Confirm': 'CONFIRM' },
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserLockResponse
+}
+
+export async function unlockPlatformUser(userId: string): Promise<PlatformUserUnlockResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/unlock`, {
+    method: 'POST',
+    headers: { 'X-Admin-Confirm': 'CONFIRM' },
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserUnlockResponse
+}
+
+export async function resetPlatformUserPassword(
+  userId: string,
+  newPassword: string,
+): Promise<AdminResetUserPasswordResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Confirm': 'CONFIRM' },
+    body: JSON.stringify({ newPassword }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as AdminResetUserPasswordResponse
+}
+
+export async function setPlatformUserMfa(
+  userId: string,
+  isEnabled: boolean,
+): Promise<PlatformUserMfaResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/mfa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isEnabled }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserMfaResponse
+}
+
+export async function getPlatformUserSessions(userId: string): Promise<PlatformUserSessionsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/sessions`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserSessionsResponse
+}
+
+export async function getPlatformUserTenantMemberships(
+  userId: string,
+): Promise<PlatformUserTenantMembershipsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/tenant-memberships`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserTenantMembershipsResponse
+}
+
+export async function assignPlatformUserTenantMembership(
+  userId: string,
+  request: AssignPlatformUserTenantMembershipRequest,
+): Promise<AssignPlatformUserTenantMembershipResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/tenant-memberships`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as AssignPlatformUserTenantMembershipResponse
+}
+
+export async function removePlatformUserTenantMembership(
+  userId: string,
+  tenantId: string,
+): Promise<RemovePlatformUserTenantMembershipResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/tenant-memberships/${tenantId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as RemovePlatformUserTenantMembershipResponse
+}
+
+export async function getPlatformUserRoles(userId: string): Promise<PlatformUserRolesResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/roles`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserRolesResponse
+}
+
+export async function assignPlatformUserRole(
+  userId: string,
+  request: AssignPlatformUserRoleRequest,
+): Promise<AssignPlatformUserRoleResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/roles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as AssignPlatformUserRoleResponse
+}
+
+export async function removePlatformUserRole(
+  userId: string,
+  roleKey: string,
+  tenantId?: string | null,
+): Promise<RemovePlatformUserRoleResponse> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (tenantId) {
+    search.set('tenantId', tenantId)
+  }
+  const qs = search.toString()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/users/${userId}/roles/${encodeURIComponent(roleKey)}${qs ? `?${qs}` : ''}`,
+    { method: 'DELETE' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as RemovePlatformUserRoleResponse
+}
+
+export async function getPlatformUserExternalIdentityMappings(
+  userId: string,
+): Promise<PlatformUserExternalIdentityProviderMappingsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/external-identity-mappings`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformUserExternalIdentityProviderMappingsResponse
+}
+
+export async function upsertPlatformUserExternalIdentityMapping(
+  userId: string,
+  request: UpsertPlatformUserExternalIdentityProviderMappingRequest,
+): Promise<UpsertPlatformUserExternalIdentityProviderMappingResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/external-identity-mappings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as UpsertPlatformUserExternalIdentityProviderMappingResponse
+}
+
+export async function removePlatformUserExternalIdentityMapping(
+  userId: string,
+  mappingId: string,
+): Promise<RemovePlatformUserExternalIdentityProviderMappingResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/users/${userId}/external-identity-mappings/${mappingId}`,
+    { method: 'DELETE' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as RemovePlatformUserExternalIdentityProviderMappingResponse
+}
+
+export async function getPlatformUserLoginHistory(
+  userId: string,
+  page = 1,
+  pageSize = 10,
+): Promise<PagedResult<PlatformUserAccessHistoryItemResponse>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/users/${userId}/login-history?page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<PlatformUserAccessHistoryItemResponse>
+}
+
+export async function getPlatformUserLaunchHistory(
+  userId: string,
+  page = 1,
+  pageSize = 10,
+): Promise<PagedResult<PlatformUserAccessHistoryItemResponse>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/users/${userId}/launch-history?page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<PlatformUserAccessHistoryItemResponse>
+}
+
+export async function getPlatformUserIdentityAuditHistory(
+  userId: string,
+  page = 1,
+  pageSize = 10,
+): Promise<PagedResult<PlatformUserIdentityAuditHistoryItemResponse>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/users/${userId}/identity-audit-history?page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<PlatformUserIdentityAuditHistoryItemResponse>
+}
+
+export async function revokePlatformUserSession(userId: string, sessionId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/users/${userId}/sessions/${sessionId}/revoke`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
 export async function createProduct(request: CreateProductRequest): Promise<ProductDetailResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/products', {
@@ -762,6 +1113,28 @@ export async function getPlatformAuditPackageTimeline(
   return (await response.json()) as PagedResult<PlatformAuditEventTimelineItem>
 }
 
+export async function getTenantAuditEvents(
+  tenantId: string,
+  options?: { from?: string; to?: string; action?: string; result?: string; targetType?: string; actorUserId?: string; page?: number; pageSize?: number },
+): Promise<PagedResult<PlatformAuditEventTimelineItem>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (options?.from) search.set('from', options.from)
+  if (options?.to) search.set('to', options.to)
+  if (options?.action) search.set('action', options.action)
+  if (options?.result) search.set('result', options.result)
+  if (options?.targetType) search.set('targetType', options.targetType)
+  if (options?.actorUserId) search.set('actorUserId', options.actorUserId)
+  if (options?.page) search.set('page', String(options.page))
+  if (options?.pageSize) search.set('pageSize', String(options.pageSize))
+  const qs = search.toString()
+  const response = await fetchWithAuth(`/api/v1/audit/tenants/${tenantId}${qs ? `?${qs}` : ''}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<PlatformAuditEventTimelineItem>
+}
+
 export async function exportPlatformAuditPackageZip(
   options?: PlatformAuditPackageScope,
 ): Promise<Blob> {
@@ -799,6 +1172,46 @@ export async function exportPlatformAuditPackageJson(
     throw await parseError(response)
   }
   return (await response.json()) as PlatformAuditPackageExportPreview
+}
+
+export async function getServiceTokenAuditHistory(options?: {
+  serviceClientId?: string
+  serviceTokenId?: string
+  tenantId?: string
+  fromUtc?: string
+  toUtc?: string
+  page?: number
+  pageSize?: number
+}): Promise<PagedResult<PlatformAuditEventTimelineItem>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (options?.serviceClientId) {
+    search.set('serviceClientId', options.serviceClientId)
+  }
+  if (options?.serviceTokenId) {
+    search.set('serviceTokenId', options.serviceTokenId)
+  }
+  if (options?.tenantId) {
+    search.set('tenantId', options.tenantId)
+  }
+  if (options?.fromUtc) {
+    search.set('fromUtc', options.fromUtc)
+  }
+  if (options?.toUtc) {
+    search.set('toUtc', options.toUtc)
+  }
+  if (options?.page) {
+    search.set('page', String(options.page))
+  }
+  if (options?.pageSize) {
+    search.set('pageSize', String(options.pageSize))
+  }
+  const qs = search.toString()
+  const response = await fetchWithAuth(`/api/platform-admin/service-tokens/audit${qs ? `?${qs}` : ''}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<PlatformAuditEventTimelineItem>
 }
 
 export async function createPlatformAuditPackageGenerationJob(
@@ -1077,6 +1490,57 @@ export async function registerServiceClient(
     throw await parseError(response)
   }
   return (await response.json()) as ServiceClientSummary
+}
+
+export async function rotateServiceClient(serviceClientId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/service-tokens/clients/${serviceClientId}/rotate`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
+export async function revokeServiceClient(serviceClientId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/service-tokens/clients/${serviceClientId}/revoke`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
+export async function updateServiceClientAudience(
+  serviceClientId: string,
+  allowedProductKeys: string[],
+): Promise<ServiceClientSummary> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/service-tokens/clients/${serviceClientId}/audience`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ allowedProductKeys }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceClientSummary
+}
+
+export async function updateServiceClientTenantScope(
+  serviceClientId: string,
+  tenantIds: string[],
+): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/service-tokens/clients/${serviceClientId}/tenant-scope`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tenantIds }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
 }
 
 export async function listServiceTokens(

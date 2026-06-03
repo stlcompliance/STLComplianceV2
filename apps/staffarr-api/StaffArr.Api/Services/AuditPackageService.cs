@@ -253,11 +253,23 @@ public sealed class AuditPackageService(
     {
         var from = filter.From;
         var to = filter.To;
+        var personId = filter.PersonId;
 
         var auditEventsQuery = db.AuditEvents.AsNoTracking().Where(x => x.TenantId == tenantId);
         auditEventsQuery = ApplyAuditEventFilters(auditEventsQuery, filter);
+        if (personId is Guid scopedPersonId)
+        {
+            var scopedPersonIdText = scopedPersonId.ToString();
+            auditEventsQuery = auditEventsQuery.Where(x =>
+                x.TargetId == scopedPersonIdText
+                && x.TargetType == "person");
+        }
 
         var peopleQuery = db.People.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId is Guid scopedPersonIdForPeople)
+        {
+            peopleQuery = peopleQuery.Where(x => x.Id == scopedPersonIdForPeople);
+        }
         if (from is not null)
         {
             peopleQuery = peopleQuery.Where(x => x.UpdatedAt >= from);
@@ -270,8 +282,16 @@ public sealed class AuditPackageService(
 
         var permissionHistoryQuery = db.PermissionHistoryEvents.AsNoTracking().Where(x => x.TenantId == tenantId);
         permissionHistoryQuery = ApplyPermissionHistoryFilter(permissionHistoryQuery, from, to);
+        if (personId is Guid scopedPersonIdForPermissions)
+        {
+            permissionHistoryQuery = permissionHistoryQuery.Where(x => x.PersonId == scopedPersonIdForPermissions);
+        }
 
         var certificationsQuery = db.PersonCertifications.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId is Guid scopedPersonIdForCertifications)
+        {
+            certificationsQuery = certificationsQuery.Where(x => x.PersonId == scopedPersonIdForCertifications);
+        }
         if (from is not null)
         {
             certificationsQuery = certificationsQuery.Where(x => x.UpdatedAt >= from);
@@ -283,6 +303,10 @@ public sealed class AuditPackageService(
         }
 
         var incidentsQuery = db.PersonnelIncidents.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId is Guid scopedPersonIdForIncidents)
+        {
+            incidentsQuery = incidentsQuery.Where(x => x.PersonId == scopedPersonIdForIncidents);
+        }
         if (from is not null)
         {
             incidentsQuery = incidentsQuery.Where(x => x.CreatedAt >= from);
@@ -294,6 +318,10 @@ public sealed class AuditPackageService(
         }
 
         var overridesQuery = db.PersonReadinessOverrides.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId is Guid scopedPersonIdForOverrides)
+        {
+            overridesQuery = overridesQuery.Where(x => x.PersonId == scopedPersonIdForOverrides);
+        }
         if (from is not null)
         {
             overridesQuery = overridesQuery.Where(x => x.CreatedAt >= from);
@@ -305,6 +333,10 @@ public sealed class AuditPackageService(
         }
 
         var blockersQuery = db.PersonTrainingBlockers.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId is Guid scopedPersonIdForBlockers)
+        {
+            blockersQuery = blockersQuery.Where(x => x.PersonId == scopedPersonIdForBlockers);
+        }
         blockersQuery = ApplyPublishedAtFilter(blockersQuery, from, to);
 
         var auditEvents = await auditEventsQuery
@@ -482,6 +514,12 @@ public sealed class AuditPackageService(
             query = query.Where(x => x.ActorUserId == actorUserId);
         }
 
+        if (filter.PersonId is Guid personId)
+        {
+            var personIdText = personId.ToString();
+            query = query.Where(x => x.TargetId == personIdText && x.TargetType == "person");
+        }
+
         return query;
     }
 
@@ -504,7 +542,7 @@ public sealed class AuditPackageService(
     }
 
     private static AuditPackageAppliedFiltersResponse MapAppliedFilters(AuditPackageFilter filter) =>
-        new(filter.From, filter.To, filter.Action, filter.Result, filter.TargetType, filter.ActorUserId);
+        new(filter.From, filter.To, filter.Action, filter.Result, filter.TargetType, filter.ActorUserId, filter.PersonId);
 
     private static string BuildFilterReasonCode(AuditPackageFilter filter)
     {
@@ -522,6 +560,11 @@ public sealed class AuditPackageService(
         if (!string.IsNullOrWhiteSpace(filter.Action))
         {
             parts.Add($"action={filter.Action}");
+        }
+
+        if (filter.PersonId is Guid personId)
+        {
+            parts.Add($"personId={personId:D}");
         }
 
         return parts.Count == 0 ? "all_time" : string.Join(";", parts);

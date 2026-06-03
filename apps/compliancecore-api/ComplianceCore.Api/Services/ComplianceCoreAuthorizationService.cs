@@ -415,6 +415,32 @@ public sealed class ComplianceCoreAuthorizationService
         throw new StlApiException("auth.platform_admin_required", message, 403);
     }
 
+    public bool CanManageVocabulary(ClaimsPrincipal principal) =>
+        principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin");
+
+    public bool CanExportAuditPackage(ClaimsPrincipal principal) =>
+        principal.IsPlatformAdmin() ||
+        MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer");
+
+    public bool CanEvaluateRiskScores(ClaimsPrincipal principal) =>
+        CanExportAuditPackage(principal);
+
+    public bool CanEvaluateMissingEvidenceWarnings(ClaimsPrincipal principal) =>
+        CanEvaluateRiskScores(principal);
+
+    public bool CanEvaluateControlEffectiveness(ClaimsPrincipal principal) =>
+        CanEvaluateRiskScores(principal);
+
+    public bool CanEvaluateReadinessForecast(ClaimsPrincipal principal) =>
+        CanEvaluateRiskScores(principal);
+
+    public bool CanReadReports(ClaimsPrincipal principal) =>
+        principal.IsPlatformAdmin() ||
+        MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer", "tenant_member");
+
+    public bool CanExportReports(ClaimsPrincipal principal) =>
+        CanExportAuditPackage(principal);
+
     public void RequireAuditPackageRead(ClaimsPrincipal principal)
     {
         RequireFindingsRead(principal);

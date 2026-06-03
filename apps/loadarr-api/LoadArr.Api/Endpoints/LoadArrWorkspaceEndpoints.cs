@@ -1,6 +1,6 @@
 namespace LoadArr.Api.Endpoints;
 
-public static class LoadArrWorkspaceEndpoints
+public static partial class LoadArrWorkspaceEndpoints
 {
     public static void MapLoadArrWorkspaceEndpoints(this WebApplication app)
     {

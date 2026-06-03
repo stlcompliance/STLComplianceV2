@@ -502,6 +502,14 @@ export interface QualificationIssueListItemResponse {
   lifecycleReason: string | null
 }
 
+export interface QualificationIssueHistoryItemResponse {
+  occurredAt: string
+  eventType: string
+  status: string
+  reason: string | null
+  actorUserId: string | null
+}
+
 export interface TrainingProgramDefinitionLinkResponse {
   trainingDefinitionId: string
   definitionKey: string

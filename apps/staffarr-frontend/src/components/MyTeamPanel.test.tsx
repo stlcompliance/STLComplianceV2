@@ -6,6 +6,7 @@ import type { MyTeamDashboardResponse } from '../api/types'
 const dashboard: MyTeamDashboardResponse = {
   directReportCount: 2,
   notReadyCount: 1,
+  missingCertificationCount: 2,
   expiringCertificationCount: 1,
   openIncidentCount: 1,
   pendingUpdateRequestCount: 1,
@@ -28,6 +29,7 @@ const dashboard: MyTeamDashboardResponse = {
       },
       readinessStatus: 'not_ready',
       blockerCount: 2,
+      missingCertificationCount: 2,
       expiringCertificationCount: 1,
       openIncidentCount: 1,
       pendingUpdateRequestCount: 1,
@@ -49,6 +51,7 @@ const dashboard: MyTeamDashboardResponse = {
       },
       readinessStatus: 'ready',
       blockerCount: 0,
+      missingCertificationCount: 0,
       expiringCertificationCount: 0,
       openIncidentCount: 0,
       pendingUpdateRequestCount: 0,
@@ -87,8 +90,10 @@ describe('MyTeamPanel', () => {
     expect(screen.getByTestId('my-team-panel')).toBeTruthy()
     expect(screen.getByTestId('my-team-metric-headcount').textContent).toContain('2')
     expect(screen.getByTestId('my-team-metric-not-ready').textContent).toContain('1')
+    expect(screen.getByTestId('my-team-metric-missing-certs').textContent).toContain('2')
     expect(screen.getByTestId('my-team-member-report-1')).toBeTruthy()
     expect(screen.getByTestId('my-team-members-table').textContent).toContain('Not ready')
+    expect(screen.getByTestId('my-team-members-table').textContent).toContain('Missing certs')
     expect(screen.getByTestId('my-team-pending-request-req-1')).toBeTruthy()
   })
 
@@ -98,6 +103,7 @@ describe('MyTeamPanel', () => {
         dashboard={{
           directReportCount: 0,
           notReadyCount: 0,
+          missingCertificationCount: 0,
           expiringCertificationCount: 0,
           openIncidentCount: 0,
           pendingUpdateRequestCount: 0,
@@ -135,6 +141,24 @@ describe('MyTeamPanel', () => {
         applyToProfile: true,
       })
     })
+  })
+
+  it('lets managers open a subordinate readiness drill-down', () => {
+    const onSelectPerson = vi.fn()
+
+    render(
+      <MyTeamPanel
+        dashboard={dashboard}
+        isLoading={false}
+        errorMessage={null}
+        onSelectPerson={onSelectPerson}
+        selectedPersonId="report-2"
+      />,
+    )
+
+    fireEvent.click(screen.getAllByRole('button', { name: /View readiness/i })[0])
+
+    expect(onSelectPerson).toHaveBeenCalledWith('report-1')
   })
 
   it('renders dashboard fetch errors in a shared alert callout', () => {

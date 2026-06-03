@@ -78,6 +78,19 @@ function emptyOrList<T>(items: T[], emptyText: string, render: (item: T) => Reac
   return <div className="space-y-3">{items.map(render)}</div>
 }
 
+function dispatchabilityLabel(outcome: string | null | undefined): string {
+  switch (outcome) {
+    case 'allow':
+      return 'Dispatch ready'
+    case 'warn':
+      return 'Dispatch warning'
+    case 'block':
+      return 'Dispatch blocked'
+    default:
+      return outcome ?? 'Unknown'
+  }
+}
+
 export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
   const detail = s.tripDetailQuery?.data ?? null
   const summary = (s.tripsQuery?.data ?? []).find((trip) => trip.tripId === s.selectedTripId)
@@ -90,8 +103,9 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
 
   const loads = detail?.loads ?? []
   const loadCount = detail?.loads.length ?? summary?.loadCount ?? 0
+  const dispatchability = s.tripAssetDispatchabilityQuery?.data ?? null
   const unassigned = !trip.assignedDriverPersonId || !trip.vehicleRefKey
-  const blocked = ['cancelled'].includes(trip.dispatchStatus) || unassigned
+  const blocked = ['cancelled'].includes(trip.dispatchStatus) || unassigned || Boolean(dispatchability?.isBlocking)
   const rails: DetailRailSectionConfig[] = [
     {
       title: 'Loads',
@@ -146,17 +160,59 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
         { label: 'Completed', value: formatDate(trip.completedAt), source: 'Execution record' },
       ]}
       mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Load plan</h3>
-          <div className="mt-4">
-            {emptyOrList(loads.slice(0, 5), 'Select a trip with loaded detail to view load legs.', (load) => (
-              <div key={load.loadId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                <h4 className="font-semibold text-white">{load.description || load.loadKey}</h4>
-                <p className="mt-1 text-sm text-sky-100/75">{load.originLabel} to {load.destinationLabel}</p>
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Load plan</h3>
+            <div className="mt-4">
+              {emptyOrList(loads.slice(0, 5), 'Select a trip with loaded detail to view load legs.', (load) => (
+                <div key={load.loadId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <h4 className="font-semibold text-white">{load.description || load.loadKey}</h4>
+                  <p className="mt-1 text-sm text-sky-100/75">{load.originLabel} to {load.destinationLabel}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Dispatch readiness</h3>
+            {s.tripAssetDispatchabilityQuery.isLoading ? (
+              <p className="mt-3 text-sm text-slate-400">Loading asset dispatchability…</p>
+            ) : dispatchability ? (
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                <div className="flex flex-wrap items-center gap-2">
+                  <DetailBadge
+                    label={dispatchabilityLabel(dispatchability.outcome)}
+                    tone={dispatchability.isBlocking ? 'bad' : dispatchability.outcome === 'warn' ? 'warn' : 'good'}
+                  />
+                  <span className="text-xs text-slate-500">
+                    {dispatchability.vehicleRefKey ?? 'Unlinked vehicle'} · {dispatchability.reasonCode}
+                  </span>
+                </div>
+                <p>{dispatchability.message}</p>
+                {dispatchability.maintainArr ? (
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-400">
+                    <p className="text-slate-200">
+                      MaintainArr asset {dispatchability.maintainArr.assetTag} is{' '}
+                      {humanize(dispatchability.maintainArr.readinessStatus)}
+                    </p>
+                    <p className="mt-1">
+                      Basis: {humanize(dispatchability.maintainArr.readinessBasis)} · Blockers{' '}
+                      {dispatchability.maintainArr.blockerCount}
+                    </p>
+                    {dispatchability.maintainArr.primaryBlockerMessage ? (
+                      <p className="mt-1 text-amber-200">{dispatchability.maintainArr.primaryBlockerMessage}</p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">MaintainArr dispatchability details are unavailable.</p>
+                )}
               </div>
-            ))}
-          </div>
-        </section>
+            ) : (
+              <p className="mt-3 text-sm text-slate-400">
+                Select a trip with a vehicle to review MaintainArr dispatch readiness.
+              </p>
+            )}
+          </section>
+        </div>
       )}
       decisionTitle="Dispatch decision"
       decisionBadge={{ label: blocked ? 'Needs assignment' : 'Dispatchable', tone: blocked ? 'warn' : 'good' }}

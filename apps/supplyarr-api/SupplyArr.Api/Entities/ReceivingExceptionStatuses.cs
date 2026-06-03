@@ -6,9 +6,12 @@ public static class ReceivingExceptionStatuses
 
     public const string Resolved = "resolved";
 
+    public const string Cancelled = "cancelled";
+
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         Open,
-        Resolved
+        Resolved,
+        Cancelled
     };
 }

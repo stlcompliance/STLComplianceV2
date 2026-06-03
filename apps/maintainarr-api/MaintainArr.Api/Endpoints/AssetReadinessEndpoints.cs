@@ -50,6 +50,23 @@ public static class AssetReadinessEndpoints
                 service,
                 cancellationToken);
         }).WithName("GetAssetReadinessByAssetId");
+        legacyGroup.MapGet("/history", async (
+            Guid? assetId,
+            int? limit,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            AssetReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetReadinessRead(context.User);
+            if (assetId is not { } id || id == Guid.Empty)
+            {
+                return Results.BadRequest(new { error = "assetId must be a non-empty GUID." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListHistoryAsync(tenantId, id, limit, cancellationToken));
+        }).WithName("ListAssetReadinessHistory");
 
         // v1 alias for documented MaintainArr readiness contract.
         var v1Group = app.MapGroup("/api/v1/readiness").WithTags("AssetReadiness").RequireAuthorization();
@@ -68,5 +85,22 @@ public static class AssetReadinessEndpoints
                 service,
                 cancellationToken);
         }).WithName("GetAssetReadinessV1ByAssetId");
+        v1Group.MapGet("/history", async (
+            Guid? assetId,
+            int? limit,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            AssetReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetReadinessRead(context.User);
+            if (assetId is not { } id || id == Guid.Empty)
+            {
+                return Results.BadRequest(new { error = "assetId must be a non-empty GUID." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListHistoryAsync(tenantId, id, limit, cancellationToken));
+        }).WithName("ListAssetReadinessHistoryV1");
     }
 }

@@ -1,12 +1,19 @@
 import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, Gauge, History, MapPin, ShieldCheck, Truck, Wrench, XCircle } from 'lucide-react'
 import { ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
 
-import type { AssetFieldContextResponse, AssetReadinessResponse, AssetResponse } from '../api/types'
+import type {
+  AssetFieldContextResponse,
+  AssetReadinessHistoryResponse,
+  AssetReadinessResponse,
+  AssetResponse,
+} from '../api/types'
 
 interface AssetDetailsPageProps {
   asset: AssetResponse
   readiness: AssetReadinessResponse | null
   isReadinessLoading: boolean
+  readinessHistory: AssetReadinessHistoryResponse | null
+  isReadinessHistoryLoading: boolean
   fieldContext: AssetFieldContextResponse | null
 }
 
@@ -22,7 +29,22 @@ function formatDateTime(value: string | null | undefined): string {
   return date.toLocaleString()
 }
 
-export function AssetDetailsPage({ asset, readiness, isReadinessLoading, fieldContext }: AssetDetailsPageProps) {
+function formatStatusFieldKey(value: string): string {
+  return value
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+export function AssetDetailsPage({
+  asset,
+  readiness,
+  isReadinessLoading,
+  readinessHistory,
+  isReadinessHistoryLoading,
+  fieldContext,
+}: AssetDetailsPageProps) {
   const blockers = readiness?.blockers ?? []
   const isReady = readiness?.readinessStatus === 'ready' && blockers.length === 0
   const decisionTone: DetailTone = isReadinessLoading ? 'warn' : isReady ? 'good' : 'bad'
@@ -141,6 +163,43 @@ export function AssetDetailsPage({ asset, readiness, isReadinessLoading, fieldCo
                 Calculated at: {readiness?.calculatedAt ?? 'Unavailable'}
               </div>
             </div>
+          ),
+        },
+        {
+          title: 'Readiness history',
+          icon: <History className="h-5 w-5" />,
+          content: isReadinessHistoryLoading ? (
+            <p className="text-sm text-slate-400">Loading readiness history…</p>
+          ) : readinessHistory ? (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">
+                {readinessHistory.totalCount} status change{readinessHistory.totalCount === 1 ? '' : 's'} captured
+                for {readinessHistory.assetTag}.
+              </p>
+              {readinessHistory.items.length === 0 ? (
+                <p className="text-sm text-slate-400">No readiness history captured yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {readinessHistory.items.map((item) => (
+                    <li key={item.entryId} className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+                          {formatStatusFieldKey(item.statusFieldKey)}
+                        </span>
+                        <span className="text-sm font-medium text-white">{item.statusValueKey}</span>
+                      </div>
+                      <div className="mt-2 text-xs text-slate-500">
+                        Changed {new Date(item.changedAt).toLocaleString()}
+                        {item.changedByPersonId ? ` · by ${item.changedByPersonId}` : ''}
+                      </div>
+                      {item.notes ? <p className="mt-2 text-xs text-slate-400">{item.notes}</p> : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">Readiness history unavailable.</p>
           ),
         },
       ]}

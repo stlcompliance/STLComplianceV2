@@ -50,6 +50,32 @@ function requirementStatusLabel(status: string): string {
   }
 }
 
+function freshnessLabel(status: PersonReadinessResponse['snapshotFreshnessStatus']): string {
+  switch (status) {
+    case 'fresh':
+      return 'Fresh'
+    case 'aging':
+      return 'Aging'
+    case 'stale':
+      return 'Stale'
+    default:
+      return status
+  }
+}
+
+function confidenceLabel(level: PersonReadinessResponse['confidenceLevel']): string {
+  switch (level) {
+    case 'high':
+      return 'High confidence'
+    case 'medium':
+      return 'Medium confidence'
+    case 'low':
+      return 'Low confidence'
+    default:
+      return level
+  }
+}
+
 export function ReadinessPanel({
   personId,
   personDisplayName,
@@ -106,6 +132,12 @@ export function ReadinessPanel({
     setOverrideExpiresAt('')
   }
 
+  const missingRequirements = readiness.requirements.filter((requirement) =>
+    requirement.requirementStatus === 'missing'
+    || requirement.requirementStatus === 'expired'
+    || requirement.requirementStatus === 'revoked',
+  )
+
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -121,6 +153,54 @@ export function ReadinessPanel({
           {formatReadinessLabel(readiness.readinessStatus)}
         </span>
       </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+          <p className="text-[11px] uppercase tracking-wide text-slate-500">Reason codes</p>
+          <p className="mt-1 text-sm text-slate-100">
+            {readiness.reasonCodes.length > 0 ? readiness.reasonCodes.join(', ') : 'None recorded'}
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+          <p className="text-[11px] uppercase tracking-wide text-slate-500">Freshness</p>
+          <p className="mt-1 text-sm text-slate-100">
+            {freshnessLabel(readiness.snapshotFreshnessStatus)} · {readiness.snapshotAgeMinutes} min old
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+          <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence</p>
+          <p className="mt-1 text-sm text-slate-100">{confidenceLabel(readiness.confidenceLevel)}</p>
+        </div>
+      </div>
+
+      {missingRequirements.length > 0 ? (
+        <div className="mt-6">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Missing requirements
+          </h3>
+          <ul className="mt-3 space-y-2">
+            {missingRequirements.map((requirement) => (
+              <li
+                key={requirement.certificationDefinitionId}
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-amber-50">{requirement.certificationName}</p>
+                  <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    {requirementStatusLabel(requirement.requirementStatus)}
+                  </span>
+                </div>
+                <p className="mt-1 text-amber-100/90">{requirement.certificationKey}</p>
+                {requirement.recordEffectiveStatus ? (
+                  <p className="mt-1 text-xs text-amber-200/80">
+                    Record status: {requirement.recordEffectiveStatus}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {readiness.readinessBasis === 'manual_override' && readiness.activeOverride ? (
         <div className="mt-6 rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
@@ -259,7 +339,8 @@ export function ReadinessPanel({
       ) : null}
 
       <p className="mt-4 text-xs text-slate-500">
-        Calculated {new Date(readiness.calculatedAt).toLocaleString()}.
+        Calculated {new Date(readiness.calculatedAt).toLocaleString()} from source snapshot{' '}
+        {new Date(readiness.sourceTimestamp).toLocaleString()}.
         {readiness.readinessBasis === 'manual_override'
           ? ' Basis: manual override.'
           : readiness.readinessBasis === 'training_blockers'

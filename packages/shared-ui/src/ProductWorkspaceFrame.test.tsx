@@ -24,6 +24,7 @@ describe('ProductWorkspaceFrame', () => {
           productKey="staffarr"
           workspaceSubtitle="People, org, and readiness"
           entitlements={['staffarr', 'trainarr']}
+          onSignOut={() => undefined}
           workspaceSession={{
             userDisplayName: 'Demo Admin',
             tenantDisplayName: 'STL Demo Tenant',
@@ -40,6 +41,7 @@ describe('ProductWorkspaceFrame', () => {
       'STL Demo Tenant',
     )
     expect(screen.getByTestId('workspace-tenant-slug')).toHaveTextContent('demo-stl')
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
     expect(screen.getByText('Workspace content')).toBeInTheDocument()
   })
 

@@ -59,6 +59,40 @@ function formatSourceLabel(sourceType: string): string {
   }
 }
 
+function daysUntil(value: string | null): number | null {
+  if (!value) {
+    return null
+  }
+
+  const timestamp = Date.parse(value)
+  if (!Number.isFinite(timestamp)) {
+    return null
+  }
+
+  return Math.ceil((timestamp - Date.now()) / 86_400_000)
+}
+
+function certificationRiskLabel(certification: PersonCertificationResponse): string | null {
+  if (certification.effectiveStatus !== 'active') {
+    return null
+  }
+
+  const remainingDays = daysUntil(certification.expiresAt)
+  if (remainingDays == null) {
+    return null
+  }
+
+  if (remainingDays < 0) {
+    return 'Expired'
+  }
+
+  if (remainingDays <= 60) {
+    return 'Expiring soon'
+  }
+
+  return null
+}
+
 export function formatCertificationMutationError(errorMessage: string | null): string | null {
   if (!errorMessage) {
     return null
@@ -172,7 +206,14 @@ export function CertificationPanel({
             <li key={certification.personCertificationId} className="py-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm text-white">{certification.certificationName}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-white">{certification.certificationName}</p>
+                    {certificationRiskLabel(certification) ? (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-200">
+                        {certificationRiskLabel(certification)}
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="text-xs text-slate-400">
                     {certification.certificationKey} · {certification.category} ·{' '}
                     {formatSourceLabel(certification.sourceType)}

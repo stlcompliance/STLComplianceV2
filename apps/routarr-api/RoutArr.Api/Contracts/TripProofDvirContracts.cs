@@ -8,6 +8,10 @@ public sealed record TripProofRecordResponse(
     string? VehicleRefKey,
     string ReferenceKey,
     string Notes,
+    string ReviewStatus,
+    string? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string ReviewNotes,
     DateTimeOffset CapturedAt,
     DateTimeOffset CreatedAt,
     IReadOnlyList<TripCaptureAttachmentResponse> Attachments);
@@ -18,6 +22,15 @@ public sealed record CreateTripProofRequest(
     string? ReferenceKey,
     string? Notes,
     DateTimeOffset? CapturedAt);
+
+public sealed record RejectTripProofRequest(string Reason);
+
+public sealed record CorrectTripProofRequest(
+    string? VehicleRefKey,
+    string? ReferenceKey,
+    string? Notes,
+    DateTimeOffset? CapturedAt,
+    string Reason);
 
 public sealed record TripDvirInspectionResponse(
     Guid DvirId,

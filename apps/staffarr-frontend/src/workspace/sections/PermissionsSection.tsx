@@ -1,5 +1,7 @@
 import { getErrorMessage } from '@stl/shared-ui'
+import { PermissionCheckPanel } from '../../components/PermissionCheckPanel'
 import { PermissionProjectionTimelinePanel } from '../../components/PermissionProjectionTimelinePanel'
+import { ProductPermissionCatalogPanel } from '../../components/ProductPermissionCatalogPanel'
 import { RoleTemplateAssignmentPanel } from '../../components/RoleTemplateAssignmentPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
@@ -98,6 +100,52 @@ export function PermissionsSection({ state }: Props) {
             personId: s.selectedPerson!.personId,
             assignmentId,
             status,
+          })
+        }}
+      />
+
+      <ProductPermissionCatalogPanel
+        productKeyFilter={s.productPermissionCatalogProductKey}
+        catalog={s.productPermissionCatalogQuery.data ?? []}
+        isLoading={s.productPermissionCatalogQuery.isLoading}
+        isError={s.productPermissionCatalogQuery.isError}
+        readErrorMessage={
+          s.productPermissionCatalogQuery.isError
+            ? getErrorMessage(
+                s.productPermissionCatalogQuery.error,
+                'Failed to load product permission catalog.',
+              )
+            : null
+        }
+        onRetryRead={() => {
+          void s.productPermissionCatalogQuery.refetch()
+        }}
+        onProductKeyFilterChange={s.setProductPermissionCatalogProductKey}
+      />
+
+      <PermissionCheckPanel
+        personId={s.selectedPerson.personId}
+        personDisplayName={s.selectedPerson.displayName}
+        permissionCheckInput={s.permissionCheckInput}
+        checkResult={s.permissionCheckMutation.data ?? null}
+        isChecking={s.permissionCheckMutation.isPending}
+        errorMessage={
+          s.permissionCheckMutationError
+            ? getErrorMessage(
+                s.permissionCheckMutationError,
+                'Failed to run permission check.',
+              )
+            : null
+        }
+        onPermissionCheckInputChange={s.setPermissionCheckInput}
+        onCheckPermissions={async () => {
+          const permissionKeys = s.permissionCheckInput
+            .split(/[\n,]/)
+            .map((entry) => entry.trim())
+            .filter(Boolean)
+          await s.permissionCheckMutation.mutateAsync({
+            personId: s.selectedPerson!.personId,
+            permissionKeys,
           })
         }}
       />

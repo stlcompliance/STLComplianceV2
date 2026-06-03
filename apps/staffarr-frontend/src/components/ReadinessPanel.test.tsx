@@ -8,6 +8,11 @@ const sampleReadiness: PersonReadinessResponse = {
   readinessStatus: 'not_ready',
   readinessBasis: 'certifications',
   calculatedAt: '2026-05-27T12:00:00.000Z',
+  sourceTimestamp: '2026-05-27T11:45:00.000Z',
+  snapshotAgeMinutes: 15,
+  snapshotFreshnessStatus: 'fresh',
+  confidenceLevel: 'high',
+  reasonCodes: ['certification_missing'],
   activeOverride: null,
   requirements: [
     {
@@ -35,6 +40,8 @@ const sampleReadiness: PersonReadinessResponse = {
 const trainingBlockerReadiness: PersonReadinessResponse = {
   ...sampleReadiness,
   readinessBasis: 'training_blockers',
+  confidenceLevel: 'low',
+  reasonCodes: ['training_blockers', 'training_overdue', 'certification_missing'],
   blockers: [
     {
       blockerSource: 'training',
@@ -53,6 +60,8 @@ const overrideReadiness: PersonReadinessResponse = {
   ...sampleReadiness,
   readinessStatus: 'ready',
   readinessBasis: 'manual_override',
+  confidenceLevel: 'medium',
+  reasonCodes: ['ready', 'manual_override', 'certification_missing'],
   activeOverride: {
     overrideId: '33333333-3333-3333-3333-333333333333',
     reason: 'Supervisor approved temporary assignment pending training completion.',
@@ -84,8 +93,12 @@ describe('ReadinessPanel', () => {
 
     expect(screen.getByText('Workforce readiness')).toBeTruthy()
     expect(screen.getByText('Not ready')).toBeTruthy()
+    expect(screen.getByText('Missing requirements')).toBeTruthy()
+    expect(screen.getAllByText('Safety Orientation').length).toBeGreaterThan(0)
     expect(screen.getByText(/Safety Orientation is required but has not been granted/i)).toBeTruthy()
-    expect(screen.getByText('Missing')).toBeTruthy()
+    expect(screen.getAllByText('Missing').length).toBeGreaterThan(0)
+    expect(screen.getByText(/certification_missing/i)).toBeTruthy()
+    expect(screen.getByText(/15 min old/i)).toBeTruthy()
   })
 
   it('renders training blockers with a training label', () => {
@@ -106,6 +119,7 @@ describe('ReadinessPanel', () => {
     expect(screen.getByText('Hazmat Remediation')).toBeTruthy()
     expect(screen.getByText('Training')).toBeTruthy()
     expect(screen.getByText(/Required hazmat remediation training is overdue/i)).toBeTruthy()
+    expect(screen.getByText(/Low confidence/i)).toBeTruthy()
   })
 
   it('renders active override banner and clear action when authorized', () => {
@@ -126,6 +140,7 @@ describe('ReadinessPanel', () => {
     expect(screen.getByText(/Manual readiness override active/i)).toBeTruthy()
     expect(screen.getByText(/Supervisor approved temporary assignment/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Clear override/i })).toBeTruthy()
+    expect(screen.getByText(/Medium confidence/i)).toBeTruthy()
   })
 
   it('submits grant override when form is completed', async () => {

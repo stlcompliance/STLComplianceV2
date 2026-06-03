@@ -48,6 +48,8 @@ export function AssetsSection({ state }: Props) {
             asset={selectedAsset}
             readiness={s.assetReadinessDetailQuery.data ?? null}
             isReadinessLoading={s.assetReadinessDetailQuery.isLoading}
+            readinessHistory={s.assetReadinessHistoryQuery.data ?? null}
+            isReadinessHistoryLoading={s.assetReadinessHistoryQuery.isLoading}
             fieldContext={s.assetFieldContextQuery.data ?? null}
           />
         ) : (

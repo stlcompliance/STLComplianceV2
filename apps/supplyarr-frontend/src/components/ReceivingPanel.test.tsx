@@ -57,6 +57,13 @@ const baseProps = {
           createdByUserId: 'user-1',
           resolvedByUserId: null,
           resolvedAt: null,
+          cancelledByUserId: null,
+          cancelledAt: null,
+          cancellationReason: '',
+          reopenedByUserId: null,
+          reopenedAt: null,
+          lastReopenReason: '',
+          reopenCount: 0,
           createdAt: '2026-05-27T10:00:00Z',
           updatedAt: '2026-05-27T10:00:00Z',
         },
@@ -73,6 +80,13 @@ const baseProps = {
           createdByUserId: 'user-1',
           resolvedByUserId: 'user-2',
           resolvedAt: '2026-05-27T12:00:00Z',
+          cancelledByUserId: null,
+          cancelledAt: null,
+          cancellationReason: '',
+          reopenedByUserId: null,
+          reopenedAt: null,
+          lastReopenReason: '',
+          reopenCount: 0,
           createdAt: '2026-05-27T11:00:00Z',
           updatedAt: '2026-05-27T12:00:00Z',
         },
@@ -146,6 +160,8 @@ const baseProps = {
   exceptionType: 'short',
   exceptionQuantity: '1',
   exceptionNotes: '',
+  exceptionCancelReason: 'No longer relevant',
+  exceptionReopenReason: 'Need to rework this discrepancy',
   onReceiptKeyChange: vi.fn(),
   onSelectedPurchaseOrderIdChange: vi.fn(),
   onSelectedReceivingReceiptIdChange: vi.fn(),
@@ -155,15 +171,21 @@ const baseProps = {
   onExceptionTypeChange: vi.fn(),
   onExceptionQuantityChange: vi.fn(),
   onExceptionNotesChange: vi.fn(),
+  onExceptionCancelReasonChange: vi.fn(),
+  onExceptionReopenReasonChange: vi.fn(),
   onCreateFromPurchaseOrder: vi.fn(),
   onUpdateLineQuantity: vi.fn(),
   onCreateException: vi.fn(),
   onResolveException: vi.fn(),
+  onCancelException: vi.fn(),
+  onReopenException: vi.fn(),
   onPost: vi.fn(),
   isCreating: false,
   isUpdatingLine: false,
   isCreatingException: false,
   isResolvingException: false,
+  isCancellingException: false,
+  isReopeningException: false,
   isPosting: false,
 }
 
@@ -177,6 +199,8 @@ describe('ReceivingPanel', () => {
     expect(screen.getByTestId('receiving-exception-record-form')).toBeInTheDocument()
     expect(screen.getByTestId('receiving-post-button')).toBeInTheDocument()
     expect(screen.getByTestId('receiving-create-form')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-exception-cancel-reason-input')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-exception-reopen-reason-input')).toBeInTheDocument()
   })
 
   it('shows resolve controls for open receiving exceptions', () => {
@@ -184,6 +208,7 @@ describe('ReceivingPanel', () => {
 
     const openRow = screen.getByTestId('receiving-exception-row-ex-1')
     expect(within(openRow).getByTestId('receiving-exception-resolve-button-ex-1')).toBeInTheDocument()
+    expect(within(openRow).getByTestId('receiving-exception-cancel-button-ex-1')).toBeInTheDocument()
     expect(within(openRow).getByTestId('receiving-exception-workflow-timeline')).toBeInTheDocument()
     expect(within(openRow).getByTestId('receiving-exception-notes')).toHaveTextContent(
       'Two units missing from carton',
@@ -195,6 +220,10 @@ describe('ReceivingPanel', () => {
 
     expect(screen.getByTestId('receiving-exception-row-ex-1')).toBeInTheDocument()
     expect(screen.getByTestId('receiving-exception-row-ex-2')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByTestId('receiving-exception-filter'), { target: { value: 'cancelled' } })
+    expect(screen.queryByTestId('receiving-exception-row-ex-1')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('receiving-exception-row-ex-2')).not.toBeInTheDocument()
 
     fireEvent.change(screen.getByTestId('receiving-exception-filter'), { target: { value: 'open' } })
 

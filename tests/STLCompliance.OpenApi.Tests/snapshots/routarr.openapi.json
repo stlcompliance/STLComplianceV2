@@ -3295,6 +3295,92 @@
         }
       }
     },
+    "/api/reports/proof-dvir/trips/{tripId}/proofs/{proofId}": {
+      "patch": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "CorrectRoutArrTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/trips/{tripId}/proofs/{proofId}/reject": {
+      "post": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "RejectRoutArrTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/routes/stops/{stopId}": {
       "get": {
         "tags": [
@@ -5948,6 +6034,92 @@
         }
       }
     },
+    "/api/v1/reports/proof-dvir/trips/{tripId}/proofs/{proofId}": {
+      "patch": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "CorrectRoutArrTripProofV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/trips/{tripId}/proofs/{proofId}/reject": {
+      "post": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "RejectRoutArrTripProofV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/routes/stops/{stopId}": {
       "get": {
         "tags": [
@@ -6680,6 +6852,46 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CorrectTripProofRequest": {
+        "required": [
+          "vehicleRefKey",
+          "referenceKey",
+          "notes",
+          "capturedAt",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -7730,6 +7942,17 @@
         "type": "object",
         "properties": {
           "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectTripProofRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
             "type": "string"
           }
         }

@@ -11,8 +11,8 @@ interface ReadinessRollupSupervisorPanelProps {
   siteRollups: ReadinessRollupSummaryResponse[]
   siteFilterOrgUnitId: string | null
   onSiteFilterChange: (siteOrgUnitId: string | null) => void
-  memberReadinessFilter: 'all' | 'not_ready'
-  onMemberReadinessFilterChange: (filter: 'all' | 'not_ready') => void
+  memberReadinessFilter: 'all' | 'not_ready' | 'missing_certifications'
+  onMemberReadinessFilterChange: (filter: 'all' | 'not_ready' | 'missing_certifications') => void
   selectedRollup: ReadinessRollupSelection | null
   onSelectRollup: (rollup: ReadinessRollupSelection | null) => void
   rollupMembers: ReadinessRollupMembersResponse | null
@@ -152,8 +152,8 @@ function RollupMembersDrillDown({
   rollupMembers: ReadinessRollupMembersResponse | null
   isLoading: boolean
   readErrorMessage: string | null
-  memberReadinessFilter: 'all' | 'not_ready'
-  onMemberReadinessFilterChange: (filter: 'all' | 'not_ready') => void
+  memberReadinessFilter: 'all' | 'not_ready' | 'missing_certifications'
+  onMemberReadinessFilterChange: (filter: 'all' | 'not_ready' | 'missing_certifications') => void
   onSelectPerson?: (personId: string) => void
   onRetryRead?: () => void
 }) {
@@ -180,12 +180,19 @@ function RollupMembersDrillDown({
             data-testid="readiness-rollup-member-filter"
             value={memberReadinessFilter}
             onChange={(event) =>
-              onMemberReadinessFilterChange(event.target.value === 'not_ready' ? 'not_ready' : 'all')
+              onMemberReadinessFilterChange(
+                event.target.value === 'not_ready'
+                  ? 'not_ready'
+                  : event.target.value === 'missing_certifications'
+                    ? 'missing_certifications'
+                    : 'all',
+              )
             }
             className="rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
           >
             <option value="all">All members</option>
             <option value="not_ready">Not ready only</option>
+            <option value="missing_certifications">Missing certifications only</option>
           </select>
         </label>
       </div>

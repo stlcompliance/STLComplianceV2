@@ -163,6 +163,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -320,6 +328,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -375,6 +391,14 @@
           },
           {
             "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -3381,6 +3405,41 @@
         }
       }
     },
+    "/api/people/{personId}/permissions/check": {
+      "get": {
+        "tags": [
+          "PermissionProjection"
+        ],
+        "operationId": "GetPermissionCheck",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "permissionKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/people/{personId}/permissions/effective": {
       "get": {
         "tags": [
@@ -4908,6 +4967,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -5065,6 +5132,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -5120,6 +5195,14 @@
           },
           {
             "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -7602,6 +7685,41 @@
         }
       }
     },
+    "/api/v1/people/{personId}/permissions/check": {
+      "get": {
+        "tags": [
+          "PermissionProjection"
+        ],
+        "operationId": "GetPermissionCheckV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "permissionKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/people/{personId}/readiness": {
       "get": {
         "tags": [
@@ -8808,6 +8926,13 @@
             ]
           },
           "actorUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "personId": {
             "type": [
               "null",
               "string"

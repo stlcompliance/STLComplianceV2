@@ -10,6 +10,7 @@ public sealed class MeService
 
     public Task<ComplianceCoreSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
+        ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
         var entitlements = principal.GetEntitlements();
@@ -22,11 +23,20 @@ public sealed class MeService
             principal.IsPlatformAdmin(),
             ProductKey,
             principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            entitlements,
+            authorization.CanManageVocabulary(principal),
+            authorization.CanExportAuditPackage(principal),
+            authorization.CanEvaluateRiskScores(principal),
+            authorization.CanEvaluateMissingEvidenceWarnings(principal),
+            authorization.CanEvaluateControlEffectiveness(principal),
+            authorization.CanEvaluateReadinessForecast(principal),
+            authorization.CanReadReports(principal),
+            authorization.CanExportReports(principal)));
     }
 
     public Task<ComplianceCoreMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
+        ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
         var entitlements = principal.GetEntitlements();
@@ -40,6 +50,14 @@ public sealed class MeService
             principal.IsPlatformAdmin(),
             ProductKey,
             principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            entitlements,
+            authorization.CanManageVocabulary(principal),
+            authorization.CanExportAuditPackage(principal),
+            authorization.CanEvaluateRiskScores(principal),
+            authorization.CanEvaluateMissingEvidenceWarnings(principal),
+            authorization.CanEvaluateControlEffectiveness(principal),
+            authorization.CanEvaluateReadinessForecast(principal),
+            authorization.CanReadReports(principal),
+            authorization.CanExportReports(principal)));
     }
 }

@@ -49,7 +49,7 @@ public static class AuthEndpoints
             authorization.RequirePlatformAdmin(
                 context.User,
                 "Compliance Core session hydration requires NexArr-confirmed platform administrator access.");
-            return Results.Ok(await service.GetSessionBootstrapAsync(context.User, cancellationToken));
+            return Results.Ok(await service.GetSessionBootstrapAsync(context.User, authorization, cancellationToken));
         })
         .WithName("ComplianceCoreGetSessionBootstrap");
 
@@ -69,7 +69,7 @@ public static class AuthEndpoints
             authorization.RequirePlatformAdmin(
                 context.User,
                 "Compliance Core session hydration requires NexArr-confirmed platform administrator access.");
-            return Results.Ok(await service.GetSessionBootstrapAsync(context.User, cancellationToken));
+            return Results.Ok(await service.GetSessionBootstrapAsync(context.User, authorization, cancellationToken));
         })
         .WithName("ComplianceCoreGetSessionBootstrapV1");
 
@@ -90,7 +90,7 @@ public static class AuthEndpoints
             authorization.RequirePlatformAdmin(
                 context.User,
                 "Compliance Core user hydration requires NexArr-confirmed platform administrator access.");
-            return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
+            return Results.Ok(await service.GetMeAsync(context.User, authorization, cancellationToken));
         })
         .WithName("ComplianceCoreGetMe");
 
@@ -110,7 +110,7 @@ public static class AuthEndpoints
             authorization.RequirePlatformAdmin(
                 context.User,
                 "Compliance Core user hydration requires NexArr-confirmed platform administrator access.");
-            return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
+            return Results.Ok(await service.GetMeAsync(context.User, authorization, cancellationToken));
         })
         .WithName("ComplianceCoreGetMeV1");
     }

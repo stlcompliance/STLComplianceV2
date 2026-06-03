@@ -149,6 +149,10 @@ public static class IntegrationOutboxEventKinds
 
     public const string ReceivingExceptionResolved = "receiving_exception.resolved";
 
+    public const string ReceivingExceptionCancelled = "receiving_exception.cancelled";
+
+    public const string ReceivingExceptionReopened = "receiving_exception.reopened";
+
     public const string MaintainarrDemandReceived = "maintainarr.demand.received";
 
     public const string RoutarrDemandReceived = "routarr.demand.received";

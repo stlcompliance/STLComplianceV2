@@ -143,7 +143,7 @@ public sealed class ReadinessRollupService(
         {
             throw new StlApiException(
                 "readiness_rollup.invalid_member_filter",
-                "Member readiness filter must be ready or not_ready.",
+                "Member readiness filter must be ready, not_ready, or missing_certifications.",
                 400);
         }
 
@@ -178,8 +178,7 @@ public sealed class ReadinessRollupService(
                 personId,
                 cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(readinessStatus)
-                && !string.Equals(readiness.ReadinessStatus, readinessStatus, StringComparison.OrdinalIgnoreCase))
+            if (!MatchesMemberFilter(readiness, readinessStatus))
             {
                 continue;
             }
@@ -458,6 +457,24 @@ public sealed class ReadinessRollupService(
             readiness.ActiveOverride is not null,
             readiness.Blockers.Count,
             readiness.Blockers.FirstOrDefault()?.Message);
+
+    private static bool MatchesMemberFilter(PersonReadinessResponse readiness, string? readinessStatus)
+    {
+        if (string.IsNullOrWhiteSpace(readinessStatus) || string.Equals(readinessStatus, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(readinessStatus, "missing_certifications", StringComparison.OrdinalIgnoreCase))
+        {
+            return readiness.Requirements.Any(x =>
+                string.Equals(x.RequirementStatus, "missing", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.RequirementStatus, "expired", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.RequirementStatus, "revoked", StringComparison.OrdinalIgnoreCase));
+        }
+
+        return string.Equals(readiness.ReadinessStatus, readinessStatus, StringComparison.OrdinalIgnoreCase);
+    }
 
     private sealed record PendingRollupCandidate(
         Guid TenantId,

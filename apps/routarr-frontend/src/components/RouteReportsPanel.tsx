@@ -24,6 +24,14 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   )
 }
 
+function formatTimestamp(iso: string) {
+  try {
+    return new Date(iso).toLocaleString()
+  } catch {
+    return iso
+  }
+}
+
 export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
   const [scope, setScope] = useState<'daily' | 'weekly'>('daily')
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
@@ -221,6 +229,26 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
               ? ` · trip ${routeDetailQuery.data.tripNumber}`
               : ''}
           </p>
+          <div className="mt-4 rounded border border-slate-700 bg-slate-900/40 p-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Route history</h4>
+            {routeDetailQuery.data.history.length === 0 ? (
+              <p className="mt-2 text-xs text-slate-500">No route history events recorded yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {routeDetailQuery.data.history.map((entry) => (
+                  <li key={`${entry.action}-${entry.occurredAt}`} className="text-xs text-slate-300">
+                    <div className="font-medium text-slate-100">{entry.action}</div>
+                    <div className="text-slate-400">
+                      {entry.result}
+                      {entry.reasonCode ? ` · ${entry.reasonCode}` : ''}
+                      {entry.actorUserId ? ` · actor ${entry.actorUserId}` : ''}
+                    </div>
+                    <div className="text-slate-500">{formatTimestamp(entry.occurredAt)}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       ) : null}
 

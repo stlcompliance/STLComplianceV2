@@ -144,6 +144,70 @@ describe('IncidentsPanel', () => {
     expect(isIncidentRoutableToTrainarr('safety')).toBe(false)
   })
 
+  it('renders cross-product source references when present', () => {
+    const routedIncident: PersonnelIncidentDetailResponse = {
+      incidentId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+      personId: sampleIncidents[0].personId,
+      reasonCategoryKey: 'training_compliance',
+      severity: 'medium',
+      status: 'open',
+      title: 'External product incident',
+      description: 'Imported from RoutArr with a source snapshot.',
+      occurredAt: '2026-05-26T14:30:00.000Z',
+      reportedAt: '2026-05-26T15:00:00.000Z',
+      reportedByUserId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      createdAt: '2026-05-26T15:00:00.000Z',
+      updatedAt: '2026-05-26T15:00:00.000Z',
+      sourceProduct: 'routarr',
+      sourceIncidentId: 'route-inc-123',
+      sourceEventKind: 'driver_incident',
+      sourceReferenceKey: 'route-incident-ref-1',
+      sourceSnapshot: {
+        sourceProduct: 'routarr',
+        sourceEntity: 'incident',
+        sourceId: 'route-inc-123',
+        labelSnapshot: 'Driver near miss',
+        statusSnapshot: 'open',
+        selectedAt: '2026-05-26T14:30:00.000Z',
+        lastVerifiedAt: '2026-05-26T15:00:00.000Z',
+        lastSyncedAt: '2026-05-26T15:00:00.000Z',
+        isAuthoritative: true,
+      },
+      relatedRouteReference: 'Route 47',
+      relatedDocumentReference: 'doc-1',
+      trainarrRouting: null,
+    }
+
+    render(
+      <IncidentsPanel
+        personId={sampleIncidents[0].personId}
+        personDisplayName="Alex Worker"
+        incidents={[]}
+        selectedIncidentId={routedIncident.incidentId}
+        selectedIncident={routedIncident}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
+        canManage={false}
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectIncident={vi.fn()}
+        onCreateIncident={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Source references')).toBeTruthy()
+    expect(screen.getByText('routarr')).toBeTruthy()
+    expect(screen.getByText('route-inc-123')).toBeTruthy()
+    expect(screen.getByText(/Driver near miss/i)).toBeTruthy()
+    expect(screen.getByText('Route 47')).toBeTruthy()
+  })
+
   it('renders incident action errors in shared callout', () => {
     render(
       <IncidentsPanel

@@ -93,6 +93,10 @@ export function ProductWorkspaceLayout() {
           void productLaunch.mutate(productKey)
         }
       }}
+      onSignOut={() => {
+        clearSession()
+        window.location.assign(suiteHomeUrl)
+      }}
       isProductLaunchPending={productLaunch.isPending}
       productLaunchError={
         productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null

@@ -42,6 +42,7 @@ import type {
   TrainingRequirementResponse,
   SyncRequirementToMatrixResponse,
   QualificationIssueListItemResponse,
+  QualificationIssueHistoryItemResponse,
   SubmitTrainingEvaluationRequest,
   SubmitTrainingSignoffRequest,
   TrainingEvaluationResponse,
@@ -665,6 +666,16 @@ export async function listQualificationIssues(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse(response, 'Failed to load qualification issues')
+}
+
+export async function getQualificationIssueHistory(
+  accessToken: string,
+  qualificationIssueId: string,
+): Promise<QualificationIssueHistoryItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/qualification-issues/${qualificationIssueId}/history`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load qualification issue history')
 }
 
 export async function getTrainingEvidence(

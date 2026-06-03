@@ -64,3 +64,20 @@ public sealed record AssetReadinessComplianceCoreReferenceResponse(
     string ReferenceId,
     string Outcome,
     string? DeepLinkPath);
+
+public sealed record AssetReadinessHistoryResponse(
+    Guid AssetId,
+    string AssetTag,
+    string AssetName,
+    int TotalCount,
+    int Limit,
+    IReadOnlyList<AssetReadinessHistoryItemResponse> Items);
+
+public sealed record AssetReadinessHistoryItemResponse(
+    Guid EntryId,
+    string StatusFieldKey,
+    string StatusValueKey,
+    string? Notes,
+    string? ChangedByPersonId,
+    DateTimeOffset ChangedAt,
+    DateTimeOffset CreatedAt);

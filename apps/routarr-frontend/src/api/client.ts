@@ -34,6 +34,7 @@ import type {
   ActiveTripsResponse,
   UnassignedWorkQueueResponse,
   CreateTripProofRequest,
+  CorrectTripProofRequest,
   DriverPortalScheduleResponse,
   DriverPortalReportExceptionRequest,
   SubmitTripDvirRequest,
@@ -43,6 +44,7 @@ import type {
   TripExecutionSettingsResponse,
   UpsertTripExecutionSettingsRequest,
   TripProofRecordResponse,
+  RejectTripProofRequest,
   TripDvirInspectionResponse,
   TripCaptureAttachmentResponse,
   TripCaptureAttachmentListResponse,
@@ -568,6 +570,34 @@ export async function createDriverPortalTripProof(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<TripProofRecordResponse>(response, 'Failed to capture trip proof')
+}
+
+export async function rejectProofDvirReportProof(
+  accessToken: string,
+  tripId: string,
+  proofId: string,
+  payload: RejectTripProofRequest,
+): Promise<TripProofRecordResponse> {
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/trips/${tripId}/proofs/${proofId}/reject`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripProofRecordResponse>(response, 'Failed to reject trip proof')
+}
+
+export async function correctProofDvirReportProof(
+  accessToken: string,
+  tripId: string,
+  proofId: string,
+  payload: CorrectTripProofRequest,
+): Promise<TripProofRecordResponse> {
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/trips/${tripId}/proofs/${proofId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripProofRecordResponse>(response, 'Failed to correct trip proof')
 }
 
 export async function submitDriverPortalTripDvir(

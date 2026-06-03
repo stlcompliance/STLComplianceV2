@@ -207,5 +207,45 @@ public static class RoleTemplateEndpoints
                 cancellationToken));
         })
         .WithName("GetPermissionHistoryTimeline");
+
+        permissionProjection.MapGet("/check", async (
+            Guid personId,
+            string[] permissionKey,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IntegrationPermissionCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePermissionProjectionRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.CheckAsync(
+                tenantId,
+                personId,
+                permissionKey,
+                cancellationToken));
+        })
+        .WithName("GetPermissionCheck");
+
+        var permissionProjectionV1 = app.MapGroup("/api/v1/people/{personId:guid}/permissions")
+            .WithTags("PermissionProjection")
+            .RequireAuthorization();
+
+        permissionProjectionV1.MapGet("/check", async (
+            Guid personId,
+            string[] permissionKey,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IntegrationPermissionCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePermissionProjectionRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.CheckAsync(
+                tenantId,
+                personId,
+                permissionKey,
+                cancellationToken));
+        })
+        .WithName("GetPermissionCheckV1");
     }
 }

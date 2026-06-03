@@ -19,6 +19,8 @@ public sealed class ComplianceCoreFactPublisherService(
         IntegrationOutboxEventKinds.ReceivingReceiptPosted,
         IntegrationOutboxEventKinds.ReceivingExceptionCreated,
         IntegrationOutboxEventKinds.ReceivingExceptionResolved,
+        IntegrationOutboxEventKinds.ReceivingExceptionCancelled,
+        IntegrationOutboxEventKinds.ReceivingExceptionReopened,
         IntegrationOutboxEventKinds.SupplierOnboardingSubmitted,
         IntegrationOutboxEventKinds.SupplierOnboardingApproved,
         IntegrationOutboxEventKinds.SupplierOnboardingRejected,
@@ -109,6 +111,8 @@ public sealed class ComplianceCoreFactPublisherService(
                 => await BuildReceivingFactsAsync(outboxEvent, cancellationToken),
             IntegrationOutboxEventKinds.ReceivingExceptionCreated
             or IntegrationOutboxEventKinds.ReceivingExceptionResolved
+            or IntegrationOutboxEventKinds.ReceivingExceptionCancelled
+            or IntegrationOutboxEventKinds.ReceivingExceptionReopened
                 => await BuildReceivingExceptionFactsAsync(outboxEvent, cancellationToken),
             IntegrationOutboxEventKinds.SupplierOnboardingSubmitted
             or IntegrationOutboxEventKinds.SupplierOnboardingApproved

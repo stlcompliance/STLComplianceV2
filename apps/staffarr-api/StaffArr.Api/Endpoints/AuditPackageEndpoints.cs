@@ -47,6 +47,7 @@ public static class AuditPackageEndpoints
             string? result,
             string? targetType,
             Guid? actorUserId,
+            Guid? personId,
             StaffArrAuthorizationService authorization,
             AuditPackageService service,
             HttpContext context,
@@ -56,7 +57,7 @@ public static class AuditPackageEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetExportSummaryAsync(
                 tenantId,
-                BuildFilter(from, to, action, result, targetType, actorUserId),
+                BuildFilter(from, to, action, result, targetType, actorUserId, personId),
                 cancellationToken));
         })
         .WithName($"GetStaffArrAuditPackageExportSummary{nameSuffix}");
@@ -68,6 +69,7 @@ public static class AuditPackageEndpoints
             string? result,
             string? targetType,
             Guid? actorUserId,
+            Guid? personId,
             int? page,
             int? pageSize,
             StaffArrAuthorizationService authorization,
@@ -79,7 +81,7 @@ public static class AuditPackageEndpoints
             var tenantId = context.User.GetTenantId();
             var resultPage = await service.ListAuditTimelineAsync(
                 tenantId,
-                BuildFilter(from, to, action, result, targetType, actorUserId),
+                BuildFilter(from, to, action, result, targetType, actorUserId, personId),
                 page ?? 1,
                 pageSize ?? 25,
                 cancellationToken);
@@ -95,6 +97,7 @@ public static class AuditPackageEndpoints
             string? result,
             string? targetType,
             Guid? actorUserId,
+            Guid? personId,
             StaffArrAuthorizationService authorization,
             AuditPackageService service,
             HttpContext context,
@@ -103,7 +106,7 @@ public static class AuditPackageEndpoints
             authorization.RequireAuditPackageExport(context.User);
             var tenantId = context.User.GetTenantId();
             var actor = context.User.GetUserId();
-            var filter = BuildFilter(from, to, action, result, targetType, actorUserId);
+            var filter = BuildFilter(from, to, action, result, targetType, actorUserId, personId);
 
             if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
             {
@@ -193,6 +196,7 @@ public static class AuditPackageEndpoints
         string? action,
         string? result,
         string? targetType,
-        Guid? actorUserId) =>
-        new(from, to, action, result, targetType, actorUserId);
+        Guid? actorUserId,
+        Guid? personId) =>
+        new(from, to, action, result, targetType, actorUserId, personId);
 }

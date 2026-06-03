@@ -18,6 +18,7 @@ vi.mock('../../components/DataExportsPanel', () => ({
 }))
 
 function buildState(roleKey: string): ComplianceCoreWorkspaceState {
+  const canReadReports = roleKey !== 'unknown_role'
   return {
     accessToken: 'token',
     me: {
@@ -31,6 +32,14 @@ function buildState(roleKey: string): ComplianceCoreWorkspaceState {
       productKey: 'compliancecore',
       hasComplianceCoreEntitlement: true,
       entitlements: ['compliancecore'],
+      canManageVocabulary: false,
+      canExportAuditPackage: false,
+      canEvaluateRiskScores: false,
+      canEvaluateMissingEvidenceWarnings: false,
+      canEvaluateControlEffectiveness: false,
+      canEvaluateReadinessForecast: false,
+      canReadReports,
+      canExportReports: canReadReports,
     },
   } as ComplianceCoreWorkspaceState
 }

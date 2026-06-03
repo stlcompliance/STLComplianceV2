@@ -388,9 +388,13 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.VehicleRefKey).HasMaxLength(128);
             entity.Property(x => x.ReferenceKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ReviewStatus).HasMaxLength(32).HasDefaultValue(TripProofReviewStatuses.PendingReview).IsRequired();
+            entity.Property(x => x.ReviewedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.ReviewNotes).HasMaxLength(1024).HasDefaultValue(string.Empty).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.TripId });
             entity.HasIndex(x => new { x.TenantId, x.TripId, x.CapturedAt });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.ReviewStatus });
             entity.HasOne(x => x.Trip)
                 .WithMany()
                 .HasForeignKey(x => x.TripId)

@@ -58,7 +58,9 @@ public sealed class DriverPortalService(
             ? new Dictionary<Guid, int>()
             : await db.TripProofRecords
                 .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+                .Where(x => x.TenantId == tenantId
+                    && tripIds.Contains(x.TripId)
+                    && x.ReviewStatus != TripProofReviewStatuses.Rejected)
                 .GroupBy(x => x.TripId)
                 .Select(g => new { TripId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.TripId, x => x.Count, cancellationToken);
@@ -87,7 +89,9 @@ public sealed class DriverPortalService(
             ? []
             : await db.TripProofRecords
                 .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+                .Where(x => x.TenantId == tenantId
+                    && tripIds.Contains(x.TripId)
+                    && x.ReviewStatus != TripProofReviewStatuses.Rejected)
                 .Select(x => new { x.TripId, x.ProofType })
                 .ToListAsync(cancellationToken);
 

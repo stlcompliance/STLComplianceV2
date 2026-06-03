@@ -6,6 +6,7 @@ import {
   approveComplianceWaiver,
   createComplianceWaiver,
   listComplianceWaivers,
+  renewComplianceWaiver,
   revokeComplianceWaiver,
 } from '../api/client'
 import type { RulePackResponse } from '../api/types'
@@ -26,6 +27,7 @@ export function ComplianceWaiversPanel({
   const [scopeKey, setScopeKey] = useState('tenant')
   const [reasonCode, setReasonCode] = useState('temporary_ops_override')
   const [explanation, setExplanation] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
   const [showPolicyHint, setShowPolicyHint] = useState(false)
 
   const waiversQuery = useQuery({
@@ -42,9 +44,11 @@ export function ComplianceWaiversPanel({
         reasonCode: reasonCode.trim(),
         explanation: explanation.trim(),
         effectiveAt: new Date().toISOString(),
+        expiresAt: expiresAt.trim() ? new Date(`${expiresAt.trim()}:00`).toISOString() : null,
       }),
     onSuccess: () => {
       setExplanation('')
+      setExpiresAt('')
       void queryClient.invalidateQueries({ queryKey: ['compliancecore-waivers', accessToken] })
     },
   })
@@ -58,6 +62,18 @@ export function ComplianceWaiversPanel({
 
   const revokeMutation = useMutation({
     mutationFn: (waiverId: string) => revokeComplianceWaiver(accessToken, waiverId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['compliancecore-waivers', accessToken] })
+    },
+  })
+
+  const renewMutation = useMutation({
+    mutationFn: (waiverId: string) =>
+      renewComplianceWaiver(accessToken, waiverId, {
+        effectiveAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+        notes: 'Renewed from Compliance Core UI.',
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['compliancecore-waivers', accessToken] })
     },
@@ -203,6 +219,15 @@ export function ComplianceWaiversPanel({
               required
             />
           </label>
+          <label className="block text-sm text-slate-300">
+            Expires at
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            />
+          </label>
           <div className="md:col-span-2">
             <button
               type="submit"
@@ -246,13 +271,33 @@ export function ComplianceWaiversPanel({
                 </button>
               )}
               {canManage && waiver.status === 'approved' && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => renewMutation.mutate(waiver.waiverId)}
+                    disabled={renewMutation.isPending}
+                    className="rounded-md bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600"
+                  >
+                    Renew 30 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => revokeMutation.mutate(waiver.waiverId)}
+                    disabled={revokeMutation.isPending}
+                    className="rounded-md bg-rose-800 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
+                  >
+                    Revoke
+                  </button>
+                </div>
+              )}
+              {canManage && waiver.status === 'expired' && (
                 <button
                   type="button"
-                  onClick={() => revokeMutation.mutate(waiver.waiverId)}
-                  disabled={revokeMutation.isPending}
-                  className="mt-2 rounded-md bg-rose-800 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
+                  onClick={() => renewMutation.mutate(waiver.waiverId)}
+                  disabled={renewMutation.isPending}
+                  className="mt-2 rounded-md bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600"
                 >
-                  Revoke
+                  Renew 30 days
                 </button>
               )}
             </li>

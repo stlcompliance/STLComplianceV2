@@ -19,6 +19,7 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
 {
     private WebApplicationFactory<global::StaffArr.Api.Program> _staffarrFactory = null!;
     private HttpClient _staffarrClient = null!;
+    private Guid _seedPersonId;
 
     public async Task InitializeAsync()
     {
@@ -123,6 +124,37 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
         Assert.Equal(1, package.Counts.People);
         Assert.Equal(1, package.Counts.PersonnelIncidents);
         Assert.Equal("Demo Worker", package.People[0].DisplayName);
+    }
+
+    [Fact]
+    public async Task Audit_package_person_filter_returns_person_specific_history()
+    {
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        await SeedWorkforceDataAsync();
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/audit-packages/export?format=json&personId={_seedPersonId:D}",
+                adminToken));
+        response.EnsureSuccessStatusCode();
+        var package = (await response.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
+        Assert.Equal(1, package.Counts.People);
+        Assert.Equal(1, package.Counts.PersonnelIncidents);
+        Assert.Single(package.People);
+        Assert.Equal(_seedPersonId, package.People[0].PersonId);
+        Assert.All(package.PersonnelIncidents, incident => Assert.Equal(_seedPersonId, incident.PersonId));
+        Assert.Contains(package.AuditEvents, item => item.TargetId == _seedPersonId.ToString());
+
+        var timelineResponse = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/audit-packages/timeline?personId={_seedPersonId:D}&page=1&pageSize=10",
+                adminToken));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<PagedResult<StaffArrAuditEventExportItem>>())!;
+        Assert.Single(timeline.Items);
+        Assert.Equal(_seedPersonId.ToString(), timeline.Items[0].TargetId);
     }
 
     [Fact]
@@ -270,12 +302,12 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
-        var personId = Guid.NewGuid();
+        _seedPersonId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
         db.People.Add(new StaffPerson
         {
-            Id = personId,
+            Id = _seedPersonId,
             TenantId = PlatformSeeder.DemoTenantId,
             GivenName = "Demo",
             FamilyName = "Worker",
@@ -290,7 +322,7 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
-            PersonId = personId,
+            PersonId = _seedPersonId,
             ReasonCategoryKey = "safety",
             Severity = "medium",
             Status = "open",
@@ -301,6 +333,18 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
             ReportedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
+        });
+
+        db.AuditEvents.Add(new StaffArrAuditEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            Action = "person.update",
+            TargetType = "person",
+            TargetId = _seedPersonId.ToString(),
+            Result = "success",
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = now,
         });
 
         await db.SaveChangesAsync();

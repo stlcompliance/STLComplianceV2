@@ -22,6 +22,7 @@ import { PlatformSessionSettingsPage } from '../pages/platform-admin/PlatformSes
 import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorkerHealthPage'
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 import { HybridDataPlanePage } from '../pages/platform-admin/HybridDataPlanePage'
+import { PlatformUsersPage } from '../pages/platform-admin/PlatformUsersPage'
 
 export function AppRoutes() {
   return (
@@ -39,6 +40,7 @@ export function AppRoutes() {
                 <Route index element={<PlatformAdminDashboardPage />} />
                 <Route path="launch" element={<LaunchDiagnosticsPage />} />
                 <Route path="tenants" element={<TenantOverviewPage />} />
+                <Route path="users" element={<PlatformUsersPage />} />
                 <Route path="products" element={<ProductOverviewPage />} />
                 <Route path="data-plane" element={<HybridDataPlanePage />} />
                 <Route path="audit-export" element={<PlatformAuditExportPage />} />

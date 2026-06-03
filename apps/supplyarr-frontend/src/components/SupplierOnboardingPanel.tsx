@@ -8,12 +8,13 @@ import {
   getSupplierOnboardingByParty,
   getSupplierOnboardingDocumentRequirements,
   listPendingSupplierOnboarding,
+  listPartyComplianceDocuments,
   registerPartyComplianceDocument,
   rejectSupplierOnboarding,
   startSupplierOnboarding,
   submitSupplierOnboarding,
 } from '../api/client'
-import type { ExternalPartyResponse } from '../api/types'
+import type { ExternalPartyResponse, PartyComplianceDocumentResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface SupplierOnboardingPanelProps {
@@ -94,6 +95,12 @@ export function SupplierOnboardingPanel({
     retry: false,
   })
 
+  const documentsQuery = useQuery({
+    queryKey: ['supplyarr-party-compliance-documents', accessToken, selectedPartyId],
+    queryFn: () => listPartyComplianceDocuments(accessToken, selectedPartyId),
+    enabled: Boolean(selectedPartyId),
+  })
+
   const selectedParty = useMemo(
     () => onboardableParties.find((p) => p.partyId === selectedPartyId),
     [onboardableParties, selectedPartyId],
@@ -158,6 +165,7 @@ export function SupplierOnboardingPanel({
   })
 
   const onboarding = onboardingQuery.data
+  const partyDocuments = documentsQuery.data ?? []
   const actionError =
     (startMutation.isError && startMutation.error)
     || (submitMutation.isError && submitMutation.error)
@@ -169,6 +177,16 @@ export function SupplierOnboardingPanel({
     onboarding &&
     (onboarding.onboardingStatus === 'draft' || onboarding.onboardingStatus === 'rejected')
   const canApproveReview = onboarding?.onboardingStatus === 'pending_review' && canReview
+  const documentPosture =
+    onboarding?.documentRequirements.some((doc) => !doc.isSatisfied)
+      ? 'missing required documents'
+      : partyDocuments.some((doc) => doc.reviewStatus === 'rejected')
+        ? 'rejected document'
+        : partyDocuments.some((doc) => isDocumentExpiringSoon(doc))
+          ? 'expiring soon'
+          : partyDocuments.length > 0
+            ? 'approved'
+            : 'no documents'
 
   return (
     <section
@@ -282,12 +300,19 @@ export function SupplierOnboardingPanel({
 
       {requirementsQuery.data ? (
         <div className="mt-4">
-          <h3 className="text-sm font-medium text-slate-300">Required documents</h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-medium text-slate-300">Required documents</h3>
+            {selectedPartyId ? (
+              <span className="rounded-full bg-slate-800 px-2 py-1 text-[11px] uppercase tracking-wide text-slate-300">
+                {documentPosture}
+              </span>
+            ) : null}
+          </div>
           <ul className="mt-2 space-y-1 text-sm">
             {requirementsQuery.data.requirements.map((req) => {
-              const status = onboarding?.documentRequirements.find(
-                (d) => d.documentTypeKey === req.documentTypeKey,
-              )
+              const status =
+                onboarding?.documentRequirements.find((d) => d.documentTypeKey === req.documentTypeKey)
+                ?? deriveRequirementStatus(req.documentTypeKey, partyDocuments)
               return (
                 <li key={req.documentTypeKey} className="flex justify-between gap-2">
                   <span>{req.label}</span>
@@ -300,6 +325,62 @@ export function SupplierOnboardingPanel({
           </ul>
         </div>
       ) : null}
+
+      {selectedPartyId && (
+        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-3">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-medium text-slate-300">Compliance documents</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                {partyDocuments.length} document(s) · {countDocuments(partyDocuments, 'approved')} approved ·{' '}
+                {countDocuments(partyDocuments, 'expiring')} expiring soon · {countDocuments(partyDocuments, 'rejected')} rejected
+              </p>
+            </div>
+            {documentsQuery.isLoading ? (
+              <span className="text-xs text-slate-500">Loading documents…</span>
+            ) : null}
+          </div>
+
+          {documentsQuery.isError ? (
+            <div className="mt-3">
+              <ApiErrorCallout
+                title="Unable to load compliance documents"
+                message={getErrorMessage(documentsQuery.error, 'Failed to load vendor compliance documents.')}
+                onRetry={() => void documentsQuery.refetch()}
+                retryLabel="Retry documents"
+              />
+            </div>
+          ) : null}
+
+          {!documentsQuery.isLoading && !documentsQuery.isError ? (
+            partyDocuments.length > 0 ? (
+              <ul className="mt-3 space-y-2 text-sm">
+                {partyDocuments.map((doc) => (
+                  <li key={doc.documentId} className="rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-slate-100">
+                          {doc.documentKey} · {doc.title}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {doc.documentTypeKey} · v{doc.version} · {doc.reviewStatus}
+                        </div>
+                      </div>
+                      <span className={`text-xs ${documentStatusClass(doc)}`}>{documentStatusLabel(doc)}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {doc.expiresAt ? `Expires ${new Date(doc.expiresAt).toLocaleDateString()}` : 'No expiration date'} ·{' '}
+                      {prettyBytes(doc.sizeBytes)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">No compliance documents uploaded yet.</p>
+            )
+          ) : null}
+        </div>
+      )}
 
       {canManage && selectedPartyId && onboarding ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-3">
@@ -424,4 +505,56 @@ export function SupplierOnboardingPanel({
       ) : null}
     </section>
   )
+}
+
+function isDocumentExpiringSoon(document: PartyComplianceDocumentResponse): boolean {
+  if (!document.expiresAt) {
+    return false
+  }
+  const expiresAt = new Date(document.expiresAt).getTime()
+  const now = Date.now()
+  const diffDays = (expiresAt - now) / (1000 * 60 * 60 * 24)
+  return diffDays >= 0 && diffDays <= 30
+}
+
+function deriveRequirementStatus(
+  documentTypeKey: string,
+  documents: PartyComplianceDocumentResponse[],
+): { isSatisfied: boolean } | undefined {
+  const matched = documents.find((doc) => doc.documentTypeKey === documentTypeKey)
+  return matched ? { isSatisfied: matched.reviewStatus === 'approved' } : undefined
+}
+
+function countDocuments(
+  documents: PartyComplianceDocumentResponse[],
+  kind: 'approved' | 'expiring' | 'rejected',
+): number {
+  switch (kind) {
+    case 'approved':
+      return documents.filter((doc) => doc.reviewStatus === 'approved').length
+    case 'expiring':
+      return documents.filter((doc) => isDocumentExpiringSoon(doc)).length
+    case 'rejected':
+      return documents.filter((doc) => doc.reviewStatus === 'rejected').length
+  }
+}
+
+function documentStatusLabel(document: PartyComplianceDocumentResponse): string {
+  if (document.reviewStatus === 'rejected') return 'rejected'
+  if (isDocumentExpiringSoon(document)) return 'expiring soon'
+  if (document.reviewStatus === 'approved') return 'approved'
+  return document.reviewStatus
+}
+
+function documentStatusClass(document: PartyComplianceDocumentResponse): string {
+  if (document.reviewStatus === 'rejected') return 'text-rose-300'
+  if (isDocumentExpiringSoon(document)) return 'text-amber-300'
+  if (document.reviewStatus === 'approved') return 'text-emerald-300'
+  return 'text-slate-400'
+}
+
+function prettyBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${Math.round(bytes / (1024 * 1024))} MB`
 }

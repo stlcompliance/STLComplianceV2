@@ -9,6 +9,7 @@ import {
   getWorkOrders,
   getDuePmSchedules,
   getAssetReadiness,
+  getAssetReadinessHistory,
   getAssetReadinessFleet,
   getMaintenanceHistory,
   getPmPrograms,
@@ -542,6 +543,40 @@ describe('maintainarr api client', () => {
     expect(result).toHaveLength(1)
     expect(result[0]?.readinessStatus).toBe('not_ready')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/readiness', expect.any(Object))
+  })
+
+  it('loads asset readiness history', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          assetId: '11111111-1111-1111-1111-111111111111',
+          assetTag: 'TRK-01',
+          assetName: 'Truck 01',
+          totalCount: 1,
+          limit: 15,
+          items: [
+            {
+              entryId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+              statusFieldKey: 'readinessStatus',
+              statusValueKey: 'ready',
+              notes: 'Cleared after PM completion.',
+              changedByPersonId: 'person-1',
+              changedAt: '2026-06-03T10:00:00Z',
+              createdAt: '2026-06-03T10:00:00Z',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await getAssetReadinessHistory('token-123', '11111111-1111-1111-1111-111111111111')
+    expect(result.totalCount).toBe(1)
+    expect(result.items[0]?.statusFieldKey).toBe('readinessStatus')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/readiness/history?assetId=11111111-1111-1111-1111-111111111111&limit=15',
+      expect.any(Object),
+    )
   })
 
   it('loads maintenance and compliance report summaries from v1 endpoints', async () => {

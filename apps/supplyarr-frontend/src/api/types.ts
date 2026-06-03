@@ -143,6 +143,17 @@ export interface PartResponse {
   updatedAt: string
 }
 
+export interface SubstitutionItemResponse {
+  partId: string
+  partKey: string
+  partDisplayName: string
+  aliasId: string
+  aliasKey: string
+  manufacturerName: string
+  manufacturerPartNumber: string
+  createdAt: string
+}
+
 export interface CreatePartCatalogRequest {
   catalogKey: string
   name: string
@@ -187,6 +198,85 @@ export interface InventoryBinResponse {
   status: string
   createdAt: string
   updatedAt: string
+}
+
+export interface WmsStockLedgerEntryResponse {
+  ledgerEntryId: string
+  movementGroupId: string
+  idempotencyKey: string
+  movementType: string
+  partId: string
+  partKey: string
+  partDisplayName: string
+  inventoryBinId: string
+  binKey: string
+  binName: string
+  locationId: string
+  locationKey: string
+  locationName: string
+  staffarrSiteOrgUnitId: string | null
+  staffarrSiteNameSnapshot: string
+  relatedInventoryBinId: string | null
+  quantityOnHandDelta: number
+  quantityReservedDelta: number
+  quantityOnHandAfter: number
+  quantityReservedAfter: number
+  sourceType: string
+  sourceReferenceId: string | null
+  notes: string
+  createdByUserId: string | null
+  createdAt: string
+}
+
+export interface WmsMovementResponse {
+  movementGroupId: string
+  idempotencyKey: string
+  entries: WmsStockLedgerEntryResponse[]
+}
+
+export interface OutboundShipmentLineResponse {
+  shipmentLineId: string
+  partId: string
+  partKey: string
+  partDisplayName: string
+  fromBinId: string
+  fromBinKey: string
+  quantityRequested: number
+  quantityReserved: number
+  quantityPicked: number
+  quantityShipped: number
+  status: string
+}
+
+export interface OutboundShipmentResponse {
+  shipmentId: string
+  shipmentKey: string
+  status: string
+  shipVia: string
+  destinationName: string
+  destinationAddressSnapshot: string
+  routarrShipmentIntentId: string | null
+  routarrRouteId: string | null
+  routarrStatus: string
+  idempotencyKey: string
+  lines: OutboundShipmentLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateOutboundShipmentLineRequest {
+  partId: string
+  fromBinId: string
+  quantity: number
+}
+
+export interface CreateOutboundShipmentRequest {
+  idempotencyKey: string
+  shipmentKey: string
+  shipVia: string
+  destinationName: string
+  destinationAddressSnapshot: string
+  lines: CreateOutboundShipmentLineRequest[]
 }
 
 export interface PartStockLevelResponse {
@@ -265,6 +355,15 @@ export interface UpsertPartStockLevelRequest {
   partId: string
   binId: string
   quantityOnHand: number
+}
+
+export interface TransferStockRequest {
+  idempotencyKey: string
+  partId: string
+  fromBinId: string
+  toBinId: string
+  quantity: number
+  notes?: string | null
 }
 
 export interface PurchaseRequestLineResponse {
@@ -417,6 +516,13 @@ export interface ReceivingExceptionResponse {
   createdByUserId: string
   resolvedByUserId: string | null
   resolvedAt: string | null
+  cancelledByUserId: string | null
+  cancelledAt: string | null
+  cancellationReason: string
+  reopenedByUserId: string | null
+  reopenedAt: string | null
+  lastReopenReason: string
+  reopenCount: number
   createdAt: string
   updatedAt: string
 }
@@ -474,6 +580,14 @@ export interface CreateReceivingExceptionRequest {
   exceptionType: string
   quantity: number
   notes?: string | null
+}
+
+export interface CancelReceivingExceptionRequest {
+  reason: string
+}
+
+export interface ReopenReceivingExceptionRequest {
+  reason: string
 }
 
 export interface BackorderResponse {

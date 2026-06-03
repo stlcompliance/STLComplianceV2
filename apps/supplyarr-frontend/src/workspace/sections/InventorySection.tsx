@@ -1,4 +1,5 @@
 import { InventoryPanel } from '../../components/InventoryPanel'
+import { OutboundShipmentsPanel } from '../../components/OutboundShipmentsPanel'
 import { StockReservationsPanel } from '../../components/StockReservationsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -12,10 +13,18 @@ export function InventorySection({ state: s }: Props) {
       <InventoryPanel
         locations={s.locations}
         bins={bins}
+        transferBins={s.allBinsQuery.data ?? []}
+        stockLedger={s.stockLedgerEntries}
         stockLevels={s.stockQuery.data ?? []}
         parts={s.partsQuery.data ?? []}
         canManage={s.canManageInv}
-        isLoading={s.locationsQuery.isLoading || s.binsQuery.isLoading || s.stockQuery.isLoading}
+        isLoading={
+          s.locationsQuery.isLoading ||
+          s.binsQuery.isLoading ||
+          s.allBinsQuery.isLoading ||
+          s.stockQuery.isLoading ||
+          s.stockLedgerQuery.isLoading
+        }
         locationKey={s.invLocationKey}
         locationName={s.invLocationName}
         locationType={s.invLocationType}
@@ -26,6 +35,13 @@ export function InventorySection({ state: s }: Props) {
         selectedPartId={s.selectedStockPartId}
         selectedBinId={s.selectedStockBinId}
         stockQuantity={s.stockQuantity}
+        transferKey={s.transferKey}
+        transferPartId={s.transferPartId}
+        transferFromBinId={s.transferFromBinId}
+        transferToBinId={s.transferToBinId}
+        transferQuantity={s.transferQuantity}
+        transferNotes={s.transferNotes}
+        lastTransferResult={s.lastTransferResult}
         onLocationKeyChange={s.setInvLocationKey}
         onLocationNameChange={s.setInvLocationName}
         onLocationTypeChange={s.setInvLocationType}
@@ -36,12 +52,20 @@ export function InventorySection({ state: s }: Props) {
         onSelectedPartIdChange={s.setSelectedStockPartId}
         onSelectedBinIdChange={s.setSelectedStockBinId}
         onStockQuantityChange={s.setStockQuantity}
+        onTransferKeyChange={s.setTransferKey}
+        onTransferPartIdChange={s.setTransferPartId}
+        onTransferFromBinIdChange={s.setTransferFromBinId}
+        onTransferToBinIdChange={s.setTransferToBinId}
+        onTransferQuantityChange={s.setTransferQuantity}
+        onTransferNotesChange={s.setTransferNotes}
         onCreateLocation={() => s.createLocationMutation.mutate()}
         onCreateBin={() => s.createBinMutation.mutate()}
         onUpsertStock={() => s.upsertStockMutation.mutate()}
+        onTransferStock={() => s.transferStockMutation.mutate()}
         isCreatingLocation={s.createLocationMutation.isPending}
         isCreatingBin={s.createBinMutation.isPending}
         isUpsertingStock={s.upsertStockMutation.isPending}
+        isTransferring={s.transferStockMutation.isPending}
       />
 
       <StockReservationsPanel
@@ -78,6 +102,13 @@ export function InventorySection({ state: s }: Props) {
         isCreating={s.createStockReservationMutation.isPending}
         isReleasing={s.releaseStockReservationMutation.isPending}
         isFulfilling={s.fulfillStockReservationMutation.isPending}
+      />
+
+      <OutboundShipmentsPanel
+        accessToken={s.accessToken}
+        parts={s.partsQuery.data ?? []}
+        bins={s.allBinsQuery.data ?? []}
+        canManage={s.canManageInv}
       />
     </div>
   )

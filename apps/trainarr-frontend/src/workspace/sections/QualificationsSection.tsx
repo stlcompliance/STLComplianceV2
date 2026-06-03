@@ -81,6 +81,8 @@ export function QualificationsSection({ state }: Props) {
         isExpiring={s.expireQualificationMutation.isPending}
 
         canManage={s.canQualifications}
+        history={s.qualificationIssueHistoryQuery.data ?? []}
+        isLoadingHistory={s.qualificationIssueHistoryQuery.isLoading}
 
       />
 

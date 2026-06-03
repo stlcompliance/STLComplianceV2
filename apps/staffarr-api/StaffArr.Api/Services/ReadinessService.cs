@@ -86,6 +86,10 @@ public sealed class ReadinessService(
             tenantId,
             personId,
             cancellationToken);
+        var sourceTimestampCandidates = new List<DateTimeOffset>
+        {
+            personRecords.Count > 0 ? personRecords.Max(x => x.UpdatedAt) : DateTimeOffset.UtcNow
+        };
 
         ReadinessOverrideSummaryResponse? overrideSummary = null;
         if (activeOverride is not null)
@@ -96,9 +100,15 @@ public sealed class ReadinessService(
                 activeOverride.GrantedAt,
                 activeOverride.ExpiresAt,
                 activeOverride.GrantedByUserId);
+            sourceTimestampCandidates.Add(activeOverride.UpdatedAt);
         }
 
         var hasTrainingBlockers = trainingBlockers.Count > 0;
+        if (trainingBlockers.Count > 0)
+        {
+            sourceTimestampCandidates.Add(trainingBlockers.Max(x => x.UpdatedAt));
+        }
+
         var localReadinessStatus = (!hasTrainingBlockers && certificationReady) || activeOverride is not null
             ? "ready"
             : "not_ready";
@@ -157,6 +167,25 @@ public sealed class ReadinessService(
         var readinessBasis = hasComplianceCoreBlockers
             ? "compliancecore"
             : localReadinessBasis;
+        var reasonCodes = BuildReasonCodes(
+            readinessStatus,
+            readinessBasis,
+            blockers,
+            activeOverride is not null);
+        var sourceTimestamp = sourceTimestampCandidates.Count > 0
+            ? sourceTimestampCandidates.Max()
+            : DateTimeOffset.UtcNow;
+        var snapshotAgeMinutes = (int)Math.Max(0, Math.Ceiling((DateTimeOffset.UtcNow - sourceTimestamp).TotalMinutes));
+        var snapshotFreshnessStatus = snapshotAgeMinutes <= 60
+            ? "fresh"
+            : snapshotAgeMinutes <= 1440
+                ? "aging"
+                : "stale";
+        var confidenceLevel = readinessStatus == "ready" && activeOverride is null && !hasComplianceCoreBlockers
+            ? "high"
+            : activeOverride is not null
+                ? "medium"
+                : "low";
 
         ReadinessAuditSnapshotResponse? auditSnapshot = null;
         if (!string.IsNullOrWhiteSpace(auditSnapshotKind))
@@ -181,10 +210,72 @@ public sealed class ReadinessService(
             readinessStatus,
             readinessBasis,
             DateTimeOffset.UtcNow,
+            sourceTimestamp,
+            snapshotAgeMinutes,
+            snapshotFreshnessStatus,
+            confidenceLevel,
+            reasonCodes,
             requirementStatuses,
             blockers,
             overrideSummary,
             auditSnapshot);
+    }
+
+    private static IReadOnlyList<string> BuildReasonCodes(
+        string readinessStatus,
+        string readinessBasis,
+        IReadOnlyList<ReadinessBlockerResponse> blockers,
+        bool hasActiveOverride)
+    {
+        var codes = new List<string>();
+
+        if (string.Equals(readinessStatus, "ready", StringComparison.OrdinalIgnoreCase))
+        {
+            codes.Add("ready");
+        }
+
+        if (hasActiveOverride)
+        {
+            codes.Add("manual_override");
+        }
+
+        if (string.Equals(readinessBasis, "training_blockers", StringComparison.OrdinalIgnoreCase))
+        {
+            codes.Add("training_blockers");
+        }
+        else if (string.Equals(readinessBasis, "certifications", StringComparison.OrdinalIgnoreCase))
+        {
+            codes.Add("certification_ready");
+        }
+        else if (string.Equals(readinessBasis, "compliancecore", StringComparison.OrdinalIgnoreCase))
+        {
+            codes.Add("compliancecore_blocker");
+        }
+
+        foreach (var blocker in blockers)
+        {
+            if (string.Equals(blocker.BlockerSource, "training", StringComparison.OrdinalIgnoreCase))
+            {
+                codes.Add($"training_{blocker.BlockerType}");
+                continue;
+            }
+
+            if (string.Equals(blocker.BlockerSource, "certification", StringComparison.OrdinalIgnoreCase))
+            {
+                codes.Add($"certification_{blocker.BlockerType}");
+                continue;
+            }
+
+            if (string.Equals(blocker.BlockerSource, "compliancecore", StringComparison.OrdinalIgnoreCase))
+            {
+                codes.Add("compliancecore_blocker");
+            }
+        }
+
+        return codes
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static (ReadinessRequirementStatusResponse RequirementStatus, ReadinessBlockerResponse? Blocker)

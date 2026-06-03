@@ -42,6 +42,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
   const [result, setResult] = useState('')
   const [targetType, setTargetType] = useState('')
   const [actorUserId, setActorUserId] = useState('')
+  const [personId, setPersonId] = useState('')
   const [lastJsonExport, setLastJsonExport] = useState<AuditPackageExportResponse | null>(null)
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const downloadedJobIdRef = useRef<string | null>(null)
@@ -53,6 +54,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
     result: result || undefined,
     targetType: targetType || undefined,
     actorUserId: actorUserId.trim() || undefined,
+    personId: personId.trim() || undefined,
   }
 
   const manifestQuery = useQuery({
@@ -275,6 +277,17 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
             testId="staffarr-audit-filter-actor"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
           />
+          <label htmlFor="staffarr-audit-filter-person" className="block text-sm text-slate-300 sm:col-span-2">
+            Person ID
+            <input
+              id="staffarr-audit-filter-person"
+              value={personId}
+              onChange={(e) => setPersonId(e.target.value)}
+              placeholder="Filter for a specific personId"
+              data-testid="staffarr-audit-filter-person"
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
+            />
+          </label>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+using RoutArr.Api.Contracts;
 using RoutArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
@@ -112,6 +113,26 @@ public static class ProofDvirReportEndpoints
             return Results.Ok(detail);
         })
         .WithName($"GetRoutArrProofDvirReportProofDetail{routeNameSuffix}");
+
+        group.MapPost("/trips/{tripId:guid}/proofs/{proofId:guid}/reject", async (
+            Guid tripId,
+            Guid proofId,
+            RejectTripProofRequest request,
+            HttpContext context,
+            TripProofDvirService proofDvirService,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await proofDvirService.RejectProofAsync(context.User, tripId, proofId, request, cancellationToken)))
+        .WithName($"RejectRoutArrTripProof{routeNameSuffix}");
+
+        group.MapPatch("/trips/{tripId:guid}/proofs/{proofId:guid}", async (
+            Guid tripId,
+            Guid proofId,
+            CorrectTripProofRequest request,
+            HttpContext context,
+            TripProofDvirService proofDvirService,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await proofDvirService.CorrectProofAsync(context.User, tripId, proofId, request, cancellationToken)))
+        .WithName($"CorrectRoutArrTripProof{routeNameSuffix}");
 
         group.MapGet("/dvir/{dvirId:guid}", async (
             Guid dvirId,

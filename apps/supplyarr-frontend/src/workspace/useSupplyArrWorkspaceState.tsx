@@ -25,6 +25,7 @@ import {
   createBackorderFromPurchaseOrderLine,
   createReceivingException,
   createReceivingReceiptFromPurchaseOrder,
+  cancelReceivingException,
   createVendorReturnFromPurchaseOrderLine,
   createVendorReturnFromStock,
   fulfillBackorder,
@@ -64,6 +65,8 @@ import {
   getDealers,
 
   getInventoryBins,
+  transferStock,
+  getStockLedger,
 
   getInventoryLocations,
 
@@ -74,6 +77,7 @@ import {
   getPartStockLevels,
 
   getParts,
+  getSubstitutions,
 
   getPurchaseRequests,
 
@@ -87,6 +91,7 @@ import {
 
   postReceivingReceipt,
   resolveReceivingException,
+  reopenReceivingException,
 
   getVendors,
 
@@ -99,7 +104,7 @@ import {
 
 } from '../api/client'
 
-import type { UpdateExternalPartyRequest } from '../api/types'
+import type { UpdateExternalPartyRequest, WmsMovementResponse } from '../api/types'
 
 import {
   canApprovePurchaseOrders,
@@ -188,6 +193,8 @@ export function useSupplyArrWorkspaceState() {
 
   const [selectedPartId, setSelectedPartId] = useState('')
 
+  const [substitutionPartId, setSubstitutionPartId] = useState('')
+
   const [selectedVendorId, setSelectedVendorId] = useState('')
 
   const [vendorPartNumber, setVendorPartNumber] = useState('')
@@ -211,6 +218,14 @@ export function useSupplyArrWorkspaceState() {
   const [selectedStockBinId, setSelectedStockBinId] = useState('')
 
   const [stockQuantity, setStockQuantity] = useState('')
+
+  const [transferKey, setTransferKey] = useState('')
+  const [transferPartId, setTransferPartId] = useState('')
+  const [transferFromBinId, setTransferFromBinId] = useState('')
+  const [transferToBinId, setTransferToBinId] = useState('')
+  const [transferQuantity, setTransferQuantity] = useState('')
+  const [transferNotes, setTransferNotes] = useState('')
+  const [lastTransferResult, setLastTransferResult] = useState<WmsMovementResponse | null>(null)
 
   const [reservationKey, setReservationKey] = useState('')
 
@@ -271,6 +286,10 @@ export function useSupplyArrWorkspaceState() {
   const [exceptionQuantity, setExceptionQuantity] = useState('')
 
   const [exceptionNotes, setExceptionNotes] = useState('')
+
+  const [exceptionCancelReason, setExceptionCancelReason] = useState('')
+
+  const [exceptionReopenReason, setExceptionReopenReason] = useState('')
 
   const [backorderKey, setBackorderKey] = useState('')
 
@@ -455,6 +474,16 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
+  const allBinsQuery = useQuery({
+
+    queryKey: ['supplyarr-inventory-bins-all', session?.accessToken],
+
+    queryFn: () => getInventoryBins(session!.accessToken),
+
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+
+  })
+
 
 
   const purchaseRequestsQuery = useQuery({
@@ -599,6 +628,27 @@ export function useSupplyArrWorkspaceState() {
 
         locationId: selectedInvLocationId || undefined,
 
+      }),
+
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+
+  })
+
+  const stockLedgerQuery = useQuery({
+
+    queryKey: [
+      'supplyarr-stock-ledger',
+      session?.accessToken,
+      selectedInvLocationId,
+      selectedStockBinId,
+      selectedStockPartId,
+    ],
+
+    queryFn: () =>
+      getStockLedger(session!.accessToken, {
+        locationId: selectedInvLocationId || undefined,
+        binId: selectedStockBinId || undefined,
+        partId: selectedStockPartId || undefined,
       }),
 
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
@@ -1246,6 +1296,38 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
+  const cancelReceivingExceptionMutation = useMutation({
+
+    mutationFn: ({ receivingExceptionId, reason }: { receivingExceptionId: string; reason: string }) =>
+
+      cancelReceivingException(session!.accessToken, receivingExceptionId, { reason }),
+
+    onSuccess: async () => {
+
+      setExceptionCancelReason('')
+
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
+
+    },
+
+  })
+
+  const reopenReceivingExceptionMutation = useMutation({
+
+    mutationFn: ({ receivingExceptionId, reason }: { receivingExceptionId: string; reason: string }) =>
+
+      reopenReceivingException(session!.accessToken, receivingExceptionId, { reason }),
+
+    onSuccess: async () => {
+
+      setExceptionReopenReason('')
+
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
+
+    },
+
+  })
+
 
 
   const createBackorderMutation = useMutation({
@@ -1663,6 +1745,38 @@ export function useSupplyArrWorkspaceState() {
       setStockQuantity('')
 
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
+
+    },
+
+  })
+
+  const transferStockMutation = useMutation({
+
+    mutationFn: () =>
+      transferStock(session!.accessToken, {
+        idempotencyKey: transferKey,
+        partId: transferPartId,
+        fromBinId: transferFromBinId,
+        toBinId: transferToBinId,
+        quantity: Number(transferQuantity),
+        notes: transferNotes || null,
+      }),
+
+    onSuccess: async (result) => {
+
+      setTransferKey('')
+      setTransferPartId('')
+      setTransferFromBinId('')
+      setTransferToBinId('')
+      setTransferQuantity('')
+      setTransferNotes('')
+      setLastTransferResult(result)
+
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-bins'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-bins-all'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
 
     },
 
@@ -1685,6 +1799,7 @@ export function useSupplyArrWorkspaceState() {
       setSelectedReservationId(created.reservationId)
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
     },
   })
 
@@ -1697,6 +1812,7 @@ export function useSupplyArrWorkspaceState() {
       setReservationReleaseReason('')
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
     },
   })
 
@@ -1705,6 +1821,7 @@ export function useSupplyArrWorkspaceState() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
     },
   })
 
@@ -1749,6 +1866,12 @@ export function useSupplyArrWorkspaceState() {
   const canReadPartsInventoryReports = me
     ? userCanReadPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
     : false
+
+  const substitutionsQuery = useQuery({
+    queryKey: ['supplyarr-substitutions', session?.accessToken, substitutionPartId],
+    queryFn: () => getSubstitutions(session!.accessToken, substitutionPartId || undefined),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPartsInventoryReports,
+  })
 
   const canExportPartsInventoryReports = me
     ? userCanExportPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
@@ -1904,6 +2027,7 @@ export function useSupplyArrWorkspaceState() {
     partMfgNumber,
     selectedCatalogId,
     selectedPartId,
+    substitutionPartId,
     selectedVendorId,
     vendorPartNumber,
     invLocationKey,
@@ -1916,6 +2040,13 @@ export function useSupplyArrWorkspaceState() {
     selectedStockPartId,
     selectedStockBinId,
     stockQuantity,
+    transferKey,
+    transferPartId,
+    transferFromBinId,
+    transferToBinId,
+    transferQuantity,
+    transferNotes,
+    lastTransferResult,
     reservationKey,
     selectedReservationId,
     selectedReservationPartId,
@@ -1946,6 +2077,8 @@ export function useSupplyArrWorkspaceState() {
     exceptionType,
     exceptionQuantity,
     exceptionNotes,
+    exceptionCancelReason,
+    exceptionReopenReason,
     backorderKey,
     selectedBackorderId,
     selectedBackorderPoLineId,
@@ -1997,8 +2130,10 @@ export function useSupplyArrWorkspaceState() {
     dealersQuery,
     catalogsQuery,
     partsQuery,
+    substitutionsQuery,
     locationsQuery,
     binsQuery,
+    allBinsQuery,
     purchaseRequestsQuery,
     purchaseOrdersQuery,
     receivingReceiptsQuery,
@@ -2010,6 +2145,7 @@ export function useSupplyArrWorkspaceState() {
     reorderEvaluationQuery,
     demandRefsQuery,
     stockQuery,
+    stockLedgerQuery,
     stockReservationsQuery,
     createVendorMutation,
     createSupplierMutation,
@@ -2036,6 +2172,8 @@ export function useSupplyArrWorkspaceState() {
     updateReceivingLineMutation,
     createReceivingExceptionMutation,
     resolveReceivingExceptionMutation,
+    cancelReceivingExceptionMutation,
+    reopenReceivingExceptionMutation,
     createBackorderMutation,
     fulfillBackorderMutation,
     cancelBackorderMutation,
@@ -2049,6 +2187,7 @@ export function useSupplyArrWorkspaceState() {
     createPurchaseRequestFromReorderMutation,
     createPurchaseRequestFromDemandRefMutation,
     upsertStockMutation,
+    transferStockMutation,
     createStockReservationMutation,
     releaseStockReservationMutation,
     fulfillStockReservationMutation,
@@ -2078,6 +2217,7 @@ export function useSupplyArrWorkspaceState() {
     issuedPurchaseOrders,
     issuedPurchaseOrdersWithReceived,
     returnInventoryBins,
+    stockLedgerEntries: stockLedgerQuery.data ?? [],
     selectedReceivingReceipt,
     selectedReceivingLine,
     vendors,
@@ -2108,6 +2248,7 @@ export function useSupplyArrWorkspaceState() {
     setPartMfgNumber,
     setSelectedCatalogId,
     setSelectedPartId,
+    setSubstitutionPartId,
     setSelectedVendorId,
     setVendorPartNumber,
     setInvLocationKey,
@@ -2120,6 +2261,12 @@ export function useSupplyArrWorkspaceState() {
     setSelectedStockPartId,
     setSelectedStockBinId,
     setStockQuantity,
+    setTransferKey,
+    setTransferPartId,
+    setTransferFromBinId,
+    setTransferToBinId,
+    setTransferQuantity,
+    setTransferNotes,
     setReservationKey,
     setSelectedReservationId,
     setSelectedReservationPartId,
@@ -2150,6 +2297,8 @@ export function useSupplyArrWorkspaceState() {
     setExceptionType,
     setExceptionQuantity,
     setExceptionNotes,
+    setExceptionCancelReason,
+    setExceptionReopenReason,
     setBackorderKey,
     setSelectedBackorderId,
     setSelectedBackorderPoLineId,
