@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AlternativeComparisonTable } from '../components/AlternativeComparisonTable'
+import { MarketComparisonTable } from '../components/MarketComparisonTable'
 import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
 import {
@@ -8,6 +9,7 @@ import {
   COMPARE_LEAD,
   SUITE_HONESTY_NOTES,
 } from '../content/compare'
+import { MARKET_COMPARISON_LEAD } from '../content/marketComparison'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 export function ComparePage() {
@@ -72,6 +74,14 @@ export function ComparePage() {
               <p className="mt-1 text-sm text-slate-400">{scenario.limitations}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Compared with market products</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">{MARKET_COMPARISON_LEAD}</p>
+        <div className="mt-6">
+          <MarketComparisonTable />
         </div>
       </section>
 

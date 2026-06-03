@@ -45,6 +45,7 @@ describe('App routing', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('compare-disclaimer')).toBeInTheDocument()
+    expect(screen.getByTestId('market-products-table')).toHaveTextContent(/Manhattan Active/i)
     expect(screen.getByTestId('compare-dimensions-table')).toBeInTheDocument()
   })
 
