@@ -835,6 +835,157 @@
         }
       }
     },
+    "/api/v1/truck-stock": {
+      "get": {
+        "tags": [
+          "TruckStock"
+        ],
+        "operationId": "ListLoadArrTruckStock",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/truck-stock/{id}": {
+      "get": {
+        "tags": [
+          "TruckStock"
+        ],
+        "operationId": "GetLoadArrTruckStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/truck-stock/{id}/count": {
+      "post": {
+        "tags": [
+          "TruckStock"
+        ],
+        "operationId": "CountLoadArrTruckStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckStockCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/truck-stock/{id}/issue": {
+      "post": {
+        "tags": [
+          "TruckStock"
+        ],
+        "operationId": "IssueLoadArrTruckStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckStockIssueRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/truck-stock/{id}/return": {
+      "post": {
+        "tags": [
+          "TruckStock"
+        ],
+        "operationId": "ReturnLoadArrTruckStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckStockReturnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/unexplained-inventory": {
       "get": {
         "tags": [
@@ -2261,6 +2412,99 @@
             ]
           }
         }
+      },
+      "TruckStockCountRequest": {
+        "required": [
+          "personId",
+          "countedQuantity",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "countedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TruckStockIssueRequest": {
+        "required": [
+          "personId",
+          "quantity",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TruckStockReturnRequest": {
+        "required": [
+          "personId",
+          "quantity",
+          "reasonCode",
+          "evidenceSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "evidenceSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       }
     }
   },
@@ -2297,6 +2541,9 @@
     },
     {
       "name": "Adjustments"
+    },
+    {
+      "name": "TruckStock"
     }
   ]
 }

@@ -465,6 +465,217 @@ public static partial class LoadArrWorkspaceEndpoints
                 movement));
         })
         .WithName("ApproveLoadArrAdjustment");
+
+        var truckStock = app.MapGroup("/api/v1/truck-stock")
+            .WithTags("TruckStock")
+            .RequireAuthorization();
+
+        truckStock.MapGet("/", (string? status, string? locationId) =>
+        {
+            var records = CreateTruckStockRecords()
+                .Where(record => status is null
+                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
+                .Where(record => locationId is null
+                    || string.Equals(record.TruckLocationId, locationId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(record => record.TruckLocationNameSnapshot, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(record => record.TruckStockNumber, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            return Results.Ok(new LoadArrListResponse<LoadArrTruckStockResponse>(records, records.Length));
+        })
+        .WithName("ListLoadArrTruckStock");
+
+        truckStock.MapGet("/{id}", (string id) =>
+        {
+            var record = ResolveTruckStockRecord(id);
+            return record is null ? Results.NotFound() : Results.Ok(record);
+        })
+        .WithName("GetLoadArrTruckStock");
+
+        truckStock.MapPost("/{id}/issue", (string id, TruckStockIssueRequest request) =>
+        {
+            var validation = ValidateTruckStockRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveTruckStockRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var issuedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var issuedQuantity = Math.Min(record.QuantityOnHand, request.Quantity);
+            var quantityOnHand = Math.Max(0m, record.QuantityOnHand - issuedQuantity);
+            var status = quantityOnHand == 0m
+                ? "empty"
+                : quantityOnHand < record.MinimumQuantity
+                    ? "low_stock"
+                    : "ready";
+            var updated = record with
+            {
+                QuantityOnHand = quantityOnHand,
+                Status = status,
+                LastMovementAtUtc = issuedAtUtc,
+                Notes = $"Issued {issuedQuantity} {record.UnitOfMeasure} from truck stock.",
+                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:issue:{issuedAtUtc}" }).ToArray()
+            };
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "truck_stock_issue",
+                record.StaffarrSiteOrgUnitId,
+                record.TruckLocationId,
+                record.TruckLocationId,
+                record.SupplyarrItemId,
+                record.ItemNameSnapshot,
+                issuedQuantity,
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "truck_stock",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                issuedAtUtc);
+            var restockTask = quantityOnHand < record.MinimumQuantity
+                ? new LoadArrWarehouseTaskResponse(
+                    $"task-{Guid.NewGuid():N}"[..13],
+                    "replenish",
+                    $"Restock {record.ItemNameSnapshot} on {record.TruckStockNumber}",
+                    "normal",
+                    "ready",
+                    record.TruckLocationNameSnapshot,
+                    "Truck Stock User",
+                    record.SupplyarrItemId,
+                    Math.Max(0m, record.MinimumQuantity - quantityOnHand),
+                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                    new[] { "truck_stock_low", "restock_requested" })
+                : null;
+
+            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, restockTask));
+        })
+        .WithName("IssueLoadArrTruckStock");
+
+        truckStock.MapPost("/{id}/return", (string id, TruckStockReturnRequest request) =>
+        {
+            var validation = ValidateTruckStockRequest(request.PersonId, request.ReasonCode, request.Quantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveTruckStockRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var returnedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var quantityOnHand = record.QuantityOnHand + request.Quantity;
+            var status = quantityOnHand < record.MinimumQuantity ? "low_stock" : "ready";
+            var updated = record with
+            {
+                QuantityOnHand = quantityOnHand,
+                Status = status,
+                LastMovementAtUtc = returnedAtUtc,
+                Notes = $"Returned {request.Quantity} {record.UnitOfMeasure} to truck stock.",
+                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:return:{returnedAtUtc}" }).ToArray()
+            };
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "truck_stock_return",
+                record.StaffarrSiteOrgUnitId,
+                record.TruckLocationId,
+                record.TruckLocationId,
+                record.SupplyarrItemId,
+                record.ItemNameSnapshot,
+                request.Quantity,
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "truck_stock",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                returnedAtUtc);
+
+            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, null));
+        })
+        .WithName("ReturnLoadArrTruckStock");
+
+        truckStock.MapPost("/{id}/count", (string id, TruckStockCountRequest request) =>
+        {
+            var validation = ValidateTruckStockCountRequest(request.PersonId, request.ReasonCode, request.CountedQuantity);
+            if (validation is not null)
+            {
+                return validation;
+            }
+
+            var record = ResolveTruckStockRecord(id);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var countedAtUtc = DateTimeOffset.UtcNow.ToString("O");
+            var variance = request.CountedQuantity - record.QuantityOnHand;
+            var status = request.CountedQuantity == 0m
+                ? "empty"
+                : request.CountedQuantity < record.MinimumQuantity
+                    ? "low_stock"
+                    : "ready";
+            var updated = record with
+            {
+                QuantityOnHand = request.CountedQuantity,
+                Status = status,
+                LastCountedAtUtc = countedAtUtc,
+                LastMovementAtUtc = countedAtUtc,
+                Notes = $"Counted at {countedAtUtc}; variance {variance:+0.##;-0.##;0}.",
+                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:count:{countedAtUtc}" }).ToArray()
+            };
+            var movement = new LoadArrInventoryMovementResponse(
+                $"move-{Guid.NewGuid():N}"[..13],
+                "truck_stock_count",
+                record.StaffarrSiteOrgUnitId,
+                record.TruckLocationId,
+                record.TruckLocationId,
+                record.SupplyarrItemId,
+                record.ItemNameSnapshot,
+                Math.Abs(variance),
+                record.UnitOfMeasure,
+                record.Status,
+                status,
+                "loadarr",
+                "truck_stock",
+                record.Id,
+                request.ReasonCode,
+                request.PersonId,
+                null,
+                countedAtUtc);
+            var restockTask = request.CountedQuantity < record.MinimumQuantity
+                ? new LoadArrWarehouseTaskResponse(
+                    $"task-{Guid.NewGuid():N}"[..13],
+                    "replenish",
+                    $"Restock {record.ItemNameSnapshot} on {record.TruckStockNumber}",
+                    "normal",
+                    "ready",
+                    record.TruckLocationNameSnapshot,
+                    "Truck Stock User",
+                    record.SupplyarrItemId,
+                    Math.Max(0m, record.MinimumQuantity - request.CountedQuantity),
+                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
+                    new[] { "truck_stock_low", "restock_requested" })
+                : null;
+
+            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, restockTask));
+        })
+        .WithName("CountLoadArrTruckStock");
     }
 
     private static LoadArrLocationUtilizationResponse? CreateLocationUtilization(string locationId)
@@ -615,12 +826,60 @@ public static partial class LoadArrWorkspaceEndpoints
                 "2026-06-02T19:54:00Z")
         ];
 
+    private static IReadOnlyCollection<LoadArrTruckStockResponse> CreateTruckStockRecords() =>
+        [
+            new LoadArrTruckStockResponse(
+                "truck-stock-17-rotor",
+                "TRK-17-ROTOR",
+                "staff-site-south-depot",
+                "South Service Depot",
+                "loc-truck-17",
+                "Truck Stock 17",
+                "SUP-BR-ROTOR-22",
+                "Brake rotor assembly",
+                "each",
+                "person-route-stock-lead",
+                "Jordan Reed",
+                12m,
+                6m,
+                18m,
+                "ready",
+                "2026-06-02T19:40:00Z",
+                "2026-06-02T19:48:00Z",
+                "Reserved for maintenance work orders and route returns.",
+                new[] { "truck_stock", "route_ready", "maintainarr:work-order:WO-5530" }),
+            new LoadArrTruckStockResponse(
+                "truck-stock-17-kit",
+                "TRK-17-KIT",
+                "staff-site-south-depot",
+                "South Service Depot",
+                "loc-truck-17",
+                "Truck Stock 17",
+                "SUP-VALVE-KIT-A",
+                "Valve repair kit A",
+                "each",
+                "person-route-stock-lead",
+                "Jordan Reed",
+                4m,
+                3m,
+                10m,
+                "low_stock",
+                "2026-06-02T18:15:00Z",
+                "2026-06-02T18:50:00Z",
+                "Needs restock after route replenishment and technician issue.",
+                new[] { "truck_stock", "restock_required", "route_replenishment" })
+        ];
+
     private static LoadArrCountResponse? ResolveCount(string id) =>
         CreateCounts()
             .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrAdjustmentResponse? ResolveAdjustment(string id) =>
         CreateAdjustments()
+            .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
+
+    private static LoadArrTruckStockResponse? ResolveTruckStockRecord(string id) =>
+        CreateTruckStockRecords()
             .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrAdjustmentResponse CreateAdjustmentFromVariance(
@@ -653,6 +912,58 @@ public static partial class LoadArrWorkspaceEndpoints
             createdAtUtc,
             createdAtUtc,
             createdAtUtc);
+    }
+
+    private static IResult? ValidateTruckStockRequest(string personId, string reasonCode, decimal quantity)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Truck stock operations require the acting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Truck stock operations require a controlled reason code."));
+        }
+
+        if (quantity <= 0m)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_quantity",
+                "Truck stock quantity must be greater than zero."));
+        }
+
+        return null;
+    }
+
+    private static IResult? ValidateTruckStockCountRequest(string personId, string reasonCode, decimal countedQuantity)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_person",
+                "Truck stock counts require the counting person reference."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_reason_code",
+                "Truck stock counts require a controlled reason code."));
+        }
+
+        if (countedQuantity < 0m)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_counted_quantity",
+                "Truck stock counted quantity cannot be negative."));
+        }
+
+        return null;
     }
 
     private static IResult? ValidateCountRequest(CreateLoadArrCountRequest request)
@@ -901,3 +1212,47 @@ public sealed record LoadArrAdjustmentMutationResponse(
     LoadArrAdjustmentResponse Adjustment,
     LoadArrInventoryOriginEventResponse? OriginEvent,
     LoadArrInventoryMovementResponse? Movement);
+
+public sealed record LoadArrTruckStockResponse(
+    string Id,
+    string TruckStockNumber,
+    string StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
+    string TruckLocationId,
+    string TruckLocationNameSnapshot,
+    string SupplyarrItemId,
+    string ItemNameSnapshot,
+    string UnitOfMeasure,
+    string AssignedPersonId,
+    string AssignedPersonNameSnapshot,
+    decimal QuantityOnHand,
+    decimal MinimumQuantity,
+    decimal MaximumQuantity,
+    string Status,
+    string LastCountedAtUtc,
+    string LastMovementAtUtc,
+    string Notes,
+    IReadOnlyCollection<string> TraceTags);
+
+public sealed record TruckStockIssueRequest(
+    string PersonId,
+    decimal Quantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record TruckStockReturnRequest(
+    string PersonId,
+    decimal Quantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record TruckStockCountRequest(
+    string PersonId,
+    decimal CountedQuantity,
+    string ReasonCode,
+    string? EvidenceSummary);
+
+public sealed record LoadArrTruckStockMutationResponse(
+    LoadArrTruckStockResponse TruckStock,
+    LoadArrInventoryMovementResponse? Movement,
+    LoadArrWarehouseTaskResponse? RestockTask);

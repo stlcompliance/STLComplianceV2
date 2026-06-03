@@ -119,6 +119,7 @@ describe('AuditPackageExportPanel', () => {
         result: null,
         targetType: null,
         actorUserId: null,
+        personId: null,
       },
       counts: {
         auditEvents: 0,

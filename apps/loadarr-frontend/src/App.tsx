@@ -101,6 +101,38 @@ type LoadArrRouteHandoff = {
   notes: string
 }
 
+type LoadArrTruckStock = {
+  id: string
+  truckStockNumber: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  truckLocationId: string
+  truckLocationNameSnapshot: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  unitOfMeasure: string
+  assignedPersonId: string
+  assignedPersonNameSnapshot: string
+  quantityOnHand: number
+  minimumQuantity: number
+  maximumQuantity: number
+  status: string
+  lastCountedAtUtc: string
+  lastMovementAtUtc: string
+  notes: string
+  traceTags: string[]
+}
+
+type LoadArrTruckStockMutation = {
+  truckStock: LoadArrTruckStock
+  movement: {
+    id: string
+    movementType: string
+    reasonCode: string
+  } | null
+  restockTask: LoadArrTask | null
+}
+
 type LoadArrEvidence = {
   id: string
   evidenceType: string
@@ -434,10 +466,19 @@ type AdjustmentFormState = {
   approvedByPersonId: string
 }
 
+type TruckStockFormState = {
+  truckStockId: string
+  quantity: string
+  personId: string
+  reasonCode: string
+  evidenceSummary: string
+}
+
 type ViewKey =
   | 'inventory'
   | 'receiving'
   | 'transfers'
+  | 'truckstock'
   | 'locations'
   | 'counts'
   | 'tasks'
@@ -822,10 +863,56 @@ const fallbackAdjustments: LoadArrAdjustment[] = [
   },
 ]
 
+const fallbackTruckStock: LoadArrTruckStock[] = [
+  {
+    id: 'truck-stock-17-rotor',
+    truckStockNumber: 'TRK-17-ROTOR',
+    staffarrSiteOrgUnitId: 'staff-site-south-depot',
+    staffarrSiteNameSnapshot: 'South Service Depot',
+    truckLocationId: 'loc-truck-17',
+    truckLocationNameSnapshot: 'Truck Stock 17',
+    supplyarrItemId: 'SUP-BR-ROTOR-22',
+    itemNameSnapshot: 'Brake rotor assembly',
+    unitOfMeasure: 'each',
+    assignedPersonId: 'person-route-stock-lead',
+    assignedPersonNameSnapshot: 'Jordan Reed',
+    quantityOnHand: 12,
+    minimumQuantity: 6,
+    maximumQuantity: 18,
+    status: 'ready',
+    lastCountedAtUtc: '2026-06-02T19:40:00Z',
+    lastMovementAtUtc: '2026-06-02T19:48:00Z',
+    notes: 'Reserved for maintenance work orders and route returns.',
+    traceTags: ['truck_stock', 'route_ready', 'maintainarr:work-order:WO-5530'],
+  },
+  {
+    id: 'truck-stock-17-kit',
+    truckStockNumber: 'TRK-17-KIT',
+    staffarrSiteOrgUnitId: 'staff-site-south-depot',
+    staffarrSiteNameSnapshot: 'South Service Depot',
+    truckLocationId: 'loc-truck-17',
+    truckLocationNameSnapshot: 'Truck Stock 17',
+    supplyarrItemId: 'SUP-VALVE-KIT-A',
+    itemNameSnapshot: 'Valve repair kit A',
+    unitOfMeasure: 'each',
+    assignedPersonId: 'person-route-stock-lead',
+    assignedPersonNameSnapshot: 'Jordan Reed',
+    quantityOnHand: 4,
+    minimumQuantity: 3,
+    maximumQuantity: 10,
+    status: 'low_stock',
+    lastCountedAtUtc: '2026-06-02T18:15:00Z',
+    lastMovementAtUtc: '2026-06-02T18:50:00Z',
+    notes: 'Needs restock after route replenishment and technician issue.',
+    traceTags: ['truck_stock', 'restock_required', 'route_replenishment'],
+  },
+]
+
 const views: Array<{ key: ViewKey; label: string; icon: typeof Boxes }> = [
   { key: 'inventory', label: 'Inventory', icon: Boxes },
   { key: 'receiving', label: 'Receiving', icon: PackagePlus },
   { key: 'transfers', label: 'Transfers', icon: Route },
+  { key: 'truckstock', label: 'Truck Stock', icon: Truck },
   { key: 'locations', label: 'Locations', icon: MapPin },
   { key: 'counts', label: 'Counts', icon: Activity },
   { key: 'tasks', label: 'Tasks', icon: ClipboardList },
@@ -1065,6 +1152,14 @@ const initialAdjustmentForm: AdjustmentFormState = {
   approvedByPersonId: 'person-inventory-supervisor',
 }
 
+const initialTruckStockForm: TruckStockFormState = {
+  truckStockId: 'truck-stock-17-rotor',
+  quantity: '1',
+  personId: 'person-route-stock-lead',
+  reasonCode: 'route_replenishment',
+  evidenceSummary: 'Mobile stock movement captured from the warehouse shell',
+}
+
 export function App() {
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
@@ -1102,6 +1197,10 @@ export function App() {
   const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentFormState>(initialAdjustmentForm)
   const [adjustmentStatus, setAdjustmentStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [adjustmentResult, setAdjustmentResult] = useState<LoadArrAdjustmentMutation | null>(null)
+  const [truckStockRecords, setTruckStockRecords] = useState<LoadArrTruckStock[]>(fallbackTruckStock)
+  const [truckStockForm, setTruckStockForm] = useState<TruckStockFormState>(initialTruckStockForm)
+  const [truckStockStatus, setTruckStockStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
+  const [truckStockResult, setTruckStockResult] = useState<LoadArrTruckStockMutation | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1184,6 +1283,35 @@ export function App() {
       .catch(() => {
         if (!controller.signal.aborted) {
           setAdjustments(fallbackAdjustments)
+        }
+      })
+
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch('/api/v1/truck-stock', {
+      credentials: 'include',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Truck stock request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<{ items: LoadArrTruckStock[] }>
+      })
+      .then((data) => {
+        if (data.items.length > 0) {
+          setTruckStockRecords(data.items)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setTruckStockRecords(fallbackTruckStock)
         }
       })
 
@@ -1324,6 +1452,44 @@ export function App() {
       ),
     [normalizedQuery, summary.holds],
   )
+
+  const filteredTruckStock = useMemo(
+    () =>
+      truckStockRecords.filter((record) =>
+        [
+          record.truckStockNumber,
+          record.itemNameSnapshot,
+          record.status,
+          record.truckLocationNameSnapshot,
+          record.assignedPersonNameSnapshot,
+          ...record.traceTags,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      ),
+    [normalizedQuery, truckStockRecords],
+  )
+
+  const selectedTruckStock = useMemo(
+    () => truckStockRecords.find((record) => record.id === truckStockForm.truckStockId) ?? null,
+    [truckStockForm.truckStockId, truckStockRecords],
+  )
+
+  useEffect(() => {
+    if (truckStockRecords.length === 0) {
+      return
+    }
+
+    if (!truckStockRecords.some((record) => record.id === truckStockForm.truckStockId)) {
+      const fallback = truckStockRecords[0]!
+      setTruckStockForm((current) => ({
+        ...current,
+        truckStockId: fallback.id,
+        personId: fallback.assignedPersonId,
+      }))
+    }
+  }, [truckStockForm.truckStockId, truckStockRecords])
 
   const filteredHandoffs = useMemo(
     () =>
@@ -1747,6 +1913,53 @@ export function App() {
         action,
       ))
       setUnexplainedStatus('completed')
+    }
+  }
+
+  const performTruckStockAction = async (action: 'issue' | 'return' | 'count') => {
+    const record = selectedTruckStock
+    if (!record) {
+      return
+    }
+
+    setTruckStockStatus('submitting')
+
+    const payload = {
+      truckStockId: truckStockForm.truckStockId,
+      quantity: toPositiveNumber(truckStockForm.quantity),
+      personId: truckStockForm.personId,
+      reasonCode: truckStockForm.reasonCode,
+      evidenceSummary: truckStockForm.evidenceSummary || null,
+    }
+
+    try {
+      const response = await fetch(`/api/v1/truck-stock/${record.id}/${action}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Truck stock ${action} failed: ${response.status}`)
+      }
+
+      const data = (await response.json()) as LoadArrTruckStockMutation
+      setTruckStockRecords((current) =>
+        current.map((item) => (item.id === data.truckStock.id ? data.truckStock : item)),
+      )
+      setTruckStockResult(data)
+      setTruckStockStatus('completed')
+    } catch {
+      const fallback = createLocalTruckStockMutation(action, truckStockForm, record)
+      setTruckStockRecords((current) =>
+        current.map((item) => (item.id === fallback.truckStock.id ? fallback.truckStock : item)),
+      )
+      setTruckStockResult(fallback)
+      setTruckStockStatus('completed')
     }
   }
 
@@ -2377,6 +2590,147 @@ export function App() {
                   </span>
                 </div>
               )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'truckstock' && (
+          <section className="receiving-layout" aria-label="Truck stock workflow">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Truck aria-hidden="true" />
+                <h2>Truck stock operations</h2>
+              </div>
+
+              <div className="form-grid">
+                <FormField label="Truck stock record" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={truckStockForm.truckStockId}
+                    onChange={(value) =>
+                      setTruckStockForm((current) => ({
+                        ...current,
+                        truckStockId: value,
+                      }))
+                    }
+                    options={truckStockRecords.map((record) => ({
+                      value: record.id,
+                      label: `${record.truckStockNumber} · ${record.itemNameSnapshot}`,
+                    }))}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Truck / site" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input className={fieldControlClassName} value={selectedTruckStock?.truckLocationNameSnapshot ?? ''} readOnly />
+                </FormField>
+
+                <FormField label="Assigned person" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input className={fieldControlClassName} value={selectedTruckStock?.assignedPersonNameSnapshot ?? ''} readOnly />
+                </FormField>
+
+                <FormField label="Quantity" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <input
+                    className={fieldControlClassName}
+                    inputMode="decimal"
+                    value={truckStockForm.quantity}
+                    onChange={(event) => setTruckStockForm((current) => ({ ...current, quantity: event.target.value }))}
+                  />
+                </FormField>
+
+                <FormField label="Reason code" className={fieldClassName} labelClassName={fieldLabelClassName}>
+                  <ControlledSelect
+                    value={truckStockForm.reasonCode}
+                    onChange={(value) =>
+                      setTruckStockForm((current) => ({
+                        ...current,
+                        reasonCode: value,
+                      }))
+                    }
+                    options={transferReasonOptions}
+                    className={fieldControlClassName}
+                  />
+                </FormField>
+
+                <FormField label="Evidence summary" className={wideFieldClassName} labelClassName={fieldLabelClassName}>
+                  <textarea
+                    className={fieldControlClassName}
+                    rows={3}
+                    value={truckStockForm.evidenceSummary}
+                    onChange={(event) =>
+                      setTruckStockForm((current) => ({
+                        ...current,
+                        evidenceSummary: event.target.value,
+                      }))
+                    }
+                  />
+                </FormField>
+              </div>
+
+              <div className="button-row">
+                <button type="button" className="primary-action" onClick={() => void performTruckStockAction('issue')} disabled={truckStockStatus === 'submitting'}>
+                  <PackageCheck aria-hidden="true" />
+                  <span>{truckStockStatus === 'submitting' ? 'Issuing' : 'Issue from truck'}</span>
+                </button>
+                <button type="button" className="secondary-action" onClick={() => void performTruckStockAction('return')} disabled={truckStockStatus === 'submitting'}>
+                  <PackagePlus aria-hidden="true" />
+                  <span>{truckStockStatus === 'submitting' ? 'Returning' : 'Return to truck'}</span>
+                </button>
+                <button type="button" className="secondary-action" onClick={() => void performTruckStockAction('count')} disabled={truckStockStatus === 'submitting'}>
+                  <ClipboardCheck aria-hidden="true" />
+                  <span>{truckStockStatus === 'submitting' ? 'Counting' : 'Count stock'}</span>
+                </button>
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Truck stock audit">
+              <div className="section-heading">
+                <ClipboardCheck aria-hidden="true" />
+                <h2>Truck stock audit</h2>
+              </div>
+
+              {truckStockResult ? (
+                <div className="completion-stack">
+                  <AuditFact
+                    label="Stock record"
+                    value={`${truckStockResult.truckStock.truckStockNumber} · ${truckStockResult.truckStock.status}`}
+                  />
+                  <AuditFact
+                    label="Quantity on hand"
+                    value={`${formatNumber.format(truckStockResult.truckStock.quantityOnHand)} ${truckStockResult.truckStock.unitOfMeasure}`}
+                  />
+                  <AuditFact
+                    label="Movement"
+                    value={truckStockResult.movement ? `${truckStockResult.movement.movementType} · ${truckStockResult.movement.reasonCode}` : 'No movement created'}
+                  />
+                  <AuditFact
+                    label="Restock task"
+                    value={truckStockResult.restockTask ? `${truckStockResult.restockTask.title} · ${truckStockResult.restockTask.status}` : 'No restock task required'}
+                  />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>Awaiting truck stock action</strong>
+                  <span>Truck stock records can be issued, returned, or counted from the mobile inventory workflow.</span>
+                </div>
+              )}
+
+              <div className="queue compact-queue">
+                {filteredTruckStock.map((record) => (
+                  <article className="queue-row" key={record.id}>
+                    <div>
+                      <div className="queue-row-header">
+                        <h2>{record.truckStockNumber}</h2>
+                        <StatusChip value={record.status} />
+                      </div>
+                      <p className="queue-subtitle">
+                        {record.itemNameSnapshot} · {formatNumber.format(record.quantityOnHand)} {record.unitOfMeasure}
+                      </p>
+                      <TagList tags={[record.truckLocationNameSnapshot, record.assignedPersonNameSnapshot, ...record.traceTags]} />
+                    </div>
+                    <time dateTime={record.lastMovementAtUtc}>{formatDate(record.lastMovementAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
             </aside>
           </section>
         )}
@@ -3670,6 +4024,73 @@ function createLocalTransferCompletion(
       dueAtUtc: new Date().toISOString(),
       requiredSignals: ['source_scan_required', 'destination_scan_required', 'movement_recorded'],
     },
+  }
+}
+
+function createLocalTruckStockMutation(
+  action: 'issue' | 'return' | 'count',
+  form: TruckStockFormState,
+  record: LoadArrTruckStock | undefined,
+): LoadArrTruckStockMutation {
+  const current = record ?? fallbackTruckStock[0]
+  const quantity = toPositiveNumber(form.quantity) || 1
+  const now = Date.now().toString(36)
+  const timestamp = new Date().toISOString()
+
+  const nextQuantity =
+    action === 'issue'
+      ? Math.max(0, current.quantityOnHand - quantity)
+      : action === 'return'
+        ? current.quantityOnHand + quantity
+        : quantity
+
+  const status =
+    nextQuantity === 0
+      ? 'empty'
+      : nextQuantity < current.minimumQuantity
+        ? 'low_stock'
+        : nextQuantity > current.maximumQuantity
+          ? 'overflow'
+          : 'ready'
+
+  const truckStock: LoadArrTruckStock = {
+    ...current,
+    quantityOnHand: nextQuantity,
+    status,
+    lastCountedAtUtc: action === 'count' ? timestamp : current.lastCountedAtUtc,
+    lastMovementAtUtc: timestamp,
+    notes:
+      action === 'issue'
+        ? `Issued ${quantity} ${current.unitOfMeasure} from truck stock.`
+        : action === 'return'
+          ? `Returned ${quantity} ${current.unitOfMeasure} to truck stock.`
+          : `Counted at ${timestamp}.`,
+    traceTags: [...current.traceTags, `truck_stock:${action}:${now}`],
+  }
+
+  return {
+    truckStock,
+    movement: {
+      id: `move-${now}`,
+      movementType: `truck_stock_${action}`,
+      reasonCode: form.reasonCode,
+    },
+    restockTask:
+      status === 'low_stock'
+        ? {
+            id: `task-${now}`,
+            taskType: 'replenish',
+            title: `Restock ${current.itemNameSnapshot} on ${current.truckStockNumber}`,
+            priority: 'normal',
+            status: 'ready',
+            locationNameSnapshot: current.truckLocationNameSnapshot,
+            assignedRole: 'Truck Stock User',
+            supplyarrItemId: current.supplyarrItemId,
+            quantity: Math.max(0, current.minimumQuantity - nextQuantity),
+            dueAtUtc: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+            requiredSignals: ['truck_stock_low', 'restock_requested'],
+          }
+        : null,
   }
 }
 
