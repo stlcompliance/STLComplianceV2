@@ -2865,6 +2865,29 @@
         }
       }
     },
+    "/api/v1/workspace/record-packages/{packageId}/download": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "DownloadRecordArrPackage",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/record-packages/{packageId}/lock": {
       "post": {
         "tags": [
@@ -3409,7 +3432,7 @@
             "type": "string"
           },
           "confidenceScore": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"

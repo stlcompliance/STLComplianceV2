@@ -41,6 +41,7 @@ import {
   createRecord,
   createScan,
   createUploadSession,
+  downloadPackage,
   getDashboard,
   getExtractionResult,
   getOcrResult,
@@ -1215,6 +1216,18 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const downloadMutation = useMutation({
+    mutationFn: () => downloadPackage(accessToken, selectedPackageId),
+    onSuccess: async (content) => {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${selectedPackageId || 'recordarr-package'}.txt`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    },
+  })
 
   return (
     <div className="recordarr-page">
@@ -1239,6 +1252,9 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
             </button>
             <button type="button" className="recordarr-button secondary" onClick={() => lockMutation.mutate()} disabled={lockMutation.isPending || !selectedPackageId}>
               {lockMutation.isPending ? 'Locking...' : 'Lock selected package'}
+            </button>
+            <button type="button" className="recordarr-button secondary" onClick={() => downloadMutation.mutate()} disabled={downloadMutation.isPending || !selectedPackageId}>
+              {downloadMutation.isPending ? 'Preparing...' : 'Download package'}
             </button>
           </div>
         </div>

@@ -657,6 +657,17 @@ export async function getPackageManifest(accessToken: string, packageId: string)
   )
 }
 
+export async function downloadPackage(accessToken: string, packageId: string): Promise<string> {
+  const response = await fetch(`${apiBase}/api/v1/workspace/record-packages/${encodeURIComponent(packageId)}/download`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(body || `Failed to download /api/v1/workspace/record-packages/${encodeURIComponent(packageId)}/download`)
+  }
+  return response.text()
+}
+
 export async function listRetentionPolicies(accessToken: string): Promise<RecordArrRetentionPolicy[]> {
   return getJson<RecordArrRetentionPolicy[]>('/api/v1/workspace/retention-policies', accessToken)
 }
