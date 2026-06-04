@@ -36,6 +36,7 @@ import {
   createDocumentDistribution,
   createDocumentReview,
   createDocumentVersion,
+  createDisposalReview,
   createEvidenceMapping,
   createExternalShare,
   createLegalHold,
@@ -74,6 +75,7 @@ import {
   reviewExtractionResult,
   revokeExternalShare,
   completeDocumentAcknowledgement,
+  completeDisposalReview,
   lockPackage,
   updateRecord,
   type RecordArrControlledDocument,
@@ -1554,7 +1556,20 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
 }
 
 function RetentionPage({ accessToken }: { accessToken: string }) {
+  const queryClient = useQueryClient()
   const [recordId, setRecordId] = useState('rec-bol-001')
+  const [selectedDisposalReviewId, setSelectedDisposalReviewId] = useState('')
+  const [disposalForm, setDisposalForm] = useState({
+    recordId: 'rec-bol-001',
+    retentionStatusRef: 'rstat-001',
+    proposedAction: 'archive',
+    requestedByPersonId: 'person-audit-admin',
+  })
+  const [completeDisposalForm, setCompleteDisposalForm] = useState({
+    status: 'approved',
+    reviewedByPersonId: 'person-audit-admin',
+    decisionReason: 'Retention review completed.',
+  })
   const policiesQuery = useQuery({
     queryKey: ['recordarr', 'retention-policies'],
     queryFn: () => listRetentionPolicies(accessToken),
@@ -1564,6 +1579,40 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
     queryKey: ['recordarr', 'retention-status', recordId],
     queryFn: () => getRetentionStatus(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
+  })
+  const disposalReviewsQuery = useQuery({
+    queryKey: ['recordarr', 'disposal-reviews'],
+    queryFn: () => listDisposalReviews(accessToken),
+    enabled: Boolean(accessToken),
+  })
+
+  useEffect(() => {
+    if (!selectedDisposalReviewId && disposalReviewsQuery.data?.[0]) {
+      setSelectedDisposalReviewId(disposalReviewsQuery.data[0].disposalReviewId)
+    }
+  }, [disposalReviewsQuery.data, selectedDisposalReviewId])
+
+  useEffect(() => {
+    if (statusQuery.data?.retentionStatusId && disposalForm.retentionStatusRef !== statusQuery.data.retentionStatusId) {
+      setDisposalForm((current) => ({ ...current, retentionStatusRef: statusQuery.data!.retentionStatusId }))
+    }
+  }, [disposalForm.retentionStatusRef, statusQuery.data])
+
+  const createDisposalMutation = useMutation({
+    mutationFn: () => createDisposalReview(accessToken, disposalForm),
+    onSuccess: async (review) => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+      setSelectedDisposalReviewId(review.disposalReviewId)
+    },
+  })
+  const completeDisposalMutation = useMutation({
+    mutationFn: () =>
+      selectedDisposalReviewId
+        ? completeDisposalReview(accessToken, selectedDisposalReviewId, completeDisposalForm)
+        : Promise.reject(new Error('No disposal review selected.')),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
   })
 
   return (
@@ -1606,6 +1655,78 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
               <EmptyState title="Enter a record id to inspect its retention status." />
             )}
           </div>
+        </Card>
+      </div>
+      <div className="recordarr-card mt-6">
+        <div className="recordarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-cyan-300" />
+            <h2 className="text-lg font-semibold text-slate-50">Disposal review</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Record id"><input className="recordarr-input" value={disposalForm.recordId} onChange={(e) => setDisposalForm({ ...disposalForm, recordId: e.target.value })} /></Field>
+            <Field label="Retention status ref"><input className="recordarr-input" value={disposalForm.retentionStatusRef} onChange={(e) => setDisposalForm({ ...disposalForm, retentionStatusRef: e.target.value })} /></Field>
+            <Field label="Proposed action"><input className="recordarr-input" value={disposalForm.proposedAction} onChange={(e) => setDisposalForm({ ...disposalForm, proposedAction: e.target.value })} /></Field>
+            <Field label="Requested by"><input className="recordarr-input" value={disposalForm.requestedByPersonId} onChange={(e) => setDisposalForm({ ...disposalForm, requestedByPersonId: e.target.value })} /></Field>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className="recordarr-button" onClick={() => createDisposalMutation.mutate()} disabled={createDisposalMutation.isPending}>
+              {createDisposalMutation.isPending ? 'Creating...' : 'Create disposal review'}
+            </button>
+            <button type="button" className="recordarr-button secondary" onClick={() => completeDisposalMutation.mutate()} disabled={completeDisposalMutation.isPending || !selectedDisposalReviewId}>
+              {completeDisposalMutation.isPending ? 'Completing...' : 'Complete selected review'}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="recordarr-grid cols-2 mt-6">
+        <Card title="Disposal reviews" icon={<History className="h-4 w-4 text-cyan-300" />}>
+          <div className="space-y-3">
+            {disposalReviewsQuery.data?.map((review) => (
+              <button
+                key={review.disposalReviewId}
+                type="button"
+                className={[
+                  'w-full rounded-xl border px-3 py-3 text-left transition-colors',
+                  review.disposalReviewId === selectedDisposalReviewId
+                    ? 'border-cyan-400/40 bg-cyan-500/10'
+                    : 'border-slate-700/70 bg-slate-900/70 hover:bg-slate-900/90',
+                ].join(' ')}
+                onClick={() => setSelectedDisposalReviewId(review.disposalReviewId)}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-sm text-slate-100">{review.recordId}</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{review.status}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">{review.proposedAction}</p>
+              </button>
+            ))}
+            {!disposalReviewsQuery.data?.length && !disposalReviewsQuery.isLoading ? <EmptyState title="No disposal reviews yet." /> : null}
+          </div>
+        </Card>
+        <Card title="Complete review" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>
+          {selectedDisposalReviewId ? (
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Status">
+                  <select className="recordarr-select" value={completeDisposalForm.status} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, status: e.target.value })}>
+                    <option value="approved">approved</option>
+                    <option value="rejected">rejected</option>
+                    <option value="completed">completed</option>
+                    <option value="canceled">canceled</option>
+                  </select>
+                </Field>
+                <Field label="Reviewed by"><input className="recordarr-input" value={completeDisposalForm.reviewedByPersonId} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, reviewedByPersonId: e.target.value })} /></Field>
+                <Field label="Decision reason" wide><textarea className="recordarr-textarea" value={completeDisposalForm.decisionReason} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, decisionReason: e.target.value })} /></Field>
+              </div>
+              <p className="text-sm text-slate-400">Selected review: {selectedDisposalReviewId}</p>
+              <button type="button" className="recordarr-button secondary" onClick={() => completeDisposalMutation.mutate()} disabled={completeDisposalMutation.isPending}>
+                {completeDisposalMutation.isPending ? 'Completing...' : 'Apply completion'}
+              </button>
+            </div>
+          ) : (
+            <EmptyState title="Select a disposal review to complete it." />
+          )}
         </Card>
       </div>
     </div>

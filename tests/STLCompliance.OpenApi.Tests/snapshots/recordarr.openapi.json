@@ -426,6 +426,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDisposalReview/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/disposal-reviews/{disposalReviewId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationDisposalReview/api/integrations",
+        "parameters": [
+          {
+            "name": "disposalReviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/integrations/document-scans": {
@@ -1692,6 +1746,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDisposalReview/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/disposal-reviews/{disposalReviewId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationDisposalReview/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "disposalReviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/integrations/document-scans": {
@@ -2772,6 +2880,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrDisposalReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/disposal-reviews/{disposalReviewId}/complete": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CompleteRecordArrDisposalReview",
+        "parameters": [
+          {
+            "name": "disposalReviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDisposalReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/workspace/document-scans": {
@@ -3572,6 +3734,31 @@
   },
   "components": {
     "schemas": {
+      "CompleteDisposalReviewRequest": {
+        "required": [
+          "status",
+          "reviewedByPersonId",
+          "decisionReason"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "reviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decisionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CompleteDocumentAcknowledgementRequest": {
         "required": [
           "signatureRecordRef"
@@ -3694,6 +3881,29 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateDisposalReviewRequest": {
+        "required": [
+          "recordId",
+          "retentionStatusRef",
+          "proposedAction",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "retentionStatusRef": {
+            "type": "string"
+          },
+          "proposedAction": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
           }
         }
       },

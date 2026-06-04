@@ -298,6 +298,18 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/disposal-reviews", (RecordArrStore store) => Results.Ok(store.GetDisposalReviews()))
             .WithName($"ListRecordArrIntegrationDisposalReviews{routePrefix}");
 
+        group.MapPost("/disposal-reviews", (WorkspaceEndpoints.CreateDisposalReviewRequest request, RecordArrStore store) =>
+        {
+            var review = store.CreateDisposalReview(request.RecordId, request.RetentionStatusRef, request.ProposedAction, request.RequestedByPersonId);
+            return Results.Created($"{routePrefix}/disposal-reviews/{review.DisposalReviewId}", review);
+        }).WithName($"CreateRecordArrIntegrationDisposalReview{routePrefix}");
+
+        group.MapPost("/disposal-reviews/{disposalReviewId}/complete", (string disposalReviewId, WorkspaceEndpoints.CompleteDisposalReviewRequest request, RecordArrStore store) =>
+        {
+            var review = store.CompleteDisposalReview(disposalReviewId, request.Status, request.ReviewedByPersonId, request.DecisionReason);
+            return Results.Ok(review);
+        }).WithName($"CompleteRecordArrIntegrationDisposalReview{routePrefix}");
+
         group.MapGet("/access-logs", (RecordArrStore store) => Results.Ok(store.GetAccessLogs()))
             .WithName($"ListRecordArrIntegrationAccessLogs{routePrefix}");
     }

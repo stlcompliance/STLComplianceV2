@@ -269,6 +269,18 @@ public static class WorkspaceEndpoints
         group.MapGet("/disposal-reviews", (RecordArrStore store) => Results.Ok(store.GetDisposalReviews()))
             .WithName("ListRecordArrDisposalReviews");
 
+        group.MapPost("/disposal-reviews", (CreateDisposalReviewRequest request, RecordArrStore store) =>
+        {
+            var review = store.CreateDisposalReview(request.RecordId, request.RetentionStatusRef, request.ProposedAction, request.RequestedByPersonId);
+            return Results.Created($"/api/v1/workspace/disposal-reviews/{review.DisposalReviewId}", review);
+        }).WithName("CreateRecordArrDisposalReview");
+
+        group.MapPost("/disposal-reviews/{disposalReviewId}/complete", (string disposalReviewId, CompleteDisposalReviewRequest request, RecordArrStore store) =>
+        {
+            var review = store.CompleteDisposalReview(disposalReviewId, request.Status, request.ReviewedByPersonId, request.DecisionReason);
+            return Results.Ok(review);
+        }).WithName("CompleteRecordArrDisposalReview");
+
         group.MapGet("/retention-policies", (RecordArrStore store) => Results.Ok(store.GetRetentionPolicies()))
             .WithName("ListRecordArrRetentionPolicies");
 
@@ -346,6 +358,8 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
+    public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);
+    public sealed record CompleteDisposalReviewRequest(string Status, string? ReviewedByPersonId, string? DecisionReason);
 
     public sealed record CreateEvidenceMappingRequest(
         string RecordId,

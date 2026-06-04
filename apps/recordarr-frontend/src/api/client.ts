@@ -935,6 +935,26 @@ export async function listDisposalReviews(accessToken: string): Promise<RecordAr
   return getJson<RecordArrDisposalReview[]>('/api/v1/workspace/disposal-reviews', accessToken)
 }
 
+export async function createDisposalReview(
+  accessToken: string,
+  body: { recordId: string; retentionStatusRef: string; proposedAction: string; requestedByPersonId: string },
+): Promise<RecordArrDisposalReview> {
+  return sendJson<RecordArrDisposalReview>('/api/v1/workspace/disposal-reviews', accessToken, 'POST', body)
+}
+
+export async function completeDisposalReview(
+  accessToken: string,
+  disposalReviewId: string,
+  body: { status: string; reviewedByPersonId?: string | null; decisionReason?: string | null },
+): Promise<RecordArrDisposalReview> {
+  return sendJson<RecordArrDisposalReview>(
+    `/api/v1/workspace/disposal-reviews/${encodeURIComponent(disposalReviewId)}/complete`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function listAccessLogs(accessToken: string): Promise<RecordArrAccessLog[]> {
   return getJson<RecordArrAccessLog[]>('/api/v1/workspace/access-logs', accessToken)
 }

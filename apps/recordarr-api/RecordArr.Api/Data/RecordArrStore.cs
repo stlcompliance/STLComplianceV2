@@ -1148,6 +1148,30 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrDisposalReviewResponse CompleteDisposalReview(string disposalReviewId, string status, string? reviewedByPersonId, string? decisionReason)
+    {
+        lock (_gate)
+        {
+            var index = _disposalReviews.FindIndex(review => string.Equals(review.DisposalReviewId, disposalReviewId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Disposal review {disposalReviewId} not found.");
+            }
+
+            var current = _disposalReviews[index];
+            var updated = current with
+            {
+                Status = status,
+                ReviewedByPersonId = reviewedByPersonId ?? current.ReviewedByPersonId,
+                ReviewedAt = DateTimeOffset.UtcNow,
+                DecisionReason = decisionReason ?? current.DecisionReason,
+                CompletedAt = status is "approved" or "rejected" or "completed" ? DateTimeOffset.UtcNow : current.CompletedAt
+            };
+            _disposalReviews[index] = updated;
+            return updated;
+        }
+    }
+
     public RecordArrControlledDocumentResponse? GetControlledDocument(string controlledDocumentId)
     {
         lock (_gate)
