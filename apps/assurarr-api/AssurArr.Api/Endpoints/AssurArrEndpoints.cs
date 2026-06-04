@@ -217,6 +217,14 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateFindingStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrFindingStatus");
 
+        integrationGroup.MapPost("/audits", async (CreateAssurArrQualityAuditRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateAuditAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrAuditIntegration");
+
+        integrationGroup.MapPost("/findings", async (CreateAssurArrAuditFindingRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateFindingAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrFindingIntegration");
+
         group.MapGet("/status-snapshots", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListStatusSnapshotsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityStatusSnapshots");

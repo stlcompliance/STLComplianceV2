@@ -953,7 +953,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     {
         var auditTitle = $"Test audit {Guid.NewGuid():N}";
         var auditResponse = await _client.PostAsJsonAsync(
-            "/api/v1/audits",
+            "/api/v1/integrations/audits",
             new CreateAssurArrQualityAuditRequest(
                 auditTitle,
                 "Automated coverage for audit checklists.",
@@ -1047,7 +1047,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         var findingTitle = $"Test finding {Guid.NewGuid():N}";
         var findingResponse = await _client.PostAsJsonAsync(
-            "/api/v1/findings",
+            "/api/v1/integrations/findings",
             new CreateAssurArrAuditFindingRequest(
                 findingTitle,
                 "Automated coverage for finding creation.",
