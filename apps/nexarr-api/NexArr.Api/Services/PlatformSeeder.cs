@@ -257,6 +257,7 @@ public static class PlatformSeeder
         await db.Database.ExecuteSqlRawAsync(
             """
             ALTER TABLE nexarr_platform_session_settings
+                ADD COLUMN IF NOT EXISTS "RequirePlatformAdminMfa" boolean NULL,
                 ADD COLUMN IF NOT EXISTS "PasswordMinLength" integer NOT NULL DEFAULT 12,
                 ADD COLUMN IF NOT EXISTS "RequirePasswordComplexity" boolean NOT NULL DEFAULT true;
             """,
