@@ -58,6 +58,7 @@ public sealed record AssurArrNonconformanceResponse(
     string? ComplianceImpact,
     bool RecurrenceFlag,
     string? RepeatOfNonconformanceRef,
+    string? RootCauseRef,
     string[] BlockerRefs,
     DateTimeOffset? DueAt);
 
@@ -77,6 +78,7 @@ public sealed record CreateAssurArrNonconformanceRequest(
     string? ComplianceImpact,
     bool RecurrenceFlag,
     string? RepeatOfNonconformanceRef,
+    string? RootCauseRef,
     string[] BlockerRefs,
     DateTimeOffset? DueAt);
 
@@ -433,6 +435,46 @@ public sealed record CreateAssurArrAuditFindingRequest(
     string? NonconformanceRef,
     string? CapaRef,
     DateTimeOffset? DueAt);
+
+public sealed record AssurArrRootCauseAnalysisResponse(
+    Guid Id,
+    string Number,
+    Guid NonconformanceId,
+    string Title,
+    string Description,
+    string Status,
+    string Method,
+    string PrimaryCauseCategory,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    IReadOnlyList<string> AffectedObjectRefs,
+    Guid? OwnerPersonId,
+    IReadOnlyList<string> RecordRefs,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    string? RootCauseSummary,
+    IReadOnlyList<string> ContributingFactors,
+    Guid? AnalyzedByPersonId,
+    DateTimeOffset? CompletedAt,
+    IReadOnlyList<string> EvidenceRecordRefs);
+
+public sealed record CreateAssurArrRootCauseAnalysisRequest(
+    string Title,
+    string Description,
+    Guid NonconformanceId,
+    string Status,
+    string Method,
+    string PrimaryCauseCategory,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string[] AffectedObjectRefs,
+    Guid? OwnerPersonId,
+    string[] RecordRefs,
+    string? RootCauseSummary,
+    string[] ContributingFactors,
+    Guid? AnalyzedByPersonId,
+    DateTimeOffset? CompletedAt,
+    string[] EvidenceRecordRefs);
 
 public sealed record AssurArrQualityStatusSnapshotResponse(
     Guid Id,

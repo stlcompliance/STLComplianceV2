@@ -839,6 +839,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             ComplianceImpact = NormalizeNullable(request.ComplianceImpact),
             RecurrenceFlag = request.RecurrenceFlag,
             RepeatOfNonconformanceRef = NormalizeNullable(request.RepeatOfNonconformanceRef),
+            RootCauseRef = NormalizeNullable(request.RootCauseRef),
             DueAt = request.DueAt,
         };
 
@@ -867,6 +868,71 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToNonconformanceResponse(entity);
+    }
+
+    public async Task<List<AssurArrRootCauseAnalysisResponse>> ListRootCauseAnalysesAsync(Guid nonconformanceId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.RootCauseAnalyses
+            .AsNoTracking()
+            .Where(x => x.NonconformanceId == nonconformanceId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToRootCauseAnalysisResponse).ToList();
+    }
+
+    public async Task<AssurArrRootCauseAnalysisResponse> CreateRootCauseAnalysisAsync(Guid nonconformanceId, CreateAssurArrRootCauseAnalysisRequest request, CancellationToken cancellationToken = default)
+    {
+        var nonconformance = await db.Nonconformances.FirstOrDefaultAsync(x => x.Id == nonconformanceId, cancellationToken)
+            ?? throw new InvalidOperationException($"Nonconformance '{nonconformanceId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrRootCauseAnalysis
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("RCA", db.RootCauseAnalyses, cancellationToken),
+            NonconformanceId = nonconformanceId,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Status = Normalize(request.Status, "in_progress"),
+            Method = Normalize(request.Method, "manual"),
+            PrimaryCauseCategory = Normalize(request.PrimaryCauseCategory, "unknown"),
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            OwnerPersonId = request.OwnerPersonId,
+            RecordRefs = request.RecordRefs ?? [],
+            CreatedAt = now,
+            UpdatedAt = now,
+            RootCauseSummary = NormalizeNullable(request.RootCauseSummary),
+            ContributingFactors = request.ContributingFactors ?? [],
+            AnalyzedByPersonId = request.AnalyzedByPersonId,
+            CompletedAt = request.CompletedAt,
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+        };
+
+        if (string.IsNullOrWhiteSpace(nonconformance.RootCauseRef))
+        {
+            nonconformance.RootCauseRef = entity.Number;
+        }
+
+        nonconformance.UpdatedAt = now;
+        if (string.Equals(nonconformance.Status, "open", StringComparison.OrdinalIgnoreCase) || string.Equals(nonconformance.Status, "containment", StringComparison.OrdinalIgnoreCase))
+        {
+            nonconformance.Status = "investigation";
+            await AddTimelineAsync("nonconformance", nonconformance.Id, "assurarr.nonconformance.status_changed", nonconformance.Status, cancellationToken);
+        }
+
+        db.RootCauseAnalyses.Add(entity);
+        await AddTimelineAsync("root_cause", entity.Id, "assurarr.root_cause.started", entity.Title, cancellationToken);
+        if (string.Equals(entity.Status, "completed", StringComparison.OrdinalIgnoreCase) || string.Equals(entity.Status, "inconclusive", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("root_cause", entity.Id, "assurarr.root_cause.completed", entity.Status, cancellationToken);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return ToRootCauseAnalysisResponse(entity);
     }
 
     public async Task<List<AssurArrQualityHoldResponse>> ListQualityHoldsAsync(CancellationToken cancellationToken = default)
@@ -2400,6 +2466,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ComplianceImpact,
             entity.RecurrenceFlag,
             entity.RepeatOfNonconformanceRef,
+            entity.RootCauseRef,
             entity.BlockerRefs,
             entity.DueAt);
 
@@ -2619,6 +2686,29 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.NonconformanceRef,
             entity.CapaRef,
             entity.DueAt);
+
+    private static AssurArrRootCauseAnalysisResponse ToRootCauseAnalysisResponse(AssurArrRootCauseAnalysis entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.NonconformanceId,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Method,
+            entity.PrimaryCauseCategory,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.AffectedObjectRefs,
+            entity.OwnerPersonId,
+            entity.RecordRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.RootCauseSummary,
+            entity.ContributingFactors,
+            entity.AnalyzedByPersonId,
+            entity.CompletedAt,
+            entity.EvidenceRecordRefs);
 
     private static AssurArrQualityStatusSnapshotResponse ToStatusSnapshotResponse(AssurArrQualityStatusSnapshot entity) =>
         new(

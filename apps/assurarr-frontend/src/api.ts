@@ -49,6 +49,7 @@ export type Nonconformance = ListItem & {
   complianceImpact: string | null
   recurrenceFlag: boolean
   repeatOfNonconformanceRef: string | null
+  rootCauseRef: string | null
   blockerRefs: string[]
   dueAt: string | null
 }
@@ -224,6 +225,29 @@ export type Finding = ListItem & {
   nonconformanceRef: string | null
   capaRef: string | null
   dueAt: string | null
+}
+
+export type RootCauseAnalysis = {
+  id: string
+  number: string
+  nonconformanceId: string
+  title: string
+  description: string
+  status: string
+  method: string
+  primaryCauseCategory: string
+  sourceProduct: string | null
+  sourceObjectRef: string | null
+  affectedObjectRefs: string[]
+  ownerPersonId: string | null
+  recordRefs: string[]
+  createdAt: string
+  updatedAt: string
+  rootCauseSummary: string | null
+  contributingFactors: string[]
+  analyzedByPersonId: string | null
+  completedAt: string | null
+  evidenceRecordRefs: string[]
 }
 
 export type StatusSnapshot = ListItem & {
@@ -439,6 +463,36 @@ export const assurarrApi = {
     }),
   updateNonconformanceStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Nonconformance>(`/api/v1/nonconformances/${id}/status`, 'PATCH', { status, closureSummary }),
+  listRootCauseAnalyses: (nonconformanceId: string) =>
+    getJson<RootCauseAnalysis[]>(`/api/v1/nonconformances/${nonconformanceId}/root-cause-analyses`),
+  createRootCauseAnalysis: (
+    body: {
+      title: string
+      description: string
+      nonconformanceId: string
+      status: string
+      method: string
+      primaryCauseCategory: string
+      sourceProduct?: string
+      sourceObjectRef?: string
+      affectedObjectRefs?: string[]
+      ownerPersonId?: string
+      recordRefs?: string[]
+      rootCauseSummary?: string
+      contributingFactors?: string[]
+      analyzedByPersonId?: string
+      completedAt?: string
+      evidenceRecordRefs?: string[]
+    },
+  ) =>
+    sendJson<RootCauseAnalysis>('/api/v1/integrations/root-cause-analyses', 'POST', {
+      ...body,
+      affectedObjectRefs: body.affectedObjectRefs ?? [],
+      recordRefs: body.recordRefs ?? [],
+      contributingFactors: body.contributingFactors ?? [],
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+      completedAt: body.completedAt ? new Date(body.completedAt).toISOString() : null,
+    }),
   listHolds: () => getJson<QualityHold[]>('/api/v1/holds'),
   getHold: (id: string) => getJson<QualityHold>(`/api/v1/holds/${id}`),
   createHold: (body: CreateBase & { holdType: string; holdScope: string; holdReason?: string; quantityHeld?: number; unitOfMeasure?: string; lotNumber?: string; serialNumber?: string; expiresAt?: string }) =>

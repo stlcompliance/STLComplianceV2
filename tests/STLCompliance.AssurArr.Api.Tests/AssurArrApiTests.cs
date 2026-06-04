@@ -53,6 +53,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 null,
                 false,
                 null,
+                null,
                 [],
                 DateTimeOffset.UtcNow.AddDays(2)));
 
@@ -75,6 +76,77 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var list = await listResponse.Content.ReadFromJsonAsync<List<AssurArrNonconformanceResponse>>();
         Assert.NotNull(list);
         Assert.Contains(list!, item => item.Title == title);
+    }
+
+    [Fact]
+    public async Task Can_create_root_cause_analyses_for_nonconformances()
+    {
+        var nonconformanceTitle = $"Test nonconformance for root cause {Guid.NewGuid():N}";
+        var nonconformanceResponse = await _client.PostAsJsonAsync(
+            "/api/v1/nonconformances",
+            new CreateAssurArrNonconformanceRequest(
+                nonconformanceTitle,
+                "Created for automated root cause coverage.",
+                "high",
+                "internal_process",
+                "process_failure",
+                "assurarr",
+                "assurarr:workflow:test",
+                ["assurarr:object:test"],
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                [],
+                DateTimeOffset.UtcNow.AddDays(2)));
+
+        Assert.Equal(HttpStatusCode.OK, nonconformanceResponse.StatusCode);
+        var nonconformance = await nonconformanceResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(nonconformance);
+
+        var rootCauseTitle = $"Test root cause {Guid.NewGuid():N}";
+        var rootCauseResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/root-cause-analyses",
+            new CreateAssurArrRootCauseAnalysisRequest(
+                rootCauseTitle,
+                "Automated coverage for root cause analysis creation.",
+                nonconformance!.Id,
+                "in_progress",
+                "five_whys",
+                "process",
+                "assurarr",
+                nonconformance.SourceObjectRef,
+                nonconformance.AffectedObjectRefs.ToArray(),
+                null,
+                ["recordarr:doc:root-cause-test"],
+                "Process checklist was incomplete.",
+                ["missing checklist", "insufficient review"],
+                null,
+                null,
+                ["recordarr:doc:root-cause-evidence"]));
+
+        Assert.Equal(HttpStatusCode.OK, rootCauseResponse.StatusCode);
+        var rootCause = await rootCauseResponse.Content.ReadFromJsonAsync<AssurArrRootCauseAnalysisResponse>();
+        Assert.NotNull(rootCause);
+        Assert.Equal(rootCauseTitle, rootCause!.Title);
+        Assert.Equal(nonconformance.Id, rootCause.NonconformanceId);
+
+        var rootCauseListResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}/root-cause-analyses");
+        Assert.Equal(HttpStatusCode.OK, rootCauseListResponse.StatusCode);
+        var rootCauses = await rootCauseListResponse.Content.ReadFromJsonAsync<List<AssurArrRootCauseAnalysisResponse>>();
+        Assert.NotNull(rootCauses);
+        Assert.Contains(rootCauses!, item => item.Id == rootCause.Id);
+
+        var nonconformanceDetailResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}");
+        Assert.Equal(HttpStatusCode.OK, nonconformanceDetailResponse.StatusCode);
+        var nonconformanceDetail = await nonconformanceDetailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(nonconformanceDetail);
+        Assert.Equal(rootCause.Number, nonconformanceDetail!.RootCauseRef);
+        Assert.Equal("investigation", nonconformanceDetail.Status);
     }
 
     [Fact]

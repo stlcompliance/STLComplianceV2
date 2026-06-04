@@ -521,6 +521,7 @@ function NonconformancePage() {
 
 function NonconformanceDetailPage() {
   const { id = '' } = useParams()
+  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ['assurarr', 'nonconformance', id],
     queryFn: () => assurarrApi.getNonconformance(id),
@@ -531,9 +532,52 @@ function NonconformanceDetailPage() {
   const containmentActions = useRecords(['assurarr', 'containment'], assurarrApi.listContainmentActions)
   const dispositions = useRecords(['assurarr', 'dispositions'], assurarrApi.listDispositions)
   const findings = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
+  const rootCauseAnalyses = useRecords(['assurarr', 'root-cause-analyses', id], () => assurarrApi.listRootCauseAnalyses(id))
   const dashboard = useDashboard()
-
   const nonconformance = query.data
+  const [rootCauseForm, setRootCauseForm] = useState({
+    title: '',
+    description: '',
+    status: 'in_progress',
+    method: 'manual',
+    primaryCauseCategory: 'unknown',
+    sourceProduct: '',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    rootCauseSummary: '',
+    contributingFactors: '',
+    recordRefs: '',
+    evidenceRecordRefs: '',
+    analyzedByPersonId: '',
+    completedAt: '',
+  })
+  const createRootCauseMutation = useMutation({
+    mutationFn: async () => {
+      if (!nonconformance) throw new Error('Nonconformance not loaded yet.')
+      return assurarrApi.createRootCauseAnalysis({
+        title: rootCauseForm.title || `Root cause for ${nonconformance.number}`,
+        description: rootCauseForm.description || `Root cause analysis for ${nonconformance.number}.`,
+        nonconformanceId: nonconformance.id,
+        status: rootCauseForm.status,
+        method: rootCauseForm.method,
+        primaryCauseCategory: rootCauseForm.primaryCauseCategory,
+        sourceProduct: rootCauseForm.sourceProduct || nonconformance.sourceProduct || undefined,
+        sourceObjectRef: rootCauseForm.sourceObjectRef || nonconformance.sourceObjectRef || undefined,
+        affectedObjectRefs: joinRefs(rootCauseForm.affectedObjectRefs || nonconformance.affectedObjectRefs.join('\n')),
+        ownerPersonId: nonconformance.ownerPersonId || undefined,
+        recordRefs: joinRefs(rootCauseForm.recordRefs),
+        rootCauseSummary: rootCauseForm.rootCauseSummary || undefined,
+        contributingFactors: joinRefs(rootCauseForm.contributingFactors),
+        evidenceRecordRefs: joinRefs(rootCauseForm.evidenceRecordRefs),
+        analyzedByPersonId: rootCauseForm.analyzedByPersonId || undefined,
+        completedAt: rootCauseForm.completedAt ? new Date(rootCauseForm.completedAt).toISOString() : undefined,
+      })
+    },
+    onSuccess: async () => {
+      setRootCauseForm((form) => ({ ...form, title: '', description: '', rootCauseSummary: '', contributingFactors: '', recordRefs: '', evidenceRecordRefs: '', analyzedByPersonId: '', completedAt: '' }))
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
   if (!nonconformance) {
     return <LoadingCard label="Loading nonconformance detail" />
   }
@@ -542,6 +586,7 @@ function NonconformanceDetailPage() {
   const relatedContainments = containmentActions.data?.filter((action) => action.nonconformanceRef === nonconformance?.number || action.nonconformanceRef === nonconformance?.sourceObjectRef)
   const relatedDispositions = dispositions.data?.filter((item) => item.nonconformanceRef === nonconformance?.number || item.nonconformanceRef === nonconformance?.sourceObjectRef)
   const relatedFindings = findings.data?.filter((finding) => finding.nonconformanceRef === nonconformance?.number || finding.nonconformanceRef === nonconformance?.sourceObjectRef)
+  const relatedRootCauses = rootCauseAnalyses.data ?? []
   const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'nonconformance' && event.subjectId === nonconformance?.id) ?? []
 
   return (
@@ -567,6 +612,7 @@ function NonconformanceDetailPage() {
                 <div><span className="text-slate-500">Source object:</span> {nonconformance.sourceObjectRef ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Owner:</span> {nonconformance.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Due:</span> {nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Root cause:</span> {nonconformance.rootCauseRef ?? 'not started'}</div>
               </div>
             </div>
           </div>
@@ -597,6 +643,101 @@ function NonconformanceDetailPage() {
         <SectionCard title="Containment actions" items={relatedContainments?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No containment actions linked to this nonconformance." />
         <SectionCard title="Dispositions" items={relatedDispositions?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No dispositions linked to this nonconformance." />
         <SectionCard title="Findings" items={relatedFindings?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No findings linked to this nonconformance." />
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div>
+              <p className="assurarr-label">Root cause analyses</p>
+              <h3 className="text-base font-semibold text-slate-50">Track investigation method, cause category, and completion evidence</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Title">
+                <input className="assurarr-input" value={rootCauseForm.title} onChange={(event) => setRootCauseForm({ ...rootCauseForm, title: event.target.value })} />
+              </Field>
+              <Field label="Status">
+                <select className="assurarr-select" value={rootCauseForm.status} onChange={(event) => setRootCauseForm({ ...rootCauseForm, status: event.target.value })}>
+                  <option value="not_started">Not started</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="inconclusive">Inconclusive</option>
+                </select>
+              </Field>
+              <Field label="Method">
+                <select className="assurarr-select" value={rootCauseForm.method} onChange={(event) => setRootCauseForm({ ...rootCauseForm, method: event.target.value })}>
+                  <option value="manual">Manual</option>
+                  <option value="five_whys">Five whys</option>
+                  <option value="fishbone">Fishbone</option>
+                  <option value="fault_tree">Fault tree</option>
+                  <option value="unknown">Unknown</option>
+                </select>
+              </Field>
+              <Field label="Cause category">
+                <select className="assurarr-select" value={rootCauseForm.primaryCauseCategory} onChange={(event) => setRootCauseForm({ ...rootCauseForm, primaryCauseCategory: event.target.value })}>
+                  <option value="people">People</option>
+                  <option value="process">Process</option>
+                  <option value="equipment">Equipment</option>
+                  <option value="material">Material</option>
+                  <option value="environment">Environment</option>
+                  <option value="supplier">Supplier</option>
+                  <option value="customer">Customer</option>
+                  <option value="documentation">Documentation</option>
+                  <option value="training">Training</option>
+                  <option value="system">System</option>
+                  <option value="unknown">Unknown</option>
+                </select>
+              </Field>
+              <Field label="Source product">
+                <input className="assurarr-input" value={rootCauseForm.sourceProduct} onChange={(event) => setRootCauseForm({ ...rootCauseForm, sourceProduct: event.target.value })} placeholder={nonconformance.sourceProduct ?? 'assurarr'} />
+              </Field>
+              <Field label="Source object ref">
+                <input className="assurarr-input" value={rootCauseForm.sourceObjectRef} onChange={(event) => setRootCauseForm({ ...rootCauseForm, sourceObjectRef: event.target.value })} placeholder={nonconformance.sourceObjectRef ?? nonconformance.number} />
+              </Field>
+              <Field label="Affected objects">
+                <textarea className="assurarr-textarea" value={rootCauseForm.affectedObjectRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, affectedObjectRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+              </Field>
+              <Field label="Root cause summary">
+                <textarea className="assurarr-textarea" value={rootCauseForm.rootCauseSummary} onChange={(event) => setRootCauseForm({ ...rootCauseForm, rootCauseSummary: event.target.value })} />
+              </Field>
+              <Field label="Contributing factors">
+                <textarea className="assurarr-textarea" value={rootCauseForm.contributingFactors} onChange={(event) => setRootCauseForm({ ...rootCauseForm, contributingFactors: event.target.value })} placeholder="One factor per line or comma-separated" />
+              </Field>
+              <Field label="Record refs">
+                <textarea className="assurarr-textarea" value={rootCauseForm.recordRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, recordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+              </Field>
+              <Field label="Evidence refs">
+                <textarea className="assurarr-textarea" value={rootCauseForm.evidenceRecordRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, evidenceRecordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+              </Field>
+              <Field label="Analyzed by person id">
+                <input className="assurarr-input" value={rootCauseForm.analyzedByPersonId} onChange={(event) => setRootCauseForm({ ...rootCauseForm, analyzedByPersonId: event.target.value })} placeholder="Optional UUID" />
+              </Field>
+              <Field label="Completed at">
+                <input className="assurarr-input" type="datetime-local" value={rootCauseForm.completedAt} onChange={(event) => setRootCauseForm({ ...rootCauseForm, completedAt: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createRootCauseMutation.mutate()} disabled={createRootCauseMutation.isPending}>
+              {createRootCauseMutation.isPending ? 'Saving...' : 'Create root cause analysis'}
+            </button>
+            <div className="space-y-2">
+              {relatedRootCauses.length > 0 ? (
+                <ul className="space-y-2 text-sm text-slate-300">
+                  {relatedRootCauses.map((rootCause) => (
+                    <li key={rootCause.id} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="assurarr-pill">{rootCause.number}</span>
+                        <span className="assurarr-pill">{rootCause.status}</span>
+                        <span className="assurarr-pill">{rootCause.method}</span>
+                        <span className="assurarr-pill">{rootCause.primaryCauseCategory}</span>
+                      </div>
+                      <p className="mt-2 text-slate-200">{rootCause.title}</p>
+                      <p className="text-slate-400">{rootCause.rootCauseSummary ?? rootCause.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState title="No root cause analyses yet." />
+              )}
+            </div>
+          </div>
+        </div>
         <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
       </div>
     </div>

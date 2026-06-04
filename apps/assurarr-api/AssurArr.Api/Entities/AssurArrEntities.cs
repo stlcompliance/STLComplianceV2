@@ -27,6 +27,7 @@ public sealed class AssurArrNonconformance
     public string? ComplianceImpact { get; set; }
     public bool RecurrenceFlag { get; set; }
     public string? RepeatOfNonconformanceRef { get; set; }
+    public string? RootCauseRef { get; set; }
     public string[] BlockerRefs { get; set; } = [];
     public DateTimeOffset? DueAt { get; set; }
 }
@@ -264,6 +265,31 @@ public sealed class AssurArrAuditFinding
     public string? NonconformanceRef { get; set; }
     public string? CapaRef { get; set; }
     public DateTimeOffset? DueAt { get; set; }
+}
+
+public sealed class AssurArrRootCauseAnalysis
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid NonconformanceId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = "not_started";
+    public string Method { get; set; } = "manual";
+    public string PrimaryCauseCategory { get; set; } = "unknown";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public Guid? OwnerPersonId { get; set; }
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public string? RootCauseSummary { get; set; }
+    public string[] ContributingFactors { get; set; } = [];
+    public Guid? AnalyzedByPersonId { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
 }
 
 public sealed class AssurArrQualityStatusSnapshot

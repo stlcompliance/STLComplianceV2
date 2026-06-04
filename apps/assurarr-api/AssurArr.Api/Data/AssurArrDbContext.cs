@@ -16,6 +16,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrQualityAuditChecklist> QualityAuditChecklists => Set<AssurArrQualityAuditChecklist>();
     public DbSet<AssurArrQualityAuditChecklistItem> QualityAuditChecklistItems => Set<AssurArrQualityAuditChecklistItem>();
     public DbSet<AssurArrAuditFinding> AuditFindings => Set<AssurArrAuditFinding>();
+    public DbSet<AssurArrRootCauseAnalysis> RootCauseAnalyses => Set<AssurArrRootCauseAnalysis>();
     public DbSet<AssurArrQualityStatusSnapshot> QualityStatusSnapshots => Set<AssurArrQualityStatusSnapshot>();
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
     public DbSet<AssurArrQualityReview> QualityReviews => Set<AssurArrQualityReview>();
@@ -41,6 +42,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureChecklist(modelBuilder);
         ConfigureChecklistItem(modelBuilder);
         ConfigureRecord<AssurArrAuditFinding>(modelBuilder, "assurarr_audit_findings");
+        ConfigureRootCauseAnalysis(modelBuilder);
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
         ConfigureReview(modelBuilder);
@@ -126,6 +128,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.ComplianceImpact).HasMaxLength(4000);
             entity.Property(x => x.RecurrenceFlag).IsRequired();
             entity.Property(x => x.RepeatOfNonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.RootCauseRef).HasMaxLength(256);
             entity.Property(x => x.DueAt);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
@@ -357,6 +360,39 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.ChecklistId });
             entity.HasIndex(x => new { x.TenantId, x.Sequence });
+        });
+    }
+
+    private static void ConfigureRootCauseAnalysis(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrRootCauseAnalysis>(entity =>
+        {
+            entity.ToTable("assurarr_root_cause_analyses");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.NonconformanceId).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Method).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PrimaryCauseCategory).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OwnerPersonId);
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.RootCauseSummary).HasMaxLength(4000);
+            entity.Property(x => x.ContributingFactors).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AnalyzedByPersonId);
+            entity.Property(x => x.CompletedAt);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.NonconformanceId });
+            entity.HasIndex(x => new { x.TenantId, x.Status });
         });
     }
 

@@ -32,6 +32,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateNonconformanceStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrNonconformanceStatus");
 
+        group.MapGet("/nonconformances/{nonconformanceId:guid}/root-cause-analyses", async (Guid nonconformanceId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListRootCauseAnalysesAsync(nonconformanceId, cancellationToken)))
+            .WithName("ListAssurArrRootCauseAnalyses");
+
         group.MapGet("/holds", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityHoldsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityHolds");
@@ -61,6 +65,10 @@ public static class AssurArrEndpoints
         integrationGroup.MapPost("/holds/{holdId:guid}/reject", async (Guid holdId, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.RejectHoldReleaseAsync(holdId, request, cancellationToken)))
             .WithName("RejectAssurArrHoldRelease");
+
+        integrationGroup.MapPost("/root-cause-analyses", async (CreateAssurArrRootCauseAnalysisRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateRootCauseAnalysisAsync(request.NonconformanceId, request, cancellationToken)))
+            .WithName("CreateAssurArrRootCauseAnalysis");
 
         group.MapGet("/capas", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListCapasAsync(cancellationToken)))
