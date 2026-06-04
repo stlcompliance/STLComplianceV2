@@ -323,6 +323,12 @@ public static class WorkspaceEndpoints
         group.MapGet("/external-shares", (RecordArrStore store) => Results.Ok(store.GetExternalShares()))
             .WithName("ListRecordArrExternalShares");
 
+        group.MapPost("/external-shares/{externalShareId}/access", (string externalShareId, RecordExternalShareAccessRequest request, RecordArrStore store) =>
+        {
+            var share = store.RecordExternalShareAccess(externalShareId, request.AccessedByPersonId, request.AccessAction, request.SourceIp, request.UserAgent);
+            return Results.Ok(share);
+        }).WithName("AccessRecordArrExternalShare");
+
         group.MapPost("/external-shares/{externalShareId}/expire", (string externalShareId, ExpireExternalShareRequest request, RecordArrStore store) =>
         {
             var share = store.ExpireExternalShare(externalShareId, request.ExpiredByPersonId);
@@ -433,6 +439,7 @@ public static class WorkspaceEndpoints
     public sealed record SupersedeControlledDocumentRequest(string SupersededByDocumentRef, string SupersededByPersonId);
     public sealed record CreateAccessGrantRequest(string RecordId, string GranteeType, string GranteeRef, string Permission, string GrantedByPersonId, DateTimeOffset? ExpiresAt);
     public sealed record RevokeAccessGrantRequest(string RevokedByPersonId, string? RevokeReason);
+    public sealed record RecordExternalShareAccessRequest(string AccessedByPersonId, string AccessAction, string? SourceIp, string? UserAgent);
     public sealed record ExpireExternalShareRequest(string ExpiredByPersonId);
     public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);
     public sealed record CompleteDisposalReviewRequest(string Status, string? ReviewedByPersonId, string? DecisionReason);

@@ -78,6 +78,7 @@ import {
   releaseLegalHold,
   reviewExtractionResult,
   revokeExternalShare,
+  recordExternalShareAccess,
   purgeRecord,
   promoteDocumentVersion,
   obsoleteControlledDocument,
@@ -2189,6 +2190,18 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const accessShareMutation = useMutation({
+    mutationFn: (externalShareId: string) =>
+      recordExternalShareAccess(accessToken, externalShareId, {
+        accessedByPersonId: 'person-doc-controller',
+        accessAction: 'view',
+        sourceIp: null,
+        userAgent: navigator.userAgent,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const grantMutation = useMutation({
     mutationFn: () =>
       createAccessGrant(accessToken, {
@@ -2323,6 +2336,14 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: 'person-doc-controller' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Revoke
+                </button>
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => accessShareMutation.mutate(share.externalShareId)}
+                  disabled={accessShareMutation.isPending || share.status !== 'active'}
+                >
+                  Log access
                 </button>
                 <button
                   type="button"

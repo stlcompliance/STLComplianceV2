@@ -1052,6 +1052,19 @@ export async function revokeExternalShare(
   )
 }
 
+export async function recordExternalShareAccess(
+  accessToken: string,
+  externalShareId: string,
+  body: { accessedByPersonId: string; accessAction: string; sourceIp?: string | null; userAgent?: string | null },
+): Promise<RecordArrExternalShare> {
+  return sendJson<RecordArrExternalShare>(
+    `/api/v1/workspace/external-shares/${encodeURIComponent(externalShareId)}/access`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function expireExternalShare(
   accessToken: string,
   externalShareId: string,

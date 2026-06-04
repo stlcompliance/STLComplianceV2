@@ -1747,6 +1747,35 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrExternalShareResponse RecordExternalShareAccess(string shareId, string accessedByPersonId, string accessAction, string? sourceIp, string? userAgent)
+    {
+        lock (_gate)
+        {
+            var index = _externalShares.FindIndex(share => string.Equals(share.ExternalShareId, shareId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"External share {shareId} not found.");
+            }
+
+            var current = _externalShares[index];
+            if (current.Status is "revoked" or "expired")
+            {
+                throw new InvalidOperationException($"External share {shareId} is not active.");
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var updated = current with
+            {
+                Status = "active",
+                LastAccessedAt = now,
+                AccessCount = current.AccessCount + 1
+            };
+            _externalShares[index] = updated;
+            AddAccessLog(current.RecordId, "external_share.accessed", "allowed", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, accessAction);
+            return updated;
+        }
+    }
+
     public RecordArrRedactionResponse CreateRedaction(string sourceRecordId, string redactedRecordId, string redactionReason, string redactedByPersonId, IEnumerable<string> redactionRules)
     {
         lock (_gate)

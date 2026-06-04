@@ -982,6 +982,39 @@
         }
       }
     },
+    "/api/integrations/external-shares/{externalShareId}/access": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AccessRecordArrIntegrationExternalShare/api/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordExternalShareAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/external-shares/{externalShareId}/expire": {
       "post": {
         "tags": [
@@ -2677,6 +2710,39 @@
         }
       }
     },
+    "/api/v1/integrations/external-shares/{externalShareId}/access": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AccessRecordArrIntegrationExternalShare/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordExternalShareAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/external-shares/{externalShareId}/expire": {
       "post": {
         "tags": [
@@ -4165,6 +4231,39 @@
         }
       }
     },
+    "/api/v1/workspace/external-shares/{externalShareId}/access": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "AccessRecordArrExternalShare",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordExternalShareAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/external-shares/{externalShareId}/expire": {
       "post": {
         "tags": [
@@ -5201,7 +5300,7 @@
             "type": "string"
           },
           "confidenceScore": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -5507,6 +5606,35 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "RecordExternalShareAccessRequest": {
+        "required": [
+          "accessedByPersonId",
+          "accessAction",
+          "sourceIp",
+          "userAgent"
+        ],
+        "type": "object",
+        "properties": {
+          "accessedByPersonId": {
+            "type": "string"
+          },
+          "accessAction": {
+            "type": "string"
+          },
+          "sourceIp": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
