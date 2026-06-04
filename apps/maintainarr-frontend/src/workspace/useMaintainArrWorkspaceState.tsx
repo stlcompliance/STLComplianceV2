@@ -806,6 +806,9 @@ export function useMaintainArrWorkspaceState() {
               selectedOptions: draftOptions,
             }
           }
+          if (item.itemType === 'photo' || item.itemType === 'signature') {
+            return null
+          }
           const text = draft?.textValue ?? existing?.textValue
           if (!text) {
             return null
@@ -1176,6 +1179,11 @@ export function useMaintainArrWorkspaceState() {
 
   const handleListenForAnswer = async () => {
     if (!currentVoicePrompt) {
+      return
+    }
+
+    if (currentVoicePrompt.itemType === 'photo' || currentVoicePrompt.itemType === 'signature') {
+      setVoiceStatusMessage('This item uses evidence uploads. Use the inspection evidence panel below.')
       return
     }
 

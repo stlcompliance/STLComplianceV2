@@ -54,7 +54,11 @@ public sealed class InspectionTemplateService(
 
         InspectionChecklistItemTypes.Select,
 
-        InspectionChecklistItemTypes.MultiSelect
+        InspectionChecklistItemTypes.MultiSelect,
+
+        InspectionChecklistItemTypes.Photo,
+
+        InspectionChecklistItemTypes.Signature
 
     };
 
@@ -1642,7 +1646,7 @@ public sealed class InspectionTemplateService(
 
                 "inspection_template.item.invalid_type",
 
-                "Item type must be pass_fail, yes_no, numeric, text, select, or multi_select.",
+                "Item type must be pass_fail, yes_no, numeric, text, select, multi_select, photo, or signature.",
 
                 400);
 

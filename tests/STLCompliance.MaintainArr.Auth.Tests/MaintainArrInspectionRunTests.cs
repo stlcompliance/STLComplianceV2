@@ -273,6 +273,64 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_accepts_photo_and_signature_evidence_without_text_answers()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, photoItemId, signatureItemId) = await SeedEvidenceOnlyTemplateWithAssetAsync(token);
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/inspections/{started.InspectionRunId}/answers", token);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([]));
+        var submitResponse = await _maintainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var photoUploadRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/evidence", token);
+        photoUploadRequest.Content = JsonContent.Create(new CreateMaintainArrEvidenceRequest(
+            "inspection_photo",
+            "data-plate.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 }),
+            "Photo evidence",
+            photoItemId));
+        var photoUploadResponse = await _maintainarrClient.SendAsync(photoUploadRequest);
+        photoUploadResponse.EnsureSuccessStatusCode();
+
+        var signatureUploadRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/evidence", token);
+        signatureUploadRequest.Content = JsonContent.Create(new CreateMaintainArrEvidenceRequest(
+            "inspection_signature",
+            "signed-slip.png",
+            "image/png",
+            Convert.ToBase64String(new byte[] { 0x89, 0x50, 0x4E, 0x47 }),
+            "Signature evidence",
+            signatureItemId));
+        var signatureUploadResponse = await _maintainarrClient.SendAsync(signatureUploadRequest);
+        signatureUploadResponse.EnsureSuccessStatusCode();
+
+        var listEvidenceRequest = Authorized(HttpMethod.Get, $"/api/inspections/{started.InspectionRunId}/evidence", token);
+        var listEvidenceResponse = await _maintainarrClient.SendAsync(listEvidenceRequest);
+        listEvidenceResponse.EnsureSuccessStatusCode();
+        var evidence = (await listEvidenceResponse.Content.ReadFromJsonAsync<List<InspectionRunEvidenceResponse>>())!;
+        Assert.Contains(evidence, entry => entry.ChecklistItemId == photoItemId && entry.FileName == "data-plate.jpg");
+        Assert.Contains(evidence, entry => entry.ChecklistItemId == signatureItemId && entry.FileName == "signed-slip.png");
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/complete", token);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Equal("completed", completed.Status);
+        Assert.Equal("passed", completed.Result);
+        Assert.Empty(completed.Answers);
+        Assert.Contains(completed.ChecklistItems, x => x.ChecklistItemId == photoItemId && x.ItemType == "photo");
+        Assert.Contains(completed.ChecklistItems, x => x.ChecklistItemId == signatureItemId && x.ItemType == "signature");
+    }
+
+    [Fact]
     public async Task Technician_cannot_view_other_users_inspection_run()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
@@ -527,6 +585,79 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
 
         return (asset.AssetId, template.InspectionTemplateId, selectItem.ChecklistItemId, multiSelectItem.ChecklistItemId);
+    }
+
+    private async Task<(Guid AssetId, Guid TemplateId, Guid PhotoItemId, Guid SignatureItemId)> SeedEvidenceOnlyTemplateWithAssetAsync(string token)
+    {
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "evidence-only",
+            "Evidence Only",
+            "Photo and signature inspection template"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createPhotoItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createPhotoItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "data-plate-photo",
+            "Upload a photo of the data plate",
+            "photo",
+            true,
+            10,
+            null));
+        var createPhotoItemResponse = await _maintainarrClient.SendAsync(createPhotoItemRequest);
+        createPhotoItemResponse.EnsureSuccessStatusCode();
+        var photoItem = (await createPhotoItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var createSignatureItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createSignatureItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "signed-approval",
+            "Capture a signature for approval",
+            "signature",
+            true,
+            20,
+            null));
+        var createSignatureItemResponse = await _maintainarrClient.SendAsync(createSignatureItemRequest);
+        createSignatureItemResponse.EnsureSuccessStatusCode();
+        var signatureItem = (await createSignatureItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var activateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/status",
+            token);
+        activateRequest.Content = JsonContent.Create(new UpdateInspectionTemplateStatusRequest("active"));
+        var activateResponse = await _maintainarrClient.SendAsync(activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetTypeId,
+            "RUN-EVIDENCE-1",
+            "Evidence Test Asset",
+            string.Empty,
+            null));
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        return (asset.AssetId, template.InspectionTemplateId, photoItem.ChecklistItemId, signatureItem.ChecklistItemId);
     }
 
     private async Task<Guid> SeedAssetTypeAsync(string token)

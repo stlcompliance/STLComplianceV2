@@ -161,6 +161,8 @@ export function InspectionRunnerPanel({
       (selectedTemplateId ? { value: selectedTemplateId, label: selectedTemplateId } : undefined),
     [selectedTemplateId, templateOptions],
   )
+  const currentVoicePromptUsesEvidence =
+    currentVoicePrompt?.itemType === 'photo' || currentVoicePrompt?.itemType === 'signature'
 
   const toggleSelectedOption = (checklistItemId: string, option: string) => {
     const draft = answerDrafts[checklistItemId] ?? {}
@@ -170,6 +172,8 @@ export function InspectionRunnerPanel({
       : [...current, option]
     onAnswerDraftChange(checklistItemId, 'selectedOptions', next)
   }
+
+  const isEvidenceItem = (itemType: string) => itemType === 'photo' || itemType === 'signature'
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -299,7 +303,7 @@ export function InspectionRunnerPanel({
                         <button
                           type="button"
                           className="rounded bg-violet-800 px-3 py-1 text-sm text-white hover:bg-violet-700 disabled:opacity-50"
-                          disabled={!currentVoicePrompt || isVoiceListening || voiceGuidanceLoading}
+                          disabled={!currentVoicePrompt || isVoiceListening || voiceGuidanceLoading || currentVoicePromptUsesEvidence}
                           onClick={onListenForAnswer}
                         >
                           {isVoiceListening ? 'Listening…' : 'Listen for answer'}
@@ -316,6 +320,11 @@ export function InspectionRunnerPanel({
                     <div className="mt-3 text-sm">
                       <p className="font-medium text-violet-100">{currentVoicePrompt.prompt}</p>
                       <p className="mt-1 text-xs text-violet-200/80">{currentVoicePrompt.voiceAnswerHint}</p>
+                      {currentVoicePromptUsesEvidence ? (
+                        <p className="mt-1 text-xs text-violet-200/80">
+                          This item is completed through evidence uploads rather than a spoken answer.
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                   {voiceGuidanceEnabled && voiceGuidanceLoading ? (
@@ -331,6 +340,7 @@ export function InspectionRunnerPanel({
                 {activeRun.checklistItems.map((item) => {
                   const existing = activeRun.answers.find((a) => a.checklistItemId === item.checklistItemId)
                   const draft = answerDrafts[item.checklistItemId] ?? {}
+                  const itemEvidence = runEvidence.filter((evidence) => evidence.checklistItemId === item.checklistItemId)
 
                   return (
                     <li
@@ -431,6 +441,25 @@ export function InspectionRunnerPanel({
                               onAnswerDraftChange(item.checklistItemId, 'numericValue', event.target.value)
                             }
                           />
+                        ) : isEvidenceItem(item.itemType) ? (
+                          <div className="space-y-2 rounded border border-dashed border-slate-700 bg-slate-950/50 p-3 text-slate-300">
+                            <p>
+                              Use the inspection evidence panel below to upload a{' '}
+                              {item.itemType === 'signature' ? 'signature' : 'photo'} for this item.
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {itemEvidence.length > 0
+                                ? `${itemEvidence.length} evidence file${itemEvidence.length === 1 ? '' : 's'} attached.`
+                                : 'No evidence uploaded yet.'}
+                            </p>
+                            {itemEvidence.length > 0 ? (
+                              <ul className="space-y-1 text-xs text-slate-400">
+                                {itemEvidence.map((evidence) => (
+                                  <li key={evidence.evidenceId}>{evidence.fileName}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
                         ) : (
                           <textarea
                             id={`inspection-answer-text-${item.checklistItemId}`}
@@ -444,13 +473,22 @@ export function InspectionRunnerPanel({
                           />
                         )
                       ) : (
-                        <p className="text-slate-300">
-                          {existing?.passFailValue ??
-                            existing?.numericValue?.toString() ??
-                            existing?.textValue ??
-                            existing?.selectedOptions?.join(', ') ??
-                            'No answer'}
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-slate-300">
+                            {existing?.passFailValue ??
+                              existing?.numericValue?.toString() ??
+                              existing?.textValue ??
+                              existing?.selectedOptions?.join(', ') ??
+                              (isEvidenceItem(item.itemType)
+                                ? 'Evidence uploaded below'
+                                : 'No answer')}
+                          </p>
+                          {isEvidenceItem(item.itemType) && itemEvidence.length > 0 ? (
+                            <p className="text-xs text-slate-500">
+                              {itemEvidence.map((evidence) => evidence.fileName).join(', ')}
+                            </p>
+                          ) : null}
+                        </div>
                       )}
                     </li>
                   )

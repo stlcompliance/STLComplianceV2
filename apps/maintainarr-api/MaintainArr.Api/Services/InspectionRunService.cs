@@ -187,7 +187,8 @@ public sealed class InspectionRunService(
             .Where(x => x.TenantId == tenantId && x.InspectionTemplateId == run.InspectionTemplateId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
-        if (request.Answers.Count == 0)
+        if (request.Answers.Count == 0
+            && checklistItems.Values.Any(item => !IsEvidenceOnlyItem(item.ItemType)))
         {
             throw new StlApiException(
                 "inspection_run.answers_required",
@@ -294,13 +295,19 @@ public sealed class InspectionRunService(
             .Where(x => x.TenantId == tenantId && x.InspectionRunId == inspectionRunId)
             .ToDictionaryAsync(x => x.ChecklistItemId, cancellationToken);
 
+        var evidenceChecklistItemIds = await db.InspectionRunEvidence
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.InspectionRunId == inspectionRunId && x.ChecklistItemId.HasValue)
+            .Select(x => x.ChecklistItemId!.Value)
+            .ToListAsync(cancellationToken);
+
         var failed = false;
 
         foreach (var item in checklistItems)
         {
             answers.TryGetValue(item.Id, out var answer);
 
-            if (item.IsRequired && !HasAnswer(item, answer))
+            if (item.IsRequired && !HasAnswer(item, answer, evidenceChecklistItemIds))
             {
                 throw new StlApiException(
                     "inspection_run.missing_required_answers",
@@ -624,6 +631,15 @@ public sealed class InspectionRunService(
             return (null, null, null, selectedOptions);
         }
 
+        if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Photo, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Signature, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "inspection_run.evidence_required",
+                "Evidence checklist items must be completed through the inspection evidence panel.",
+                400);
+        }
+
         if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Numeric, StringComparison.OrdinalIgnoreCase))
         {
             if (!input.NumericValue.HasValue)
@@ -657,8 +673,14 @@ public sealed class InspectionRunService(
         return (null, null, text, []);
     }
 
-    private static bool HasAnswer(InspectionChecklistItem item, InspectionRunAnswer? answer)
+    private static bool HasAnswer(InspectionChecklistItem item, InspectionRunAnswer? answer, IReadOnlyCollection<Guid> evidenceChecklistItemIds)
     {
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.Photo, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(item.ItemType, InspectionChecklistItemTypes.Signature, StringComparison.OrdinalIgnoreCase))
+        {
+            return evidenceChecklistItemIds.Contains(item.Id);
+        }
+
         if (answer is null)
         {
             return false;
@@ -702,6 +724,10 @@ public sealed class InspectionRunService(
 
         return false;
     }
+
+    private static bool IsEvidenceOnlyItem(string itemType) =>
+        string.Equals(itemType, InspectionChecklistItemTypes.Photo, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(itemType, InspectionChecklistItemTypes.Signature, StringComparison.OrdinalIgnoreCase);
 
     private static IReadOnlyList<string> NormalizeSelectedOptions(
         InspectionChecklistItem checklistItem,

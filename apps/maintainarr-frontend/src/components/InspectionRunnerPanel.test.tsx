@@ -248,4 +248,40 @@ describe('InspectionRunnerPanel', () => {
 
     expect(screen.getByRole('combobox', { name: /Cab door position/ })).toBeInTheDocument()
   })
+
+  it('renders evidence guidance for photo and signature checklist items', () => {
+    render(
+      <InspectionRunnerPanel
+        {...baseProps}
+        activeRun={{
+          ...baseProps.activeRun!,
+          checklistItems: [
+            {
+              ...baseProps.activeRun!.checklistItems[0],
+              itemType: 'photo',
+              prompt: 'Upload a photo of the data plate',
+              itemKey: 'data-plate-photo',
+            },
+          ],
+        }}
+        runEvidence={[
+          {
+            evidenceId: '77777777-7777-7777-7777-777777777777',
+            inspectionRunId: '44444444-4444-4444-4444-444444444444',
+            checklistItemId: '66666666-6666-6666-6666-666666666666',
+            evidenceTypeKey: 'inspection_photo',
+            fileName: 'data-plate.jpg',
+            contentType: 'image/jpeg',
+            sizeBytes: 1024,
+            notes: null,
+            uploadedByUserId: '55555555-5555-5555-5555-555555555555',
+            createdAt: '2026-05-27T12:05:00Z',
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText(/Use the inspection evidence panel below to upload a photo/)).toBeInTheDocument()
+    expect(screen.getAllByText('data-plate.jpg').length).toBeGreaterThan(0)
+  })
 })

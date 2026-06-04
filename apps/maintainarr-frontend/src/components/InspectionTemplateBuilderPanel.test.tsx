@@ -126,6 +126,8 @@ describe('InspectionTemplateBuilderPanel', () => {
     expect(screen.getByText('Horn operates correctly')).toBeInTheDocument()
     expect(screen.getByText('Forklift (vehicles)')).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Yes / no' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Photo' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Signature' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clone template' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export JSON' })).toBeInTheDocument()
     expect(screen.queryByText('Import template JSON')).not.toBeInTheDocument()
@@ -137,6 +139,13 @@ describe('InspectionTemplateBuilderPanel', () => {
     expect(screen.getByRole('textbox', { name: /Controlled options/ })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Select' })).toBeInTheDocument()
     expect(screen.queryByText('Options:')).not.toBeInTheDocument()
+  })
+
+  it('shows evidence guidance for photo and signature items', () => {
+    render(<InspectionTemplateBuilderPanel {...baseProps} itemType="photo" />)
+
+    expect(screen.getByText(/Evidence-based items are completed in the inspection evidence panel/)).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Controlled options/ })).not.toBeInTheDocument()
   })
 
   it('downloads the selected template JSON export', () => {

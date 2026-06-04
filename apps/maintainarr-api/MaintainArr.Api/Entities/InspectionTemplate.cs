@@ -82,6 +82,8 @@ public static class InspectionChecklistItemTypes
     public const string Text = "text";
     public const string Select = "select";
     public const string MultiSelect = "multi_select";
+    public const string Photo = "photo";
+    public const string Signature = "signature";
 }
 
 

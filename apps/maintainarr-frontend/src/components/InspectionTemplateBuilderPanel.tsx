@@ -368,6 +368,8 @@ export function InspectionTemplateBuilderPanel({
                 <option value="text">Text</option>
                 <option value="select">Select</option>
                 <option value="multi_select">Multi-select</option>
+                <option value="photo">Photo</option>
+                <option value="signature">Signature</option>
               </select>
             </label>
             {itemType === 'select' || itemType === 'multi_select' ? (
@@ -384,6 +386,10 @@ export function InspectionTemplateBuilderPanel({
                   Enter one option per line. These options are used for runner selection and voice capture.
                 </p>
               </label>
+            ) : itemType === 'photo' || itemType === 'signature' ? (
+              <p className="text-xs text-slate-500 md:col-span-2">
+                Evidence-based items are completed in the inspection evidence panel; they do not need controlled options.
+              </p>
             ) : null}
             <label className="block text-sm md:col-span-2" htmlFor="inspectiontemplatebuilder-prompt">
           <span className="text-slate-300">Prompt</span>
