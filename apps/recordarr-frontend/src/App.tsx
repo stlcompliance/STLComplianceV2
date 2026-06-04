@@ -82,6 +82,7 @@ import {
   promoteDocumentVersion,
   obsoleteControlledDocument,
   completeDocumentAcknowledgement,
+  completeDocumentReview,
   completeDisposalReview,
   revokeAccessGrant,
   lockPackage,
@@ -1173,6 +1174,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     reviewerPersonId: 'person-quality-reviewer',
     dueAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   })
+  const [selectedReviewId, setSelectedReviewId] = useState<string>('')
+  const [completeReviewForm, setCompleteReviewForm] = useState({
+    status: 'approved',
+    decisionReason: 'Review completed and approved for use.',
+    comments: 'Approved in demo workspace.',
+  })
   const [distributionForm, setDistributionForm] = useState({
     versionId: '',
     distributionType: 'person',
@@ -1224,6 +1231,19 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listDocumentAcknowledgements(accessToken, selectedDocumentId),
     enabled: Boolean(accessToken && selectedDocumentId),
   })
+
+  useEffect(() => {
+    if (!selectedReviewId && reviewsQuery.data?.[0]) {
+      setSelectedReviewId(reviewsQuery.data[0].documentReviewId)
+    }
+  }, [reviewsQuery.data, selectedReviewId])
+
+  useEffect(() => {
+    if (selectedReviewId && !reviewsQuery.data?.some((review) => review.documentReviewId === selectedReviewId)) {
+      setSelectedReviewId(reviewsQuery.data?.[0]?.documentReviewId ?? '')
+    }
+  }, [reviewsQuery.data, selectedReviewId])
+
   const createDocumentMutation = useMutation({
     mutationFn: () => createControlledDocument(accessToken, newDocument),
     onSuccess: async (document) => {
@@ -1264,6 +1284,17 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       createDocumentReview(accessToken, selectedDocumentId, {
         ...reviewForm,
         versionId: reviewForm.versionId || selectedDocument?.currentVersionId || '',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const completeReviewMutation = useMutation({
+    mutationFn: () =>
+      completeDocumentReview(accessToken, selectedDocumentId, selectedReviewId, {
+        status: completeReviewForm.status,
+        decisionReason: completeReviewForm.decisionReason,
+        comments: completeReviewForm.comments,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -1442,15 +1473,77 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                   <h3 className="text-sm font-semibold text-slate-100">Reviews</h3>
                   <div className="mt-2 space-y-2">
                     {(reviewsQuery.data ?? []).map((review) => (
-                      <div key={review.documentReviewId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <button
+                        key={review.documentReviewId}
+                        type="button"
+                        className={[
+                          'w-full rounded-xl border p-3 text-left text-sm transition-colors',
+                          review.documentReviewId === selectedReviewId
+                            ? 'border-cyan-400/40 bg-cyan-500/10'
+                            : 'border-slate-700/70 bg-slate-900/70 hover:bg-slate-900/90',
+                        ].join(' ')}
+                        onClick={() => setSelectedReviewId(review.documentReviewId)}
+                      >
                         <div className="flex items-center justify-between gap-3">
                           <strong className="text-slate-100">{review.reviewType}</strong>
                           <span className="recordarr-pill text-[0.7rem]">{review.status}</span>
                         </div>
-                        <p className="mt-1">{review.reviewerPersonId}</p>
-                      </div>
+                        <p className="mt-1 text-slate-300">{review.reviewerPersonId}</p>
+                        <p className="mt-1 text-xs text-slate-400">Requested by {review.requestedByPersonId}</p>
+                      </button>
                     ))}
                     {!reviewsQuery.data?.length ? <EmptyState title="No reviews yet." /> : null}
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-slate-700/70 bg-slate-950/50 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Field label="Selected review">
+                        <select
+                          className="recordarr-select"
+                          value={selectedReviewId}
+                          onChange={(e) => setSelectedReviewId(e.target.value)}
+                        >
+                          <option value="">Choose a review</option>
+                          {(reviewsQuery.data ?? []).map((review) => (
+                            <option key={review.documentReviewId} value={review.documentReviewId}>
+                              {review.reviewType} · {review.status}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Decision">
+                        <select
+                          className="recordarr-select"
+                          value={completeReviewForm.status}
+                          onChange={(e) => setCompleteReviewForm({ ...completeReviewForm, status: e.target.value })}
+                        >
+                          <option value="approved">approved</option>
+                          <option value="rejected">rejected</option>
+                          <option value="changes_requested">changes_requested</option>
+                        </select>
+                      </Field>
+                      <Field label="Decision reason" wide>
+                        <textarea
+                          className="recordarr-textarea"
+                          value={completeReviewForm.decisionReason}
+                          onChange={(e) => setCompleteReviewForm({ ...completeReviewForm, decisionReason: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Comments" wide>
+                        <textarea
+                          className="recordarr-textarea"
+                          value={completeReviewForm.comments}
+                          onChange={(e) => setCompleteReviewForm({ ...completeReviewForm, comments: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    <button
+                      type="button"
+                      className="recordarr-button secondary mt-3"
+                      onClick={() => completeReviewMutation.mutate()}
+                      disabled={completeReviewMutation.isPending || !selectedReviewId}
+                    >
+                      {completeReviewMutation.isPending ? 'Completing...' : 'Complete review'}
+                    </button>
                   </div>
                 </div>
                 <div>
