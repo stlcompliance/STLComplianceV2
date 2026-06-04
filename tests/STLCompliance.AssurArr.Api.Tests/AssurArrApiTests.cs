@@ -255,6 +255,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("requested", approvalRelease!.Status);
         Assert.Equal(approvalHold.Number, approvalRelease.HoldRef);
 
+        var releaseRequestedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        releaseRequestedDashboardResponse.EnsureSuccessStatusCode();
+        var releaseRequestedDashboard = await releaseRequestedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(releaseRequestedDashboard);
+        Assert.Contains(releaseRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.release_requested");
+
         var holdsAfterRequestResponse = await _client.GetAsync("/api/v1/holds");
         holdsAfterRequestResponse.EnsureSuccessStatusCode();
         var holdsAfterRequest = await holdsAfterRequestResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
@@ -595,6 +601,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(action);
         Assert.Equal(actionTitle, action!.Title);
 
+        var actionAssignedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        actionAssignedDashboardResponse.EnsureSuccessStatusCode();
+        var actionAssignedDashboard = await actionAssignedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(actionAssignedDashboard);
+        Assert.Contains(actionAssignedDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.action_assigned");
+
         var blockerTitle = $"Test CAPA blocker {Guid.NewGuid():N}";
         var blockerResponse = await _client.PostAsJsonAsync(
             $"/api/v1/capas/{capa!.Id}/actions/{action.Id}/blockers",
@@ -839,6 +851,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(checklist);
         Assert.Equal(checklistTitle, checklist!.Title);
 
+        var checklistCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        checklistCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var checklistCreatedDashboard = await checklistCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(checklistCreatedDashboard);
+        Assert.Contains(checklistCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist_created");
+
         var itemPrompt = $"Check release signature {Guid.NewGuid():N}";
         var itemResponse = await _client.PostAsJsonAsync(
             $"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}/items",
@@ -861,6 +879,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var item = await itemResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistItemResponse>();
         Assert.NotNull(item);
         Assert.Equal(itemPrompt, item!.Prompt);
+
+        var itemCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        itemCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var itemCreatedDashboard = await itemCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(itemCreatedDashboard);
+        Assert.Contains(itemCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist.item_created");
 
         var findingTitle = $"Test finding {Guid.NewGuid():N}";
         var findingResponse = await _client.PostAsJsonAsync(
@@ -939,6 +963,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 DateTimeOffset.UtcNow));
 
         Assert.Equal(HttpStatusCode.OK, responseUpdate.StatusCode);
+
+        var itemAnsweredDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        itemAnsweredDashboardResponse.EnsureSuccessStatusCode();
+        var itemAnsweredDashboard = await itemAnsweredDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(itemAnsweredDashboard);
+        Assert.Contains(itemAnsweredDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist.item_answered");
 
         var reviewAuditResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/audits/{audit.Id}/status",
