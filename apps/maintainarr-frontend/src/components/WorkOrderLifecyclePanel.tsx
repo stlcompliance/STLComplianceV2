@@ -208,12 +208,38 @@ export function WorkOrderLifecyclePanel({
                 <div>
                   <dt className="text-slate-500">Returned to service</dt>
                   <dd className="text-slate-200">
-                    {closeout.assetReturnedToService ? formatTimestamp(closeout.returnToServiceAt) : 'No'}
+                    {closeout.assetReturnedToService
+                      ? formatTimestamp(closeout.returnToServiceAt)
+                      : 'No'}
                   </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Returned by</dt>
+                  <dd className="text-slate-200">{closeout.returnToServiceByPersonId ?? '—'}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Readiness</dt>
                   <dd className="text-slate-200">{closeout.finalAssetReadinessStatus ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Post-repair inspection</dt>
+                  <dd className="text-slate-200">
+                    {closeout.postRepairInspectionRequired
+                      ? closeout.postRepairInspectionRef ?? 'Required'
+                      : 'Not required'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Supervisor review</dt>
+                  <dd className="text-slate-200">{closeout.supervisorReviewRequired ? 'Required' : 'Not required'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Compliance review</dt>
+                  <dd className="text-slate-200">{closeout.complianceReviewRequired ? 'Required' : 'Not required'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Quality review</dt>
+                  <dd className="text-slate-200">{closeout.qualityReviewRequired ? 'Required' : 'Not required'}</dd>
                 </div>
               </dl>
               <div className="mt-3" data-testid="work-order-closeout-evidence">

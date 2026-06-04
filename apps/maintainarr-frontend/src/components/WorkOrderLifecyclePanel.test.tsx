@@ -118,17 +118,17 @@ describe('WorkOrderLifecyclePanel', () => {
             assetReturnedToService: true,
             returnToServiceAt: '2026-05-27T14:00:00Z',
             returnToServiceByPersonId: 'person-tech-001',
-            postRepairInspectionRequired: false,
-            postRepairInspectionRef: null,
-            supervisorReviewRequired: false,
-            supervisorReviewedByPersonId: null,
-            supervisorReviewedAt: null,
-            complianceReviewRequired: false,
-            complianceReviewedByPersonId: null,
-            complianceReviewedAt: null,
-            qualityReviewRequired: false,
-            qualityReviewedByPersonId: null,
-            qualityReviewedAt: null,
+            postRepairInspectionRequired: true,
+            postRepairInspectionRef: 'inspect-123',
+            supervisorReviewRequired: true,
+            supervisorReviewedByPersonId: 'person-supervisor-001',
+            supervisorReviewedAt: '2026-05-27T14:10:00Z',
+            complianceReviewRequired: true,
+            complianceReviewedByPersonId: 'person-compliance-001',
+            complianceReviewedAt: '2026-05-27T14:15:00Z',
+            qualityReviewRequired: true,
+            qualityReviewedByPersonId: 'person-quality-001',
+            qualityReviewedAt: '2026-05-27T14:20:00Z',
             evidenceAccepted: true,
             unresolvedDefectRefs: null,
             followUpWorkOrderRefs: null,
@@ -165,6 +165,8 @@ describe('WorkOrderLifecyclePanel', () => {
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('closed')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('wear')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Replaced seal')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('inspect-123')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Required')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Yes')
     expect(screen.getByTestId('work-order-closeout-evidence')).toHaveTextContent('after.jpg')
     expect(screen.getByTestId('work-order-closeout-evidence')).not.toHaveTextContent('ev-1')
