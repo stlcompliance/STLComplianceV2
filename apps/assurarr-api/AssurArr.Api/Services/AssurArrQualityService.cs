@@ -1622,6 +1622,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToReviewResponse).ToList();
     }
 
+    public async Task<AssurArrQualityReviewResponse?> GetQualityReviewAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityReviews.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToReviewResponse(entity)
+            : null;
+
     public async Task<AssurArrQualityReviewResponse> CreateQualityReviewAsync(CreateAssurArrQualityReviewRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -1688,6 +1693,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         return entities.Select(ToReleaseResponse).ToList();
     }
+
+    public async Task<AssurArrQualityReleaseResponse?> GetQualityReleaseAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityReleases.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToReleaseResponse(entity)
+            : null;
 
     public async Task<AssurArrQualityReleaseResponse> CreateQualityReleaseAsync(CreateAssurArrQualityReleaseRequest request, CancellationToken cancellationToken = default)
     {

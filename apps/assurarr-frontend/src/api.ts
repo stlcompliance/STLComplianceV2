@@ -615,6 +615,7 @@ export const assurarrApi = {
       metricRefs: body.metricRefs ?? [],
     }),
   listQualityReviews: () => getJson<QualityReview[]>('/api/v1/integrations/quality-reviews'),
+  getQualityReview: (id: string) => getJson<QualityReview>(`/api/v1/integrations/quality-reviews/${id}`),
   createQualityReview: (body: CreateBase & { reviewType: string; sourceReviewRef?: string; reviewerPersonId?: string; requestedAt?: string; dueAt?: string; decisionReason?: string; requiredEvidenceRefs?: string[]; submittedEvidenceRefs?: string[]; notes?: string }) =>
     sendJson<QualityReview>('/api/v1/integrations/quality-reviews', 'POST', {
       ...body,
@@ -626,6 +627,7 @@ export const assurarrApi = {
   updateQualityReviewStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<QualityReview>(`/api/v1/integrations/quality-reviews/${id}/status`, 'PATCH', { status, closureSummary }),
   listQualityReleases: () => getJson<QualityRelease[]>('/api/v1/integrations/quality-releases'),
+  getQualityRelease: (id: string) => getJson<QualityRelease>(`/api/v1/integrations/quality-releases/${id}`),
   createQualityRelease: (body: CreateBase & { holdRef: string; releaseType: string; requestedByPersonId?: string; requestedAt?: string; conditions?: string; expirationAt?: string; evidenceRecordRefs?: string[]; notes?: string }) =>
     sendJson<QualityRelease>('/api/v1/integrations/quality-releases', 'POST', {
       ...body,

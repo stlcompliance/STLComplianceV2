@@ -183,10 +183,23 @@ export function WorkOrderLifecyclePanel({
               <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Closeout
               </h4>
+              <p className="mt-2 text-sm text-slate-200">{closeout.completionSummary}</p>
               <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                 <div>
                   <dt className="text-slate-500">Final status</dt>
                   <dd className="text-slate-200">{closeout.finalStatus ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Root cause</dt>
+                  <dd className="text-slate-200">{closeout.rootCause ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Corrective action</dt>
+                  <dd className="text-slate-200">{closeout.correctiveAction ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Preventive recommendation</dt>
+                  <dd className="text-slate-200">{closeout.preventiveActionRecommendation ?? '—'}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Evidence accepted</dt>

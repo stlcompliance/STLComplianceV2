@@ -218,6 +218,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListQualityReviewsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityReviews");
 
+        integrationGroup.MapGet("/quality-reviews/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetQualityReviewAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityReview");
+
         integrationGroup.MapPost("/quality-reviews", async (CreateAssurArrQualityReviewRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityReviewAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityReview");
@@ -229,6 +235,12 @@ public static class AssurArrEndpoints
         integrationGroup.MapGet("/quality-releases", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityReleasesAsync(cancellationToken)))
             .WithName("ListAssurArrQualityReleases");
+
+        integrationGroup.MapGet("/quality-releases/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetQualityReleaseAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityRelease");
 
         integrationGroup.MapPost("/quality-releases", async (CreateAssurArrQualityReleaseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityReleaseAsync(request, cancellationToken)))

@@ -161,7 +161,10 @@ describe('WorkOrderLifecyclePanel', () => {
     )
 
     expect(screen.getByTestId('work-order-closeout-summary')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Completed')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('closed')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('wear')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Replaced seal')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Yes')
     expect(screen.getByTestId('work-order-closeout-evidence')).toHaveTextContent('after.jpg')
     expect(screen.getByTestId('work-order-closeout-evidence')).not.toHaveTextContent('ev-1')

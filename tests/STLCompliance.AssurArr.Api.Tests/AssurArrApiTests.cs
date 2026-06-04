@@ -250,6 +250,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(review);
         Assert.Equal(reviewTitle, review!.Title);
 
+        var reviewDetailResponse = await _client.GetAsync($"/api/v1/integrations/quality-reviews/{review.Id}");
+        Assert.Equal(HttpStatusCode.OK, reviewDetailResponse.StatusCode);
+        var reviewDetail = await reviewDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
+        Assert.NotNull(reviewDetail);
+        Assert.Equal(review.Id, reviewDetail!.Id);
+        Assert.Equal(review.Number, reviewDetail.Number);
+
         var releaseTitle = $"Test quality release {Guid.NewGuid():N}";
         var releaseResponse = await _client.PostAsJsonAsync(
             "/api/v1/integrations/quality-releases",
@@ -275,6 +282,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var release = await releaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
         Assert.NotNull(release);
         Assert.Equal(releaseTitle, release!.Title);
+
+        var releaseDetailResponse = await _client.GetAsync($"/api/v1/integrations/quality-releases/{release.Id}");
+        Assert.Equal(HttpStatusCode.OK, releaseDetailResponse.StatusCode);
+        var releaseDetail = await releaseDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(releaseDetail);
+        Assert.Equal(release.Id, releaseDetail!.Id);
+        Assert.Equal(release.Number, releaseDetail.Number);
 
         var listResponse = await _client.GetAsync("/api/v1/integrations/quality-reviews");
         listResponse.EnsureSuccessStatusCode();

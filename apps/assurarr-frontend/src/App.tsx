@@ -2199,10 +2199,92 @@ function ReviewPage() {
           emptyLabel="No quality reviews yet."
           onStatusChange={(id, status) => assurarrApi.updateQualityReviewStatus(id, status)}
           statusChoices={statusOptions.review}
+          detailBasePath="/reviews"
         />
       ) : (
         <LoadingCard label="Loading quality reviews" />
       )}
+    </div>
+  )
+}
+
+function ReviewDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'review', id],
+    queryFn: () => assurarrApi.getQualityReview(id),
+    enabled: Boolean(id),
+  })
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading review detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Quality review detail" description="Could not load the requested quality review." />
+        <EmptyState title="Quality review not found." />
+      </div>
+    )
+  }
+
+  const review = query.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'review' && event.subjectId === review.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${review.number} · ${review.title}`}
+        description="Evidence review, decision state, and closure context for the quality gate."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{review.status}</span>
+                <span className="assurarr-pill">{review.severity}</span>
+                <span className="assurarr-pill">{review.reviewType}</span>
+              </div>
+              <p className="text-sm text-slate-300">Review gate for evidence, closure, and release decisions.</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {review.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {review.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewer:</span> {review.reviewerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Requested:</span> {review.requestedAt ? new Date(review.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Due:</span> {review.dueAt ? new Date(review.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Decision:</span> {review.decisionAt ? new Date(review.decisionAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Evidence</p>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Required refs:</span> {review.requiredEvidenceRefs.length ? review.requiredEvidenceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Submitted refs:</span> {review.submittedEvidenceRefs.length ? review.submittedEvidenceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Source review ref:</span> {review.sourceReviewRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Decision reason:</span> {review.decisionReason ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Notes:</span> {review.notes ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Affected objects"
+          items={review.affectedObjectRefs.map((ref) => ref)}
+          emptyLabel="No affected objects recorded."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -2346,10 +2428,101 @@ function ReleasePage() {
           emptyLabel="No quality releases yet."
           onStatusChange={(id, status) => assurarrApi.updateQualityReleaseStatus(id, status)}
           statusChoices={statusOptions.release}
+          detailBasePath="/releases"
         />
       ) : (
         <LoadingCard label="Loading quality releases" />
       )}
+    </div>
+  )
+}
+
+function ReleaseDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'release', id],
+    queryFn: () => assurarrApi.getQualityRelease(id),
+    enabled: Boolean(id),
+  })
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading release detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Quality release detail" description="Could not load the requested quality release." />
+        <EmptyState title="Quality release not found." />
+      </div>
+    )
+  }
+
+  const release = query.data
+  const relatedHold = holds.data?.find((hold) => hold.number === release.holdRef) ?? null
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'release' && event.subjectId === release.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${release.number} · ${release.title}`}
+        description="Release decision, evidence, and the hold context that this record unblocks."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{release.status}</span>
+                <span className="assurarr-pill">{release.severity}</span>
+                <span className="assurarr-pill">{release.releaseType}</span>
+              </div>
+              <p className="text-sm text-slate-300">Release decision for the linked held object and its downstream workflow.</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Hold ref:</span> {release.holdRef}</div>
+                <div><span className="text-slate-500">Source product:</span> {release.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {release.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {release.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Requested:</span> {release.requestedAt ? new Date(release.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Approved:</span> {release.approvedAt ? new Date(release.approvedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Executed:</span> {release.executedAt ? new Date(release.executedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Expiration:</span> {release.expirationAt ? new Date(release.expirationAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Evidence and conditions</p>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Conditions:</span> {release.conditions ?? 'none'}</div>
+                <div><span className="text-slate-500">Requested by:</span> {release.requestedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Approved by:</span> {release.approvedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Evidence refs:</span> {release.evidenceRecordRefs.length ? release.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Notes:</span> {release.notes ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Affected objects"
+          items={release.affectedObjectRefs.map((ref) => ref)}
+          emptyLabel="No affected objects recorded."
+        />
+        <SectionCard
+          title="Related hold"
+          items={relatedHold ? [`${relatedHold.number} · ${relatedHold.title} · ${relatedHold.status}`] : []}
+          emptyLabel="No matching hold was found for this release."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -3396,7 +3569,9 @@ export function App() {
         <Route path="/findings" element={<FindingsPage />} />
         <Route path="/findings/:id" element={<FindingDetailPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
+        <Route path="/reviews/:id" element={<ReviewDetailPage />} />
         <Route path="/releases" element={<ReleasePage />} />
+        <Route path="/releases/:id" element={<ReleaseDetailPage />} />
         <Route path="/containment" element={<ContainmentPage />} />
         <Route path="/dispositions" element={<DispositionPage />} />
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
