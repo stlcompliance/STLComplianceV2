@@ -896,6 +896,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             OwnerPersonId = request.OwnerPersonId,
             RecordRefs = [],
+            ReleaseRequirements = [],
+            ReleaseApprovalRefs = [],
             CreatedAt = now,
             UpdatedAt = now,
             HoldType = Normalize(request.HoldType, "other"),
@@ -928,6 +930,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
         else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase))
         {
+            entity.RejectedAt = entity.UpdatedAt;
+            entity.RejectedByPersonId = null;
             entity.RejectionReason = request.ClosureSummary ?? entity.RejectionReason;
         }
         else if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
@@ -938,6 +942,122 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToQualityHoldResponse(entity);
+    }
+
+    public async Task<AssurArrQualityReleaseResponse> RequestHoldReleaseAsync(Guid holdId, CreateAssurArrQualityReleaseRequest request, CancellationToken cancellationToken = default)
+    {
+        var hold = await db.QualityHolds.FirstOrDefaultAsync(x => x.Id == holdId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality hold '{holdId}' was not found.");
+        if (!string.Equals(request.HoldRef.Trim(), hold.Number, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Release request hold reference '{request.HoldRef}' does not match hold '{hold.Number}'.");
+        }
+
+        var release = new AssurArrQualityRelease
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("QREL", db.QualityReleases, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "none"),
+            Status = "requested",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            OwnerPersonId = request.OwnerPersonId,
+            RecordRefs = [],
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            HoldRef = hold.Number,
+            ReleaseType = Normalize(request.ReleaseType, "full"),
+            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedAt = request.RequestedAt ?? DateTimeOffset.UtcNow,
+            Conditions = NormalizeNullable(request.Conditions),
+            ExpirationAt = request.ExpirationAt,
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+        };
+
+        hold.Status = "release_pending";
+        hold.ReleaseRequirements = request.EvidenceRecordRefs ?? [];
+        hold.ReleaseApprovalRefs = [];
+        hold.UpdatedAt = release.CreatedAt;
+        hold.ReleaseReason = release.Conditions;
+
+        db.QualityReleases.Add(release);
+        await AddTimelineAsync("hold", hold.Id, "assurarr.hold.release_requested", hold.Title, cancellationToken);
+        await AddTimelineAsync("release", release.Id, "assurarr.quality_release.requested", release.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReleaseResponse(release);
+    }
+
+    public async Task<AssurArrQualityReleaseResponse> ApproveHoldReleaseAsync(Guid holdId, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var hold = await db.QualityHolds.FirstOrDefaultAsync(x => x.Id == holdId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality hold '{holdId}' was not found.");
+
+        var release = await db.QualityReleases
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(x => x.HoldRef == hold.Number, cancellationToken)
+            ?? throw new InvalidOperationException($"No quality release request was found for hold '{hold.Number}'.");
+
+        if (string.Equals(release.Status, "requested", StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureTransition(release.Status, "pending_review", ReleaseTransitions, "quality release");
+            release.Status = "pending_review";
+        }
+        EnsureTransition(release.Status, "approved", ReleaseTransitions, "quality release");
+        release.Status = "approved";
+        release.ApprovedAt = release.ApprovedAt ?? DateTimeOffset.UtcNow;
+        release.ApprovedByPersonId ??= null;
+        release.UpdatedAt = DateTimeOffset.UtcNow;
+
+        EnsureTransition(hold.Status, "released", HoldTransitions, "quality hold");
+        hold.Status = "released";
+        hold.ReleasedAt = DateTimeOffset.UtcNow;
+        hold.ReleasedByPersonId = null;
+        hold.ReleaseReason = request.ClosureSummary ?? hold.ReleaseReason;
+        hold.UpdatedAt = release.UpdatedAt;
+
+        await AddTimelineAsync("hold", hold.Id, "assurarr.hold.released", hold.Title, cancellationToken);
+        await AddTimelineAsync("release", release.Id, "assurarr.quality_release.approved", release.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReleaseResponse(release);
+    }
+
+    public async Task<AssurArrQualityReleaseResponse> RejectHoldReleaseAsync(Guid holdId, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var hold = await db.QualityHolds.FirstOrDefaultAsync(x => x.Id == holdId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality hold '{holdId}' was not found.");
+
+        var release = await db.QualityReleases
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(x => x.HoldRef == hold.Number, cancellationToken)
+            ?? throw new InvalidOperationException($"No quality release request was found for hold '{hold.Number}'.");
+
+        if (string.Equals(release.Status, "requested", StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureTransition(release.Status, "pending_review", ReleaseTransitions, "quality release");
+            release.Status = "pending_review";
+        }
+        EnsureTransition(release.Status, "rejected", ReleaseTransitions, "quality release");
+        release.Status = "rejected";
+        release.ClosedAt = DateTimeOffset.UtcNow;
+        release.ClosureSummary = request.ClosureSummary ?? release.ClosureSummary;
+        release.UpdatedAt = release.ClosedAt.Value;
+
+        EnsureTransition(hold.Status, "rejected", HoldTransitions, "quality hold");
+        hold.Status = "rejected";
+        hold.RejectedAt = release.UpdatedAt;
+        hold.RejectedByPersonId = null;
+        hold.RejectionReason = request.ClosureSummary ?? hold.RejectionReason;
+        hold.UpdatedAt = release.UpdatedAt;
+
+        await AddTimelineAsync("hold", hold.Id, "assurarr.hold.rejected", hold.Title, cancellationToken);
+        await AddTimelineAsync("release", release.Id, "assurarr.quality_release.rejected", release.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReleaseResponse(release);
     }
 
     public async Task<List<AssurArrCapaResponse>> ListCapasAsync(CancellationToken cancellationToken = default)
@@ -2250,6 +2370,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReleaseReason,
             entity.RejectionReason,
             entity.ConditionalReleaseTerms,
+            entity.ReleaseRequirements,
+            entity.ReleaseApprovalRefs,
             entity.QuantityHeld,
             entity.UnitOfMeasure,
             entity.LotNumber,
@@ -2258,6 +2380,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.PlacedByPersonId,
             entity.ReleasedAt,
             entity.ReleasedByPersonId,
+            entity.RejectedAt,
+            entity.RejectedByPersonId,
             entity.ExpiresAt);
 
     private static AssurArrCapaResponse ToCapaResponse(AssurArrCapa entity) =>

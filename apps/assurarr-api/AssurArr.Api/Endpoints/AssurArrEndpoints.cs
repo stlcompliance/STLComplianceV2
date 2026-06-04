@@ -44,6 +44,18 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateQualityHoldStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrQualityHoldStatus");
 
+        integrationGroup.MapPost("/holds/{holdId:guid}/release-requests", async (Guid holdId, CreateAssurArrQualityReleaseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.RequestHoldReleaseAsync(holdId, request, cancellationToken)))
+            .WithName("CreateAssurArrHoldReleaseRequest");
+
+        integrationGroup.MapPost("/holds/{holdId:guid}/release", async (Guid holdId, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ApproveHoldReleaseAsync(holdId, request, cancellationToken)))
+            .WithName("ApproveAssurArrHoldRelease");
+
+        integrationGroup.MapPost("/holds/{holdId:guid}/reject", async (Guid holdId, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.RejectHoldReleaseAsync(holdId, request, cancellationToken)))
+            .WithName("RejectAssurArrHoldRelease");
+
         group.MapGet("/capas", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListCapasAsync(cancellationToken)))
             .WithName("ListAssurArrCapas");

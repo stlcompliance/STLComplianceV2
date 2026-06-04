@@ -103,6 +103,8 @@ public sealed record AssurArrQualityHoldResponse(
     string? ReleaseReason,
     string? RejectionReason,
     string? ConditionalReleaseTerms,
+    IReadOnlyList<string> ReleaseRequirements,
+    IReadOnlyList<string> ReleaseApprovalRefs,
     decimal? QuantityHeld,
     string? UnitOfMeasure,
     string? LotNumber,
@@ -111,6 +113,8 @@ public sealed record AssurArrQualityHoldResponse(
     Guid? PlacedByPersonId,
     DateTimeOffset? ReleasedAt,
     Guid? ReleasedByPersonId,
+    DateTimeOffset? RejectedAt,
+    Guid? RejectedByPersonId,
     DateTimeOffset? ExpiresAt);
 
 public sealed record CreateAssurArrQualityHoldRequest(

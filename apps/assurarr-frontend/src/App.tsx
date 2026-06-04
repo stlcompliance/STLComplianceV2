@@ -504,22 +504,146 @@ function NonconformancePage() {
 
 function HoldPage() {
   const query = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const queryClient = useQueryClient()
+  const [selectedHoldId, setSelectedHoldId] = useState('')
+  const activeHoldId = selectedHoldId || query.data?.[0]?.id || ''
+  const activeHold = query.data?.find((hold) => hold.id === activeHoldId) ?? null
+  const [releaseForm, setReleaseForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    releaseType: 'full',
+    conditions: '',
+    evidenceRecordRefs: '',
+    notes: '',
+  })
+  const requestReleaseMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeHold) throw new Error('Select a hold first.')
+      return assurarrApi.requestHoldRelease(activeHold.id, {
+        title: releaseForm.title || `Release ${activeHold.number}`,
+        description: releaseForm.description || `Request release of ${activeHold.number}.`,
+        severity: releaseForm.severity,
+        sourceProduct: activeHold.sourceProduct || undefined,
+        sourceObjectRef: activeHold.sourceObjectRef || undefined,
+        affectedObjectRefs: activeHold.affectedObjectRefs,
+        ownerPersonId: activeHold.ownerPersonId || undefined,
+        holdRef: activeHold.number,
+        releaseType: releaseForm.releaseType,
+        requestedAt: new Date().toISOString(),
+        evidenceRecordRefs: releaseForm.evidenceRecordRefs,
+        notes: releaseForm.notes,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+  const approveReleaseMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeHold) throw new Error('Select a hold first.')
+      return assurarrApi.approveHoldRelease(activeHold.id, releaseForm.notes || 'Release approved.')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+  const rejectReleaseMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeHold) throw new Error('Select a hold first.')
+      return assurarrApi.rejectHoldRelease(activeHold.id, releaseForm.notes || 'Release rejected.')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
   return (
     <div className="assurarr-page">
       <PageHeader title="Quality holds" description="Place active restrictions on affected objects until release requirements are met." />
-      <RecordForm
-        title="Create quality hold"
-        entityLabel="Hold"
-        onCreate={async (body) =>
-          assurarrApi.createHold({
-            ...body,
-            ownerPersonId: body.ownerPersonId || undefined,
-            holdType: 'inventory',
-            holdScope: 'full',
-            holdReason: 'Needs quality review',
-          })
-        }
-      />
+      <div className="assurarr-grid cols-2">
+        <RecordForm
+          title="Create quality hold"
+          entityLabel="Hold"
+          onCreate={async (body) =>
+            assurarrApi.createHold({
+              ...body,
+              ownerPersonId: body.ownerPersonId || undefined,
+              holdType: 'inventory',
+              holdScope: 'full',
+              holdReason: 'Needs quality review',
+            })
+          }
+        />
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div>
+              <p className="assurarr-label">Manage release</p>
+              <h3 className="text-base font-semibold text-slate-50">Request, approve, or reject a hold release</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Hold">
+                <select className="assurarr-select" value={activeHoldId} onChange={(event) => setSelectedHoldId(event.target.value)} disabled={!query.data?.length}>
+                  {query.data?.map((hold) => (
+                    <option key={hold.id} value={hold.id}>
+                      {hold.number} · {hold.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Release type">
+                <select className="assurarr-select" value={releaseForm.releaseType} onChange={(event) => setReleaseForm({ ...releaseForm, releaseType: event.target.value })}>
+                  <option value="full">Full</option>
+                  <option value="partial">Partial</option>
+                  <option value="conditional">Conditional</option>
+                  <option value="use_as_is">Use as is</option>
+                  <option value="release_after_rework">Release after rework</option>
+                  <option value="release_after_sort">Release after sort</option>
+                </select>
+              </Field>
+              <Field label="Title">
+                <input className="assurarr-input" value={releaseForm.title} onChange={(event) => setReleaseForm({ ...releaseForm, title: event.target.value })} placeholder="Optional release request title" />
+              </Field>
+              <Field label="Severity">
+                <select className="assurarr-select" value={releaseForm.severity} onChange={(event) => setReleaseForm({ ...releaseForm, severity: event.target.value })}>
+                  <option value="none">None</option>
+                  <option value="low">Low</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </Field>
+            </div>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={releaseForm.description} onChange={(event) => setReleaseForm({ ...releaseForm, description: event.target.value })} placeholder="Describe why release is requested." />
+            </Field>
+            <Field label="Evidence refs" wide>
+              <textarea className="assurarr-textarea" value={releaseForm.evidenceRecordRefs} onChange={(event) => setReleaseForm({ ...releaseForm, evidenceRecordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+            </Field>
+            <Field label="Notes" wide>
+              <textarea className="assurarr-textarea" value={releaseForm.notes} onChange={(event) => setReleaseForm({ ...releaseForm, notes: event.target.value })} placeholder="Optional notes for approvers." />
+            </Field>
+            <div className="flex flex-wrap gap-3">
+              <button className="assurarr-button" type="button" onClick={() => requestReleaseMutation.mutate()} disabled={requestReleaseMutation.isPending || !activeHoldId}>
+                {requestReleaseMutation.isPending ? 'Requesting...' : 'Request release'}
+              </button>
+              <button className="assurarr-button secondary" type="button" onClick={() => approveReleaseMutation.mutate()} disabled={approveReleaseMutation.isPending || !activeHoldId}>
+                {approveReleaseMutation.isPending ? 'Approving...' : 'Release hold'}
+              </button>
+              <button className="assurarr-button secondary" type="button" onClick={() => rejectReleaseMutation.mutate()} disabled={rejectReleaseMutation.isPending || !activeHoldId}>
+                {rejectReleaseMutation.isPending ? 'Rejecting...' : 'Reject release'}
+              </button>
+            </div>
+            {activeHold ? (
+              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-sm text-cyan-100">
+                <div className="font-semibold">{activeHold.number} · {activeHold.title}</div>
+                <div className="mt-1 text-cyan-50/80">
+                  Status {activeHold.status}. Release requirements {activeHold.releaseRequirements.length ? activeHold.releaseRequirements.length : 'not set'}.
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
       {query.data ? (
         <EntityTable
           items={query.data}

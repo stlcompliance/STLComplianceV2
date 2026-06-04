@@ -64,6 +64,8 @@ export type QualityHold = ListItem & {
   releaseReason: string | null
   rejectionReason: string | null
   conditionalReleaseTerms: string | null
+  releaseRequirements: string[]
+  releaseApprovalRefs: string[]
   quantityHeld: number | null
   unitOfMeasure: string | null
   lotNumber: string | null
@@ -72,6 +74,8 @@ export type QualityHold = ListItem & {
   placedByPersonId: string | null
   releasedAt: string | null
   releasedByPersonId: string | null
+  rejectedAt: string | null
+  rejectedByPersonId: string | null
   expiresAt: string | null
 }
 
@@ -414,6 +418,14 @@ async function sendJson<T>(path: string, method: 'POST' | 'PATCH', body: unknown
   )
 }
 
+function splitLines(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(/[,;\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 export const assurarrApi = {
   getDashboard: () => getJson<DashboardResponse>('/api/v1/dashboard'),
   listNonconformances: () => getJson<Nonconformance[]>('/api/v1/nonconformances'),
@@ -433,6 +445,23 @@ export const assurarrApi = {
     }),
   updateHoldStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<QualityHold>(`/api/v1/holds/${id}/status`, 'PATCH', { status, closureSummary }),
+  requestHoldRelease: (holdId: string, body: CreateBase & { holdRef: string; releaseType: string; requestedByPersonId?: string; requestedAt?: string; conditions?: string; expirationAt?: string; evidenceRecordRefs?: string; notes?: string }) =>
+    sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/release-requests`, 'POST', {
+      ...body,
+      sourceProduct: body.sourceProduct || null,
+      sourceObjectRef: body.sourceObjectRef || null,
+      affectedObjectRefs: body.affectedObjectRefs,
+      ownerPersonId: body.ownerPersonId || null,
+      requestedByPersonId: body.requestedByPersonId || null,
+      requestedAt: body.requestedAt || null,
+      expirationAt: body.expirationAt || null,
+      evidenceRecordRefs: splitLines(body.evidenceRecordRefs),
+      notes: body.notes || null,
+    }),
+  approveHoldRelease: (holdId: string, closureSummary?: string) =>
+    sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/release`, 'POST', { status: 'executed', closureSummary }),
+  rejectHoldRelease: (holdId: string, closureSummary?: string) =>
+    sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/reject`, 'POST', { status: 'rejected', closureSummary }),
   listCapas: () => getJson<Capa[]>('/api/v1/capas'),
   createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[] }) =>
     sendJson<Capa>('/api/v1/capas', 'POST', {

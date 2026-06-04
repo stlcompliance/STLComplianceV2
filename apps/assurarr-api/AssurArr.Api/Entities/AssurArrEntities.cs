@@ -56,6 +56,8 @@ public sealed class AssurArrQualityHold
     public string? ReleaseReason { get; set; }
     public string? RejectionReason { get; set; }
     public string? ConditionalReleaseTerms { get; set; }
+    public string[] ReleaseRequirements { get; set; } = [];
+    public string[] ReleaseApprovalRefs { get; set; } = [];
     public decimal? QuantityHeld { get; set; }
     public string? UnitOfMeasure { get; set; }
     public string? LotNumber { get; set; }
@@ -64,6 +66,8 @@ public sealed class AssurArrQualityHold
     public Guid? PlacedByPersonId { get; set; }
     public DateTimeOffset? ReleasedAt { get; set; }
     public Guid? ReleasedByPersonId { get; set; }
+    public DateTimeOffset? RejectedAt { get; set; }
+    public Guid? RejectedByPersonId { get; set; }
     public DateTimeOffset? ExpiresAt { get; set; }
 }
 

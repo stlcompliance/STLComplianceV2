@@ -32,7 +32,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         base.OnModelCreating(modelBuilder);
 
         ConfigureNonconformance(modelBuilder);
-        ConfigureRecord<AssurArrQualityHold>(modelBuilder, "assurarr_quality_holds");
+        ConfigureQualityHold(modelBuilder);
         ConfigureRecord<AssurArrCapa>(modelBuilder, "assurarr_capas");
         ConfigureCapaAction(modelBuilder);
         ConfigureCapaActionBlocker(modelBuilder);
@@ -127,6 +127,53 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.RecurrenceFlag).IsRequired();
             entity.Property(x => x.RepeatOfNonconformanceRef).HasMaxLength(256);
             entity.Property(x => x.DueAt);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureQualityHold(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityHold>(entity =>
+        {
+            entity.ToTable("assurarr_quality_holds");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OwnerPersonId);
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.HoldType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.HoldScope).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.HoldReason).HasMaxLength(4000);
+            entity.Property(x => x.ReleaseReason).HasMaxLength(4000);
+            entity.Property(x => x.RejectionReason).HasMaxLength(4000);
+            entity.Property(x => x.ConditionalReleaseTerms).HasMaxLength(4000);
+            entity.Property(x => x.ReleaseRequirements).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ReleaseApprovalRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.QuantityHeld);
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(64);
+            entity.Property(x => x.LotNumber).HasMaxLength(128);
+            entity.Property(x => x.SerialNumber).HasMaxLength(128);
+            entity.Property(x => x.PlacedAt);
+            entity.Property(x => x.PlacedByPersonId);
+            entity.Property(x => x.ReleasedAt);
+            entity.Property(x => x.ReleasedByPersonId);
+            entity.Property(x => x.RejectedAt);
+            entity.Property(x => x.RejectedByPersonId);
+            entity.Property(x => x.ExpiresAt);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });

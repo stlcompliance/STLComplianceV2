@@ -71,6 +71,142 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
+    public async Task Can_request_approve_and_reject_hold_releases()
+    {
+        var approvalHoldTitle = $"Test approval hold {Guid.NewGuid():N}";
+        var approvalHoldResponse = await _client.PostAsJsonAsync(
+            "/api/v1/holds",
+            new CreateAssurArrQualityHoldRequest(
+                approvalHoldTitle,
+                "Created for hold release approval coverage.",
+                "moderate",
+                "inventory",
+                "full",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                null,
+                "Needs release review",
+                null,
+                null,
+                null,
+                null,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, approvalHoldResponse.StatusCode);
+        var approvalHold = await approvalHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(approvalHold);
+
+        var approvalReleaseResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/integrations/holds/{approvalHold!.Id}/release-requests",
+            new CreateAssurArrQualityReleaseRequest(
+                $"Release {approvalHold.Number}",
+                "Release request created for automated coverage.",
+                "none",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                null,
+                approvalHold.Number,
+                "full",
+                null,
+                DateTimeOffset.UtcNow,
+                "Release requirements met.",
+                null,
+                ["recordarr:doc:release-evidence"],
+                "Release request notes"));
+
+        Assert.Equal(HttpStatusCode.OK, approvalReleaseResponse.StatusCode);
+        var approvalRelease = await approvalReleaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(approvalRelease);
+        Assert.Equal("requested", approvalRelease!.Status);
+        Assert.Equal(approvalHold.Number, approvalRelease.HoldRef);
+
+        var holdsAfterRequestResponse = await _client.GetAsync("/api/v1/holds");
+        holdsAfterRequestResponse.EnsureSuccessStatusCode();
+        var holdsAfterRequest = await holdsAfterRequestResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
+        Assert.NotNull(holdsAfterRequest);
+        var requestedHold = holdsAfterRequest!.Single(item => item.Id == approvalHold.Id);
+        Assert.Equal("release_pending", requestedHold.Status);
+        Assert.NotEmpty(requestedHold.ReleaseRequirements);
+
+        var releaseApprovalResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/integrations/holds/{approvalHold.Id}/release",
+            new UpdateAssurArrStatusRequest("executed", "Release approved."));
+
+        Assert.Equal(HttpStatusCode.OK, releaseApprovalResponse.StatusCode);
+        var approvedRelease = await releaseApprovalResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(approvedRelease);
+        Assert.Equal("approved", approvedRelease!.Status);
+
+        var holdsAfterReleaseResponse = await _client.GetAsync("/api/v1/holds");
+        holdsAfterReleaseResponse.EnsureSuccessStatusCode();
+        var holdsAfterRelease = await holdsAfterReleaseResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
+        Assert.NotNull(holdsAfterRelease);
+        Assert.Equal("released", holdsAfterRelease!.Single(item => item.Id == approvalHold.Id).Status);
+
+        var rejectHoldTitle = $"Test reject hold {Guid.NewGuid():N}";
+        var rejectHoldResponse = await _client.PostAsJsonAsync(
+            "/api/v1/holds",
+            new CreateAssurArrQualityHoldRequest(
+                rejectHoldTitle,
+                "Created for hold release rejection coverage.",
+                "moderate",
+                "inventory",
+                "full",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                null,
+                "Needs release review",
+                null,
+                null,
+                null,
+                null,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, rejectHoldResponse.StatusCode);
+        var rejectHold = await rejectHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(rejectHold);
+
+        var rejectReleaseResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/integrations/holds/{rejectHold!.Id}/release-requests",
+            new CreateAssurArrQualityReleaseRequest(
+                $"Release {rejectHold.Number}",
+                "Release request created for rejection coverage.",
+                "none",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                null,
+                rejectHold.Number,
+                "full",
+                null,
+                DateTimeOffset.UtcNow,
+                "Release requirements met.",
+                null,
+                ["recordarr:doc:release-evidence"],
+                "Release request notes"));
+
+        Assert.Equal(HttpStatusCode.OK, rejectReleaseResponse.StatusCode);
+
+        var rejectionResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/integrations/holds/{rejectHold.Id}/reject",
+            new UpdateAssurArrStatusRequest("rejected", "Release rejected."));
+
+        Assert.Equal(HttpStatusCode.OK, rejectionResponse.StatusCode);
+        var rejectedRelease = await rejectionResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(rejectedRelease);
+        Assert.Equal("rejected", rejectedRelease!.Status);
+
+        var holdsAfterRejectResponse = await _client.GetAsync("/api/v1/holds");
+        holdsAfterRejectResponse.EnsureSuccessStatusCode();
+        var holdsAfterReject = await holdsAfterRejectResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
+        Assert.NotNull(holdsAfterReject);
+        Assert.Equal("rejected", holdsAfterReject!.Single(item => item.Id == rejectHold.Id).Status);
+    }
+
+    [Fact]
     public async Task Can_create_quality_review_and_release_records()
     {
         var reviewTitle = $"Test quality review {Guid.NewGuid():N}";
