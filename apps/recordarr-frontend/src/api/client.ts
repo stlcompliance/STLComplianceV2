@@ -848,6 +848,46 @@ export async function listDocumentAcknowledgements(
   )
 }
 
+export async function createDocumentDistribution(
+  accessToken: string,
+  controlledDocumentId: string,
+  body: { versionId: string; distributionType: string; targetRef: string },
+): Promise<RecordArrDocumentDistribution> {
+  return sendJson<RecordArrDocumentDistribution>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/distributions`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function createDocumentAcknowledgement(
+  accessToken: string,
+  controlledDocumentId: string,
+  body: { versionId: string; personId: string; attestationText?: string | null; dueAt?: string | null },
+): Promise<RecordArrDocumentAcknowledgement> {
+  return sendJson<RecordArrDocumentAcknowledgement>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/acknowledgements`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function completeDocumentAcknowledgement(
+  accessToken: string,
+  controlledDocumentId: string,
+  acknowledgementId: string,
+  body: { signatureRecordRef?: string | null },
+): Promise<RecordArrDocumentAcknowledgement> {
+  return sendJson<RecordArrDocumentAcknowledgement>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/acknowledgements/${encodeURIComponent(acknowledgementId)}/complete`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function listAccessPolicies(accessToken: string): Promise<RecordArrAccessPolicy[]> {
   return getJson<RecordArrAccessPolicy[]>('/api/v1/workspace/access-policies', accessToken)
 }

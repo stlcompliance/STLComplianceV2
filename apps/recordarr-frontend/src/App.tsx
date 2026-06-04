@@ -32,6 +32,8 @@ import {
   applyManualCorrection,
   confirmEvidenceMapping,
   createControlledDocument,
+  createDocumentAcknowledgement,
+  createDocumentDistribution,
   createDocumentReview,
   createDocumentVersion,
   createEvidenceMapping,
@@ -71,6 +73,7 @@ import {
   releaseLegalHold,
   reviewExtractionResult,
   revokeExternalShare,
+  completeDocumentAcknowledgement,
   lockPackage,
   updateRecord,
   type RecordArrControlledDocument,
@@ -993,6 +996,17 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     reviewerPersonId: 'person-quality-reviewer',
     dueAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   })
+  const [distributionForm, setDistributionForm] = useState({
+    versionId: '',
+    distributionType: 'person',
+    targetRef: 'person-quality-reviewer',
+  })
+  const [acknowledgementForm, setAcknowledgementForm] = useState({
+    versionId: '',
+    personId: 'person-quality-reviewer',
+    attestationText: 'I acknowledge receipt and review of this controlled document.',
+    dueAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  })
 
   useEffect(() => {
     if (!selectedDocumentId && docsQuery.data?.[0]) {
@@ -1005,7 +1019,13 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     if (currentVersionId && reviewForm.versionId !== currentVersionId) {
       setReviewForm((current) => ({ ...current, versionId: currentVersionId }))
     }
-  }, [docsQuery.data, reviewForm.versionId, selectedDocumentId])
+    if (currentVersionId && distributionForm.versionId !== currentVersionId) {
+      setDistributionForm((current) => ({ ...current, versionId: currentVersionId }))
+    }
+    if (currentVersionId && acknowledgementForm.versionId !== currentVersionId) {
+      setAcknowledgementForm((current) => ({ ...current, versionId: currentVersionId }))
+    }
+  }, [docsQuery.data, reviewForm.versionId, distributionForm.versionId, acknowledgementForm.versionId, selectedDocumentId])
 
   const versionsQuery = useQuery({
     queryKey: ['recordarr', 'document-versions', selectedDocumentId],
@@ -1045,6 +1065,36 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       createDocumentReview(accessToken, selectedDocumentId, {
         ...reviewForm,
         versionId: reviewForm.versionId || selectedDocument?.currentVersionId || '',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const createDistributionMutation = useMutation({
+    mutationFn: () =>
+      createDocumentDistribution(accessToken, selectedDocumentId, {
+        ...distributionForm,
+        versionId: distributionForm.versionId || selectedDocument?.currentVersionId || '',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const createAcknowledgementMutation = useMutation({
+    mutationFn: () =>
+      createDocumentAcknowledgement(accessToken, selectedDocumentId, {
+        ...acknowledgementForm,
+        versionId: acknowledgementForm.versionId || selectedDocument?.currentVersionId || '',
+        dueAt: acknowledgementForm.dueAt || null,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const completeAcknowledgementMutation = useMutation({
+    mutationFn: (acknowledgementId: string) =>
+      completeDocumentAcknowledgement(accessToken, selectedDocumentId, acknowledgementId, {
+        signatureRecordRef: 'sig-rec-doc-controller',
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -1129,6 +1179,21 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
               <button type="button" className="recordarr-button secondary" onClick={() => createReviewMutation.mutate()} disabled={createReviewMutation.isPending}>
                 {createReviewMutation.isPending ? 'Requesting...' : 'Request review'}
               </button>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Distribution type"><input className="recordarr-input" value={distributionForm.distributionType} onChange={(e) => setDistributionForm({ ...distributionForm, distributionType: e.target.value })} /></Field>
+                <Field label="Target ref"><input className="recordarr-input" value={distributionForm.targetRef} onChange={(e) => setDistributionForm({ ...distributionForm, targetRef: e.target.value })} /></Field>
+                <Field label="Acknowledgement person"><input className="recordarr-input" value={acknowledgementForm.personId} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, personId: e.target.value })} /></Field>
+                <Field label="Acknowledgement due at"><input className="recordarr-input" value={acknowledgementForm.dueAt} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, dueAt: e.target.value })} /></Field>
+                <Field label="Attestation" wide><textarea className="recordarr-textarea" value={acknowledgementForm.attestationText} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, attestationText: e.target.value })} /></Field>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button type="button" className="recordarr-button secondary" onClick={() => createDistributionMutation.mutate()} disabled={createDistributionMutation.isPending}>
+                  {createDistributionMutation.isPending ? 'Distributing...' : 'Create distribution'}
+                </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => createAcknowledgementMutation.mutate()} disabled={createAcknowledgementMutation.isPending}>
+                  {createAcknowledgementMutation.isPending ? 'Creating...' : 'Create acknowledgement'}
+                </button>
+              </div>
 
               <div className="space-y-3">
                 <div>
@@ -1186,6 +1251,16 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                           <span className="recordarr-pill text-[0.7rem]">{acknowledgement.status}</span>
                         </div>
                         <p className="mt-1">{acknowledgement.attestationText ?? 'No attestation'}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="recordarr-button secondary"
+                            onClick={() => completeAcknowledgementMutation.mutate(acknowledgement.acknowledgementId)}
+                            disabled={completeAcknowledgementMutation.isPending}
+                          >
+                            Complete
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {!acknowledgementsQuery.data?.length ? <EmptyState title="No acknowledgements yet." /> : null}

@@ -236,6 +236,24 @@ public static class WorkspaceEndpoints
             Results.Ok(store.GetDocumentAcknowledgements(controlledDocumentId)))
             .WithName("ListRecordArrControlledDocumentAcknowledgements");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions", (string controlledDocumentId, CreateDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.CreateDocumentDistribution(controlledDocumentId, request.VersionId, request.DistributionType, request.TargetRef);
+            return Results.Created($"/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions/{distribution.DistributionId}", distribution);
+        }).WithName("CreateRecordArrControlledDocumentDistribution");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
+        {
+            var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, request.PersonId, request.AttestationText, request.DueAt);
+            return Results.Created($"/api/v1/workspace/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgement.AcknowledgementId}", acknowledgement);
+        }).WithName("CreateRecordArrControlledDocumentAcknowledgement");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgementId}/complete", (string controlledDocumentId, string acknowledgementId, CompleteDocumentAcknowledgementRequest request, RecordArrStore store) =>
+        {
+            var acknowledgement = store.CompleteDocumentAcknowledgement(acknowledgementId, request.SignatureRecordRef);
+            return Results.Ok(acknowledgement);
+        }).WithName("CompleteRecordArrControlledDocumentAcknowledgement");
+
         group.MapGet("/access-policies", (RecordArrStore store) => Results.Ok(store.GetAccessPolicies()))
             .WithName("ListRecordArrAccessPolicies");
 
@@ -325,6 +343,9 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentScanRequest(string RecordId, string OriginalFileName, string ScanPurpose);
     public sealed record ManualCorrectionRequest(string EdgeCoordinates);
     public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
+    public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
+    public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
+    public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
 
     public sealed record CreateEvidenceMappingRequest(
         string RecordId,

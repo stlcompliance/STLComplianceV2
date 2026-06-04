@@ -138,6 +138,78 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentAcknowledgement/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgementId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationControlledDocumentAcknowledgement/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "acknowledgementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/integrations/controlled-documents/{controlledDocumentId}/distributions": {
@@ -156,6 +228,37 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentDistribution/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1301,6 +1404,78 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentAcknowledgement/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgementId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationControlledDocumentAcknowledgement/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "acknowledgementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/integrations/controlled-documents/{controlledDocumentId}/distributions": {
@@ -1319,6 +1494,37 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentDistribution/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2381,6 +2587,78 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrControlledDocumentAcknowledgement",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgementId}/complete": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CompleteRecordArrControlledDocumentAcknowledgement",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "acknowledgementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions": {
@@ -2399,6 +2677,37 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrControlledDocumentDistribution",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3263,6 +3572,20 @@
   },
   "components": {
     "schemas": {
+      "CompleteDocumentAcknowledgementRequest": {
+        "required": [
+          "signatureRecordRef"
+        ],
+        "type": "object",
+        "properties": {
+          "signatureRecordRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CompleteDocumentReviewRequest": {
         "required": [
           "status",
@@ -3371,6 +3694,55 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateDocumentAcknowledgementRequest": {
+        "required": [
+          "versionId",
+          "personId",
+          "attestationText",
+          "dueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string"
+          },
+          "personId": {
+            "type": "string"
+          },
+          "attestationText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateDocumentDistributionRequest": {
+        "required": [
+          "versionId",
+          "distributionType",
+          "targetRef"
+        ],
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string"
+          },
+          "distributionType": {
+            "type": "string"
+          },
+          "targetRef": {
+            "type": "string"
           }
         }
       },

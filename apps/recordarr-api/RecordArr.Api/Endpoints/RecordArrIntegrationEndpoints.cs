@@ -247,6 +247,24 @@ public static class RecordArrIntegrationEndpoints
             Results.Ok(store.GetDocumentAcknowledgements(controlledDocumentId)))
             .WithName($"ListRecordArrIntegrationControlledDocumentAcknowledgements{routePrefix}");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions", (string controlledDocumentId, WorkspaceEndpoints.CreateDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.CreateDocumentDistribution(controlledDocumentId, request.VersionId, request.DistributionType, request.TargetRef);
+            return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/distributions/{distribution.DistributionId}", distribution);
+        }).WithName($"CreateRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, WorkspaceEndpoints.CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
+        {
+            var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, request.PersonId, request.AttestationText, request.DueAt);
+            return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgement.AcknowledgementId}", acknowledgement);
+        }).WithName($"CreateRecordArrIntegrationControlledDocumentAcknowledgement{routePrefix}");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgementId}/complete", (string controlledDocumentId, string acknowledgementId, WorkspaceEndpoints.CompleteDocumentAcknowledgementRequest request, RecordArrStore store) =>
+        {
+            var acknowledgement = store.CompleteDocumentAcknowledgement(acknowledgementId, request.SignatureRecordRef);
+            return Results.Ok(acknowledgement);
+        }).WithName($"CompleteRecordArrIntegrationControlledDocumentAcknowledgement{routePrefix}");
+
         group.MapPost("/external-shares", (CreateExternalShareRequest request, RecordArrStore store) =>
         {
             var share = store.CreateExternalShare(request.RecordId, request.RecipientName, request.RecipientEmail, request.SharePurpose, request.AllowedActions, request.CreatedByPersonId);

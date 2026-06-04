@@ -1048,6 +1048,66 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrDocumentDistributionResponse CreateDocumentDistribution(string controlledDocumentId, string versionId, string distributionType, string targetRef)
+    {
+        lock (_gate)
+        {
+            var distribution = new RecordArrDocumentDistributionResponse(
+                $"dist-{Guid.NewGuid():N}"[..12],
+                controlledDocumentId,
+                versionId,
+                distributionType,
+                targetRef,
+                "distributed",
+                DateTimeOffset.UtcNow,
+                null,
+                null);
+            _documentDistributions.Add(distribution);
+            return distribution;
+        }
+    }
+
+    public RecordArrDocumentAcknowledgementResponse CreateDocumentAcknowledgement(string controlledDocumentId, string versionId, string personId, string? attestationText, DateTimeOffset? dueAt)
+    {
+        lock (_gate)
+        {
+            var acknowledgement = new RecordArrDocumentAcknowledgementResponse(
+                $"dack-{Guid.NewGuid():N}"[..12],
+                controlledDocumentId,
+                versionId,
+                personId,
+                "pending",
+                null,
+                null,
+                attestationText,
+                dueAt);
+            _documentAcknowledgements.Add(acknowledgement);
+            return acknowledgement;
+        }
+    }
+
+    public RecordArrDocumentAcknowledgementResponse CompleteDocumentAcknowledgement(string acknowledgementId, string? signatureRecordRef)
+    {
+        lock (_gate)
+        {
+            var index = _documentAcknowledgements.FindIndex(acknowledgement => string.Equals(acknowledgement.AcknowledgementId, acknowledgementId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Document acknowledgement {acknowledgementId} not found.");
+            }
+
+            var current = _documentAcknowledgements[index];
+            var updated = current with
+            {
+                Status = "acknowledged",
+                AcknowledgedAt = DateTimeOffset.UtcNow,
+                SignatureRecordRef = signatureRecordRef ?? current.SignatureRecordRef
+            };
+            _documentAcknowledgements[index] = updated;
+            return updated;
+        }
+    }
+
     public IReadOnlyList<RecordArrAccessPolicyResponse> GetAccessPolicies()
     {
         lock (_gate)
