@@ -498,6 +498,75 @@ export async function getRecord(accessToken: string, recordId: string): Promise<
   return getJson<RecordArrRecord>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}`, accessToken)
 }
 
+export type RecordArrRecordMetadata = {
+  metadataId: string
+  recordId: string
+  key: string
+  value: string
+  valueType: string
+  source: string
+  confidenceScore: number
+  verified: boolean
+  verifiedByPersonId: string | null
+  verifiedAt: string | null
+}
+
+export type RecordArrRecordLink = {
+  recordLinkId: string
+  recordId: string
+  linkedRecordId: string | null
+  sourceObjectRef: string | null
+  linkType: string
+  createdAt: string
+  createdByPersonId: string
+}
+
+export async function listRecordMetadata(accessToken: string, recordId: string): Promise<RecordArrRecordMetadata[]> {
+  return getJson<RecordArrRecordMetadata[]>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/metadata`, accessToken)
+}
+
+export async function createRecordMetadata(
+  accessToken: string,
+  recordId: string,
+  body: {
+    key: string
+    value: string
+    valueType: string
+    source: string
+    confidenceScore: number
+    createdByPersonId: string
+  },
+): Promise<RecordArrRecordMetadata> {
+  return sendJson<RecordArrRecordMetadata>(
+    `/api/v1/workspace/records/${encodeURIComponent(recordId)}/metadata`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function listRecordLinks(accessToken: string, recordId: string): Promise<RecordArrRecordLink[]> {
+  return getJson<RecordArrRecordLink[]>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/links`, accessToken)
+}
+
+export async function createRecordLink(
+  accessToken: string,
+  recordId: string,
+  body: {
+    linkedRecordId?: string | null
+    sourceObjectRef?: string | null
+    linkType: string
+    createdByPersonId: string
+  },
+): Promise<RecordArrRecordLink> {
+  return sendJson<RecordArrRecordLink>(
+    `/api/v1/workspace/records/${encodeURIComponent(recordId)}/links`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function createRecord(
   accessToken: string,
   body: {

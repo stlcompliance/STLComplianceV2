@@ -56,6 +56,8 @@ import {
   getOcrResult,
   getPackageManifest,
   getRecord,
+  listRecordMetadata,
+  listRecordLinks,
   getRetentionStatus,
   getSessionBootstrap,
   listAccessGrants,
@@ -99,6 +101,8 @@ import {
   revokeDocumentDistribution,
   lockPackage,
   updateRecord,
+  createRecordMetadata,
+  createRecordLink,
   type RecordArrAccessPolicy,
   type RecordArrControlledDocument,
   type RecordArrLegalHold,
@@ -593,10 +597,34 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   const recordId = params.recordId ?? ''
   const [status, setStatus] = useState('review')
   const [classification, setClassification] = useState('internal')
+  const [metadataForm, setMetadataForm] = useState({
+    key: 'source_system_ref',
+    value: 'trip-7781',
+    valueType: 'string',
+    source: 'source_product',
+    confidenceScore: 1,
+    createdByPersonId: 'person-route-lead',
+  })
+  const [linkForm, setLinkForm] = useState({
+    linkedRecordId: '',
+    sourceObjectRef: '',
+    linkType: 'source',
+    createdByPersonId: 'person-route-lead',
+  })
 
   const recordQuery = useQuery({
     queryKey: ['recordarr', 'records', recordId],
     queryFn: () => getRecord(accessToken, recordId),
+    enabled: Boolean(accessToken && recordId),
+  })
+  const metadataQuery = useQuery({
+    queryKey: ['recordarr', 'record-metadata', recordId],
+    queryFn: () => listRecordMetadata(accessToken, recordId),
+    enabled: Boolean(accessToken && recordId),
+  })
+  const linksQuery = useQuery({
+    queryKey: ['recordarr', 'record-links', recordId],
+    queryFn: () => listRecordLinks(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
   })
   const retentionQuery = useQuery({
@@ -658,6 +686,28 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const createMetadataMutation = useMutation({
+    mutationFn: () =>
+      createRecordMetadata(accessToken, recordId, {
+        ...metadataForm,
+        confidenceScore: Number(metadataForm.confidenceScore),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const createLinkMutation = useMutation({
+    mutationFn: () =>
+      createRecordLink(accessToken, recordId, {
+        linkedRecordId: linkForm.linkedRecordId || null,
+        sourceObjectRef: linkForm.sourceObjectRef || null,
+        linkType: linkForm.linkType,
+        createdByPersonId: linkForm.createdByPersonId,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   const record = recordQuery.data
   useEffect(() => {
@@ -665,6 +715,14 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       setClassification(record.classification)
     }
   }, [record?.classification])
+  useEffect(() => {
+    if (record?.sourceProduct && record?.sourceObjectType && record?.sourceObjectId) {
+      setLinkForm((current) => ({
+        ...current,
+        sourceObjectRef: `${record.sourceProduct}:${record.sourceObjectType}:${record.sourceObjectId}`,
+      }))
+    }
+  }, [record?.sourceProduct, record?.sourceObjectType, record?.sourceObjectId])
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
@@ -753,7 +811,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 {archiveMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(archiveMutation.error, 'Archive failed')}</span> : null}
                 {purgeMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(purgeMutation.error, 'Purge failed')}</span> : null}
               </div>
-              {activeHold ? <p className="mt-3 text-sm text-amber-300">Blocked by legal hold {activeHold.holdNumber}.</p> : null}
+                {activeHold ? <p className="mt-3 text-sm text-amber-300">Blocked by legal hold {activeHold.holdNumber}.</p> : null}
             </Card>
             <Card title="Retention and access" icon={<LockKeyhole className="h-4 w-4 text-cyan-300" />}>
               <div className="space-y-3 text-sm text-slate-300">
@@ -763,6 +821,58 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Last reviewed:</strong> {formatDate(retentionQuery.data?.lastReviewedAt ?? null)}</p>
                 <p><strong className="text-slate-100">Related uploads:</strong> {relatedUploads.length}</p>
                 <p><strong className="text-slate-100">Related packages:</strong> {relatedPackages.length}</p>
+              </div>
+            </Card>
+          </div>
+          <div className="recordarr-grid cols-2">
+            <Card title="Record metadata" icon={<Settings className="h-4 w-4 text-cyan-300" />}>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Key"><input className="recordarr-input" value={metadataForm.key} onChange={(e) => setMetadataForm({ ...metadataForm, key: e.target.value })} /></Field>
+                <Field label="Value"><input className="recordarr-input" value={metadataForm.value} onChange={(e) => setMetadataForm({ ...metadataForm, value: e.target.value })} /></Field>
+                <Field label="Value type"><select className="recordarr-select" value={metadataForm.valueType} onChange={(e) => setMetadataForm({ ...metadataForm, valueType: e.target.value })}><option value="string">string</option><option value="number">number</option><option value="boolean">boolean</option><option value="date">date</option><option value="datetime">datetime</option><option value="enum">enum</option><option value="object_ref">object_ref</option><option value="json">json</option></select></Field>
+                <Field label="Source"><select className="recordarr-select" value={metadataForm.source} onChange={(e) => setMetadataForm({ ...metadataForm, source: e.target.value })}><option value="user">user</option><option value="source_product">source_product</option><option value="ocr">ocr</option><option value="extraction">extraction</option><option value="system">system</option><option value="import">import</option></select></Field>
+                <Field label="Confidence"><input className="recordarr-input" type="number" min="0" max="1" step="0.01" value={metadataForm.confidenceScore} onChange={(e) => setMetadataForm({ ...metadataForm, confidenceScore: Number(e.target.value) })} /></Field>
+                <Field label="Created by"><input className="recordarr-input" value={metadataForm.createdByPersonId} onChange={(e) => setMetadataForm({ ...metadataForm, createdByPersonId: e.target.value })} /></Field>
+              </div>
+              <button type="button" className="recordarr-button secondary mt-3" onClick={() => createMetadataMutation.mutate()} disabled={createMetadataMutation.isPending}>
+                {createMetadataMutation.isPending ? 'Saving...' : 'Add metadata'}
+              </button>
+              <div className="mt-4 space-y-2">
+                {(metadataQuery.data ?? []).map((metadata) => (
+                  <div key={metadata.metadataId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-slate-100">{metadata.key}</strong>
+                      <span className="recordarr-pill text-[0.7rem]">{metadata.valueType}</span>
+                    </div>
+                    <p className="mt-1">{metadata.value}</p>
+                    <p className="mt-1 text-xs text-slate-400">{metadata.source} · {metadata.verified ? 'verified' : 'unverified'}</p>
+                  </div>
+                ))}
+                {!metadataQuery.data?.length ? <EmptyState title="No metadata yet." /> : null}
+              </div>
+            </Card>
+            <Card title="Record links" icon={<Settings className="h-4 w-4 text-cyan-300" />}>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Linked record id"><input className="recordarr-input" value={linkForm.linkedRecordId} onChange={(e) => setLinkForm({ ...linkForm, linkedRecordId: e.target.value })} placeholder="Optional" /></Field>
+                <Field label="Source object ref"><input className="recordarr-input" value={linkForm.sourceObjectRef} onChange={(e) => setLinkForm({ ...linkForm, sourceObjectRef: e.target.value })} /></Field>
+                <Field label="Link type"><select className="recordarr-select" value={linkForm.linkType} onChange={(e) => setLinkForm({ ...linkForm, linkType: e.target.value })}><option value="source">source</option><option value="evidence_for">evidence_for</option><option value="supersedes">supersedes</option><option value="duplicate_of">duplicate_of</option><option value="attachment_to">attachment_to</option><option value="package_member">package_member</option><option value="generated_from">generated_from</option><option value="redacted_from">redacted_from</option><option value="related_to">related_to</option></select></Field>
+                <Field label="Created by"><input className="recordarr-input" value={linkForm.createdByPersonId} onChange={(e) => setLinkForm({ ...linkForm, createdByPersonId: e.target.value })} /></Field>
+              </div>
+              <button type="button" className="recordarr-button secondary mt-3" onClick={() => createLinkMutation.mutate()} disabled={createLinkMutation.isPending}>
+                {createLinkMutation.isPending ? 'Saving...' : 'Add link'}
+              </button>
+              <div className="mt-4 space-y-2">
+                {(linksQuery.data ?? []).map((link) => (
+                  <div key={link.recordLinkId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-slate-100">{link.linkType}</strong>
+                      <span className="recordarr-pill text-[0.7rem]">{formatDate(link.createdAt)}</span>
+                    </div>
+                    <p className="mt-1">{link.linkedRecordId ?? link.sourceObjectRef ?? 'Unspecified link'}</p>
+                    <p className="mt-1 text-xs text-slate-400">Created by {link.createdByPersonId}</p>
+                  </div>
+                ))}
+                {!linksQuery.data?.length ? <EmptyState title="No record links yet." /> : null}
               </div>
             </Card>
           </div>

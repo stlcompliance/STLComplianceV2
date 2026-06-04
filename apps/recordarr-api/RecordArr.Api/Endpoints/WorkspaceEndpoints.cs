@@ -20,6 +20,26 @@ public static class WorkspaceEndpoints
             return record is null ? Results.NotFound() : Results.Ok(record);
         }).WithName("GetRecordArrRecord");
 
+        group.MapGet("/records/{recordId}/metadata", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordMetadata(recordId)))
+            .WithName("ListRecordArrRecordMetadata");
+
+        group.MapPost("/records/{recordId}/metadata", (string recordId, CreateRecordMetadataRequest request, RecordArrStore store) =>
+        {
+            var metadata = store.CreateRecordMetadata(recordId, request.Key, request.Value, request.ValueType, request.Source, request.ConfidenceScore, request.CreatedByPersonId);
+            return Results.Created($"/api/v1/workspace/records/{recordId}/metadata/{metadata.MetadataId}", metadata);
+        }).WithName("CreateRecordArrRecordMetadata");
+
+        group.MapGet("/records/{recordId}/links", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordLinks(recordId)))
+            .WithName("ListRecordArrRecordLinks");
+
+        group.MapPost("/records/{recordId}/links", (string recordId, CreateRecordLinkRequest request, RecordArrStore store) =>
+        {
+            var link = store.CreateRecordLink(recordId, request.LinkedRecordId, request.SourceObjectRef, request.LinkType, request.CreatedByPersonId);
+            return Results.Created($"/api/v1/workspace/records/{recordId}/links/{link.RecordLinkId}", link);
+        }).WithName("CreateRecordArrRecordLink");
+
         group.MapPost("/records", (CreateRecordRequest request, RecordArrStore store) =>
         {
             if (string.IsNullOrWhiteSpace(request.SourceProduct))
@@ -485,6 +505,8 @@ public static class WorkspaceEndpoints
     public sealed record CompleteUploadSessionRequest(string RecordId);
     public sealed record RevokeUploadSessionRequest(string Reason);
     public sealed record CreateDocumentScanRequest(string RecordId, string OriginalFileName, string ScanPurpose);
+    public sealed record CreateRecordMetadataRequest(string Key, string Value, string ValueType, string Source, decimal ConfidenceScore, string CreatedByPersonId);
+    public sealed record CreateRecordLinkRequest(string? LinkedRecordId, string? SourceObjectRef, string LinkType, string CreatedByPersonId);
     public sealed record ManualCorrectionRequest(string EdgeCoordinates);
     public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);

@@ -23,6 +23,26 @@ public static class RecordArrIntegrationEndpoints
             return record is null ? Results.NotFound() : Results.Ok(record);
         }).WithName($"GetRecordArrIntegrationRecord{routePrefix}");
 
+        group.MapGet("/records/{recordId}/metadata", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordMetadata(recordId)))
+            .WithName($"ListRecordArrIntegrationRecordMetadata{routePrefix}");
+
+        group.MapPost("/records/{recordId}/metadata", (string recordId, WorkspaceEndpoints.CreateRecordMetadataRequest request, RecordArrStore store) =>
+        {
+            var metadata = store.CreateRecordMetadata(recordId, request.Key, request.Value, request.ValueType, request.Source, request.ConfidenceScore, request.CreatedByPersonId);
+            return Results.Created($"{routePrefix}/records/{recordId}/metadata/{metadata.MetadataId}", metadata);
+        }).WithName($"CreateRecordArrIntegrationRecordMetadata{routePrefix}");
+
+        group.MapGet("/records/{recordId}/links", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordLinks(recordId)))
+            .WithName($"ListRecordArrIntegrationRecordLinks{routePrefix}");
+
+        group.MapPost("/records/{recordId}/links", (string recordId, WorkspaceEndpoints.CreateRecordLinkRequest request, RecordArrStore store) =>
+        {
+            var link = store.CreateRecordLink(recordId, request.LinkedRecordId, request.SourceObjectRef, request.LinkType, request.CreatedByPersonId);
+            return Results.Created($"{routePrefix}/records/{recordId}/links/{link.RecordLinkId}", link);
+        }).WithName($"CreateRecordArrIntegrationRecordLink{routePrefix}");
+
         group.MapPost("/records", (WorkspaceEndpoints.CreateRecordRequest request, RecordArrStore store) =>
         {
             var record = store.CreateRecord(

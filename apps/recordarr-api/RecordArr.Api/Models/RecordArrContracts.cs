@@ -178,6 +178,27 @@ public sealed record RecordArrPackageManifestEntryResponse(
     string? StatusSnapshot,
     string Checksum);
 
+public sealed record RecordArrRecordMetadataResponse(
+    string MetadataId,
+    string RecordId,
+    string Key,
+    string Value,
+    string ValueType,
+    string Source,
+    decimal ConfidenceScore,
+    bool Verified,
+    string? VerifiedByPersonId,
+    DateTimeOffset? VerifiedAt);
+
+public sealed record RecordArrRecordLinkResponse(
+    string RecordLinkId,
+    string RecordId,
+    string? LinkedRecordId,
+    string? SourceObjectRef,
+    string LinkType,
+    DateTimeOffset CreatedAt,
+    string CreatedByPersonId);
+
 public sealed record RecordArrRetentionPolicyResponse(
     string RetentionPolicyId,
     string PolicyKey,

@@ -13,6 +13,8 @@ public sealed class RecordArrStore
     private readonly List<RecordArrEvidenceMappingResponse> _evidenceMappings;
     private readonly List<RecordArrPackageResponse> _packages;
     private readonly List<RecordArrPackageManifestResponse> _manifests;
+    private readonly List<RecordArrRecordMetadataResponse> _recordMetadata;
+    private readonly List<RecordArrRecordLinkResponse> _recordLinks;
     private readonly List<RecordArrRetentionPolicyResponse> _retentionPolicies;
     private readonly List<RecordArrRetentionStatusResponse> _retentionStatuses;
     private readonly List<RecordArrDisposalReviewResponse> _disposalReviews;
@@ -102,6 +104,52 @@ public sealed class RecordArrStore
                 5,
                 25_000_000,
                 ["rec-bol-001"]),
+        ];
+
+        _recordMetadata =
+        [
+            new RecordArrRecordMetadataResponse(
+                "meta-001",
+                "rec-bol-001",
+                "bol_number",
+                "RT-7781",
+                "string",
+                "source_product",
+                1m,
+                true,
+                "person-route-lead",
+                now.AddDays(-3)),
+            new RecordArrRecordMetadataResponse(
+                "meta-002",
+                "rec-sop-001",
+                "review_cycle_days",
+                "180",
+                "number",
+                "system",
+                1m,
+                true,
+                "person-doc-controller",
+                now.AddDays(-14)),
+        ];
+
+        _recordLinks =
+        [
+            new RecordArrRecordLinkResponse(
+                "rlk-001",
+                "rec-bol-001",
+                null,
+                "routarr:trip:trip-7781",
+                "source",
+                now.AddDays(-3),
+                "person-route-lead"),
+            new RecordArrRecordLinkResponse(
+                "rlk-002",
+                "rec-sop-001",
+                null,
+                "recordarr:controlled_document:doc-001",
+                "related_to",
+                now.AddDays(-14),
+                "person-doc-controller"),
         ];
 
         _scans =
@@ -568,6 +616,14 @@ public sealed class RecordArrStore
                 1,
                 [sourceProduct, recordType, documentType]);
             _records.Add(record);
+            _recordLinks.Add(new RecordArrRecordLinkResponse(
+                $"rlk-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                null,
+                $"{sourceProduct}:{sourceObjectType}:{sourceObjectId}",
+                "source",
+                DateTimeOffset.UtcNow,
+                uploadedByPersonId));
             _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], record.RecordId, "upload", "allowed", uploadedByPersonId, null, null, DateTimeOffset.UtcNow, null, null, "api-upload"));
             return record;
         }
@@ -615,6 +671,104 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrRecordMetadataResponse> GetRecordMetadata(string recordId)
+    {
+        lock (_gate)
+        {
+            return _recordMetadata
+                .Where(metadata => string.Equals(metadata.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(metadata => metadata.MetadataId)
+                .ToArray();
+        }
+    }
+
+    public RecordArrRecordMetadataResponse CreateRecordMetadata(
+        string recordId,
+        string key,
+        string value,
+        string valueType,
+        string source,
+        decimal confidenceScore,
+        string createdByPersonId)
+    {
+        lock (_gate)
+        {
+            var record = RequireRecord(recordId);
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new InvalidOperationException("Record metadata key is required.");
+            }
+            if (confidenceScore < 0m || confidenceScore > 1m)
+            {
+                throw new InvalidOperationException("Record metadata confidence must be between 0 and 1.");
+            }
+            var normalizedValueType = NormalizeRecordMetadataValueType(valueType);
+            var normalizedSource = NormalizeRecordMetadataSource(source);
+
+            var metadata = new RecordArrRecordMetadataResponse(
+                $"meta-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                key.Trim(),
+                value,
+                normalizedValueType,
+                normalizedSource,
+                confidenceScore,
+                false,
+                null,
+                null);
+            _recordMetadata.Add(metadata);
+            AppendRecordLinkAuditTrail(record, "metadata_added", createdByPersonId, $"Added metadata {key.Trim()}.");
+            return metadata;
+        }
+    }
+
+    public IReadOnlyList<RecordArrRecordLinkResponse> GetRecordLinks(string recordId)
+    {
+        lock (_gate)
+        {
+            return _recordLinks
+                .Where(link => string.Equals(link.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(link => link.CreatedAt)
+                .ToArray();
+        }
+    }
+
+    public RecordArrRecordLinkResponse CreateRecordLink(
+        string recordId,
+        string? linkedRecordId,
+        string? sourceObjectRef,
+        string linkType,
+        string createdByPersonId)
+    {
+        lock (_gate)
+        {
+            var record = RequireRecord(recordId);
+            if (string.IsNullOrWhiteSpace(linkedRecordId) && string.IsNullOrWhiteSpace(sourceObjectRef))
+            {
+                throw new InvalidOperationException("A record link requires either a linked record or a source object reference.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(linkedRecordId) &&
+                !_records.Any(candidate => string.Equals(candidate.RecordId, linkedRecordId.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Linked record {linkedRecordId} not found.");
+            }
+
+            var normalizedLinkType = NormalizeRecordLinkType(linkType);
+            var link = new RecordArrRecordLinkResponse(
+                $"rlk-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                string.IsNullOrWhiteSpace(linkedRecordId) ? null : linkedRecordId.Trim(),
+                string.IsNullOrWhiteSpace(sourceObjectRef) ? null : sourceObjectRef.Trim(),
+                normalizedLinkType,
+                DateTimeOffset.UtcNow,
+                createdByPersonId);
+            _recordLinks.Add(link);
+            AppendRecordLinkAuditTrail(record, "link_added", createdByPersonId, $"Added {normalizedLinkType} link.");
+            return link;
+        }
+    }
+
     private static string NormalizeClassification(string classification)
     {
         if (string.IsNullOrWhiteSpace(classification))
@@ -631,6 +785,73 @@ public sealed class RecordArrStore
             "legal_hold" => "legal_hold",
             _ => throw new InvalidOperationException($"Unsupported record classification '{classification}'.")
         };
+    }
+
+    private static string NormalizeRecordMetadataValueType(string valueType)
+    {
+        if (string.IsNullOrWhiteSpace(valueType))
+        {
+            return "string";
+        }
+
+        return valueType.Trim().ToLowerInvariant() switch
+        {
+            "string" => "string",
+            "number" => "number",
+            "boolean" => "boolean",
+            "date" => "date",
+            "datetime" => "datetime",
+            "enum" => "enum",
+            "object_ref" => "object_ref",
+            "json" => "json",
+            _ => throw new InvalidOperationException($"Unsupported record metadata value type '{valueType}'.")
+        };
+    }
+
+    private static string NormalizeRecordMetadataSource(string source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return "user";
+        }
+
+        return source.Trim().ToLowerInvariant() switch
+        {
+            "user" => "user",
+            "source_product" => "source_product",
+            "ocr" => "ocr",
+            "extraction" => "extraction",
+            "system" => "system",
+            "import" => "import",
+            _ => throw new InvalidOperationException($"Unsupported record metadata source '{source}'.")
+        };
+    }
+
+    private static string NormalizeRecordLinkType(string linkType)
+    {
+        if (string.IsNullOrWhiteSpace(linkType))
+        {
+            return "related_to";
+        }
+
+        return linkType.Trim().ToLowerInvariant() switch
+        {
+            "source" => "source",
+            "evidence_for" => "evidence_for",
+            "supersedes" => "supersedes",
+            "duplicate_of" => "duplicate_of",
+            "attachment_to" => "attachment_to",
+            "package_member" => "package_member",
+            "generated_from" => "generated_from",
+            "redacted_from" => "redacted_from",
+            "related_to" => "related_to",
+            _ => throw new InvalidOperationException($"Unsupported record link type '{linkType}'.")
+        };
+    }
+
+    private void AppendRecordLinkAuditTrail(RecordArrRecordResponse record, string action, string actorPersonId, string details)
+    {
+        AddAccessLog(record.RecordId, action, "allowed", actorPersonId, null, null, null, null, details);
     }
 
     public RecordArrUploadSessionResponse CreateUploadSession(string sourceProduct, string sourceObjectType, string sourceObjectId, string uploadPurpose, bool requiresDocumentScan, bool requiresOcr, bool requiresManualReview)
