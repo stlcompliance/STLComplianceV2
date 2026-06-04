@@ -1993,11 +1993,17 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
     queryFn: () => getRetentionStatus(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
   })
+  const holdsQuery = useQuery({
+    queryKey: ['recordarr', 'legal-holds'],
+    queryFn: () => listLegalHolds(accessToken),
+    enabled: Boolean(accessToken),
+  })
   const disposalReviewsQuery = useQuery({
     queryKey: ['recordarr', 'disposal-reviews'],
     queryFn: () => listDisposalReviews(accessToken),
     enabled: Boolean(accessToken),
   })
+  const activeHoldsForRecord = (holdsQuery.data ?? []).filter((hold) => hold.status === 'active' && hold.recordRefs.includes(recordId))
 
   useEffect(() => {
     if (!selectedDisposalReviewId && disposalReviewsQuery.data?.[0]) {
@@ -2063,6 +2069,7 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Expires:</strong> {formatDate(statusQuery.data.retentionExpiresAt)}</p>
                 <p><strong className="text-slate-100">Next review:</strong> {formatDate(statusQuery.data.nextReviewAt)}</p>
                 <p><strong className="text-slate-100">Last reviewed:</strong> {formatDate(statusQuery.data.lastReviewedAt)}</p>
+                <p><strong className="text-slate-100">Legal holds:</strong> {activeHoldsForRecord.length > 0 ? activeHoldsForRecord.map((hold) => hold.holdNumber).join(', ') : 'none'}</p>
               </>
             ) : (
               <EmptyState title="Enter a record id to inspect its retention status." />
@@ -2082,6 +2089,9 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
             <Field label="Proposed action"><input className="recordarr-input" value={disposalForm.proposedAction} onChange={(e) => setDisposalForm({ ...disposalForm, proposedAction: e.target.value })} /></Field>
             <Field label="Requested by"><input className="recordarr-input" value={disposalForm.requestedByPersonId} onChange={(e) => setDisposalForm({ ...disposalForm, requestedByPersonId: e.target.value })} /></Field>
           </div>
+          {statusQuery.data?.status === 'blocked_by_legal_hold' ? (
+            <p className="text-sm text-amber-300">This record is blocked by an active legal hold.</p>
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <button type="button" className="recordarr-button" onClick={() => createDisposalMutation.mutate()} disabled={createDisposalMutation.isPending}>
               {createDisposalMutation.isPending ? 'Creating...' : 'Create disposal review'}

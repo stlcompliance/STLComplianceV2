@@ -1022,6 +1022,7 @@ public sealed class RecordArrStore
                 ActivatedAt = DateTimeOffset.UtcNow
             };
             _legalHolds[index] = updated;
+            RefreshRetentionStatusesForActiveLegalHolds();
             return updated;
         }
     }
@@ -1045,7 +1046,38 @@ public sealed class RecordArrStore
                 ReleaseReason = releaseReason
             };
             _legalHolds[index] = updated;
+            RefreshRetentionStatusesForActiveLegalHolds();
             return updated;
+        }
+    }
+
+    private void RefreshRetentionStatusesForActiveLegalHolds()
+    {
+        var activeHoldRecordRefs = _legalHolds
+            .Where(hold => string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(hold => hold.RecordRefs)
+            .Select(recordRef => recordRef.Trim())
+            .Where(recordRef => !string.IsNullOrWhiteSpace(recordRef))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < _retentionStatuses.Count; i++)
+        {
+            var current = _retentionStatuses[i];
+            var nextStatus = activeHoldRecordRefs.Contains(current.RecordId)
+                ? "blocked_by_legal_hold"
+                : current.Status == "blocked_by_legal_hold"
+                    ? "active"
+                    : current.Status;
+
+            if (string.Equals(current.Status, nextStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            _retentionStatuses[i] = current with
+            {
+                Status = nextStatus
+            };
         }
     }
 
