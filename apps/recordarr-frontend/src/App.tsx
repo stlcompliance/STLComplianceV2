@@ -433,6 +433,7 @@ function RecordsPage({ accessToken }: { accessToken: string }) {
     description: 'Captured from RoutArr proof-of-delivery handoff.',
     recordType: 'document',
     documentType: 'bol',
+    classification: 'internal',
     sourceProduct: 'routarr',
     sourceObjectType: 'trip',
     sourceObjectId: 'trip-7781',
@@ -501,6 +502,7 @@ function RecordsPage({ accessToken }: { accessToken: string }) {
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Record type"><input className="recordarr-input" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })} /></Field>
             <Field label="Document type"><input className="recordarr-input" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })} /></Field>
+            <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><option value="public">public</option><option value="internal">internal</option><option value="confidential">confidential</option><option value="restricted">restricted</option><option value="legal_hold">legal_hold</option></select></Field>
             <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
             <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
             <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
@@ -590,6 +592,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   const params = useParams()
   const recordId = params.recordId ?? ''
   const [status, setStatus] = useState('review')
+  const [classification, setClassification] = useState('internal')
 
   const recordQuery = useQuery({
     queryKey: ['recordarr', 'records', recordId],
@@ -638,7 +641,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   })
 
   const updateMutation = useMutation({
-    mutationFn: () => updateRecord(accessToken, recordId, { status }),
+    mutationFn: () => updateRecord(accessToken, recordId, { status, classification }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -657,6 +660,11 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   })
 
   const record = recordQuery.data
+  useEffect(() => {
+    if (record?.classification) {
+      setClassification(record.classification)
+    }
+  }, [record?.classification])
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
@@ -718,6 +726,15 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                     <option value="approved">approved</option>
                     <option value="archived">archived</option>
                     <option value="expired">expired</option>
+                  </select>
+                </Field>
+                <Field label="Classification">
+                  <select className="recordarr-select" value={classification} onChange={(e) => setClassification(e.target.value)}>
+                    <option value="public">public</option>
+                    <option value="internal">internal</option>
+                    <option value="confidential">confidential</option>
+                    <option value="restricted">restricted</option>
+                    <option value="legal_hold">legal_hold</option>
                   </select>
                 </Field>
                 <Field label="Current version"><input className="recordarr-input" value={`v${record.versionNumber}`} readOnly /></Field>

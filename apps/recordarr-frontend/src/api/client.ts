@@ -505,6 +505,7 @@ export async function createRecord(
     description: string
     recordType: string
     documentType: string
+    classification: string
     sourceProduct: string
     sourceObjectType: string
     sourceObjectId: string

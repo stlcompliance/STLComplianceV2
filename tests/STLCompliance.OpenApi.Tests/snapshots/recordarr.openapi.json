@@ -5877,6 +5877,7 @@
           "description",
           "recordType",
           "documentType",
+          "classification",
           "sourceProduct",
           "sourceObjectType",
           "sourceObjectId",
@@ -5898,6 +5899,9 @@
             "type": "string"
           },
           "documentType": {
+            "type": "string"
+          },
+          "classification": {
             "type": "string"
           },
           "sourceProduct": {

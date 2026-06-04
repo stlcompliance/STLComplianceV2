@@ -30,6 +30,7 @@ public static class RecordArrIntegrationEndpoints
                 request.Description,
                 request.RecordType,
                 request.DocumentType,
+                request.Classification,
                 request.SourceProduct,
                 request.SourceObjectType,
                 request.SourceObjectId,

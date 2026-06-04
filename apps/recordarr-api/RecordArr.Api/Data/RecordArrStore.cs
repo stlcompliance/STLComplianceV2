@@ -540,10 +540,11 @@ public sealed class RecordArrStore
         }
     }
 
-    public RecordArrRecordResponse CreateRecord(string title, string description, string recordType, string documentType, string sourceProduct, string sourceObjectType, string sourceObjectId, string sourceObjectDisplayName, string ownerPersonId, string uploadedByPersonId, string currentFileName, string currentMimeType)
+    public RecordArrRecordResponse CreateRecord(string title, string description, string recordType, string documentType, string classification, string sourceProduct, string sourceObjectType, string sourceObjectId, string sourceObjectDisplayName, string ownerPersonId, string uploadedByPersonId, string currentFileName, string currentMimeType)
     {
         lock (_gate)
         {
+            var normalizedClassification = NormalizeClassification(classification);
             var record = new RecordArrRecordResponse(
                 $"rec-{Guid.NewGuid():N}"[..12],
                 $"REC-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
@@ -552,7 +553,7 @@ public sealed class RecordArrStore
                 recordType,
                 documentType,
                 "processing",
-                "internal",
+                normalizedClassification,
                 sourceProduct,
                 sourceObjectType,
                 sourceObjectId,
@@ -585,7 +586,7 @@ public sealed class RecordArrStore
             var updated = _records[index] with
             {
                 Status = status,
-                Classification = classification ?? _records[index].Classification,
+                Classification = classification is null ? _records[index].Classification : NormalizeClassification(classification),
                 EffectiveAt = effectiveAt ?? _records[index].EffectiveAt,
                 ExpiresAt = expiresAt ?? _records[index].ExpiresAt
             };
@@ -612,6 +613,24 @@ public sealed class RecordArrStore
             EnsureRecordCanBeDisposed(recordId);
             return UpdateRecordLifecycle(record, "purged", actorPersonId, "purge");
         }
+    }
+
+    private static string NormalizeClassification(string classification)
+    {
+        if (string.IsNullOrWhiteSpace(classification))
+        {
+            return "internal";
+        }
+
+        return classification.Trim().ToLowerInvariant() switch
+        {
+            "public" => "public",
+            "internal" => "internal",
+            "confidential" => "confidential",
+            "restricted" => "restricted",
+            "legal_hold" => "legal_hold",
+            _ => throw new InvalidOperationException($"Unsupported record classification '{classification}'.")
+        };
     }
 
     public RecordArrUploadSessionResponse CreateUploadSession(string sourceProduct, string sourceObjectType, string sourceObjectId, string uploadPurpose, bool requiresDocumentScan, bool requiresOcr, bool requiresManualReview)
