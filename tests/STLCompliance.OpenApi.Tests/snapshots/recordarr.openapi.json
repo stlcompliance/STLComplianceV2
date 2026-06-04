@@ -353,6 +353,88 @@
         }
       }
     },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationControlledDocumentDistribution/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationControlledDocumentDistribution/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/controlled-documents/{controlledDocumentId}/obsolete": {
       "post": {
         "tags": [
@@ -1933,6 +2015,88 @@
         }
       }
     },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationControlledDocumentDistribution/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationControlledDocumentDistribution/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/controlled-documents/{controlledDocumentId}/obsolete": {
       "post": {
         "tags": [
@@ -3418,6 +3582,88 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ExpireRecordArrControlledDocumentDistribution",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RevokeRecordArrControlledDocumentDistribution",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distributionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeDocumentDistributionRequest"
               }
             }
           },
@@ -5106,6 +5352,24 @@
           }
         }
       },
+      "ExpireDocumentDistributionRequest": {
+        "required": [
+          "expiredByPersonId",
+          "expireReason"
+        ],
+        "type": "object",
+        "properties": {
+          "expiredByPersonId": {
+            "type": "string"
+          },
+          "expireReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ManualCorrectionRequest": {
         "required": [
           "edgeCoordinates"
@@ -5196,6 +5460,24 @@
         }
       },
       "RevokeAccessGrantRequest": {
+        "required": [
+          "revokedByPersonId",
+          "revokeReason"
+        ],
+        "type": "object",
+        "properties": {
+          "revokedByPersonId": {
+            "type": "string"
+          },
+          "revokeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RevokeDocumentDistributionRequest": {
         "required": [
           "revokedByPersonId",
           "revokeReason"

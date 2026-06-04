@@ -1160,6 +1160,22 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrDocumentDistributionResponse RevokeDocumentDistribution(string distributionId, string revokedByPersonId, string? revokeReason)
+    {
+        lock (_gate)
+        {
+            return UpdateDocumentDistributionStatus(distributionId, "revoked", revokedByPersonId, revokeReason ?? $"Revoked by {revokedByPersonId}");
+        }
+    }
+
+    public RecordArrDocumentDistributionResponse ExpireDocumentDistribution(string distributionId, string expiredByPersonId, string? expireReason)
+    {
+        lock (_gate)
+        {
+            return UpdateDocumentDistributionStatus(distributionId, "expired", expiredByPersonId, expireReason ?? $"Expired by {expiredByPersonId}");
+        }
+    }
+
     public RecordArrDocumentAcknowledgementResponse CreateDocumentAcknowledgement(string controlledDocumentId, string versionId, string personId, string? attestationText, DateTimeOffset? dueAt)
     {
         lock (_gate)
@@ -1211,6 +1227,29 @@ public sealed class RecordArrStore
                     $"Acknowledgement {acknowledgementId} completed."));
             return updated;
         }
+    }
+
+    private RecordArrDocumentDistributionResponse UpdateDocumentDistributionStatus(string distributionId, string status, string actorPersonId, string reason)
+    {
+        var index = _documentDistributions.FindIndex(distribution => string.Equals(distribution.DistributionId, distributionId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            throw new InvalidOperationException($"Document distribution {distributionId} not found.");
+        }
+
+        var current = _documentDistributions[index];
+        var updated = current with
+        {
+            Status = status
+        };
+        _documentDistributions[index] = updated;
+        AppendControlledDocumentAuditTrail(
+            current.ControlledDocumentId,
+            CreateControlledDocumentAuditTrailEntry(
+                status,
+                actorPersonId,
+                $"Distribution {distributionId} {reason}."));
+        return updated;
     }
 
     public IReadOnlyList<RecordArrAccessPolicyResponse> GetAccessPolicies()

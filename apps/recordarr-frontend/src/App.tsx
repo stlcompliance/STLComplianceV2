@@ -81,11 +81,13 @@ import {
   purgeRecord,
   promoteDocumentVersion,
   obsoleteControlledDocument,
+  expireDocumentDistribution,
   supersedeControlledDocument,
   completeDocumentAcknowledgement,
   completeDocumentReview,
   completeDisposalReview,
   revokeAccessGrant,
+  revokeDocumentDistribution,
   lockPackage,
   updateRecord,
   type RecordArrControlledDocument,
@@ -1324,6 +1326,26 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const revokeDistributionMutation = useMutation({
+    mutationFn: (distributionId: string) =>
+      revokeDocumentDistribution(accessToken, selectedDocumentId, distributionId, {
+        revokedByPersonId: 'person-doc-controller',
+        revokeReason: 'Distribution no longer needed.',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const expireDistributionMutation = useMutation({
+    mutationFn: (distributionId: string) =>
+      expireDocumentDistribution(accessToken, selectedDocumentId, distributionId, {
+        expiredByPersonId: 'person-doc-controller',
+        expireReason: 'Distribution expired on review cycle.',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const createAcknowledgementMutation = useMutation({
     mutationFn: () =>
       createDocumentAcknowledgement(accessToken, selectedDocumentId, {
@@ -1592,6 +1614,24 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                           <span className="recordarr-pill text-[0.7rem]">{distribution.status}</span>
                         </div>
                         <p className="mt-1">{distribution.targetRef}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="recordarr-button secondary"
+                            onClick={() => revokeDistributionMutation.mutate(distribution.distributionId)}
+                            disabled={revokeDistributionMutation.isPending || distribution.status === 'revoked'}
+                          >
+                            Revoke
+                          </button>
+                          <button
+                            type="button"
+                            className="recordarr-button secondary"
+                            onClick={() => expireDistributionMutation.mutate(distribution.distributionId)}
+                            disabled={expireDistributionMutation.isPending || distribution.status === 'expired'}
+                          >
+                            Expire
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {!distributionsQuery.data?.length ? <EmptyState title="No distributions yet." /> : null}

@@ -289,6 +289,18 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/distributions/{distribution.DistributionId}", distribution);
         }).WithName($"CreateRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke", (string controlledDocumentId, string distributionId, WorkspaceEndpoints.RevokeDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.RevokeDocumentDistribution(distributionId, request.RevokedByPersonId, request.RevokeReason);
+            return Results.Ok(distribution);
+        }).WithName($"RevokeRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire", (string controlledDocumentId, string distributionId, WorkspaceEndpoints.ExpireDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.ExpireDocumentDistribution(distributionId, request.ExpiredByPersonId, request.ExpireReason);
+            return Results.Ok(distribution);
+        }).WithName($"ExpireRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
+
         group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, WorkspaceEndpoints.CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
         {
             var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, request.PersonId, request.AttestationText, request.DueAt);

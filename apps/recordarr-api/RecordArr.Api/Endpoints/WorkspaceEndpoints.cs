@@ -278,6 +278,18 @@ public static class WorkspaceEndpoints
             return Results.Created($"/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions/{distribution.DistributionId}", distribution);
         }).WithName("CreateRecordArrControlledDocumentDistribution");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke", (string controlledDocumentId, string distributionId, RevokeDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.RevokeDocumentDistribution(distributionId, request.RevokedByPersonId, request.RevokeReason);
+            return Results.Ok(distribution);
+        }).WithName("RevokeRecordArrControlledDocumentDistribution");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire", (string controlledDocumentId, string distributionId, ExpireDocumentDistributionRequest request, RecordArrStore store) =>
+        {
+            var distribution = store.ExpireDocumentDistribution(distributionId, request.ExpiredByPersonId, request.ExpireReason);
+            return Results.Ok(distribution);
+        }).WithName("ExpireRecordArrControlledDocumentDistribution");
+
         group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
         {
             var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, request.PersonId, request.AttestationText, request.DueAt);
@@ -406,6 +418,8 @@ public static class WorkspaceEndpoints
     public sealed record ManualCorrectionRequest(string EdgeCoordinates);
     public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
+    public sealed record RevokeDocumentDistributionRequest(string RevokedByPersonId, string? RevokeReason);
+    public sealed record ExpireDocumentDistributionRequest(string ExpiredByPersonId, string? ExpireReason);
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);

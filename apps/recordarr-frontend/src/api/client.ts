@@ -931,6 +931,34 @@ export async function createDocumentDistribution(
   )
 }
 
+export async function revokeDocumentDistribution(
+  accessToken: string,
+  controlledDocumentId: string,
+  distributionId: string,
+  body: { revokedByPersonId: string; revokeReason?: string | null },
+): Promise<RecordArrDocumentDistribution> {
+  return sendJson<RecordArrDocumentDistribution>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/distributions/${encodeURIComponent(distributionId)}/revoke`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function expireDocumentDistribution(
+  accessToken: string,
+  controlledDocumentId: string,
+  distributionId: string,
+  body: { expiredByPersonId: string; expireReason?: string | null },
+): Promise<RecordArrDocumentDistribution> {
+  return sendJson<RecordArrDocumentDistribution>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/distributions/${encodeURIComponent(distributionId)}/expire`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function createDocumentAcknowledgement(
   accessToken: string,
   controlledDocumentId: string,
