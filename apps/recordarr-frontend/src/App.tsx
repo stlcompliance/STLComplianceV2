@@ -76,6 +76,7 @@ import {
   reviewExtractionResult,
   revokeExternalShare,
   purgeRecord,
+  promoteDocumentVersion,
   completeDocumentAcknowledgement,
   completeDisposalReview,
   lockPackage,
@@ -1231,6 +1232,16 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const promoteVersionMutation = useMutation({
+    mutationFn: (versionId: string) =>
+      promoteDocumentVersion(accessToken, selectedDocumentId, versionId, {
+        approvedByPersonId: 'person-doc-controller',
+        effectiveAt: new Date().toISOString(),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const createReviewMutation = useMutation({
     mutationFn: () =>
       createDocumentReview(accessToken, selectedDocumentId, {
@@ -1377,6 +1388,16 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                           <span className="recordarr-pill text-[0.7rem]">{version.status}</span>
                         </div>
                         <p className="mt-1">{version.fileName}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="recordarr-button secondary"
+                            onClick={() => promoteVersionMutation.mutate(version.versionId)}
+                            disabled={promoteVersionMutation.isPending || version.status === 'effective'}
+                          >
+                            {promoteVersionMutation.isPending ? 'Promoting...' : 'Approve and make effective'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {!versionsQuery.data?.length ? <EmptyState title="No versions yet." /> : null}

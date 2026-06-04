@@ -783,6 +783,20 @@ export async function createDocumentVersion(
   )
 }
 
+export async function promoteDocumentVersion(
+  accessToken: string,
+  controlledDocumentId: string,
+  versionId: string,
+  body: { approvedByPersonId: string; effectiveAt?: string | null },
+): Promise<RecordArrControlledDocumentVersion> {
+  return sendJson<RecordArrControlledDocumentVersion>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/versions/${encodeURIComponent(versionId)}/promote`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function createDocumentReview(
   accessToken: string,
   controlledDocumentId: string,

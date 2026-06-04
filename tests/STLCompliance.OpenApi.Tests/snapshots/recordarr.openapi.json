@@ -415,6 +415,47 @@
         }
       }
     },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PromoteRecordArrIntegrationControlledDocumentVersion/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteControlledDocumentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -1801,6 +1842,47 @@
         }
       }
     },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PromoteRecordArrIntegrationControlledDocumentVersion/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteControlledDocumentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -2994,6 +3076,47 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "PromoteRecordArrControlledDocumentVersion",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteControlledDocumentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4497,6 +4620,25 @@
         "properties": {
           "edgeCoordinates": {
             "type": "string"
+          }
+        }
+      },
+      "PromoteControlledDocumentVersionRequest": {
+        "required": [
+          "approvedByPersonId",
+          "effectiveAt"
+        ],
+        "type": "object",
+        "properties": {
+          "approvedByPersonId": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

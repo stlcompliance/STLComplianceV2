@@ -236,6 +236,12 @@ public static class WorkspaceEndpoints
             Results.Ok(store.GetDocumentVersions(controlledDocumentId)))
             .WithName("ListRecordArrControlledDocumentVersions");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote", (string controlledDocumentId, string versionId, PromoteControlledDocumentVersionRequest request, RecordArrStore store) =>
+        {
+            var version = store.PromoteDocumentVersion(controlledDocumentId, versionId, request.ApprovedByPersonId, request.EffectiveAt);
+            return Results.Ok(version);
+        }).WithName("PromoteRecordArrControlledDocumentVersion");
+
         group.MapGet("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, RecordArrStore store) =>
             Results.Ok(store.GetDocumentReviews(controlledDocumentId)))
             .WithName("ListRecordArrControlledDocumentReviews");
@@ -372,6 +378,7 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
+    public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
     public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);
     public sealed record CompleteDisposalReviewRequest(string Status, string? ReviewedByPersonId, string? DecisionReason);
 

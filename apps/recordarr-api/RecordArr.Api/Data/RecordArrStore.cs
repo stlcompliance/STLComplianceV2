@@ -1287,6 +1287,64 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrControlledDocumentVersionResponse PromoteDocumentVersion(string controlledDocumentId, string versionId, string approvedByPersonId, DateTimeOffset? effectiveAt)
+    {
+        lock (_gate)
+        {
+            var versionIndex = _documentVersions.FindIndex(version =>
+                string.Equals(version.VersionId, versionId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(version.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+
+            if (versionIndex < 0)
+            {
+                throw new InvalidOperationException($"Document version {versionId} not found.");
+            }
+
+            var documentIndex = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            if (documentIndex < 0)
+            {
+                throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var promoted = _documentVersions[versionIndex] with
+            {
+                Status = "effective",
+                ApprovedAt = now,
+                ApprovedByPersonId = approvedByPersonId,
+                EffectiveAt = effectiveAt ?? now
+            };
+            _documentVersions[versionIndex] = promoted;
+
+            var document = _controlledDocuments[documentIndex];
+            var previousVersionId = document.CurrentVersionId;
+            var updatedDocument = document with
+            {
+                Status = "effective",
+                CurrentVersionId = versionId,
+                EffectiveAt = promoted.EffectiveAt,
+                NextReviewAt = promoted.EffectiveAt?.AddDays(document.ReviewIntervalDays)
+            };
+            _controlledDocuments[documentIndex] = updatedDocument;
+
+            if (!string.IsNullOrWhiteSpace(previousVersionId) && !string.Equals(previousVersionId, versionId, StringComparison.OrdinalIgnoreCase))
+            {
+                var previousIndex = _documentVersions.FindIndex(version => string.Equals(version.VersionId, previousVersionId, StringComparison.OrdinalIgnoreCase));
+                if (previousIndex >= 0)
+                {
+                    _documentVersions[previousIndex] = _documentVersions[previousIndex] with
+                    {
+                        Status = "superseded",
+                        SupersededAt = now,
+                        NextVersionRef = versionId
+                    };
+                }
+            }
+
+            return promoted;
+        }
+    }
+
     public RecordArrDocumentReviewResponse RequestDocumentReview(string controlledDocumentId, string versionId, string reviewType, string requestedByPersonId, string reviewerPersonId, DateTimeOffset? dueAt)
     {
         lock (_gate)
