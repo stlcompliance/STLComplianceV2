@@ -783,6 +783,32 @@ export async function createDocumentVersion(
   )
 }
 
+export async function archiveControlledDocument(
+  accessToken: string,
+  controlledDocumentId: string,
+  body: { updatedByPersonId: string },
+): Promise<RecordArrControlledDocument> {
+  return sendJson<RecordArrControlledDocument>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/archive`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function obsoleteControlledDocument(
+  accessToken: string,
+  controlledDocumentId: string,
+  body: { updatedByPersonId: string },
+): Promise<RecordArrControlledDocument> {
+  return sendJson<RecordArrControlledDocument>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/obsolete`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function promoteDocumentVersion(
   accessToken: string,
   controlledDocumentId: string,

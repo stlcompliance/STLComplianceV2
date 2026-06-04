@@ -38,6 +38,7 @@ import {
   createDocumentDistribution,
   createDocumentReview,
   createDocumentVersion,
+  archiveControlledDocument,
   createDisposalReview,
   createEvidenceMapping,
   createExternalShare,
@@ -79,6 +80,7 @@ import {
   revokeExternalShare,
   purgeRecord,
   promoteDocumentVersion,
+  obsoleteControlledDocument,
   completeDocumentAcknowledgement,
   completeDisposalReview,
   revokeAccessGrant,
@@ -1229,6 +1231,18 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       setSelectedDocumentId(document.controlledDocumentId)
     },
   })
+  const archiveDocumentMutation = useMutation({
+    mutationFn: () => archiveControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const obsoleteDocumentMutation = useMutation({
+    mutationFn: () => obsoleteControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const createVersionMutation = useMutation({
     mutationFn: () => createDocumentVersion(accessToken, selectedDocumentId, versionForm),
     onSuccess: async () => {
@@ -1310,12 +1324,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
             <Field label="StaffArr site id"><input className="recordarr-input" value={newDocument.staffarrSiteId} onChange={(e) => setNewDocument({ ...newDocument, staffarrSiteId: e.target.value })} /></Field>
             <Field label="Acknowledgement required"><select className="recordarr-select" value={String(newDocument.acknowledgementRequired)} onChange={(e) => setNewDocument({ ...newDocument, acknowledgementRequired: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={newDocument.description} onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })} /></Field>
+              </div>
+              <button type="button" className="recordarr-button" onClick={() => createDocumentMutation.mutate()} disabled={createDocumentMutation.isPending}>
+                {createDocumentMutation.isPending ? 'Creating...' : 'Create document'}
+              </button>
+            </div>
           </div>
-          <button type="button" className="recordarr-button" onClick={() => createDocumentMutation.mutate()} disabled={createDocumentMutation.isPending}>
-            {createDocumentMutation.isPending ? 'Creating...' : 'Create document'}
-          </button>
-        </div>
-      </div>
 
       <div className="recordarr-grid cols-2">
         <Card title="Controlled documents" icon={<Archive className="h-4 w-4 text-cyan-300" />}>
@@ -1375,8 +1389,26 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                 <button type="button" className="recordarr-button secondary" onClick={() => createDistributionMutation.mutate()} disabled={createDistributionMutation.isPending}>
                   {createDistributionMutation.isPending ? 'Distributing...' : 'Create distribution'}
                 </button>
-                <button type="button" className="recordarr-button secondary" onClick={() => createAcknowledgementMutation.mutate()} disabled={createAcknowledgementMutation.isPending}>
+              <button type="button" className="recordarr-button secondary" onClick={() => createAcknowledgementMutation.mutate()} disabled={createAcknowledgementMutation.isPending}>
                   {createAcknowledgementMutation.isPending ? 'Creating...' : 'Create acknowledgement'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => archiveDocumentMutation.mutate()}
+                  disabled={archiveDocumentMutation.isPending || !selectedDocument || selectedDocument.status === 'archived'}
+                >
+                  {archiveDocumentMutation.isPending ? 'Archiving...' : 'Archive document'}
+                </button>
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => obsoleteDocumentMutation.mutate()}
+                  disabled={obsoleteDocumentMutation.isPending || !selectedDocument || selectedDocument.status === 'obsolete'}
+                >
+                  {obsoleteDocumentMutation.isPending ? 'Updating...' : 'Mark obsolete'}
                 </button>
               </div>
 

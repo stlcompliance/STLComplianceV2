@@ -1611,6 +1611,15 @@ function CustomerComplaintPage() {
 
 function StatusPage() {
   const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
+  const [lookup, setLookup] = useState({ targetProduct: 'loadarr', targetObjectId: 'inventory:LOT-991' })
+  const lookupQuery = useQuery({
+    queryKey: ['assurarr', 'quality-status', lookup.targetProduct, lookup.targetObjectId],
+    queryFn: () => assurarrApi.getQualityStatus(lookup.targetProduct, lookup.targetObjectId),
+    enabled: false,
+  })
+  const lookupMutation = useMutation({
+    mutationFn: async () => lookupQuery.refetch(),
+  })
   return (
     <div className="assurarr-page">
       <PageHeader title="Quality status" description="Publish current quality posture to downstream products that need to block, warn, or permit work." />
@@ -1639,6 +1648,35 @@ function StatusPage() {
       ) : (
         <LoadingCard label="Loading quality status" />
       )}
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <BookCheck className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Look up current quality status</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Target product">
+              <input className="assurarr-input" value={lookup.targetProduct} onChange={(event) => setLookup({ ...lookup, targetProduct: event.target.value })} />
+            </Field>
+            <Field label="Target object id">
+              <input className="assurarr-input" value={lookup.targetObjectId} onChange={(event) => setLookup({ ...lookup, targetObjectId: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => lookupMutation.mutate()} disabled={lookupMutation.isPending}>
+            {lookupMutation.isPending ? 'Looking up...' : 'Fetch quality status'}
+          </button>
+          {lookupQuery.data ? (
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4 text-sm text-slate-200">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="assurarr-pill">{lookupQuery.data.targetProduct}</span>
+                <span className="assurarr-pill">{lookupQuery.data.targetObjectRef}</span>
+                <span className="assurarr-pill">{lookupQuery.data.qualityStatus}</span>
+              </div>
+              <p className="mt-3 text-slate-300">{lookupQuery.data.description}</p>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   )
 }

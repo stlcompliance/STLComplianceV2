@@ -242,6 +242,18 @@ public static class WorkspaceEndpoints
             return Results.Ok(version);
         }).WithName("PromoteRecordArrControlledDocumentVersion");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (string controlledDocumentId, UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        {
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived");
+            return Results.Ok(document);
+        }).WithName("ArchiveRecordArrControlledDocument");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (string controlledDocumentId, UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        {
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete");
+            return Results.Ok(document);
+        }).WithName("ObsoleteRecordArrControlledDocument");
+
         group.MapGet("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, RecordArrStore store) =>
             Results.Ok(store.GetDocumentReviews(controlledDocumentId)))
             .WithName("ListRecordArrControlledDocumentReviews");
@@ -391,6 +403,7 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
+    public sealed record UpdateControlledDocumentStatusRequest(string UpdatedByPersonId);
     public sealed record CreateAccessGrantRequest(string RecordId, string GranteeType, string GranteeRef, string Permission, string GrantedByPersonId, DateTimeOffset? ExpiresAt);
     public sealed record RevokeAccessGrantRequest(string RevokedByPersonId, string? RevokeReason);
     public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);

@@ -140,6 +140,8 @@ export type StatusSnapshot = ListItem & {
   recordRefs: string[]
 }
 
+export type QualityStatus = StatusSnapshot
+
 export type Scorecard = ListItem & {
   description: string
   targetType: string
@@ -348,6 +350,17 @@ export const assurarrApi = {
   listSnapshots: () => getJson<StatusSnapshot[]>('/api/v1/status-snapshots'),
   createSnapshot: (body: CreateBase & { targetProduct: string; targetObjectRef: string; qualityStatus: string; activeHoldRefs?: string[]; openNonconformanceRefs?: string[]; openCapaRefs?: string[]; openFindingRefs?: string[]; expiresAt?: string }) =>
     sendJson<StatusSnapshot>('/api/v1/status-snapshots', 'POST', {
+      ...body,
+      activeHoldRefs: body.activeHoldRefs ?? [],
+      openNonconformanceRefs: body.openNonconformanceRefs ?? [],
+      openCapaRefs: body.openCapaRefs ?? [],
+      openFindingRefs: body.openFindingRefs ?? [],
+      expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
+    }),
+  listQualityStatus: () => getJson<QualityStatus[]>('/api/v1/integrations/quality-status'),
+  getQualityStatus: (targetProduct: string, targetObjectId: string) => getJson<QualityStatus>(`/api/v1/integrations/quality-status/${targetProduct}/${targetObjectId}`),
+  createQualityStatusCheck: (body: CreateBase & { targetProduct: string; targetObjectRef: string; qualityStatus: string; activeHoldRefs?: string[]; openNonconformanceRefs?: string[]; openCapaRefs?: string[]; openFindingRefs?: string[]; expiresAt?: string }) =>
+    sendJson<QualityStatus>('/api/v1/integrations/quality-status-checks', 'POST', {
       ...body,
       activeHoldRefs: body.activeHoldRefs ?? [],
       openNonconformanceRefs: body.openNonconformanceRefs ?? [],

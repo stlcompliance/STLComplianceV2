@@ -253,6 +253,18 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(version);
         }).WithName($"PromoteRecordArrIntegrationControlledDocumentVersion{routePrefix}");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        {
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived");
+            return Results.Ok(document);
+        }).WithName($"ArchiveRecordArrIntegrationControlledDocument{routePrefix}");
+
+        group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        {
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete");
+            return Results.Ok(document);
+        }).WithName($"ObsoleteRecordArrIntegrationControlledDocument{routePrefix}");
+
         group.MapGet("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, RecordArrStore store) =>
             Results.Ok(store.GetDocumentReviews(controlledDocumentId)))
             .WithName($"ListRecordArrIntegrationControlledDocumentReviews{routePrefix}");

@@ -100,6 +100,24 @@ public static class AssurArrEndpoints
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))
             .WithName("GetAssurArrHistory");
 
+        integrationGroup.MapGet("/quality-status", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListQualityStatusAsync(cancellationToken)))
+            .WithName("ListAssurArrQualityStatus");
+
+        integrationGroup.MapGet("/quality-status/{targetProduct}/{targetObjectId}", async (string targetProduct, string targetObjectId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetQualityStatusAsync(targetProduct, targetObjectId, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityStatus");
+
+        integrationGroup.MapPost("/quality-status-checks", async (CreateAssurArrQualityStatusSnapshotRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateQualityStatusCheckAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrQualityStatusCheck");
+
+        integrationGroup.MapGet("/scorecards", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListScorecardsAsync(cancellationToken)))
+            .WithName("ListAssurArrQualityScorecardsIntegration");
+
         integrationGroup.MapGet("/quality-reviews", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityReviewsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityReviews");

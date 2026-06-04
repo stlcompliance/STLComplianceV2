@@ -273,4 +273,49 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(dispositions);
         Assert.Contains(dispositions!, item => item.Title == dispositionTitle);
     }
+
+    [Fact]
+    public async Task Can_create_and_lookup_quality_status_checks()
+    {
+        var targetProduct = $"target-{Guid.NewGuid():N}";
+        var targetObjectId = $"object-{Guid.NewGuid():N}";
+        var title = $"Test quality status {Guid.NewGuid():N}";
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/quality-status-checks",
+            new CreateAssurArrQualityStatusSnapshotRequest(
+                targetProduct,
+                $"{targetProduct}:{targetObjectId}",
+                "warning",
+                "moderate",
+                title,
+                "Automated coverage for quality status checks.",
+                "assurarr",
+                "NCR-000001",
+                [$"{targetProduct}:{targetObjectId}"],
+                null,
+                ["HOLD-000001"],
+                ["NCR-000001"],
+                ["CAPA-000001"],
+                ["FIND-000001"],
+                DateTimeOffset.UtcNow.AddDays(2)));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(created);
+        Assert.Equal(targetProduct, created!.TargetProduct);
+
+        var lookupResponse = await _client.GetAsync($"/api/v1/integrations/quality-status/{targetProduct}/{targetObjectId}");
+        Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
+
+        var lookup = await lookupResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(lookup);
+        Assert.Equal(targetProduct, lookup!.TargetProduct);
+
+        var listResponse = await _client.GetAsync("/api/v1/integrations/quality-status");
+        listResponse.EnsureSuccessStatusCode();
+        var statuses = await listResponse.Content.ReadFromJsonAsync<List<AssurArrQualityStatusSnapshotResponse>>();
+        Assert.NotNull(statuses);
+        Assert.Contains(statuses!, item => item.TargetProduct == targetProduct);
+    }
 }

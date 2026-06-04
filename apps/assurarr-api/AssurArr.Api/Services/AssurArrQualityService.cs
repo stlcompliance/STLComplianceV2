@@ -1305,6 +1305,27 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToStatusSnapshotResponse).ToList();
     }
 
+    public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListQualityStatusAsync(CancellationToken cancellationToken = default) =>
+        await ListStatusSnapshotsAsync(cancellationToken);
+
+    public async Task<AssurArrQualityStatusSnapshotResponse?> GetQualityStatusAsync(string targetProduct, string targetObjectId, CancellationToken cancellationToken = default)
+    {
+        var normalizedTargetProduct = targetProduct.Trim();
+        var normalizedTargetObjectId = targetObjectId.Trim();
+
+        var entity = await db.QualityStatusSnapshots
+            .AsNoTracking()
+            .Where(x => x.TargetProduct == normalizedTargetProduct
+                && (x.TargetObjectRef == normalizedTargetObjectId || x.TargetObjectRef.EndsWith($":{normalizedTargetObjectId}", StringComparison.OrdinalIgnoreCase)))
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return entity is null ? null : ToStatusSnapshotResponse(entity);
+    }
+
+    public async Task<AssurArrQualityStatusSnapshotResponse> CreateQualityStatusCheckAsync(CreateAssurArrQualityStatusSnapshotRequest request, CancellationToken cancellationToken = default) =>
+        await CreateStatusSnapshotAsync(request, cancellationToken);
+
     public async Task<AssurArrQualityStatusSnapshotResponse> CreateStatusSnapshotAsync(CreateAssurArrQualityStatusSnapshotRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;

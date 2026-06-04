@@ -266,6 +266,39 @@
         }
       }
     },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationControlledDocument/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/controlled-documents/{controlledDocumentId}/distributions": {
       "get": {
         "tags": [
@@ -308,6 +341,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/obsolete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ObsoleteRecordArrIntegrationControlledDocument/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
               }
             }
           },
@@ -1747,6 +1813,39 @@
         }
       }
     },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationControlledDocument/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/controlled-documents/{controlledDocumentId}/distributions": {
       "get": {
         "tags": [
@@ -1789,6 +1888,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/obsolete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ObsoleteRecordArrIntegrationControlledDocument/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
               }
             }
           },
@@ -3145,6 +3277,39 @@
         }
       }
     },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/archive": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ArchiveRecordArrControlledDocument",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions": {
       "get": {
         "tags": [
@@ -3187,6 +3352,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateDocumentDistributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/obsolete": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ObsoleteRecordArrControlledDocument",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateControlledDocumentStatusRequest"
               }
             }
           },
@@ -4934,6 +5132,17 @@
         "type": "object",
         "properties": {
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateControlledDocumentStatusRequest": {
+        "required": [
+          "updatedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "updatedByPersonId": {
             "type": "string"
           }
         }

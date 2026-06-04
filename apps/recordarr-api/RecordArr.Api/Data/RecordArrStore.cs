@@ -1388,6 +1388,26 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrControlledDocumentResponse UpdateControlledDocumentStatus(string controlledDocumentId, string status)
+    {
+        lock (_gate)
+        {
+            var index = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
+            }
+
+            var updated = _controlledDocuments[index] with
+            {
+                Status = status,
+                NextReviewAt = status is "archived" or "obsolete" ? null : _controlledDocuments[index].NextReviewAt
+            };
+            _controlledDocuments[index] = updated;
+            return updated;
+        }
+    }
+
     public RecordArrDocumentReviewResponse RequestDocumentReview(string controlledDocumentId, string versionId, string reviewType, string requestedByPersonId, string reviewerPersonId, DateTimeOffset? dueAt)
     {
         lock (_gate)
