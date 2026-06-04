@@ -1093,6 +1093,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosureSummary = request.ClosureSummary;
         }
         await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.status_changed", entity.Status, cancellationToken);
+        if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.closed", entity.Status, cancellationToken);
+        }
         await db.SaveChangesAsync(cancellationToken);
         return ToNonconformanceResponse(entity);
     }
@@ -2255,7 +2259,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
         }
 
-        await AddTimelineAsync("containment", entity.Id, $"assurarr.containment.{entity.Status}", entity.Title, cancellationToken);
+        var eventType = entity.Status.ToLowerInvariant() switch
+        {
+            "assigned" => "assurarr.containment.assigned",
+            "completed" => "assurarr.containment.completed",
+            "verified" => "assurarr.containment.verified",
+            _ => "assurarr.containment.status_changed",
+        };
+
+        await AddTimelineAsync("containment", entity.Id, eventType, entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToContainmentActionResponse(entity);
     }
@@ -2331,7 +2343,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
         }
 
-        await AddTimelineAsync("disposition", entity.Id, $"assurarr.disposition.{entity.Status}", entity.Title, cancellationToken);
+        var eventType = entity.Status.ToLowerInvariant() switch
+        {
+            "approved" => "assurarr.disposition.approved",
+            "executed" => "assurarr.disposition.executed",
+            "rejected" => "assurarr.disposition.rejected",
+            _ => "assurarr.disposition.status_changed",
+        };
+
+        await AddTimelineAsync("disposition", entity.Id, eventType, entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToDispositionResponse(entity);
     }
