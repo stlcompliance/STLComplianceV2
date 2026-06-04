@@ -1856,7 +1856,18 @@ public sealed class RecordArrStore
             var current = _externalShares[index];
             if (current.Status is "revoked" or "expired")
             {
+                AddAccessLog(current.RecordId, "external_share.accessed", "denied", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, "external-share-status");
                 throw new InvalidOperationException($"External share {shareId} is not active.");
+            }
+
+            var accessPolicy = _accessPolicies.FirstOrDefault(policy =>
+                string.Equals(policy.RecordId, current.RecordId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(policy.Status, "active", StringComparison.OrdinalIgnoreCase));
+
+            if (accessPolicy is not null && !IsExternalShareActionAllowedByPolicy(accessPolicy, accessAction))
+            {
+                AddAccessLog(current.RecordId, "external_share.accessed", "denied", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, "access_policy_denied");
+                throw new InvalidOperationException($"External share {shareId} is denied by access policy.");
             }
 
             var nextStatus = current.Status == "created" ? "active" : current.Status;
@@ -1872,6 +1883,23 @@ public sealed class RecordArrStore
             AddAccessLog(current.RecordId, "external_share.accessed", "allowed", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, accessAction);
             return updated;
         }
+    }
+
+    private static bool IsExternalShareActionAllowedByPolicy(RecordArrAccessPolicyResponse policy, string accessAction)
+    {
+        if (string.IsNullOrWhiteSpace(accessAction))
+        {
+            return false;
+        }
+
+        return accessAction.Trim().ToLowerInvariant() switch
+        {
+            "view" => policy.ReadRules.Count > 0,
+            "download" => policy.DownloadRules.Count > 0,
+            "upload" => policy.WriteRules.Count > 0,
+            "sign" => policy.ShareRules.Count > 0 || policy.WriteRules.Count > 0,
+            _ => policy.ReadRules.Count > 0 || policy.WriteRules.Count > 0 || policy.DownloadRules.Count > 0 || policy.ShareRules.Count > 0 || policy.ExportRules.Count > 0 || policy.PurgeRules.Count > 0
+        };
     }
 
     public RecordArrRedactionResponse CreateRedaction(string sourceRecordId, string redactedRecordId, string redactionReason, string redactedByPersonId, IEnumerable<string> redactionRules)

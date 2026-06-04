@@ -2408,6 +2408,8 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const getSharePolicy = (recordId: string) =>
+    policiesQuery.data?.find((policy) => policy.recordId === recordId && policy.status === 'active') ?? null
 
   return (
     <div className="recordarr-page">
@@ -2561,6 +2563,9 @@ function AccessPage({ accessToken }: { accessToken: string }) {
                 <span className="recordarr-pill text-[0.7rem]">{share.status}</span>
               </div>
               <p className="mt-1">{share.recipientName} · {share.recipientEmail}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Policy: {getSharePolicy(share.recordId)?.policyType ?? 'none'}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: 'person-doc-controller' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Revoke
