@@ -10,6 +10,8 @@ import {
   History,
   ListChecks,
   Pencil,
+  MessageSquare,
+  Pin,
   Play,
   Route,
   ShieldCheck,
@@ -26,6 +28,7 @@ import {
   type DetailTone,
 } from '@stl/shared-ui'
 import { WorkOrderSupplyReadinessPanel } from '../../components/WorkOrderSupplyReadinessPanel'
+import { WorkOrderLaborEvidencePanel } from '../../components/WorkOrderLaborEvidencePanel'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 function humanize(value: string | null | undefined): string {
@@ -356,11 +359,14 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
 
   const tasks = s.workOrderTasksQuery?.data ?? []
   const labor = s.workOrderLaborQuery?.data ?? []
+  const comments = s.workOrderCommentsQuery?.data ?? []
+  const timeline = s.workOrderTimelineQuery?.data ?? []
   const evidence = s.workOrderEvidenceQuery?.data ?? []
   const partsDemand = s.workOrderPartsDemandQuery?.data ?? []
   const blockers = s.workOrderSupplyReadinessQuery?.data?.lines.flatMap((line) => line.blockers) ?? []
   const laborHours = labor.reduce((total, entry) => total + entry.hoursWorked, 0)
   const blocked = blockers.length > 0 || ['cancelled'].includes(order.status)
+  const commentReady = s.woCommentBody.trim().length > 0
 
   return (
     <ProfileDetailsLayout
@@ -382,6 +388,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
         { label: 'Tasks', value: tasks.length, hint: 'Execution checklist', icon: <ListChecks className="h-5 w-5" />, tone: 'neutral' },
         { label: 'Labor', value: `${laborHours.toFixed(1)}h`, hint: 'Logged technician time', icon: <Activity className="h-5 w-5" />, tone: 'info' },
         { label: 'Parts demand', value: partsDemand.length, hint: `${blockers.length} supply blockers`, icon: <AlertTriangle className="h-5 w-5" />, tone: blockers.length > 0 ? 'warn' : 'good' },
+        { label: 'Comments', value: comments.length, hint: 'Work order notes', icon: <MessageSquare className="h-5 w-5" />, tone: comments.length > 0 ? 'info' : 'neutral' },
       ]}
       tabs={['Overview', 'Tasks', 'Labor', 'Parts', 'Evidence', 'History']}
       snapshotTitle="Work order snapshot"
@@ -400,6 +407,79 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
       mainContent={(
         <div className="space-y-5">
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-white">Notes and comments</h3>
+              <span className="text-xs text-slate-500">{comments.length} entries</span>
+            </div>
+            <div className="mt-4 space-y-4">
+              {listPanel({
+                items: comments.slice(0, 5),
+                emptyText: 'No work order comments yet.',
+                render: (comment) => (
+                  <div key={comment.commentId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold text-white">{comment.body}</h4>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {humanize(comment.visibility)} · {formatDate(comment.createdAt)} · {comment.createdByPersonId ?? 'Unknown author'}
+                        </p>
+                      </div>
+                      {comment.pinned ? <Pin className="h-4 w-4 text-amber-300" /> : null}
+                    </div>
+                  </div>
+                ),
+              })}
+            </div>
+            <div className="mt-5 grid gap-3 rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+              <label className="block text-sm text-slate-300" htmlFor="work-order-comment-body">
+                Add a comment
+                <textarea
+                  id="work-order-comment-body"
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                  rows={3}
+                  value={s.woCommentBody}
+                  onChange={(event) => s.setWoCommentBody(event.target.value)}
+                  placeholder="Add execution notes, handoff context, or review feedback."
+                />
+              </label>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="block text-sm text-slate-300" htmlFor="work-order-comment-visibility">
+                  Visibility
+                  <select
+                    id="work-order-comment-visibility"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                    value={s.woCommentVisibility}
+                    onChange={(event) => s.setWoCommentVisibility(event.target.value)}
+                  >
+                    <option value="internal">Internal</option>
+                    <option value="supervisor_only">Supervisor only</option>
+                    <option value="auditor_visible">Auditor visible</option>
+                    <option value="vendor_visible">Vendor visible</option>
+                  </select>
+                </label>
+                <label className="flex items-end gap-2 text-sm text-slate-300 md:pt-6" htmlFor="work-order-comment-pinned">
+                  <input
+                    id="work-order-comment-pinned"
+                    type="checkbox"
+                    checked={s.woCommentPinned}
+                    onChange={(event) => s.setWoCommentPinned(event.target.checked)}
+                  />
+                  Pin comment
+                </label>
+                <div className="flex items-end md:justify-end">
+                  <button
+                    type="button"
+                    className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+                    disabled={!commentReady || s.addWorkOrderCommentMutation.isPending}
+                    onClick={() => s.addWorkOrderCommentMutation.mutate()}
+                  >
+                    {s.addWorkOrderCommentMutation.isPending ? 'Saving…' : 'Add comment'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <h3 className="text-lg font-bold text-white">Execution tasks</h3>
             <div className="mt-4">
               {listPanel({
@@ -415,6 +495,40 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
                 ),
               })}
             </div>
+          </section>
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Labor and evidence</h3>
+            <WorkOrderLaborEvidencePanel
+              workOrder={detail}
+              tasks={tasks}
+              labor={labor}
+              evidence={evidence}
+              canPerform={s.canExecuteInspections}
+              sessionPersonId={s.session.personId}
+              technicianRefs={s.technicianRefs}
+              taskTitle={s.woTaskTitle}
+              laborHours={s.woLaborHours}
+              laborTypeKey={s.woLaborTypeKey}
+              laborPersonId={s.woLaborPersonId}
+              selectedTaskLineId={s.woSelectedTaskLineId}
+              evidenceTypeKey={s.woEvidenceTypeKey}
+              evidenceNotes={s.woEvidenceNotes}
+              selectedFileName={s.woEvidenceFile?.name ?? null}
+              onTaskTitleChange={s.setWoTaskTitle}
+              onLaborHoursChange={s.setWoLaborHours}
+              onLaborTypeKeyChange={s.setWoLaborTypeKey}
+              onLaborPersonIdChange={s.setWoLaborPersonId}
+              onSelectedTaskLineIdChange={s.setWoSelectedTaskLineId}
+              onEvidenceTypeKeyChange={s.setWoEvidenceTypeKey}
+              onEvidenceNotesChange={s.setWoEvidenceNotes}
+              onSelectFile={s.setWoEvidenceFile}
+              onAddTask={() => s.addWorkOrderTaskMutation.mutate()}
+              onLogLabor={() => s.logWorkOrderLaborMutation.mutate()}
+              onUploadEvidence={() => s.uploadWorkOrderEvidenceMutation.mutate()}
+              isAddingTask={s.addWorkOrderTaskMutation.isPending}
+              isLoggingLabor={s.logWorkOrderLaborMutation.isPending}
+              isUploadingEvidence={s.uploadWorkOrderEvidenceMutation.isPending}
+            />
           </section>
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <h3 className="text-lg font-bold text-white">Supply readiness</h3>
@@ -433,6 +547,29 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
       allowedChecks={[order.status !== 'cancelled', blockers.length === 0, tasks.length > 0].filter(Boolean).length}
       blockedChecks={[order.status === 'cancelled', blockers.length > 0].filter(Boolean).length}
       railSections={[
+        {
+          title: 'Status timeline',
+          icon: <History className="h-5 w-5" />,
+          content: listPanel({
+            items: timeline.slice(0, 6),
+            emptyText: 'No timeline events recorded yet.',
+            render: (event) => (
+              <div key={event.timelineEventId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-white">{event.summary}</h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {humanize(event.eventType)} · {formatDate(event.occurredAt)}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {event.sourceProduct ? `${humanize(event.sourceProduct)}` : 'MaintainArr'}{event.actorPersonId ? ` · ${event.actorPersonId}` : ''}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ),
+          }),
+        },
         {
           title: 'Evidence',
           icon: <FileText className="h-5 w-5" />,

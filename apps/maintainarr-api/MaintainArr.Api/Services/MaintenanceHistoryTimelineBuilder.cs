@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
@@ -87,6 +88,46 @@ public static class MaintenanceHistoryTimelineBuilder
                 defect.Id.ToString(),
                 defect.InspectionRunId?.ToString()));
 
+            if (string.Equals(defect.Status, DefectStatuses.InRepair, StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"defect:{defect.Id}:in_repair",
+                    defect.AssetId,
+                    "defect",
+                    "defect_in_repair",
+                    $"Defect in repair: {defect.Title}",
+                    $"{defect.Severity} · {defect.Source} · {defect.Status}",
+                    defect.UpdatedAt,
+                    defect.ReportedByUserId,
+                    "defect",
+                    defect.Id.ToString(),
+                    defect.InspectionRunId?.ToString()));
+            }
+
+            var linkedWorkOrders = await db.WorkOrders
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.DefectId == defect.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var workOrder in linkedWorkOrders)
+            {
+                if (workOrder.StartedAt is DateTimeOffset startedAt)
+                {
+                    entries.Add(new MaintenanceHistoryEntryResponse(
+                        $"defect:{defect.Id}:in_repair:{workOrder.Id}",
+                        defect.AssetId,
+                        "defect",
+                        "defect_in_repair",
+                        $"Defect in repair: {defect.Title}",
+                        workOrder.WorkOrderNumber,
+                        startedAt,
+                        workOrder.CreatedByUserId,
+                        "work_order",
+                        workOrder.Id.ToString(),
+                        defect.InspectionRunId?.ToString()));
+                }
+            }
+
             if (defect.ResolvedAt is DateTimeOffset resolvedAt)
             {
                 entries.Add(new MaintenanceHistoryEntryResponse(
@@ -102,6 +143,45 @@ public static class MaintenanceHistoryTimelineBuilder
                     defect.Id.ToString(),
                     defect.InspectionRunId?.ToString()));
             }
+
+            if (string.Equals(defect.Status, DefectStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"defect:{defect.Id}:closed",
+                    defect.AssetId,
+                    "defect",
+                    "defect_closed",
+                    $"Defect closed: {defect.Title}",
+                    defect.Status,
+                    defect.UpdatedAt,
+                    defect.ReportedByUserId,
+                    "defect",
+                    defect.Id.ToString(),
+                    defect.InspectionRunId?.ToString()));
+            }
+        }
+
+        var components = await db.AssetComponents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.AssetId == assetId)
+            .OrderBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var component in components)
+        {
+            entries.Add(new MaintenanceHistoryEntryResponse(
+                $"component:{component.Id}:created",
+                assetId,
+                "component",
+                "component_created",
+                $"Component recorded: {FormatComponentKey(component.ComponentKey)}",
+                FormatComponentValue(component.ValueJson),
+                component.CreatedAt,
+                null,
+                "asset_component",
+                component.Id.ToString(),
+                null));
         }
 
         var workOrders = await db.WorkOrders
@@ -170,6 +250,25 @@ public static class MaintenanceHistoryTimelineBuilder
                     "work_order",
                     workOrder.Id.ToString(),
                     null));
+            }
+
+            var closeout = await db.WorkOrderCloseouts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id, cancellationToken);
+            if (closeout is not null && string.Equals(closeout.FinalStatus, "closed", StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"work_order:{workOrder.Id}:closed",
+                    workOrder.AssetId,
+                    "work_order",
+                    "work_order_closed",
+                    $"Work order closed: {workOrder.Title}",
+                    closeout.FinalStatus,
+                    closeout.ReturnToServiceAt ?? closeout.CreatedAt,
+                    workOrder.CreatedByUserId,
+                    "work_order_closeout",
+                    closeout.Id.ToString(),
+                    workOrder.DefectId?.ToString() ?? workOrder.PmScheduleId?.ToString()));
             }
         }
 
@@ -245,5 +344,44 @@ public static class MaintenanceHistoryTimelineBuilder
         }
 
         return entries;
+    }
+
+    private static string FormatComponentKey(string componentKey) =>
+        componentKey
+            .Replace('_', ' ')
+            .Replace('-', ' ')
+            .Replace("Make", "Make")
+            .Replace("Model", "Model")
+            .Trim()
+            .Replace("\t", " ");
+
+    private static string FormatComponentValue(string valueJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(valueJson);
+            return FormatJsonElement(document.RootElement);
+        }
+        catch
+        {
+            return string.IsNullOrWhiteSpace(valueJson) ? "Not recorded" : valueJson;
+        }
+    }
+
+    private static string FormatJsonElement(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? "Not recorded",
+            JsonValueKind.Number => element.ToString(),
+            JsonValueKind.True => "Yes",
+            JsonValueKind.False => "No",
+            JsonValueKind.Null or JsonValueKind.Undefined => "Not recorded",
+            JsonValueKind.Array => string.Join(", ", element.EnumerateArray().Select(FormatJsonElement).Where(x => !string.IsNullOrWhiteSpace(x))),
+            JsonValueKind.Object => string.Join(
+                "; ",
+                element.EnumerateObject().Select(prop => $"{FormatComponentKey(prop.Name)}: {FormatJsonElement(prop.Value)}")),
+            _ => element.ToString(),
+        };
     }
 }

@@ -259,6 +259,51 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Route_exception_ingest_uses_real_routarr_event_pipeline()
+    {
+        var assetId = await SeedActiveAssetAsync("ROUTARR-EX-001");
+        var sourceEventId = Guid.NewGuid();
+        var exceptionId = Guid.NewGuid();
+        var ingestRequest = new IngestRoutarrEventRequest(
+            PlatformSeeder.DemoTenantId,
+            sourceEventId,
+            "route.exception_created",
+            "route_exception",
+            exceptionId,
+            Guid.NewGuid(),
+            new RoutarrEventPayload(
+                PlatformSeeder.DemoTenantId,
+                "Route exception reported",
+                Guid.NewGuid(),
+                "TRIP-2001",
+                "driver-42",
+                "ROUTARR-EX-001",
+                "in_progress",
+                ExceptionId: exceptionId,
+                ExceptionKey: "EX-2001",
+                ExceptionCategory: "vehicle",
+                IncidentType: "equipment_abuse",
+                IncidentSeverity: "critical",
+                IncidentReviewStatus: "routed",
+                IncidentRoutedProduct: "maintainarr"));
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/integrations/route-exceptions", _routarrEventToken);
+        request.Content = JsonContent.Create(ingestRequest);
+
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var ingested = (await response.Content.ReadFromJsonAsync<IngestRoutarrEventResponse>())!;
+        Assert.Equal("processed", ingested.Outcome);
+        Assert.NotNull(ingested.DefectId);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var defect = await db.Defects.SingleAsync(x => x.Id == ingested.DefectId);
+        Assert.Equal(assetId, defect.AssetId);
+        Assert.Equal(DefectSources.RoutArr, defect.Source);
+    }
+
+    [Fact]
     public async Task Asset_telematics_ingestion_history_returns_asset_linked_routarr_events()
     {
         var assetTag = "TELEM-001";

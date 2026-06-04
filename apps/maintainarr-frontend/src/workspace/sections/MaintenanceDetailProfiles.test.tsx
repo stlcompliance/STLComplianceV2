@@ -1,6 +1,45 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
 
 import { WorkOrderProfile } from './MaintenanceDetailProfiles'
 
@@ -27,7 +66,29 @@ describe('WorkOrderProfile', () => {
         ],
       },
       workOrderDetailQuery: {
-        data: null,
+        data: {
+          workOrderId: 'wo-1',
+          workOrderNumber: 'WO-100',
+          assetId: 'asset-1',
+          assetTag: 'FLT-01',
+          assetName: 'Forklift 01',
+          defectId: 'def-1',
+          defectTitle: 'Brake issue',
+          pmScheduleId: null,
+          pmScheduleName: null,
+          title: 'Replace brake pads',
+          description: 'Replace pads and inspect calipers',
+          priority: 'high',
+          status: 'open',
+          source: 'defect',
+          assignedTechnicianPersonId: 'person-1',
+          createdByUserId: 'user-1',
+          createdAt: '2026-05-29T00:00:00Z',
+          updatedAt: '2026-05-29T00:00:00Z',
+          startedAt: null,
+          completedAt: null,
+          cancelledAt: null,
+        },
       },
       workOrderTasksQuery: {
         data: [
@@ -41,8 +102,64 @@ describe('WorkOrderProfile', () => {
       workOrderLaborQuery: {
         data: [],
       },
+      workOrderCommentsQuery: {
+        data: [],
+      },
+      workOrderTimelineQuery: {
+        data: [],
+      },
       workOrderEvidenceQuery: {
         data: [],
+      },
+      canExecuteInspections: true,
+      session: {
+        personId: 'person-1',
+      },
+      technicianRefs: [
+        {
+          personId: 'person-1',
+          displayName: 'Alex Tech',
+          activeStatus: 'active',
+          primarySite: 'Central Maintenance',
+        },
+      ],
+      woCommentBody: '',
+      woCommentVisibility: 'internal',
+      woCommentPinned: false,
+      setWoCommentBody: () => {},
+      setWoCommentVisibility: () => {},
+      setWoCommentPinned: () => {},
+      addWorkOrderCommentMutation: {
+        isPending: false,
+        mutate: () => {},
+      },
+      woTaskTitle: '',
+      setWoTaskTitle: () => {},
+      woLaborHours: '1',
+      setWoLaborHours: () => {},
+      woLaborTypeKey: 'regular',
+      setWoLaborTypeKey: () => {},
+      woLaborPersonId: 'person-1',
+      setWoLaborPersonId: () => {},
+      woSelectedTaskLineId: '',
+      setWoSelectedTaskLineId: () => {},
+      woEvidenceTypeKey: 'completion_photo',
+      setWoEvidenceTypeKey: () => {},
+      woEvidenceNotes: '',
+      setWoEvidenceNotes: () => {},
+      woEvidenceFile: null,
+      setWoEvidenceFile: () => {},
+      addWorkOrderTaskMutation: {
+        isPending: false,
+        mutate: () => {},
+      },
+      logWorkOrderLaborMutation: {
+        isPending: false,
+        mutate: () => {},
+      },
+      uploadWorkOrderEvidenceMutation: {
+        isPending: false,
+        mutate: () => {},
       },
       workOrderPartsDemandQuery: {
         data: [
@@ -98,6 +215,7 @@ describe('WorkOrderProfile', () => {
     )
 
     expect(screen.getByText('Supply readiness')).toBeInTheDocument()
+    expect(screen.getByText('Labor and evidence')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-supply-readiness-panel')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-supply-readiness-overall')).toHaveTextContent('Supply blocked')
   })

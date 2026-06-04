@@ -3,6 +3,7 @@ using System;
 using MaintainArr.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MaintainArr.Api.Migrations
 {
     [DbContext(typeof(MaintainArrDbContext))]
-    partial class MaintainArrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260604072954_AddWorkOrderCommentsAndTimeline")]
+    partial class AddWorkOrderCommentsAndTimeline
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -550,152 +553,6 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("maintainarr_asset_external_mappings", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetInstalledComponent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ComponentNumber")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ComponentType")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Condition")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DefectRefsJson")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("DocumentRefsJson")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<int?>("ExpectedLifeCycles")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("ExpectedLifeHours")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("ExpectedLifeMiles")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTimeOffset?>("InstallDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InstalledByPersonId")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<decimal?>("InstalledMeterReading")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("InstalledPartUsageRef")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("Make")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("Model")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<Guid>("ParentAssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ParentComponentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PartNumberSnapshot")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("RemovalReason")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("RemovedByPersonId")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<DateTimeOffset?>("RemovedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("RemovedMeterReading")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("ReplacementPartRefsJson")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("SerialNumber")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("WarrantyEndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("WarrantyStartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("WorkOrderRefsJson")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentAssetId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "ParentAssetId");
-
-                    b.HasIndex("TenantId", "ParentComponentId");
-
-                    b.HasIndex("TenantId", "ParentAssetId", "ComponentNumber")
-                        .IsUnique()
-                        .HasDatabaseName("IX_maintainarr_asset_installed_components_TenantId_ParentAsse~1");
-
-                    b.ToTable("maintainarr_asset_installed_components", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetLocationHistory", b =>
@@ -4445,17 +4302,6 @@ namespace MaintainArr.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("AssetType");
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetInstalledComponent", b =>
-                {
-                    b.HasOne("MaintainArr.Api.Entities.Asset", "ParentAsset")
-                        .WithMany()
-                        .HasForeignKey("ParentAssetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ParentAsset");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetMeter", b =>

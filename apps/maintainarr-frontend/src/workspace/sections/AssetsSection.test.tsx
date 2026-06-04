@@ -63,6 +63,7 @@ const state = {
   assetReadinessDetailQuery: { data: null, isLoading: false },
   assetReadinessHistoryQuery: { data: null, isLoading: false },
   assetFieldContextQuery: { data: null, isLoading: false },
+  assetInstalledComponentsQuery: { data: [], isLoading: false },
 } as unknown as MaintainArrWorkspaceState
 
 describe('AssetsSection', () => {

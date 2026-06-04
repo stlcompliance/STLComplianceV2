@@ -21,6 +21,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();
         app.MapMaintainArrAssetEndpoints();
+        app.MapMaintainArrAssetComponentEndpoints();
         app.MapMaintainArrCatalogEndpoints();
         app.MapMaintainArrFieldsetEndpoints();
         app.MapMaintainArrReferenceEndpoints();
@@ -33,6 +34,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrDocumentEndpoints();
         app.MapMaintainArrWorkOrderEndpoints();
         app.MapMaintainArrTechnicianRefEndpoints();
+        app.MapMaintainArrWorkOrderDiscussionEndpoints();
         app.MapMaintainArrWorkOrderLaborEvidenceEndpoints();
         app.MapMaintainArrWorkOrderPartsDemandEndpoints();
         app.MapMaintainArrWorkOrderSupplyReadinessEndpoints();

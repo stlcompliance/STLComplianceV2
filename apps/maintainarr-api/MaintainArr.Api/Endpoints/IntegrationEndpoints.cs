@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Services;
+using Microsoft.Extensions.DependencyInjection;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
@@ -108,188 +109,405 @@ public static class IntegrationEndpoints
             .WithName($"AssetReadinessIntegration{nameSuffix}")
             .ExcludeFromDescription();
 
-            integrations.MapPost("/asset-readiness-checks", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/asset-readiness-checks", async (
+                CreateAssetReadinessCheckRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetReadinessCheckService service,
+                CancellationToken cancellationToken) =>
             {
-                var tenantId = ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationAssetReadinessCheckResponse(
-                    $"arc-{Guid.NewGuid():N}"[..13],
-                    ReadOptionalString(request, "assetId") ?? "asset-001",
-                    ReadOptionalString(request, "sourceProduct") ?? "maintainarr",
-                    ReadOptionalString(request, "requestedBy") ?? "system",
-                    ReadOptionalString(request, "status") ?? "ready",
-                    tenantId);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var response = await service.CreateAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
                 return Results.Created($"/api/v1/integrations/asset-readiness-checks/{response.AssetReadinessCheckId}", response);
             })
             .WithName($"CheckMaintainArrAssetReadiness{nameSuffix}");
 
-            integrations.MapGet("/assets", (HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/assets", async (
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetService assetService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var assets = CreateMaintainArrIntegrationAssets();
-                return Results.Ok(new MaintainArrIntegrationListResponse<MaintainArrIntegrationAssetResponse>(assets, assets.Length));
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var assets = await assetService.ListAsync(token.TenantScope ?? Guid.Empty, cancellationToken);
+                return Results.Ok(new MaintainArrIntegrationListResponse<AssetResponse>(assets, assets.Count));
             })
             .WithName($"ListMaintainArrIntegrationAssets{nameSuffix}");
 
-            integrations.MapGet("/assets/{assetId}", (string assetId, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/assets/{assetId}", async (
+                string assetId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetService assetService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var asset = ResolveIntegrationAsset(assetId);
-                return asset is null ? Results.NotFound() : Results.Ok(asset);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(assetId, out var parsedAssetId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "assetId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await assetService.GetAsync(token.TenantScope ?? Guid.Empty, parsedAssetId, cancellationToken));
             })
             .WithName($"GetMaintainArrIntegrationAsset{nameSuffix}");
 
-            integrations.MapGet("/assets/{assetId}/readiness", (string assetId, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/assets/{assetId}/readiness", async (
+                string assetId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetReadinessService assetReadinessService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var readiness = ResolveIntegrationAssetReadiness(assetId);
-                return readiness is null ? Results.NotFound() : Results.Ok(readiness);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(assetId, out var parsedAssetId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "assetId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await assetReadinessService.GetAsync(token.TenantScope ?? Guid.Empty, parsedAssetId, cancellationToken));
             })
             .WithName($"GetMaintainArrIntegrationAssetReadiness{nameSuffix}");
 
-            integrations.MapGet("/work-orders/{workOrderId}", (string workOrderId, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/work-orders/{workOrderId}", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var workOrder = ResolveIntegrationWorkOrder(workOrderId);
-                return workOrder is null ? Results.NotFound() : Results.Ok(workOrder);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.GetAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedWorkOrderId,
+                    cancellationToken));
             })
             .WithName($"GetMaintainArrIntegrationWorkOrder{nameSuffix}");
 
-            integrations.MapPost("/work-orders", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/work-orders", async (
+                CreateWorkOrderRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationWorkOrderResponse(
-                    $"wo-{Guid.NewGuid():N}"[..13],
-                    ReadOptionalString(request, "workOrderNumber") ?? "WO-001",
-                    ReadOptionalString(request, "status") ?? "requested",
-                    ReadOptionalString(request, "sourceProduct") ?? "maintainarr",
-                    ReadOptionalString(request, "sourceObjectRef") ?? "obj-001");
-                return Results.Created($"/api/v1/integrations/work-orders/{response.WorkOrderId}", response);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var created = await workOrderService.CreateAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"/api/v1/integrations/work-orders/{created.WorkOrderId}", created);
             })
             .WithName($"CreateMaintainArrIntegrationWorkOrder{nameSuffix}");
 
-            integrations.MapPost("/work-orders/{workOrderId}/status-updates", (string workOrderId, JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/work-orders/{workOrderId}/status-updates", async (
+                string workOrderId,
+                UpdateWorkOrderStatusRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var status = ReadOptionalString(request, "status") ?? "updated";
-                var response = new MaintainArrIntegrationWorkOrderStatusUpdateResponse(workOrderId, status, TimestampUtc());
-                return Results.Ok(response);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                var updated = await workOrderService.UpdateStatusAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    request,
+                    canCloseAny: true,
+                    token.TokenId.ToString("D"),
+                    cancellationToken);
+                return Results.Ok(updated);
             })
             .WithName($"UpdateMaintainArrIntegrationWorkOrderStatus{nameSuffix}");
 
-            integrations.MapPost("/work-orders/{workOrderId}/blockers", (string workOrderId, JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/work-orders/{workOrderId}/blockers", async (
+                string workOrderId,
+                CreateWorkOrderBlockerRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var blocker = new MaintainArrIntegrationWorkOrderBlockerResponse(
-                    $"wb-{Guid.NewGuid():N}"[..13],
-                    workOrderId,
-                    ReadOptionalString(request, "blockerType") ?? "safety",
-                    ReadOptionalString(request, "status") ?? "active",
-                    TimestampUtc());
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                var blocker = await workOrderService.CreateBlockerAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    request,
+                    cancellationToken);
                 return Results.Ok(blocker);
             })
             .WithName($"CreateMaintainArrIntegrationWorkOrderBlocker{nameSuffix}");
 
-            integrations.MapPost("/work-orders/{workOrderId}/closeout", (string workOrderId, JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/work-orders/{workOrderId}/closeout", async (
+                string workOrderId,
+                CreateWorkOrderCloseoutRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var reason = ReadOptionalString(request, "reason") ?? "completed";
-                return Results.Ok(new MaintainArrIntegrationWorkOrderCloseoutResponse(workOrderId, reason, TimestampUtc()));
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                var closeout = await workOrderService.CreateCloseoutAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(closeout);
             })
             .WithName($"CloseMaintainArrIntegrationWorkOrder{nameSuffix}");
 
-            integrations.MapPost("/defects", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/defects", async (
+                CreateDefectRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                DefectService defectService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationDefectResponse(
-                    $"def-{Guid.NewGuid():N}"[..13],
-                    ReadOptionalString(request, "assetId") ?? "asset-001",
-                    ReadOptionalString(request, "severity") ?? "medium",
-                    ReadOptionalString(request, "status") ?? "open",
-                    TimestampUtc());
-                return Results.Created($"/api/v1/integrations/defects/{response.DefectId}", response);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var created = await defectService.CreateManualAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"/api/v1/integrations/defects/{created.DefectId}", created);
             })
             .WithName($"CreateMaintainArrIntegrationDefect{nameSuffix}");
 
-            integrations.MapGet("/defects/{defectId}", (string defectId, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/defects/{defectId}", async (
+                string defectId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                DefectService defectService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var defect = ResolveIntegrationDefect(defectId);
-                return defect is null ? Results.NotFound() : Results.Ok(defect);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(defectId, out var parsedDefectId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "defectId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await defectService.GetAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedDefectId,
+                    cancellationToken));
             })
             .WithName($"GetMaintainArrIntegrationDefect{nameSuffix}");
 
-            integrations.MapPost("/defects/{defectId}/status-updates", (string defectId, JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/defects/{defectId}/status-updates", async (
+                string defectId,
+                UpdateDefectStatusRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                DefectService defectService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var status = ReadOptionalString(request, "status") ?? "investigating";
-                return Results.Ok(new MaintainArrIntegrationDefectStatusUpdateResponse(defectId, status, TimestampUtc()));
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(defectId, out var parsedDefectId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "defectId must be a valid identifier."
+                    });
+                }
+
+                var updated = await defectService.UpdateStatusAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedDefectId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(updated);
             })
             .WithName($"UpdateMaintainArrIntegrationDefectStatus{nameSuffix}");
 
-            integrations.MapPost("/inspections", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/inspections", async (
+                StartInspectionRunRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                InspectionRunService inspectionRunService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationInspectionResponse(
-                    $"ins-{Guid.NewGuid():N}"[..13],
-                    ReadOptionalString(request, "assetId") ?? "asset-001",
-                    ReadOptionalString(request, "status") ?? "scheduled",
-                    ReadOptionalString(request, "inspectionType") ?? "routine",
-                    TimestampUtc());
-                return Results.Created($"/api/v1/integrations/inspections/{response.InspectionId}", response);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var created = await inspectionRunService.StartAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"/api/v1/integrations/inspections/{created.InspectionRunId}", created);
             })
             .WithName($"CreateMaintainArrIntegrationInspection{nameSuffix}");
 
-            integrations.MapGet("/inspections/{inspectionId}", (string inspectionId, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapGet("/inspections/{inspectionId}", async (
+                string inspectionId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                InspectionRunService inspectionRunService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var inspection = ResolveIntegrationInspection(inspectionId);
-                return inspection is null ? Results.NotFound() : Results.Ok(inspection);
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(inspectionId, out var parsedInspectionId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "inspectionId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await inspectionRunService.GetAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedInspectionId,
+                    cancellationToken));
             })
             .WithName($"GetMaintainArrIntegrationInspection{nameSuffix}");
 
-            integrations.MapPost("/inspections/{inspectionId}/answers", (string inspectionId, JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/inspections/{inspectionId}/answers", async (
+                string inspectionId,
+                SubmitInspectionRunAnswersRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                InspectionRunService inspectionRunService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                return Results.Ok(new MaintainArrIntegrationInspectionAnswerResponse(
-                    inspectionId,
-                    ReadOptionalString(request, "answer") ?? "acknowledged",
-                    TimestampUtc()));
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(inspectionId, out var parsedInspectionId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "inspectionId must be a valid identifier."
+                    });
+                }
+
+                var updated = await inspectionRunService.SubmitAnswersAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedInspectionId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(updated);
             })
             .WithName($"AnswerMaintainArrIntegrationInspection{nameSuffix}");
 
-            integrations.MapPost("/route-exceptions", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/route-exceptions", async (
+                IngestRoutarrEventRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                RoutarrEventIngestionService service,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationRouteExceptionResponse(
-                    $"re-{Guid.NewGuid():N}"[..14],
-                    ReadOptionalString(request, "routeId") ?? "route-001",
-                    ReadOptionalString(request, "status") ?? "reported",
-                    TimestampUtc());
-                return Results.Ok(response);
+                tokenValidator.ValidateOrThrow(
+                    ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "routarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = request.TenantId,
+                        RequiredActionScope = RoutarrEventIngestActionScope
+                    });
+
+                var result = await service.IngestAsync(request, cancellationToken);
+                return Results.Ok(result);
             })
             .WithName($"ReportMaintainArrIntegrationRouteException{nameSuffix}");
 
-            integrations.MapPost("/quality-holds", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/quality-holds", async (
+                CreateAssetQualityHoldRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetQualityHoldService assetQualityHoldService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var hold = new MaintainArrIntegrationQualityHoldResponse(
-                    $"qh-{Guid.NewGuid():N}"[..13],
-                    ReadOptionalString(request, "assetId") ?? "asset-001",
-                    ReadOptionalString(request, "holdType") ?? "quarantine",
-                    ReadOptionalString(request, "status") ?? "active",
-                    TimestampUtc());
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var hold = await assetQualityHoldService.CreateAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
                 return Results.Ok(hold);
             })
             .WithName($"CreateMaintainArrIntegrationQualityHold{nameSuffix}");
 
-            integrations.MapPost("/quality-hold-releases", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/quality-hold-releases", async (
+                ReleaseAssetQualityHoldRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                AssetQualityHoldService assetQualityHoldService,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var holdId = ReadOptionalString(request, "holdId") ?? "qh-001";
-                return Results.Ok(new MaintainArrIntegrationQualityHoldReleaseResponse(
-                    holdId,
-                    "released",
-                    TimestampUtc()));
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (request.HoldId == Guid.Empty)
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "holdId must be a valid identifier."
+                    });
+                }
+
+                var released = await assetQualityHoldService.ReleaseAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request.HoldId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(released);
             })
             .WithName($"ReleaseMaintainArrIntegrationQualityHold{nameSuffix}");
 
@@ -362,36 +580,58 @@ public static class IntegrationEndpoints
             .WithName($"IngestStaffarrPersonSync{nameSuffix}")
             .ExcludeFromDescription();
 
-            integrations.MapPost("/part-demand-status-updates", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/part-demand-status-updates", async (
+                IngestSupplyarrDemandStatusRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderPartsDemandStatusIngestionService service,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationPartDemandStatusUpdateResponse(
-                    ReadOptionalString(request, "workOrderDemandId") ?? "dmd-001",
-                    ReadOptionalString(request, "status") ?? "reserved",
-                    TimestampUtc());
-                return Results.Ok(response);
+                tokenValidator.ValidateOrThrow(
+                    ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "supplyarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = request.TenantId,
+                        RequiredActionScope = SupplyarrDemandStatusIngestActionScope
+                    });
+
+                var result = await service.IngestAsync(request, cancellationToken);
+                return Results.Ok(result);
             })
             .WithName($"IngestMaintainArrPartDemandStatusUpdate{nameSuffix}");
 
-            integrations.MapPost("/part-issue-events", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/part-issue-events", async (
+                IngestPartIssueEventRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderPartsDemandService service,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationPartIssueEventResponse(
-                    ReadOptionalString(request, "workOrderId") ?? "wo-001",
-                    ReadOptionalString(request, "issueType") ?? "issued",
-                    ReadOptionalString(request, "itemId") ?? "item-001",
-                    TimestampUtc());
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var response = await service.RecordIssueAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
                 return Results.Ok(response);
             })
             .WithName($"CreateMaintainArrPartIssueEvent{nameSuffix}");
 
-            integrations.MapPost("/supplier-work-status", (JsonElement request, HttpContext context, StlServiceTokenValidator tokenValidator) =>
+            integrations.MapPost("/supplier-work-status", async (
+                IngestSupplierWorkStatusRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                MaintenanceVendorWorkService service,
+                CancellationToken cancellationToken) =>
             {
-                ValidateIntegrationToken(context, tokenValidator);
-                var response = new MaintainArrIntegrationSupplierWorkStatusResponse(
-                    ReadOptionalString(request, "workOrderId") ?? "wo-001",
-                    ReadOptionalString(request, "status") ?? "in_progress",
-                    TimestampUtc());
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var response = await service.UpsertAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
                 return Results.Ok(response);
             })
             .WithName($"ReportMaintainArrSupplierWorkStatus{nameSuffix}");
@@ -402,6 +642,13 @@ public static class IntegrationEndpoints
     }
 
     private static Guid ValidateIntegrationToken(HttpContext context, StlServiceTokenValidator tokenValidator)
+    {
+        return ValidateIntegrationTokenPreview(context, tokenValidator).TenantScope ?? Guid.Empty;
+    }
+
+    private static ValidatedServiceToken ValidateIntegrationTokenPreview(
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator)
     {
         var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString());
         var preview = tokenValidator.TryValidate(bearer)
@@ -418,8 +665,7 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "maintainarr",
                 TenantId = preview.TenantScope ?? Guid.Empty
             });
-
-        return preview.TenantScope ?? Guid.Empty;
+        return preview;
     }
 
     private static void ValidateAssetReadinessServiceToken(
@@ -464,24 +710,6 @@ public static class IntegrationEndpoints
             ? property.GetString()
             : null;
     }
-
-    private static MaintainArrIntegrationAssetResponse[] CreateMaintainArrIntegrationAssets() =>
-        new[]
-        {
-            new MaintainArrIntegrationAssetResponse("asset-001", "Pump-AX-01", "active", "maintenance-bay-01"),
-            new MaintainArrIntegrationAssetResponse("asset-002", "Compressor-BX-77", "ready", "maintenance-bay-02")
-        };
-
-    private static MaintainArrIntegrationAssetResponse? ResolveIntegrationAsset(string id) =>
-        CreateMaintainArrIntegrationAssets().SingleOrDefault(asset =>
-            string.Equals(asset.AssetId, id, StringComparison.OrdinalIgnoreCase));
-
-    private static MaintainArrIntegrationAssetReadinessResponse? ResolveIntegrationAssetReadiness(string assetId) =>
-        new MaintainArrIntegrationAssetReadinessResponse(
-            $"ar-{assetId}",
-            assetId,
-            "ready",
-            Array.Empty<string>());
 
     private static MaintainArrIntegrationWorkOrderResponse[] CreateMaintainArrIntegrationWorkOrders() =>
         new[]

@@ -321,4 +321,141 @@ public sealed class WorkOrderPartsDemandService(
 
         return normalized;
     }
+
+    public async Task<IngestPartIssueEventResponse> RecordIssueAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        IngestPartIssueEventRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.TenantId != tenantId)
+        {
+            throw new StlApiException(
+                "part_issue.tenant_mismatch",
+                "Request tenant does not match the integration tenant.",
+                400);
+        }
+
+        if (request.WorkOrderId == Guid.Empty)
+        {
+            throw new StlApiException("part_issue.validation", "Work order id is required.", 400);
+        }
+
+        if (request.Quantity <= 0)
+        {
+            throw new StlApiException("part_issue.validation", "Quantity must be greater than zero.", 400);
+        }
+
+        var workOrder = await db.WorkOrders
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == request.WorkOrderId, cancellationToken)
+            ?? throw new StlApiException("work_orders.not_found", "Work order was not found.", 404);
+
+        var candidateLines = await db.WorkOrderPartsDemandLines
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == request.WorkOrderId)
+            .OrderBy(x => x.LineNumber)
+            .ToListAsync(cancellationToken);
+
+        if (candidateLines.Count == 0)
+        {
+            throw new StlApiException(
+                "part_issue.no_demand_lines",
+                "No parts demand lines exist for this work order.",
+                404);
+        }
+
+        var normalizedPartNumber = NormalizeOptionalPartNumber(request.PartNumber);
+        var matchingLines = candidateLines
+            .Where(line =>
+                (request.SupplyarrPartId.HasValue && line.SupplyarrPartId == request.SupplyarrPartId)
+                || (!string.IsNullOrWhiteSpace(normalizedPartNumber)
+                    && string.Equals(line.PartNumber, normalizedPartNumber, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        if (matchingLines.Count == 0)
+        {
+            throw new StlApiException(
+                "part_issue.line_not_found",
+                "No matching demand lines were found for the issue event.",
+                404);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var remaining = request.Quantity;
+        var updatedCount = 0;
+        foreach (var line in matchingLines)
+        {
+            if (remaining <= 0)
+            {
+                break;
+            }
+
+            var outstanding = Math.Max(0m, line.QuantityRequested - line.QuantityReceived);
+            if (outstanding <= 0)
+            {
+                continue;
+            }
+
+            var issued = Math.Min(outstanding, remaining);
+            line.QuantityReceived += issued;
+            line.LastProcurementStatusAt = request.OccurredAt;
+            line.ProcurementStatusMessage = request.Message?.Trim() ?? "Issue posted.";
+            line.ProcurementStatus = line.QuantityReceived >= line.QuantityRequested
+                ? WorkOrderPartsDemandProcurementStatuses.ReceivedComplete
+                : WorkOrderPartsDemandProcurementStatuses.PartiallyReceived;
+            line.UpdatedAt = now;
+            updatedCount++;
+            remaining -= issued;
+        }
+
+        if (updatedCount == 0)
+        {
+            throw new StlApiException(
+                "part_issue.no_outstanding_quantity",
+                "The matching demand lines are already fully issued.",
+                409);
+        }
+
+        workOrder.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var issueId = Guid.NewGuid();
+        await audit.WriteAsync(
+            "work_order_parts_demand.issue_posted",
+            tenantId,
+            actorUserId,
+            "work_order",
+            workOrder.Id.ToString(),
+            issueId.ToString(),
+            cancellationToken: cancellationToken);
+
+        return new IngestPartIssueEventResponse(
+            issueId,
+            workOrder.Id,
+            updatedCount,
+            request.Quantity - Math.Max(0m, remaining),
+            matchingLines.All(line => line.QuantityReceived >= line.QuantityRequested)
+                ? WorkOrderPartsDemandProcurementStatuses.ReceivedComplete
+                : WorkOrderPartsDemandProcurementStatuses.PartiallyReceived,
+            request.OccurredAt,
+            false);
+    }
+
+    private static string? NormalizeOptionalPartNumber(string? partNumber)
+    {
+        if (string.IsNullOrWhiteSpace(partNumber))
+        {
+            return null;
+        }
+
+        var normalized = partNumber.Trim();
+        if (normalized.Length > 128)
+        {
+            throw new StlApiException(
+                "part_issue.part_number_too_long",
+                "Part number must be 128 characters or fewer.",
+                400);
+        }
+
+        return normalized;
+    }
 }

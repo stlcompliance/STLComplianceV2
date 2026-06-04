@@ -545,6 +545,36 @@ public sealed class AssetReadinessService(
                 workOrder.DefectId?.ToString() ?? workOrder.PmScheduleId?.ToString()));
         }
 
+        foreach (var blocker in context.WorkOrderBlockersByAsset.GetValueOrDefault(assetId, []))
+        {
+            if (!string.Equals(blocker.Status, "active", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            blockers.Add(new AssetReadinessBlockerResponse(
+                blocker.BlockerType,
+                blocker.Title,
+                "work_order_blocker",
+                blocker.BlockerId.ToString(),
+                blocker.WorkOrderId.ToString()));
+        }
+
+        foreach (var hold in context.AssetQualityHoldsByAsset.GetValueOrDefault(assetId, []))
+        {
+            if (!string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            blockers.Add(new AssetReadinessBlockerResponse(
+                "quality_hold",
+                hold.Title,
+                "asset_quality_hold",
+                hold.Id.ToString(),
+                hold.SourceObjectRef));
+        }
+
         foreach (var schedule in context.PmSchedulesByAsset.GetValueOrDefault(assetId, []))
         {
             if (!AssetReadinessRules.IsActivePmScheduleStatus(schedule.Status)
@@ -583,6 +613,18 @@ public sealed class AssetReadinessService(
 
     private static int BlockerSortOrder(string blockerType) => blockerType switch
     {
+        "parts" => 0,
+        "labor" => 0,
+        "qualification" => 0,
+        "safety" => 0,
+        "compliance" => 0,
+        "approval" => 0,
+        "vendor" => 0,
+        "quality_hold" => 0,
+        "asset_unavailable" => 0,
+        "location_unavailable" => 0,
+        "system" => 0,
+        "document" => 1,
         "compliancecore_rule" => 0,
         "critical_defect" => 0,
         "high_defect" => 1,
@@ -609,6 +651,37 @@ public sealed class AssetReadinessService(
             .ToListAsync(cancellationToken);
 
         var workOrders = await db.WorkOrders
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && assetIds.Contains(x.AssetId))
+            .ToListAsync(cancellationToken);
+
+        var workOrderBlockers = await (
+            from blocker in db.WorkOrderBlockers.AsNoTracking()
+            join workOrder in db.WorkOrders.AsNoTracking()
+                on blocker.WorkOrderId equals workOrder.Id
+            where blocker.TenantId == tenantId
+                && workOrder.TenantId == tenantId
+                && assetIds.Contains(workOrder.AssetId)
+            select new WorkOrderBlockerSnapshot(
+                workOrder.AssetId,
+                blocker.Id,
+                blocker.WorkOrderId,
+                blocker.BlockerType,
+                blocker.SourceProduct,
+                blocker.SourceObjectRef,
+                blocker.Title,
+                blocker.Description,
+                blocker.Severity,
+                blocker.Status,
+                blocker.RequiredAction,
+                blocker.CreatedAt,
+                blocker.CreatedByPersonId,
+                blocker.ResolvedAt,
+                blocker.ResolvedByPersonId,
+                blocker.OverrideReason))
+            .ToListAsync(cancellationToken);
+
+        var qualityHolds = await db.AssetQualityHolds
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && assetIds.Contains(x.AssetId))
             .ToListAsync(cancellationToken);
@@ -644,6 +717,8 @@ public sealed class AssetReadinessService(
         return new AssetReadinessContext(
             defects.GroupBy(x => x.AssetId).ToDictionary(group => group.Key, group => group.ToList()),
             workOrders.GroupBy(x => x.AssetId).ToDictionary(group => group.Key, group => group.ToList()),
+            workOrderBlockers.GroupBy(x => x.AssetId).ToDictionary(group => group.Key, group => group.ToList()),
+            qualityHolds.GroupBy(x => x.AssetId).ToDictionary(group => group.Key, group => group.ToList()),
             pmSchedules.GroupBy(x => x.AssetId).ToDictionary(group => group.Key, group => group.ToList()),
             latestFailedInspectionByAsset);
     }
@@ -651,8 +726,28 @@ public sealed class AssetReadinessService(
     private sealed record AssetReadinessContext(
         IReadOnlyDictionary<Guid, List<Defect>> DefectsByAsset,
         IReadOnlyDictionary<Guid, List<WorkOrder>> WorkOrdersByAsset,
+        IReadOnlyDictionary<Guid, List<WorkOrderBlockerSnapshot>> WorkOrderBlockersByAsset,
+        IReadOnlyDictionary<Guid, List<AssetQualityHold>> AssetQualityHoldsByAsset,
         IReadOnlyDictionary<Guid, List<PmSchedule>> PmSchedulesByAsset,
         IReadOnlyDictionary<Guid, FailedInspectionSnapshot> LatestFailedInspectionByAsset);
+
+    private sealed record WorkOrderBlockerSnapshot(
+        Guid AssetId,
+        Guid BlockerId,
+        Guid WorkOrderId,
+        string BlockerType,
+        string SourceProduct,
+        string? SourceObjectRef,
+        string Title,
+        string Description,
+        string Severity,
+        string Status,
+        string? RequiredAction,
+        DateTimeOffset CreatedAt,
+        string? CreatedByPersonId,
+        DateTimeOffset? ResolvedAt,
+        string? ResolvedByPersonId,
+        string? OverrideReason);
 
     private sealed record FailedInspectionSnapshot(
         Guid AssetId,

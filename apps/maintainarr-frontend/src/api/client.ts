@@ -6,6 +6,7 @@ import type {
   CreateAssetRequest,
   AssetUpsertV1Request,
   AssetFieldContextResponse,
+  AssetInstalledComponentResponse,
   CatalogResponse,
   FieldsetResponse,
   CreateAssetTypeRequest,
@@ -100,7 +101,10 @@ import type {
   WorkOrderLaborEntryResponse,
   CreateWorkOrderLaborEntryRequest,
   WorkOrderEvidenceResponse,
+  WorkOrderCommentResponse,
+  WorkOrderTimelineEventResponse,
   CreateWorkOrderEvidenceRequest,
+  CreateWorkOrderCommentRequest,
   WorkOrderPartsDemandLineResponse,
   CreateWorkOrderPartsDemandLineRequest,
   PublishWorkOrderPartsDemandRequest,
@@ -314,6 +318,19 @@ export async function getAssetFieldContext(accessToken: string, assetId: string)
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetFieldContextResponse>(response, 'Failed to load asset field context')
+}
+
+export async function getAssetInstalledComponents(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetInstalledComponentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/components`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetInstalledComponentResponse[]>(
+    response,
+    'Failed to load asset components',
+  )
 }
 
 export async function getAssetCreateFieldset(accessToken: string): Promise<FieldsetResponse> {
@@ -900,6 +917,39 @@ export async function uploadWorkOrderEvidence(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<WorkOrderEvidenceResponse>(response, 'Failed to upload work order evidence')
+}
+
+export async function getWorkOrderComments(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderCommentResponse[]> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/comments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderCommentResponse[]>(response, 'Failed to load work order comments')
+}
+
+export async function createWorkOrderComment(
+  accessToken: string,
+  workOrderId: string,
+  payload: CreateWorkOrderCommentRequest,
+): Promise<WorkOrderCommentResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/comments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<WorkOrderCommentResponse>(response, 'Failed to create work order comment')
+}
+
+export async function getWorkOrderTimeline(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderTimelineEventResponse[]> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/timeline`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderTimelineEventResponse[]>(response, 'Failed to load work order timeline')
 }
 
 export async function getWorkOrderPartsDemand(

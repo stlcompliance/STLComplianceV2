@@ -177,6 +177,41 @@ export interface AssetFieldContextResponse {
   fields: AssetFieldContextValueResponse[]
 }
 
+export interface AssetInstalledComponentResponse {
+  componentId: string
+  componentNumber: string
+  parentAssetId: string
+  parentComponentId: string | null
+  name: string
+  description: string | null
+  componentType: string
+  status: string
+  make: string | null
+  model: string | null
+  serialNumber: string | null
+  partNumberSnapshot: string | null
+  installedPartUsageRef: string | null
+  installDate: string | null
+  installedByPersonId: string | null
+  installedMeterReading: number | null
+  removedDate: string | null
+  removedByPersonId: string | null
+  removedMeterReading: number | null
+  removalReason: string | null
+  warrantyStartDate: string | null
+  warrantyEndDate: string | null
+  expectedLifeHours: number | null
+  expectedLifeMiles: number | null
+  expectedLifeCycles: number | null
+  condition: string
+  replacementPartRefs: string[]
+  documentRefs: string[]
+  defectRefs: string[]
+  workOrderRefs: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface InspectionTemplateSummaryResponse {
   inspectionTemplateId: string
   templateKey: string
@@ -573,6 +608,38 @@ export interface WorkOrderEvidenceResponse {
   notes: string | null
   uploadedByUserId: string
   createdAt: string
+}
+
+export interface CreateWorkOrderCommentRequest {
+  body: string
+  visibility?: string | null
+  pinned?: boolean | null
+}
+
+export interface WorkOrderCommentResponse {
+  commentId: string
+  workOrderId: string
+  body: string
+  visibility: string
+  createdAt: string
+  createdByPersonId: string | null
+  editedAt: string | null
+  editedByPersonId: string | null
+  pinned: boolean
+}
+
+export interface WorkOrderTimelineEventResponse {
+  timelineEventId: string
+  workOrderId: string
+  eventType: string
+  occurredAt: string
+  actorPersonId: string | null
+  actorServiceClientId: string | null
+  summary: string
+  sourceProduct: string | null
+  sourceObjectRef: string | null
+  beforeSnapshot: string | null
+  afterSnapshot: string | null
 }
 
 export interface CreateWorkOrderEvidenceRequest {

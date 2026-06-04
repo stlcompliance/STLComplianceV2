@@ -11,10 +11,13 @@ import {
   createWorkOrder,
   createWorkOrderFromDefect,
   createWorkOrderTask,
+  createWorkOrderComment,
   createWorkOrderPartsDemandLine,
   getWorkOrder,
+  getWorkOrderComments,
   getWorkOrderEvidence,
   getWorkOrderLabor,
+  getWorkOrderTimeline,
   getWorkOrderPartsDemand,
   getWorkOrderPartsDemandStatusEvents,
   getWorkOrderSupplyReadiness,
@@ -29,6 +32,7 @@ import {
   createInspectionTemplateCategory,
   getAssetClasses,
   getAssetFieldContext,
+  getAssetInstalledComponents,
   getAssetMeters,
   getAssets,
   getAssetTypes,
@@ -166,6 +170,9 @@ export function useMaintainArrWorkspaceState() {
   const [woEvidenceTypeKey, setWoEvidenceTypeKey] = useState('completion_photo')
   const [woEvidenceNotes, setWoEvidenceNotes] = useState('')
   const [woEvidenceFile, setWoEvidenceFile] = useState<File | null>(null)
+  const [woCommentBody, setWoCommentBody] = useState('')
+  const [woCommentVisibility, setWoCommentVisibility] = useState('internal')
+  const [woCommentPinned, setWoCommentPinned] = useState(false)
   const [demandPartNumber, setDemandPartNumber] = useState('')
   const [demandSupplyarrPartId, setDemandSupplyarrPartId] = useState('')
   const [demandQuantity, setDemandQuantity] = useState('1')
@@ -244,6 +251,12 @@ export function useMaintainArrWorkspaceState() {
   const assetFieldContextQuery = useQuery({
     queryKey: ['maintainarr-asset-field-context', selectedAssetId],
     queryFn: () => getAssetFieldContext(accessToken, selectedAssetId!),
+    enabled: meQuery.isSuccess && Boolean(selectedAssetId),
+  })
+
+  const assetInstalledComponentsQuery = useQuery({
+    queryKey: ['maintainarr-asset-installed-components', selectedAssetId],
+    queryFn: () => getAssetInstalledComponents(accessToken, selectedAssetId!),
     enabled: meQuery.isSuccess && Boolean(selectedAssetId),
   })
 
@@ -368,6 +381,18 @@ export function useMaintainArrWorkspaceState() {
   const workOrderLaborQuery = useQuery({
     queryKey: ['maintainarr-work-order-labor', selectedWorkOrderId],
     queryFn: () => getWorkOrderLabor(accessToken, selectedWorkOrderId),
+    enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
+  })
+
+  const workOrderCommentsQuery = useQuery({
+    queryKey: ['maintainarr-work-order-comments', selectedWorkOrderId],
+    queryFn: () => getWorkOrderComments(accessToken, selectedWorkOrderId),
+    enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
+  })
+
+  const workOrderTimelineQuery = useQuery({
+    queryKey: ['maintainarr-work-order-timeline', selectedWorkOrderId],
+    queryFn: () => getWorkOrderTimeline(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
@@ -526,6 +551,8 @@ export function useMaintainArrWorkspaceState() {
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-tasks', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-labor', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-evidence', workOrderId] })
+      await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-comments', workOrderId] })
+      await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-timeline', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-parts-demand', workOrderId] })
       await queryClient.invalidateQueries({
         queryKey: ['maintainarr-work-order-parts-demand-status-events', workOrderId],
@@ -953,6 +980,22 @@ export function useMaintainArrWorkspaceState() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to upload evidence'),
   })
 
+  const addWorkOrderCommentMutation = useMutation({
+    mutationFn: () =>
+      createWorkOrderComment(accessToken, selectedWorkOrderId, {
+        body: woCommentBody,
+        visibility: woCommentVisibility,
+        pinned: woCommentPinned,
+      }),
+    onSuccess: async () => {
+      setWoCommentBody('')
+      setWoCommentPinned(false)
+      setApiError(null)
+      await invalidateWorkOrders(selectedWorkOrderId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create comment'),
+  })
+
   const uploadDefectEvidenceMutation = useMutation({
     mutationFn: async () => {
       if (!defectEvidenceFile || !selectedDefectId) {
@@ -1205,6 +1248,9 @@ export function useMaintainArrWorkspaceState() {
     woEvidenceTypeKey,
     woEvidenceNotes,
     woEvidenceFile,
+    woCommentBody,
+    woCommentVisibility,
+    woCommentPinned,
     demandPartNumber,
     demandSupplyarrPartId,
     demandQuantity,
@@ -1273,6 +1319,9 @@ export function useMaintainArrWorkspaceState() {
     setWoEvidenceTypeKey,
     setWoEvidenceNotes,
     setWoEvidenceFile,
+    setWoCommentBody,
+    setWoCommentVisibility,
+    setWoCommentPinned,
     setDemandPartNumber,
     setDemandSupplyarrPartId,
     setDemandQuantity,
@@ -1302,6 +1351,7 @@ export function useMaintainArrWorkspaceState() {
     typesQuery,
     assetsQuery,
     assetFieldContextQuery,
+    assetInstalledComponentsQuery,
     selectedAssetId,
     assetReadinessFleetQuery,
     assetReadinessDetailQuery,
@@ -1325,6 +1375,8 @@ export function useMaintainArrWorkspaceState() {
     workOrderDetailQuery,
     workOrderTasksQuery,
     workOrderLaborQuery,
+    workOrderCommentsQuery,
+    workOrderTimelineQuery,
     workOrderEvidenceQuery,
     workOrderPartsDemandQuery,
     workOrderPartsDemandStatusEventsQuery,
@@ -1372,6 +1424,7 @@ export function useMaintainArrWorkspaceState() {
     addWorkOrderTaskMutation,
     logWorkOrderLaborMutation,
     uploadWorkOrderEvidenceMutation,
+    addWorkOrderCommentMutation,
     uploadDefectEvidenceMutation,
     uploadInspectionRunEvidenceMutation,
     addWorkOrderPartsDemandMutation,

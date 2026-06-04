@@ -53,6 +53,10 @@ public sealed class WorkOrder : IHasTenant
     public ICollection<WorkOrderEvidence> Evidence { get; set; } = [];
 
     public ICollection<WorkOrderPartsDemandLine> PartsDemandLines { get; set; } = [];
+
+    public ICollection<WorkOrderBlocker> Blockers { get; set; } = [];
+
+    public ICollection<WorkOrderCloseout> Closeouts { get; set; } = [];
 }
 
 public static class WorkOrderStatuses

@@ -584,6 +584,30 @@
         }
       }
     },
+    "/api/assets/{assetId}/components": {
+      "get": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "ListAssetComponents",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/assets/{assetId}/lifecycle-status": {
       "patch": {
         "tags": [
@@ -2633,7 +2657,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateAssetReadinessCheckRequest"
               }
             }
           },
@@ -2715,7 +2739,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateDefectRequest"
               }
             }
           },
@@ -2771,7 +2795,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/UpdateDefectStatusRequest"
               }
             }
           },
@@ -2794,7 +2818,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/StartInspectionRunRequest"
               }
             }
           },
@@ -2850,7 +2874,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/SubmitInspectionRunAnswersRequest"
               }
             }
           },
@@ -2873,7 +2897,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
               }
             }
           },
@@ -2896,7 +2920,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestPartIssueEventRequest"
               }
             }
           },
@@ -2919,7 +2943,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/ReleaseAssetQualityHoldRequest"
               }
             }
           },
@@ -2942,7 +2966,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateAssetQualityHoldRequest"
               }
             }
           },
@@ -2965,7 +2989,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
               }
             }
           },
@@ -2988,7 +3012,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestSupplierWorkStatusRequest"
               }
             }
           },
@@ -3011,7 +3035,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
               }
             }
           },
@@ -3067,7 +3091,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderBlockerRequest"
               }
             }
           },
@@ -3100,7 +3124,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderCloseoutRequest"
               }
             }
           },
@@ -3133,7 +3157,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/UpdateWorkOrderStatusRequest"
               }
             }
           },
@@ -5595,6 +5619,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/components": {
+      "get": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "ListAssetComponentsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -8115,7 +8163,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateAssetReadinessCheckRequest"
               }
             }
           },
@@ -8197,7 +8245,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateDefectRequest"
               }
             }
           },
@@ -8253,7 +8301,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/UpdateDefectStatusRequest"
               }
             }
           },
@@ -8276,7 +8324,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/StartInspectionRunRequest"
               }
             }
           },
@@ -8332,7 +8380,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/SubmitInspectionRunAnswersRequest"
               }
             }
           },
@@ -8355,7 +8403,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
               }
             }
           },
@@ -8378,7 +8426,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestPartIssueEventRequest"
               }
             }
           },
@@ -8401,7 +8449,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/ReleaseAssetQualityHoldRequest"
               }
             }
           },
@@ -8424,7 +8472,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateAssetQualityHoldRequest"
               }
             }
           },
@@ -8447,7 +8495,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
               }
             }
           },
@@ -8470,7 +8518,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/IngestSupplierWorkStatusRequest"
               }
             }
           },
@@ -8493,7 +8541,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
               }
             }
           },
@@ -8549,7 +8597,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderBlockerRequest"
               }
             }
           },
@@ -8582,7 +8630,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/CreateWorkOrderCloseoutRequest"
               }
             }
           },
@@ -8615,7 +8663,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonElement"
+                "$ref": "#/components/schemas/UpdateWorkOrderStatusRequest"
               }
             }
           },
@@ -10582,6 +10630,62 @@
         }
       }
     },
+    "/api/v1/work-orders/{workOrderId}/comments": {
+      "get": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "ListWorkOrderCommentsV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "CreateWorkOrderCommentV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/work-orders/{workOrderId}/evidence": {
       "get": {
         "tags": [
@@ -10918,6 +11022,30 @@
         }
       }
     },
+    "/api/v1/work-orders/{workOrderId}/timeline": {
+      "get": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "ListWorkOrderTimelineV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/work-orders": {
       "get": {
         "tags": [
@@ -11021,6 +11149,62 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/comments": {
+      "get": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "ListWorkOrderComments",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "CreateWorkOrderComment",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderCommentRequest"
               }
             }
           },
@@ -11369,6 +11553,30 @@
         }
       }
     },
+    "/api/work-orders/{workOrderId}/timeline": {
+      "get": {
+        "tags": [
+          "WorkOrderDiscussion"
+        ],
+        "operationId": "ListWorkOrderTimeline",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -11571,6 +11779,96 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "CreateAssetQualityHoldRequest": {
+        "required": [
+          "assetId",
+          "holdType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "title",
+          "description",
+          "severity",
+          "createdByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "holdType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "createdByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAssetReadinessCheckRequest": {
+        "required": [
+          "assetId",
+          "vehicleRefKey",
+          "assetTag",
+          "sourceProduct",
+          "requestedBy",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetTag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12055,6 +12353,252 @@
           }
         }
       },
+      "CreateWorkOrderBlockerRequest": {
+        "required": [
+          "blockerType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "title",
+          "description",
+          "severity",
+          "requiredAction",
+          "createdByPersonId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "blockerType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "requiredAction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateWorkOrderCloseoutRequest": {
+        "required": [
+          "completionSummary",
+          "rootCause",
+          "correctiveAction",
+          "preventiveActionRecommendation",
+          "assetReturnedToService",
+          "returnToServiceAt",
+          "returnToServiceByPersonId",
+          "postRepairInspectionRequired",
+          "postRepairInspectionRef",
+          "supervisorReviewRequired",
+          "supervisorReviewedByPersonId",
+          "supervisorReviewedAt",
+          "complianceReviewRequired",
+          "complianceReviewedByPersonId",
+          "complianceReviewedAt",
+          "qualityReviewRequired",
+          "qualityReviewedByPersonId",
+          "qualityReviewedAt",
+          "evidenceAccepted",
+          "unresolvedDefectRefs",
+          "followUpWorkOrderRefs",
+          "customerImpactSummary",
+          "downtimeSummary",
+          "finalAssetReadinessStatus",
+          "finalStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "completionSummary": {
+            "type": "string"
+          },
+          "rootCause": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correctiveAction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "preventiveActionRecommendation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetReturnedToService": {
+            "type": "boolean"
+          },
+          "returnToServiceAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "returnToServiceByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "postRepairInspectionRequired": {
+            "type": "boolean"
+          },
+          "postRepairInspectionRef": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supervisorReviewRequired": {
+            "type": "boolean"
+          },
+          "supervisorReviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supervisorReviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "complianceReviewRequired": {
+            "type": "boolean"
+          },
+          "complianceReviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceReviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "qualityReviewRequired": {
+            "type": "boolean"
+          },
+          "qualityReviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "qualityReviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "evidenceAccepted": {
+            "type": "boolean"
+          },
+          "unresolvedDefectRefs": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "followUpWorkOrderRefs": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerImpactSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "downtimeSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "finalAssetReadinessStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "finalStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateWorkOrderCommentRequest": {
+        "required": [
+          "body",
+          "visibility",
+          "pinned"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pinned": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "CreateWorkOrderEvidenceRequest": {
         "required": [
           "evidenceTypeKey",
@@ -12412,6 +12956,299 @@
           }
         }
       },
+      "IngestPartIssueEventRequest": {
+        "required": [
+          "tenantId",
+          "workOrderId",
+          "supplyarrPartId",
+          "partNumber",
+          "quantity",
+          "unitOfMeasure",
+          "sourceReference",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IngestRoutarrEventRequest": {
+        "required": [
+          "tenantId",
+          "sourceEventId",
+          "eventKind",
+          "relatedEntityType",
+          "relatedEntityId",
+          "correlationId",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventKind": {
+            "type": "string"
+          },
+          "relatedEntityType": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RoutarrEventPayload"
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "IngestSupplierWorkStatusRequest": {
+        "required": [
+          "tenantId",
+          "workOrderId",
+          "supplierRef",
+          "vendorContactSnapshot",
+          "status",
+          "workDescription",
+          "quoteRecordRef",
+          "approvalRef",
+          "scheduledAt",
+          "completedAt",
+          "costEstimateSnapshot",
+          "invoiceRecordRef",
+          "warrantyFlag",
+          "notes",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierRef": {
+            "type": "string"
+          },
+          "vendorContactSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "workDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quoteRecordRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approvalRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "costEstimateSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "invoiceRecordRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "warrantyFlag": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IngestSupplyarrDemandStatusRequest": {
+        "required": [
+          "tenantId",
+          "maintainarrPublicationId",
+          "supplyarrDemandRefId",
+          "supplyarrCallbackPublicationId",
+          "eventType",
+          "procurementStatus",
+          "supplyarrPurchaseRequestId",
+          "supplyarrPurchaseOrderId",
+          "supplyarrReceivingReceiptId",
+          "quantityReceivedDelta",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maintainarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrDemandRefId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrCallbackPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "procurementStatus": {
+            "type": "string"
+          },
+          "supplyarrPurchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrPurchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrReceivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantityReceivedDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "InspectionRunAnswerInput": {
         "required": [
           "checklistItemId",
@@ -12448,7 +13285,6 @@
           }
         }
       },
-      "JsonElement": {},
       "NormalizeVoiceNumericRequest": {
         "required": [
           "transcript"
@@ -12842,6 +13678,32 @@
           }
         }
       },
+      "ReleaseAssetQualityHoldRequest": {
+        "required": [
+          "holdId",
+          "releasedByPersonId",
+          "releaseReason"
+        ],
+        "type": "object",
+        "properties": {
+          "holdId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releasedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "releaseReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ReplaceInspectionTemplateAssetTypesRequest": {
         "required": [
           "assetTypeIds"
@@ -12869,6 +13731,188 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "RoutarrEventPayload": {
+        "required": [
+          "tenantId",
+          "summary",
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispatchStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "routeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stopId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stopKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stopStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proofId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "proofType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dvirId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "dvirPhase": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dvirResult": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defectNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "exceptionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionCategory": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentReviewStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentRoutedProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "overrideTargetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "overrideKinds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "routeNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "routeStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -13601,6 +14645,9 @@
       "name": "Assets"
     },
     {
+      "name": "AssetComponents"
+    },
+    {
       "name": "Catalogs"
     },
     {
@@ -13638,6 +14685,9 @@
     },
     {
       "name": "TechnicianRefs"
+    },
+    {
+      "name": "WorkOrderDiscussion"
     },
     {
       "name": "WorkOrderTasks"

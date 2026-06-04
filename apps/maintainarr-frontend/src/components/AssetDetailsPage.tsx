@@ -3,6 +3,7 @@ import { ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
 
 import type {
   AssetFieldContextResponse,
+  AssetInstalledComponentResponse,
   AssetReadinessHistoryResponse,
   AssetReadinessResponse,
   AssetResponse,
@@ -15,6 +16,7 @@ interface AssetDetailsPageProps {
   readinessHistory: AssetReadinessHistoryResponse | null
   isReadinessHistoryLoading: boolean
   fieldContext: AssetFieldContextResponse | null
+  installedComponents: AssetInstalledComponentResponse[] | null
 }
 
 function humanize(value: string | null | undefined): string {
@@ -37,6 +39,10 @@ function formatStatusFieldKey(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
+function formatCountLabel(label: string, items: readonly unknown[]): string {
+  return `${label}: ${items.length}`
+}
+
 export function AssetDetailsPage({
   asset,
   readiness,
@@ -44,6 +50,7 @@ export function AssetDetailsPage({
   readinessHistory,
   isReadinessHistoryLoading,
   fieldContext,
+  installedComponents,
 }: AssetDetailsPageProps) {
   const blockers = readiness?.blockers ?? []
   const isReady = readiness?.readinessStatus === 'ready' && blockers.length === 0
@@ -59,6 +66,13 @@ export function AssetDetailsPage({
       ].filter(Boolean).length
     : 0
   const allowedChecks = readiness ? Math.max(0, 5 - blockedChecks) : 0
+  const components = installedComponents ?? []
+  const componentLabelsById = new Map(
+    components.map((component) => [
+      component.componentId,
+      `${component.componentNumber} · ${component.name}`,
+    ]),
+  )
   const snapshotFields = [
     { label: 'Unit number', value: asset.assetTag, source: 'Asset registry' },
     { label: 'Lifecycle status', value: humanize(asset.lifecycleStatus), source: 'Asset registry' },
@@ -163,6 +177,73 @@ export function AssetDetailsPage({
                 Calculated at: {readiness?.calculatedAt ?? 'Unavailable'}
               </div>
             </div>
+          ),
+        },
+        {
+          title: 'Components',
+          icon: <Truck className="h-5 w-5" />,
+          content: components.length > 0 ? (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">
+                Installed components recorded against this asset and any nested child components.
+              </p>
+              <ul className="space-y-2">
+                {components.map((component) => (
+                  <li key={component.componentId} className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-white">
+                          {component.componentNumber} · {component.name}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-400">
+                          {humanize(component.componentType)} · {humanize(component.status)} · {humanize(component.condition)}
+                        </div>
+                      </div>
+                      <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                        {component.parentComponentId
+                          ? `Parent: ${componentLabelsById.get(component.parentComponentId) ?? component.parentComponentId}`
+                          : 'Root component'}
+                      </div>
+                    </div>
+                    <dl className="mt-3 grid gap-2 text-xs text-slate-300 md:grid-cols-2">
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Make / model</dt>
+                        <dd className="mt-1 text-slate-100">{[component.make, component.model].filter(Boolean).join(' · ') || 'Not recorded'}</dd>
+                      </div>
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Serial / part</dt>
+                        <dd className="mt-1 text-slate-100">{[component.serialNumber, component.partNumberSnapshot].filter(Boolean).join(' · ') || 'Not recorded'}</dd>
+                      </div>
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Installed</dt>
+                        <dd className="mt-1 text-slate-100">{formatDateTime(component.installDate)}</dd>
+                      </div>
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Removed</dt>
+                        <dd className="mt-1 text-slate-100">{formatDateTime(component.removedDate)}</dd>
+                      </div>
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Installed by</dt>
+                        <dd className="mt-1 text-slate-100">{component.installedByPersonId ?? 'Not recorded'}</dd>
+                      </div>
+                      <div className="rounded-md bg-slate-950/60 p-2">
+                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">References</dt>
+                        <dd className="mt-1 text-slate-100">
+                          {[
+                            formatCountLabel('Replacement parts', component.replacementPartRefs),
+                            formatCountLabel('Documents', component.documentRefs),
+                            formatCountLabel('Defects', component.defectRefs),
+                            formatCountLabel('Work orders', component.workOrderRefs),
+                          ].join(' · ')}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No installed components recorded yet.</p>
           ),
         },
         {

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
@@ -12,6 +13,7 @@ public sealed class WorkOrderService(
     MaintenanceNotificationEnqueueService notificationEnqueueService,
     TechnicianRefService technicianRefService,
     AssetDowntimeService assetDowntimeService,
+    WorkOrderDiscussionService discussionService,
     TrainArrQualificationCheckClient trainArrQualificationCheckClient,
     ComplianceCoreWorkOrderGateClient complianceCoreWorkOrderGateClient,
     MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
@@ -147,6 +149,20 @@ public sealed class WorkOrderService(
             now,
             emitCreated: true,
             emitAssigned: !string.IsNullOrWhiteSpace(entity.AssignedTechnicianPersonId),
+            cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            entity.Id,
+            "maintainarr.work_order.created",
+            now,
+            null,
+            null,
+            $"Work order {entity.WorkOrderNumber} was created.",
+            "maintainarr",
+            entity.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(entity),
             cancellationToken);
 
         return await MapDetailAsync(tenantId, entity, cancellationToken);
@@ -356,6 +372,20 @@ public sealed class WorkOrderService(
             emitAssigned: false,
             cancellationToken);
 
+        await discussionService.RecordTimelineEventAsync(
+            schedule.TenantId,
+            entity.Id,
+            "maintainarr.work_order.created",
+            now,
+            null,
+            null,
+            $"Work order {entity.WorkOrderNumber} was created from PM schedule {schedule.ScheduleKey}.",
+            "maintainarr",
+            entity.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(entity),
+            cancellationToken);
+
         return new PmWorkOrderGenerationResult(entity.Id, entity.WorkOrderNumber, LinkedExisting: false);
     }
 
@@ -448,6 +478,20 @@ public sealed class WorkOrderService(
                 cancellationToken);
         }
 
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrder.Id,
+            "maintainarr.work_order.updated",
+            workOrder.UpdatedAt,
+            null,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} was updated.",
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(workOrder),
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, workOrder, cancellationToken);
     }
 
@@ -520,6 +564,26 @@ public sealed class WorkOrderService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        if (workOrder.DefectId.HasValue)
+        {
+            var defectStatus = normalized switch
+            {
+                WorkOrderStatuses.InProgress => DefectStatuses.InRepair,
+                WorkOrderStatuses.Completed => DefectStatuses.Resolved,
+                _ => null,
+            };
+
+            if (defectStatus is not null)
+            {
+                await SyncLinkedDefectStatusAsync(
+                    tenantId,
+                    actorUserId,
+                    workOrder.DefectId.Value,
+                    defectStatus,
+                    cancellationToken);
+            }
+        }
+
         DowntimeFollowUpResponse? downtimeFollowUp = null;
         if (string.Equals(normalized, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
         {
@@ -556,7 +620,252 @@ public sealed class WorkOrderService(
             now,
             cancellationToken);
 
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrder.Id,
+            GetStatusTimelineEventType(normalized),
+            now,
+            actorPersonId,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} changed to {normalized}.",
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(workOrder),
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, workOrder, cancellationToken, downtimeFollowUp);
+    }
+
+    public async Task<WorkOrderBlockerResponse> CreateBlockerAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        CreateWorkOrderBlockerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await db.WorkOrders
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrderId, cancellationToken);
+
+        if (workOrder is null)
+        {
+            throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
+        }
+
+        var blockerType = NormalizeRequiredValue(request.BlockerType, "work_order.blocker_type_required");
+        ValidateBlockerType(blockerType);
+        var sourceProduct = NormalizeRequiredValue(request.SourceProduct, "work_order.blocker_source_product_required");
+        ValidateSourceProduct(sourceProduct);
+        var sourceObjectRef = NormalizeOptionalValue(request.SourceObjectRef);
+        var title = NormalizeRequiredValue(request.Title, "work_order.blocker_title_required");
+        ValidateBlockerTitle(title);
+        var description = NormalizeRequiredValue(request.Description, "work_order.blocker_description_required");
+        ValidateBlockerDescription(description);
+        var severity = NormalizeRequiredValue(request.Severity, "work_order.blocker_severity_required");
+        ValidateBlockerSeverity(severity);
+        var status = NormalizeOptionalValue(request.Status) ?? "active";
+        ValidateBlockerStatus(status);
+        var requiredAction = NormalizeOptionalValue(request.RequiredAction);
+        ValidateBlockerRequiredAction(requiredAction);
+        var createdByPersonId = NormalizeOptionalValue(request.CreatedByPersonId);
+        ValidateOptionalPersonId(createdByPersonId);
+
+        var existing = await db.WorkOrderBlockers
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId
+                    && x.WorkOrderId == workOrderId
+                    && x.SourceProduct == sourceProduct
+                    && x.SourceObjectRef == sourceObjectRef,
+                cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        if (existing is null)
+        {
+            existing = new WorkOrderBlocker
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                WorkOrderId = workOrderId,
+                BlockerType = blockerType,
+                SourceProduct = sourceProduct,
+                SourceObjectRef = sourceObjectRef,
+                Title = title,
+                Description = description,
+                Severity = severity,
+                Status = status,
+                RequiredAction = requiredAction,
+                CreatedAt = now,
+                CreatedByPersonId = createdByPersonId,
+            };
+            db.WorkOrderBlockers.Add(existing);
+        }
+        else
+        {
+            existing.BlockerType = blockerType;
+            existing.SourceProduct = sourceProduct;
+            existing.SourceObjectRef = sourceObjectRef;
+            existing.Title = title;
+            existing.Description = description;
+            existing.Severity = severity;
+            existing.Status = status;
+            existing.RequiredAction = requiredAction;
+            if (existing.CreatedByPersonId is null)
+            {
+                existing.CreatedByPersonId = createdByPersonId;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "work_order.blocker_upsert",
+            tenantId,
+            actorUserId,
+            "work_order_blocker",
+            existing.Id.ToString(),
+            existing.Status,
+            cancellationToken: cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrderId,
+            string.Equals(status, "active", StringComparison.OrdinalIgnoreCase)
+                ? "maintainarr.work_order.blocked"
+                : "maintainarr.work_order.blocker_updated",
+            now,
+            null,
+            null,
+            $"{title} - {description}",
+            sourceProduct,
+            sourceObjectRef,
+            null,
+            SerializeBlockerSnapshot(existing),
+            cancellationToken);
+
+        return MapBlockerResponse(existing);
+    }
+
+    public async Task<WorkOrderCloseoutResponse> CreateCloseoutAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        CreateWorkOrderCloseoutRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await db.WorkOrders
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrderId, cancellationToken);
+
+        if (workOrder is null)
+        {
+            throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
+        }
+
+        var completionSummary = NormalizeRequiredValue(request.CompletionSummary, "work_order.closeout_summary_required");
+        ValidateCloseoutCompletionSummary(completionSummary);
+        var rootCause = NormalizeOptionalValue(request.RootCause);
+        ValidateCloseoutRootCause(rootCause);
+        var correctiveAction = NormalizeOptionalValue(request.CorrectiveAction);
+        ValidateCloseoutCorrectiveAction(correctiveAction);
+        var preventiveActionRecommendation = NormalizeOptionalValue(request.PreventiveActionRecommendation);
+        ValidateCloseoutPreventiveAction(preventiveActionRecommendation);
+        var returnToServiceByPersonId = NormalizeOptionalValue(request.ReturnToServiceByPersonId);
+        ValidateOptionalPersonId(returnToServiceByPersonId);
+        var supervisorReviewedByPersonId = NormalizeOptionalValue(request.SupervisorReviewedByPersonId);
+        ValidateOptionalPersonId(supervisorReviewedByPersonId);
+        var complianceReviewedByPersonId = NormalizeOptionalValue(request.ComplianceReviewedByPersonId);
+        ValidateOptionalPersonId(complianceReviewedByPersonId);
+        var qualityReviewedByPersonId = NormalizeOptionalValue(request.QualityReviewedByPersonId);
+        ValidateOptionalPersonId(qualityReviewedByPersonId);
+        var unresolvedDefectRefs = NormalizeOptionalValue(request.UnresolvedDefectRefs);
+        var followUpWorkOrderRefs = NormalizeOptionalValue(request.FollowUpWorkOrderRefs);
+        var customerImpactSummary = NormalizeOptionalValue(request.CustomerImpactSummary);
+        var downtimeSummary = NormalizeOptionalValue(request.DowntimeSummary);
+        var finalAssetReadinessStatus = NormalizeOptionalValue(request.FinalAssetReadinessStatus);
+        var finalStatus = NormalizeOptionalValue(request.FinalStatus);
+        var now = DateTimeOffset.UtcNow;
+
+        var closeout = await db.WorkOrderCloseouts
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrderId, cancellationToken);
+
+        if (closeout is null)
+        {
+            closeout = new WorkOrderCloseout
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                WorkOrderId = workOrderId,
+                CreatedAt = now,
+                CreatedByPersonId = returnToServiceByPersonId ?? supervisorReviewedByPersonId ?? complianceReviewedByPersonId ?? qualityReviewedByPersonId,
+            };
+            db.WorkOrderCloseouts.Add(closeout);
+        }
+
+        closeout.CompletionSummary = completionSummary;
+        closeout.RootCause = rootCause;
+        closeout.CorrectiveAction = correctiveAction;
+        closeout.PreventiveActionRecommendation = preventiveActionRecommendation;
+        closeout.AssetReturnedToService = request.AssetReturnedToService;
+        closeout.ReturnToServiceAt = request.AssetReturnedToService
+            ? request.ReturnToServiceAt ?? now
+            : request.ReturnToServiceAt;
+        closeout.ReturnToServiceByPersonId = returnToServiceByPersonId;
+        closeout.PostRepairInspectionRequired = request.PostRepairInspectionRequired;
+        closeout.PostRepairInspectionRef = request.PostRepairInspectionRef;
+        closeout.SupervisorReviewRequired = request.SupervisorReviewRequired;
+        closeout.SupervisorReviewedByPersonId = supervisorReviewedByPersonId;
+        closeout.SupervisorReviewedAt = request.SupervisorReviewedAt;
+        closeout.ComplianceReviewRequired = request.ComplianceReviewRequired;
+        closeout.ComplianceReviewedByPersonId = complianceReviewedByPersonId;
+        closeout.ComplianceReviewedAt = request.ComplianceReviewedAt;
+        closeout.QualityReviewRequired = request.QualityReviewRequired;
+        closeout.QualityReviewedByPersonId = qualityReviewedByPersonId;
+        closeout.QualityReviewedAt = request.QualityReviewedAt;
+        closeout.EvidenceAccepted = request.EvidenceAccepted;
+        closeout.UnresolvedDefectRefs = unresolvedDefectRefs;
+        closeout.FollowUpWorkOrderRefs = followUpWorkOrderRefs;
+        closeout.CustomerImpactSummary = customerImpactSummary;
+        closeout.DowntimeSummary = downtimeSummary;
+        closeout.FinalAssetReadinessStatus = finalAssetReadinessStatus;
+        closeout.FinalStatus = finalStatus ?? (request.AssetReturnedToService ? "closed" : "review_pending");
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (workOrder.DefectId.HasValue && string.Equals(closeout.FinalStatus, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            await SyncLinkedDefectStatusAsync(
+                tenantId,
+                actorUserId,
+                workOrder.DefectId.Value,
+                DefectStatuses.Closed,
+                cancellationToken);
+        }
+
+        await audit.WriteAsync(
+            "work_order.closeout",
+            tenantId,
+            actorUserId,
+            "work_order_closeout",
+            closeout.Id.ToString(),
+            closeout.FinalStatus,
+            cancellationToken: cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrderId,
+            string.Equals(closeout.FinalStatus, "closed", StringComparison.OrdinalIgnoreCase)
+                ? "maintainarr.work_order.closed"
+                : "maintainarr.work_order.closeout_updated",
+            now,
+            null,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} closeout updated.",
+            "maintainarr",
+            closeout.Id.ToString("D"),
+            null,
+            SerializeCloseoutSnapshot(closeout),
+            cancellationToken);
+
+        return MapCloseoutResponse(closeout);
     }
 
     private async Task EnqueueWorkOrderLifecycleEventsAsync(
@@ -952,6 +1261,33 @@ public sealed class WorkOrderService(
             pmScheduleName = schedule?.Name;
         }
 
+        var blockers = await db.WorkOrderBlockers
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
+            .Select(x => new WorkOrderBlockerResponse(
+                x.Id,
+                x.WorkOrderId,
+                x.BlockerType,
+                x.SourceProduct,
+                x.SourceObjectRef,
+                x.Title,
+                x.Description,
+                x.Severity,
+                x.Status,
+                x.RequiredAction,
+                x.CreatedAt,
+                x.CreatedByPersonId,
+                x.ResolvedAt,
+                x.ResolvedByPersonId,
+                x.OverrideReason))
+            .ToListAsync(cancellationToken);
+
+        var closeout = await db.WorkOrderCloseouts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id, cancellationToken);
+
         return new WorkOrderDetailResponse(
             summary.WorkOrderId,
             summary.WorkOrderNumber,
@@ -974,7 +1310,214 @@ public sealed class WorkOrderService(
             workOrder.StartedAt,
             workOrder.CompletedAt,
             workOrder.CancelledAt,
-            downtimeFollowUp);
+            downtimeFollowUp,
+            blockers,
+            closeout is null ? null : MapCloseoutResponse(closeout));
+    }
+
+    private static WorkOrderBlockerResponse MapBlockerResponse(WorkOrderBlocker blocker) =>
+        new(
+            blocker.Id,
+            blocker.WorkOrderId,
+            blocker.BlockerType,
+            blocker.SourceProduct,
+            blocker.SourceObjectRef,
+            blocker.Title,
+            blocker.Description,
+            blocker.Severity,
+            blocker.Status,
+            blocker.RequiredAction,
+            blocker.CreatedAt,
+            blocker.CreatedByPersonId,
+            blocker.ResolvedAt,
+            blocker.ResolvedByPersonId,
+            blocker.OverrideReason);
+
+    private static WorkOrderCloseoutResponse MapCloseoutResponse(WorkOrderCloseout closeout) =>
+        new(
+            closeout.Id,
+            closeout.WorkOrderId,
+            closeout.CompletionSummary,
+            closeout.RootCause,
+            closeout.CorrectiveAction,
+            closeout.PreventiveActionRecommendation,
+            closeout.AssetReturnedToService,
+            closeout.ReturnToServiceAt,
+            closeout.ReturnToServiceByPersonId,
+            closeout.PostRepairInspectionRequired,
+            closeout.PostRepairInspectionRef,
+            closeout.SupervisorReviewRequired,
+            closeout.SupervisorReviewedByPersonId,
+            closeout.SupervisorReviewedAt,
+            closeout.ComplianceReviewRequired,
+            closeout.ComplianceReviewedByPersonId,
+            closeout.ComplianceReviewedAt,
+            closeout.QualityReviewRequired,
+            closeout.QualityReviewedByPersonId,
+            closeout.QualityReviewedAt,
+            closeout.EvidenceAccepted,
+            closeout.UnresolvedDefectRefs,
+            closeout.FollowUpWorkOrderRefs,
+            closeout.CustomerImpactSummary,
+            closeout.DowntimeSummary,
+            closeout.FinalAssetReadinessStatus,
+            closeout.FinalStatus,
+            closeout.CreatedAt,
+            closeout.CreatedByPersonId);
+
+    private static string SerializeWorkOrderSnapshot(WorkOrder workOrder) =>
+        JsonSerializer.Serialize(new
+        {
+            workOrder.Id,
+            workOrder.WorkOrderNumber,
+            workOrder.AssetId,
+            workOrder.DefectId,
+            workOrder.PmScheduleId,
+            workOrder.Title,
+            workOrder.Description,
+            workOrder.Priority,
+            workOrder.Status,
+            workOrder.Source,
+            workOrder.AssignedTechnicianPersonId,
+            workOrder.CreatedAt,
+            workOrder.UpdatedAt,
+            workOrder.StartedAt,
+            workOrder.CompletedAt,
+            workOrder.CancelledAt,
+        });
+
+    private static string SerializeBlockerSnapshot(WorkOrderBlocker blocker) =>
+        JsonSerializer.Serialize(new
+        {
+            blocker.Id,
+            blocker.WorkOrderId,
+            blocker.BlockerType,
+            blocker.SourceProduct,
+            blocker.SourceObjectRef,
+            blocker.Title,
+            blocker.Description,
+            blocker.Severity,
+            blocker.Status,
+            blocker.RequiredAction,
+            blocker.CreatedAt,
+            blocker.CreatedByPersonId,
+            blocker.ResolvedAt,
+            blocker.ResolvedByPersonId,
+            blocker.OverrideReason,
+        });
+
+    private static string SerializeCloseoutSnapshot(WorkOrderCloseout closeout) =>
+        JsonSerializer.Serialize(new
+        {
+            closeout.Id,
+            closeout.WorkOrderId,
+            closeout.CompletionSummary,
+            closeout.RootCause,
+            closeout.CorrectiveAction,
+            closeout.PreventiveActionRecommendation,
+            closeout.AssetReturnedToService,
+            closeout.ReturnToServiceAt,
+            closeout.ReturnToServiceByPersonId,
+            closeout.PostRepairInspectionRequired,
+            closeout.PostRepairInspectionRef,
+            closeout.SupervisorReviewRequired,
+            closeout.SupervisorReviewedByPersonId,
+            closeout.SupervisorReviewedAt,
+            closeout.ComplianceReviewRequired,
+            closeout.ComplianceReviewedByPersonId,
+            closeout.ComplianceReviewedAt,
+            closeout.QualityReviewRequired,
+            closeout.QualityReviewedByPersonId,
+            closeout.QualityReviewedAt,
+            closeout.EvidenceAccepted,
+            closeout.UnresolvedDefectRefs,
+            closeout.FollowUpWorkOrderRefs,
+            closeout.CustomerImpactSummary,
+            closeout.DowntimeSummary,
+            closeout.FinalAssetReadinessStatus,
+            closeout.FinalStatus,
+        });
+
+    private static string GetStatusTimelineEventType(string status) =>
+        status.ToLowerInvariant() switch
+        {
+            WorkOrderStatuses.InProgress => "maintainarr.work_order.started",
+            WorkOrderStatuses.Completed => "maintainarr.work_order.completed",
+            WorkOrderStatuses.Cancelled => "maintainarr.work_order.canceled",
+            _ => "maintainarr.work_order.updated",
+        };
+
+    private async Task SyncLinkedDefectStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid defectId,
+        string targetDefectStatus,
+        CancellationToken cancellationToken)
+    {
+        var defect = await db.Defects.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == defectId,
+            cancellationToken);
+
+        if (defect is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(targetDefectStatus)
+            || string.Equals(defect.Status, targetDefectStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        defect.Status = targetDefectStatus;
+        defect.UpdatedAt = now;
+        if (string.Equals(targetDefectStatus, DefectStatuses.Resolved, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(targetDefectStatus, DefectStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+        {
+            defect.ResolvedAt ??= now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "defect.status_update_from_work_order",
+            tenantId,
+            actorUserId,
+            "defect",
+            defect.Id.ToString(),
+            defect.Status,
+            cancellationToken: cancellationToken);
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == defect.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        var eventKind = defect.Status switch
+        {
+            DefectStatuses.InRepair => null,
+            DefectStatuses.Resolved => MaintenancePlatformOutboxEventKinds.DefectRepaired,
+            DefectStatuses.Closed => MaintenancePlatformOutboxEventKinds.DefectClosed,
+            _ => null,
+        };
+
+        if (eventKind is not null)
+        {
+            await platformOutboxEnqueue.TryEnqueueDefectEventAsync(
+                tenantId,
+                eventKind,
+                defect,
+                asset,
+                actorUserId,
+                now,
+                $"Defect {defect.Title} changed to {defect.Status} for asset {asset.AssetTag}.",
+                eventResult: defect.Status,
+                cancellationToken: cancellationToken);
+        }
     }
 
     private static string MapDefectSeverityToPriority(string severity) =>
@@ -1032,6 +1575,169 @@ public sealed class WorkOrderService(
     }
 
     private static string NormalizePriority(string priority) => priority.Trim().ToLowerInvariant();
+
+    private static string NormalizeRequiredValue(string? value, string code)
+    {
+        var normalized = NormalizeOptionalValue(value);
+        if (normalized is null)
+        {
+            throw new StlApiException(code, "A value is required.", 400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptionalValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
+    }
+
+    private static void ValidateBlockerType(string blockerType)
+    {
+        if (!WorkOrderBlockerTypes.All.Contains(blockerType))
+        {
+            throw new StlApiException(
+                "work_order.invalid_blocker_type",
+                "Blocker type is not recognized.",
+                400);
+        }
+    }
+
+    private static void ValidateSourceProduct(string sourceProduct)
+    {
+        if (sourceProduct.Length > 64)
+        {
+            throw new StlApiException(
+                "work_order.blocker_source_product_too_long",
+                "Blocker source product must be 64 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateBlockerTitle(string title)
+    {
+        if (title.Length > 256)
+        {
+            throw new StlApiException(
+                "work_order.blocker_title_too_long",
+                "Blocker title must be 256 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateBlockerDescription(string description)
+    {
+        if (description.Length > 1024)
+        {
+            throw new StlApiException(
+                "work_order.blocker_description_too_long",
+                "Blocker description must be 1024 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateBlockerSeverity(string severity)
+    {
+        if (!WorkOrderBlockerSeverities.All.Contains(severity))
+        {
+            throw new StlApiException(
+                "work_order.invalid_blocker_severity",
+                "Blocker severity must be low, moderate, high, or critical.",
+                400);
+        }
+    }
+
+    private static void ValidateBlockerStatus(string status)
+    {
+        if (!WorkOrderBlockerStatuses.All.Contains(status))
+        {
+            throw new StlApiException(
+                "work_order.invalid_blocker_status",
+                "Blocker status must be active, resolved, overridden, or canceled.",
+                400);
+        }
+    }
+
+    private static void ValidateBlockerRequiredAction(string? requiredAction)
+    {
+        if (requiredAction is not null && requiredAction.Length > 512)
+        {
+            throw new StlApiException(
+                "work_order.blocker_required_action_too_long",
+                "Blocker required action must be 512 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateCloseoutCompletionSummary(string summary)
+    {
+        if (summary.Length > 1024)
+        {
+            throw new StlApiException(
+                "work_order.closeout_summary_too_long",
+                "Closeout completion summary must be 1024 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateCloseoutRootCause(string? rootCause)
+    {
+        if (rootCause is null)
+        {
+            return;
+        }
+
+        if (!WorkOrderCloseoutRootCauses.All.Contains(rootCause))
+        {
+            throw new StlApiException(
+                "work_order.invalid_closeout_root_cause",
+                "Closeout root cause is not recognized.",
+                400);
+        }
+    }
+
+    private static void ValidateCloseoutCorrectiveAction(string? correctiveAction)
+    {
+        if (correctiveAction is not null && correctiveAction.Length > 1024)
+        {
+            throw new StlApiException(
+                "work_order.closeout_corrective_action_too_long",
+                "Closeout corrective action must be 1024 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateCloseoutPreventiveAction(string? preventiveActionRecommendation)
+    {
+        if (preventiveActionRecommendation is not null && preventiveActionRecommendation.Length > 1024)
+        {
+            throw new StlApiException(
+                "work_order.closeout_preventive_action_too_long",
+                "Closeout preventive action recommendation must be 1024 characters or fewer.",
+                400);
+        }
+    }
+
+    private static void ValidateOptionalPersonId(string? personId)
+    {
+        if (personId is null)
+        {
+            return;
+        }
+
+        if (personId.Length > 128)
+        {
+            throw new StlApiException(
+                "work_order.person_id_too_long",
+                "Person id must be 128 characters or fewer.",
+                400);
+        }
+    }
 
     private static string? NormalizeAssignedPersonId(string? personId)
     {
@@ -1094,5 +1800,62 @@ public sealed class WorkOrderService(
             assignedTechnicianPersonId,
             null,
             cancellationToken);
+    }
+
+    private static class WorkOrderBlockerTypes
+    {
+        public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "parts",
+            "labor",
+            "qualification",
+            "safety",
+            "compliance",
+            "approval",
+            "vendor",
+            "quality_hold",
+            "document",
+            "asset_unavailable",
+            "location_unavailable",
+            "system",
+        };
+    }
+
+    private static class WorkOrderBlockerSeverities
+    {
+        public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "low",
+            "moderate",
+            "high",
+            "critical",
+        };
+    }
+
+    private static class WorkOrderBlockerStatuses
+    {
+        public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "active",
+            "resolved",
+            "overridden",
+            "canceled",
+        };
+    }
+
+    private static class WorkOrderCloseoutRootCauses
+    {
+        public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "wear",
+            "abuse",
+            "operator_error",
+            "maintenance_error",
+            "part_failure",
+            "design_issue",
+            "environmental",
+            "unknown",
+            "other",
+        };
     }
 }

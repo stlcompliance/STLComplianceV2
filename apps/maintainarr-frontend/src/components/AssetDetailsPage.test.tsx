@@ -63,13 +63,69 @@ describe('AssetDetailsPage', () => {
           isReadinessHistoryLoading={false}
           fieldContext={{
             assetId: '11111111-1111-1111-1111-111111111111',
-            fields: [],
+            fields: [
+              {
+                key: 'engineMake',
+                storedValue: 'Cummins',
+                displayValue: 'Cummins',
+                source: 'controlled',
+                sourceOfTruth: 'Asset profile',
+              },
+              {
+                key: 'preferredPartId',
+                storedValue: 'part-123',
+                displayValue: 'Brake chamber kit',
+                source: 'reference',
+                sourceOfTruth: 'SupplyArr',
+              },
+            ],
           }}
+          installedComponents={[
+            {
+              componentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+              componentNumber: 'ENG-01',
+              parentAssetId: '11111111-1111-1111-1111-111111111111',
+              parentComponentId: null,
+              name: 'Primary engine',
+              description: 'Main power unit',
+              componentType: 'engine',
+              status: 'installed',
+              make: 'Cummins',
+              model: 'X15',
+              serialNumber: 'SER-123',
+              partNumberSnapshot: 'PN-999',
+              installedPartUsageRef: 'usage-1',
+              installDate: '2026-06-01T08:00:00Z',
+              installedByPersonId: 'person-2',
+              installedMeterReading: 1234,
+              removedDate: null,
+              removedByPersonId: null,
+              removedMeterReading: null,
+              removalReason: null,
+              warrantyStartDate: '2026-06-01T00:00:00Z',
+              warrantyEndDate: '2027-06-01T00:00:00Z',
+              expectedLifeHours: 5000,
+              expectedLifeMiles: 250000,
+              expectedLifeCycles: 1000,
+              condition: 'good',
+              replacementPartRefs: ['part-1'],
+              documentRefs: ['doc-1'],
+              defectRefs: [],
+              workOrderRefs: ['wo-1'],
+              createdAt: '2026-06-01T08:00:00Z',
+              updatedAt: '2026-06-01T08:00:00Z',
+            },
+          ]}
         />
       </MemoryRouter>,
     )
 
     expect(screen.getByText('Readiness history')).toBeInTheDocument()
+    expect(screen.getByText('Components')).toBeInTheDocument()
+    expect(screen.getByText('ENG-01 · Primary engine')).toBeInTheDocument()
+    expect(screen.getByText('Engine · Installed · Good')).toBeInTheDocument()
+    expect(screen.getByText(/Replacement parts: 1/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Brake chamber kit/i).length).toBeGreaterThan(0)
     expect(screen.getByText('Readiness Status')).toBeInTheDocument()
     expect(screen.getByText('ready')).toBeInTheDocument()
     expect(screen.getByText('Cleared after PM completion.')).toBeInTheDocument()

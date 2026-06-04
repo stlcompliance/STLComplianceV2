@@ -32,7 +32,10 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _handoffServiceToken = null!;
+    private string _maintainarrIntegrationToken = null!;
+    private string _staffarrSiteLookupToken = null!;
     private string _pmScanServiceToken = null!;
+    private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -59,7 +62,15 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         _handoffServiceToken = await IssueHandoffServiceTokenAsync(adminToken, "maintainarr");
+        _maintainarrIntegrationToken = await IssueServiceTokenAsync(adminToken, "maintainarr");
+        _staffarrSiteLookupToken = await IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            ["staffarr"],
+            StaffArrSiteIntegrationScopes.SitesRead,
+            "staffarr-sites");
         _pmScanServiceToken = await IssuePmScanServiceTokenAsync(adminToken);
+        _staffarrSiteLookupHandler = new RecordingStaffArrSiteLookupHandler(Guid.Parse("5f0b49a9-7c67-4ce1-a0e9-3e7e226d3992"));
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -69,6 +80,8 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", _handoffServiceToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", _staffarrSiteLookupToken);
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
             builder.ConfigureServices(services =>
             {
@@ -77,6 +90,8 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrSiteLookupClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
             });
         });
 
@@ -96,6 +111,28 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     {
         var token = await RedeemMaintainArrTokenAsync();
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
+
+        var asset = await GetAssetAsync(token, assetId);
+        var componentUpdateRequest = Authorized(HttpMethod.Patch, $"/api/v1/assets/{assetId}", token);
+        componentUpdateRequest.Content = JsonContent.Create(new AssetUpsertV1Request(
+            asset.AssetTag,
+            asset.Name,
+            asset.Description,
+            new Dictionary<string, object?>
+            {
+                ["assetClass"] = "powered_industrial_truck",
+                ["assetType"] = "forklift",
+                ["engineMake"] = "Cummins",
+                ["lifecycleStatus"] = "active",
+            }));
+        var componentUpdateResponse = await _maintainarrClient.SendAsync(componentUpdateRequest);
+        componentUpdateResponse.EnsureSuccessStatusCode();
+        var lifecycleRequest = Authorized(HttpMethod.Patch, $"/api/v1/assets/{assetId}/lifecycle-status", token);
+        lifecycleRequest.Content = JsonContent.Create(new UpdateAssetLifecycleStatusRequest("active"));
+        var lifecycleResponse = await _maintainarrClient.SendAsync(lifecycleRequest);
+        lifecycleResponse.EnsureSuccessStatusCode();
+        var updatedAsset = await GetAssetAsync(token, assetId);
+        Assert.Equal("active", updatedAsset.LifecycleStatus);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
         startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
@@ -167,6 +204,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         Assert.True(history.TotalCount >= 6);
         Assert.Contains(history.Items, x => x.Category == "inspection" && x.EventType == "inspection_started");
         Assert.Contains(history.Items, x => x.Category == "inspection" && x.EventType == "inspection_completed");
+        Assert.Contains(history.Items, x => x.Category == "component" && x.EventType == "component_created");
         Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_reported");
         Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_resolved");
         Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_created");
@@ -179,6 +217,86 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             x => x.Category == "work_order"
                 && x.EventType == "work_order_created"
                 && x.SourceEntityId == workOrder.WorkOrderId.ToString());
+    }
+
+    [Fact]
+    public async Task Maintenance_history_includes_repair_progression_events_for_defects()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var defectRequest = Authorized(HttpMethod.Post, "/api/defects", token);
+        defectRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "Repair history defect",
+            "Track the repair lifecycle in maintenance history",
+            "high"));
+        var defectResponse = await _maintainarrClient.SendAsync(defectRequest);
+        defectResponse.EnsureSuccessStatusCode();
+        var defect = (await defectResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var workOrderRequest = Authorized(HttpMethod.Post, $"/api/defects/{defect.DefectId}/work-orders", token);
+        workOrderRequest.Content = JsonContent.Create(new CreateWorkOrderFromDefectRequest(
+            "Repair history work order",
+            "Exercise the repair lifecycle timeline",
+            "high",
+            null));
+        var workOrderResponse = await _maintainarrClient.SendAsync(workOrderRequest);
+        workOrderResponse.EnsureSuccessStatusCode();
+        var workOrder = (await workOrderResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var startRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.WorkOrderId}/status", token);
+        startRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
+        await _maintainarrClient.SendAsync(startRequest);
+
+        var completeRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.WorkOrderId}/status", token);
+        completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
+        await _maintainarrClient.SendAsync(completeRequest);
+
+        var closeoutRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/integrations/work-orders/{workOrder.WorkOrderId}/closeout",
+            _maintainarrIntegrationToken);
+        closeoutRequest.Content = JsonContent.Create(new CreateWorkOrderCloseoutRequest(
+            "Repair completed and asset returned to service.",
+            "wear",
+            "Replaced failed seal and verified operation.",
+            "Monitor seal wear at next PM.",
+            true,
+            DateTimeOffset.UtcNow,
+            Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd").ToString(),
+            true,
+            Guid.NewGuid(),
+            true,
+            Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee").ToString(),
+            DateTimeOffset.UtcNow,
+            false,
+            null,
+            null,
+            false,
+            null,
+            null,
+            true,
+            null,
+            null,
+            "Customer reported brief downtime.",
+            "2.5 hours downtime.",
+            "ready",
+            "closed"));
+        await _maintainarrClient.SendAsync(closeoutRequest);
+
+        var historyResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/maintenance-history?assetId={assetId}&page=1&pageSize=50", token));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<PagedResult<MaintenanceHistoryEntryResponse>>())!;
+
+        Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_reported" && x.SourceEntityId == defect.DefectId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_in_repair" && x.EntryId.StartsWith($"defect:{defect.DefectId}:in_repair:"));
+        Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_resolved" && x.SourceEntityId == defect.DefectId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "defect" && x.EventType == "defect_closed" && x.SourceEntityId == defect.DefectId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_started" && x.SourceEntityId == workOrder.WorkOrderId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_completed" && x.SourceEntityId == workOrder.WorkOrderId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_closed" && x.SourceEntityType == "work_order_closeout" && x.RelatedEntityId == defect.DefectId.ToString());
     }
 
     [Fact]
@@ -265,6 +383,14 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         return asset.AssetId;
     }
 
+    private async Task<AssetResponse> GetAssetAsync(string token, Guid assetId)
+    {
+        var request = Authorized(HttpMethod.Get, $"/api/assets/{assetId}", token);
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<AssetResponse>())!;
+    }
+
     private async Task<(Guid AssetId, Guid TemplateId, Guid ChecklistItemId)> SeedActiveTemplateWithAssetAsync(string token)
     {
         var assetTypeId = await SeedAssetTypeAsync(token);
@@ -313,7 +439,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             $"HIST-RUN-{Guid.NewGuid():N}".Substring(0, 12),
             "History Inspection Asset",
             string.Empty,
-            "yard-a"));
+            null));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -325,8 +451,8 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     {
         var createClassRequest = Authorized(HttpMethod.Post, "/api/asset-classes", token);
         createClassRequest.Content = JsonContent.Create(new CreateAssetClassRequest(
-            $"hist-vehicles-{Guid.NewGuid():N}".Substring(0, 12),
-            "History Vehicles",
+            "vehicles",
+            "Vehicles",
             string.Empty));
         var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
         createClassResponse.EnsureSuccessStatusCode();
@@ -335,8 +461,8 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
         createTypeRequest.Content = JsonContent.Create(new CreateAssetTypeRequest(
             assetClass.AssetClassId,
-            $"hist-forklift-{Guid.NewGuid():N}".Substring(0, 12),
-            "History Forklift",
+            "forklift",
+            "Forklift",
             string.Empty));
         var createTypeResponse = await _maintainarrClient.SendAsync(createTypeRequest);
         createTypeResponse.EnsureSuccessStatusCode();
@@ -418,6 +544,36 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         return issued.AccessToken;
     }
 
+    private async Task<string> IssueServiceTokenAsync(
+        string adminToken,
+        string productKey,
+        string[]? targetProducts = null,
+        string actionScope = "launch.redeem",
+        string clientSuffix = "history-test")
+    {
+        var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
+        registerRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.RegisterServiceClientRequest(
+            $"{productKey}-{clientSuffix}",
+            $"{productKey} History Test",
+            productKey,
+            [productKey]));
+        var registerResponse = await _nexarrClient.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", adminToken);
+        issueRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            targetProducts,
+            actionScope,
+            30));
+        var issueResponse = await _nexarrClient.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceTokenIssueResponse>())!;
+        return issued.AccessToken;
+    }
+
     private string CreateMaintainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",
@@ -475,5 +631,43 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class RecordingStaffArrSiteLookupHandler(Guid siteOrgUnitId) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!path.Contains("/api/v1/integrations/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+
+            var response = new StaffArrSiteLookupResponse(
+                siteOrgUnitId,
+                "Central Maintenance Site",
+                null,
+                "active");
+
+            if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new[] { response })
+                });
+            }
+
+            if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(response)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 }

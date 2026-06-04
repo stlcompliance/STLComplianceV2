@@ -21,6 +21,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<AssetClassService>();
         builder.Services.AddScoped<AssetTypeService>();
         builder.Services.AddScoped<AssetService>();
+        builder.Services.AddScoped<AssetInstalledComponentService>();
         builder.Services.AddScoped<AssetTelematicsIngestionService>();
         builder.Services.AddScoped<CatalogService>();
         builder.Services.AddScoped<CatalogSeedService>();
@@ -48,6 +49,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MeterReadingService>();
         builder.Services.AddScoped<MeterPmForecastService>();
         builder.Services.AddScoped<WorkOrderService>();
+        builder.Services.AddScoped<WorkOrderDiscussionService>();
         builder.Services.AddScoped<TechnicianRefService>();
         builder.Services.AddScoped<StaffarrPersonSyncIngestionService>();
         builder.Services.AddScoped<RoutarrEventIngestionService>();
@@ -83,6 +85,9 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<WorkOrderLaborEvidenceService>();
         builder.Services.AddScoped<WorkOrderPartsDemandService>();
         builder.Services.AddScoped<WorkOrderPartsDemandStatusIngestionService>();
+        builder.Services.AddScoped<AssetQualityHoldService>();
+        builder.Services.AddScoped<AssetReadinessCheckService>();
+        builder.Services.AddScoped<MaintenanceVendorWorkService>();
         builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
         {

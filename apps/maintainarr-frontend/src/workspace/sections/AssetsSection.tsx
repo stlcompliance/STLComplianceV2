@@ -61,6 +61,7 @@ export function AssetsSection({ state }: Props) {
             readinessHistory={s.assetReadinessHistoryQuery.data ?? null}
             isReadinessHistoryLoading={s.assetReadinessHistoryQuery.isLoading}
             fieldContext={s.assetFieldContextQuery.data ?? null}
+            installedComponents={s.assetInstalledComponentsQuery.data ?? null}
           />
         ) : (
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
