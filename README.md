@@ -8,7 +8,7 @@ Greenfield monorepo for the full V1 STL Compliance / Arr product suite (.NET 10 
 |-----------|--------|
 | M1 — Render & repo foundation | Complete |
 | M2 — NexArr platform access spine | Partial |
-| M4 — StaffArr workforce spine | In progress (see `docs/staffarr_end_goal_featureset.md`) |
+| M4 — StaffArr workforce spine | In progress (documentation is being rewritten) |
 
 ## Repository layout
 
@@ -17,7 +17,7 @@ apps/           # Product APIs (nexarr, staffarr, trainarr, maintainarr, routarr
 workers/        # Product background workers
 packages/       # shared-dotnet (hosting, health, tenant-scoped EF foundation)
 tests/          # Cross-suite tests
-docs/           # Masterplan, featuresets, implementation milestones
+docs/           # Architecture/implementation docs have been retired and will be replaced
 docker/         # Shared Docker build patterns
 docker-compose.yml
 render.yaml
@@ -80,4 +80,4 @@ GitHub Actions workflow: `.github/workflows/ci.yml` — restore, build, test.
 
 ## Documentation
 
-See the product end-goal docs in `docs/` and the suite guardrails in `.cursor/rules/suite-rules-and-guardrails.mdc`.
+Architecture and implementation notes are being replaced as part of the active cleanup effort; check active planning notes in-progress.
