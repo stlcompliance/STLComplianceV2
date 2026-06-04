@@ -2087,6 +2087,14 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.DecisionReason = request.ClosureSummary ?? entity.DecisionReason;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
         }
+        if (string.Equals(entity.Status, "approved", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("review", entity.Id, "assurarr.quality_review.approved", entity.Title, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("review", entity.Id, "assurarr.quality_review.rejected", entity.Title, cancellationToken);
+        }
         await AddTimelineAsync("review", entity.Id, $"assurarr.quality_review.{entity.Status}", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToReviewResponse(entity);
@@ -2152,6 +2160,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         if (string.Equals(entity.Status, "approved", StringComparison.OrdinalIgnoreCase))
         {
             entity.ApprovedAt = entity.ApprovedAt ?? entity.UpdatedAt;
+            await AddTimelineAsync("release", entity.Id, "assurarr.quality_release.approved", entity.Title, cancellationToken);
         }
         else if (string.Equals(entity.Status, "executed", StringComparison.OrdinalIgnoreCase))
         {
@@ -2159,12 +2168,17 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ExecutedAt = entity.UpdatedAt;
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            await AddTimelineAsync("release", entity.Id, "assurarr.quality_release.executed", entity.Title, cancellationToken);
         }
         else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase)
             || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                await AddTimelineAsync("release", entity.Id, "assurarr.quality_release.rejected", entity.Title, cancellationToken);
+            }
         }
 
         await AddTimelineAsync("release", entity.Id, $"assurarr.quality_release.{entity.Status}", entity.Title, cancellationToken);
