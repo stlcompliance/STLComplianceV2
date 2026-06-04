@@ -452,6 +452,7 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionAnswerSubmitted);
         Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionCompleted);
         Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionFailed);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionDefectCreated);
         Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
     }
 

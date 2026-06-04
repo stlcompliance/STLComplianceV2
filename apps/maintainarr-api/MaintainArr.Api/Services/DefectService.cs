@@ -18,6 +18,8 @@ public sealed class DefectService(
 
     MaintainArrDbContext db,
 
+    AssetService assetService,
+
     IMaintainArrAuditService audit,
 
     AssetDowntimeService assetDowntimeService,
@@ -670,6 +672,7 @@ public sealed class DefectService(
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
         if (asset is not null)
         {
+            var assetResponse = await assetService.GetAsync(tenantId, asset.Id, cancellationToken);
             await platformOutboxEnqueue.TryEnqueueDefectEventAsync(
                 tenantId,
                 MaintenancePlatformOutboxEventKinds.DefectCreated,
@@ -679,6 +682,17 @@ public sealed class DefectService(
                 now,
                 $"Defect {entity.Title} created from inspection for asset {asset.AssetTag}.",
                 eventResult: entity.Severity,
+                cancellationToken: cancellationToken);
+
+            await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.InspectionDefectCreated,
+                run,
+                assetResponse,
+                actorUserId,
+                now,
+                $"Inspection {run.Id} created defect {entity.Id} for asset {asset.AssetTag}.",
+                eventResult: entity.Id.ToString("D"),
                 cancellationToken: cancellationToken);
         }
 

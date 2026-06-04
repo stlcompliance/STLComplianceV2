@@ -98,6 +98,8 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string InspectionFailed = "inspection.failed";
 
+    public const string InspectionDefectCreated = "inspection.defect_created";
+
     public const string DefectCreated = "defect.created";
 
     public const string DefectRepaired = "defect.repaired";
