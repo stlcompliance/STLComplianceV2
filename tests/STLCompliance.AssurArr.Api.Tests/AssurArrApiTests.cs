@@ -30,9 +30,14 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Contains(dashboard.Cards, card => card.Key == "critical-nonconformances" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "holds" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "scars" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "audit-findings" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "repeat-issues" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "capa-effectiveness");
         Assert.Contains(dashboard.Cards, card => card.Key == "overdue-capas" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "recently-released-holds");
+        Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-site" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-supplier" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-process" && card.Count >= 1);
     }
 
     [Fact]

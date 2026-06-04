@@ -721,6 +721,44 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = now,
         });
 
+        db.QualityRiskProfiles.AddRange(
+            new AssurArrQualityRiskProfile
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                TargetType = "supplier",
+                TargetRef = "supplyarr:supplier:acme-packaging",
+                RiskLevel = "critical",
+                RiskFactors = ["repeat damage trend", "late supplier response", "open SCAR"],
+                OpenIssueCount = 3,
+                RepeatIssueCount = 1,
+                CriticalIssueCount = 1,
+                LastIncidentAt = now.AddDays(-1),
+                MitigationActions = ["Escalate supplier review", "Require corrective action confirmation", "Increase incoming inspection sampling"],
+                ReviewedAt = now,
+                ReviewedByPersonId = null,
+                CreatedAt = now,
+                UpdatedAt = now,
+            },
+            new AssurArrQualityRiskProfile
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                TargetType = "process",
+                TargetRef = "loadarr:process:receiving-release",
+                RiskLevel = "high",
+                RiskFactors = ["missing inspection handoff", "repeat release delay", "manual workaround"],
+                OpenIssueCount = 2,
+                RepeatIssueCount = 1,
+                CriticalIssueCount = 0,
+                LastIncidentAt = now.AddDays(-3),
+                MitigationActions = ["Update release checklist", "Add supervisor review step", "Monitor release cycle time"],
+                ReviewedAt = now,
+                ReviewedByPersonId = null,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
         db.QualityReviews.Add(new AssurArrQualityReview
         {
             Id = Guid.NewGuid(),
@@ -931,6 +969,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var overdueCapaCount = await db.Capas.CountAsync(x => x.DueAt != null && x.DueAt < now && x.Status != "closed" && x.Status != "canceled" && x.Status != "effective", cancellationToken);
         var openAuditCount = await db.QualityAudits.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openFindingCount = await db.AuditFindings.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var auditFindingCount = await db.AuditFindings.CountAsync(cancellationToken);
+        var repeatIssueCount = await db.Nonconformances.CountAsync(x => x.RecurrenceFlag || x.RepeatOfNonconformanceRef != null, cancellationToken);
         var pendingReviewCount = await db.QualityReviews.CountAsync(x => x.Status == "pending" || x.Status == "in_review", cancellationToken);
         var pendingReleaseCount = await db.QualityReleases.CountAsync(x => x.Status == "requested" || x.Status == "pending_review", cancellationToken);
         var openContainmentCount = await db.ContainmentActions.CountAsync(x => x.Status != "verified" && x.Status != "canceled", cancellationToken);
@@ -942,6 +982,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var recentlyReleasedHoldCount = await db.QualityHolds.CountAsync(x => x.Status == "released" && x.ReleasedAt != null && x.ReleasedAt >= now.AddDays(-30), cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
         var highRiskProfileCount = await db.QualityRiskProfiles.CountAsync(x => x.RiskLevel == "high" || x.RiskLevel == "critical", cancellationToken);
+        var siteRiskCount = await db.QualityRiskProfiles.CountAsync(x => (x.RiskLevel == "high" || x.RiskLevel == "critical") && x.TargetType == "site", cancellationToken);
+        var supplierRiskCount = await db.QualityRiskProfiles.CountAsync(x => (x.RiskLevel == "high" || x.RiskLevel == "critical") && x.TargetType == "supplier", cancellationToken);
+        var processRiskCount = await db.QualityRiskProfiles.CountAsync(x => (x.RiskLevel == "high" || x.RiskLevel == "critical") && x.TargetType == "process", cancellationToken);
         var openStatusSnapshots = await db.QualityStatusSnapshots.CountAsync(x => x.Status != "unknown", cancellationToken);
 
         var cards = new[]
@@ -953,6 +996,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("overdue-capas", "Overdue CAPAs", "CAPA records that have passed their due date without completion.", overdueCapaCount, "warning"),
             new AssurArrDashboardCardResponse("audits", "Open audits", "Quality reviews and audits awaiting closeout.", openAuditCount, "info"),
             new AssurArrDashboardCardResponse("findings", "Open findings", "Issues or opportunities captured during audits.", openFindingCount, "soft"),
+            new AssurArrDashboardCardResponse("audit-findings", "Audit findings", "Findings captured across active and historical audits.", auditFindingCount, "info"),
+            new AssurArrDashboardCardResponse("repeat-issues", "Repeat issues", "Nonconformances marked as recurring or repeated.", repeatIssueCount, "warning"),
             new AssurArrDashboardCardResponse("reviews", "Quality reviews", "Evidence reviews and decision gates in progress.", pendingReviewCount, "info"),
             new AssurArrDashboardCardResponse("releases", "Quality releases", "Release requests waiting on approval or execution.", pendingReleaseCount, "warning"),
             new AssurArrDashboardCardResponse("containment", "Containment actions", "Immediate quality actions in flight or pending verification.", openContainmentCount, "accent"),
@@ -965,6 +1010,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("capa-effectiveness", "CAPA effectiveness", "CAPAs that have been verified effective.", effectiveCapaCount, "success"),
             new AssurArrDashboardCardResponse("recently-released-holds", "Recently released holds", "Holds released in the last 30 days.", recentlyReleasedHoldCount, "info"),
             new AssurArrDashboardCardResponse("risk-profiles", "Quality risk profiles", "Sites, suppliers, customers, and processes with elevated quality risk.", highRiskProfileCount, "warning"),
+            new AssurArrDashboardCardResponse("risk-by-site", "Quality risk by site", "High-risk sites with elevated quality impact.", siteRiskCount, "warning"),
+            new AssurArrDashboardCardResponse("risk-by-supplier", "Quality risk by supplier", "High-risk suppliers with current quality concerns.", supplierRiskCount, "danger"),
+            new AssurArrDashboardCardResponse("risk-by-process", "Quality risk by process", "High-risk business processes requiring attention.", processRiskCount, "warning"),
         };
 
         var events = await db.TimelineEvents
