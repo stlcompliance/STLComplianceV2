@@ -623,6 +623,35 @@ public sealed record CreateAssurArrQualityMetricRequest(
     string Status,
     string[] SourceProductRefs);
 
+public sealed record AssurArrQualityRiskProfileResponse(
+    Guid Id,
+    string TargetType,
+    string TargetRef,
+    string RiskLevel,
+    IReadOnlyList<string> RiskFactors,
+    int OpenIssueCount,
+    int RepeatIssueCount,
+    int CriticalIssueCount,
+    DateTimeOffset? LastIncidentAt,
+    IReadOnlyList<string> MitigationActions,
+    DateTimeOffset? ReviewedAt,
+    Guid? ReviewedByPersonId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrQualityRiskProfileRequest(
+    string TargetType,
+    string TargetRef,
+    string RiskLevel,
+    string[] RiskFactors,
+    int OpenIssueCount,
+    int RepeatIssueCount,
+    int CriticalIssueCount,
+    DateTimeOffset? LastIncidentAt,
+    string[] MitigationActions,
+    DateTimeOffset? ReviewedAt,
+    Guid? ReviewedByPersonId);
+
 public sealed record AssurArrQualityReviewResponse(
     Guid Id,
     string Number,

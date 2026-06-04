@@ -91,6 +91,27 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly HashSet<string> RiskProfileTargetTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "supplier",
+        "customer",
+        "process",
+        "site",
+        "asset",
+        "inventory_item",
+        "order",
+        "route",
+    };
+
+    private static readonly HashSet<string> RiskLevels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "low",
+        "moderate",
+        "high",
+        "critical",
+        "unknown",
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> AuditTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -631,6 +652,25 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var seededScorecard = db.QualityScorecards.Local.Single(x => x.Number == "SCORE-000001");
         seededScorecard.MetricRefs = ["MET-000001", "MET-000002"];
 
+        db.QualityRiskProfiles.Add(new AssurArrQualityRiskProfile
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            TargetType = "site",
+            TargetRef = "loadarr:site:north-yard",
+            RiskLevel = "high",
+            RiskFactors = ["open nonconformance trend", "recent hold activity", "critical defect recurrence"],
+            OpenIssueCount = 4,
+            RepeatIssueCount = 2,
+            CriticalIssueCount = 1,
+            LastIncidentAt = now.AddDays(-2),
+            MitigationActions = ["Continue receiving containment review", "Verify hold release evidence", "Monitor repeat defects"],
+            ReviewedAt = now,
+            ReviewedByPersonId = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         db.QualityReviews.Add(new AssurArrQualityReview
         {
             Id = Guid.NewGuid(),
@@ -847,6 +887,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var openScarCount = await db.SupplierCorrectiveActionRequests.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openComplaintCount = await db.CustomerComplaintQualityCases.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
+        var highRiskProfileCount = await db.QualityRiskProfiles.CountAsync(x => x.RiskLevel == "high" || x.RiskLevel == "critical", cancellationToken);
         var openStatusSnapshots = await db.QualityStatusSnapshots.CountAsync(x => x.Status != "unknown", cancellationToken);
 
         var cards = new[]
@@ -865,6 +906,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("customer-complaints", "Customer complaint cases", "Customer-facing complaint quality workflows in progress.", openComplaintCount, "warning"),
             new AssurArrDashboardCardResponse("status", "Status snapshots", "Current quality state published to other products.", openStatusSnapshots, "neutral"),
             new AssurArrDashboardCardResponse("scorecards", "Scorecards", "Active quality scorecards and trend summaries.", openScorecards, "accent"),
+            new AssurArrDashboardCardResponse("risk-profiles", "Quality risk profiles", "Sites, suppliers, customers, and processes with elevated quality risk.", highRiskProfileCount, "warning"),
         };
 
         var events = await db.TimelineEvents
@@ -2538,6 +2580,67 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return ToScorecardResponse(entity);
     }
 
+    public async Task<List<AssurArrQualityRiskProfileResponse>> ListQualityRiskProfilesAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.QualityRiskProfiles
+            .AsNoTracking()
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToRiskProfileResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityRiskProfileResponse?> GetQualityRiskProfileAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityRiskProfiles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToRiskProfileResponse(entity)
+            : null;
+
+    public async Task<AssurArrQualityRiskProfileResponse> CreateQualityRiskProfileAsync(CreateAssurArrQualityRiskProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var targetType = Normalize(request.TargetType, "other");
+        if (!RiskProfileTargetTypes.Contains(targetType))
+        {
+            throw new InvalidOperationException($"Unsupported risk profile target type '{request.TargetType}'.");
+        }
+
+        var riskLevel = Normalize(request.RiskLevel, "unknown");
+        if (!RiskLevels.Contains(riskLevel))
+        {
+            throw new InvalidOperationException($"Unsupported risk level '{request.RiskLevel}'.");
+        }
+
+        var existing = await db.QualityRiskProfiles.FirstOrDefaultAsync(x => x.TargetType == targetType && x.TargetRef == request.TargetRef.Trim(), cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var entity = existing ?? new AssurArrQualityRiskProfile
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            TargetType = targetType,
+            TargetRef = request.TargetRef.Trim(),
+            CreatedAt = now,
+        };
+
+        entity.RiskLevel = riskLevel;
+        entity.RiskFactors = request.RiskFactors ?? [];
+        entity.OpenIssueCount = request.OpenIssueCount;
+        entity.RepeatIssueCount = request.RepeatIssueCount;
+        entity.CriticalIssueCount = request.CriticalIssueCount;
+        entity.LastIncidentAt = request.LastIncidentAt;
+        entity.MitigationActions = request.MitigationActions ?? [];
+        entity.ReviewedAt = request.ReviewedAt;
+        entity.ReviewedByPersonId = request.ReviewedByPersonId;
+        entity.UpdatedAt = now;
+
+        if (existing is null)
+        {
+            db.QualityRiskProfiles.Add(entity);
+        }
+
+        await AddTimelineAsync("risk-profile", entity.Id, "assurarr.risk_profile.updated", entity.TargetRef, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToRiskProfileResponse(entity);
+    }
+
     public async Task<List<AssurArrQualityMetricResponse>> ListQualityMetricsAsync(Guid scorecardId, CancellationToken cancellationToken = default)
     {
         var entities = await db.QualityMetrics
@@ -3259,6 +3362,23 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.CriticalThreshold,
             entity.Status,
             entity.SourceProductRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt);
+
+    private static AssurArrQualityRiskProfileResponse ToRiskProfileResponse(AssurArrQualityRiskProfile entity) =>
+        new(
+            entity.Id,
+            entity.TargetType,
+            entity.TargetRef,
+            entity.RiskLevel,
+            entity.RiskFactors,
+            entity.OpenIssueCount,
+            entity.RepeatIssueCount,
+            entity.CriticalIssueCount,
+            entity.LastIncidentAt,
+            entity.MitigationActions,
+            entity.ReviewedAt,
+            entity.ReviewedByPersonId,
             entity.CreatedAt,
             entity.UpdatedAt);
 }

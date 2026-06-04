@@ -322,6 +322,23 @@ export type QualityMetric = {
   updatedAt: string
 }
 
+export type QualityRiskProfile = {
+  id: string
+  targetType: string
+  targetRef: string
+  riskLevel: string
+  riskFactors: string[]
+  openIssueCount: number
+  repeatIssueCount: number
+  criticalIssueCount: number
+  lastIncidentAt: string | null
+  mitigationActions: string[]
+  reviewedAt: string | null
+  reviewedByPersonId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export type QualityReview = ListItem & {
   reviewType: string
   sourceReviewRef: string | null
@@ -754,6 +771,16 @@ export const assurarrApi = {
     sendJson<QualityMetric>(`/api/v1/scorecards/${scorecardId}/metrics`, 'POST', {
       ...body,
       sourceProductRefs: body.sourceProductRefs ?? [],
+    }),
+  listRiskProfiles: () => getJson<QualityRiskProfile[]>('/api/v1/integrations/risk-profiles'),
+  getRiskProfile: (id: string) => getJson<QualityRiskProfile>(`/api/v1/integrations/risk-profiles/${id}`),
+  createRiskProfile: (body: { targetType: string; targetRef: string; riskLevel: string; riskFactors?: string[]; openIssueCount: number; repeatIssueCount: number; criticalIssueCount: number; lastIncidentAt?: string | null; mitigationActions?: string[]; reviewedAt?: string | null; reviewedByPersonId?: string | null }) =>
+    sendJson<QualityRiskProfile>('/api/v1/integrations/risk-profiles', 'POST', {
+      ...body,
+      riskFactors: body.riskFactors ?? [],
+      mitigationActions: body.mitigationActions ?? [],
+      lastIncidentAt: body.lastIncidentAt ? new Date(body.lastIncidentAt).toISOString() : null,
+      reviewedAt: body.reviewedAt ? new Date(body.reviewedAt).toISOString() : null,
     }),
   listQualityReviews: () => getJson<QualityReview[]>('/api/v1/integrations/quality-reviews'),
   getQualityReview: (id: string) => getJson<QualityReview>(`/api/v1/integrations/quality-reviews/${id}`),

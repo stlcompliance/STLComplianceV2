@@ -399,6 +399,25 @@ public sealed class AssurArrQualityMetric
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
+public sealed class AssurArrQualityRiskProfile
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string TargetType { get; set; } = "other";
+    public string TargetRef { get; set; } = string.Empty;
+    public string RiskLevel { get; set; } = "unknown";
+    public string[] RiskFactors { get; set; } = [];
+    public int OpenIssueCount { get; set; }
+    public int RepeatIssueCount { get; set; }
+    public int CriticalIssueCount { get; set; }
+    public DateTimeOffset? LastIncidentAt { get; set; }
+    public string[] MitigationActions { get; set; } = [];
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public Guid? ReviewedByPersonId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
 public sealed class AssurArrQualityReview
 {
     public Guid Id { get; set; }

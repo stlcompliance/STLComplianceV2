@@ -1715,6 +1715,64 @@
         }
       }
     },
+    "/api/v1/integrations/risk-profiles": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityRiskProfiles",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrQualityRiskProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityRiskProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/risk-profiles/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrQualityRiskProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/root-cause-analyses": {
       "post": {
         "tags": [
@@ -3798,6 +3856,90 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateAssurArrQualityRiskProfileRequest": {
+        "required": [
+          "targetType",
+          "targetRef",
+          "riskLevel",
+          "riskFactors",
+          "openIssueCount",
+          "repeatIssueCount",
+          "criticalIssueCount",
+          "lastIncidentAt",
+          "mitigationActions",
+          "reviewedAt",
+          "reviewedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "targetType": {
+            "type": "string"
+          },
+          "targetRef": {
+            "type": "string"
+          },
+          "riskLevel": {
+            "type": "string"
+          },
+          "riskFactors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "openIssueCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "repeatIssueCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "criticalIssueCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastIncidentAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "mitigationActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

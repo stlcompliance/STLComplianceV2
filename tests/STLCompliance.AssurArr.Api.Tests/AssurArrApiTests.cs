@@ -1044,4 +1044,45 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(metrics);
         Assert.Contains(metrics!, item => item.MetricKey == metricKey);
     }
+
+    [Fact]
+    public async Task Can_create_and_lookup_quality_risk_profiles()
+    {
+        var targetType = "process";
+        var targetRef = $"assurarr:process:{Guid.NewGuid():N}";
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/risk-profiles",
+            new CreateAssurArrQualityRiskProfileRequest(
+                targetType,
+                targetRef,
+                "high",
+                ["recurring defect", "supplier instability"],
+                5,
+                2,
+                1,
+                DateTimeOffset.UtcNow.AddDays(-1),
+                ["monitor trend", "verify training refresh"],
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<AssurArrQualityRiskProfileResponse>();
+        Assert.NotNull(created);
+        Assert.Equal(targetType, created!.TargetType);
+        Assert.Equal(targetRef, created.TargetRef);
+
+        var lookupResponse = await _client.GetAsync($"/api/v1/integrations/risk-profiles/{created.Id}");
+        Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
+
+        var lookup = await lookupResponse.Content.ReadFromJsonAsync<AssurArrQualityRiskProfileResponse>();
+        Assert.NotNull(lookup);
+        Assert.Equal(created.Id, lookup!.Id);
+
+        var listResponse = await _client.GetAsync("/api/v1/integrations/risk-profiles");
+        listResponse.EnsureSuccessStatusCode();
+        var profiles = await listResponse.Content.ReadFromJsonAsync<List<AssurArrQualityRiskProfileResponse>>();
+        Assert.NotNull(profiles);
+        Assert.Contains(profiles!, item => item.TargetType == targetType && item.TargetRef == targetRef);
+    }
 }

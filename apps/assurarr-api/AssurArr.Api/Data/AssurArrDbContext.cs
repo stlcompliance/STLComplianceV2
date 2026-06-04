@@ -21,6 +21,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrQualityStatusSnapshot> QualityStatusSnapshots => Set<AssurArrQualityStatusSnapshot>();
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
     public DbSet<AssurArrQualityMetric> QualityMetrics => Set<AssurArrQualityMetric>();
+    public DbSet<AssurArrQualityRiskProfile> QualityRiskProfiles => Set<AssurArrQualityRiskProfile>();
     public DbSet<AssurArrQualityReview> QualityReviews => Set<AssurArrQualityReview>();
     public DbSet<AssurArrQualityRelease> QualityReleases => Set<AssurArrQualityRelease>();
     public DbSet<AssurArrContainmentAction> ContainmentActions => Set<AssurArrContainmentAction>();
@@ -49,6 +50,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
         ConfigureMetric(modelBuilder);
+        ConfigureRiskProfile(modelBuilder);
         ConfigureReview(modelBuilder);
         ConfigureRelease(modelBuilder);
         ConfigureContainmentAction(modelBuilder);
@@ -246,6 +248,31 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.UpdatedAt).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.ScorecardId });
             entity.HasIndex(x => new { x.TenantId, x.MetricKey });
+        });
+    }
+
+    private static void ConfigureRiskProfile(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityRiskProfile>(entity =>
+        {
+            entity.ToTable("assurarr_quality_risk_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.TargetType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.RiskLevel).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RiskFactors).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OpenIssueCount).IsRequired();
+            entity.Property(x => x.RepeatIssueCount).IsRequired();
+            entity.Property(x => x.CriticalIssueCount).IsRequired();
+            entity.Property(x => x.LastIncidentAt);
+            entity.Property(x => x.MitigationActions).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ReviewedAt);
+            entity.Property(x => x.ReviewedByPersonId);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.TargetType, x.TargetRef }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.RiskLevel });
         });
     }
 

@@ -4093,6 +4093,20 @@ function CustomerComplaintDetailPage() {
 function StatusPage() {
   const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
   const [lookup, setLookup] = useState({ targetProduct: 'loadarr', targetObjectId: 'inventory:LOT-991' })
+  const riskProfilesQuery = useRecords(['assurarr', 'risk-profiles'], assurarrApi.listRiskProfiles)
+  const [riskForm, setRiskForm] = useState({
+    targetType: 'site',
+    targetRef: 'loadarr:site:north-yard',
+    riskLevel: 'high',
+    riskFactors: 'open nonconformance trend\nrecent hold activity\ncritical defect recurrence',
+    openIssueCount: '4',
+    repeatIssueCount: '2',
+    criticalIssueCount: '1',
+    lastIncidentAt: '',
+    mitigationActions: 'continue receiving containment review\nverify hold release evidence\nmonitor repeat defects',
+    reviewedAt: '',
+    reviewedByPersonId: '',
+  })
   const lookupQuery = useQuery({
     queryKey: ['assurarr', 'quality-status', lookup.targetProduct, lookup.targetObjectId],
     queryFn: () => assurarrApi.getQualityStatus(lookup.targetProduct, lookup.targetObjectId),
@@ -4101,6 +4115,26 @@ function StatusPage() {
   const lookupMutation = useMutation({
     mutationFn: async () => lookupQuery.refetch(),
   })
+  const createRiskMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createRiskProfile({
+        targetType: riskForm.targetType,
+        targetRef: riskForm.targetRef,
+        riskLevel: riskForm.riskLevel,
+        riskFactors: joinRefs(riskForm.riskFactors),
+        openIssueCount: Number(riskForm.openIssueCount || 0),
+        repeatIssueCount: Number(riskForm.repeatIssueCount || 0),
+        criticalIssueCount: Number(riskForm.criticalIssueCount || 0),
+        lastIncidentAt: riskForm.lastIncidentAt || undefined,
+        mitigationActions: joinRefs(riskForm.mitigationActions),
+        reviewedAt: riskForm.reviewedAt || undefined,
+        reviewedByPersonId: riskForm.reviewedByPersonId || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+  const queryClient = useQueryClient()
   return (
     <div className="assurarr-page">
       <PageHeader title="Quality status" description="Publish current quality posture to downstream products that need to block, warn, or permit work." />
@@ -4156,6 +4190,91 @@ function StatusPage() {
               <p className="mt-3 text-slate-300">{lookupQuery.data.description}</p>
             </div>
           ) : null}
+        </div>
+      </div>
+      <div className="assurarr-card mt-6">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Risk profiles</h3>
+            <span className="assurarr-pill">{riskProfilesQuery.data?.length ?? 0} records</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Target type">
+              <select className="assurarr-select" value={riskForm.targetType} onChange={(event) => setRiskForm({ ...riskForm, targetType: event.target.value })}>
+                <option value="supplier">Supplier</option>
+                <option value="customer">Customer</option>
+                <option value="process">Process</option>
+                <option value="site">Site</option>
+                <option value="asset">Asset</option>
+                <option value="inventory_item">Inventory item</option>
+                <option value="order">Order</option>
+                <option value="route">Route</option>
+              </select>
+            </Field>
+            <Field label="Target ref">
+              <input className="assurarr-input" value={riskForm.targetRef} onChange={(event) => setRiskForm({ ...riskForm, targetRef: event.target.value })} />
+            </Field>
+            <Field label="Risk level">
+              <select className="assurarr-select" value={riskForm.riskLevel} onChange={(event) => setRiskForm({ ...riskForm, riskLevel: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </Field>
+            <Field label="Open issue count">
+              <input className="assurarr-input" value={riskForm.openIssueCount} onChange={(event) => setRiskForm({ ...riskForm, openIssueCount: event.target.value })} />
+            </Field>
+            <Field label="Repeat issue count">
+              <input className="assurarr-input" value={riskForm.repeatIssueCount} onChange={(event) => setRiskForm({ ...riskForm, repeatIssueCount: event.target.value })} />
+            </Field>
+            <Field label="Critical issue count">
+              <input className="assurarr-input" value={riskForm.criticalIssueCount} onChange={(event) => setRiskForm({ ...riskForm, criticalIssueCount: event.target.value })} />
+            </Field>
+            <Field label="Risk factors">
+              <textarea className="assurarr-textarea" value={riskForm.riskFactors} onChange={(event) => setRiskForm({ ...riskForm, riskFactors: event.target.value })} />
+            </Field>
+            <Field label="Mitigation actions">
+              <textarea className="assurarr-textarea" value={riskForm.mitigationActions} onChange={(event) => setRiskForm({ ...riskForm, mitigationActions: event.target.value })} />
+            </Field>
+            <Field label="Last incident at">
+              <input className="assurarr-input" type="datetime-local" value={riskForm.lastIncidentAt} onChange={(event) => setRiskForm({ ...riskForm, lastIncidentAt: event.target.value })} />
+            </Field>
+            <Field label="Reviewed at">
+              <input className="assurarr-input" type="datetime-local" value={riskForm.reviewedAt} onChange={(event) => setRiskForm({ ...riskForm, reviewedAt: event.target.value })} />
+            </Field>
+            <Field label="Reviewed by person id">
+              <input className="assurarr-input" value={riskForm.reviewedByPersonId} onChange={(event) => setRiskForm({ ...riskForm, reviewedByPersonId: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => createRiskMutation.mutate()} disabled={createRiskMutation.isPending}>
+            {createRiskMutation.isPending ? 'Saving...' : 'Create risk profile'}
+          </button>
+          <div className="grid gap-3 md:grid-cols-2">
+            {riskProfilesQuery.data?.length ? (
+              riskProfilesQuery.data.map((profile) => (
+                <div key={profile.id} className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4 text-sm text-slate-200">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="assurarr-pill">{profile.targetType}</span>
+                    <span className="assurarr-pill">{profile.targetRef}</span>
+                    <span className="assurarr-pill">{profile.riskLevel}</span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
+                    <div>Open issues: {profile.openIssueCount}</div>
+                    <div>Repeat issues: {profile.repeatIssueCount}</div>
+                    <div>Critical issues: {profile.criticalIssueCount}</div>
+                    <div>Reviewed: {profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleString() : 'n/a'}</div>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-400">Risk factors: {profile.riskFactors.length ? profile.riskFactors.join(', ') : 'none'}</p>
+                  <p className="mt-1 text-xs text-slate-400">Mitigation: {profile.mitigationActions.length ? profile.mitigationActions.join(', ') : 'none'}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState title="No risk profiles yet." />
+            )}
+          </div>
         </div>
       </div>
     </div>
