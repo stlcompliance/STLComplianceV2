@@ -457,6 +457,97 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Component_lifecycle_enqueues_platform_events()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        await UpsertPlatformEventSettingsAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", token);
+        createRequest.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
+            ComponentNumber: "CMP-100",
+            ParentComponentId: null,
+            Name: "Hydraulic pump",
+            Description: "Primary hydraulic pump",
+            ComponentType: "pump",
+            Status: "installed",
+            Make: "Bosch",
+            Model: "P100",
+            SerialNumber: "CMP-100-XYZ",
+            PartNumberSnapshot: "PN-100",
+            InstalledPartUsageRef: "usage-100",
+            InstallDate: DateTimeOffset.UtcNow.AddDays(-2),
+            InstalledByPersonId: "person-100",
+            InstalledMeterReading: 1200,
+            RemovedDate: null,
+            RemovedByPersonId: null,
+            RemovedMeterReading: null,
+            RemovalReason: null,
+            WarrantyStartDate: DateTimeOffset.UtcNow.AddYears(-1),
+            WarrantyEndDate: DateTimeOffset.UtcNow.AddYears(1),
+            ExpectedLifeHours: 5000,
+            ExpectedLifeMiles: 0,
+            ExpectedLifeCycles: 0,
+            Condition: "good",
+            ReplacementPartRefs: new[] { "part-100" },
+            DocumentRefs: new[] { "doc-100" },
+            DefectRefs: Array.Empty<string>(),
+            WorkOrderRefs: Array.Empty<string>()));
+
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/assets/{assetId}/components/{created.ComponentId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdateAssetInstalledComponentRequest(
+            ComponentNumber: null,
+            ParentComponentId: null,
+            Name: null,
+            Description: null,
+            ComponentType: null,
+            Status: "removed",
+            Make: null,
+            Model: null,
+            SerialNumber: null,
+            PartNumberSnapshot: null,
+            InstalledPartUsageRef: null,
+            InstallDate: null,
+            InstalledByPersonId: null,
+            InstalledMeterReading: null,
+            RemovedDate: DateTimeOffset.UtcNow,
+            RemovedByPersonId: "person-100",
+            RemovedMeterReading: 1215,
+            RemovalReason: "Routine service removal",
+            WarrantyStartDate: null,
+            WarrantyEndDate: null,
+            ExpectedLifeHours: null,
+            ExpectedLifeMiles: null,
+            ExpectedLifeCycles: null,
+            Condition: "fair",
+            ReplacementPartRefs: null,
+            DocumentRefs: null,
+            DefectRefs: null,
+            WorkOrderRefs: null));
+
+        var updateResponse = await _maintainarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.Component
+                && x.RelatedEntityId == created.ComponentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.ComponentCreated);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.ComponentInstalled);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.ComponentRemoved);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+    }
+
+    [Fact]
     public async Task Work_order_lifecycle_enqueues_platform_events()
     {
         var assetId = await SeedActiveAssetAsync("WO-EVT-001");
@@ -578,6 +669,54 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         db.Defects.Add(defect);
         await db.SaveChangesAsync();
         return asset.Id;
+    }
+
+    private async Task<Guid> SeedAssetOnlyAsync(string token)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var assetClassId = Guid.NewGuid();
+        var assetTypeId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
+
+        db.AssetClasses.Add(new AssetClass
+        {
+            Id = assetClassId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            ClassKey = $"platform-event-component-class-{Guid.NewGuid():N}"[..32],
+            Name = "Platform Event Component Class",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        db.AssetTypes.Add(new AssetType
+        {
+            Id = assetTypeId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetClassId = assetClassId,
+            TypeKey = $"platform-event-component-type-{Guid.NewGuid():N}"[..32],
+            Name = "Platform Event Component Type",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        db.Assets.Add(new Asset
+        {
+            Id = assetId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetTypeId = assetTypeId,
+            AssetTag = $"COMP-EVT-{Guid.NewGuid():N}"[..12],
+            Name = "Platform Event Component Asset",
+            SiteRef = "Plant-A",
+            LifecycleStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
+        return assetId;
     }
 
     private async Task<Guid> SeedActiveAssetAsync(string assetTag)

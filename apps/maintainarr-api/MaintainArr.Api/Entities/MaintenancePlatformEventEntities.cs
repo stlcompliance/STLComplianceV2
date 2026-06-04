@@ -143,6 +143,18 @@ public static class MaintenancePlatformOutboxEventKinds
     public const string MeterReadingRecorded = "meter_reading.recorded";
 
     public const string MeterReadingRejected = "meter_reading.rejected";
+
+    public const string ComponentCreated = "component.created";
+
+    public const string ComponentInstalled = "component.installed";
+
+    public const string ComponentRemoved = "component.removed";
+
+    public const string ComponentFailed = "component.failed";
+
+    public const string ComponentReplaced = "component.replaced";
+
+    public const string ComponentRetired = "component.retired";
 }
 
 public static class MaintenancePlatformEventRelatedEntityTypes
@@ -160,4 +172,6 @@ public static class MaintenancePlatformEventRelatedEntityTypes
     public const string PmOccurrence = "pm_occurrence";
 
     public const string MeterReading = "meter_reading";
+
+    public const string Component = "component";
 }

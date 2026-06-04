@@ -7,7 +7,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace MaintainArr.Api.Services;
 
-public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMaintainArrAuditService audit)
+public sealed class AssetInstalledComponentService(
+    MaintainArrDbContext db,
+    IMaintainArrAuditService audit,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     private static readonly HashSet<string> AllowedComponentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -167,6 +170,14 @@ public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMai
             "Succeeded",
             cancellationToken: cancellationToken);
 
+        await EnqueueCreateEventsAsync(
+            tenantId,
+            actorUserId,
+            asset,
+            entity,
+            now,
+            cancellationToken);
+
         return MapResponse(entity);
     }
 
@@ -204,6 +215,7 @@ public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMai
             entity.ComponentNumber = componentNumber;
         }
 
+        var previousStatus = entity.Status;
         if (request.ParentComponentId is Guid parentComponentId)
         {
             if (parentComponentId == componentId)
@@ -256,7 +268,8 @@ public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMai
         entity.WorkOrderRefsJson = request.WorkOrderRefs is not null
             ? JsonSerializer.Serialize(request.WorkOrderRefs)
             : entity.WorkOrderRefsJson;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -268,6 +281,20 @@ public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMai
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        if (!string.Equals(previousStatus, entity.Status, StringComparison.OrdinalIgnoreCase))
+        {
+            var asset = await db.Assets
+                .AsNoTracking()
+                .FirstAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken);
+            await EnqueueLifecycleEventAsync(
+                tenantId,
+                actorUserId,
+                asset,
+                entity,
+                now,
+                cancellationToken);
+        }
 
         return MapResponse(entity);
     }
@@ -384,5 +411,68 @@ public sealed class AssetInstalledComponentService(MaintainArrDbContext db, IMai
         }
 
         return value.Trim();
+    }
+
+    private async Task EnqueueCreateEventsAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Asset asset,
+        AssetInstalledComponent component,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        await platformOutboxEnqueue.TryEnqueueComponentEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.ComponentCreated,
+            component,
+            asset,
+            actorUserId ?? Guid.Empty,
+            occurredAt,
+            $"Component created: {component.ComponentNumber} · {component.Name}",
+            component.Status,
+            cancellationToken: cancellationToken);
+
+        await EnqueueLifecycleEventAsync(
+            tenantId,
+            actorUserId,
+            asset,
+            component,
+            occurredAt,
+            cancellationToken);
+    }
+
+    private async Task EnqueueLifecycleEventAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Asset asset,
+        AssetInstalledComponent component,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var eventKind = component.Status.ToLowerInvariant() switch
+        {
+            "installed" => MaintenancePlatformOutboxEventKinds.ComponentInstalled,
+            "removed" => MaintenancePlatformOutboxEventKinds.ComponentRemoved,
+            "failed" => MaintenancePlatformOutboxEventKinds.ComponentFailed,
+            "replaced" => MaintenancePlatformOutboxEventKinds.ComponentReplaced,
+            "retired" => MaintenancePlatformOutboxEventKinds.ComponentRetired,
+            _ => null,
+        };
+
+        if (eventKind is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueueComponentEventAsync(
+            tenantId,
+            eventKind,
+            component,
+            asset,
+            actorUserId ?? Guid.Empty,
+            occurredAt,
+            $"Component {component.Status}: {component.ComponentNumber} · {component.Name}",
+            component.Status,
+            cancellationToken: cancellationToken);
     }
 }
