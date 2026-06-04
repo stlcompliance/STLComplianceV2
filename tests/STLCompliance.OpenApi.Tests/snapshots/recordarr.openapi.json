@@ -1085,6 +1085,72 @@
         }
       }
     },
+    "/api/integrations/records/{recordId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationRecord/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/records/{recordId}/purge": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PurgeRecordArrIntegrationRecord/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/records/{recordId}/retention-status": {
       "get": {
         "tags": [
@@ -2405,6 +2471,72 @@
         }
       }
     },
+    "/api/v1/integrations/records/{recordId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationRecord/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/records/{recordId}/purge": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PurgeRecordArrIntegrationRecord/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/records/{recordId}/retention-status": {
       "get": {
         "tags": [
@@ -3520,6 +3652,72 @@
         }
       }
     },
+    "/api/v1/workspace/records/{recordId}/archive": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ArchiveRecordArrRecord",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/records/{recordId}/purge": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "PurgeRecordArrRecord",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/records/{recordId}/retention-status": {
       "get": {
         "tags": [
@@ -4277,6 +4475,17 @@
           },
           "requiresManualReview": {
             "type": "boolean"
+          }
+        }
+      },
+      "DisposeRecordRequest": {
+        "required": [
+          "actorPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "actorPersonId": {
+            "type": "string"
           }
         }
       },

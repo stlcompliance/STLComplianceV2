@@ -560,6 +560,14 @@ export async function applyManualCorrection(
   )
 }
 
+export async function archiveRecord(accessToken: string, recordId: string, body: { actorPersonId: string }): Promise<RecordArrRecord> {
+  return sendJson<RecordArrRecord>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/archive`, accessToken, 'POST', body)
+}
+
+export async function purgeRecord(accessToken: string, recordId: string, body: { actorPersonId: string }): Promise<RecordArrRecord> {
+  return sendJson<RecordArrRecord>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/purge`, accessToken, 'POST', body)
+}
+
 export async function getOcrResult(accessToken: string, ocrResultId: string): Promise<RecordArrOcrResult> {
   return getJson<RecordArrOcrResult>(`/api/v1/workspace/ocr-results/${encodeURIComponent(ocrResultId)}`, accessToken)
 }

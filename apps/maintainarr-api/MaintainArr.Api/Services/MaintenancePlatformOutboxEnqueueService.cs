@@ -297,6 +297,62 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
             cancellationToken);
     }
 
+    public async Task<Guid?> TryEnqueueMeterReadingEventAsync(
+        Guid tenantId,
+        string eventKind,
+        AssetMeter meter,
+        Guid relatedEntityId,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        string? idempotencyDiscriminator = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var asset = await db.Assets.AsNoTracking()
+            .SingleAsync(
+                x => x.TenantId == tenantId && x.Id == meter.AssetId,
+                cancellationToken);
+
+        var payload = BuildEntityPayload(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.MeterReading,
+            relatedEntityId,
+            eventResult,
+            actorUserId);
+
+        var idempotencyKey = string.IsNullOrWhiteSpace(idempotencyDiscriminator)
+            ? MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.MeterReading,
+                relatedEntityId)
+            : MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.MeterReading,
+                relatedEntityId,
+                idempotencyDiscriminator);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.MeterReading,
+            relatedEntityId,
+            idempotencyKey,
+            payload,
+            cancellationToken);
+    }
+
     private async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
         string eventKind,

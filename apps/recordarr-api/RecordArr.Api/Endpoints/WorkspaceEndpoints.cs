@@ -49,6 +49,18 @@ public static class WorkspaceEndpoints
             return Results.Ok(updated);
         }).WithName("UpdateRecordArrRecord");
 
+        group.MapPost("/records/{recordId}/archive", (string recordId, DisposeRecordRequest request, RecordArrStore store) =>
+        {
+            var updated = store.ArchiveRecord(recordId, request.ActorPersonId);
+            return Results.Ok(updated);
+        }).WithName("ArchiveRecordArrRecord");
+
+        group.MapPost("/records/{recordId}/purge", (string recordId, DisposeRecordRequest request, RecordArrStore store) =>
+        {
+            var updated = store.PurgeRecord(recordId, request.ActorPersonId);
+            return Results.Ok(updated);
+        }).WithName("PurgeRecordArrRecord");
+
         group.MapPost("/upload-sessions", (CreateUploadSessionRequest request, RecordArrStore store) =>
         {
             var session = store.CreateUploadSession(
@@ -340,6 +352,8 @@ public static class WorkspaceEndpoints
         string? Classification,
         DateTimeOffset? EffectiveAt,
         DateTimeOffset? ExpiresAt);
+
+    public sealed record DisposeRecordRequest(string ActorPersonId);
 
     public sealed record CreateUploadSessionRequest(
         string SourceProduct,

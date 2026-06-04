@@ -209,6 +209,17 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         getMeterResponse.EnsureSuccessStatusCode();
         var updatedMeter = (await getMeterResponse.Content.ReadFromJsonAsync<AssetMeterResponse>())!;
         Assert.Equal(1050m, updatedMeter.CurrentReading);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .AsNoTracking()
+            .Where(x => x.EventKind == MaintenancePlatformOutboxEventKinds.MeterReadingRecorded)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x =>
+            x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.MeterReading &&
+            x.RelatedEntityId == reading.MeterReadingId);
     }
 
     [Fact]
@@ -379,6 +390,17 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         recordRequest.Content = JsonContent.Create(new RecordMeterReadingRequest(400m, null, string.Empty, false));
         var recordResponse = await _maintainarrClient.SendAsync(recordRequest);
         Assert.Equal(HttpStatusCode.BadRequest, recordResponse.StatusCode);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .AsNoTracking()
+            .Where(x => x.EventKind == MaintenancePlatformOutboxEventKinds.MeterReadingRejected)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x =>
+            x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.MeterReading &&
+            x.RelatedEntityId == meter.AssetMeterId);
     }
 
     [Fact]

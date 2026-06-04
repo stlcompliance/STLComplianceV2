@@ -115,6 +115,10 @@ public static class MaintenancePlatformOutboxEventKinds
     public const string PmDue = "pm.due";
 
     public const string PmOverdue = "pm.overdue";
+
+    public const string MeterReadingRecorded = "meter_reading.recorded";
+
+    public const string MeterReadingRejected = "meter_reading.rejected";
 }
 
 public static class MaintenancePlatformEventRelatedEntityTypes
@@ -128,4 +132,6 @@ public static class MaintenancePlatformEventRelatedEntityTypes
     public const string WorkOrder = "work_order";
 
     public const string PmSchedule = "pm_schedule";
+
+    public const string MeterReading = "meter_reading";
 }

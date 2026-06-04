@@ -30,6 +30,7 @@ import {
 import {
   activateLegalHold,
   applyManualCorrection,
+  archiveRecord,
   confirmEvidenceMapping,
   createControlledDocument,
   createDocumentAcknowledgement,
@@ -74,6 +75,7 @@ import {
   releaseLegalHold,
   reviewExtractionResult,
   revokeExternalShare,
+  purgeRecord,
   completeDocumentAcknowledgement,
   completeDisposalReview,
   lockPackage,
@@ -604,6 +606,11 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listUploadSessions(accessToken),
     enabled: Boolean(accessToken),
   })
+  const holdsQuery = useQuery({
+    queryKey: ['recordarr', 'legal-holds'],
+    queryFn: () => listLegalHolds(accessToken),
+    enabled: Boolean(accessToken),
+  })
   const documentsQuery = useQuery({
     queryKey: ['recordarr', 'documents'],
     queryFn: () => listControlledDocuments(accessToken),
@@ -616,6 +623,18 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const archiveMutation = useMutation({
+    mutationFn: () => archiveRecord(accessToken, recordId, { actorPersonId: 'person-record-admin' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const purgeMutation = useMutation({
+    mutationFn: () => purgeRecord(accessToken, recordId, { actorPersonId: 'person-record-admin' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   const record = recordQuery.data
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
@@ -624,6 +643,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
   const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
   const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
+  const activeHold = (holdsQuery.data ?? []).find((hold) => hold.status === 'active' && hold.recordRefs.includes(recordId)) ?? null
   const timeline = useMemo(() => {
     if (!record) return []
     return [
@@ -686,8 +706,17 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <button type="button" className="recordarr-button" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
                   {updateMutation.isPending ? 'Updating...' : 'Update status'}
                 </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending || Boolean(activeHold)}>
+                  {archiveMutation.isPending ? 'Archiving...' : 'Archive record'}
+                </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => purgeMutation.mutate()} disabled={purgeMutation.isPending || Boolean(activeHold)}>
+                  {purgeMutation.isPending ? 'Purging...' : 'Purge record'}
+                </button>
                 {updateMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(updateMutation.error, 'Update failed')}</span> : null}
+                {archiveMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(archiveMutation.error, 'Archive failed')}</span> : null}
+                {purgeMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(purgeMutation.error, 'Purge failed')}</span> : null}
               </div>
+              {activeHold ? <p className="mt-3 text-sm text-amber-300">Blocked by legal hold {activeHold.holdNumber}.</p> : null}
             </Card>
             <Card title="Retention and access" icon={<LockKeyhole className="h-4 w-4 text-cyan-300" />}>
               <div className="space-y-3 text-sm text-slate-300">

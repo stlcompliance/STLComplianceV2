@@ -10,7 +10,8 @@ public sealed class MeterReadingService(
     MaintainArrDbContext db,
     AssetMeterService assetMeterService,
     MeterPmForecastService forecastService,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     private const int DefaultListLimit = 50;
     private const int MaxListLimit = 200;
@@ -41,6 +42,112 @@ public sealed class MeterReadingService(
         CancellationToken cancellationToken = default)
     {
         var meter = await assetMeterService.GetEntityAsync(tenantId, assetMeterId, cancellationToken);
+        try
+        {
+            return await RecordInternalAsync(
+                tenantId,
+                actorUserId,
+                meter,
+                request,
+                cancellationToken);
+        }
+        catch (StlApiException ex)
+        {
+            await TryEnqueueRejectedAsync(
+                tenantId,
+                actorUserId,
+                meter,
+                request.ReadingValue,
+                request.ReadAt,
+                ex,
+                cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task<MeterReadingResponse> CorrectAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid assetMeterId,
+        CorrectMeterReadingRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var meter = await assetMeterService.GetEntityAsync(tenantId, assetMeterId, cancellationToken);
+        try
+        {
+            var reason = NormalizeCorrectionReason(request.Reason);
+            return await RecordInternalAsync(
+                tenantId,
+                actorUserId,
+                meter,
+                new RecordMeterReadingRequest(
+                    request.ReadingValue,
+                    request.ReadAt,
+                    reason,
+                    true),
+                cancellationToken);
+        }
+        catch (StlApiException ex)
+        {
+            await TryEnqueueRejectedAsync(
+                tenantId,
+                actorUserId,
+                meter,
+                request.ReadingValue,
+                request.ReadAt,
+                ex,
+                cancellationToken);
+            throw;
+        }
+    }
+
+    private static MeterReadingResponse Map(MeterReading entity) =>
+        new(
+            entity.Id,
+            entity.AssetMeterId,
+            entity.AssetId,
+            entity.ReadingValue,
+            entity.DeltaFromPrevious,
+            entity.ReadAt,
+            entity.RecordedByUserId,
+            entity.Notes,
+            entity.IsCorrection,
+            entity.CreatedAt);
+
+    private static int NormalizeLimit(int? limit)
+    {
+        if (limit is null or < 1)
+        {
+            return DefaultListLimit;
+        }
+
+        return Math.Min(limit.Value, MaxListLimit);
+    }
+
+    private static string NormalizeNotes(string notes) =>
+        notes.Trim().Length <= 512 ? notes.Trim() : notes.Trim()[..512];
+
+    private static string NormalizeCorrectionReason(string reason)
+    {
+        var normalized = NormalizeNotes(reason);
+        if (normalized.Length < 3)
+        {
+            throw new StlApiException(
+                "meter_reading.correction_reason_required",
+                "Meter correction reason must be at least 3 characters.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private async Task<MeterReadingResponse> RecordInternalAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        AssetMeter meter,
+        RecordMeterReadingRequest request,
+        CancellationToken cancellationToken)
+    {
         if (!string.Equals(meter.Status, MeterStatuses.Active, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
@@ -106,70 +213,43 @@ public sealed class MeterReadingService(
         await forecastService.ApplyForecastAfterReadingAsync(
             tenantId,
             actorUserId,
-            assetMeterId,
+            meter.Id,
             readingValue,
             cancellationToken);
+
+        await platformOutboxEnqueue.TryEnqueueMeterReadingEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.MeterReadingRecorded,
+            meter,
+            entity.Id,
+            actorUserId,
+            now,
+            $"Meter reading recorded for {meter.MeterKey} ({readingValue} {meter.Unit}).",
+            eventResult: request.IsCorrection ? "correction" : "recorded",
+            cancellationToken: cancellationToken);
 
         return Map(entity);
     }
 
-    public Task<MeterReadingResponse> CorrectAsync(
+    private async Task TryEnqueueRejectedAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid assetMeterId,
-        CorrectMeterReadingRequest request,
-        CancellationToken cancellationToken = default)
+        AssetMeter meter,
+        decimal readingValue,
+        DateTimeOffset? readAt,
+        StlApiException exception,
+        CancellationToken cancellationToken)
     {
-        var reason = NormalizeCorrectionReason(request.Reason);
-        return RecordAsync(
+        await platformOutboxEnqueue.TryEnqueueMeterReadingEventAsync(
             tenantId,
+            MaintenancePlatformOutboxEventKinds.MeterReadingRejected,
+            meter,
+            meter.Id,
             actorUserId,
-            assetMeterId,
-            new RecordMeterReadingRequest(
-                request.ReadingValue,
-                request.ReadAt,
-                reason,
-                true),
-            cancellationToken);
-    }
-
-    private static MeterReadingResponse Map(MeterReading entity) =>
-        new(
-            entity.Id,
-            entity.AssetMeterId,
-            entity.AssetId,
-            entity.ReadingValue,
-            entity.DeltaFromPrevious,
-            entity.ReadAt,
-            entity.RecordedByUserId,
-            entity.Notes,
-            entity.IsCorrection,
-            entity.CreatedAt);
-
-    private static int NormalizeLimit(int? limit)
-    {
-        if (limit is null or < 1)
-        {
-            return DefaultListLimit;
-        }
-
-        return Math.Min(limit.Value, MaxListLimit);
-    }
-
-    private static string NormalizeNotes(string notes) =>
-        notes.Trim().Length <= 512 ? notes.Trim() : notes.Trim()[..512];
-
-    private static string NormalizeCorrectionReason(string reason)
-    {
-        var normalized = NormalizeNotes(reason);
-        if (normalized.Length < 3)
-        {
-            throw new StlApiException(
-                "meter_reading.correction_reason_required",
-                "Meter correction reason must be at least 3 characters.",
-                400);
-        }
-
-        return normalized;
+            DateTimeOffset.UtcNow,
+            $"Meter reading rejected for {meter.MeterKey}: {exception.Message}",
+            eventResult: exception.Code,
+            idempotencyDiscriminator: $"{exception.Code}:{readingValue}:{readAt?.UtcDateTime.Ticks ?? 0}",
+            cancellationToken: cancellationToken);
     }
 }

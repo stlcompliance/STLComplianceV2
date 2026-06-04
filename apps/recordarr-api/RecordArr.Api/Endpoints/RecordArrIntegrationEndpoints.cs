@@ -47,6 +47,18 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(updated);
         }).WithName($"UpdateRecordArrIntegrationRecord{routePrefix}");
 
+        group.MapPost("/records/{recordId}/archive", (string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
+        {
+            var updated = store.ArchiveRecord(recordId, request.ActorPersonId);
+            return Results.Ok(updated);
+        }).WithName($"ArchiveRecordArrIntegrationRecord{routePrefix}");
+
+        group.MapPost("/records/{recordId}/purge", (string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
+        {
+            var updated = store.PurgeRecord(recordId, request.ActorPersonId);
+            return Results.Ok(updated);
+        }).WithName($"PurgeRecordArrIntegrationRecord{routePrefix}");
+
         group.MapGet("/upload-sessions/{uploadSessionId}", (string uploadSessionId, RecordArrStore store) =>
         {
             var session = store.GetUploadSession(uploadSessionId);

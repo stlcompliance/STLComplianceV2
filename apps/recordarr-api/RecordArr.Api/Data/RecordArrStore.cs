@@ -574,6 +574,26 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrRecordResponse ArchiveRecord(string recordId, string actorPersonId)
+    {
+        lock (_gate)
+        {
+            var record = RequireRecord(recordId);
+            EnsureRecordCanBeDisposed(recordId);
+            return UpdateRecordLifecycle(record, "archived", actorPersonId, "archive");
+        }
+    }
+
+    public RecordArrRecordResponse PurgeRecord(string recordId, string actorPersonId)
+    {
+        lock (_gate)
+        {
+            var record = RequireRecord(recordId);
+            EnsureRecordCanBeDisposed(recordId);
+            return UpdateRecordLifecycle(record, "purged", actorPersonId, "purge");
+        }
+    }
+
     public RecordArrUploadSessionResponse CreateUploadSession(string sourceProduct, string sourceObjectType, string sourceObjectId, string uploadPurpose, bool requiresDocumentScan, bool requiresOcr, bool requiresManualReview)
     {
         lock (_gate)
@@ -980,6 +1000,38 @@ public sealed class RecordArrStore
             };
             _legalHolds[index] = updated;
             return updated;
+        }
+    }
+
+    private RecordArrRecordResponse RequireRecord(string recordId)
+    {
+        var record = _records.FirstOrDefault(candidate => string.Equals(candidate.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+        return record ?? throw new InvalidOperationException($"Record {recordId} not found.");
+    }
+
+    private RecordArrRecordResponse UpdateRecordLifecycle(RecordArrRecordResponse record, string status, string actorPersonId, string reasonCode)
+    {
+        var index = _records.FindIndex(candidate => string.Equals(candidate.RecordId, record.RecordId, StringComparison.OrdinalIgnoreCase));
+        var updated = record with
+        {
+            Status = status,
+            ExpiresAt = status is "purged" ? null : record.ExpiresAt
+        };
+
+        _records[index] = updated;
+        _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], record.RecordId, status, "allowed", actorPersonId, null, null, DateTimeOffset.UtcNow, null, null, reasonCode));
+        return updated;
+    }
+
+    private void EnsureRecordCanBeDisposed(string recordId)
+    {
+        var activeHold = _legalHolds.FirstOrDefault(hold =>
+            string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+            hold.RecordRefs.Any(reference => string.Equals(reference, recordId, StringComparison.OrdinalIgnoreCase)));
+
+        if (activeHold is not null)
+        {
+            throw new InvalidOperationException($"Record {recordId} is blocked by legal hold {activeHold.HoldNumber}.");
         }
     }
 
