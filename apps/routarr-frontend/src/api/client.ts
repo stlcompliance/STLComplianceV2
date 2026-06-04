@@ -256,6 +256,19 @@ export async function getTrip(accessToken: string, tripId: string): Promise<Trip
   return parseJsonResponse<TripDetailResponse>(response, 'Failed to load trip')
 }
 
+export async function getTripByNumber(
+  accessToken: string,
+  tripNumber: string,
+): Promise<TripDetailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/trips/by-number/${encodeURIComponent(tripNumber)}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TripDetailResponse>(response, 'Failed to load trip by number')
+}
+
 export async function createTrip(
   accessToken: string,
   payload: CreateTripRequest,

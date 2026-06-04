@@ -60,6 +60,33 @@ public sealed class TripService(
         return MapDetail(trip);
     }
 
+    public async Task<TripDetailResponse> GetByTripNumberAsync(
+        Guid tenantId,
+        string tripNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedTripNumber = tripNumber.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedTripNumber))
+        {
+            throw new StlApiException("trip.trip_number_required", "Trip number is required.", 400);
+        }
+
+        var trip = await db.Trips
+            .AsNoTracking()
+            .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.TripNumber == normalizedTripNumber,
+                cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+        }
+
+        return MapDetail(trip);
+    }
+
     public async Task<TripDetailResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,

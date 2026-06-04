@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const appRoot = path.dirname(fileURLToPath(import.meta.url))
+const loadarrApiTarget = process.env.VITE_LOADARR_PROXY_TARGET ?? 'http://localhost:5108'
 
 export default defineConfig({
   base: './',
@@ -23,6 +24,16 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:5108',
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 5182,
+    host: true,
+    proxy: {
+      '/api': {
+        target: loadarrApiTarget,
         changeOrigin: true,
       },
     },

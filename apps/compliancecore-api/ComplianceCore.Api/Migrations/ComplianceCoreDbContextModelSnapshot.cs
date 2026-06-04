@@ -4080,6 +4080,67 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_rule_pack_monitor_snapshots", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RuleTestCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExpectedResult")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("FactsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TestKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RulePackId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "RulePackId", "RuleKey");
+
+                    b.HasIndex("TenantId", "RulePackId", "TestKey")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_rule_test_cases", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.ScheduledRuleEvaluationRun", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5772,6 +5833,17 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("RegulatoryProgram");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RuleTestCase", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.RulePack", "RulePack")
+                        .WithMany()
+                        .HasForeignKey("RulePackId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RulePack");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.SdsReference", b =>

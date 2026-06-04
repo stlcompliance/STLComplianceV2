@@ -18,6 +18,7 @@ import {
   updateTripStatus,
 } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
+import { fromDatetimeLocalValue } from '../lib/availabilityDateTime'
 
 export function useRoutArrWorkspaceState() {
 
@@ -46,6 +47,7 @@ export function useRoutArrWorkspaceState() {
   const [stopLabel, setStopLabel] = useState('')
   const [stopAddress, setStopAddress] = useState('')
   const [stopType, setStopType] = useState('pickup')
+  const [stopScheduledArrivalAt, setStopScheduledArrivalAt] = useState('')
   const [stopGeofenceAnchorLatitude, setStopGeofenceAnchorLatitude] = useState('')
   const [stopGeofenceAnchorLongitude, setStopGeofenceAnchorLongitude] = useState('')
   const [stopGeofenceRadiusMeters, setStopGeofenceRadiusMeters] = useState('')
@@ -165,6 +167,9 @@ export function useRoutArrWorkspaceState() {
                 addressLabel: stopAddress,
                 stopType,
                 sequenceNumber: 1,
+                scheduledArrivalAt: stopScheduledArrivalAt.trim()
+                  ? fromDatetimeLocalValue(stopScheduledArrivalAt)
+                  : null,
                 geofenceAnchorLatitude: stopGeofenceAnchorLatitude.trim() ? Number(stopGeofenceAnchorLatitude) : null,
                 geofenceAnchorLongitude: stopGeofenceAnchorLongitude.trim() ? Number(stopGeofenceAnchorLongitude) : null,
                 geofenceRadiusMeters: stopGeofenceRadiusMeters.trim() ? Number(stopGeofenceRadiusMeters) : null,
@@ -178,6 +183,7 @@ export function useRoutArrWorkspaceState() {
       setStopKey('')
       setStopLabel('')
       setStopAddress('')
+      setStopScheduledArrivalAt('')
       setStopGeofenceAnchorLatitude('')
       setStopGeofenceAnchorLongitude('')
       setStopGeofenceRadiusMeters('')
@@ -265,6 +271,7 @@ export function useRoutArrWorkspaceState() {
     stopLabel,
     stopAddress,
     stopType,
+    stopScheduledArrivalAt,
     stopGeofenceAnchorLatitude,
     stopGeofenceAnchorLongitude,
     stopGeofenceRadiusMeters,
@@ -286,6 +293,7 @@ export function useRoutArrWorkspaceState() {
     setStopLabel,
     setStopAddress,
     setStopType,
+    setStopScheduledArrivalAt,
     setStopGeofenceAnchorLatitude,
     setStopGeofenceAnchorLongitude,
     setStopGeofenceRadiusMeters,

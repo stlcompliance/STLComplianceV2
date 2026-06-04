@@ -54,3 +54,28 @@ public sealed record ProcessRuleChangeScanResponse(
     int PacksScannedCount,
     int ChangesDetectedCount,
     IReadOnlyList<RuleChangeEventResponse> DetectedEvents);
+
+public sealed record RuleChangeImpactReportResponse(
+    Guid TenantId,
+    int TotalImpactedRulePacks,
+    int TotalChangeEvents,
+    int TotalEvaluationRuns,
+    int TotalFindings,
+    int TotalWaivers,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<RuleChangeImpactReportItem> RulePacks);
+
+public sealed record RuleChangeImpactReportItem(
+    Guid RulePackId,
+    string PackKey,
+    string ProgramKey,
+    string LatestChangeType,
+    string LatestSummary,
+    int ChangeEventCount,
+    int VersionCreatedCount,
+    int StatusChangedCount,
+    int ContentUpdatedCount,
+    int EvaluationRunCount,
+    int FindingCount,
+    int WaiverCount,
+    DateTimeOffset LatestChangedAt);

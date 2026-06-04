@@ -29,19 +29,19 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 11. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across NexArr, StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
 12. **EntitlementDenialFlowTests** — JWT without product entitlement denied on `/api/me`; NexArr launch context denied for unknown product (`Area=EntitlementDenial`)
 13. **StlM13ShipGateCatalogTests** / **StlDocs23CrossProductFlowCatalogTests** — ship-gate minimums aligned with shared catalogs (`Area=ShipGate`)
-14. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5181) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
+14. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5182) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
 
 ## Playwright browser smokes (`tests/e2e-playwright`)
 
 | Spec | Coverage |
 |------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Suite login → StaffArr handoff |
-| `product-handoff-smoke.spec.ts` | Handoff to all six product frontends |
+| `product-handoff-smoke.spec.ts` | Handoff to all seven product frontends |
 | `product-handoff-tenant-chrome.spec.ts` | Tenant name/slug in product shell after handoff |
 | `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route |
 
-Requires `E2E_LIVE=1` and `scripts/ops/e2e-frontends-preview` (suite 5174, products 5175–5180, companion 5181). See `tests/e2e-playwright/README.md` and `docs/implementation/worker-slices/W134_M13_PLAYWRIGHT_DEEP_LINK_E2E.md`.
+Requires `E2E_LIVE=1` and `scripts/ops/e2e-frontends-preview` (suite 5174, products 5175–5180 and 5182, companion 5181). See `tests/e2e-playwright/README.md` and `docs/implementation/worker-slices/W134_M13_PLAYWRIGHT_DEEP_LINK_E2E.md`.
 
 ## Live URL configuration
 

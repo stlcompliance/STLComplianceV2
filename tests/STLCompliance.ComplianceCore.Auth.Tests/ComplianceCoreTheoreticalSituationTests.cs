@@ -111,6 +111,14 @@ public sealed class ComplianceCoreTheoreticalSituationTests : IAsyncLifetime
         Assert.Contains(evaluation.Details, detail => detail.FactKey == "medical_current" && detail.Result == "blocked");
         Assert.Contains(evaluation.Details, detail => detail.SimulatedState == "missing");
         Assert.Contains(evaluation.Details, detail => detail.SimulatedState == "invalid");
+
+        var reportResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/theoretical-situations/{situation.SituationId}/simulation-report", token));
+        reportResponse.EnsureSuccessStatusCode();
+        var report = (await reportResponse.Content.ReadFromJsonAsync<TheoreticalSituationResponse>())!;
+        Assert.Equal(situation.SituationId, report.SituationId);
+        Assert.NotNull(report.LatestEvaluation);
+        Assert.Equal(evaluation.EvaluationId, report.LatestEvaluation!.EvaluationId);
     }
 
     [Fact]

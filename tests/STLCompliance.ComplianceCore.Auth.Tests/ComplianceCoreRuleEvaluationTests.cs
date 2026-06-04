@@ -129,6 +129,60 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Rule_content_supports_none_logic()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackAsync(adminToken);
+
+        var content = new RulePackContentBody(
+            1,
+            "none",
+            [
+                new RuleDefinitionDto(
+                    "license_valid",
+                    "Valid driver license",
+                    "fact_boolean",
+                    "driver_license_valid",
+                    true),
+                new RuleDefinitionDto(
+                    "med_cert",
+                    "Medical certificate on file",
+                    "fact_boolean",
+                    "medical_cert_on_file",
+                    true),
+            ]);
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/rule-packs/{rulePackId}/content", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        var updateResponse = await _complianceCoreClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+
+        var passRequest = Authorized(HttpMethod.Post, $"/api/rule-packs/{rulePackId}/evaluate", adminToken);
+        passRequest.Content = JsonContent.Create(new EvaluateRulePackRequest(new Dictionary<string, bool>
+        {
+            ["driver_license_valid"] = false,
+            ["medical_cert_on_file"] = false,
+        }));
+        var passResponse = await _complianceCoreClient.SendAsync(passRequest);
+        passResponse.EnsureSuccessStatusCode();
+        var passResult = (await passResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("pass", passResult.OverallResult);
+        Assert.All(passResult.RuleResults, item => Assert.Equal("fail", item.Result));
+
+        var failRequest = Authorized(HttpMethod.Post, $"/api/rule-packs/{rulePackId}/evaluate", adminToken);
+        failRequest.Content = JsonContent.Create(new EvaluateRulePackRequest(new Dictionary<string, bool>
+        {
+            ["driver_license_valid"] = true,
+            ["medical_cert_on_file"] = false,
+        }));
+        var failResponse = await _complianceCoreClient.SendAsync(failRequest);
+        failResponse.EnsureSuccessStatusCode();
+        var failResult = (await failResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("fail", failResult.OverallResult);
+        Assert.Contains(failResult.RuleResults, item => item.Result == "pass");
+    }
+
+    [Fact]
     public async Task Rule_content_update_denies_member_role()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
@@ -491,6 +545,76 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Rule_test_cases_can_be_saved_run_updated_and_deleted()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{rulePackId}/test-cases", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRuleTestCaseRequest(
+            RuleKey: "license_valid",
+            TestKey: "license-valid-pass",
+            Label: "License passes when valid",
+            Description: "Saved regression case for a passing license check.",
+            Facts: new Dictionary<string, bool>
+            {
+                ["driver_license_valid"] = true,
+            },
+            ExpectedResult: "pass"));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RuleTestCaseResponse>())!;
+        Assert.Equal(rulePackId, created.RulePackId);
+        Assert.Equal("license_valid", created.RuleKey);
+        Assert.Equal("license-valid-pass", created.TestKey);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{rulePackId}/test-cases", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var testCases = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleTestCaseResponse>>())!;
+        Assert.Single(testCases, item => item.TestKey == "license-valid-pass");
+
+        var runResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{rulePackId}/test-cases/{created.RuleTestCaseId}/run", adminToken));
+        runResponse.EnsureSuccessStatusCode();
+        var run = (await runResponse.Content.ReadFromJsonAsync<RuleTestCaseRunResponse>())!;
+        Assert.True(run.Passed);
+        Assert.Equal("pass", run.ActualResult);
+        Assert.Equal("pass", run.ExpectedResult);
+
+        var patchRequest = Authorized(HttpMethod.Patch, $"/api/v1/rule-packs/{rulePackId}/test-cases/{created.RuleTestCaseId}", adminToken);
+        patchRequest.Content = JsonContent.Create(new PatchRuleTestCaseRequest(
+            Facts: new Dictionary<string, bool>
+            {
+                ["driver_license_valid"] = false,
+            },
+            ExpectedResult: "fail"));
+        var patchResponse = await _complianceCoreClient.SendAsync(patchRequest);
+        patchResponse.EnsureSuccessStatusCode();
+        var patched = (await patchResponse.Content.ReadFromJsonAsync<RuleTestCaseResponse>())!;
+        Assert.Equal("fail", patched.ExpectedResult);
+        Assert.False(patched.Facts["driver_license_valid"]);
+
+        var rerunResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{rulePackId}/test-cases/{created.RuleTestCaseId}/run", adminToken));
+        rerunResponse.EnsureSuccessStatusCode();
+        var rerun = (await rerunResponse.Content.ReadFromJsonAsync<RuleTestCaseRunResponse>())!;
+        Assert.True(rerun.Passed);
+        Assert.Equal("fail", rerun.ActualResult);
+        Assert.Equal("fail", rerun.ExpectedResult);
+
+        var deleteResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Delete, $"/api/v1/rule-packs/{rulePackId}/test-cases/{created.RuleTestCaseId}", adminToken));
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var emptyListResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{rulePackId}/test-cases", adminToken));
+        emptyListResponse.EnsureSuccessStatusCode();
+        var emptyTestCases = (await emptyListResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleTestCaseResponse>>())!;
+        Assert.Empty(emptyTestCases);
+    }
+
+    [Fact]
     public async Task V1_rule_pack_evaluation_aliases_support_content_and_evaluate_routes()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
@@ -542,7 +666,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/rules", adminToken));
         listResponse.EnsureSuccessStatusCode();
         var listedRules = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleCatalogItemResponse>>())!;
-        var existingRule = Assert.Single(listedRules.Where(x => x.RulePackId == rulePackId));
+        var existingRule = Assert.Single(listedRules, x => x.RulePackId == rulePackId);
 
         var getResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/v1/rules/{Uri.EscapeDataString(existingRule.RuleId)}", adminToken));

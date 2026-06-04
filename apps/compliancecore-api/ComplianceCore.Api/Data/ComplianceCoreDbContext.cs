@@ -45,6 +45,8 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<RuleEvaluationRun> RuleEvaluationRuns => Set<RuleEvaluationRun>();
 
+    public DbSet<RuleTestCase> RuleTestCases => Set<RuleTestCase>();
+
     public DbSet<ScheduledRuleEvaluationRun> ScheduledRuleEvaluationRuns => Set<ScheduledRuleEvaluationRun>();
 
     public DbSet<FactSource> FactSources => Set<FactSource>();
@@ -961,6 +963,26 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<RuleTestCase>(entity =>
+        {
+            entity.ToTable("compliancecore_rule_test_cases");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RuleKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TestKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ExpectedResult).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.FactsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RulePackId);
+            entity.HasIndex(x => new { x.TenantId, x.RulePackId, x.TestKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.RulePackId, x.RuleKey });
+            entity.HasOne(x => x.RulePack)
+                .WithMany()
+                .HasForeignKey(x => x.RulePackId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<ComplianceExceptionExemption>(entity =>
         {
             entity.ToTable("compliance_exception_exemption");
@@ -1323,6 +1345,35 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .HasForeignKey(x => x.ImportSessionId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateImmutableSnapshots();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ValidateImmutableSnapshots();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ValidateImmutableSnapshots()
+    {
+        var changedSnapshots = ChangeTracker.Entries()
+            .Where(entry =>
+                entry.Entity is RuleEvaluationRun or ComplianceCoreAuditEvent &&
+                entry.State is EntityState.Modified or EntityState.Deleted)
+            .Select(entry => entry.Entity.GetType().Name)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (changedSnapshots.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"Immutable compliance snapshots cannot be modified or deleted: {string.Join(", ", changedSnapshots)}.");
+        }
     }
 
     private static void ConfigureReference<TEntity>(ModelBuilder modelBuilder, string tableName)

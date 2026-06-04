@@ -73,6 +73,69 @@ public sealed record MissingEvidenceReportSummaryItem(
     string Summary,
     DateTimeOffset EvaluatedAt);
 
+public sealed record EvidenceCompletenessReportSummaryResponse(
+    Guid TenantId,
+    int TotalRulePacks,
+    int CompleteRulePackCount,
+    int PartialRulePackCount,
+    int IncompleteRulePackCount,
+    int TotalWarnings,
+    int CriticalWarningCount,
+    int HighWarningCount,
+    int MediumWarningCount,
+    int LowWarningCount,
+    int CompletenessScore,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<EvidenceCompletenessReportItem> RulePacks);
+
+public sealed record EvidenceCompletenessReportItem(
+    Guid RulePackId,
+    string PackKey,
+    string ScopeKey,
+    int TotalWarnings,
+    int CriticalWarningCount,
+    int HighWarningCount,
+    int MediumWarningCount,
+    int LowWarningCount,
+    int CompletenessScore,
+    string CompletenessLevel,
+    DateTimeOffset? LatestWarningAt,
+    string Summary);
+
+public sealed record CitationReviewReportSummaryResponse(
+    Guid TenantId,
+    int TotalCitations,
+    int ActiveCitationCount,
+    int ReviewedCitationCount,
+    int NeedsReviewCitationCount,
+    int InactiveCitationCount,
+    int SupersededCitationCount,
+    int LinkedRulePackCount,
+    int TotalFactRequirementCount,
+    int TotalMappingCount,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<CitationReviewReportItem> Citations);
+
+public sealed record CitationReviewReportItem(
+    Guid CitationId,
+    string CitationKey,
+    string SourceReference,
+    string ProgramKey,
+    string ProgramLabel,
+    string CitationLabel,
+    int VersionNumber,
+    string ReviewState,
+    bool IsActive,
+    bool HasRulePack,
+    string? RulePackKey,
+    string? RulePackLabel,
+    int FactRequirementCount,
+    int MappingCount,
+    int SupersededByCount,
+    string? SupersedesCitationKey,
+    DateTimeOffset UpdatedAt,
+    string Summary);
+
 public sealed record RemediationQueueReportSummaryResponse(
     int TotalWarnings,
     int QueuedCount,
@@ -156,6 +219,61 @@ public sealed record ProductIntegrationHealthReportSummaryResponse(
     int FailedCount,
     int PendingCount,
     IReadOnlyList<FactSourceSyncHealthItem> Sources);
+
+public sealed record RegulatoryDomainCoverageReportSummaryResponse(
+    Guid TenantId,
+    int TotalPrograms,
+    int OperationalProgramCount,
+    int ReferenceProgramCount,
+    int MixedProgramCount,
+    int TotalRulePacks,
+    int OperationalRulePackCount,
+    int ReferenceRulePackCount,
+    int TotalCitations,
+    int TotalMappings,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<RegulatoryDomainCoverageReportItem> Programs);
+
+public sealed record RegulatoryDomainCoverageReportItem(
+    Guid RegulatoryProgramId,
+    string ProgramKey,
+    string ProgramLabel,
+    string GoverningBodyKey,
+    string GoverningBodyLabel,
+    string JurisdictionKey,
+    string JurisdictionLabel,
+    string CoverageMode,
+    int RulePackCount,
+    int OperationalRulePackCount,
+    int ReferenceRulePackCount,
+    int CitationCount,
+    int MappingCount,
+    DateTimeOffset UpdatedAt);
+
+public sealed record HazmatTableCoverageReportSummaryResponse(
+    Guid TenantId,
+    int TotalMaterialKeys,
+    int LookupControlledCount,
+    int CitationLinkedCount,
+    int UnmappedCount,
+    int TotalMappings,
+    int TotalRulePacks,
+    int TotalCitations,
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<HazmatTableCoverageReportItem> MaterialKeys);
+
+public sealed record HazmatTableCoverageReportItem(
+    Guid MaterialKeyId,
+    string Key,
+    string Label,
+    string Category,
+    string CoverageMode,
+    int MappingCount,
+    int RulePackCount,
+    int CitationCount,
+    bool HasLookupControl,
+    bool HasCitationLink,
+    DateTimeOffset UpdatedAt);
 
 public sealed record AuditReadinessReportSummaryResponse(
     int TotalForecasts,

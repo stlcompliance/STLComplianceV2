@@ -41,6 +41,10 @@ vi.mock('../../components/SourceIngestionPanel', () => ({
   SourceIngestionPanel: () => <div data-testid="source-ingestion-panel" />,
 }))
 
+vi.mock('../../components/RulePackImportWorkflowPanel', () => ({
+  RulePackImportWorkflowPanel: () => <div data-testid="rule-pack-import-workflow-panel" />,
+}))
+
 vi.mock('../../components/CsvImportExportPanel', () => ({
   CsvImportExportPanel: () => <div data-testid="csv-import-export-panel" />,
 }))
@@ -70,7 +74,7 @@ describe('AdminSection', () => {
     cleanup()
   })
 
-  it('renders admin workspace with all nine product-admin panels for compliance admin', () => {
+  it('renders admin workspace with all ten product-admin panels for compliance admin', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -97,6 +101,7 @@ describe('AdminSection', () => {
     expect(screen.getByTestId('risk-scoring-panel')).toBeTruthy()
     expect(screen.getByTestId('rule-change-monitoring-panel')).toBeTruthy()
     expect(screen.getByTestId('source-ingestion-panel')).toBeTruthy()
+    expect(screen.getByTestId('rule-pack-import-workflow-panel')).toBeTruthy()
     expect(screen.getByTestId('csv-import-export-panel')).toBeTruthy()
   })
 

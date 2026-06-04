@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { RegulatoryRegistryPanel } from '../../components/RegulatoryRegistryPanel'
+import { RuleTestCasesPanel } from '../../components/RuleTestCasesPanel'
 import { RuleVersionManagementPanel } from '../../components/RuleVersionManagementPanel'
 import { SdsHazComReferencesPanel } from '../../components/SdsHazComReferencesPanel'
 import { VocabularyPanel } from '../../components/VocabularyPanel'
@@ -44,6 +45,13 @@ export function RegistrySection({ state }: Props) {
       <RuleVersionManagementPanel
         accessToken={s.accessToken}
         canRead
+        canManage={s.canManage}
+      />
+      <RuleTestCasesPanel
+        accessToken={s.accessToken}
+        rulePacks={s.rulePacksQuery.data ?? []}
+        selectedRulePackId={s.selectedRulePackId}
+        onSelectRulePack={s.setSelectedRulePackId}
         canManage={s.canManage}
       />
       <SdsHazComReferencesPanel

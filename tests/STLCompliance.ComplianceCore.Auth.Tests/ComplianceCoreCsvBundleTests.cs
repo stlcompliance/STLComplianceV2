@@ -84,6 +84,32 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Csv_bundle_zip_round_trip_supports_dry_run_validation()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        await SeedSampleTenantDataAsync(adminToken);
+
+        var exportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/csv-bundle/export", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var zipBytes = await exportResponse.Content.ReadAsByteArrayAsync();
+
+        using var form = new MultipartFormDataContent();
+        var zipContent = new ByteArrayContent(zipBytes);
+        zipContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+        form.Add(zipContent, "file", "compliancecore-csv-bundle.zip");
+
+        var importRequest = Authorized(HttpMethod.Post, "/api/csv-bundle/import?dryRun=true", adminToken);
+        importRequest.Content = form;
+        var importResponse = await _complianceCoreClient.SendAsync(importRequest);
+        importResponse.EnsureSuccessStatusCode();
+        var result = (await importResponse.Content.ReadFromJsonAsync<CsvImportResultResponse>())!;
+        Assert.True(result.DryRun);
+        Assert.False(result.Applied);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
     public async Task Csv_bundle_import_round_trip_upserts_keys()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);

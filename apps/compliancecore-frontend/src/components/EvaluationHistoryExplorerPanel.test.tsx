@@ -51,8 +51,41 @@ describe('EvaluationHistoryExplorerPanel', () => {
               createdAt: '2026-05-27T00:00:00Z',
               updatedAt: '2026-05-27T00:00:00Z',
             },
+            {
+              rulePackId: 'rp-3',
+              regulatoryProgramId: 'prog-1',
+              regulatoryProgramKey: 'fmcsa_safety',
+              regulatoryProgramLabel: 'FMCSA Safety Compliance',
+              packKey: 'legacy_rules',
+              label: 'Legacy Rule Pack',
+              description: 'Historical legacy rules.',
+              versionNumber: 1,
+              status: 'archived',
+              isActive: false,
+              createdAt: '2026-05-26T00:00:00Z',
+              updatedAt: '2026-05-26T00:00:00Z',
+            },
           ]}
           evaluationRuns={[
+            {
+              evaluationRunId: 'run-0',
+              rulePackId: 'rp-3',
+              packKey: 'legacy_rules',
+              packLabel: 'Legacy Rule Pack',
+              versionNumber: 1,
+              status: 'completed',
+              overallResult: 'warn',
+              factInputs: { legacy_fact: true },
+              ruleResults: [
+                {
+                  ruleKey: 'legacy_check',
+                  label: 'Legacy check',
+                  result: 'warn',
+                  message: 'Legacy rule triggered.',
+                },
+              ],
+              createdAt: '2026-05-26T09:00:00Z',
+            },
             {
               evaluationRunId: 'run-1',
               rulePackId: 'rp-1',
@@ -91,6 +124,25 @@ describe('EvaluationHistoryExplorerPanel', () => {
                 },
               ],
               createdAt: '2026-05-27T13:00:00Z',
+            },
+            {
+              evaluationRunId: 'run-3',
+              rulePackId: 'rp-1',
+              packKey: 'driver_qualification',
+              packLabel: 'Driver Qualification Rules',
+              versionNumber: 1,
+              status: 'completed',
+              overallResult: 'pass',
+              factInputs: { driver_license_valid: true, refresher_complete: true },
+              ruleResults: [
+                {
+                  ruleKey: 'license_valid',
+                  label: 'Valid driver license',
+                  result: 'pass',
+                  message: 'Fact matched.',
+                },
+              ],
+              createdAt: '2026-05-28T08:00:00Z',
             },
           ]}
           canExportAudit={true}
@@ -158,12 +210,24 @@ describe('EvaluationHistoryExplorerPanel', () => {
     expect(screen.getByTestId('evaluation-history-explorer-panel')).toBeTruthy()
     expect(screen.getAllByText('Driver Qualification Rules').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Medical Certificate Rules').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Legacy Rule Pack').length).toBeGreaterThan(0)
 
     fireEvent.change(screen.getByLabelText(/Search/i), { target: { value: 'medical' } })
 
     await waitFor(() => {
       expect(screen.queryAllByText('Driver Qualification Rules').length).toBe(0)
       expect(screen.queryAllByText('Medical Certificate Rules').length).toBeGreaterThan(0)
+    })
+
+    fireEvent.change(screen.getByLabelText(/Search/i), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText(/Start date/i), { target: { value: '2026-05-27' } })
+    fireEvent.change(screen.getByLabelText(/End date/i), { target: { value: '2026-05-27' } })
+
+    await waitFor(() => {
+      expect(screen.queryAllByText('Legacy Rule Pack').length).toBe(0)
+      expect(screen.queryAllByText('Medical Certificate Rules').length).toBeGreaterThan(0)
+      expect(screen.queryAllByText('Driver Qualification Rules').length).toBeGreaterThan(0)
+      expect(screen.getByText(/Matching runs/i).parentElement).toHaveTextContent('2')
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Load audit export snapshot/i }))

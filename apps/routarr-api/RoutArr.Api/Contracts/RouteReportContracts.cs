@@ -14,7 +14,11 @@ public sealed record RouteReportRouteSummaryItem(
     int ArrivedStopCount,
     int CompletedStopCount,
     int SkippedStopCount,
-    int CompletionPercent);
+    int CompletionPercent,
+    int WaitStopCount,
+    int DetentionStopCount,
+    int TotalWaitMinutes,
+    int TotalDetentionMinutes);
 
 public sealed record RouteReportStopRow(
     Guid StopId,
@@ -26,6 +30,8 @@ public sealed record RouteReportStopRow(
     string StopStatus,
     int SequenceNumber,
     DateTimeOffset? ScheduledArrivalAt,
+    int WaitMinutes,
+    int DetentionMinutes,
     DateTimeOffset UpdatedAt);
 
 public sealed record RouteReportSummaryResponse(
@@ -39,6 +45,10 @@ public sealed record RouteReportSummaryResponse(
     int ArrivedStopCount,
     int CompletedStopCount,
     int SkippedStopCount,
+    int WaitStopCount,
+    int DetentionStopCount,
+    int TotalWaitMinutes,
+    int TotalDetentionMinutes,
     IReadOnlyList<RouteReportCountItem> RouteStatusCounts,
     IReadOnlyList<RouteReportCountItem> StopStatusCounts,
     IReadOnlyList<RouteReportCountItem> StopTypeCounts,
@@ -56,6 +66,8 @@ public sealed record RouteReportStopSummaryRow(
     DateTimeOffset? ScheduledArrivalAt,
     DateTimeOffset? ArrivedAt,
     DateTimeOffset? CompletedAt,
+    int WaitMinutes,
+    int DetentionMinutes,
     DateTimeOffset UpdatedAt);
 
 public sealed record RouteReportRouteDetailResponse(
@@ -102,5 +114,7 @@ public sealed record RouteReportStopDetailResponse(
     DateTimeOffset? ScheduledArrivalAt,
     DateTimeOffset? ArrivedAt,
     DateTimeOffset? CompletedAt,
+    int WaitMinutes,
+    int DetentionMinutes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

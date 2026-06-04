@@ -1,4 +1,4 @@
-import { Radio, Route, Map, UserCheck, Calendar, Settings, Truck, BarChart3, ListCollapse, StickyNote } from 'lucide-react'
+import { Radio, Route, Map, UserCheck, Calendar, Settings, Truck, BarChart3, ListCollapse, StickyNote, Globe } from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -13,6 +13,8 @@ export const routarrNavItems: ProductNavItem[] = [
   { label: 'Dispatch', to: '/dispatch', icon: Radio as NavIcon },
 
   { label: 'Driver portal', to: '/driver-portal', icon: Truck as NavIcon },
+
+  { label: 'Customer portal', to: '/customer-portal', icon: Globe as NavIcon },
 
   {
     label: 'Trips',

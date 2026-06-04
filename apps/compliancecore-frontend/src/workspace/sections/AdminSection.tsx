@@ -9,6 +9,7 @@ import { M12AnalyticsWorkerSettingsPanel } from '../../components/M12AnalyticsWo
 import { RuleChangeMonitoringPanel } from '../../components/RuleChangeMonitoringPanel'
 import { SourceIngestionPanel } from '../../components/SourceIngestionPanel'
 import { ImportWizardPanel } from '../../components/ImportWizardPanel'
+import { RulePackImportWorkflowPanel } from '../../components/RulePackImportWorkflowPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
@@ -49,6 +50,7 @@ export function AdminSection({ state }: Props) {
           <RuleChangeMonitoringPanel accessToken={s.accessToken} />
           <SourceIngestionPanel accessToken={s.accessToken} canManage={s.canManage} />
           <ImportWizardPanel accessToken={s.accessToken} canManage={s.canManage} />
+          <RulePackImportWorkflowPanel accessToken={s.accessToken} canManage={s.canManage} />
           <CsvImportExportPanel accessToken={s.accessToken} canManage={s.canManage} />
         </div>
       ) : null}

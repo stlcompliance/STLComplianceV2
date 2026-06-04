@@ -1,7 +1,9 @@
 using ComplianceCore.Api.Options;
 using ComplianceCore.Api.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
+using System.Threading.RateLimiting;
 
 namespace ComplianceCore.Api;
 
@@ -45,6 +47,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<RegulatoryMappingService>();
         builder.Services.AddScoped<RuleContentService>();
         builder.Services.AddScoped<RuleCatalogService>();
+        builder.Services.AddScoped<RuleTestCaseService>();
         builder.Services.AddScoped<ComplianceFindingService>();
         builder.Services.AddScoped<ComplianceWaiverService>();
         builder.Services.AddScoped<ComplianceExceptionExemptionService>();
@@ -63,8 +66,11 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<ProductFactIngestionService>();
         builder.Services.AddScoped<SourceIngestionService>();
         builder.Services.AddScoped<RuleChangeMonitoringService>();
+        builder.Services.AddScoped<RuleChangeImpactReportService>();
+        builder.Services.AddScoped<EvaluationHistoryExplorerService>();
         builder.Services.AddScoped<RiskScoringService>();
         builder.Services.AddScoped<MissingEvidenceWarningService>();
+        builder.Services.AddScoped<EvidenceCompletenessReportService>();
         builder.Services.AddScoped<ControlEffectivenessService>();
         builder.Services.AddScoped<ReadinessForecastService>();
         builder.Services.AddScoped<M12AnalyticsWorkerSettingsService>();
@@ -91,8 +97,32 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<MissingEvidenceReportService>();
         builder.Services.AddScoped<WaiverReportService>();
         builder.Services.AddScoped<ExceptionExemptionReportService>();
+        builder.Services.AddScoped<RegulatoryDomainCoverageReportService>();
+        builder.Services.AddScoped<HazmatTableCoverageReportService>();
+        builder.Services.AddScoped<Title49CoverageExplorerService>();
+        builder.Services.AddScoped<Title49CitationCoverageReportService>();
+        builder.Services.AddScoped<CitationReviewReportService>();
+        builder.Services.AddScoped<Title49CalculatorService>();
         builder.Services.AddScoped<ComplianceCoreEntityBulkExportService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
+
+        var authPermitLimit = builder.Configuration.GetValue("Auth:LoginRateLimitPermitLimit", 100);
+        var authWindowSeconds = builder.Configuration.GetValue("Auth:LoginRateLimitWindowSeconds", 60);
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(
+                "ComplianceCoreAuthThrottle",
+                httpContext => RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = authPermitLimit,
+                        Window = TimeSpan.FromSeconds(authWindowSeconds),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
+        });
 
         var frontendOrigin = builder.Configuration["Cors:ComplianceCoreFrontendOrigin"] ?? "http://localhost:5177";
 
@@ -109,6 +139,7 @@ public static class ComplianceCoreServiceRegistration
 
     public static void ConfigurePipeline(WebApplication app)
     {
+        app.UseRateLimiter();
         app.UseCors("ComplianceCoreFrontend");
     }
 }

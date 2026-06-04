@@ -92,6 +92,26 @@ public class ComplianceCoreAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Audit_package_export_stream_returns_zip_files_without_buffered_download()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        await SeedEvaluationDataAsync(adminToken);
+
+        using var request = Authorized(HttpMethod.Get, "/api/audit-packages/export/stream", adminToken);
+        using var response = await _complianceCoreClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("application/zip", response.Content.Headers.ContentType?.MediaType);
+
+        var zipBytes = await response.Content.ReadAsByteArrayAsync();
+        using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read, leaveOpen: false);
+        Assert.Equal(7, archive.Entries.Count);
+        Assert.Contains(archive.Entries, entry => entry.Name == "manifest.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "audit_events.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "findings.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "workflow_gate_checks.json");
+    }
+
+    [Fact]
     public async Task Audit_package_export_json_returns_structured_package()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
@@ -106,6 +126,84 @@ public class ComplianceCoreAuditPackageTests : IAsyncLifetime
         Assert.True(package.Counts.RulePacks >= 1);
         Assert.True(package.Counts.EvaluationRuns >= 1);
         Assert.NotEmpty(package.RulePacks);
+    }
+
+    [Fact]
+    public async Task Evaluation_runs_are_immutable_after_creation()
+    {
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var governingBody = new GoverningBody
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            BodyKey = "test-body",
+            Label = "Test Body",
+            Description = "Test body",
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var jurisdiction = new Jurisdiction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            GoverningBodyId = governingBody.Id,
+            JurisdictionKey = "test-jurisdiction",
+            Label = "Test Jurisdiction",
+            Description = "Test jurisdiction",
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var program = new RegulatoryProgram
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            JurisdictionId = jurisdiction.Id,
+            ProgramKey = "test-program",
+            Label = "Test Program",
+            Description = "Test program",
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var pack = new RulePack
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            RegulatoryProgramId = program.Id,
+            PackKey = "test-pack",
+            Label = "Test Pack",
+            Description = "Test pack",
+            VersionNumber = 1,
+            Status = RulePackStatuses.Published,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var run = new RuleEvaluationRun
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            RulePackId = pack.Id,
+            ActorUserId = PlatformSeeder.DemoAdminUserId,
+            Status = RuleEvaluationRunStatuses.Completed,
+            OverallResult = RuleEvaluationResults.Pass,
+            FactInputsJson = "{}",
+            RuleResultsJson = "[]",
+            CreatedAt = now,
+        };
+
+        db.AddRange(governingBody, jurisdiction, program, pack, run);
+        await db.SaveChangesAsync();
+
+        run.OverallResult = RuleEvaluationResults.Fail;
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+        Assert.Contains("Immutable compliance snapshots", exception.Message);
     }
 
     [Fact]

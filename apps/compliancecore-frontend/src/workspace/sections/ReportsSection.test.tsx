@@ -9,6 +9,14 @@ vi.mock('../../components/ComplianceReportsPanel', () => ({
   ComplianceReportsPanel: () => <div data-testid="compliance-reports-panel" />,
 }))
 
+vi.mock('../../components/CitationReviewReportsPanel', () => ({
+  CitationReviewReportsPanel: () => <div data-testid="citation-review-reports-panel" />,
+}))
+
+vi.mock('../../components/EvidenceCompletenessReportsPanel', () => ({
+  EvidenceCompletenessReportsPanel: () => <div data-testid="evidence-completeness-reports-panel" />,
+}))
+
 vi.mock('../../components/OperatorReportsPanel', () => ({
   OperatorReportsPanel: () => <div data-testid="operator-reports-panel" />,
 }))
@@ -80,6 +88,8 @@ describe('ReportsSection', () => {
 
     expect(screen.getByTestId('compliancecore-reports-workspace')).toBeTruthy()
     expect(screen.getByTestId('compliance-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('citation-review-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('evidence-completeness-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('operator-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('waiver-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('exception-exemption-reports-panel')).toBeTruthy()

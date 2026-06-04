@@ -112,7 +112,16 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
             "Pickup then delivery",
             null,
             [
-                new CreateRouteStopRequest("stop-1", "Quarry pickup", "North quarry gate", "pickup", 1, null),
+                new CreateRouteStopRequest(
+                    "stop-1",
+                    "Quarry pickup",
+                    "North quarry gate",
+                    "pickup",
+                    1,
+                    null,
+                    null,
+                    null,
+                    DateTimeOffset.Parse("2026-05-27T10:30:00Z")),
                 new CreateRouteStopRequest("stop-2", "Yard delivery", "South yard dock", "delivery", 2, null),
             ]));
         var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
@@ -123,6 +132,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
         Assert.StartsWith("RT-", created.RouteNumber);
         Assert.Equal("stop-1", created.Stops[0].StopKey);
         Assert.Equal("stop-2", created.Stops[1].StopKey);
+        Assert.Equal(DateTimeOffset.Parse("2026-05-27T10:30:00Z"), created.Stops[0].ScheduledArrivalAt);
 
         var linkRequest = Authorized(HttpMethod.Patch, $"/api/routes/{created.RouteId}/link-trip", dispatcherToken);
         linkRequest.Content = JsonContent.Create(new LinkRouteTripRequest(trip.TripId));
@@ -188,6 +198,35 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
         var routes = (await listRoutesResponse.Content.ReadFromJsonAsync<List<RouteSummaryResponse>>())!;
         Assert.Single(routes);
         Assert.Equal(created.RouteId, routes[0].RouteId);
+    }
+
+    [Fact]
+    public async Task Trip_lookup_by_number_returns_detail()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
+        createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Customer portal trip",
+            "Trip used to verify lookup by trip number.",
+            null,
+            DateTimeOffset.Parse("2026-06-03T10:00:00Z"),
+            DateTimeOffset.Parse("2026-06-03T16:00:00Z"),
+            null));
+        var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
+        createTripResponse.EnsureSuccessStatusCode();
+        var created = (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var lookupResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/by-number/{created.TripNumber}", dispatcherToken));
+        lookupResponse.EnsureSuccessStatusCode();
+        var lookedUp = (await lookupResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        Assert.Equal(created.TripId, lookedUp.TripId);
+        Assert.Equal(created.TripNumber, lookedUp.TripNumber);
+        Assert.Equal(created.Title, lookedUp.Title);
+        Assert.Equal(created.ScheduledStartAt, lookedUp.ScheduledStartAt);
+        Assert.Equal(created.ScheduledEndAt, lookedUp.ScheduledEndAt);
     }
 
     [Fact]

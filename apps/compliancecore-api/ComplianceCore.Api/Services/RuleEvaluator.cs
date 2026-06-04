@@ -49,13 +49,19 @@ public static class RuleEvaluator
             .Select(rule => EvaluateRule(rule, facts))
             .ToList();
 
-        var overallResult = string.Equals(content.Logic, "any", StringComparison.OrdinalIgnoreCase)
-            ? results.Any(x => string.Equals(x.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+        var logic = content.Logic.Trim().ToLowerInvariant();
+        var overallResult = logic switch
+        {
+            "any" => results.Any(x => string.Equals(x.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
                 ? RuleEvaluationResults.Pass
-                : RuleEvaluationResults.Fail
-            : results.All(x => string.Equals(x.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+                : RuleEvaluationResults.Fail,
+            "none" => results.All(x => !string.Equals(x.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
                 ? RuleEvaluationResults.Pass
-                : RuleEvaluationResults.Fail;
+                : RuleEvaluationResults.Fail,
+            _ => results.All(x => string.Equals(x.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+                ? RuleEvaluationResults.Pass
+                : RuleEvaluationResults.Fail,
+        };
 
         return (overallResult, results);
     }
@@ -112,11 +118,11 @@ public static class RuleEvaluator
         }
 
         var logic = content.Logic.Trim().ToLowerInvariant();
-        if (logic is not ("all" or "any"))
+        if (logic is not ("all" or "any" or "none"))
         {
             throw new StlApiException(
                 "rule_content.validation",
-                "Rule content logic must be 'all' or 'any'.",
+                "Rule content logic must be 'all', 'any', or 'none'.",
                 400);
         }
 

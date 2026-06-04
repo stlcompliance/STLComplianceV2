@@ -415,6 +415,8 @@ export interface RuleEvaluationItemResponse {
   result: string
   message: string
   nonWaivable?: boolean
+  remediationRequired?: boolean
+  reviewRequired?: boolean
 }
 
 export interface RuleEvaluationRunResponse {
@@ -684,6 +686,82 @@ export interface CsvImportResultResponse {
   applied: boolean
   files: CsvImportFileSummary[]
   issues: CsvImportIssue[]
+}
+
+export interface RulePackImportRunResponse {
+  importId: string
+  status: string
+  dryRun: boolean
+  createdAt: string
+  result: CsvImportResultResponse
+}
+
+export interface RulePackImportDiffResponse {
+  importId: string
+  filesWithChanges: number
+  createdCount: number
+  updatedCount: number
+  deactivatedCount: number
+  issueCount: number
+}
+
+export interface RulePackImportTestResultsResponse {
+  importId: string
+  passed: boolean
+  issueCount: number
+  issues: CsvImportIssue[]
+}
+
+export interface RulePackImportRollbackResponse {
+  importId: string
+  rolledBack: boolean
+  status: string
+}
+
+export interface RuleTestCaseResponse {
+  ruleTestCaseId: string
+  rulePackId: string
+  rulePackKey: string
+  rulePackVersion: number
+  rulePackStatus: string
+  ruleId: string
+  ruleKey: string
+  testKey: string
+  label: string
+  description: string
+  expectedResult: string
+  facts: Record<string, boolean>
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateRuleTestCaseRequest {
+  ruleKey: string
+  testKey: string
+  label: string
+  description: string
+  facts: Record<string, boolean>
+  expectedResult?: string
+}
+
+export interface PatchRuleTestCaseRequest {
+  ruleKey?: string | null
+  testKey?: string | null
+  label?: string | null
+  description?: string | null
+  facts?: Record<string, boolean> | null
+  expectedResult?: string | null
+}
+
+export interface RuleTestCaseRunResponse {
+  ruleTestCaseId: string
+  ruleId: string
+  expectedResult: string
+  actualResult: string
+  passed: boolean
+  message: string
+  evaluation: RuleEvaluationItemResponse
+  evaluatedAt: string
 }
 
 export interface CsvImportResolutionOptions {
@@ -1178,6 +1256,73 @@ export interface MissingEvidenceWarningSummaryResponse {
   highestSeverity: string
   lastEvaluatedAt: string | null
   generatedAt: string
+}
+
+export interface EvidenceCompletenessReportItem {
+  rulePackId: string
+  packKey: string
+  scopeKey: string
+  totalWarnings: number
+  criticalWarningCount: number
+  highWarningCount: number
+  mediumWarningCount: number
+  lowWarningCount: number
+  completenessScore: number
+  completenessLevel: string
+  latestWarningAt: string | null
+  summary: string
+}
+
+export interface EvidenceCompletenessReportSummaryResponse {
+  tenantId: string
+  totalRulePacks: number
+  completeRulePackCount: number
+  partialRulePackCount: number
+  incompleteRulePackCount: number
+  totalWarnings: number
+  criticalWarningCount: number
+  highWarningCount: number
+  mediumWarningCount: number
+  lowWarningCount: number
+  completenessScore: number
+  generatedAt: string
+  rulePacks: EvidenceCompletenessReportItem[]
+}
+
+export interface CitationReviewReportItem {
+  citationId: string
+  citationKey: string
+  sourceReference: string
+  programKey: string
+  programLabel: string
+  citationLabel: string
+  versionNumber: number
+  reviewState: string
+  isActive: boolean
+  hasRulePack: boolean
+  rulePackKey: string | null
+  rulePackLabel: string | null
+  factRequirementCount: number
+  mappingCount: number
+  supersededByCount: number
+  supersedesCitationKey: string | null
+  updatedAt: string
+  summary: string
+}
+
+export interface CitationReviewReportSummaryResponse {
+  tenantId: string
+  totalCitations: number
+  activeCitationCount: number
+  reviewedCitationCount: number
+  needsReviewCitationCount: number
+  inactiveCitationCount: number
+  supersededCitationCount: number
+  linkedRulePackCount: number
+  totalFactRequirementCount: number
+  totalMappingCount: number
+  generatedAt: string
+  citations: CitationReviewReportItem[]
 }
 
 export interface EvaluateControlEffectivenessRequest {

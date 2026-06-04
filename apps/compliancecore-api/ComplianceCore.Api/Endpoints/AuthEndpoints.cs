@@ -1,5 +1,6 @@
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using STLCompliance.Shared.Auth;
 
 namespace ComplianceCore.Api.Endpoints;
@@ -20,17 +21,21 @@ public static class AuthEndpoints
 
         auth.MapPost("/handoff/redeem", RedeemHandoffAsync)
             .AllowAnonymous()
+            .RequireRateLimiting("ComplianceCoreAuthThrottle")
             .WithName("ComplianceCoreRedeemHandoff");
         auth.MapPost("/nexarr/redeem", RedeemHandoffAsync)
             .AllowAnonymous()
+            .RequireRateLimiting("ComplianceCoreAuthThrottle")
             .ExcludeFromDescription();
 
         var authV1 = app.MapGroup("/api/v1/auth").WithTags("Auth");
         authV1.MapPost("/handoff/redeem", RedeemHandoffAsync)
             .AllowAnonymous()
+            .RequireRateLimiting("ComplianceCoreAuthThrottle")
             .WithName("ComplianceCoreRedeemHandoffV1");
         authV1.MapPost("/nexarr/redeem", RedeemHandoffAsync)
             .AllowAnonymous()
+            .RequireRateLimiting("ComplianceCoreAuthThrottle")
             .ExcludeFromDescription();
 
         var session = app.MapGroup("/api/session").WithTags("Session").RequireAuthorization();

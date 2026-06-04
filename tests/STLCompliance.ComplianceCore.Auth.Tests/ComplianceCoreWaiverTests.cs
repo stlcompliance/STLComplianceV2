@@ -607,7 +607,10 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         var content = new RulePackContentBody(
             1,
             "all",
-            [new RuleDefinitionDto("license_valid", "Valid license", "fact_boolean", "driver_license_valid", true)]);
+            [
+                new RuleDefinitionDto("license_valid", "Valid license", "fact_boolean", "driver_license_valid", true),
+                new RuleDefinitionDto("med_cert", "Medical certificate on file", "fact_boolean", "medical_cert_on_file", true),
+            ]);
         var contentRequest = Authorized(HttpMethod.Put, $"/api/v1/rule-packs/{created.RulePackId}/content", adminToken);
         contentRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
         (await _complianceCoreClient.SendAsync(contentRequest)).EnsureSuccessStatusCode();
@@ -622,12 +625,39 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         Assert.NotEqual(created.RulePackId, cloned.RulePackId);
         Assert.Equal("draft", cloned.Status);
 
+        var cloneContent = new RulePackContentBody(
+            1,
+            "all",
+            [
+                new RuleDefinitionDto("license_valid", "Valid driver license updated", "fact_boolean", "driver_license_valid", true),
+                new RuleDefinitionDto("hazmat_training", "Hazmat training complete", "fact_boolean", "hazmat_training_complete", true),
+            ]);
+        var cloneContentRequest = Authorized(HttpMethod.Put, $"/api/v1/rule-packs/{cloned.RulePackId}/content", adminToken);
+        cloneContentRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(cloneContent));
+        (await _complianceCoreClient.SendAsync(cloneContentRequest)).EnsureSuccessStatusCode();
+
         var diffResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{created.RulePackId}/diff?compareRulePackId={cloned.RulePackId}", adminToken));
         diffResponse.EnsureSuccessStatusCode();
         var diff = (await diffResponse.Content.ReadFromJsonAsync<RulePackDiffResponse>())!;
         Assert.Equal(created.RulePackId, diff.BaseRulePackId);
         Assert.Equal(cloned.RulePackId, diff.CompareRulePackId);
+        Assert.True(diff.MetadataChanged);
+        Assert.True(diff.ContentChanged);
+        Assert.Equal(1, diff.AddedRuleCount);
+        Assert.Equal(1, diff.RemovedRuleCount);
+        Assert.Equal(1, diff.ModifiedRuleCount);
+        Assert.Equal(3, diff.RuleChanges.Count);
+        Assert.Contains(diff.RuleChanges, item => item.RuleKey == "license_valid" && item.ChangeType == "modified");
+        Assert.Contains(diff.RuleChanges, item => item.RuleKey == "hazmat_training" && item.ChangeType == "added");
+        Assert.Contains(diff.RuleChanges, item => item.RuleKey == "med_cert" && item.ChangeType == "removed");
+        var licenseChange = diff.RuleChanges.Single(item => item.RuleKey == "license_valid");
+        Assert.Equal("Valid license", licenseChange.BaseLabel);
+        Assert.Equal("Valid driver license updated", licenseChange.CompareLabel);
+        Assert.Equal("driver_license_valid", licenseChange.BaseFactKey);
+        Assert.Equal("driver_license_valid", licenseChange.CompareFactKey);
+        Assert.True(licenseChange.BaseExpectedValue);
+        Assert.True(licenseChange.CompareExpectedValue);
     }
 
     [Fact]

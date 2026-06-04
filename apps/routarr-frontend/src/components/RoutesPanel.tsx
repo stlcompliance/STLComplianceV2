@@ -18,6 +18,7 @@ interface RoutesPanelProps {
   stopLabel: string
   stopAddress: string
   stopType: string
+  stopScheduledArrivalAt: string
   stopGeofenceAnchorLatitude: string
   stopGeofenceAnchorLongitude: string
   stopGeofenceRadiusMeters: string
@@ -33,6 +34,7 @@ interface RoutesPanelProps {
   onStopLabelChange: (value: string) => void
   onStopAddressChange: (value: string) => void
   onStopTypeChange: (value: string) => void
+  onStopScheduledArrivalAtChange: (value: string) => void
   onStopGeofenceAnchorLatitudeChange: (value: string) => void
   onStopGeofenceAnchorLongitudeChange: (value: string) => void
   onStopGeofenceRadiusMetersChange: (value: string) => void
@@ -62,6 +64,7 @@ export function RoutesPanel({
   stopLabel,
   stopAddress,
   stopType,
+  stopScheduledArrivalAt,
   stopGeofenceAnchorLatitude,
   stopGeofenceAnchorLongitude,
   stopGeofenceRadiusMeters,
@@ -77,6 +80,7 @@ export function RoutesPanel({
   onStopLabelChange,
   onStopAddressChange,
   onStopTypeChange,
+  onStopScheduledArrivalAtChange,
   onStopGeofenceAnchorLatitudeChange,
   onStopGeofenceAnchorLongitudeChange,
   onStopGeofenceRadiusMetersChange,
@@ -192,6 +196,17 @@ export function RoutesPanel({
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopAddress}
               onChange={(event) => onStopAddressChange(event.target.value)}
+            />
+          </label>
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-scheduled-arrival">
+            Scheduled arrival
+            <input
+              id="routes-stop-scheduled-arrival"
+              type="datetime-local"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={stopScheduledArrivalAt}
+              onChange={(event) => onStopScheduledArrivalAtChange(event.target.value)}
+              placeholder="Optional dock appointment"
             />
           </label>
           <label className="text-sm text-slate-300" htmlFor="routes-stop-geofence-latitude">
@@ -346,12 +361,17 @@ export function RoutesPanel({
                             </span>
                             <span className="text-xs uppercase text-slate-400">{stop.stopStatus}</span>
                           </div>
-                          <div className="text-slate-400">
-                            {stop.stopType} · {stop.addressLabel || 'No address'}
-                          </div>
-                          {canPerform && nextStatus ? (
-                            <button
-                              type="button"
+                  <div className="text-slate-400">
+                    {stop.stopType} · {stop.addressLabel || 'No address'}
+                  </div>
+                  {stop.scheduledArrivalAt ? (
+                    <div className="text-xs text-slate-500">
+                      Scheduled arrival {new Date(stop.scheduledArrivalAt).toLocaleString()}
+                    </div>
+                  ) : null}
+                  {canPerform && nextStatus ? (
+                    <button
+                      type="button"
                               className="mt-2 rounded bg-slate-700 px-2 py-1 text-xs text-white disabled:opacity-50"
                               disabled={isUpdatingStop}
                               onClick={() => onUpdateStopStatus(stop.stopId, nextStatus)}

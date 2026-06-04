@@ -80,6 +80,11 @@ public sealed class ComplianceCoreEntityBulkExportService(
                     "Missing evidence report CSV",
                     "Missing evidence warnings by severity and reason."),
                 new(
+                    "evidence_completeness",
+                    "/api/reports/evidence/completeness/summary/export",
+                    "Evidence completeness report CSV",
+                    "Evidence completeness rollups by rule pack, scope, and warning severity."),
+                new(
                     "waivers",
                     "/api/reports/waivers/summary/export",
                     "Waiver report CSV",
@@ -104,6 +109,11 @@ public sealed class ComplianceCoreEntityBulkExportService(
                     "/api/reports/remediation-queue/summary/export",
                     "Remediation queue report CSV",
                     "Open remediation items derived from missing evidence warnings with recommended actions."),
+                new(
+                    "citation_review",
+                    "/api/reports/citation-review/summary/export",
+                    "Citation review report CSV",
+                    "Citation review rollups with review states, supersession links, and downstream traceability."),
             ],
             AuditPackageFormats: ["json", "zip"]);
 

@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_TRAINARR_FRONTEND_BASE?: string
   readonly VITE_STAFFARR_FRONTEND_BASE?: string
   readonly VITE_SUPPLYARR_FRONTEND_BASE?: string
+  readonly VITE_LOADARR_FRONTEND_BASE?: string
 }
 
 interface ImportMeta {

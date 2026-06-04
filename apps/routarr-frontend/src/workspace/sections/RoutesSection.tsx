@@ -27,6 +27,7 @@ export function RoutesSection({ state }: Props) {
     stopLabel,
     stopAddress,
     stopType,
+    stopScheduledArrivalAt,
     stopGeofenceAnchorLatitude,
     stopGeofenceAnchorLongitude,
     stopGeofenceRadiusMeters,
@@ -40,6 +41,7 @@ export function RoutesSection({ state }: Props) {
     setStopLabel,
     setStopAddress,
     setStopType,
+    setStopScheduledArrivalAt,
     setStopGeofenceAnchorLatitude,
     setStopGeofenceAnchorLongitude,
     setStopGeofenceRadiusMeters,
@@ -66,6 +68,7 @@ export function RoutesSection({ state }: Props) {
         stopLabel={stopLabel}
         stopAddress={stopAddress}
         stopType={stopType}
+        stopScheduledArrivalAt={stopScheduledArrivalAt}
         stopGeofenceAnchorLatitude={stopGeofenceAnchorLatitude}
         stopGeofenceAnchorLongitude={stopGeofenceAnchorLongitude}
         stopGeofenceRadiusMeters={stopGeofenceRadiusMeters}
@@ -81,6 +84,7 @@ export function RoutesSection({ state }: Props) {
         onStopLabelChange={setStopLabel}
         onStopAddressChange={setStopAddress}
         onStopTypeChange={setStopType}
+        onStopScheduledArrivalAtChange={setStopScheduledArrivalAt}
         onStopGeofenceAnchorLatitudeChange={setStopGeofenceAnchorLatitude}
         onStopGeofenceAnchorLongitudeChange={setStopGeofenceAnchorLongitude}
         onStopGeofenceRadiusMetersChange={setStopGeofenceRadiusMeters}

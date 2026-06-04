@@ -25,6 +25,7 @@ export const handoffProductFrontends: readonly HandoffProductFrontend[] = [
   },
   { productKey: 'supplyarr', port: 5179, baseUrl: process.env.E2E_SUPPLYARR_URL ?? 'http://localhost:5179' },
   { productKey: 'routarr', port: 5180, baseUrl: process.env.E2E_ROUTARR_URL ?? 'http://localhost:5180' },
+  { productKey: 'loadarr', port: 5182, baseUrl: process.env.E2E_LOADARR_URL ?? 'http://localhost:5182' },
 ]
 
 export function handoffUrlPattern(frontend: HandoffProductFrontend): RegExp {

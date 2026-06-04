@@ -143,6 +143,7 @@ export function RuleEvaluationPanel({
               >
                 <option value="all">All rules must pass</option>
                 <option value="any">Any rule may pass</option>
+                <option value="none">No listed rule may pass</option>
               </select>
             </label>
             <p className="text-xs text-slate-500">

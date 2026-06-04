@@ -497,6 +497,88 @@ public sealed class RulePackService(
             || !string.Equals(basePack.PackKey, comparePack.PackKey, StringComparison.Ordinal);
         var contentChanged = !string.Equals(baseHash, compareHash, StringComparison.Ordinal);
 
+        var baseContent = ParseContentOrEmpty(basePack.RuleContentJson);
+        var compareContent = ParseContentOrEmpty(comparePack.RuleContentJson);
+        var baseRulesByKey = baseContent.Rules.ToDictionary(x => x.RuleKey, StringComparer.OrdinalIgnoreCase);
+        var compareRulesByKey = compareContent.Rules.ToDictionary(x => x.RuleKey, StringComparer.OrdinalIgnoreCase);
+        var ruleKeys = baseRulesByKey.Keys
+            .Union(compareRulesByKey.Keys, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var ruleChanges = new List<RulePackRuleDiffResponse>();
+        foreach (var ruleKey in ruleKeys)
+        {
+            var hasBase = baseRulesByKey.TryGetValue(ruleKey, out var baseRule);
+            var hasCompare = compareRulesByKey.TryGetValue(ruleKey, out var compareRule);
+
+            if (hasBase && hasCompare)
+            {
+                var modified =
+                    !string.Equals(baseRule.Label, compareRule.Label, StringComparison.Ordinal)
+                    || !string.Equals(baseRule.FactKey, compareRule.FactKey, StringComparison.Ordinal)
+                    || baseRule.ExpectedValue != compareRule.ExpectedValue
+                    || baseRule.NonWaivable != compareRule.NonWaivable
+                    || baseRule.RemediationRequired != compareRule.RemediationRequired
+                    || baseRule.ReviewRequired != compareRule.ReviewRequired;
+
+                if (modified)
+                {
+                    ruleChanges.Add(new RulePackRuleDiffResponse(
+                        ruleKey,
+                        "modified",
+                        baseRule.Label,
+                        compareRule.Label,
+                        baseRule.FactKey,
+                        compareRule.FactKey,
+                        baseRule.ExpectedValue,
+                        compareRule.ExpectedValue,
+                        baseRule.NonWaivable,
+                        compareRule.NonWaivable,
+                        baseRule.RemediationRequired,
+                        compareRule.RemediationRequired,
+                        baseRule.ReviewRequired,
+                        compareRule.ReviewRequired));
+                }
+            }
+            else if (hasBase)
+            {
+                ruleChanges.Add(new RulePackRuleDiffResponse(
+                    ruleKey,
+                    "removed",
+                    baseRule.Label,
+                    null,
+                    baseRule.FactKey,
+                    null,
+                    baseRule.ExpectedValue,
+                    null,
+                    baseRule.NonWaivable,
+                    null,
+                    baseRule.RemediationRequired,
+                    null,
+                    baseRule.ReviewRequired,
+                    null));
+            }
+            else if (hasCompare)
+            {
+                ruleChanges.Add(new RulePackRuleDiffResponse(
+                    ruleKey,
+                    "added",
+                    null,
+                    compareRule.Label,
+                    null,
+                    compareRule.FactKey,
+                    null,
+                    compareRule.ExpectedValue,
+                    null,
+                    compareRule.NonWaivable,
+                    null,
+                    compareRule.RemediationRequired,
+                    null,
+                    compareRule.ReviewRequired));
+            }
+        }
+
         return new RulePackDiffResponse(
             basePack.Id,
             comparePack.Id,
@@ -507,7 +589,11 @@ public sealed class RulePackService(
             metadataChanged,
             contentChanged,
             baseHash,
-            compareHash);
+            compareHash,
+            ruleChanges.Count(x => x.ChangeType == "added"),
+            ruleChanges.Count(x => x.ChangeType == "removed"),
+            ruleChanges.Count(x => x.ChangeType == "modified"),
+            ruleChanges);
     }
 
 
@@ -637,6 +723,26 @@ public sealed class RulePackService(
             entity.CreatedAt,
 
             entity.UpdatedAt);
+
+
+
+    private static RulePackContentBody ParseContentOrEmpty(string? contentJson)
+
+    {
+
+        if (string.IsNullOrWhiteSpace(contentJson))
+
+        {
+
+            return new RulePackContentBody(1, "all", []);
+
+        }
+
+
+
+        return RuleEvaluator.ParseContent(contentJson);
+
+    }
 
 
 

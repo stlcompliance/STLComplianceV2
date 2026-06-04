@@ -12,6 +12,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -95,6 +96,10 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
         var summary = (await response.Content.ReadFromJsonAsync<RouteReportSummaryResponse>())!;
         Assert.True(summary.TotalRouteCount >= 1);
         Assert.True(summary.TotalStopCount >= 2);
+        Assert.Equal(1, summary.WaitStopCount);
+        Assert.Equal(1, summary.DetentionStopCount);
+        Assert.Equal(45, summary.TotalWaitMinutes);
+        Assert.Equal(30, summary.TotalDetentionMinutes);
         Assert.Contains(summary.Routes, x => x.RouteId == _routeId);
         Assert.Contains(summary.StopStatusCounts, x =>
             string.Equals(x.Key, "completed", StringComparison.OrdinalIgnoreCase) && x.Count >= 1);
@@ -110,6 +115,9 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
         Assert.Equal(_routeId, route.RouteId);
         Assert.Equal(2, route.Stops.Count);
         Assert.True(route.CompletionPercent >= 50);
+        var delayedStop = Assert.Single(route.Stops, x => x.StopKey == "stop-a");
+        Assert.Equal(45, delayedStop.WaitMinutes);
+        Assert.Equal(30, delayedStop.DetentionMinutes);
 
         var stopResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/reports/routes/stops/{_stopId:D}", _dispatcherToken));
@@ -117,6 +125,8 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
         var stop = (await stopResponse.Content.ReadFromJsonAsync<RouteReportStopDetailResponse>())!;
         Assert.Equal(_stopId, stop.StopId);
         Assert.Equal("completed", stop.StopStatus);
+        Assert.Equal(45, stop.WaitMinutes);
+        Assert.Equal(30, stop.DetentionMinutes);
     }
 
     [Fact]
@@ -130,6 +140,7 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
 
         var csv = await response.Content.ReadAsStringAsync();
         Assert.Contains("routeNumber,title", csv, StringComparison.Ordinal);
+        Assert.Contains("waitStopCount", csv, StringComparison.Ordinal);
         Assert.Contains("Report route", csv, StringComparison.Ordinal);
     }
 
@@ -165,6 +176,18 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
         var completeRequest = Authorized(HttpMethod.Patch, $"/api/stops/{firstStopId}/status", _dispatcherToken);
         completeRequest.Content = JsonContent.Create(new UpdateRouteStopStatusRequest("completed"));
         (await _routarrClient.SendAsync(completeRequest)).EnsureSuccessStatusCode();
+
+        using (var scope = _routarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+            var stop = await db.RouteStops.SingleAsync(x => x.Id == firstStopId);
+            var scheduledArrivalAt = DateTimeOffset.UtcNow.AddHours(-2);
+            stop.ScheduledArrivalAt = scheduledArrivalAt;
+            stop.ArrivedAt = scheduledArrivalAt.AddMinutes(45);
+            stop.CompletedAt = stop.ArrivedAt.Value.AddMinutes(30);
+            stop.UpdatedAt = stop.CompletedAt.Value;
+            await db.SaveChangesAsync();
+        }
 
         return (route.RouteId, firstStopId);
     }

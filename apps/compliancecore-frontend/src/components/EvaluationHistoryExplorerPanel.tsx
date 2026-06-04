@@ -45,6 +45,23 @@ function formatAuditExportSummary(exportResponse: RuleEvaluationAuditExportRespo
   ].join(' · ')
 }
 
+function getDateBoundaryMillis(value: string, boundary: 'start' | 'end'): number | null {
+  if (!value) {
+    return null
+  }
+
+  const parsed = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  if (boundary === 'end') {
+    parsed.setHours(23, 59, 59, 999)
+  }
+
+  return parsed.getTime()
+}
+
 export function EvaluationHistoryExplorerPanel({
   accessToken,
   rulePacks,
@@ -55,6 +72,8 @@ export function EvaluationHistoryExplorerPanel({
   const [searchTerm, setSearchTerm] = useState('')
   const [rulePackFilter, setRulePackFilter] = useState('all')
   const [resultFilter, setResultFilter] = useState('all')
+  const [startDateFilter, setStartDateFilter] = useState('')
+  const [endDateFilter, setEndDateFilter] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')
   const [lastAuditExport, setLastAuditExport] = useState<RuleEvaluationAuditExportResponse | null>(null)
 
@@ -73,9 +92,19 @@ export function EvaluationHistoryExplorerPanel({
 
   const filteredRuns = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
+    const startBoundary = getDateBoundaryMillis(startDateFilter, 'start')
+    const endBoundary = getDateBoundaryMillis(endDateFilter, 'end')
     return [...evaluationRuns]
       .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
       .filter((run) => {
+        const createdAtMillis = Date.parse(run.createdAt)
+
+        if (startBoundary !== null && createdAtMillis < startBoundary) {
+          return false
+        }
+        if (endBoundary !== null && createdAtMillis > endBoundary) {
+          return false
+        }
         if (rulePackFilter !== 'all' && run.rulePackId !== rulePackFilter) {
           return false
         }
@@ -98,7 +127,7 @@ export function EvaluationHistoryExplorerPanel({
           .toLowerCase()
         return searchableText.includes(normalizedSearch)
       })
-  }, [evaluationRuns, resultFilter, rulePackFilter, searchTerm])
+  }, [endDateFilter, evaluationRuns, resultFilter, rulePackFilter, searchTerm, startDateFilter])
 
   useEffect(() => {
     if (filteredRuns.length === 0) {
@@ -212,6 +241,28 @@ export function EvaluationHistoryExplorerPanel({
             <option value="block">Block</option>
           </select>
         </label>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <label htmlFor="evaluation-history-start-date" className="text-xs text-slate-400">
+            Start date
+            <input
+              id="evaluation-history-start-date"
+              type="date"
+              value={startDateFilter}
+              onChange={(event) => setStartDateFilter(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            />
+          </label>
+          <label htmlFor="evaluation-history-end-date" className="text-xs text-slate-400">
+            End date
+            <input
+              id="evaluation-history-end-date"
+              type="date"
+              value={endDateFilter}
+              onChange={(event) => setEndDateFilter(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            />
+          </label>
+        </div>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
           <MetricCard label="Matching runs" value={String(totalRuns)} />
           <MetricCard label="Passing" value={String(passRuns)} />

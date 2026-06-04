@@ -1,4 +1,6 @@
 import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
+import { CitationReviewReportsPanel } from '../../components/CitationReviewReportsPanel'
+import { EvidenceCompletenessReportsPanel } from '../../components/EvidenceCompletenessReportsPanel'
 import { AuditReadinessReportsPanel } from '../../components/AuditReadinessReportsPanel'
 import { DataExportsPanel } from '../../components/DataExportsPanel'
 import { ExceptionExemptionReportsPanel } from '../../components/ExceptionExemptionReportsPanel'
@@ -24,6 +26,16 @@ export function ReportsSection({ state }: Props) {
   return (
     <div className="grid gap-6" data-testid="compliancecore-reports-workspace">
       <ComplianceReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <CitationReviewReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <EvidenceCompletenessReportsPanel
         accessToken={state.accessToken}
         canRead={canRead}
         canExport={canExport}

@@ -48,6 +48,7 @@ public sealed class RouteReportService(RoutArrDbContext db)
                 var arrived = CountStopStatus(routeStops, RouteStopStatuses.Arrived);
                 var completed = CountStopStatus(routeStops, RouteStopStatuses.Completed);
                 var skipped = CountStopStatus(routeStops, RouteStopStatuses.Skipped);
+                var delayMetrics = routeStops.Select(stop => ComputeDelayMetrics(stop, now)).ToList();
                 return new RouteReportRouteSummaryItem(
                     route.Id,
                     route.RouteNumber,
@@ -60,15 +61,20 @@ public sealed class RouteReportService(RoutArrDbContext db)
                     arrived,
                     completed,
                     skipped,
-                    ComputeCompletionPercent(total, completed, skipped));
+                    ComputeCompletionPercent(total, completed, skipped),
+                    delayMetrics.Count(x => x.WaitMinutes > 0),
+                    delayMetrics.Count(x => x.DetentionMinutes > 0),
+                    delayMetrics.Sum(x => x.WaitMinutes),
+                    delayMetrics.Sum(x => x.DetentionMinutes));
             })
             .OrderBy(x => x.RouteNumber)
             .ToList();
 
+        var stopDelayMetrics = scopedStops.Select(stop => ComputeDelayMetrics(stop, now)).ToList();
         var recentStops = scopedStops
             .OrderByDescending(x => x.UpdatedAt)
             .Take(RecentStopLimit)
-            .Select(MapStopRow)
+            .Select(x => MapStopRow(x, now))
             .ToList();
 
         return new RouteReportSummaryResponse(
@@ -82,6 +88,10 @@ public sealed class RouteReportService(RoutArrDbContext db)
             CountStopStatus(scopedStops, RouteStopStatuses.Arrived),
             CountStopStatus(scopedStops, RouteStopStatuses.Completed),
             CountStopStatus(scopedStops, RouteStopStatuses.Skipped),
+            stopDelayMetrics.Count(x => x.WaitMinutes > 0),
+            stopDelayMetrics.Count(x => x.DetentionMinutes > 0),
+            stopDelayMetrics.Sum(x => x.WaitMinutes),
+            stopDelayMetrics.Sum(x => x.DetentionMinutes),
             CountBy(scopedRoutes.Select(x => x.RouteStatus)),
             CountBy(scopedStops.Select(x => x.StopStatus)),
             CountBy(scopedStops.Select(x => x.StopType)),
@@ -144,18 +154,24 @@ public sealed class RouteReportService(RoutArrDbContext db)
             route.UpdatedAt,
             route.ActivatedAt,
             route.CompletedAt,
-            stops.Select(x => new RouteReportStopSummaryRow(
-                x.Id,
-                x.StopKey,
-                x.Label,
-                x.AddressLabel,
-                x.StopType,
-                x.StopStatus,
-                x.SequenceNumber,
-                x.ScheduledArrivalAt,
-                x.ArrivedAt,
-                x.CompletedAt,
-                x.UpdatedAt)).ToList(),
+            stops.Select(x =>
+            {
+                var delayMetrics = ComputeDelayMetrics(x, DateTimeOffset.UtcNow);
+                return new RouteReportStopSummaryRow(
+                    x.Id,
+                    x.StopKey,
+                    x.Label,
+                    x.AddressLabel,
+                    x.StopType,
+                    x.StopStatus,
+                    x.SequenceNumber,
+                    x.ScheduledArrivalAt,
+                    x.ArrivedAt,
+                    x.CompletedAt,
+                    delayMetrics.WaitMinutes,
+                    delayMetrics.DetentionMinutes,
+                    x.UpdatedAt);
+            }).ToList(),
             routeHistory);
     }
 
@@ -187,6 +203,8 @@ public sealed class RouteReportService(RoutArrDbContext db)
             stop.ScheduledArrivalAt,
             stop.ArrivedAt,
             stop.CompletedAt,
+            ComputeDelayMetrics(stop, DateTimeOffset.UtcNow).WaitMinutes,
+            ComputeDelayMetrics(stop, DateTimeOffset.UtcNow).DetentionMinutes,
             stop.CreatedAt,
             stop.UpdatedAt);
     }
@@ -199,7 +217,7 @@ public sealed class RouteReportService(RoutArrDbContext db)
         var summary = await GetSummaryAsync(tenantId, scope, cancellationToken);
         var builder = new StringBuilder();
         builder.AppendLine(
-            "routeNumber,title,routeStatus,tripNumber,totalStopCount,pendingStopCount,arrivedStopCount,completedStopCount,skippedStopCount,completionPercent");
+            "routeNumber,title,routeStatus,tripNumber,totalStopCount,pendingStopCount,arrivedStopCount,completedStopCount,skippedStopCount,completionPercent,waitStopCount,detentionStopCount,totalWaitMinutes,totalDetentionMinutes");
 
         foreach (var route in summary.Routes)
         {
@@ -221,15 +239,25 @@ public sealed class RouteReportService(RoutArrDbContext db)
             builder.Append(',');
             builder.Append(route.SkippedStopCount);
             builder.Append(',');
-            builder.AppendLine(route.CompletionPercent.ToString());
+            builder.Append(route.CompletionPercent);
+            builder.Append(',');
+            builder.Append(route.WaitStopCount);
+            builder.Append(',');
+            builder.Append(route.DetentionStopCount);
+            builder.Append(',');
+            builder.Append(route.TotalWaitMinutes);
+            builder.Append(',');
+            builder.AppendLine(route.TotalDetentionMinutes.ToString());
         }
 
         var fileName = $"routarr-route-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
         return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
-    private static RouteReportStopRow MapStopRow(RouteStop stop) =>
-        new(
+    private static RouteReportStopRow MapStopRow(RouteStop stop, DateTimeOffset now)
+    {
+        var delayMetrics = ComputeDelayMetrics(stop, now);
+        return new RouteReportStopRow(
             stop.Id,
             stop.RouteId,
             stop.Route.RouteNumber,
@@ -239,7 +267,42 @@ public sealed class RouteReportService(RoutArrDbContext db)
             stop.StopStatus,
             stop.SequenceNumber,
             stop.ScheduledArrivalAt,
+            delayMetrics.WaitMinutes,
+            delayMetrics.DetentionMinutes,
             stop.UpdatedAt);
+    }
+
+    private static (int WaitMinutes, int DetentionMinutes) ComputeDelayMetrics(RouteStop stop, DateTimeOffset now)
+    {
+        var waitMinutes = 0;
+        if (stop.ScheduledArrivalAt.HasValue)
+        {
+            var waitEnd = stop.ArrivedAt
+                ?? (string.Equals(stop.StopStatus, RouteStopStatuses.Pending, StringComparison.OrdinalIgnoreCase)
+                    ? now
+                    : stop.CompletedAt);
+            waitMinutes = ComputePositiveMinutes(stop.ScheduledArrivalAt.Value, waitEnd);
+        }
+
+        var detentionMinutes = 0;
+        if (stop.ArrivedAt.HasValue)
+        {
+            var detentionEnd = stop.CompletedAt ?? now;
+            detentionMinutes = ComputePositiveMinutes(stop.ArrivedAt.Value, detentionEnd);
+        }
+
+        return (waitMinutes, detentionMinutes);
+    }
+
+    private static int ComputePositiveMinutes(DateTimeOffset startAt, DateTimeOffset? endAt)
+    {
+        if (!endAt.HasValue || endAt.Value <= startAt)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((endAt.Value - startAt).TotalMinutes, MidpointRounding.AwayFromZero);
+    }
 
     private static int CountStopStatus(IEnumerable<RouteStop> stops, string status) =>
         stops.Count(x => string.Equals(x.StopStatus, status, StringComparison.OrdinalIgnoreCase));

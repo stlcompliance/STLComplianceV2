@@ -323,6 +323,18 @@ public static class TheoreticalSituationEndpoints
         })
         .WithName("GetTheoreticalSituationEvaluationV1");
 
+        situations.MapGet("/{id:guid}/simulation-report", async (
+            Guid id,
+            ComplianceCoreAuthorizationService authorization,
+            TheoreticalSituationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireSimulationRead(context.User);
+            return Results.Ok(await service.GetAsync(context.User.GetTenantId(), id, cancellationToken));
+        })
+        .WithName("GetTheoreticalSituationSimulationReportV1");
+
         situations.MapPost("/{id:guid}/save-template", async (
             Guid id,
             ComplianceCoreAuthorizationService authorization,

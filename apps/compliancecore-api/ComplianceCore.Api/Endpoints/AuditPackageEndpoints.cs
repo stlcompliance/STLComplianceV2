@@ -1,6 +1,7 @@
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Data;
 using ComplianceCore.Api.Services;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
@@ -39,6 +40,7 @@ public static class AuditPackageEndpoints
             DateTimeOffset? from,
             DateTimeOffset? to,
             ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService auditService,
             AuditPackageService service,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -70,6 +72,43 @@ public static class AuditPackageEndpoints
                 $"compliancecore-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
         .WithName("ExportAuditPackage");
+
+        packages.MapGet("/export/stream", async (
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService auditService,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var package = await service.MaterializeExportAsync(
+                tenantId,
+                from,
+                to,
+                cancellationToken);
+
+            await auditService.WriteAsync(
+                "audit_package.export",
+                tenantId,
+                actorUserId,
+                "audit_package",
+                package.PackageId.ToString(),
+                "success",
+                reasonCode: from is null && to is null ? "all_time" : "date_filtered",
+                cancellationToken: cancellationToken);
+
+            context.Features.Get<IHttpBodyControlFeature>()?.AllowSynchronousIO = true;
+
+            return Results.Stream(
+                stream => service.WriteZipAsync(package, stream, cancellationToken),
+                "application/zip",
+                $"compliancecore-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
+        })
+        .WithName("StreamAuditPackageExport");
 
         packages.MapPost("/jobs", async (
             CreateAuditPackageGenerationJobRequest request,

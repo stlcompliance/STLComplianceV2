@@ -122,5 +122,6 @@ describe('RuleEvaluationPanel', () => {
     expect(screen.getByRole('button', { name: 'Seed sample rule content' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Evaluate rule pack' })).toBeInTheDocument()
     expect(screen.getByText('pass')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'No listed rule may pass' })).toBeInTheDocument()
   })
 })

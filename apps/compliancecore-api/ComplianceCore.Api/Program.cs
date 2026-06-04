@@ -25,6 +25,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreRegulatoryRegistryEndpoints();
         app.MapComplianceCoreRulePackEndpoints();
         app.MapComplianceCoreRuleCatalogEndpoints();
+        app.MapComplianceCoreRuleTestCaseEndpoints();
         app.MapComplianceCoreCitationFactEndpoints();
         app.MapComplianceCoreRegulatoryMappingEndpoints();
         app.MapComplianceCoreRuleEvaluationEndpoints();
@@ -63,11 +64,20 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreFindingsReportEndpoints();
         app.MapComplianceCoreOperatorReportEndpoints();
         app.MapComplianceCoreMissingEvidenceReportEndpoints();
+        app.MapComplianceCoreEvidenceCompletenessReportEndpoints();
         app.MapComplianceCoreWaiverReportEndpoints();
         app.MapComplianceCoreExceptionExemptionReportEndpoints();
         app.MapComplianceCoreProductIntegrationHealthReportEndpoints();
         app.MapComplianceCoreAuditReadinessReportEndpoints();
         app.MapComplianceCoreRemediationQueueReportEndpoints();
+        app.MapComplianceCoreRegulatoryDomainCoverageReportEndpoints();
+        app.MapComplianceCoreHazmatTableCoverageReportEndpoints();
+        app.MapComplianceCoreTitle49CoverageExplorerEndpoints();
+        app.MapComplianceCoreTitle49CitationCoverageReportEndpoints();
+        app.MapComplianceCoreCitationReviewReportEndpoints();
+        app.MapComplianceCoreRuleChangeImpactReportEndpoints();
+        app.MapComplianceCoreEvaluationHistoryExplorerEndpoints();
+        app.MapComplianceCoreCalculatorEndpoints();
         app.MapComplianceCoreEntityExportEndpoints();
         app.MapComplianceCoreLoadTestJourneySeedEndpoints();
 

@@ -50,6 +50,24 @@ public static class TripEndpoints
         })
         .WithName("GetTrip");
 
+        group.MapGet("/by-number/{tripNumber}", async (
+            string tripNumber,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            TripService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var detail = await service.GetByTripNumberAsync(tenantId, tripNumber, cancellationToken);
+            authorization.RequireTripAccess(
+                context.User,
+                detail.CreatedByUserId,
+                detail.AssignedDriverPersonId);
+            return Results.Ok(detail);
+        })
+        .WithName("GetTripByNumber");
+
         group.MapPost("/", async (
             CreateTripRequest request,
             HttpContext context,

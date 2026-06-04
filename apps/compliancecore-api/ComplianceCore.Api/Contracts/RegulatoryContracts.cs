@@ -159,6 +159,26 @@ public sealed record RulePackDiffResponse(
     bool MetadataChanged,
     bool ContentChanged,
     string? BaseContentHash,
-    string? CompareContentHash);
+    string? CompareContentHash,
+    int AddedRuleCount,
+    int RemovedRuleCount,
+    int ModifiedRuleCount,
+    IReadOnlyList<RulePackRuleDiffResponse> RuleChanges);
+
+public sealed record RulePackRuleDiffResponse(
+    string RuleKey,
+    string ChangeType,
+    string? BaseLabel,
+    string? CompareLabel,
+    string? BaseFactKey,
+    string? CompareFactKey,
+    bool? BaseExpectedValue,
+    bool? CompareExpectedValue,
+    bool? BaseNonWaivable,
+    bool? CompareNonWaivable,
+    bool? BaseRemediationRequired,
+    bool? CompareRemediationRequired,
+    bool? BaseReviewRequired,
+    bool? CompareReviewRequired);
 
 

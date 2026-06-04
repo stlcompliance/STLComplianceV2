@@ -1,6 +1,6 @@
 # Browser E2E (Playwright)
 
-Optional smoke tests for **suite-frontend**: NexArr login → unified dashboard → product launch surfaces → handoff redirect to each Arr product frontend (5175–5180).
+Optional smoke tests for **suite-frontend**: NexArr login → unified dashboard → product launch surfaces → handoff redirect to each Arr product frontend (5175–5180 and 5182).
 
 ## Quick start (host Vite previews — recommended for CI)
 
@@ -8,7 +8,7 @@ Optional smoke tests for **suite-frontend**: NexArr login → unified dashboard 
 # APIs
 ./scripts/ops/e2e-stack-up.ps1
 
-# Suite + six product frontends (5174–5180) and Companion (5181)
+# Suite + seven product frontends (5175–5180 and 5182) and Companion (5181)
 ./scripts/ops/e2e-frontends-preview.ps1
 
 cd tests/e2e-playwright
@@ -41,7 +41,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | Test file | Coverage |
 |-----------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Login, StaffArr launch surface, StaffArr handoff redirect |
-| `product-handoff-smoke.spec.ts` | Handoff redirect for all six product frontends |
+| `product-handoff-smoke.spec.ts` | Handoff redirect for all seven product frontends |
 | `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
 | `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
@@ -101,6 +101,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `routarr-trip-complete-after-capture-journey-smoke.spec.ts` | RoutArr handoff → `/driver-portal` start trip + post-trip DVIR submit + photo upload + **Complete** (photo gate), then `/dispatch` `trip-proof-dvir-read-panel` post DVIR yes + `dvir-attachment-*` download in one session (W273/W274; end-to-end capture → complete → dispatcher read) |
 | `routarr-trip-close-after-complete-journey-smoke.spec.ts` | RoutArr handoff → `/driver-portal` start trip + post-trip DVIR submit + photo upload + **Complete** + **Close**, then `/dispatch` `trip-proof-dvir-read-panel` status completed + driver closed yes + post DVIR + `dvir-attachment-*` download in one session (W274/W275; end-to-end capture → complete → close → dispatcher read) |
 | `routarr-dispatch-closeout-panel-smoke.spec.ts` | RoutArr handoff → `/dispatch` `dispatch-closeout-panel`: disposition selects, trip checklist when open trips exist, preview closeout only (W251/W253; no apply closeout) |
+| `loadarr-workspace-smoke.spec.ts` | LoadArr handoff → workspace shell: warehouse execution header, metrics, receiving workflow, unexplained inventory, and route/product handoffs sections visible |
 | `supplyarr-settings-integration-events-smoke.spec.ts` | SupplyArr handoff → Settings integration event outbox/inbox save + Readiness dashboard metrics (W236) |
 | `supplyarr-settings-admin-workspace-smoke.spec.ts` | SupplyArr handoff → `/settings` `supplyarr-settings-admin-workspace`: all nine product-admin panels visible with save controls; notification dispatches + escalation runs + integration outbox/inbox sections loaded (W318; no save mutations) |
 | `supplyarr-reports-workspace-smoke.spec.ts` | SupplyArr handoff → `/reports` `supplyarr-reports-workspace`: all five M12 report panels (vendor, parts/inventory, purchasing, compliance, audit history) with filters, summary/empty states, export controls (W237/W319; no CSV download clicks) |
@@ -179,7 +180,9 @@ Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFronten
 | `E2E_MAINTAINARR_URL` | `http://localhost:5178` |
 | `E2E_SUPPLYARR_URL` | `http://localhost:5179` |
 | `E2E_ROUTARR_URL` | `http://localhost:5180` |
+| `E2E_LOADARR_URL` | `http://localhost:5182` |
 | `E2E_COMPANION_URL` | `http://localhost:5181` |
+| `E2E_LOADARR_API_URL` | `http://localhost:5108` |
 | `E2E_TRAINARR_API_URL` | `http://localhost:5103` |
 | `E2E_STAFFARR_API_URL` | `http://localhost:5102` |
 | `E2E_COMPLIANCECORE_API_URL` | `http://localhost:5107` |

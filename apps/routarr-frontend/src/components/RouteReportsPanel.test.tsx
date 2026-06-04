@@ -17,6 +17,10 @@ vi.mock('../api/client', () => ({
     arrivedStopCount: 0,
     completedStopCount: 1,
     skippedStopCount: 0,
+    waitStopCount: 1,
+    detentionStopCount: 1,
+    totalWaitMinutes: 45,
+    totalDetentionMinutes: 30,
     routeStatusCounts: [{ key: 'draft', count: 1 }],
     stopStatusCounts: [
       { key: 'pending', count: 1 },
@@ -37,6 +41,10 @@ vi.mock('../api/client', () => ({
         completedStopCount: 1,
         skippedStopCount: 0,
         completionPercent: 50,
+        waitStopCount: 1,
+        detentionStopCount: 1,
+        totalWaitMinutes: 45,
+        totalDetentionMinutes: 30,
       },
     ],
     recentStops: [
@@ -50,6 +58,8 @@ vi.mock('../api/client', () => ({
         stopStatus: 'completed',
         sequenceNumber: 1,
         scheduledArrivalAt: null,
+        waitMinutes: 45,
+        detentionMinutes: 30,
         updatedAt: new Date().toISOString(),
       },
     ],
@@ -98,7 +108,23 @@ describe('RouteReportsPanel', () => {
       updatedAt: '2026-06-02T00:00:00Z',
       activatedAt: '2026-06-01T12:00:00Z',
       completedAt: null,
-      stops: [],
+      stops: [
+        {
+          stopId: 'stop-1',
+          stopKey: 'stop-a',
+          label: 'Pickup',
+          addressLabel: '123 Main',
+          stopType: 'pickup',
+          stopStatus: 'completed',
+          sequenceNumber: 1,
+          scheduledArrivalAt: '2026-06-01T10:00:00Z',
+          arrivedAt: '2026-06-01T10:45:00Z',
+          completedAt: '2026-06-01T11:15:00Z',
+          waitMinutes: 45,
+          detentionMinutes: 30,
+          updatedAt: '2026-06-01T11:15:00Z',
+        },
+      ],
       history: [
         {
           occurredAt: '2026-06-02T09:00:00Z',
@@ -122,6 +148,7 @@ describe('RouteReportsPanel', () => {
     fireEvent.click(screen.getByText(/RT-RPT — Report test route/i))
     expect(await screen.findByText('Route history')).toBeInTheDocument()
     expect(await screen.findByText('route.updated')).toBeInTheDocument()
+    expect(await screen.findByText(/Stop delays/i)).toBeInTheDocument()
   })
 
   it('returns null when user cannot read reports', () => {

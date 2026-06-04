@@ -39,6 +39,14 @@ import type {
   CsvBundleManifestResponse,
   CsvImportResolutionOptions,
   CsvImportResultResponse,
+  RulePackImportDiffResponse,
+  RulePackImportRollbackResponse,
+  RulePackImportRunResponse,
+  RulePackImportTestResultsResponse,
+  RuleTestCaseResponse,
+  RuleTestCaseRunResponse,
+  CreateRuleTestCaseRequest,
+  PatchRuleTestCaseRequest,
   WorkflowGateBatchCheckRequest,
   WorkflowGateBatchCheckResponse,
   WorkflowGateCheckRequest,
@@ -84,6 +92,8 @@ import type {
   ControlEffectivenessSummaryResponse,
   EvaluateMissingEvidenceWarningsRequest,
   EvaluateMissingEvidenceWarningsResponse,
+  EvidenceCompletenessReportSummaryResponse,
+  CitationReviewReportSummaryResponse,
   MissingEvidenceWarningResponse,
   MissingEvidenceWarningSummaryResponse,
   RiskScoreResponse,
@@ -721,6 +731,10 @@ export async function importCsvBundle(
 }
 
 function appendCsvImportResolutionOptions(form: FormData, options?: CsvImportResolutionOptions) {
+  appendRulePackImportResolutionOptions(form, options)
+}
+
+function appendRulePackImportResolutionOptions(form: FormData, options?: CsvImportResolutionOptions) {
   if (!options) {
     return
   }
@@ -736,6 +750,163 @@ function appendCsvImportResolutionOptions(form: FormData, options?: CsvImportRes
   if (options.programMappings && Object.keys(options.programMappings).length > 0) {
     form.append('programMappingsJson', JSON.stringify(options.programMappings))
   }
+}
+
+async function submitRulePackImport(
+  accessToken: string,
+  route: string,
+  files: FileList,
+  options?: CsvImportResolutionOptions,
+): Promise<RulePackImportRunResponse> {
+  const form = new FormData()
+  Array.from(files).forEach((file) => form.append('file', file, file.name))
+  appendRulePackImportResolutionOptions(form, options)
+  const response = await fetch(`${apiBase}${route}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  })
+  return parseJsonResponse<RulePackImportRunResponse>(response, 'Failed to submit rule pack import')
+}
+
+export async function previewRulePackImport(
+  accessToken: string,
+  files: FileList,
+  options?: CsvImportResolutionOptions,
+): Promise<RulePackImportRunResponse> {
+  return submitRulePackImport(accessToken, '/api/v1/rule-pack-imports/preview', files, options)
+}
+
+export async function validateRulePackImport(
+  accessToken: string,
+  files: FileList,
+  options?: CsvImportResolutionOptions,
+): Promise<RulePackImportRunResponse> {
+  return submitRulePackImport(accessToken, '/api/v1/rule-pack-imports/validate', files, options)
+}
+
+export async function publishDraftRulePackImport(
+  accessToken: string,
+  files: FileList,
+  options?: CsvImportResolutionOptions,
+): Promise<RulePackImportRunResponse> {
+  return submitRulePackImport(accessToken, '/api/v1/rule-pack-imports/publish-draft', files, options)
+}
+
+export async function getRulePackImport(
+  accessToken: string,
+  importId: string,
+): Promise<RulePackImportRunResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rule-pack-imports/${importId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImportRunResponse>(response, 'Failed to load rule pack import')
+}
+
+export async function getRulePackImportDiff(
+  accessToken: string,
+  importId: string,
+): Promise<RulePackImportDiffResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rule-pack-imports/${importId}/diff`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImportDiffResponse>(response, 'Failed to load rule pack import diff')
+}
+
+export async function getRulePackImportTestResults(
+  accessToken: string,
+  importId: string,
+): Promise<RulePackImportTestResultsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rule-pack-imports/${importId}/test-results`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImportTestResultsResponse>(
+    response,
+    'Failed to load rule pack import test results',
+  )
+}
+
+export async function rollbackRulePackImport(
+  accessToken: string,
+  importId: string,
+): Promise<RulePackImportRollbackResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rule-pack-imports/${importId}/rollback`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImportRollbackResponse>(response, 'Failed to rollback rule pack import')
+}
+
+export async function listRuleTestCases(
+  accessToken: string,
+  rulePackId: string,
+): Promise<RuleTestCaseResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/rule-packs/${encodeURIComponent(rulePackId)}/test-cases`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RuleTestCaseResponse[]>(response, 'Failed to load rule test cases')
+}
+
+export async function createRuleTestCase(
+  accessToken: string,
+  rulePackId: string,
+  payload: CreateRuleTestCaseRequest,
+): Promise<RuleTestCaseResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rule-packs/${encodeURIComponent(rulePackId)}/test-cases`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RuleTestCaseResponse>(response, 'Failed to create rule test case')
+}
+
+export async function patchRuleTestCase(
+  accessToken: string,
+  rulePackId: string,
+  testCaseId: string,
+  payload: PatchRuleTestCaseRequest,
+): Promise<RuleTestCaseResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/rule-packs/${encodeURIComponent(rulePackId)}/test-cases/${encodeURIComponent(testCaseId)}`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<RuleTestCaseResponse>(response, 'Failed to update rule test case')
+}
+
+export async function deleteRuleTestCase(
+  accessToken: string,
+  rulePackId: string,
+  testCaseId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/v1/rule-packs/${encodeURIComponent(rulePackId)}/test-cases/${encodeURIComponent(testCaseId)}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to delete rule test case')
+  }
+}
+
+export async function runRuleTestCase(
+  accessToken: string,
+  rulePackId: string,
+  testCaseId: string,
+): Promise<RuleTestCaseRunResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/rule-packs/${encodeURIComponent(rulePackId)}/test-cases/${encodeURIComponent(testCaseId)}/run`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RuleTestCaseRunResponse>(response, 'Failed to run rule test case')
 }
 
 function appendFormValue(form: FormData, key: string, value?: string) {
@@ -1609,6 +1780,130 @@ export async function evaluateMissingEvidenceWarnings(
   )
 }
 
+export async function getEvidenceCompletenessReportSummary(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    severity?: string
+    limit?: number
+  },
+): Promise<EvidenceCompletenessReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.severity) {
+    params.set('severity', options.severity)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/evidence/completeness/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<EvidenceCompletenessReportSummaryResponse>(
+    response,
+    'Failed to load evidence completeness report summary',
+  )
+}
+
+export async function exportEvidenceCompletenessReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    severity?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.severity) {
+    params.set('severity', options.severity)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/evidence/completeness/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export evidence completeness report')
+  }
+  return response.blob()
+}
+
+export async function getCitationReviewReportSummary(
+  accessToken: string,
+  options?: {
+    reviewState?: string
+    programKey?: string
+    rulePackKey?: string
+    limit?: number
+  },
+): Promise<CitationReviewReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.reviewState) {
+    params.set('reviewState', options.reviewState)
+  }
+  if (options?.programKey) {
+    params.set('programKey', options.programKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/citation-review/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<CitationReviewReportSummaryResponse>(
+    response,
+    'Failed to load citation review report summary',
+  )
+}
+
+export async function exportCitationReviewReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    reviewState?: string
+    programKey?: string
+    rulePackKey?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.reviewState) {
+    params.set('reviewState', options.reviewState)
+  }
+  if (options?.programKey) {
+    params.set('programKey', options.programKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/citation-review/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export citation review report')
+  }
+  return response.blob()
+}
+
 export async function getRuleChangeSummary(
   accessToken: string,
 ): Promise<RuleChangeMonitoringSummaryResponse> {
@@ -2244,6 +2539,22 @@ export async function getTheoreticalSituation(
   return parseJsonResponse<TheoreticalSituationResponse>(
     response,
     'Failed to load theoretical situation',
+  )
+}
+
+export async function getTheoreticalSituationSimulationReport(
+  accessToken: string,
+  situationId: string,
+): Promise<TheoreticalSituationResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/${situationId}/simulation-report`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TheoreticalSituationResponse>(
+    response,
+    'Failed to load theoretical situation simulation report',
   )
 }
 

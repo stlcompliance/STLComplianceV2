@@ -1,6 +1,6 @@
 # Browser E2E overlay — use with base compose:
 #   docker compose -f docker-compose.yml -f docker-compose.e2e.yml --profile e2e up -d
-# APIs use default services from docker-compose.yml; this file adds Vite preview frontends on 5174–5180.
+# APIs use default services from docker-compose.yml; this file adds Vite preview frontends on 5174–5182.
 
 x-frontend-e2e: &frontend-e2e
   profiles: [e2e]
@@ -113,4 +113,19 @@ services:
       - "5180:5180"
     depends_on:
       routarr-api:
+        condition: service_started
+
+  loadarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: loadarr-frontend
+        PREVIEW_PORT: 5182
+        API_PROXY_TARGET: http://loadarr-api:8080
+    ports:
+      - "5182:5182"
+    depends_on:
+      loadarr-api:
         condition: service_started

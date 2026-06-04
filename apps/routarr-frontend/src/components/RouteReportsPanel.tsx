@@ -32,6 +32,14 @@ function formatTimestamp(iso: string) {
   }
 }
 
+function formatMinutes(minutes: number) {
+  if (minutes <= 0) return '0m'
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}m`
+  return mins === 0 ? `${hours}h` : `${hours}h ${mins}m`
+}
+
 export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
   const [scope, setScope] = useState<'daily' | 'weekly'>('daily')
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
@@ -80,7 +88,7 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Route & stop execution reports</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Route and stop rollups with completion metrics from RoutArr-owned routes and stops.
+            Route and stop rollups with completion, wait, and detention metrics from RoutArr-owned routes and stops.
           </p>
         </div>
         {canExport ? (
@@ -150,6 +158,22 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
               label="Pending stops"
               value={String(summaryQuery.data.pendingStopCount)}
             />
+            <MetricCard
+              label="Wait minutes"
+              value={formatMinutes(summaryQuery.data.totalWaitMinutes)}
+            />
+            <MetricCard
+              label="Detention minutes"
+              value={formatMinutes(summaryQuery.data.totalDetentionMinutes)}
+            />
+            <MetricCard
+              label="Waiting stops"
+              value={String(summaryQuery.data.waitStopCount)}
+            />
+            <MetricCard
+              label="Detained stops"
+              value={String(summaryQuery.data.detentionStopCount)}
+            />
           </div>
 
           <div className="mt-6">
@@ -173,7 +197,8 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
                       {route.routeNumber} — {route.title}
                       <span className="ml-2 text-xs text-slate-500">
                         {route.completionPercent}% · {route.completedStopCount}/{route.totalStopCount}{' '}
-                        stops
+                        stops · wait {formatMinutes(route.totalWaitMinutes)} · detention{' '}
+                        {formatMinutes(route.totalDetentionMinutes)}
                       </span>
                     </button>
                   </li>
@@ -248,6 +273,27 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
                 ))}
               </ul>
             )}
+            <h4 className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Stop delays</h4>
+            {routeDetailQuery.data.stops.length === 0 ? (
+              <p className="mt-2 text-xs text-slate-500">No stop details recorded yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {routeDetailQuery.data.stops.map((stop) => (
+                  <li key={stop.stopId} className="rounded border border-slate-700 bg-slate-950/50 p-2 text-xs text-slate-300">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium text-slate-100">{stop.stopKey} — {stop.label}</span>
+                      <span className="text-slate-400">
+                        wait {formatMinutes(stop.waitMinutes)} · detention {formatMinutes(stop.detentionMinutes)}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-slate-500">
+                      {stop.stopType} · {stop.stopStatus}
+                      {stop.scheduledArrivalAt ? ` · scheduled ${formatTimestamp(stop.scheduledArrivalAt)}` : ''}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       ) : null}
@@ -264,6 +310,8 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
           </p>
           <p className="text-xs text-slate-500">
             {stopDetailQuery.data.stopType} · {stopDetailQuery.data.stopStatus}
+            {stopDetailQuery.data.waitMinutes > 0 ? ` · wait ${formatMinutes(stopDetailQuery.data.waitMinutes)}` : ''}
+            {stopDetailQuery.data.detentionMinutes > 0 ? ` · detention ${formatMinutes(stopDetailQuery.data.detentionMinutes)}` : ''}
           </p>
         </div>
       ) : null}

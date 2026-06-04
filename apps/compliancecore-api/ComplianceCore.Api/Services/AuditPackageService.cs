@@ -90,27 +90,34 @@ public sealed class AuditPackageService(
         CancellationToken cancellationToken = default)
     {
         await using var memory = new MemoryStream();
-        using (var archive = new ZipArchive(memory, ZipArchiveMode.Create, leaveOpen: true))
-        {
-            await WriteJsonEntryAsync(archive, "manifest.json", new
-            {
-                package.PackageId,
-                package.TenantId,
-                package.GeneratedAt,
-                package.DateRange,
-                package.Counts,
-                PackageVersion = "1",
-            }, cancellationToken);
-
-            await WriteJsonEntryAsync(archive, "audit_events.json", package.AuditEvents, cancellationToken);
-            await WriteJsonEntryAsync(archive, "findings.json", package.Findings, cancellationToken);
-            await WriteJsonEntryAsync(archive, "evaluation_runs.json", package.EvaluationRuns, cancellationToken);
-            await WriteJsonEntryAsync(archive, "workflow_gate_checks.json", package.WorkflowGateChecks, cancellationToken);
-            await WriteJsonEntryAsync(archive, "waivers.json", package.Waivers, cancellationToken);
-            await WriteJsonEntryAsync(archive, "rule_packs.json", package.RulePacks, cancellationToken);
-        }
+        await WriteZipAsync(package, memory, cancellationToken);
 
         return memory.ToArray();
+    }
+
+    public async Task WriteZipAsync(
+        AuditPackageExportResponse package,
+        Stream output,
+        CancellationToken cancellationToken = default)
+    {
+        await using var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
+
+        await WriteJsonEntryAsync(archive, "manifest.json", new
+        {
+            package.PackageId,
+            package.TenantId,
+            package.GeneratedAt,
+            package.DateRange,
+            package.Counts,
+            PackageVersion = "1",
+        }, cancellationToken);
+
+        await WriteJsonEntryAsync(archive, "audit_events.json", package.AuditEvents, cancellationToken);
+        await WriteJsonEntryAsync(archive, "findings.json", package.Findings, cancellationToken);
+        await WriteJsonEntryAsync(archive, "evaluation_runs.json", package.EvaluationRuns, cancellationToken);
+        await WriteJsonEntryAsync(archive, "workflow_gate_checks.json", package.WorkflowGateChecks, cancellationToken);
+        await WriteJsonEntryAsync(archive, "waivers.json", package.Waivers, cancellationToken);
+        await WriteJsonEntryAsync(archive, "rule_packs.json", package.RulePacks, cancellationToken);
     }
 
     private async Task<AuditPackageExportResponse> LoadPackageDataAsync(

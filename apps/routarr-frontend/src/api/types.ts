@@ -1311,6 +1311,10 @@ export interface RouteReportRouteSummaryItem {
   completedStopCount: number
   skippedStopCount: number
   completionPercent: number
+  waitStopCount: number
+  detentionStopCount: number
+  totalWaitMinutes: number
+  totalDetentionMinutes: number
 }
 
 export interface RouteReportStopRow {
@@ -1323,6 +1327,8 @@ export interface RouteReportStopRow {
   stopStatus: string
   sequenceNumber: number
   scheduledArrivalAt: string | null
+  waitMinutes: number
+  detentionMinutes: number
   updatedAt: string
 }
 
@@ -1337,6 +1343,10 @@ export interface RouteReportSummaryResponse {
   arrivedStopCount: number
   completedStopCount: number
   skippedStopCount: number
+  waitStopCount: number
+  detentionStopCount: number
+  totalWaitMinutes: number
+  totalDetentionMinutes: number
   routeStatusCounts: RouteReportCountItem[]
   stopStatusCounts: RouteReportCountItem[]
   stopTypeCounts: RouteReportCountItem[]
@@ -1355,6 +1365,8 @@ export interface RouteReportStopSummaryRow {
   scheduledArrivalAt: string | null
   arrivedAt: string | null
   completedAt: string | null
+  waitMinutes: number
+  detentionMinutes: number
   updatedAt: string
 }
 
@@ -1404,6 +1416,8 @@ export interface RouteReportStopDetailResponse {
   scheduledArrivalAt: string | null
   arrivedAt: string | null
   completedAt: string | null
+  waitMinutes: number
+  detentionMinutes: number
   createdAt: string
   updatedAt: string
 }
