@@ -72,6 +72,26 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(title, created!.Title);
 
+        var initialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        initialStatusResponse.EnsureSuccessStatusCode();
+        var initialStatus = await initialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(initialStatus);
+        Assert.Equal("warning", initialStatus!.QualityStatus);
+        Assert.Contains(initialStatus.OpenNonconformanceRefs, item => item == created.Number);
+
+        var containmentResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/nonconformances/{created.Id}/status",
+            new UpdateAssurArrStatusRequest("containment", "Containment underway."));
+
+        Assert.Equal(HttpStatusCode.OK, containmentResponse.StatusCode);
+
+        var containmentStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        containmentStatusResponse.EnsureSuccessStatusCode();
+        var containmentStatus = await containmentStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(containmentStatus);
+        Assert.Equal("on_hold", containmentStatus!.QualityStatus);
+        Assert.Contains(containmentStatus.OpenNonconformanceRefs, item => item == created.Number);
+
         var detailResponse = await _client.GetAsync($"/api/v1/nonconformances/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
         var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();

@@ -1072,6 +1072,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         db.Nonconformances.Add(entity);
         await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.created", entity.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToNonconformanceResponse(entity);
     }
@@ -1110,9 +1111,53 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.closed", entity.Status, cancellationToken);
         }
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToNonconformanceResponse(entity);
     }
+
+    private async Task PublishQualityStatusSnapshotAsync(AssurArrNonconformance entity, CancellationToken cancellationToken)
+    {
+        var targetProduct = NormalizeNullable(entity.SourceProduct) ?? "assurarr";
+        var targetObjectRef = NormalizeNullable(entity.SourceObjectRef) ?? $"assurarr:nonconformance:{entity.Number}";
+        var qualityStatus = DetermineQualityStatus(entity.Status, entity.Severity);
+        string[] openNonconformanceRefs = string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : [entity.Number];
+
+        await CreateStatusSnapshotAsync(
+            new CreateAssurArrQualityStatusSnapshotRequest(
+                targetProduct,
+                targetObjectRef,
+                qualityStatus,
+                entity.Severity,
+                entity.Title,
+                entity.Description,
+                entity.SourceProduct,
+                entity.SourceObjectRef,
+                entity.AffectedObjectRefs.ToArray(),
+                entity.OwnerPersonId,
+                [],
+                openNonconformanceRefs,
+                [],
+                [],
+                entity.DueAt),
+            cancellationToken);
+    }
+
+    private static string DetermineQualityStatus(string status, string severity) =>
+        string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase) ? "unknown"
+        : string.Equals(status, "release_pending", StringComparison.OrdinalIgnoreCase) ? "conditional_release"
+        : string.Equals(status, "containment", StringComparison.OrdinalIgnoreCase) ? "on_hold"
+        : string.Equals(status, "verification", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "disposition_pending", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "corrective_action", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "investigation", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : (string.Equals(severity, "critical", StringComparison.OrdinalIgnoreCase) || string.Equals(severity, "high", StringComparison.OrdinalIgnoreCase))
+            ? "warning"
+            : "under_review";
 
     public async Task<List<AssurArrRootCauseAnalysisResponse>> ListRootCauseAnalysesAsync(Guid nonconformanceId, CancellationToken cancellationToken = default)
     {
