@@ -4626,14 +4626,129 @@ function HistoryPage() {
 }
 
 function SettingsPage() {
+  const roleGroups = [
+    {
+      name: 'Quality Viewer',
+      permissions: ['Read nonconformances', 'Read holds', 'Read CAPAs', 'Read audits', 'Read scorecards'],
+    },
+    {
+      name: 'Quality Technician',
+      permissions: ['Create nonconformances', 'Complete containment actions', 'Upload evidence', 'Execute assigned audit checklist items'],
+    },
+    {
+      name: 'Quality Reviewer',
+      permissions: ['Triage nonconformances', 'Review evidence', 'Propose dispositions', 'Request hold releases'],
+    },
+    {
+      name: 'Quality Manager',
+      permissions: ['Place and release holds', 'Approve dispositions', 'Open and close CAPAs', 'Approve verification', 'Close nonconformances'],
+    },
+    {
+      name: 'Supplier Quality Manager',
+      permissions: ['Manage supplier quality issues', 'Send and review SCARs', 'Update supplier quality status'],
+    },
+    {
+      name: 'Customer Quality Manager',
+      permissions: ['Manage customer complaint quality cases', 'Prepare response records', 'Coordinate customer-facing closure with CustomArr'],
+    },
+    {
+      name: 'Quality Auditor',
+      permissions: ['Create and execute audits', 'Create findings', 'Verify finding closure'],
+    },
+    {
+      name: 'AssurArr Admin',
+      permissions: ['Manage settings', 'Manage templates', 'Manage catalogs', 'Manage role configuration'],
+    },
+  ]
+
+  const uiSurfaces = [
+    'dashboard',
+    'nonconformances',
+    'nonconformance detail',
+    'holds',
+    'hold detail',
+    'containment actions',
+    'dispositions',
+    'CAPA',
+    'CAPA detail',
+    'audits',
+    'audit detail',
+    'findings',
+    'supplier quality',
+    'customer complaints',
+    'quality releases',
+    'scorecards',
+    'settings',
+  ]
+
+  const integrationBoundaries = [
+    'RecordArr owns supporting evidence files and document retention.',
+    'StaffArr owns reviewer and approver identity data.',
+    'CustomArr owns customer-facing closure workflows where referenced.',
+    'AssurArr owns the quality workflow state, history, and dashboard summaries.',
+  ]
+
   return (
     <div className="assurarr-page">
-      <PageHeader title="Settings" description="Frontend wiring for AssurArr is minimal in this slice; API and workflows are the focus." />
-      <div className="assurarr-card">
-        <div className="assurarr-card-inner space-y-2 text-sm text-slate-300">
-          <p>Frontend base URL: <span className="assurarr-kbd">{import.meta.env.VITE_ASSURARR_API_BASE ?? '/api proxy'}</span></p>
-          <p>Local preview port: <span className="assurarr-kbd">5183</span></p>
-          <p>API port: <span className="assurarr-kbd">5109</span></p>
+      <PageHeader title="Settings" description="Admin reference for roles, product surfaces, and AssurArr integration boundaries." />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Role configuration</h2>
+            <p className="text-sm text-slate-400">Doc-backed role examples for the AssurArr admin and quality workflows.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-4">
+            {roleGroups.map((role) => (
+              <div key={role.name} className="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{role.name}</h3>
+                <ul className="mt-3 space-y-1 text-sm text-slate-300">
+                  {role.permissions.map((permission) => (
+                    <li key={permission}>• {permission}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Product surfaces</h2>
+            <p className="text-sm text-slate-400">The UI routes explicitly called out in the AssurArr feature set.</p>
+          </div>
+          <div className="assurarr-card-inner">
+            <div className="flex flex-wrap gap-2">
+              {uiSurfaces.map((surface) => (
+                <span key={surface} className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
+                  {surface}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Integration boundaries</h2>
+            <p className="text-sm text-slate-400">Ownership reminders pulled from the constitution and product docs.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-3 text-sm text-slate-300">
+            {integrationBoundaries.map((item) => (
+              <p key={item}>{item}</p>
+            ))}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Runtime wiring</h2>
+            <p className="text-sm text-slate-400">Local environment and API endpoint reference for AssurArr.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-2 text-sm text-slate-300">
+            <p>Frontend base URL: <span className="assurarr-kbd">{import.meta.env.VITE_ASSURARR_API_BASE ?? '/api proxy'}</span></p>
+            <p>Local preview port: <span className="assurarr-kbd">5183</span></p>
+            <p>API port: <span className="assurarr-kbd">5109</span></p>
+          </div>
         </div>
       </div>
     </div>
