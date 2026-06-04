@@ -1577,6 +1577,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(scorecard);
         Assert.Equal(scorecardTitle, scorecard!.Title);
 
+        var scorecardGeneratedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        scorecardGeneratedDashboardResponse.EnsureSuccessStatusCode();
+        var scorecardGeneratedDashboard = await scorecardGeneratedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(scorecardGeneratedDashboard);
+        Assert.Contains(scorecardGeneratedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scorecard.generated");
+
         var metricKey = $"metric-{Guid.NewGuid():N}";
         var metricResponse = await _client.PostAsJsonAsync(
             $"/api/v1/scorecards/{scorecard.Id}/metrics",
@@ -1599,6 +1605,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var metric = await metricResponse.Content.ReadFromJsonAsync<AssurArrQualityMetricResponse>();
         Assert.NotNull(metric);
         Assert.Equal(metricKey, metric!.MetricKey);
+
+        var metricCalculatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        metricCalculatedDashboardResponse.EnsureSuccessStatusCode();
+        var metricCalculatedDashboard = await metricCalculatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(metricCalculatedDashboard);
+        Assert.Contains(metricCalculatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.metric.calculated");
 
         var detailResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}");
         Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
@@ -1656,6 +1668,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(targetType, created!.TargetType);
         Assert.Equal(targetRef, created.TargetRef);
+
+        var riskProfileUpdatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        riskProfileUpdatedDashboardResponse.EnsureSuccessStatusCode();
+        var riskProfileUpdatedDashboard = await riskProfileUpdatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(riskProfileUpdatedDashboard);
+        Assert.Contains(riskProfileUpdatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.risk_profile.updated");
 
         var lookupResponse = await _client.GetAsync($"/api/v1/integrations/risk-profiles/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
