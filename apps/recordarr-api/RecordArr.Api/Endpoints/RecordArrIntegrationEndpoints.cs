@@ -43,6 +43,22 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/records/{recordId}/links/{link.RecordLinkId}", link);
         }).WithName($"CreateRecordArrIntegrationRecordLink{routePrefix}");
 
+        group.MapGet("/records/{recordId}/comments", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordComments(recordId)))
+            .WithName($"ListRecordArrIntegrationRecordComments{routePrefix}");
+
+        group.MapPost("/records/{recordId}/comments", (string recordId, WorkspaceEndpoints.CreateRecordCommentRequest request, RecordArrStore store) =>
+        {
+            var comment = store.CreateRecordComment(recordId, request.Body, request.Visibility, request.CreatedByPersonId);
+            return Results.Created($"{routePrefix}/records/{recordId}/comments/{comment.CommentId}", comment);
+        }).WithName($"CreateRecordArrIntegrationRecordComment{routePrefix}");
+
+        group.MapPatch("/records/{recordId}/comments/{commentId}", (string recordId, string commentId, WorkspaceEndpoints.UpdateRecordCommentRequest request, RecordArrStore store) =>
+        {
+            var comment = store.UpdateRecordComment(commentId, request.Body, request.Visibility, request.EditedByPersonId);
+            return Results.Ok(comment);
+        }).WithName($"UpdateRecordArrIntegrationRecordComment{routePrefix}");
+
         group.MapPost("/records", (WorkspaceEndpoints.CreateRecordRequest request, RecordArrStore store) =>
         {
             var record = store.CreateRecord(

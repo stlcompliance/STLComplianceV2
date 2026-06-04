@@ -1576,6 +1576,101 @@
         }
       }
     },
+    "/api/integrations/records/{recordId}/comments": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRecordComments/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRecordComment/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/records/{recordId}/comments/{commentId}": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationRecordComment/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/records/{recordId}/links": {
       "get": {
         "tags": [
@@ -3541,6 +3636,101 @@
         }
       }
     },
+    "/api/v1/integrations/records/{recordId}/comments": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRecordComments/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRecordComment/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/records/{recordId}/comments/{commentId}": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationRecordComment/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/records/{recordId}/links": {
       "get": {
         "tags": [
@@ -5301,6 +5491,101 @@
         }
       }
     },
+    "/api/v1/workspace/records/{recordId}/comments": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRecordComments",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrRecordComment",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/records/{recordId}/comments/{commentId}": {
+      "patch": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "UpdateRecordArrRecordComment",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordCommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/records/{recordId}/links": {
       "get": {
         "tags": [
@@ -6195,6 +6480,25 @@
           }
         }
       },
+      "CreateRecordCommentRequest": {
+        "required": [
+          "body",
+          "visibility",
+          "createdByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          }
+        }
+      },
       "CreateRecordLinkRequest": {
         "required": [
           "linkedRecordId",
@@ -6687,6 +6991,25 @@
         "type": "object",
         "properties": {
           "updatedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRecordCommentRequest": {
+        "required": [
+          "body",
+          "visibility",
+          "editedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "editedByPersonId": {
             "type": "string"
           }
         }

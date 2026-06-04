@@ -9,6 +9,7 @@ import {
   History,
   LayoutDashboard,
   LockKeyhole,
+  MessageSquare,
   PackageSearch,
   ScanSearch,
   Settings,
@@ -103,11 +104,14 @@ import {
   updateRecord,
   createRecordMetadata,
   createRecordLink,
+  createRecordComment,
   type RecordArrAccessPolicy,
   type RecordArrControlledDocument,
   type RecordArrLegalHold,
   type RecordArrPackage,
   type RecordArrRecord,
+  listRecordComments,
+  updateRecordComment,
 } from './api/client'
 import { clearSession, loadSession, type StoredRecordArrSession } from './auth/sessionStorage'
 
@@ -611,6 +615,12 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
     linkType: 'source',
     createdByPersonId: 'person-route-lead',
   })
+  const [commentForm, setCommentForm] = useState({
+    body: 'Reviewed and ready for internal use.',
+    visibility: 'internal',
+    actorPersonId: 'person-doc-controller',
+  })
+  const [editingCommentId, setEditingCommentId] = useState('')
 
   const recordQuery = useQuery({
     queryKey: ['recordarr', 'records', recordId],
@@ -625,6 +635,11 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   const linksQuery = useQuery({
     queryKey: ['recordarr', 'record-links', recordId],
     queryFn: () => listRecordLinks(accessToken, recordId),
+    enabled: Boolean(accessToken && recordId),
+  })
+  const commentsQuery = useQuery({
+    queryKey: ['recordarr', 'record-comments', recordId],
+    queryFn: () => listRecordComments(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
   })
   const retentionQuery = useQuery({
@@ -708,6 +723,25 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const saveCommentMutation = useMutation({
+    mutationFn: () =>
+      editingCommentId
+        ? updateRecordComment(accessToken, recordId, editingCommentId, {
+            body: commentForm.body,
+            visibility: commentForm.visibility,
+            editedByPersonId: commentForm.actorPersonId,
+          })
+        : createRecordComment(accessToken, recordId, {
+            body: commentForm.body,
+            visibility: commentForm.visibility,
+            createdByPersonId: commentForm.actorPersonId,
+          }),
+    onSuccess: async () => {
+      setEditingCommentId('')
+      setCommentForm((current) => ({ ...current, body: 'Reviewed and ready for internal use.' }))
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   const record = recordQuery.data
   useEffect(() => {
@@ -723,12 +757,28 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       }))
     }
   }, [record?.sourceProduct, record?.sourceObjectType, record?.sourceObjectId])
+  useEffect(() => {
+    if (!editingCommentId) {
+      return
+    }
+
+    const selectedComment = commentsQuery.data?.find((comment) => comment.commentId === editingCommentId)
+    if (selectedComment) {
+      setCommentForm({
+        body: selectedComment.body,
+        visibility: selectedComment.visibility,
+        actorPersonId: selectedComment.editedByPersonId ?? selectedComment.createdByPersonId,
+      })
+    }
+  }, [commentsQuery.data, editingCommentId])
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
   const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
   const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
   const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
+  const recordComments = commentsQuery.data ?? []
+  const selectedComment = recordComments.find((comment) => comment.commentId === editingCommentId) ?? null
   const activeHold = (holdsQuery.data ?? []).find((hold) => hold.status === 'active' && hold.recordRefs.includes(recordId)) ?? null
   const timeline = useMemo(() => {
     if (!record) return []
@@ -876,6 +926,78 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
               </div>
             </Card>
           </div>
+          <Card title="Record comments" icon={<MessageSquare className="h-4 w-4 text-cyan-300" />}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Body" wide>
+                <textarea
+                  className="recordarr-textarea"
+                  value={commentForm.body}
+                  onChange={(e) => setCommentForm({ ...commentForm, body: e.target.value })}
+                  rows={4}
+                />
+              </Field>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Visibility">
+                  <select className="recordarr-select" value={commentForm.visibility} onChange={(e) => setCommentForm({ ...commentForm, visibility: e.target.value })}>
+                    <option value="internal">internal</option>
+                    <option value="auditor_visible">auditor_visible</option>
+                    <option value="product_visible">product_visible</option>
+                    <option value="customer_visible">customer_visible</option>
+                    <option value="supplier_visible">supplier_visible</option>
+                  </select>
+                </Field>
+                <Field label="Person id">
+                  <input className="recordarr-input" value={commentForm.actorPersonId} onChange={(e) => setCommentForm({ ...commentForm, actorPersonId: e.target.value })} />
+                </Field>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button type="button" className="recordarr-button secondary" onClick={() => saveCommentMutation.mutate()} disabled={saveCommentMutation.isPending}>
+                {saveCommentMutation.isPending ? 'Saving...' : editingCommentId ? 'Save comment' : 'Add comment'}
+              </button>
+              {editingCommentId ? (
+                <button
+                  type="button"
+                  className="recordarr-button"
+                  onClick={() => {
+                    setEditingCommentId('')
+                    setCommentForm({ body: 'Reviewed and ready for internal use.', visibility: 'internal', actorPersonId: 'person-doc-controller' })
+                  }}
+                >
+                  Cancel edit
+                </button>
+              ) : null}
+              {saveCommentMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(saveCommentMutation.error, 'Comment save failed')}</span> : null}
+            </div>
+            <div className="mt-4 space-y-2">
+              {recordComments.length > 0 ? recordComments.map((comment) => (
+                <div key={comment.commentId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <strong className="text-slate-100">{comment.createdByPersonId}</strong>
+                    <span className="recordarr-pill text-[0.7rem]">{comment.visibility}</span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap">{comment.body}</p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Created {formatDate(comment.createdAt)}{comment.editedAt ? ` · Edited ${formatDate(comment.editedAt)} by ${comment.editedByPersonId ?? 'n/a'}` : ''}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="recordarr-button secondary"
+                      onClick={() => setEditingCommentId(comment.commentId)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              )) : <EmptyState title="No comments yet." />}
+            </div>
+            {selectedComment ? (
+              <p className="mt-3 text-xs text-slate-400">
+                Editing {selectedComment.commentId}. The form is prefilled with the current comment body and visibility.
+              </p>
+            ) : null}
+          </Card>
           <div className="recordarr-grid cols-2">
             <Card title="Evidence and packaging" icon={<PackageSearch className="h-4 w-4 text-cyan-300" />}>
               <div className="space-y-3">

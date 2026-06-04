@@ -521,6 +521,17 @@ export type RecordArrRecordLink = {
   createdByPersonId: string
 }
 
+export type RecordArrRecordComment = {
+  commentId: string
+  recordId: string
+  body: string
+  visibility: string
+  createdAt: string
+  createdByPersonId: string
+  editedAt: string | null
+  editedByPersonId: string | null
+}
+
 export async function listRecordMetadata(accessToken: string, recordId: string): Promise<RecordArrRecordMetadata[]> {
   return getJson<RecordArrRecordMetadata[]>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/metadata`, accessToken)
 }
@@ -563,6 +574,45 @@ export async function createRecordLink(
     `/api/v1/workspace/records/${encodeURIComponent(recordId)}/links`,
     accessToken,
     'POST',
+    body,
+  )
+}
+
+export async function listRecordComments(accessToken: string, recordId: string): Promise<RecordArrRecordComment[]> {
+  return getJson<RecordArrRecordComment[]>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}/comments`, accessToken)
+}
+
+export async function createRecordComment(
+  accessToken: string,
+  recordId: string,
+  body: {
+    body: string
+    visibility: string
+    createdByPersonId: string
+  },
+): Promise<RecordArrRecordComment> {
+  return sendJson<RecordArrRecordComment>(
+    `/api/v1/workspace/records/${encodeURIComponent(recordId)}/comments`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function updateRecordComment(
+  accessToken: string,
+  recordId: string,
+  commentId: string,
+  body: {
+    body: string
+    visibility: string
+    editedByPersonId: string
+  },
+): Promise<RecordArrRecordComment> {
+  return sendJson<RecordArrRecordComment>(
+    `/api/v1/workspace/records/${encodeURIComponent(recordId)}/comments/${encodeURIComponent(commentId)}`,
+    accessToken,
+    'PATCH',
     body,
   )
 }

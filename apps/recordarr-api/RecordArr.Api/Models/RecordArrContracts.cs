@@ -199,6 +199,16 @@ public sealed record RecordArrRecordLinkResponse(
     DateTimeOffset CreatedAt,
     string CreatedByPersonId);
 
+public sealed record RecordArrRecordCommentResponse(
+    string CommentId,
+    string RecordId,
+    string Body,
+    string Visibility,
+    DateTimeOffset CreatedAt,
+    string CreatedByPersonId,
+    DateTimeOffset? EditedAt,
+    string? EditedByPersonId);
+
 public sealed record RecordArrRetentionPolicyResponse(
     string RetentionPolicyId,
     string PolicyKey,

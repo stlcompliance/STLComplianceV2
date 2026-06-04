@@ -15,6 +15,7 @@ public sealed class RecordArrStore
     private readonly List<RecordArrPackageManifestResponse> _manifests;
     private readonly List<RecordArrRecordMetadataResponse> _recordMetadata;
     private readonly List<RecordArrRecordLinkResponse> _recordLinks;
+    private readonly List<RecordArrRecordCommentResponse> _recordComments;
     private readonly List<RecordArrRetentionPolicyResponse> _retentionPolicies;
     private readonly List<RecordArrRetentionStatusResponse> _retentionStatuses;
     private readonly List<RecordArrDisposalReviewResponse> _disposalReviews;
@@ -149,6 +150,28 @@ public sealed class RecordArrStore
                 "recordarr:controlled_document:doc-001",
                 "related_to",
                 now.AddDays(-14),
+                "person-doc-controller"),
+        ];
+
+        _recordComments =
+        [
+            new RecordArrRecordCommentResponse(
+                "com-001",
+                "rec-bol-001",
+                "Confirm the receiving signature against the trip closeout packet before release.",
+                "product_visible",
+                now.AddDays(-2),
+                "person-route-lead",
+                null,
+                null),
+            new RecordArrRecordCommentResponse(
+                "com-002",
+                "rec-sop-001",
+                "This procedure is under audit review; keep the current draft available for the quality team.",
+                "auditor_visible",
+                now.AddDays(-1),
+                "person-audit-admin",
+                now.AddHours(-12),
                 "person-doc-controller"),
         ];
 
@@ -769,6 +792,69 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrRecordCommentResponse> GetRecordComments(string recordId)
+    {
+        lock (_gate)
+        {
+            return _recordComments
+                .Where(comment => string.Equals(comment.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(comment => comment.CreatedAt)
+                .ToArray();
+        }
+    }
+
+    public RecordArrRecordCommentResponse CreateRecordComment(string recordId, string body, string visibility, string createdByPersonId)
+    {
+        lock (_gate)
+        {
+            var record = RequireRecord(recordId);
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                throw new InvalidOperationException("Record comment body is required.");
+            }
+
+            var comment = new RecordArrRecordCommentResponse(
+                $"com-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                body.Trim(),
+                NormalizeRecordCommentVisibility(visibility),
+                DateTimeOffset.UtcNow,
+                createdByPersonId,
+                null,
+                null);
+            _recordComments.Add(comment);
+            return comment;
+        }
+    }
+
+    public RecordArrRecordCommentResponse UpdateRecordComment(string commentId, string body, string visibility, string editedByPersonId)
+    {
+        lock (_gate)
+        {
+            var index = _recordComments.FindIndex(comment => string.Equals(comment.CommentId, commentId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Record comment {commentId} not found.");
+            }
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                throw new InvalidOperationException("Record comment body is required.");
+            }
+
+            var current = _recordComments[index];
+            var updated = current with
+            {
+                Body = body.Trim(),
+                Visibility = NormalizeRecordCommentVisibility(visibility),
+                EditedAt = DateTimeOffset.UtcNow,
+                EditedByPersonId = editedByPersonId
+            };
+            _recordComments[index] = updated;
+            return updated;
+        }
+    }
+
     private static string NormalizeClassification(string classification)
     {
         if (string.IsNullOrWhiteSpace(classification))
@@ -846,6 +932,24 @@ public sealed class RecordArrStore
             "redacted_from" => "redacted_from",
             "related_to" => "related_to",
             _ => throw new InvalidOperationException($"Unsupported record link type '{linkType}'.")
+        };
+    }
+
+    private static string NormalizeRecordCommentVisibility(string visibility)
+    {
+        if (string.IsNullOrWhiteSpace(visibility))
+        {
+            return "internal";
+        }
+
+        return visibility.Trim().ToLowerInvariant() switch
+        {
+            "internal" => "internal",
+            "auditor_visible" => "auditor_visible",
+            "product_visible" => "product_visible",
+            "customer_visible" => "customer_visible",
+            "supplier_visible" => "supplier_visible",
+            _ => throw new InvalidOperationException($"Unsupported record comment visibility '{visibility}'.")
         };
     }
 

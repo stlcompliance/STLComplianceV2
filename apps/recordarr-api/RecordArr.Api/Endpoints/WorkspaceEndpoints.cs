@@ -40,6 +40,22 @@ public static class WorkspaceEndpoints
             return Results.Created($"/api/v1/workspace/records/{recordId}/links/{link.RecordLinkId}", link);
         }).WithName("CreateRecordArrRecordLink");
 
+        group.MapGet("/records/{recordId}/comments", (string recordId, RecordArrStore store) =>
+            Results.Ok(store.GetRecordComments(recordId)))
+            .WithName("ListRecordArrRecordComments");
+
+        group.MapPost("/records/{recordId}/comments", (string recordId, CreateRecordCommentRequest request, RecordArrStore store) =>
+        {
+            var comment = store.CreateRecordComment(recordId, request.Body, request.Visibility, request.CreatedByPersonId);
+            return Results.Created($"/api/v1/workspace/records/{recordId}/comments/{comment.CommentId}", comment);
+        }).WithName("CreateRecordArrRecordComment");
+
+        group.MapPatch("/records/{recordId}/comments/{commentId}", (string recordId, string commentId, UpdateRecordCommentRequest request, RecordArrStore store) =>
+        {
+            var comment = store.UpdateRecordComment(commentId, request.Body, request.Visibility, request.EditedByPersonId);
+            return Results.Ok(comment);
+        }).WithName("UpdateRecordArrRecordComment");
+
         group.MapPost("/records", (CreateRecordRequest request, RecordArrStore store) =>
         {
             if (string.IsNullOrWhiteSpace(request.SourceProduct))
@@ -507,6 +523,8 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentScanRequest(string RecordId, string OriginalFileName, string ScanPurpose);
     public sealed record CreateRecordMetadataRequest(string Key, string Value, string ValueType, string Source, decimal ConfidenceScore, string CreatedByPersonId);
     public sealed record CreateRecordLinkRequest(string? LinkedRecordId, string? SourceObjectRef, string LinkType, string CreatedByPersonId);
+    public sealed record CreateRecordCommentRequest(string Body, string Visibility, string CreatedByPersonId);
+    public sealed record UpdateRecordCommentRequest(string Body, string Visibility, string EditedByPersonId);
     public sealed record ManualCorrectionRequest(string EdgeCoordinates);
     public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
