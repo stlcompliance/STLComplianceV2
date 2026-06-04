@@ -565,6 +565,93 @@ function CapaPage() {
 
 function AuditPage() {
   const query = useRecords(['assurarr', 'audits'], assurarrApi.listAudits)
+  const queryClient = useQueryClient()
+  const [selectedAuditId, setSelectedAuditId] = useState('')
+  const activeAuditId = selectedAuditId || query.data?.[0]?.id || ''
+  const [selectedChecklistId, setSelectedChecklistId] = useState('')
+  const [checklistForm, setChecklistForm] = useState({
+    title: '',
+    description: '',
+    status: 'draft',
+  })
+  const [itemForm, setItemForm] = useState({
+    sequence: '1',
+    prompt: '',
+    helpText: '',
+    requirementRef: '',
+    responseType: 'pass_fail',
+    required: true,
+    responseValue: '',
+    result: 'pass',
+    findingCreated: false,
+    findingRef: '',
+    evidenceRecordRefs: '',
+    answeredByPersonId: '',
+    answeredAt: '',
+  })
+  const checklistQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklists', activeAuditId],
+    queryFn: () => assurarrApi.listAuditChecklists(activeAuditId),
+    enabled: Boolean(activeAuditId),
+    staleTime: 15_000,
+  })
+  const activeChecklistId = selectedChecklistId || checklistQuery.data?.[0]?.id || ''
+  const itemQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist-items', activeAuditId, activeChecklistId],
+    queryFn: () => assurarrApi.listAuditChecklistItems(activeAuditId, activeChecklistId),
+    enabled: Boolean(activeAuditId && activeChecklistId),
+    staleTime: 15_000,
+  })
+  const createChecklistMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createAuditChecklist(activeAuditId, {
+        title: checklistForm.title,
+        description: checklistForm.description,
+        status: checklistForm.status,
+      }),
+    onSuccess: async (created) => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setSelectedChecklistId(created.id)
+      setChecklistForm({ title: '', description: '', status: 'draft' })
+    },
+  })
+  const createItemMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createAuditChecklistItem(activeAuditId, activeChecklistId, {
+        sequence: Number.parseInt(itemForm.sequence, 10) || 1,
+        prompt: itemForm.prompt,
+        helpText: itemForm.helpText || undefined,
+        requirementRef: itemForm.requirementRef || undefined,
+        responseType: itemForm.responseType,
+        required: itemForm.required,
+        responseValue: itemForm.responseValue || undefined,
+        result: itemForm.result || undefined,
+        findingCreated: itemForm.findingCreated,
+        findingRef: itemForm.findingRef || undefined,
+        evidenceRecordRefs: joinRefs(itemForm.evidenceRecordRefs),
+        answeredByPersonId: itemForm.answeredByPersonId || undefined,
+        answeredAt: itemForm.answeredAt || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setItemForm({
+        sequence: '1',
+        prompt: '',
+        helpText: '',
+        requirementRef: '',
+        responseType: 'pass_fail',
+        required: true,
+        responseValue: '',
+        result: 'pass',
+        findingCreated: false,
+        findingRef: '',
+        evidenceRecordRefs: '',
+        answeredByPersonId: '',
+        answeredAt: '',
+      })
+    },
+  })
+
   return (
     <div className="assurarr-page">
       <PageHeader title="Audits" description="Plan, execute, and close internal or supplier audits with findings tied back to quality action." />
@@ -582,6 +669,155 @@ function AuditPage() {
           })
         }
       />
+      <div className="assurarr-grid cols-2">
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-cyan-300" />
+              <h3 className="text-base font-semibold text-slate-50">Prepare audit checklist</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Audit">
+                <select className="assurarr-select" value={activeAuditId} onChange={(event) => setSelectedAuditId(event.target.value)}>
+                  {query.data?.map((audit) => (
+                    <option key={audit.id} value={audit.id}>
+                      {audit.number} - {audit.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Checklist status">
+                <select className="assurarr-select" value={checklistForm.status} onChange={(event) => setChecklistForm({ ...checklistForm, status: event.target.value })}>
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
+                </select>
+              </Field>
+              <Field label="Checklist title" wide>
+                <input className="assurarr-input" value={checklistForm.title} onChange={(event) => setChecklistForm({ ...checklistForm, title: event.target.value })} />
+              </Field>
+              <Field label="Description" wide>
+                <textarea className="assurarr-textarea" value={checklistForm.description} onChange={(event) => setChecklistForm({ ...checklistForm, description: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createChecklistMutation.mutate()} disabled={createChecklistMutation.isPending || !activeAuditId}>
+              {createChecklistMutation.isPending ? 'Saving...' : 'Create checklist'}
+            </button>
+            {checklistQuery.data?.length ? (
+              <div className="space-y-2">
+                {checklistQuery.data.map((checklist) => (
+                  <button
+                    key={checklist.id}
+                    type="button"
+                    className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+                      checklist.id === activeChecklistId ? 'border-cyan-400/70 bg-cyan-400/10' : 'border-slate-700/70 bg-slate-900/80'
+                    }`}
+                    onClick={() => setSelectedChecklistId(checklist.id)}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-50">{checklist.number}</strong>
+                      <span className="assurarr-pill">{checklist.status}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-300">{checklist.title}</p>
+                    <p className="mt-1 text-xs text-slate-400">{checklist.itemRefs.length} item refs</p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title={activeAuditId ? 'No checklists yet.' : 'Select an audit first.'} />
+            )}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-cyan-300" />
+              <h3 className="text-base font-semibold text-slate-50">Add checklist item response</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Checklist">
+                <select className="assurarr-select" value={activeChecklistId} onChange={(event) => setSelectedChecklistId(event.target.value)} disabled={!checklistQuery.data?.length}>
+                  {checklistQuery.data?.map((checklist) => (
+                    <option key={checklist.id} value={checklist.id}>
+                      {checklist.number} - {checklist.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Sequence">
+                <input className="assurarr-input" value={itemForm.sequence} onChange={(event) => setItemForm({ ...itemForm, sequence: event.target.value })} />
+              </Field>
+              <Field label="Response type">
+                <select className="assurarr-select" value={itemForm.responseType} onChange={(event) => setItemForm({ ...itemForm, responseType: event.target.value })}>
+                  <option value="pass_fail">Pass / fail</option>
+                  <option value="yes_no">Yes / no</option>
+                  <option value="numeric">Numeric</option>
+                  <option value="text">Text</option>
+                  <option value="select">Select</option>
+                  <option value="multi_select">Multi select</option>
+                  <option value="photo">Photo</option>
+                  <option value="document">Document</option>
+                </select>
+              </Field>
+              <Field label="Required">
+                <select className="assurarr-select" value={String(itemForm.required)} onChange={(event) => setItemForm({ ...itemForm, required: event.target.value === 'true' })}>
+                  <option value="true">Required</option>
+                  <option value="false">Optional</option>
+                </select>
+              </Field>
+              <Field label="Prompt" wide>
+                <input className="assurarr-input" value={itemForm.prompt} onChange={(event) => setItemForm({ ...itemForm, prompt: event.target.value })} />
+              </Field>
+              <Field label="Help text" wide>
+                <textarea className="assurarr-textarea" value={itemForm.helpText} onChange={(event) => setItemForm({ ...itemForm, helpText: event.target.value })} />
+              </Field>
+              <Field label="Requirement ref">
+                <input className="assurarr-input" value={itemForm.requirementRef} onChange={(event) => setItemForm({ ...itemForm, requirementRef: event.target.value })} />
+              </Field>
+              <Field label="Response value">
+                <input className="assurarr-input" value={itemForm.responseValue} onChange={(event) => setItemForm({ ...itemForm, responseValue: event.target.value })} />
+              </Field>
+              <Field label="Result">
+                <select className="assurarr-select" value={itemForm.result} onChange={(event) => setItemForm({ ...itemForm, result: event.target.value })}>
+                  <option value="pass">Pass</option>
+                  <option value="fail">Fail</option>
+                  <option value="observation">Observation</option>
+                  <option value="not_applicable">Not applicable</option>
+                </select>
+              </Field>
+              <Field label="Evidence refs" wide>
+                <textarea className="assurarr-textarea" value={itemForm.evidenceRecordRefs} onChange={(event) => setItemForm({ ...itemForm, evidenceRecordRefs: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createItemMutation.mutate()} disabled={createItemMutation.isPending || !activeChecklistId}>
+              {createItemMutation.isPending ? 'Saving...' : 'Create checklist item'}
+            </button>
+            {itemQuery.data?.length ? (
+              <div className="space-y-3">
+                {itemQuery.data.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-50">
+                        {item.sequence}. {item.prompt}
+                      </strong>
+                      <span className="assurarr-pill">{item.result ?? item.responseValue ?? 'unanswered'}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {item.responseType} {item.required ? 'required' : 'optional'}
+                    </p>
+                    {item.helpText ? <p className="mt-2 text-sm text-slate-300">{item.helpText}</p> : null}
+                    {item.evidenceRecordRefs.length ? <p className="mt-2 text-xs text-slate-400">{item.evidenceRecordRefs.join(', ')}</p> : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title={activeChecklistId ? 'No items on this checklist yet.' : 'Select a checklist first.'} />
+            )}
+          </div>
+        </div>
+      </div>
       {query.data ? (
         <EntityTable
           items={query.data}

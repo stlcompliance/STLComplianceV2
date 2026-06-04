@@ -113,6 +113,231 @@
         }
       }
     },
+    "/api/v1/audits/{auditId}/checklists": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrAuditChecklists",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrAuditChecklist",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityAuditChecklistRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits/{auditId}/checklists/{checklistId}/items": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrAuditChecklistItems",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrAuditChecklistItem",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityAuditChecklistItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits/{auditId}/checklists/{checklistId}/items/{itemId}/response": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrAuditChecklistItemResponse",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrQualityAuditChecklistItemResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits/{auditId}/checklists/{checklistId}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrAuditChecklistStatus",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audits/{id}/status": {
       "patch": {
         "tags": [
@@ -390,6 +615,210 @@
         }
       }
     },
+    "/api/v1/integrations/containment-actions": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrContainmentActions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrContainmentAction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrContainmentActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/containment-actions/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrContainmentActionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-complaint-quality-cases": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrCustomerComplaintQualityCases",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrCustomerComplaintQualityCase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCustomerComplaintQualityCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-complaint-quality-cases/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrCustomerComplaintQualityCaseStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dispositions": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrDispositions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrDisposition",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrDispositionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dispositions/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrDispositionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/quality-releases": {
       "get": {
         "tags": [
@@ -498,6 +927,154 @@
           "AssurArr Integrations"
         ],
         "operationId": "UpdateAssurArrQualityReviewStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-status": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityStatus",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-status-checks": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrQualityStatusCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityStatusSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-status/{targetProduct}/{targetObjectId}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrQualityStatus",
+        "parameters": [
+          {
+            "name": "targetProduct",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetObjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/scorecards": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityScorecardsIntegration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplier-quality-issues": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrSupplierQualityIssues",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrSupplierQualityIssue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrSupplierQualityIssueRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplier-quality-issues/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrSupplierQualityIssueStatus",
         "parameters": [
           {
             "name": "id",
@@ -947,6 +1524,383 @@
           }
         }
       },
+      "CreateAssurArrContainmentActionRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "actionType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "nonconformanceRef",
+          "assignedPersonId",
+          "assignedTeamRef",
+          "sourceProductActionRef",
+          "dueAt",
+          "verificationRequired",
+          "evidenceRecordRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "actionType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductActionRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "verificationRequired": {
+            "type": "boolean"
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAssurArrCustomerComplaintQualityCaseRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "complaintType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedOrderRefs",
+          "affectedShipmentRefs",
+          "affectedItemRefs",
+          "affectedAssetRefs",
+          "customerRef",
+          "customerContactSnapshot",
+          "customerLocationRef",
+          "nonconformanceRef",
+          "holdRefs",
+          "capaRefs",
+          "customerResponseRecordRefs",
+          "recordRefs",
+          "ownerPersonId",
+          "receivedAt",
+          "receivedByPersonId",
+          "customerResponseDueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "complaintType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedOrderRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affectedShipmentRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affectedItemRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affectedAssetRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "customerRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerContactSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerLocationRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capaRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "customerResponseRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "receivedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "customerResponseDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrDispositionRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "dispositionType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "nonconformanceRef",
+          "decisionByPersonId",
+          "decisionAt",
+          "approvedByPersonId",
+          "approvedAt",
+          "rationale",
+          "requiredActions",
+          "executionProduct",
+          "executionObjectRef",
+          "evidenceRecordRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "dispositionType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decisionByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "decisionAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "approvedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "approvedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "rationale": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "executionProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "executionObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAssurArrNonconformanceRequest": {
         "required": [
           "title",
@@ -1047,6 +2001,115 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrQualityAuditChecklistItemRequest": {
+        "required": [
+          "sequence",
+          "prompt",
+          "helpText",
+          "requirementRef",
+          "responseType",
+          "required",
+          "responseValue",
+          "result",
+          "findingCreated",
+          "findingRef",
+          "evidenceRecordRefs",
+          "answeredByPersonId",
+          "answeredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "helpText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirementRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "responseType": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "responseValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "findingCreated": {
+            "type": "boolean"
+          },
+          "findingRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "answeredByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "answeredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrQualityAuditChecklistRequest": {
+        "required": [
+          "title",
+          "description",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
           }
         }
       },
@@ -1670,6 +2733,170 @@
             }
           },
           "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrSupplierQualityIssueRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "issueType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedReceiptRefs",
+          "affectedPurchaseOrderRefs",
+          "affectedItemRefs",
+          "supplierRef",
+          "nonconformanceRef",
+          "scarRef",
+          "holdRefs",
+          "recordRefs",
+          "ownerPersonId",
+          "openedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "issueType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedReceiptRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affectedPurchaseOrderRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affectedItemRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supplierRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scarRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "openedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateAssurArrQualityAuditChecklistItemResponseRequest": {
+        "required": [
+          "responseValue",
+          "result",
+          "findingCreated",
+          "findingRef",
+          "evidenceRecordRefs",
+          "answeredByPersonId",
+          "answeredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "responseValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "findingCreated": {
+            "type": "boolean"
+          },
+          "findingRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "answeredByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "answeredAt": {
             "type": [
               "null",
               "string"

@@ -10,6 +10,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrQualityHold> QualityHolds => Set<AssurArrQualityHold>();
     public DbSet<AssurArrCapa> Capas => Set<AssurArrCapa>();
     public DbSet<AssurArrQualityAudit> QualityAudits => Set<AssurArrQualityAudit>();
+    public DbSet<AssurArrQualityAuditChecklist> QualityAuditChecklists => Set<AssurArrQualityAuditChecklist>();
+    public DbSet<AssurArrQualityAuditChecklistItem> QualityAuditChecklistItems => Set<AssurArrQualityAuditChecklistItem>();
     public DbSet<AssurArrAuditFinding> AuditFindings => Set<AssurArrAuditFinding>();
     public DbSet<AssurArrQualityStatusSnapshot> QualityStatusSnapshots => Set<AssurArrQualityStatusSnapshot>();
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
@@ -29,6 +31,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRecord<AssurArrQualityHold>(modelBuilder, "assurarr_quality_holds");
         ConfigureRecord<AssurArrCapa>(modelBuilder, "assurarr_capas");
         ConfigureRecord<AssurArrQualityAudit>(modelBuilder, "assurarr_quality_audits");
+        ConfigureChecklist(modelBuilder);
+        ConfigureChecklistItem(modelBuilder);
         ConfigureRecord<AssurArrAuditFinding>(modelBuilder, "assurarr_audit_findings");
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
@@ -114,6 +118,62 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureChecklist(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityAuditChecklist>(entity =>
+        {
+            entity.ToTable("assurarr_quality_audit_checklists");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AuditId).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ItemRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.AuditId });
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureChecklistItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityAuditChecklistItem>(entity =>
+        {
+            entity.ToTable("assurarr_quality_audit_checklist_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ChecklistId).IsRequired();
+            entity.Property(x => x.Sequence).IsRequired();
+            entity.Property(x => x.Prompt).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.HelpText).HasMaxLength(4000);
+            entity.Property(x => x.RequirementRef).HasMaxLength(256);
+            entity.Property(x => x.ResponseType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Required).IsRequired();
+            entity.Property(x => x.ResponseValue).HasMaxLength(4000);
+            entity.Property(x => x.Result).HasMaxLength(64);
+            entity.Property(x => x.FindingCreated).IsRequired();
+            entity.Property(x => x.FindingRef).HasMaxLength(256);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AnsweredAt);
+            entity.Property(x => x.AnsweredByPersonId);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ChecklistId });
+            entity.HasIndex(x => new { x.TenantId, x.Sequence });
         });
     }
 

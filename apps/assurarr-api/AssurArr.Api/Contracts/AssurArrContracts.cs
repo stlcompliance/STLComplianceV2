@@ -221,6 +221,69 @@ public sealed record CreateAssurArrQualityAuditRequest(
     DateTimeOffset? PlannedEndAt,
     string[] ChecklistRefs);
 
+public sealed record AssurArrQualityAuditChecklistResponse(
+    Guid Id,
+    string Number,
+    Guid AuditId,
+    string Title,
+    string Description,
+    string Status,
+    IReadOnlyList<string> ItemRefs,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? ClosedAt,
+    Guid? ClosedByPersonId,
+    string? ClosureSummary);
+
+public sealed record CreateAssurArrQualityAuditChecklistRequest(
+    string Title,
+    string Description,
+    string Status);
+
+public sealed record AssurArrQualityAuditChecklistItemResponse(
+    Guid Id,
+    string Number,
+    Guid ChecklistId,
+    int Sequence,
+    string Prompt,
+    string? HelpText,
+    string? RequirementRef,
+    string ResponseType,
+    bool Required,
+    string? ResponseValue,
+    string? Result,
+    bool FindingCreated,
+    string? FindingRef,
+    IReadOnlyList<string> EvidenceRecordRefs,
+    DateTimeOffset? AnsweredAt,
+    Guid? AnsweredByPersonId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrQualityAuditChecklistItemRequest(
+    int Sequence,
+    string Prompt,
+    string? HelpText,
+    string? RequirementRef,
+    string ResponseType,
+    bool Required,
+    string? ResponseValue,
+    string? Result,
+    bool FindingCreated,
+    string? FindingRef,
+    string[] EvidenceRecordRefs,
+    Guid? AnsweredByPersonId,
+    DateTimeOffset? AnsweredAt);
+
+public sealed record UpdateAssurArrQualityAuditChecklistItemResponseRequest(
+    string? ResponseValue,
+    string? Result,
+    bool FindingCreated,
+    string? FindingRef,
+    string[] EvidenceRecordRefs,
+    Guid? AnsweredByPersonId,
+    DateTimeOffset? AnsweredAt);
+
 public sealed record AssurArrAuditFindingResponse(
     Guid Id,
     string Number,

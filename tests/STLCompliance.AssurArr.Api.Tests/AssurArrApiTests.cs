@@ -132,6 +132,98 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
+    public async Task Can_create_audit_checklists_and_items()
+    {
+        var auditTitle = $"Test audit {Guid.NewGuid():N}";
+        var auditResponse = await _client.PostAsJsonAsync(
+            "/api/v1/audits",
+            new CreateAssurArrQualityAuditRequest(
+                auditTitle,
+                "Automated coverage for audit checklists.",
+                "moderate",
+                "internal",
+                "receiving review",
+                "assurarr",
+                "workflow:audit:test",
+                ["loadarr:location:test"],
+                null,
+                [],
+                null,
+                null,
+                null,
+                "supplyarr:supplier:test",
+                null,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(1),
+                []));
+
+        Assert.Equal(HttpStatusCode.OK, auditResponse.StatusCode);
+        var audit = await auditResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
+        Assert.NotNull(audit);
+
+        var checklistTitle = $"Test checklist {Guid.NewGuid():N}";
+        var checklistResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/audits/{audit!.Id}/checklists",
+            new CreateAssurArrQualityAuditChecklistRequest(
+                checklistTitle,
+                "Automated coverage for audit checklist creation.",
+                "draft"));
+
+        Assert.Equal(HttpStatusCode.OK, checklistResponse.StatusCode);
+        var checklist = await checklistResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistResponse>();
+        Assert.NotNull(checklist);
+        Assert.Equal(checklistTitle, checklist!.Title);
+
+        var itemPrompt = $"Check release signature {Guid.NewGuid():N}";
+        var itemResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}/items",
+            new CreateAssurArrQualityAuditChecklistItemRequest(
+                1,
+                itemPrompt,
+                "Confirm the signoff before closing the audit.",
+                "recordarr:req:release-signoff",
+                "pass_fail",
+                true,
+                "pass",
+                "pass",
+                false,
+                null,
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, itemResponse.StatusCode);
+        var item = await itemResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistItemResponse>();
+        Assert.NotNull(item);
+        Assert.Equal(itemPrompt, item!.Prompt);
+
+        var checklistListResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists");
+        checklistListResponse.EnsureSuccessStatusCode();
+        var checklists = await checklistListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityAuditChecklistResponse>>();
+        Assert.NotNull(checklists);
+        Assert.Contains(checklists!, entry => entry.Title == checklistTitle);
+
+        var itemListResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}/items");
+        itemListResponse.EnsureSuccessStatusCode();
+        var items = await itemListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityAuditChecklistItemResponse>>();
+        Assert.NotNull(items);
+        Assert.Contains(items!, entry => entry.Prompt == itemPrompt);
+
+        var responseUpdate = await _client.PatchAsJsonAsync(
+            $"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}/items/{item.Id}/response",
+            new UpdateAssurArrQualityAuditChecklistItemResponseRequest(
+                "pass",
+                "pass",
+                false,
+                null,
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, responseUpdate.StatusCode);
+    }
+
+    [Fact]
     public async Task Can_create_supplier_quality_issue_and_customer_complaint_records()
     {
         var supplierTitle = $"Test supplier quality issue {Guid.NewGuid():N}";

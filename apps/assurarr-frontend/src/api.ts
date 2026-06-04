@@ -112,6 +112,42 @@ export type Audit = ListItem & {
   findingRefs: string[]
 }
 
+export type AuditChecklist = {
+  id: string
+  number: string
+  auditId: string
+  title: string
+  description: string
+  status: string
+  itemRefs: string[]
+  createdAt: string
+  updatedAt: string
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+}
+
+export type AuditChecklistItem = {
+  id: string
+  number: string
+  checklistId: string
+  sequence: number
+  prompt: string
+  helpText: string | null
+  requirementRef: string | null
+  responseType: string
+  required: boolean
+  responseValue: string | null
+  result: string | null
+  findingCreated: boolean
+  findingRef: string | null
+  evidenceRecordRefs: string[]
+  answeredAt: string | null
+  answeredByPersonId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export type Finding = ListItem & {
   description: string
   findingType: string
@@ -339,6 +375,61 @@ export const assurarrApi = {
     }),
   updateAuditStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Audit>(`/api/v1/audits/${id}/status`, 'PATCH', { status, closureSummary }),
+  listAuditChecklists: (auditId: string) => getJson<AuditChecklist[]>(`/api/v1/audits/${auditId}/checklists`),
+  createAuditChecklist: (auditId: string, body: { title: string; description: string; status?: string }) =>
+    sendJson<AuditChecklist>(`/api/v1/audits/${auditId}/checklists`, 'POST', {
+      ...body,
+      status: body.status ?? 'draft',
+    }),
+  updateAuditChecklistStatus: (auditId: string, checklistId: string, status: string, closureSummary?: string) =>
+    sendJson<AuditChecklist>(`/api/v1/audits/${auditId}/checklists/${checklistId}/status`, 'PATCH', { status, closureSummary }),
+  listAuditChecklistItems: (auditId: string, checklistId: string) =>
+    getJson<AuditChecklistItem[]>(`/api/v1/audits/${auditId}/checklists/${checklistId}/items`),
+  createAuditChecklistItem: (
+    auditId: string,
+    checklistId: string,
+    body: {
+      sequence: number
+      prompt: string
+      helpText?: string
+      requirementRef?: string
+      responseType: string
+      required: boolean
+      responseValue?: string
+      result?: string
+      findingCreated?: boolean
+      findingRef?: string
+      evidenceRecordRefs?: string[]
+      answeredByPersonId?: string
+      answeredAt?: string
+    },
+  ) =>
+    sendJson<AuditChecklistItem>(`/api/v1/audits/${auditId}/checklists/${checklistId}/items`, 'POST', {
+      ...body,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+      findingCreated: body.findingCreated ?? false,
+      answeredAt: body.answeredAt ? new Date(body.answeredAt).toISOString() : null,
+    }),
+  updateAuditChecklistItemResponse: (
+    auditId: string,
+    checklistId: string,
+    itemId: string,
+    body: {
+      responseValue?: string
+      result?: string
+      findingCreated?: boolean
+      findingRef?: string
+      evidenceRecordRefs?: string[]
+      answeredByPersonId?: string
+      answeredAt?: string
+    },
+  ) =>
+    sendJson<AuditChecklistItem>(`/api/v1/audits/${auditId}/checklists/${checklistId}/items/${itemId}/response`, 'PATCH', {
+      ...body,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+      findingCreated: body.findingCreated ?? false,
+      answeredAt: body.answeredAt ? new Date(body.answeredAt).toISOString() : null,
+    }),
   listFindings: () => getJson<Finding[]>('/api/v1/findings'),
   createFinding: (body: CreateBase & { findingType: string; auditRef?: string; nonconformanceRef?: string; capaRef?: string; dueAt?: string }) =>
     sendJson<Finding>('/api/v1/findings', 'POST', {

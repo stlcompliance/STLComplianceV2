@@ -62,6 +62,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> ChecklistTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["draft"] = ["active", "completed", "canceled"],
+        ["active"] = ["completed", "canceled"],
+        ["completed"] = [],
+        ["canceled"] = [],
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> FindingTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -228,7 +237,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             RelatedNonconformanceRefs = ["NCR-000001"],
         });
 
-        db.QualityAudits.Add(new AssurArrQualityAudit
+        var audit = new AssurArrQualityAudit
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -251,7 +260,48 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             StaffArrLocationId = null,
             PlannedStartAt = now.AddDays(-1),
             PlannedEndAt = now,
+        };
+        db.QualityAudits.Add(audit);
+
+        var checklist = new AssurArrQualityAuditChecklist
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "CHK-000001",
+            AuditId = audit.Id,
+            Title = "Receiving release evidence checklist",
+            Description = "Verify inspection evidence, release signature, and quarantine closure steps.",
+            Status = "active",
+            ItemRefs = ["CHKI-000001"],
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.QualityAuditChecklists.Add(checklist);
+
+        db.QualityAuditChecklistItems.Add(new AssurArrQualityAuditChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "CHKI-000001",
+            ChecklistId = checklist.Id,
+            Sequence = 1,
+            Prompt = "Is the release signature present on the inspection checklist?",
+            HelpText = "Check the release line before approving the lot.",
+            RequirementRef = "recordarr:req:release-signoff",
+            ResponseType = "pass_fail",
+            Required = true,
+            ResponseValue = "pass",
+            Result = "pass",
+            FindingCreated = false,
+            FindingRef = null,
+            EvidenceRecordRefs = ["recordarr:doc:inspection-photo-1"],
+            AnsweredAt = now,
+            AnsweredByPersonId = null,
+            CreatedAt = now,
+            UpdatedAt = now,
         });
+
+        audit.ChecklistRefs = [checklist.Number];
 
         db.AuditFindings.Add(new AssurArrAuditFinding
         {
@@ -809,6 +859,141 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("audit", entity.Id, "assurarr.audit.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToAuditResponse(entity);
+    }
+
+    public async Task<List<AssurArrQualityAuditChecklistResponse>> ListAuditChecklistsAsync(Guid auditId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.QualityAuditChecklists
+            .AsNoTracking()
+            .Where(x => x.AuditId == auditId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToChecklistResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityAuditChecklistResponse> CreateAuditChecklistAsync(Guid auditId, CreateAssurArrQualityAuditChecklistRequest request, CancellationToken cancellationToken = default)
+    {
+        var audit = await db.QualityAudits.FirstOrDefaultAsync(x => x.Id == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit '{auditId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrQualityAuditChecklist
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("CHK", db.QualityAuditChecklists, cancellationToken),
+            AuditId = audit.Id,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Status = Normalize(request.Status, "draft"),
+            ItemRefs = [],
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.QualityAuditChecklists.Add(entity);
+        audit.ChecklistRefs = [.. audit.ChecklistRefs, entity.Number];
+        audit.UpdatedAt = now;
+        await AddTimelineAsync("audit", audit.Id, "assurarr.audit.checklist_created", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToChecklistResponse(entity);
+    }
+
+    public async Task<AssurArrQualityAuditChecklistResponse> UpdateAuditChecklistStatusAsync(Guid auditId, Guid checklistId, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityAuditChecklists.FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+        EnsureTransition(entity.Status, request.Status, ChecklistTransitions, "quality audit checklist");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        await AddTimelineAsync("audit_checklist", entity.Id, "assurarr.audit.checklist.status_changed", entity.Status, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToChecklistResponse(entity);
+    }
+
+    public async Task<List<AssurArrQualityAuditChecklistItemResponse>> ListAuditChecklistItemsAsync(Guid auditId, Guid checklistId, CancellationToken cancellationToken = default)
+    {
+        var checklist = await db.QualityAuditChecklists.AsNoTracking().FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+
+        var entities = await db.QualityAuditChecklistItems
+            .AsNoTracking()
+            .Where(x => x.ChecklistId == checklist.Id)
+            .OrderBy(x => x.Sequence)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToChecklistItemResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityAuditChecklistItemResponse> CreateAuditChecklistItemAsync(Guid auditId, Guid checklistId, CreateAssurArrQualityAuditChecklistItemRequest request, CancellationToken cancellationToken = default)
+    {
+        var checklist = await db.QualityAuditChecklists.FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrQualityAuditChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("CHKI", db.QualityAuditChecklistItems, cancellationToken),
+            ChecklistId = checklist.Id,
+            Sequence = request.Sequence,
+            Prompt = request.Prompt.Trim(),
+            HelpText = NormalizeNullable(request.HelpText),
+            RequirementRef = NormalizeNullable(request.RequirementRef),
+            ResponseType = Normalize(request.ResponseType, "pass_fail"),
+            Required = request.Required,
+            ResponseValue = NormalizeNullable(request.ResponseValue),
+            Result = NormalizeNullable(request.Result),
+            FindingCreated = request.FindingCreated,
+            FindingRef = NormalizeNullable(request.FindingRef),
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            AnsweredAt = request.AnsweredAt,
+            AnsweredByPersonId = request.AnsweredByPersonId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.QualityAuditChecklistItems.Add(entity);
+        checklist.ItemRefs = [.. checklist.ItemRefs, entity.Number];
+        checklist.UpdatedAt = now;
+        await AddTimelineAsync("audit_checklist", checklist.Id, "assurarr.audit.checklist.item_created", entity.Prompt, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToChecklistItemResponse(entity);
+    }
+
+    public async Task<AssurArrQualityAuditChecklistItemResponse> UpdateAuditChecklistItemResponseAsync(
+        Guid auditId,
+        Guid checklistId,
+        Guid itemId,
+        UpdateAssurArrQualityAuditChecklistItemResponseRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityAuditChecklistItems
+            .FirstOrDefaultAsync(x => x.Id == itemId && x.ChecklistId == checklistId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist item '{itemId}' was not found.");
+
+        var checklist = await db.QualityAuditChecklists.FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+
+        entity.ResponseValue = NormalizeNullable(request.ResponseValue);
+        entity.Result = NormalizeNullable(request.Result);
+        entity.FindingCreated = request.FindingCreated;
+        entity.FindingRef = NormalizeNullable(request.FindingRef);
+        entity.EvidenceRecordRefs = request.EvidenceRecordRefs ?? [];
+        entity.AnsweredAt = request.AnsweredAt ?? DateTimeOffset.UtcNow;
+        entity.AnsweredByPersonId = request.AnsweredByPersonId;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        checklist.UpdatedAt = entity.UpdatedAt;
+        await AddTimelineAsync("audit_checklist_item", entity.Id, "assurarr.audit.checklist.item_answered", entity.Result ?? entity.ResponseValue, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToChecklistItemResponse(entity);
     }
 
     public async Task<List<AssurArrAuditFindingResponse>> ListFindingsAsync(CancellationToken cancellationToken = default)
@@ -1580,6 +1765,42 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ActualEndAt,
             entity.ChecklistRefs,
             entity.FindingRefs);
+
+    private static AssurArrQualityAuditChecklistResponse ToChecklistResponse(AssurArrQualityAuditChecklist entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.AuditId,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.ItemRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary);
+
+    private static AssurArrQualityAuditChecklistItemResponse ToChecklistItemResponse(AssurArrQualityAuditChecklistItem entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.ChecklistId,
+            entity.Sequence,
+            entity.Prompt,
+            entity.HelpText,
+            entity.RequirementRef,
+            entity.ResponseType,
+            entity.Required,
+            entity.ResponseValue,
+            entity.Result,
+            entity.FindingCreated,
+            entity.FindingRef,
+            entity.EvidenceRecordRefs,
+            entity.AnsweredAt,
+            entity.AnsweredByPersonId,
+            entity.CreatedAt,
+            entity.UpdatedAt);
 
     private static AssurArrAuditFindingResponse ToFindingResponse(AssurArrAuditFinding entity) =>
         new(

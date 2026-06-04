@@ -68,6 +68,30 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateAuditStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrAuditStatus");
 
+        group.MapGet("/audits/{auditId:guid}/checklists", async (Guid auditId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListAuditChecklistsAsync(auditId, cancellationToken)))
+            .WithName("ListAssurArrAuditChecklists");
+
+        group.MapPost("/audits/{auditId:guid}/checklists", async (Guid auditId, CreateAssurArrQualityAuditChecklistRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateAuditChecklistAsync(auditId, request, cancellationToken)))
+            .WithName("CreateAssurArrAuditChecklist");
+
+        group.MapPatch("/audits/{auditId:guid}/checklists/{checklistId:guid}/status", async (Guid auditId, Guid checklistId, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateAuditChecklistStatusAsync(auditId, checklistId, request, cancellationToken)))
+            .WithName("UpdateAssurArrAuditChecklistStatus");
+
+        group.MapGet("/audits/{auditId:guid}/checklists/{checklistId:guid}/items", async (Guid auditId, Guid checklistId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListAuditChecklistItemsAsync(auditId, checklistId, cancellationToken)))
+            .WithName("ListAssurArrAuditChecklistItems");
+
+        group.MapPost("/audits/{auditId:guid}/checklists/{checklistId:guid}/items", async (Guid auditId, Guid checklistId, CreateAssurArrQualityAuditChecklistItemRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateAuditChecklistItemAsync(auditId, checklistId, request, cancellationToken)))
+            .WithName("CreateAssurArrAuditChecklistItem");
+
+        group.MapPatch("/audits/{auditId:guid}/checklists/{checklistId:guid}/items/{itemId:guid}/response", async (Guid auditId, Guid checklistId, Guid itemId, UpdateAssurArrQualityAuditChecklistItemResponseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateAuditChecklistItemResponseAsync(auditId, checklistId, itemId, request, cancellationToken)))
+            .WithName("UpdateAssurArrAuditChecklistItemResponse");
+
         group.MapGet("/findings", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListFindingsAsync(cancellationToken)))
             .WithName("ListAssurArrFindings");

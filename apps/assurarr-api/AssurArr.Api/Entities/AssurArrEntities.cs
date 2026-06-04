@@ -129,6 +129,46 @@ public sealed class AssurArrQualityAudit
     public string[] FindingRefs { get; set; } = [];
 }
 
+public sealed class AssurArrQualityAuditChecklist
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid AuditId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = "draft";
+    public string[] ItemRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+}
+
+public sealed class AssurArrQualityAuditChecklistItem
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid ChecklistId { get; set; }
+    public int Sequence { get; set; }
+    public string Prompt { get; set; } = string.Empty;
+    public string? HelpText { get; set; }
+    public string? RequirementRef { get; set; }
+    public string ResponseType { get; set; } = "pass_fail";
+    public bool Required { get; set; }
+    public string? ResponseValue { get; set; }
+    public string? Result { get; set; }
+    public bool FindingCreated { get; set; }
+    public string? FindingRef { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public DateTimeOffset? AnsweredAt { get; set; }
+    public Guid? AnsweredByPersonId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
 public sealed class AssurArrAuditFinding
 {
     public Guid Id { get; set; }
