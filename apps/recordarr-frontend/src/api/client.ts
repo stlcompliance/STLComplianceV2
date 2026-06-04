@@ -478,8 +478,11 @@ export async function getDashboard(accessToken: string): Promise<RecordArrDashbo
   return getJson<RecordArrDashboardResponse>('/api/v1/workspace/summary', accessToken)
 }
 
-export async function listRecords(accessToken: string): Promise<RecordArrRecord[]> {
-  return getJson<RecordArrRecord[]>('/api/v1/workspace/records', accessToken)
+export async function listRecords(accessToken: string, search?: string): Promise<RecordArrRecord[]> {
+  const path = search && search.trim().length > 0
+    ? `/api/v1/workspace/records?search=${encodeURIComponent(search.trim())}`
+    : '/api/v1/workspace/records'
+  return getJson<RecordArrRecord[]>(path, accessToken)
 }
 
 export async function getRecord(accessToken: string, recordId: string): Promise<RecordArrRecord> {

@@ -11,7 +11,7 @@ public static class WorkspaceEndpoints
         group.MapGet("/summary", (RecordArrStore store) => Results.Ok(store.GetDashboard()))
             .WithName("GetRecordArrWorkspaceSummary");
 
-        group.MapGet("/records", (RecordArrStore store) => Results.Ok(store.GetRecords()))
+        group.MapGet("/records", (string? search, RecordArrStore store) => Results.Ok(store.GetRecords(search)))
             .WithName("ListRecordArrRecords");
 
         group.MapGet("/records/{recordId}", (string recordId, RecordArrStore store) =>

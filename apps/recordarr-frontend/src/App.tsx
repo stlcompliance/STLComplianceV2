@@ -400,6 +400,7 @@ function SimpleHoldList({ holds, emptyLabel }: { holds: RecordArrLegalHold[]; em
 function RecordsPage({ accessToken }: { accessToken: string }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
   const [form, setForm] = useState({
     title: 'Inbound BOL for delivery load',
     description: 'Captured from RoutArr proof-of-delivery handoff.',
@@ -416,8 +417,8 @@ function RecordsPage({ accessToken }: { accessToken: string }) {
   })
 
   const recordsQuery = useQuery({
-    queryKey: ['recordarr', 'records'],
-    queryFn: () => listRecords(accessToken),
+    queryKey: ['recordarr', 'records', search.trim()],
+    queryFn: () => listRecords(accessToken, search),
     enabled: Boolean(accessToken),
   })
 
@@ -437,6 +438,32 @@ function RecordsPage({ accessToken }: { accessToken: string }) {
         description="Capture, classify, and route records through the lifecycle with source links, versions, and expiry details."
         action={<span className="recordarr-pill"><FileText className="h-4 w-4" /> {recordsQuery.data?.length ?? 0} records</span>}
       />
+      <div className="recordarr-card">
+        <div className="recordarr-card-inner space-y-3">
+          <div className="flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-cyan-300" />
+            <h2 className="text-lg font-semibold text-slate-50">Search records</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+            <Field label="Search term" wide>
+              <input
+                className="recordarr-input"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Record number, title, source, file, or tag"
+              />
+            </Field>
+            <div className="flex items-end gap-3">
+              <button type="button" className="recordarr-button secondary" onClick={() => setSearch('')} disabled={!search}>
+                Clear
+              </button>
+            </div>
+          </div>
+          <p className="text-sm text-slate-400">
+            Search is server-side and matches record number, title, description, source, file name, and tags.
+          </p>
+        </div>
+      </div>
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
           <div className="flex items-center gap-2">

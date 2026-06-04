@@ -486,11 +486,29 @@ public sealed class RecordArrStore
         }
     }
 
-    public IReadOnlyList<RecordArrRecordResponse> GetRecords()
+    public IReadOnlyList<RecordArrRecordResponse> GetRecords(string? search = null)
     {
         lock (_gate)
         {
-            return _records.OrderByDescending(record => record.UploadedAt).ToArray();
+            var query = string.IsNullOrWhiteSpace(search)
+                ? null
+                : search.Trim();
+
+            var records = _records.AsEnumerable();
+            if (query is not null)
+            {
+                records = records.Where(record =>
+                    record.RecordNumber.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.Description.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.SourceProduct.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.SourceObjectId.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.SourceObjectDisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.CurrentFileName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    record.Tags.Any(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return records.OrderByDescending(record => record.UploadedAt).ToArray();
         }
     }
 

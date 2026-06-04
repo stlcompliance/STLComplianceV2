@@ -837,6 +837,15 @@
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationRecords/api/integrations",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1991,6 +2000,15 @@
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationRecords/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2940,6 +2958,15 @@
           "Workspace"
         ],
         "operationId": "ListRecordArrRecords",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
