@@ -159,7 +159,8 @@ public sealed record AssurArrCapaResponse(
     string? RootCauseSummary,
     DateTimeOffset? DueAt,
     IReadOnlyList<string> RelatedNonconformanceRefs,
-    IReadOnlyList<string> RelatedAuditFindingRefs);
+    IReadOnlyList<string> RelatedAuditFindingRefs,
+    IReadOnlyList<string> EffectivenessVerificationRefs);
 
 public sealed record CreateAssurArrCapaRequest(
     string Title,
@@ -175,7 +176,8 @@ public sealed record CreateAssurArrCapaRequest(
     string? RootCauseSummary,
     DateTimeOffset? DueAt,
     string[] RelatedNonconformanceRefs,
-    string[] RelatedAuditFindingRefs);
+    string[] RelatedAuditFindingRefs,
+    string[] EffectivenessVerificationRefs);
 
 public sealed record AssurArrCapaActionResponse(
     Guid Id,
@@ -283,6 +285,42 @@ public sealed record CreateAssurArrVerificationPlanRequest(
 public sealed record UpdateAssurArrVerificationPlanStatusRequest(
     string Status,
     string? ClosureSummary = null);
+
+public sealed record AssurArrEffectivenessVerificationResponse(
+    Guid Id,
+    string Number,
+    Guid CapaId,
+    Guid? VerificationPlanId,
+    string Status,
+    Guid? PerformedByPersonId,
+    DateTimeOffset? PerformedAt,
+    string? ResultSummary,
+    IReadOnlyList<string> EvidenceRecordRefs,
+    IReadOnlyList<string> MetricResults,
+    bool RecurrenceFound,
+    bool FollowUpRequired,
+    string? ReopenedCapaRef,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrEffectivenessVerificationRequest(
+    Guid? VerificationPlanId,
+    string Status,
+    Guid? PerformedByPersonId,
+    DateTimeOffset? PerformedAt,
+    string? ResultSummary,
+    string[] EvidenceRecordRefs,
+    string[] MetricResults,
+    bool RecurrenceFound,
+    bool FollowUpRequired,
+    string? ReopenedCapaRef);
+
+public sealed record UpdateAssurArrEffectivenessVerificationStatusRequest(
+    string Status,
+    string? ResultSummary = null,
+    bool? RecurrenceFound = null,
+    bool? FollowUpRequired = null,
+    string? ReopenedCapaRef = null);
 
 public sealed record AssurArrQualityAuditResponse(
     Guid Id,

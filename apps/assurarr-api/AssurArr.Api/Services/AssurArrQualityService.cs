@@ -80,6 +80,17 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> EffectivenessVerificationTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["scheduled"] = ["in_progress", "effective", "ineffective", "inconclusive", "canceled"],
+        ["in_progress"] = ["effective", "ineffective", "inconclusive", "canceled"],
+        ["effective"] = [],
+        ["ineffective"] = ["scheduled", "in_progress", "canceled"],
+        ["inconclusive"] = ["scheduled", "in_progress", "canceled"],
+        ["canceled"] = [],
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> AuditTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -410,6 +421,27 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             CreatedAt = now,
             UpdatedAt = now,
         });
+
+        db.EffectivenessVerifications.Add(new AssurArrEffectivenessVerification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "VERIF-000001",
+            CapaId = capa.Id,
+            VerificationPlanId = null,
+            Status = "scheduled",
+            PerformedByPersonId = null,
+            PerformedAt = null,
+            ResultSummary = null,
+            EvidenceRecordRefs = ["recordarr:doc:scorecard-1"],
+            MetricResults = ["open_nc_count=1", "hold_aging=high"],
+            RecurrenceFound = false,
+            FollowUpRequired = true,
+            ReopenedCapaRef = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        capa.EffectivenessVerificationRefs = ["VERIF-000001"];
 
         var audit = new AssurArrQualityAudit
         {
@@ -1392,7 +1424,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         db.VerificationPlans.Add(entity);
         capa.UpdatedAt = now;
-        await AddTimelineAsync("capa", capa.Id, "assurarr.capa.verification_started", entity.Title, cancellationToken);
+        await AddTimelineAsync("capa", capa.Id, "assurarr.capa.verification_started", entity.Number, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToVerificationPlanResponse(entity);
     }
@@ -1407,6 +1439,101 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("capa_verification", entity.Id, $"assurarr.capa.verification.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToVerificationPlanResponse(entity);
+    }
+
+    public async Task<List<AssurArrEffectivenessVerificationResponse>> ListEffectivenessVerificationsAsync(Guid capaId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.EffectivenessVerifications
+            .AsNoTracking()
+            .Where(x => x.CapaId == capaId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToEffectivenessVerificationResponse).ToList();
+    }
+
+    public async Task<AssurArrEffectivenessVerificationResponse> CreateEffectivenessVerificationAsync(Guid capaId, CreateAssurArrEffectivenessVerificationRequest request, CancellationToken cancellationToken = default)
+    {
+        var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA '{capaId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        if (!string.Equals(capa.Status, "verification", StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureTransition(capa.Status, "verification", CapaTransitions, "CAPA");
+            capa.Status = "verification";
+        }
+        var entity = new AssurArrEffectivenessVerification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("VERIF", db.EffectivenessVerifications, cancellationToken),
+            CapaId = capa.Id,
+            VerificationPlanId = request.VerificationPlanId,
+            Status = Normalize(request.Status, "scheduled"),
+            PerformedByPersonId = request.PerformedByPersonId,
+            PerformedAt = request.PerformedAt,
+            ResultSummary = NormalizeNullable(request.ResultSummary),
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            MetricResults = request.MetricResults ?? [],
+            RecurrenceFound = request.RecurrenceFound,
+            FollowUpRequired = request.FollowUpRequired,
+            ReopenedCapaRef = NormalizeNullable(request.ReopenedCapaRef),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.EffectivenessVerifications.Add(entity);
+        capa.EffectivenessVerificationRefs = capa.EffectivenessVerificationRefs.Append(entity.Number).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        capa.UpdatedAt = now;
+        await AddTimelineAsync("capa", capa.Id, "assurarr.capa.verification_started", entity.Number, cancellationToken);
+        await AddTimelineAsync("capa_verification", entity.Id, "assurarr.capa.verification_started", entity.Number, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToEffectivenessVerificationResponse(entity);
+    }
+
+    public async Task<AssurArrEffectivenessVerificationResponse> UpdateEffectivenessVerificationStatusAsync(Guid capaId, Guid verificationId, UpdateAssurArrEffectivenessVerificationStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA '{capaId}' was not found.");
+        var entity = await db.EffectivenessVerifications.FirstOrDefaultAsync(x => x.Id == verificationId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"Effectiveness verification '{verificationId}' was not found.");
+        EnsureTransition(entity.Status, request.Status, EffectivenessVerificationTransitions, "effectiveness verification");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.ResultSummary = NormalizeNullable(request.ResultSummary) ?? entity.ResultSummary;
+        if (request.RecurrenceFound.HasValue)
+        {
+            entity.RecurrenceFound = request.RecurrenceFound.Value;
+        }
+        if (request.FollowUpRequired.HasValue)
+        {
+            entity.FollowUpRequired = request.FollowUpRequired.Value;
+        }
+        entity.ReopenedCapaRef = NormalizeNullable(request.ReopenedCapaRef) ?? entity.ReopenedCapaRef;
+        if (string.Equals(entity.Status, "effective", StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureTransition(capa.Status, "effective", CapaTransitions, "CAPA");
+            capa.Status = "effective";
+            EnsureTransition(capa.Status, "closed", CapaTransitions, "CAPA");
+            capa.Status = "closed";
+            capa.ClosedAt = entity.UpdatedAt;
+            capa.ClosureSummary = entity.ResultSummary ?? capa.ClosureSummary;
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.verified_effective", entity.ResultSummary ?? entity.Number, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "ineffective", StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureTransition(capa.Status, "ineffective", CapaTransitions, "CAPA");
+            capa.Status = "ineffective";
+            capa.ClosedAt = null;
+            capa.ClosureSummary = entity.ResultSummary ?? capa.ClosureSummary;
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.reopened", entity.ResultSummary ?? entity.Number, cancellationToken);
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.verified_ineffective", entity.ResultSummary ?? entity.Number, cancellationToken);
+        }
+        capa.UpdatedAt = entity.UpdatedAt;
+        await AddTimelineAsync("capa_verification", entity.Id, $"assurarr.capa.verification.{entity.Status}", entity.ResultSummary ?? entity.Number, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToEffectivenessVerificationResponse(entity);
     }
 
     public async Task<List<AssurArrQualityAuditResponse>> ListAuditsAsync(CancellationToken cancellationToken = default)
@@ -2532,7 +2659,26 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.RootCauseSummary,
             entity.DueAt,
             entity.RelatedNonconformanceRefs,
-            entity.RelatedAuditFindingRefs);
+            entity.RelatedAuditFindingRefs,
+            entity.EffectivenessVerificationRefs);
+
+    private static AssurArrEffectivenessVerificationResponse ToEffectivenessVerificationResponse(AssurArrEffectivenessVerification entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.CapaId,
+            entity.VerificationPlanId,
+            entity.Status,
+            entity.PerformedByPersonId,
+            entity.PerformedAt,
+            entity.ResultSummary,
+            entity.EvidenceRecordRefs,
+            entity.MetricResults,
+            entity.RecurrenceFound,
+            entity.FollowUpRequired,
+            entity.ReopenedCapaRef,
+            entity.CreatedAt,
+            entity.UpdatedAt);
 
     private static AssurArrCapaActionResponse ToCapaActionResponse(AssurArrCapaAction entity) =>
         new(

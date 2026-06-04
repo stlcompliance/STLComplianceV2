@@ -1455,6 +1455,7 @@ function CapaPage() {
 
 function CapaDetailPage() {
   const { id = '' } = useParams()
+  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ['assurarr', 'capa', id],
     queryFn: () => assurarrApi.getCapa(id),
@@ -1462,10 +1463,23 @@ function CapaDetailPage() {
   })
   const actionQuery = useRecords(['assurarr', 'capa-actions', id], () => assurarrApi.listCapaActions(id))
   const verificationQuery = useRecords(['assurarr', 'verification-plans', id], () => assurarrApi.listVerificationPlans(id))
+  const effectivenessQuery = useRecords(['assurarr', 'effectiveness-verifications', id], () => assurarrApi.listEffectivenessVerifications(id))
   const nonconformanceQuery = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
   const findingQuery = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
   const dashboard = useDashboard()
   const [selectedActionId, setSelectedActionId] = useState('')
+  const [effectivenessForm, setEffectivenessForm] = useState({
+    verificationPlanId: '',
+    status: 'scheduled',
+    performedByPersonId: '',
+    performedAt: '',
+    resultSummary: '',
+    evidenceRecordRefs: '',
+    metricResults: '',
+    recurrenceFound: false,
+    followUpRequired: false,
+    reopenedCapaRef: '',
+  })
 
   useEffect(() => {
     setSelectedActionId('')
@@ -1477,6 +1491,47 @@ function CapaDetailPage() {
     queryFn: () => assurarrApi.listCapaActionBlockers(id, activeActionId),
     enabled: Boolean(id && activeActionId),
     staleTime: 15_000,
+  })
+  const createEffectivenessMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createEffectivenessVerification(id, {
+        verificationPlanId: effectivenessForm.verificationPlanId || undefined,
+        status: effectivenessForm.status,
+        performedByPersonId: effectivenessForm.performedByPersonId || undefined,
+        performedAt: effectivenessForm.performedAt || undefined,
+        resultSummary: effectivenessForm.resultSummary || undefined,
+        evidenceRecordRefs: joinRefs(effectivenessForm.evidenceRecordRefs),
+        metricResults: joinRefs(effectivenessForm.metricResults),
+        recurrenceFound: effectivenessForm.recurrenceFound,
+        followUpRequired: effectivenessForm.followUpRequired,
+        reopenedCapaRef: effectivenessForm.reopenedCapaRef || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setEffectivenessForm({
+        verificationPlanId: '',
+        status: 'scheduled',
+        performedByPersonId: '',
+        performedAt: '',
+        resultSummary: '',
+        evidenceRecordRefs: '',
+        metricResults: '',
+        recurrenceFound: false,
+        followUpRequired: false,
+        reopenedCapaRef: '',
+      })
+    },
+  })
+  const updateEffectivenessMutation = useMutation({
+    mutationFn: async ({ verificationId, status }: { verificationId: string; status: string }) =>
+      assurarrApi.updateEffectivenessVerificationStatus(id, verificationId, status, {
+        resultSummary: status === 'effective' ? 'Verified effective.' : status === 'ineffective' ? 'Verification found an issue.' : undefined,
+        recurrenceFound: status === 'ineffective',
+        followUpRequired: status === 'ineffective',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
   })
 
   if (query.isLoading) {
@@ -1495,6 +1550,7 @@ function CapaDetailPage() {
   const capa = query.data
   const relatedNonconformances = nonconformanceQuery.data?.filter((item) => capa.relatedNonconformanceRefs.includes(item.number)) ?? []
   const relatedFindings = findingQuery.data?.filter((item) => capa.relatedAuditFindingRefs.includes(item.number) || item.capaRef === capa.number) ?? []
+  const currentEffectivenessVerification = effectivenessQuery.data?.[0] ?? null
   const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa' && event.subjectId === capa.id) ?? []
   const currentAction = actionQuery.data?.find((action) => action.id === activeActionId) ?? null
 
@@ -1534,6 +1590,7 @@ function CapaDetailPage() {
                 <div><span className="text-slate-500">Source refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Related nonconformances:</span> {capa.relatedNonconformanceRefs.length ? capa.relatedNonconformanceRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Related findings:</span> {capa.relatedAuditFindingRefs.length ? capa.relatedAuditFindingRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Effectiveness refs:</span> {capa.effectivenessVerificationRefs.length ? capa.effectivenessVerificationRefs.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -1615,6 +1672,102 @@ function CapaDetailPage() {
                 ) : (
                   <EmptyState title="No verification plans yet." />
                 )}
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <p className="assurarr-label">Effectiveness verification</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="Plan">
+                      <select className="assurarr-select" value={effectivenessForm.verificationPlanId} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, verificationPlanId: event.target.value })}>
+                        <option value="">No plan selected</option>
+                        {verificationQuery.data?.map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.number} · {plan.title}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Status">
+                      <select className="assurarr-select" value={effectivenessForm.status} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, status: event.target.value })}>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="effective">Effective</option>
+                        <option value="ineffective">Ineffective</option>
+                        <option value="inconclusive">Inconclusive</option>
+                        <option value="canceled">Canceled</option>
+                      </select>
+                    </Field>
+                    <Field label="Performed by">
+                      <input className="assurarr-input" value={effectivenessForm.performedByPersonId} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, performedByPersonId: event.target.value })} placeholder="Optional UUID" />
+                    </Field>
+                    <Field label="Performed at">
+                      <input className="assurarr-input" type="datetime-local" value={effectivenessForm.performedAt} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, performedAt: event.target.value })} />
+                    </Field>
+                    <Field label="Result summary" wide>
+                      <textarea className="assurarr-textarea" value={effectivenessForm.resultSummary} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, resultSummary: event.target.value })} />
+                    </Field>
+                    <Field label="Evidence refs" wide>
+                      <textarea className="assurarr-textarea" value={effectivenessForm.evidenceRecordRefs} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, evidenceRecordRefs: event.target.value })} />
+                    </Field>
+                    <Field label="Metric results" wide>
+                      <textarea className="assurarr-textarea" value={effectivenessForm.metricResults} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, metricResults: event.target.value })} />
+                    </Field>
+                    <Field label="Reopened CAPA ref">
+                      <input className="assurarr-input" value={effectivenessForm.reopenedCapaRef} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, reopenedCapaRef: event.target.value })} placeholder="CAPA-000001" />
+                    </Field>
+                    <Field label="Follow-up required">
+                      <select className="assurarr-select" value={effectivenessForm.followUpRequired ? 'yes' : 'no'} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, followUpRequired: event.target.value === 'yes' })}>
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </Field>
+                    <Field label="Recurrence found">
+                      <select className="assurarr-select" value={effectivenessForm.recurrenceFound ? 'yes' : 'no'} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, recurrenceFound: event.target.value === 'yes' })}>
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </Field>
+                  </div>
+                  <button className="assurarr-button mt-3" type="button" onClick={() => createEffectivenessMutation.mutate()} disabled={createEffectivenessMutation.isPending}>
+                    {createEffectivenessMutation.isPending ? 'Saving...' : 'Create effectiveness verification'}
+                  </button>
+                </div>
+                {effectivenessQuery.data?.length ? (
+                  <div className="space-y-2">
+                    {effectivenessQuery.data.map((verification) => (
+                      <div key={verification.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-sm text-slate-50">{verification.number}</strong>
+                          <span className="assurarr-pill">{verification.status}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-300">{verification.resultSummary ?? 'No result summary yet.'}</p>
+                        <p className="mt-1 text-xs text-slate-400">Metric results: {verification.metricResults.length ? verification.metricResults.join(', ') : 'none'}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'effective' })} disabled={updateEffectivenessMutation.isPending}>
+                            Mark effective
+                          </button>
+                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'ineffective' })} disabled={updateEffectivenessMutation.isPending}>
+                            Mark ineffective
+                          </button>
+                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'inconclusive' })} disabled={updateEffectivenessMutation.isPending}>
+                            Mark inconclusive
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="No effectiveness verifications yet." />
+                )}
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-50">Current effectiveness status</strong>
+                    <span className="assurarr-pill">{currentEffectivenessVerification?.status ?? 'none'}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {currentEffectivenessVerification
+                      ? currentEffectivenessVerification.resultSummary ?? 'Verification result not summarized yet.'
+                      : 'No effectiveness verification has been created for this CAPA yet.'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

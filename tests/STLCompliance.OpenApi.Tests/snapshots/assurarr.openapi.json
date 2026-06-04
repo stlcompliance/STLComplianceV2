@@ -338,6 +338,30 @@
         }
       }
     },
+    "/api/v1/audits/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrAudit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audits/{id}/status": {
       "patch": {
         "tags": [
@@ -631,6 +655,105 @@
         }
       }
     },
+    "/api/v1/capas/{capaId}/effectiveness-verifications": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrEffectivenessVerifications",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrEffectivenessVerification",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrEffectivenessVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/effectiveness-verifications/{verificationId}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrEffectivenessVerificationStatus",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "verificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrEffectivenessVerificationStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/capas/{capaId}/verification-plans": {
       "get": {
         "tags": [
@@ -828,6 +951,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/findings/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrFinding",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1089,6 +1236,30 @@
         }
       }
     },
+    "/api/v1/integrations/customer-complaint-quality-cases/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrCustomerComplaintQualityCase",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/customer-complaint-quality-cases/{id}/status": {
       "patch": {
         "tags": [
@@ -1327,6 +1498,30 @@
         }
       }
     },
+    "/api/v1/integrations/quality-releases/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrQualityRelease",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/quality-releases/{id}/status": {
       "patch": {
         "tags": [
@@ -1388,6 +1583,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-reviews/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrQualityReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1496,6 +1715,29 @@
         }
       }
     },
+    "/api/v1/integrations/root-cause-analyses": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrRootCauseAnalysis",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrRootCauseAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/scars": {
       "get": {
         "tags": [
@@ -1523,6 +1765,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/scars/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrSupplierCorrectiveActionRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1604,6 +1870,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplier-quality-issues/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrSupplierQualityIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1788,6 +2078,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nonconformances/{nonconformanceId}/root-cause-analyses": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrRootCauseAnalyses",
+        "parameters": [
+          {
+            "name": "nonconformanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2106,7 +2420,8 @@
           "rootCauseSummary",
           "dueAt",
           "relatedNonconformanceRefs",
-          "relatedAuditFindingRefs"
+          "relatedAuditFindingRefs",
+          "effectivenessVerificationRefs"
         ],
         "type": "object",
         "properties": {
@@ -2177,6 +2492,12 @@
             }
           },
           "relatedAuditFindingRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effectivenessVerificationRefs": {
             "type": "array",
             "items": {
               "type": "string"
@@ -2561,6 +2882,77 @@
           }
         }
       },
+      "CreateAssurArrEffectivenessVerificationRequest": {
+        "required": [
+          "verificationPlanId",
+          "status",
+          "performedByPersonId",
+          "performedAt",
+          "resultSummary",
+          "evidenceRecordRefs",
+          "metricResults",
+          "recurrenceFound",
+          "followUpRequired",
+          "reopenedCapaRef"
+        ],
+        "type": "object",
+        "properties": {
+          "verificationPlanId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "performedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "performedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "resultSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metricResults": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recurrenceFound": {
+            "type": "boolean"
+          },
+          "followUpRequired": {
+            "type": "boolean"
+          },
+          "reopenedCapaRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAssurArrNonconformanceRequest": {
         "required": [
           "title",
@@ -2578,6 +2970,7 @@
           "complianceImpact",
           "recurrenceFlag",
           "repeatOfNonconformanceRef",
+          "rootCauseRef",
           "blockerRefs",
           "dueAt"
         ],
@@ -2651,6 +3044,12 @@
             "type": "boolean"
           },
           "repeatOfNonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rootCauseRef": {
             "type": [
               "null",
               "string"
@@ -3408,6 +3807,111 @@
           }
         }
       },
+      "CreateAssurArrRootCauseAnalysisRequest": {
+        "required": [
+          "title",
+          "description",
+          "nonconformanceId",
+          "status",
+          "method",
+          "primaryCauseCategory",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "recordRefs",
+          "rootCauseSummary",
+          "contributingFactors",
+          "analyzedByPersonId",
+          "completedAt",
+          "evidenceRecordRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nonconformanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "primaryCauseCategory": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "recordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rootCauseSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "contributingFactors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "analyzedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "CreateAssurArrSupplierCorrectiveActionRequest": {
         "required": [
           "title",
@@ -3790,6 +4294,41 @@
             "format": "date-time"
           },
           "closureSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateAssurArrEffectivenessVerificationStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "resultSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recurrenceFound": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "followUpRequired": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "reopenedCapaRef": {
             "type": [
               "null",
               "string"

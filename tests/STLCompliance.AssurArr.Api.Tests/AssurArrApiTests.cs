@@ -389,7 +389,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 "Awaiting analysis",
                 DateTimeOffset.UtcNow.AddDays(7),
                 ["NCR-000001"],
-                ["FIND-000001"]));
+                ["FIND-000001"],
+                []));
 
         Assert.Equal(HttpStatusCode.OK, capaResponse.StatusCode);
         var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
@@ -453,6 +454,30 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         Assert.Equal(HttpStatusCode.OK, resolveBlockerResponse.StatusCode);
 
+        var capaRootCauseResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/status",
+            new UpdateAssurArrStatusRequest("root_cause", "Root cause analysis in progress."));
+
+        Assert.Equal(HttpStatusCode.OK, capaRootCauseResponse.StatusCode);
+
+        var capaActionPlanResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/status",
+            new UpdateAssurArrStatusRequest("action_plan", "Action plan defined."));
+
+        Assert.Equal(HttpStatusCode.OK, capaActionPlanResponse.StatusCode);
+
+        var capaImplementationResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/status",
+            new UpdateAssurArrStatusRequest("implementation", "Actions in progress."));
+
+        Assert.Equal(HttpStatusCode.OK, capaImplementationResponse.StatusCode);
+
+        var capaVerificationResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/status",
+            new UpdateAssurArrStatusRequest("verification", "Ready for effectiveness verification."));
+
+        Assert.Equal(HttpStatusCode.OK, capaVerificationResponse.StatusCode);
+
         var verificationTitle = $"Test verification plan {Guid.NewGuid():N}";
         var verificationResponse = await _client.PostAsJsonAsync(
             $"/api/v1/capas/{capa.Id}/verification-plans",
@@ -483,6 +508,53 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var verifications = await verificationListResponse.Content.ReadFromJsonAsync<List<AssurArrVerificationPlanResponse>>();
         Assert.NotNull(verifications);
         Assert.Contains(verifications!, item => item.Title == verificationTitle);
+
+        var effectivenessResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/effectiveness-verifications",
+            new CreateAssurArrEffectivenessVerificationRequest(
+                verification.Id,
+                "scheduled",
+                null,
+                null,
+                "Initial effectiveness check scheduled after action completion.",
+                ["recordarr:doc:test"],
+                ["actions_completed=1", "open_nc_count=0"],
+                false,
+                true,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, effectivenessResponse.StatusCode);
+        var effectiveness = await effectivenessResponse.Content.ReadFromJsonAsync<AssurArrEffectivenessVerificationResponse>();
+        Assert.NotNull(effectiveness);
+        Assert.Equal(verification.Id, effectiveness!.VerificationPlanId);
+        Assert.Equal(capa.Id, effectiveness.CapaId);
+
+        var effectivenessListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/effectiveness-verifications");
+        effectivenessListResponse.EnsureSuccessStatusCode();
+        var effectivenessVerifications = await effectivenessListResponse.Content.ReadFromJsonAsync<List<AssurArrEffectivenessVerificationResponse>>();
+        Assert.NotNull(effectivenessVerifications);
+        Assert.Contains(effectivenessVerifications!, item => item.Id == effectiveness.Id);
+
+        var effectivenessStatusResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/effectiveness-verifications/{effectiveness.Id}/status",
+            new UpdateAssurArrEffectivenessVerificationStatusRequest(
+                "effective",
+                "Verification confirmed the corrective action was effective.",
+                false,
+                true,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, effectivenessStatusResponse.StatusCode);
+        var updatedEffectiveness = await effectivenessStatusResponse.Content.ReadFromJsonAsync<AssurArrEffectivenessVerificationResponse>();
+        Assert.NotNull(updatedEffectiveness);
+        Assert.Equal("effective", updatedEffectiveness!.Status);
+
+        var capaAfterEffectivenessResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}");
+        capaAfterEffectivenessResponse.EnsureSuccessStatusCode();
+        var capaAfterEffectiveness = await capaAfterEffectivenessResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
+        Assert.NotNull(capaAfterEffectiveness);
+        Assert.Equal("closed", capaAfterEffectiveness!.Status);
+        Assert.Contains(capaAfterEffectiveness.EffectivenessVerificationRefs, reference => reference == effectiveness.Number);
     }
 
     [Fact]

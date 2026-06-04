@@ -12,6 +12,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrCapaAction> CapaActions => Set<AssurArrCapaAction>();
     public DbSet<AssurArrCapaActionBlocker> CapaActionBlockers => Set<AssurArrCapaActionBlocker>();
     public DbSet<AssurArrVerificationPlan> VerificationPlans => Set<AssurArrVerificationPlan>();
+    public DbSet<AssurArrEffectivenessVerification> EffectivenessVerifications => Set<AssurArrEffectivenessVerification>();
     public DbSet<AssurArrQualityAudit> QualityAudits => Set<AssurArrQualityAudit>();
     public DbSet<AssurArrQualityAuditChecklist> QualityAuditChecklists => Set<AssurArrQualityAuditChecklist>();
     public DbSet<AssurArrQualityAuditChecklistItem> QualityAuditChecklistItems => Set<AssurArrQualityAuditChecklistItem>();
@@ -38,6 +39,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureCapaAction(modelBuilder);
         ConfigureCapaActionBlocker(modelBuilder);
         ConfigureVerificationPlan(modelBuilder);
+        ConfigureEffectivenessVerification(modelBuilder);
         ConfigureRecord<AssurArrQualityAudit>(modelBuilder, "assurarr_quality_audits");
         ConfigureChecklist(modelBuilder);
         ConfigureChecklistItem(modelBuilder);
@@ -298,6 +300,34 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.ResponsiblePersonId);
             entity.Property(x => x.PlannedVerificationAt);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.CapaId });
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureEffectivenessVerification(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrEffectivenessVerification>(entity =>
+        {
+            entity.ToTable("assurarr_effectiveness_verifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CapaId).IsRequired();
+            entity.Property(x => x.VerificationPlanId);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.PerformedByPersonId);
+            entity.Property(x => x.PerformedAt);
+            entity.Property(x => x.ResultSummary).HasMaxLength(4000);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.MetricResults).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RecurrenceFound).IsRequired();
+            entity.Property(x => x.FollowUpRequired).IsRequired();
+            entity.Property(x => x.ReopenedCapaRef).HasMaxLength(256);
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.Property(x => x.UpdatedAt).IsRequired();
             entity.HasIndex(x => x.TenantId);

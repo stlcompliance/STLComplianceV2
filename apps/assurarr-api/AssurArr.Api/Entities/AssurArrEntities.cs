@@ -98,6 +98,7 @@ public sealed class AssurArrCapa
     public DateTimeOffset? DueAt { get; set; }
     public string[] RelatedNonconformanceRefs { get; set; } = [];
     public string[] RelatedAuditFindingRefs { get; set; } = [];
+    public string[] EffectivenessVerificationRefs { get; set; } = [];
 }
 
 public sealed class AssurArrCapaAction
@@ -162,6 +163,26 @@ public sealed class AssurArrVerificationPlan
     public Guid? ResponsiblePersonId { get; set; }
     public DateTimeOffset? PlannedVerificationAt { get; set; }
     public string Status { get; set; } = "draft";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed class AssurArrEffectivenessVerification
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid CapaId { get; set; }
+    public Guid? VerificationPlanId { get; set; }
+    public string Status { get; set; } = "scheduled";
+    public Guid? PerformedByPersonId { get; set; }
+    public DateTimeOffset? PerformedAt { get; set; }
+    public string? ResultSummary { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public string[] MetricResults { get; set; } = [];
+    public bool RecurrenceFound { get; set; }
+    public bool FollowUpRequired { get; set; }
+    public string? ReopenedCapaRef { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

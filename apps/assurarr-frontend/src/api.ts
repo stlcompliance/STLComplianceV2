@@ -94,6 +94,7 @@ export type Capa = ListItem & {
   dueAt: string | null
   relatedNonconformanceRefs: string[]
   relatedAuditFindingRefs: string[]
+  effectivenessVerificationRefs: string[]
 }
 
 export type CapaAction = {
@@ -152,6 +153,24 @@ export type VerificationPlan = {
   responsiblePersonId: string | null
   plannedVerificationAt: string | null
   status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type EffectivenessVerification = {
+  id: string
+  number: string
+  capaId: string
+  verificationPlanId: string | null
+  status: string
+  performedByPersonId: string | null
+  performedAt: string | null
+  resultSummary: string | null
+  evidenceRecordRefs: string[]
+  metricResults: string[]
+  recurrenceFound: boolean
+  followUpRequired: boolean
+  reopenedCapaRef: string | null
   createdAt: string
   updatedAt: string
 }
@@ -521,12 +540,13 @@ export const assurarrApi = {
     sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/reject`, 'POST', { status: 'rejected', closureSummary }),
   listCapas: () => getJson<Capa[]>('/api/v1/capas'),
   getCapa: (id: string) => getJson<Capa>(`/api/v1/capas/${id}`),
-  createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[] }) =>
+  createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[]; effectivenessVerificationRefs?: string[] }) =>
     sendJson<Capa>('/api/v1/capas', 'POST', {
       ...body,
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
       relatedNonconformanceRefs: body.relatedNonconformanceRefs ?? [],
       relatedAuditFindingRefs: body.relatedAuditFindingRefs ?? [],
+      effectivenessVerificationRefs: body.effectivenessVerificationRefs ?? [],
     }),
   updateCapaStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Capa>(`/api/v1/capas/${id}/status`, 'PATCH', { status, closureSummary }),
@@ -563,6 +583,46 @@ export const assurarrApi = {
     }),
   updateVerificationPlanStatus: (capaId: string, verificationPlanId: string, status: string, closureSummary?: string) =>
     sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans/${verificationPlanId}/status`, 'PATCH', { status, closureSummary }),
+  listEffectivenessVerifications: (capaId: string) => getJson<EffectivenessVerification[]>(`/api/v1/capas/${capaId}/effectiveness-verifications`),
+  createEffectivenessVerification: (
+    capaId: string,
+    body: {
+      verificationPlanId?: string
+      status: string
+      performedByPersonId?: string
+      performedAt?: string
+      resultSummary?: string
+      evidenceRecordRefs?: string[]
+      metricResults?: string[]
+      recurrenceFound?: boolean
+      followUpRequired?: boolean
+      reopenedCapaRef?: string
+    },
+  ) =>
+    sendJson<EffectivenessVerification>(`/api/v1/capas/${capaId}/effectiveness-verifications`, 'POST', {
+      ...body,
+      verificationPlanId: body.verificationPlanId ?? null,
+      performedByPersonId: body.performedByPersonId ?? null,
+      performedAt: body.performedAt ? new Date(body.performedAt).toISOString() : null,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+      metricResults: body.metricResults ?? [],
+      recurrenceFound: body.recurrenceFound ?? false,
+      followUpRequired: body.followUpRequired ?? false,
+      reopenedCapaRef: body.reopenedCapaRef ?? null,
+    }),
+  updateEffectivenessVerificationStatus: (
+    capaId: string,
+    verificationId: string,
+    status: string,
+    body?: { resultSummary?: string; recurrenceFound?: boolean; followUpRequired?: boolean; reopenedCapaRef?: string },
+  ) =>
+    sendJson<EffectivenessVerification>(`/api/v1/capas/${capaId}/effectiveness-verifications/${verificationId}/status`, 'PATCH', {
+      status,
+      resultSummary: body?.resultSummary ?? null,
+      recurrenceFound: body?.recurrenceFound ?? null,
+      followUpRequired: body?.followUpRequired ?? null,
+      reopenedCapaRef: body?.reopenedCapaRef ?? null,
+    }),
   listAudits: () => getJson<Audit[]>('/api/v1/audits'),
   getAudit: (id: string) => getJson<Audit>(`/api/v1/audits/${id}`),
   createAudit: (body: CreateBase & { auditType: string; auditScope?: string; auditorPersonIds?: string[]; leadAuditorPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; supplierRef?: string; customerRef?: string; plannedStartAt?: string; plannedEndAt?: string; checklistRefs?: string[] }) =>
