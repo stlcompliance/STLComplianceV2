@@ -49,6 +49,29 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> CapaActionTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["open"] = ["assigned", "in_progress", "blocked", "completed", "rejected", "canceled"],
+        ["assigned"] = ["in_progress", "blocked", "completed", "rejected", "canceled"],
+        ["in_progress"] = ["blocked", "completed", "verified", "rejected", "canceled"],
+        ["blocked"] = ["assigned", "in_progress", "completed", "rejected", "canceled"],
+        ["completed"] = ["verified", "rejected", "canceled"],
+        ["verified"] = [],
+        ["rejected"] = [],
+        ["canceled"] = [],
+    };
+
+    private static readonly IReadOnlyDictionary<string, string[]> VerificationPlanTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["draft"] = ["approved", "canceled"],
+        ["approved"] = ["active", "canceled"],
+        ["active"] = ["completed", "canceled"],
+        ["completed"] = [],
+        ["canceled"] = [],
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> AuditTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -214,7 +237,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             PlacedAt = now,
         });
 
-        db.Capas.Add(new AssurArrCapa
+        var capa = new AssurArrCapa
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -235,6 +258,56 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             RootCauseSummary = "Release steps were not visible in the receiving workflow.",
             DueAt = now.AddDays(14),
             RelatedNonconformanceRefs = ["NCR-000001"],
+        };
+        db.Capas.Add(capa);
+
+        db.CapaActions.Add(new AssurArrCapaAction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "ACT-000001",
+            CapaId = capa.Id,
+            Title = "Update incoming inspection release work instruction",
+            Description = "Add a visible release checklist to the receiving workflow.",
+            Status = "assigned",
+            ActionType = "update_work_instruction",
+            AssignedPersonId = null,
+            AssignedTeamRef = "loadarr:receiving",
+            SourceProductActionRef = "loadarr:action:update-work-instruction-1",
+            TargetProduct = "loadarr",
+            TargetObjectRef = "loadarr:workflow:receiving-release",
+            DueAt = now.AddDays(7),
+            StartedAt = null,
+            CompletedAt = null,
+            CompletedByPersonId = null,
+            VerificationRequired = true,
+            VerifiedAt = null,
+            VerifiedByPersonId = null,
+            EvidenceRecordRefs = ["recordarr:doc:capa-plan-1"],
+            BlockerRefs = [],
+            Notes = "Waiting on workflow update.",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.VerificationPlans.Add(new AssurArrVerificationPlan
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "VER-000001",
+            CapaId = capa.Id,
+            Title = "Verify receiving release instruction adoption",
+            Description = "Review a sample of receiving releases to confirm the new instruction is used.",
+            VerificationType = "audit",
+            SuccessCriteria = "No missing release signatures in the next five sampled receipts.",
+            SampleSize = 5,
+            ObservationPeriodDays = 14,
+            RequiredEvidenceTypes = ["record", "photo"],
+            ResponsiblePersonId = null,
+            PlannedVerificationAt = now.AddDays(14),
+            Status = "draft",
+            CreatedAt = now,
+            UpdatedAt = now,
         });
 
         var audit = new AssurArrQualityAudit
@@ -794,6 +867,141 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("capa", entity.Id, "assurarr.capa.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCapaResponse(entity);
+    }
+
+    public async Task<List<AssurArrCapaActionResponse>> ListCapaActionsAsync(Guid capaId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.CapaActions
+            .AsNoTracking()
+            .Where(x => x.CapaId == capaId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToCapaActionResponse).ToList();
+    }
+
+    public async Task<AssurArrCapaActionResponse> CreateCapaActionAsync(Guid capaId, CreateAssurArrCapaActionRequest request, CancellationToken cancellationToken = default)
+    {
+        var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA '{capaId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrCapaAction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("ACT", db.CapaActions, cancellationToken),
+            CapaId = capa.Id,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Status = "open",
+            ActionType = Normalize(request.ActionType, "other"),
+            AssignedPersonId = request.AssignedPersonId,
+            AssignedTeamRef = NormalizeNullable(request.AssignedTeamRef),
+            SourceProductActionRef = NormalizeNullable(request.SourceProductActionRef),
+            TargetProduct = Normalize(request.TargetProduct, "manual"),
+            TargetObjectRef = NormalizeNullable(request.TargetObjectRef),
+            DueAt = request.DueAt,
+            StartedAt = null,
+            CompletedAt = null,
+            CompletedByPersonId = null,
+            VerificationRequired = request.VerificationRequired,
+            VerifiedAt = null,
+            VerifiedByPersonId = null,
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            BlockerRefs = request.BlockerRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.CapaActions.Add(entity);
+        capa.UpdatedAt = now;
+        await AddTimelineAsync("capa", capa.Id, "assurarr.capa.action_assigned", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCapaActionResponse(entity);
+    }
+
+    public async Task<AssurArrCapaActionResponse> UpdateCapaActionStatusAsync(Guid capaId, Guid actionId, UpdateAssurArrCapaActionStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.CapaActions.FirstOrDefaultAsync(x => x.Id == actionId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA action '{actionId}' was not found.");
+        EnsureTransition(entity.Status, request.Status, CapaActionTransitions, "CAPA action");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "in_progress", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.StartedAt ??= entity.UpdatedAt;
+        }
+        if (string.Equals(entity.Status, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.CompletedAt = request.CompletedAt ?? entity.UpdatedAt;
+            entity.CompletedByPersonId = request.CompletedByPersonId ?? entity.CompletedByPersonId;
+        }
+        if (string.Equals(entity.Status, "verified", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.VerifiedAt = request.VerifiedAt ?? entity.UpdatedAt;
+            entity.VerifiedByPersonId = request.VerifiedByPersonId ?? entity.VerifiedByPersonId;
+        }
+        await AddTimelineAsync("capa_action", entity.Id, $"assurarr.capa.action.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCapaActionResponse(entity);
+    }
+
+    public async Task<List<AssurArrVerificationPlanResponse>> ListVerificationPlansAsync(Guid capaId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.VerificationPlans
+            .AsNoTracking()
+            .Where(x => x.CapaId == capaId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToVerificationPlanResponse).ToList();
+    }
+
+    public async Task<AssurArrVerificationPlanResponse> CreateVerificationPlanAsync(Guid capaId, CreateAssurArrVerificationPlanRequest request, CancellationToken cancellationToken = default)
+    {
+        var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA '{capaId}' was not found.");
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrVerificationPlan
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("VER", db.VerificationPlans, cancellationToken),
+            CapaId = capa.Id,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            VerificationType = Normalize(request.VerificationType, "observation"),
+            SuccessCriteria = request.SuccessCriteria.Trim(),
+            SampleSize = request.SampleSize,
+            ObservationPeriodDays = request.ObservationPeriodDays,
+            RequiredEvidenceTypes = request.RequiredEvidenceTypes ?? [],
+            ResponsiblePersonId = request.ResponsiblePersonId,
+            PlannedVerificationAt = request.PlannedVerificationAt,
+            Status = "draft",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.VerificationPlans.Add(entity);
+        capa.UpdatedAt = now;
+        await AddTimelineAsync("capa", capa.Id, "assurarr.capa.verification_started", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToVerificationPlanResponse(entity);
+    }
+
+    public async Task<AssurArrVerificationPlanResponse> UpdateVerificationPlanStatusAsync(Guid capaId, Guid verificationPlanId, UpdateAssurArrVerificationPlanStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.VerificationPlans.FirstOrDefaultAsync(x => x.Id == verificationPlanId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"Verification plan '{verificationPlanId}' was not found.");
+        EnsureTransition(entity.Status, request.Status, VerificationPlanTransitions, "verification plan");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await AddTimelineAsync("capa_verification", entity.Id, $"assurarr.capa.verification.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToVerificationPlanResponse(entity);
     }
 
     public async Task<List<AssurArrQualityAuditResponse>> ListAuditsAsync(CancellationToken cancellationToken = default)
@@ -1732,6 +1940,51 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.DueAt,
             entity.RelatedNonconformanceRefs,
             entity.RelatedAuditFindingRefs);
+
+    private static AssurArrCapaActionResponse ToCapaActionResponse(AssurArrCapaAction entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.CapaId,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.ActionType,
+            entity.AssignedPersonId,
+            entity.AssignedTeamRef,
+            entity.SourceProductActionRef,
+            entity.TargetProduct,
+            entity.TargetObjectRef,
+            entity.DueAt,
+            entity.StartedAt,
+            entity.CompletedAt,
+            entity.CompletedByPersonId,
+            entity.VerificationRequired,
+            entity.VerifiedAt,
+            entity.VerifiedByPersonId,
+            entity.EvidenceRecordRefs,
+            entity.BlockerRefs,
+            entity.Notes,
+            entity.CreatedAt,
+            entity.UpdatedAt);
+
+    private static AssurArrVerificationPlanResponse ToVerificationPlanResponse(AssurArrVerificationPlan entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.CapaId,
+            entity.Title,
+            entity.Description,
+            entity.VerificationType,
+            entity.SuccessCriteria,
+            entity.SampleSize,
+            entity.ObservationPeriodDays,
+            entity.RequiredEvidenceTypes,
+            entity.ResponsiblePersonId,
+            entity.PlannedVerificationAt,
+            entity.Status,
+            entity.CreatedAt,
+            entity.UpdatedAt);
 
     private static AssurArrQualityAuditResponse ToAuditResponse(AssurArrQualityAudit entity) =>
         new(

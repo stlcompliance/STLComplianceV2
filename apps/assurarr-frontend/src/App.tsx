@@ -533,6 +533,111 @@ function HoldPage() {
 
 function CapaPage() {
   const query = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const queryClient = useQueryClient()
+  const [selectedCapaId, setSelectedCapaId] = useState('')
+  const activeCapaId = selectedCapaId || query.data?.[0]?.id || ''
+  const [actionForm, setActionForm] = useState({
+    title: '',
+    description: '',
+    actionType: 'update_work_instruction',
+    assignedPersonId: '',
+    assignedTeamRef: '',
+    sourceProductActionRef: '',
+    targetProduct: 'manual',
+    targetObjectRef: '',
+    dueAt: '',
+    verificationRequired: true,
+    evidenceRecordRefs: '',
+    blockerRefs: '',
+    notes: '',
+  })
+  const [verificationForm, setVerificationForm] = useState({
+    title: '',
+    description: '',
+    verificationType: 'audit',
+    successCriteria: '',
+    sampleSize: '5',
+    observationPeriodDays: '14',
+    requiredEvidenceTypes: '',
+    responsiblePersonId: '',
+    plannedVerificationAt: '',
+  })
+  const actionQuery = useQuery({
+    queryKey: ['assurarr', 'capa-actions', activeCapaId],
+    queryFn: () => assurarrApi.listCapaActions(activeCapaId),
+    enabled: Boolean(activeCapaId),
+    staleTime: 15_000,
+  })
+  const verificationQuery = useQuery({
+    queryKey: ['assurarr', 'verification-plans', activeCapaId],
+    queryFn: () => assurarrApi.listVerificationPlans(activeCapaId),
+    enabled: Boolean(activeCapaId),
+    staleTime: 15_000,
+  })
+  const createActionMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createCapaAction(activeCapaId, {
+        title: actionForm.title,
+        description: actionForm.description,
+        actionType: actionForm.actionType,
+        assignedPersonId: actionForm.assignedPersonId || undefined,
+        assignedTeamRef: actionForm.assignedTeamRef || undefined,
+        sourceProductActionRef: actionForm.sourceProductActionRef || undefined,
+        targetProduct: actionForm.targetProduct,
+        targetObjectRef: actionForm.targetObjectRef || undefined,
+        dueAt: actionForm.dueAt || undefined,
+        verificationRequired: actionForm.verificationRequired,
+        evidenceRecordRefs: joinRefs(actionForm.evidenceRecordRefs),
+        blockerRefs: joinRefs(actionForm.blockerRefs),
+        notes: actionForm.notes || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setActionForm({
+        title: '',
+        description: '',
+        actionType: 'update_work_instruction',
+        assignedPersonId: '',
+        assignedTeamRef: '',
+        sourceProductActionRef: '',
+        targetProduct: 'manual',
+        targetObjectRef: '',
+        dueAt: '',
+        verificationRequired: true,
+        evidenceRecordRefs: '',
+        blockerRefs: '',
+        notes: '',
+      })
+    },
+  })
+  const createVerificationMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createVerificationPlan(activeCapaId, {
+        title: verificationForm.title,
+        description: verificationForm.description,
+        verificationType: verificationForm.verificationType,
+        successCriteria: verificationForm.successCriteria,
+        sampleSize: verificationForm.sampleSize ? Number.parseInt(verificationForm.sampleSize, 10) : undefined,
+        observationPeriodDays: verificationForm.observationPeriodDays ? Number.parseInt(verificationForm.observationPeriodDays, 10) : undefined,
+        requiredEvidenceTypes: joinRefs(verificationForm.requiredEvidenceTypes),
+        responsiblePersonId: verificationForm.responsiblePersonId || undefined,
+        plannedVerificationAt: verificationForm.plannedVerificationAt || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setVerificationForm({
+        title: '',
+        description: '',
+        verificationType: 'audit',
+        successCriteria: '',
+        sampleSize: '5',
+        observationPeriodDays: '14',
+        requiredEvidenceTypes: '',
+        responsiblePersonId: '',
+        plannedVerificationAt: '',
+      })
+    },
+  })
   return (
     <div className="assurarr-page">
       <PageHeader title="CAPA" description="Track root cause, action plans, implementation, verification, and closeout." />
@@ -549,6 +654,169 @@ function CapaPage() {
           })
         }
       />
+      <div className="assurarr-grid cols-2">
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div className="flex items-center gap-2">
+              <ListTodo className="h-4 w-4 text-cyan-300" />
+              <h3 className="text-base font-semibold text-slate-50">CAPA action plan</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="CAPA">
+                <select className="assurarr-select" value={activeCapaId} onChange={(event) => setSelectedCapaId(event.target.value)}>
+                  {query.data?.map((capa) => (
+                    <option key={capa.id} value={capa.id}>
+                      {capa.number} - {capa.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Action type">
+                <select className="assurarr-select" value={actionForm.actionType} onChange={(event) => setActionForm({ ...actionForm, actionType: event.target.value })}>
+                  <option value="update_procedure">Update procedure</option>
+                  <option value="retrain_personnel">Retrain personnel</option>
+                  <option value="repair_asset">Repair asset</option>
+                  <option value="change_supplier">Change supplier</option>
+                  <option value="update_inspection">Update inspection</option>
+                  <option value="update_pm">Update PM</option>
+                  <option value="update_work_instruction">Update work instruction</option>
+                  <option value="update_document">Update document</option>
+                  <option value="quarantine_inventory">Quarantine inventory</option>
+                  <option value="rework_inventory">Rework inventory</option>
+                  <option value="customer_notification">Customer notification</option>
+                  <option value="supplier_corrective_action">Supplier corrective action</option>
+                  <option value="system_change">System change</option>
+                  <option value="process_change">Process change</option>
+                  <option value="audit_followup">Audit followup</option>
+                  <option value="other">Other</option>
+                </select>
+              </Field>
+              <Field label="Target product">
+                <select className="assurarr-select" value={actionForm.targetProduct} onChange={(event) => setActionForm({ ...actionForm, targetProduct: event.target.value })}>
+                  <option value="manual">Manual</option>
+                  <option value="staffarr">StaffArr</option>
+                  <option value="trainarr">TrainArr</option>
+                  <option value="maintainarr">MaintainArr</option>
+                  <option value="loadarr">LoadArr</option>
+                  <option value="supplyarr">SupplyArr</option>
+                  <option value="routarr">RoutArr</option>
+                  <option value="customarr">CustomArr</option>
+                  <option value="ordarr">OrdArr</option>
+                  <option value="recordarr">RecordArr</option>
+                  <option value="compliancecore">Compliance Core</option>
+                </select>
+              </Field>
+              <Field label="Due at">
+                <input className="assurarr-input" type="datetime-local" value={actionForm.dueAt} onChange={(event) => setActionForm({ ...actionForm, dueAt: event.target.value })} />
+              </Field>
+              <Field label="Title" wide>
+                <input className="assurarr-input" value={actionForm.title} onChange={(event) => setActionForm({ ...actionForm, title: event.target.value })} />
+              </Field>
+              <Field label="Description" wide>
+                <textarea className="assurarr-textarea" value={actionForm.description} onChange={(event) => setActionForm({ ...actionForm, description: event.target.value })} />
+              </Field>
+              <Field label="Target object ref">
+                <input className="assurarr-input" value={actionForm.targetObjectRef} onChange={(event) => setActionForm({ ...actionForm, targetObjectRef: event.target.value })} />
+              </Field>
+              <Field label="Assigned team ref">
+                <input className="assurarr-input" value={actionForm.assignedTeamRef} onChange={(event) => setActionForm({ ...actionForm, assignedTeamRef: event.target.value })} />
+              </Field>
+              <Field label="Evidence refs" wide>
+                <textarea className="assurarr-textarea" value={actionForm.evidenceRecordRefs} onChange={(event) => setActionForm({ ...actionForm, evidenceRecordRefs: event.target.value })} />
+              </Field>
+              <Field label="Blocker refs" wide>
+                <textarea className="assurarr-textarea" value={actionForm.blockerRefs} onChange={(event) => setActionForm({ ...actionForm, blockerRefs: event.target.value })} />
+              </Field>
+              <Field label="Notes" wide>
+                <textarea className="assurarr-textarea" value={actionForm.notes} onChange={(event) => setActionForm({ ...actionForm, notes: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createActionMutation.mutate()} disabled={createActionMutation.isPending || !activeCapaId}>
+              {createActionMutation.isPending ? 'Saving...' : 'Create CAPA action'}
+            </button>
+            {actionQuery.data?.length ? (
+              <div className="space-y-3">
+                {actionQuery.data.map((action) => (
+                  <div key={action.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-50">{action.number}</strong>
+                      <span className="assurarr-pill">{action.status}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-300">{action.title}</p>
+                    <p className="mt-1 text-xs text-slate-400">{action.actionType} - {action.targetProduct}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title={activeCapaId ? 'No CAPA actions yet.' : 'Select a CAPA first.'} />
+            )}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-cyan-300" />
+              <h3 className="text-base font-semibold text-slate-50">Verification plan</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Verification type">
+                <select className="assurarr-select" value={verificationForm.verificationType} onChange={(event) => setVerificationForm({ ...verificationForm, verificationType: event.target.value })}>
+                  <option value="observation">Observation</option>
+                  <option value="audit">Audit</option>
+                  <option value="inspection">Inspection</option>
+                  <option value="trend_review">Trend review</option>
+                  <option value="sample_review">Sample review</option>
+                  <option value="customer_confirmation">Customer confirmation</option>
+                  <option value="supplier_confirmation">Supplier confirmation</option>
+                  <option value="document_review">Document review</option>
+                  <option value="training_completion_review">Training completion review</option>
+                </select>
+              </Field>
+              <Field label="Planned at">
+                <input className="assurarr-input" type="datetime-local" value={verificationForm.plannedVerificationAt} onChange={(event) => setVerificationForm({ ...verificationForm, plannedVerificationAt: event.target.value })} />
+              </Field>
+              <Field label="Title" wide>
+                <input className="assurarr-input" value={verificationForm.title} onChange={(event) => setVerificationForm({ ...verificationForm, title: event.target.value })} />
+              </Field>
+              <Field label="Success criteria" wide>
+                <textarea className="assurarr-textarea" value={verificationForm.successCriteria} onChange={(event) => setVerificationForm({ ...verificationForm, successCriteria: event.target.value })} />
+              </Field>
+              <Field label="Description" wide>
+                <textarea className="assurarr-textarea" value={verificationForm.description} onChange={(event) => setVerificationForm({ ...verificationForm, description: event.target.value })} />
+              </Field>
+              <Field label="Sample size">
+                <input className="assurarr-input" value={verificationForm.sampleSize} onChange={(event) => setVerificationForm({ ...verificationForm, sampleSize: event.target.value })} />
+              </Field>
+              <Field label="Observation days">
+                <input className="assurarr-input" value={verificationForm.observationPeriodDays} onChange={(event) => setVerificationForm({ ...verificationForm, observationPeriodDays: event.target.value })} />
+              </Field>
+              <Field label="Required evidence types" wide>
+                <textarea className="assurarr-textarea" value={verificationForm.requiredEvidenceTypes} onChange={(event) => setVerificationForm({ ...verificationForm, requiredEvidenceTypes: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createVerificationMutation.mutate()} disabled={createVerificationMutation.isPending || !activeCapaId}>
+              {createVerificationMutation.isPending ? 'Saving...' : 'Create verification plan'}
+            </button>
+            {verificationQuery.data?.length ? (
+              <div className="space-y-3">
+                {verificationQuery.data.map((plan) => (
+                  <div key={plan.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-50">{plan.number}</strong>
+                      <span className="assurarr-pill">{plan.status}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-300">{plan.title}</p>
+                    <p className="mt-1 text-xs text-slate-400">{plan.verificationType}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title={activeCapaId ? 'No verification plans yet.' : 'Select a CAPA first.'} />
+            )}
+          </div>
+        </div>
+      </div>
       {query.data ? (
         <EntityTable
           items={query.data}

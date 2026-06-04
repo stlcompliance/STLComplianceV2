@@ -132,6 +132,87 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
+    public async Task Can_create_capa_actions_and_verification_plans()
+    {
+        var capaTitle = $"Test CAPA {Guid.NewGuid():N}";
+        var capaResponse = await _client.PostAsJsonAsync(
+            "/api/v1/capas",
+            new CreateAssurArrCapaRequest(
+                capaTitle,
+                "Automated coverage for CAPA actions.",
+                "high",
+                "corrective_and_preventive",
+                "manual",
+                "assurarr",
+                "workflow:capa:test",
+                ["loadarr:inventory:test"],
+                null,
+                null,
+                "Awaiting analysis",
+                DateTimeOffset.UtcNow.AddDays(7),
+                ["NCR-000001"],
+                ["FIND-000001"]));
+
+        Assert.Equal(HttpStatusCode.OK, capaResponse.StatusCode);
+        var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
+        Assert.NotNull(capa);
+
+        var actionTitle = $"Test CAPA action {Guid.NewGuid():N}";
+        var actionResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/capas/{capa!.Id}/actions",
+            new CreateAssurArrCapaActionRequest(
+                actionTitle,
+                "Automated coverage for CAPA action records.",
+                "update_work_instruction",
+                null,
+                "loadarr:receiving",
+                "loadarr:action:test",
+                "loadarr",
+                "loadarr:workflow:test",
+                DateTimeOffset.UtcNow.AddDays(3),
+                true,
+                ["recordarr:doc:test"],
+                ["blocker:test"],
+                "Action notes"));
+
+        Assert.Equal(HttpStatusCode.OK, actionResponse.StatusCode);
+        var action = await actionResponse.Content.ReadFromJsonAsync<AssurArrCapaActionResponse>();
+        Assert.NotNull(action);
+        Assert.Equal(actionTitle, action!.Title);
+
+        var verificationTitle = $"Test verification plan {Guid.NewGuid():N}";
+        var verificationResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/verification-plans",
+            new CreateAssurArrVerificationPlanRequest(
+                verificationTitle,
+                "Automated coverage for verification plans.",
+                "audit",
+                "No missing release signatures in sampled receipts.",
+                5,
+                14,
+                ["record", "photo"],
+                null,
+                DateTimeOffset.UtcNow.AddDays(14)));
+
+        Assert.Equal(HttpStatusCode.OK, verificationResponse.StatusCode);
+        var verification = await verificationResponse.Content.ReadFromJsonAsync<AssurArrVerificationPlanResponse>();
+        Assert.NotNull(verification);
+        Assert.Equal(verificationTitle, verification!.Title);
+
+        var actionListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions");
+        actionListResponse.EnsureSuccessStatusCode();
+        var actions = await actionListResponse.Content.ReadFromJsonAsync<List<AssurArrCapaActionResponse>>();
+        Assert.NotNull(actions);
+        Assert.Contains(actions!, item => item.Title == actionTitle);
+
+        var verificationListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/verification-plans");
+        verificationListResponse.EnsureSuccessStatusCode();
+        var verifications = await verificationListResponse.Content.ReadFromJsonAsync<List<AssurArrVerificationPlanResponse>>();
+        Assert.NotNull(verifications);
+        Assert.Contains(verifications!, item => item.Title == verificationTitle);
+    }
+
+    [Fact]
     public async Task Can_create_audit_checklists_and_items()
     {
         var auditTitle = $"Test audit {Guid.NewGuid():N}";

@@ -169,6 +169,87 @@ public sealed record CreateAssurArrCapaRequest(
     string[] RelatedNonconformanceRefs,
     string[] RelatedAuditFindingRefs);
 
+public sealed record AssurArrCapaActionResponse(
+    Guid Id,
+    string Number,
+    Guid CapaId,
+    string Title,
+    string Description,
+    string Status,
+    string ActionType,
+    Guid? AssignedPersonId,
+    string? AssignedTeamRef,
+    string? SourceProductActionRef,
+    string TargetProduct,
+    string? TargetObjectRef,
+    DateTimeOffset? DueAt,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt,
+    Guid? CompletedByPersonId,
+    bool VerificationRequired,
+    DateTimeOffset? VerifiedAt,
+    Guid? VerifiedByPersonId,
+    IReadOnlyList<string> EvidenceRecordRefs,
+    IReadOnlyList<string> BlockerRefs,
+    string? Notes,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrCapaActionRequest(
+    string Title,
+    string Description,
+    string ActionType,
+    Guid? AssignedPersonId,
+    string? AssignedTeamRef,
+    string? SourceProductActionRef,
+    string TargetProduct,
+    string? TargetObjectRef,
+    DateTimeOffset? DueAt,
+    bool VerificationRequired,
+    string[] EvidenceRecordRefs,
+    string[] BlockerRefs,
+    string? Notes);
+
+public sealed record UpdateAssurArrCapaActionStatusRequest(
+    string Status,
+    Guid? CompletedByPersonId,
+    DateTimeOffset? CompletedAt,
+    Guid? VerifiedByPersonId,
+    DateTimeOffset? VerifiedAt,
+    string? ClosureSummary);
+
+public sealed record AssurArrVerificationPlanResponse(
+    Guid Id,
+    string Number,
+    Guid CapaId,
+    string Title,
+    string Description,
+    string VerificationType,
+    string SuccessCriteria,
+    int? SampleSize,
+    int? ObservationPeriodDays,
+    IReadOnlyList<string> RequiredEvidenceTypes,
+    Guid? ResponsiblePersonId,
+    DateTimeOffset? PlannedVerificationAt,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrVerificationPlanRequest(
+    string Title,
+    string Description,
+    string VerificationType,
+    string SuccessCriteria,
+    int? SampleSize,
+    int? ObservationPeriodDays,
+    string[] RequiredEvidenceTypes,
+    Guid? ResponsiblePersonId,
+    DateTimeOffset? PlannedVerificationAt);
+
+public sealed record UpdateAssurArrVerificationPlanStatusRequest(
+    string Status,
+    string? ClosureSummary = null);
+
 public sealed record AssurArrQualityAuditResponse(
     Guid Id,
     string Number,

@@ -90,6 +90,51 @@ export type Capa = ListItem & {
   relatedAuditFindingRefs: string[]
 }
 
+export type CapaAction = {
+  id: string
+  number: string
+  capaId: string
+  title: string
+  description: string
+  status: string
+  actionType: string
+  assignedPersonId: string | null
+  assignedTeamRef: string | null
+  sourceProductActionRef: string | null
+  targetProduct: string
+  targetObjectRef: string | null
+  dueAt: string | null
+  startedAt: string | null
+  completedAt: string | null
+  completedByPersonId: string | null
+  verificationRequired: boolean
+  verifiedAt: string | null
+  verifiedByPersonId: string | null
+  evidenceRecordRefs: string[]
+  blockerRefs: string[]
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type VerificationPlan = {
+  id: string
+  number: string
+  capaId: string
+  title: string
+  description: string
+  verificationType: string
+  successCriteria: string
+  sampleSize: number | null
+  observationPeriodDays: number | null
+  requiredEvidenceTypes: string[]
+  responsiblePersonId: string | null
+  plannedVerificationAt: string | null
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type Audit = ListItem & {
   description: string
   auditType: string
@@ -364,6 +409,30 @@ export const assurarrApi = {
     }),
   updateCapaStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Capa>(`/api/v1/capas/${id}/status`, 'PATCH', { status, closureSummary }),
+  listCapaActions: (capaId: string) => getJson<CapaAction[]>(`/api/v1/capas/${capaId}/actions`),
+  createCapaAction: (capaId: string, body: { title: string; description: string; actionType: string; assignedPersonId?: string; assignedTeamRef?: string; sourceProductActionRef?: string; targetProduct: string; targetObjectRef?: string; dueAt?: string; verificationRequired?: boolean; evidenceRecordRefs?: string[]; blockerRefs?: string[]; notes?: string }) =>
+    sendJson<CapaAction>(`/api/v1/capas/${capaId}/actions`, 'POST', {
+      ...body,
+      verificationRequired: body.verificationRequired ?? true,
+      dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+      blockerRefs: body.blockerRefs ?? [],
+    }),
+  updateCapaActionStatus: (capaId: string, actionId: string, body: { status: string; completedByPersonId?: string; completedAt?: string; verifiedByPersonId?: string; verifiedAt?: string; closureSummary?: string }) =>
+    sendJson<CapaAction>(`/api/v1/capas/${capaId}/actions/${actionId}/status`, 'PATCH', {
+      ...body,
+      completedAt: body.completedAt ? new Date(body.completedAt).toISOString() : null,
+      verifiedAt: body.verifiedAt ? new Date(body.verifiedAt).toISOString() : null,
+    }),
+  listVerificationPlans: (capaId: string) => getJson<VerificationPlan[]>(`/api/v1/capas/${capaId}/verification-plans`),
+  createVerificationPlan: (capaId: string, body: { title: string; description: string; verificationType: string; successCriteria: string; sampleSize?: number; observationPeriodDays?: number; requiredEvidenceTypes?: string[]; responsiblePersonId?: string; plannedVerificationAt?: string }) =>
+    sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans`, 'POST', {
+      ...body,
+      requiredEvidenceTypes: body.requiredEvidenceTypes ?? [],
+      plannedVerificationAt: body.plannedVerificationAt ? new Date(body.plannedVerificationAt).toISOString() : null,
+    }),
+  updateVerificationPlanStatus: (capaId: string, verificationPlanId: string, status: string, closureSummary?: string) =>
+    sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans/${verificationPlanId}/status`, 'PATCH', { status, closureSummary }),
   listAudits: () => getJson<Audit[]>('/api/v1/audits'),
   createAudit: (body: CreateBase & { auditType: string; auditScope?: string; auditorPersonIds?: string[]; leadAuditorPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; supplierRef?: string; customerRef?: string; plannedStartAt?: string; plannedEndAt?: string; checklistRefs?: string[] }) =>
     sendJson<Audit>('/api/v1/audits', 'POST', {

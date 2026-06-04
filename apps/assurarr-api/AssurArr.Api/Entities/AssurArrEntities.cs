@@ -94,6 +94,55 @@ public sealed class AssurArrCapa
     public string[] RelatedAuditFindingRefs { get; set; } = [];
 }
 
+public sealed class AssurArrCapaAction
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid CapaId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = "open";
+    public string ActionType { get; set; } = "other";
+    public Guid? AssignedPersonId { get; set; }
+    public string? AssignedTeamRef { get; set; }
+    public string? SourceProductActionRef { get; set; }
+    public string TargetProduct { get; set; } = "manual";
+    public string? TargetObjectRef { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public Guid? CompletedByPersonId { get; set; }
+    public bool VerificationRequired { get; set; }
+    public DateTimeOffset? VerifiedAt { get; set; }
+    public Guid? VerifiedByPersonId { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public string[] BlockerRefs { get; set; } = [];
+    public string? Notes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed class AssurArrVerificationPlan
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid CapaId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string VerificationType { get; set; } = "observation";
+    public string SuccessCriteria { get; set; } = string.Empty;
+    public int? SampleSize { get; set; }
+    public int? ObservationPeriodDays { get; set; }
+    public string[] RequiredEvidenceTypes { get; set; } = [];
+    public Guid? ResponsiblePersonId { get; set; }
+    public DateTimeOffset? PlannedVerificationAt { get; set; }
+    public string Status { get; set; } = "draft";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
 public sealed class AssurArrQualityAudit
 {
     public Guid Id { get; set; }

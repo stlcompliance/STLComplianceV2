@@ -9,6 +9,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrNonconformance> Nonconformances => Set<AssurArrNonconformance>();
     public DbSet<AssurArrQualityHold> QualityHolds => Set<AssurArrQualityHold>();
     public DbSet<AssurArrCapa> Capas => Set<AssurArrCapa>();
+    public DbSet<AssurArrCapaAction> CapaActions => Set<AssurArrCapaAction>();
+    public DbSet<AssurArrVerificationPlan> VerificationPlans => Set<AssurArrVerificationPlan>();
     public DbSet<AssurArrQualityAudit> QualityAudits => Set<AssurArrQualityAudit>();
     public DbSet<AssurArrQualityAuditChecklist> QualityAuditChecklists => Set<AssurArrQualityAuditChecklist>();
     public DbSet<AssurArrQualityAuditChecklistItem> QualityAuditChecklistItems => Set<AssurArrQualityAuditChecklistItem>();
@@ -30,6 +32,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRecord<AssurArrNonconformance>(modelBuilder, "assurarr_nonconformances");
         ConfigureRecord<AssurArrQualityHold>(modelBuilder, "assurarr_quality_holds");
         ConfigureRecord<AssurArrCapa>(modelBuilder, "assurarr_capas");
+        ConfigureCapaAction(modelBuilder);
+        ConfigureVerificationPlan(modelBuilder);
         ConfigureRecord<AssurArrQualityAudit>(modelBuilder, "assurarr_quality_audits");
         ConfigureChecklist(modelBuilder);
         ConfigureChecklistItem(modelBuilder);
@@ -117,6 +121,71 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.Notes).HasMaxLength(4000);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureCapaAction(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrCapaAction>(entity =>
+        {
+            entity.ToTable("assurarr_capa_actions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CapaId).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ActionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AssignedPersonId);
+            entity.Property(x => x.AssignedTeamRef).HasMaxLength(256);
+            entity.Property(x => x.SourceProductActionRef).HasMaxLength(256);
+            entity.Property(x => x.TargetProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetObjectRef).HasMaxLength(256);
+            entity.Property(x => x.DueAt);
+            entity.Property(x => x.StartedAt);
+            entity.Property(x => x.CompletedAt);
+            entity.Property(x => x.CompletedByPersonId);
+            entity.Property(x => x.VerificationRequired).IsRequired();
+            entity.Property(x => x.VerifiedAt);
+            entity.Property(x => x.VerifiedByPersonId);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.BlockerRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(4000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.CapaId });
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureVerificationPlan(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrVerificationPlan>(entity =>
+        {
+            entity.ToTable("assurarr_verification_plans");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CapaId).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.VerificationType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SuccessCriteria).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.SampleSize);
+            entity.Property(x => x.ObservationPeriodDays);
+            entity.Property(x => x.RequiredEvidenceTypes).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ResponsiblePersonId);
+            entity.Property(x => x.PlannedVerificationAt);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.CapaId });
             entity.HasIndex(x => new { x.TenantId, x.Status });
         });
     }
