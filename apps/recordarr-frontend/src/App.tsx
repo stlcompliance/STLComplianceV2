@@ -45,6 +45,7 @@ import {
   createRedaction,
   createLegalHold,
   createPackage,
+  archivePackage,
   createRecord,
   createScan,
   createUploadSession,
@@ -1732,6 +1733,12 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const archiveMutation = useMutation({
+    mutationFn: () => archivePackage(accessToken, selectedPackageId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const downloadMutation = useMutation({
     mutationFn: () => downloadPackage(accessToken, selectedPackageId),
     onSuccess: async (content) => {
@@ -1769,6 +1776,9 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
             <button type="button" className="recordarr-button secondary" onClick={() => lockMutation.mutate()} disabled={lockMutation.isPending || !selectedPackageId}>
               {lockMutation.isPending ? 'Locking...' : 'Lock selected package'}
             </button>
+            <button type="button" className="recordarr-button secondary" onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending || !selectedPackageId}>
+              {archiveMutation.isPending ? 'Archiving...' : 'Archive selected package'}
+            </button>
             <button type="button" className="recordarr-button secondary" onClick={() => downloadMutation.mutate()} disabled={downloadMutation.isPending || !selectedPackageId}>
               {downloadMutation.isPending ? 'Preparing...' : 'Download package'}
             </button>
@@ -1796,6 +1806,7 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
                   <span className="recordarr-pill text-[0.7rem]">{pkg.status}</span>
                 </div>
                 <p className="mt-1 text-sm text-slate-300">{pkg.title}</p>
+                <p className="mt-1 text-xs text-slate-400">Records: {pkg.recordRefs.length} · Source objects: {pkg.sourceObjectRefs.length}</p>
               </button>
             ))}
             {!packagesQuery.data?.length && !packagesQuery.isLoading ? <EmptyState title="No packages yet." /> : null}

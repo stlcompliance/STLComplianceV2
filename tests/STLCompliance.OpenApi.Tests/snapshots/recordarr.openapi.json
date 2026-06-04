@@ -1284,6 +1284,29 @@
         }
       }
     },
+    "/api/integrations/record-packages/{packageId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/record-packages/{packageId}/download": {
       "get": {
         "tags": [
@@ -3012,6 +3035,29 @@
         }
       }
     },
+    "/api/v1/integrations/record-packages/{packageId}/archive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ArchiveRecordArrIntegrationPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/record-packages/{packageId}/download": {
       "get": {
         "tags": [
@@ -4495,6 +4541,29 @@
           "Workspace"
         ],
         "operationId": "GetRecordArrPackage",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/record-packages/{packageId}/archive": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ArchiveRecordArrPackage",
         "parameters": [
           {
             "name": "packageId",

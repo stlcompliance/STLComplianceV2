@@ -936,6 +936,32 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrPackageResponse ArchivePackage(string packageId)
+    {
+        lock (_gate)
+        {
+            var index = _packages.FindIndex(pkg => string.Equals(pkg.PackageId, packageId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Package {packageId} not found.");
+            }
+
+            var current = _packages[index];
+            if (string.Equals(current.Status, "archived", StringComparison.OrdinalIgnoreCase))
+            {
+                return current;
+            }
+
+            var updated = current with
+            {
+                Status = "archived",
+                ArchivedAt = DateTimeOffset.UtcNow
+            };
+            _packages[index] = updated;
+            return updated;
+        }
+    }
+
     public IReadOnlyList<RecordArrRetentionPolicyResponse> GetRetentionPolicies()
     {
         lock (_gate)

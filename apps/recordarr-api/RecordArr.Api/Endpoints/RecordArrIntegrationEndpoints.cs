@@ -169,6 +169,12 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(package);
         }).WithName($"LockRecordArrIntegrationPackage{routePrefix}");
 
+        group.MapPost("/record-packages/{packageId}/archive", (string packageId, RecordArrStore store) =>
+        {
+            var package = store.ArchivePackage(packageId);
+            return Results.Ok(package);
+        }).WithName($"ArchiveRecordArrIntegrationPackage{routePrefix}");
+
         group.MapGet("/record-packages/{packageId}/download", (string packageId, RecordArrStore store) =>
         {
             var package = store.GetPackage(packageId);

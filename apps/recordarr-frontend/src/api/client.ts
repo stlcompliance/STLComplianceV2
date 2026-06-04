@@ -670,6 +670,15 @@ export async function lockPackage(accessToken: string, packageId: string): Promi
   )
 }
 
+export async function archivePackage(accessToken: string, packageId: string): Promise<RecordArrPackage> {
+  return sendJson<RecordArrPackage>(
+    `/api/v1/workspace/record-packages/${encodeURIComponent(packageId)}/archive`,
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
 export async function getPackageManifest(accessToken: string, packageId: string): Promise<RecordArrPackageManifest> {
   return getJson<RecordArrPackageManifest>(
     `/api/v1/workspace/record-packages/${encodeURIComponent(packageId)}/manifest`,

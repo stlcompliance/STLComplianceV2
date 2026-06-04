@@ -181,6 +181,12 @@ public static class WorkspaceEndpoints
             return Results.Ok(package);
         }).WithName("LockRecordArrPackage");
 
+        group.MapPost("/record-packages/{packageId}/archive", (string packageId, RecordArrStore store) =>
+        {
+            var package = store.ArchivePackage(packageId);
+            return Results.Ok(package);
+        }).WithName("ArchiveRecordArrPackage");
+
         group.MapGet("/record-packages/{packageId}/manifest", (string packageId, RecordArrStore store) =>
         {
             var manifest = store.GetManifest(packageId);
