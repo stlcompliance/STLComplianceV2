@@ -32,6 +32,8 @@ const navItems: ProductNavItem[] = [
   { label: 'CAPA', to: '/capa', icon: asNavIcon(ListTodo) },
   { label: 'Audits', to: '/audits', icon: asNavIcon(ClipboardList) },
   { label: 'Findings', to: '/findings', icon: asNavIcon(Sparkles) },
+  { label: 'Reviews', to: '/reviews', icon: asNavIcon(BookCheck) },
+  { label: 'Releases', to: '/releases', icon: asNavIcon(CheckCircle2) },
   { label: 'Status', to: '/status', icon: asNavIcon(BookCheck), sectionBreakBefore: true },
   { label: 'Scorecards', to: '/scorecards', icon: asNavIcon(BarChart3) },
   { label: 'History', to: '/history', icon: asNavIcon(History) },
@@ -44,6 +46,8 @@ const statusOptions: Record<string, readonly string[]> = {
   capa: ['draft', 'open', 'root_cause', 'action_plan', 'implementation', 'verification', 'effective', 'ineffective', 'closed', 'canceled'],
   audit: ['draft', 'planned', 'in_progress', 'findings_review', 'corrective_action', 'verification', 'closed', 'canceled'],
   finding: ['open', 'accepted', 'disputed', 'nonconformance_created', 'corrective_action', 'verified', 'closed', 'canceled'],
+  review: ['pending', 'in_review', 'approved', 'rejected', 'changes_requested', 'canceled'],
+  release: ['requested', 'pending_review', 'approved', 'rejected', 'executed', 'canceled'],
 }
 
 function AppShell({ children }: { children: ReactNode }) {
@@ -614,6 +618,305 @@ function FindingsPage() {
   )
 }
 
+function ReviewPage() {
+  const query = useRecords(['assurarr', 'reviews'], assurarrApi.listQualityReviews)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    reviewType: 'hold_release',
+    sourceProduct: 'assurarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    ownerPersonId: '',
+    sourceReviewRef: '',
+    reviewerPersonId: '',
+    requestedAt: '',
+    dueAt: '',
+    decisionReason: '',
+    requiredEvidenceRefs: '',
+    submittedEvidenceRefs: '',
+    notes: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createQualityReview({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        reviewType: form.reviewType,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        ownerPersonId: form.ownerPersonId || undefined,
+        sourceReviewRef: form.sourceReviewRef || undefined,
+        reviewerPersonId: form.reviewerPersonId || undefined,
+        requestedAt: form.requestedAt || undefined,
+        dueAt: form.dueAt || undefined,
+        decisionReason: form.decisionReason || undefined,
+        requiredEvidenceRefs: joinRefs(form.requiredEvidenceRefs),
+        submittedEvidenceRefs: joinRefs(form.submittedEvidenceRefs),
+        notes: form.notes || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        reviewType: 'hold_release',
+        sourceProduct: 'assurarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        ownerPersonId: '',
+        sourceReviewRef: '',
+        reviewerPersonId: '',
+        requestedAt: '',
+        dueAt: '',
+        decisionReason: '',
+        requiredEvidenceRefs: '',
+        submittedEvidenceRefs: '',
+        notes: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Quality reviews"
+        description="Review gates for evidence, disposition, release, and closure decisions."
+        action={<span className="assurarr-pill"><Plus className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create quality review</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Review title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Review type">
+              <select className="assurarr-select" value={form.reviewType} onChange={(event) => setForm({ ...form, reviewType: event.target.value })}>
+                <option value="nonconformance_review">Nonconformance review</option>
+                <option value="hold_release">Hold release</option>
+                <option value="disposition_review">Disposition review</option>
+                <option value="capa_review">CAPA review</option>
+                <option value="audit_finding_review">Audit finding review</option>
+                <option value="supplier_response_review">Supplier response review</option>
+                <option value="customer_response_review">Customer response review</option>
+                <option value="document_quality_review">Document quality review</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+                <option value="none">None</option>
+              </select>
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="HOLD-000001" />
+            </Field>
+            <Field label="Affected object refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+            </Field>
+            <Field label="Required evidence refs" wide>
+              <textarea className="assurarr-textarea" value={form.requiredEvidenceRefs} onChange={(event) => setForm({ ...form, requiredEvidenceRefs: event.target.value })} />
+            </Field>
+            <Field label="Submitted evidence refs" wide>
+              <textarea className="assurarr-textarea" value={form.submittedEvidenceRefs} onChange={(event) => setForm({ ...form, submittedEvidenceRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Notes" wide>
+              <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </Field>
+            <Field label="Reviewer person id">
+              <input className="assurarr-input" value={form.reviewerPersonId} onChange={(event) => setForm({ ...form, reviewerPersonId: event.target.value })} />
+            </Field>
+            <Field label="Requested at">
+              <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
+            </Field>
+            <Field label="Due at">
+              <input className="assurarr-input" type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
+            </Field>
+            <Field label="Decision reason" wide>
+              <input className="assurarr-input" value={form.decisionReason} onChange={(event) => setForm({ ...form, decisionReason: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create review'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No quality reviews yet."
+          onStatusChange={(id, status) => assurarrApi.updateQualityReviewStatus(id, status)}
+          statusChoices={statusOptions.review}
+        />
+      ) : (
+        <LoadingCard label="Loading quality reviews" />
+      )}
+    </div>
+  )
+}
+
+function ReleasePage() {
+  const query = useRecords(['assurarr', 'releases'], assurarrApi.listQualityReleases)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'none',
+    sourceProduct: 'assurarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    ownerPersonId: '',
+    holdRef: '',
+    releaseType: 'full',
+    requestedByPersonId: '',
+    requestedAt: '',
+    conditions: '',
+    expirationAt: '',
+    evidenceRecordRefs: '',
+    notes: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createQualityRelease({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        ownerPersonId: form.ownerPersonId || undefined,
+        holdRef: form.holdRef,
+        releaseType: form.releaseType,
+        requestedByPersonId: form.requestedByPersonId || undefined,
+        requestedAt: form.requestedAt || undefined,
+        conditions: form.conditions || undefined,
+        expirationAt: form.expirationAt || undefined,
+        evidenceRecordRefs: joinRefs(form.evidenceRecordRefs),
+        notes: form.notes || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'none',
+        sourceProduct: 'assurarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        ownerPersonId: '',
+        holdRef: '',
+        releaseType: 'full',
+        requestedByPersonId: '',
+        requestedAt: '',
+        conditions: '',
+        expirationAt: '',
+        evidenceRecordRefs: '',
+        notes: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Quality releases"
+        description="Explicit release decisions that unblock held objects after review and evidence checks."
+        action={<span className="assurarr-pill"><CheckCircle2 className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create quality release</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Release title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Release type">
+              <select className="assurarr-select" value={form.releaseType} onChange={(event) => setForm({ ...form, releaseType: event.target.value })}>
+                <option value="full">Full</option>
+                <option value="partial">Partial</option>
+                <option value="conditional">Conditional</option>
+                <option value="use_as_is">Use as is</option>
+                <option value="release_after_rework">Release after rework</option>
+                <option value="release_after_sort">Release after sort</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="none">None</option>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Hold ref">
+              <input className="assurarr-input" value={form.holdRef} onChange={(event) => setForm({ ...form, holdRef: event.target.value })} placeholder="HOLD-000001" />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="loadarr:inventory:LOT-991" />
+            </Field>
+            <Field label="Affected object refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+            </Field>
+            <Field label="Evidence record refs" wide>
+              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Notes" wide>
+              <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </Field>
+            <Field label="Requested by person id">
+              <input className="assurarr-input" value={form.requestedByPersonId} onChange={(event) => setForm({ ...form, requestedByPersonId: event.target.value })} />
+            </Field>
+            <Field label="Requested at">
+              <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
+            </Field>
+            <Field label="Expiration at">
+              <input className="assurarr-input" type="datetime-local" value={form.expirationAt} onChange={(event) => setForm({ ...form, expirationAt: event.target.value })} />
+            </Field>
+            <Field label="Conditions" wide>
+              <input className="assurarr-input" value={form.conditions} onChange={(event) => setForm({ ...form, conditions: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create release'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No quality releases yet."
+          onStatusChange={(id, status) => assurarrApi.updateQualityReleaseStatus(id, status)}
+          statusChoices={statusOptions.release}
+        />
+      ) : (
+        <LoadingCard label="Loading quality releases" />
+      )}
+    </div>
+  )
+}
+
 function StatusPage() {
   const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
   return (
@@ -737,6 +1040,8 @@ export function App() {
     if (path.startsWith('/capa')) return 'CAPA'
     if (path.startsWith('/audits')) return 'Audits'
     if (path.startsWith('/findings')) return 'Findings'
+    if (path.startsWith('/reviews')) return 'Reviews'
+    if (path.startsWith('/releases')) return 'Releases'
     if (path.startsWith('/status')) return 'Status'
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
@@ -752,6 +1057,8 @@ export function App() {
         <Route path="/capa" element={<CapaPage />} />
         <Route path="/audits" element={<AuditPage />} />
         <Route path="/findings" element={<FindingsPage />} />
+        <Route path="/reviews" element={<ReviewPage />} />
+        <Route path="/releases" element={<ReleasePage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/history" element={<HistoryPage />} />

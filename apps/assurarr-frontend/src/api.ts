@@ -156,6 +156,33 @@ export type Scorecard = ListItem & {
   metricRefs: string[]
 }
 
+export type QualityReview = ListItem & {
+  reviewType: string
+  sourceReviewRef: string | null
+  reviewerPersonId: string | null
+  requestedAt: string | null
+  dueAt: string | null
+  decisionAt: string | null
+  decisionReason: string | null
+  requiredEvidenceRefs: string[]
+  submittedEvidenceRefs: string[]
+  notes: string | null
+}
+
+export type QualityRelease = ListItem & {
+  holdRef: string
+  releaseType: string
+  requestedByPersonId: string | null
+  requestedAt: string | null
+  approvedByPersonId: string | null
+  approvedAt: string | null
+  executedAt: string | null
+  conditions: string | null
+  expirationAt: string | null
+  evidenceRecordRefs: string[]
+  notes: string | null
+}
+
 type CreateBase = {
   title: string
   description: string
@@ -258,4 +285,25 @@ export const assurarrApi = {
       periodEnd: new Date(body.periodEnd).toISOString(),
       metricRefs: body.metricRefs ?? [],
     }),
+  listQualityReviews: () => getJson<QualityReview[]>('/api/v1/integrations/quality-reviews'),
+  createQualityReview: (body: CreateBase & { reviewType: string; sourceReviewRef?: string; reviewerPersonId?: string; requestedAt?: string; dueAt?: string; decisionReason?: string; requiredEvidenceRefs?: string[]; submittedEvidenceRefs?: string[]; notes?: string }) =>
+    sendJson<QualityReview>('/api/v1/integrations/quality-reviews', 'POST', {
+      ...body,
+      requestedAt: body.requestedAt ? new Date(body.requestedAt).toISOString() : null,
+      dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
+      requiredEvidenceRefs: body.requiredEvidenceRefs ?? [],
+      submittedEvidenceRefs: body.submittedEvidenceRefs ?? [],
+    }),
+  updateQualityReviewStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<QualityReview>(`/api/v1/integrations/quality-reviews/${id}/status`, 'PATCH', { status, closureSummary }),
+  listQualityReleases: () => getJson<QualityRelease[]>('/api/v1/integrations/quality-releases'),
+  createQualityRelease: (body: CreateBase & { holdRef: string; releaseType: string; requestedByPersonId?: string; requestedAt?: string; conditions?: string; expirationAt?: string; evidenceRecordRefs?: string[]; notes?: string }) =>
+    sendJson<QualityRelease>('/api/v1/integrations/quality-releases', 'POST', {
+      ...body,
+      requestedAt: body.requestedAt ? new Date(body.requestedAt).toISOString() : null,
+      expirationAt: body.expirationAt ? new Date(body.expirationAt).toISOString() : null,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+    }),
+  updateQualityReleaseStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<QualityRelease>(`/api/v1/integrations/quality-releases/${id}/status`, 'PATCH', { status, closureSummary }),
 }

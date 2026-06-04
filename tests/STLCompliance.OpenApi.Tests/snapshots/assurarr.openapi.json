@@ -390,6 +390,142 @@
         }
       }
     },
+    "/api/v1/integrations/quality-releases": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityReleases",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrQualityRelease",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-releases/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrQualityReleaseStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-reviews": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityReviews",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrQualityReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-reviews/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrQualityReviewStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/launch/catalog": {
       "get": {
         "tags": [
@@ -1143,6 +1279,218 @@
           }
         }
       },
+      "CreateAssurArrQualityReleaseRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "holdRef",
+          "releaseType",
+          "requestedByPersonId",
+          "requestedAt",
+          "conditions",
+          "expirationAt",
+          "evidenceRecordRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "holdRef": {
+            "type": "string"
+          },
+          "releaseType": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requestedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "conditions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expirationAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAssurArrQualityReviewRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "reviewType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "sourceReviewRef",
+          "reviewerPersonId",
+          "requestedAt",
+          "dueAt",
+          "decisionReason",
+          "requiredEvidenceRefs",
+          "submittedEvidenceRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "reviewType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sourceReviewRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requestedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "decisionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredEvidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "submittedEvidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAssurArrQualityScorecardRequest": {
         "required": [
           "targetType",
@@ -1361,6 +1709,9 @@
     },
     {
       "name": "AssurArr"
+    },
+    {
+      "name": "AssurArr Integrations"
     }
   ]
 }

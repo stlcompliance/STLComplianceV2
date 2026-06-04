@@ -75,6 +75,28 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> ReviewTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["pending"] = ["in_review", "canceled"],
+        ["in_review"] = ["approved", "rejected", "changes_requested", "canceled"],
+        ["approved"] = ["changes_requested"],
+        ["rejected"] = [],
+        ["changes_requested"] = ["in_review", "approved", "rejected", "canceled"],
+        ["canceled"] = [],
+    };
+
+    private static readonly IReadOnlyDictionary<string, string[]> ReleaseTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["requested"] = ["pending_review", "canceled"],
+        ["pending_review"] = ["approved", "rejected", "canceled"],
+        ["approved"] = ["executed", "rejected", "canceled"],
+        ["rejected"] = [],
+        ["executed"] = [],
+        ["canceled"] = [],
+    };
+
     public async Task EnsureDemoDataAsync(CancellationToken cancellationToken = default)
     {
         if (await db.Nonconformances.AnyAsync(cancellationToken))
@@ -257,6 +279,62 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             MetricRefs = ["metric:open-nc-count", "metric:hold-aging"],
         });
 
+        db.QualityReviews.Add(new AssurArrQualityReview
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "QREV-000001",
+            Title = "Release review for incoming lot",
+            Description = "Review evidence before releasing the quarantined receiving lot.",
+            Severity = "moderate",
+            Status = "in_review",
+            SourceProduct = "assurarr",
+            SourceObjectRef = "HOLD-000001",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-991"],
+            OwnerPersonId = null,
+            RecordRefs = ["recordarr:doc:inspection-photo-1"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            ReviewType = "hold_release",
+            SourceReviewRef = "HOLD-000001",
+            ReviewerPersonId = null,
+            RequestedAt = now.AddHours(-2),
+            DueAt = now.AddDays(2),
+            DecisionReason = null,
+            RequiredEvidenceRefs = ["recordarr:doc:inspection-photo-1"],
+            SubmittedEvidenceRefs = ["recordarr:doc:inspection-photo-1"],
+            Notes = "Awaiting final approval.",
+        });
+
+        db.QualityReleases.Add(new AssurArrQualityRelease
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "QREL-000001",
+            Title = "Release quarantined receiving lot",
+            Description = "Approved release path for the held incoming inventory lot.",
+            Severity = "low",
+            Status = "pending_review",
+            SourceProduct = "assurarr",
+            SourceObjectRef = "HOLD-000001",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-991"],
+            OwnerPersonId = null,
+            RecordRefs = ["recordarr:doc:inspection-photo-1"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            HoldRef = "HOLD-000001",
+            ReleaseType = "full",
+            RequestedByPersonId = null,
+            RequestedAt = now.AddHours(-1),
+            ApprovedByPersonId = null,
+            ApprovedAt = null,
+            ExecutedAt = null,
+            Conditions = "Maintain inspection evidence in RecordArr.",
+            ExpirationAt = now.AddDays(1),
+            EvidenceRecordRefs = ["recordarr:doc:inspection-photo-1"],
+            Notes = "Waiting on release approval.",
+        });
+
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -268,6 +346,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var openCapaCount = await db.Capas.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openAuditCount = await db.QualityAudits.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openFindingCount = await db.AuditFindings.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var pendingReviewCount = await db.QualityReviews.CountAsync(x => x.Status == "pending" || x.Status == "in_review", cancellationToken);
+        var pendingReleaseCount = await db.QualityReleases.CountAsync(x => x.Status == "requested" || x.Status == "pending_review", cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
         var openStatusSnapshots = await db.QualityStatusSnapshots.CountAsync(x => x.Status != "unknown", cancellationToken);
 
@@ -278,6 +358,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("capa", "Open CAPA", "Corrective and preventive actions in progress.", openCapaCount, "accent"),
             new AssurArrDashboardCardResponse("audits", "Open audits", "Quality reviews and audits awaiting closeout.", openAuditCount, "info"),
             new AssurArrDashboardCardResponse("findings", "Open findings", "Issues or opportunities captured during audits.", openFindingCount, "soft"),
+            new AssurArrDashboardCardResponse("reviews", "Quality reviews", "Evidence reviews and decision gates in progress.", pendingReviewCount, "info"),
+            new AssurArrDashboardCardResponse("releases", "Quality releases", "Release requests waiting on approval or execution.", pendingReleaseCount, "warning"),
             new AssurArrDashboardCardResponse("status", "Status snapshots", "Current quality state published to other products.", openStatusSnapshots, "neutral"),
             new AssurArrDashboardCardResponse("scorecards", "Scorecards", "Active quality scorecards and trend summaries.", openScorecards, "accent"),
         };
@@ -619,6 +701,148 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return ToFindingResponse(entity);
     }
 
+    public async Task<List<AssurArrQualityReviewResponse>> ListQualityReviewsAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.QualityReviews
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToReviewResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityReviewResponse> CreateQualityReviewAsync(CreateAssurArrQualityReviewRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrQualityReview
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("QREV", db.QualityReviews, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "moderate"),
+            Status = "pending",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            OwnerPersonId = request.OwnerPersonId,
+            RecordRefs = [],
+            CreatedAt = now,
+            UpdatedAt = now,
+            ReviewType = Normalize(request.ReviewType, "nonconformance_review"),
+            SourceReviewRef = NormalizeNullable(request.SourceReviewRef),
+            ReviewerPersonId = request.ReviewerPersonId,
+            RequestedAt = request.RequestedAt ?? now,
+            DueAt = request.DueAt,
+            DecisionReason = NormalizeNullable(request.DecisionReason),
+            RequiredEvidenceRefs = request.RequiredEvidenceRefs ?? [],
+            SubmittedEvidenceRefs = request.SubmittedEvidenceRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+        };
+
+        db.QualityReviews.Add(entity);
+        await AddTimelineAsync("review", entity.Id, "assurarr.quality_review.requested", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReviewResponse(entity);
+    }
+
+    public async Task<AssurArrQualityReviewResponse> UpdateQualityReviewStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityReviews.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality review '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, ReviewTransitions, "quality review");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "approved", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.DecisionAt = entity.DecisionAt ?? entity.UpdatedAt;
+            entity.DecisionReason = request.ClosureSummary ?? entity.DecisionReason;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        await AddTimelineAsync("review", entity.Id, $"assurarr.quality_review.{entity.Status}", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReviewResponse(entity);
+    }
+
+    public async Task<List<AssurArrQualityReleaseResponse>> ListQualityReleasesAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.QualityReleases
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToReleaseResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityReleaseResponse> CreateQualityReleaseAsync(CreateAssurArrQualityReleaseRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrQualityRelease
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("QREL", db.QualityReleases, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "none"),
+            Status = "requested",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            OwnerPersonId = request.OwnerPersonId,
+            RecordRefs = [],
+            CreatedAt = now,
+            UpdatedAt = now,
+            HoldRef = request.HoldRef.Trim(),
+            ReleaseType = Normalize(request.ReleaseType, "full"),
+            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedAt = request.RequestedAt ?? now,
+            Conditions = NormalizeNullable(request.Conditions),
+            ExpirationAt = request.ExpirationAt,
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+        };
+
+        db.QualityReleases.Add(entity);
+        await AddTimelineAsync("release", entity.Id, "assurarr.quality_release.requested", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReleaseResponse(entity);
+    }
+
+    public async Task<AssurArrQualityReleaseResponse> UpdateQualityReleaseStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityReleases.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality release '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, ReleaseTransitions, "quality release");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "approved", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ApprovedAt = entity.ApprovedAt ?? entity.UpdatedAt;
+        }
+        else if (string.Equals(entity.Status, "executed", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ApprovedAt ??= entity.UpdatedAt;
+            entity.ExecutedAt = entity.UpdatedAt;
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+
+        await AddTimelineAsync("release", entity.Id, $"assurarr.quality_release.{entity.Status}", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToReleaseResponse(entity);
+    }
+
     public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListStatusSnapshotsAsync(CancellationToken cancellationToken = default)
     {
         var entities = await db.QualityStatusSnapshots
@@ -936,6 +1160,65 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.LastReviewedAt,
             entity.ReviewedByPersonId,
             entity.ExpiresAt);
+
+    private static AssurArrQualityReviewResponse ToReviewResponse(AssurArrQualityReview entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.ReviewType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.AffectedObjectRefs,
+            entity.OwnerPersonId,
+            entity.RecordRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary,
+            entity.SourceReviewRef,
+            entity.ReviewerPersonId,
+            entity.RequestedAt,
+            entity.DueAt,
+            entity.DecisionAt,
+            entity.DecisionReason,
+            entity.RequiredEvidenceRefs,
+            entity.SubmittedEvidenceRefs,
+            entity.Notes);
+
+    private static AssurArrQualityReleaseResponse ToReleaseResponse(AssurArrQualityRelease entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.AffectedObjectRefs,
+            entity.OwnerPersonId,
+            entity.RecordRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary,
+            entity.HoldRef,
+            entity.ReleaseType,
+            entity.RequestedByPersonId,
+            entity.RequestedAt,
+            entity.ApprovedByPersonId,
+            entity.ApprovedAt,
+            entity.ExecutedAt,
+            entity.Conditions,
+            entity.ExpirationAt,
+            entity.EvidenceRecordRefs,
+            entity.Notes);
 
     private static AssurArrQualityScorecardResponse ToScorecardResponse(AssurArrQualityScorecard entity) =>
         new(

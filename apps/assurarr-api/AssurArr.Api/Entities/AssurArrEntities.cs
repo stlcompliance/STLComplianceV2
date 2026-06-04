@@ -219,6 +219,69 @@ public sealed class AssurArrQualityScorecard
     public string[] MetricRefs { get; set; } = [];
 }
 
+public sealed class AssurArrQualityReview
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "pending";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public Guid? OwnerPersonId { get; set; }
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+    public string ReviewType { get; set; } = "nonconformance_review";
+    public string? SourceReviewRef { get; set; }
+    public Guid? ReviewerPersonId { get; set; }
+    public DateTimeOffset? RequestedAt { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
+    public DateTimeOffset? DecisionAt { get; set; }
+    public string? DecisionReason { get; set; }
+    public string[] RequiredEvidenceRefs { get; set; } = [];
+    public string[] SubmittedEvidenceRefs { get; set; } = [];
+    public string? Notes { get; set; }
+}
+
+public sealed class AssurArrQualityRelease
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "none";
+    public string Status { get; set; } = "requested";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public Guid? OwnerPersonId { get; set; }
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+    public string HoldRef { get; set; } = string.Empty;
+    public string ReleaseType { get; set; } = "full";
+    public Guid? RequestedByPersonId { get; set; }
+    public DateTimeOffset? RequestedAt { get; set; }
+    public Guid? ApprovedByPersonId { get; set; }
+    public DateTimeOffset? ApprovedAt { get; set; }
+    public DateTimeOffset? ExecutedAt { get; set; }
+    public string? Conditions { get; set; }
+    public DateTimeOffset? ExpirationAt { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public string? Notes { get; set; }
+}
+
 public sealed class AssurArrTimelineEvent
 {
     public Guid Id { get; set; }

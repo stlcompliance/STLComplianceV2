@@ -8,6 +8,7 @@ public static class AssurArrEndpoints
     public static void MapAssurArrEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/v1").WithTags("AssurArr");
+        var integrationGroup = app.MapGroup("/api/v1/integrations").WithTags("AssurArr Integrations");
 
         group.MapGet("/dashboard", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))
@@ -98,5 +99,29 @@ public static class AssurArrEndpoints
         group.MapGet("/history", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))
             .WithName("GetAssurArrHistory");
+
+        integrationGroup.MapGet("/quality-reviews", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListQualityReviewsAsync(cancellationToken)))
+            .WithName("ListAssurArrQualityReviews");
+
+        integrationGroup.MapPost("/quality-reviews", async (CreateAssurArrQualityReviewRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateQualityReviewAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrQualityReview");
+
+        integrationGroup.MapPatch("/quality-reviews/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateQualityReviewStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrQualityReviewStatus");
+
+        integrationGroup.MapGet("/quality-releases", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListQualityReleasesAsync(cancellationToken)))
+            .WithName("ListAssurArrQualityReleases");
+
+        integrationGroup.MapPost("/quality-releases", async (CreateAssurArrQualityReleaseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateQualityReleaseAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrQualityRelease");
+
+        integrationGroup.MapPatch("/quality-releases/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateQualityReleaseStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrQualityReleaseStatus");
     }
 }

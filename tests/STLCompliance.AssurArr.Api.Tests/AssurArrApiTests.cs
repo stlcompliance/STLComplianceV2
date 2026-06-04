@@ -67,4 +67,67 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(list);
         Assert.Contains(list!, item => item.Title == title);
     }
+
+    [Fact]
+    public async Task Can_create_quality_review_and_release_records()
+    {
+        var reviewTitle = $"Test quality review {Guid.NewGuid():N}";
+        var reviewResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/quality-reviews",
+            new CreateAssurArrQualityReviewRequest(
+                reviewTitle,
+                "Automated coverage for the quality review workflow.",
+                "moderate",
+                "hold_release",
+                "assurarr",
+                "HOLD-000001",
+                ["loadarr:inventory:test"],
+                null,
+                "HOLD-000001",
+                null,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(2),
+                "Review evidence before release.",
+                ["recordarr:doc:test"],
+                ["recordarr:doc:test"],
+                "Review notes"));
+
+        Assert.Equal(HttpStatusCode.OK, reviewResponse.StatusCode);
+
+        var review = await reviewResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
+        Assert.NotNull(review);
+        Assert.Equal(reviewTitle, review!.Title);
+
+        var releaseTitle = $"Test quality release {Guid.NewGuid():N}";
+        var releaseResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/quality-releases",
+            new CreateAssurArrQualityReleaseRequest(
+                releaseTitle,
+                "Automated coverage for the quality release workflow.",
+                "low",
+                "assurarr",
+                "HOLD-000001",
+                ["loadarr:inventory:test"],
+                null,
+                "HOLD-000001",
+                "full",
+                null,
+                DateTimeOffset.UtcNow,
+                "Inspection evidence retained in RecordArr.",
+                DateTimeOffset.UtcNow.AddDays(1),
+                ["recordarr:doc:test"],
+                "Release notes"));
+
+        Assert.Equal(HttpStatusCode.OK, releaseResponse.StatusCode);
+
+        var release = await releaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(release);
+        Assert.Equal(releaseTitle, release!.Title);
+
+        var listResponse = await _client.GetAsync("/api/v1/integrations/quality-reviews");
+        listResponse.EnsureSuccessStatusCode();
+        var reviews = await listResponse.Content.ReadFromJsonAsync<List<AssurArrQualityReviewResponse>>();
+        Assert.NotNull(reviews);
+        Assert.Contains(reviews!, item => item.Title == reviewTitle);
+    }
 }
