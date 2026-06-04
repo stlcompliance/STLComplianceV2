@@ -102,6 +102,71 @@ describe('WorkOrderLifecyclePanel', () => {
     )
   })
 
+  it('renders closeout summary with accepted evidence labels', () => {
+    render(
+      <WorkOrderLifecyclePanel
+        workOrder={{
+          ...baseWorkOrder,
+          status: 'completed',
+          closeout: {
+            closeoutId: 'closeout-1',
+            workOrderId: baseWorkOrder.workOrderId,
+            completionSummary: 'Completed',
+            rootCause: 'wear',
+            correctiveAction: 'Replaced seal',
+            preventiveActionRecommendation: 'Inspect next PM',
+            assetReturnedToService: true,
+            returnToServiceAt: '2026-05-27T14:00:00Z',
+            returnToServiceByPersonId: 'person-tech-001',
+            postRepairInspectionRequired: false,
+            postRepairInspectionRef: null,
+            supervisorReviewRequired: false,
+            supervisorReviewedByPersonId: null,
+            supervisorReviewedAt: null,
+            complianceReviewRequired: false,
+            complianceReviewedByPersonId: null,
+            complianceReviewedAt: null,
+            qualityReviewRequired: false,
+            qualityReviewedByPersonId: null,
+            qualityReviewedAt: null,
+            evidenceAccepted: true,
+            unresolvedDefectRefs: null,
+            followUpWorkOrderRefs: null,
+            customerImpactSummary: null,
+            downtimeSummary: null,
+            finalAssetReadinessStatus: 'ready',
+            finalStatus: 'closed',
+            evidenceRecordRefs: ['ev-1'],
+            createdAt: '2026-05-27T14:05:00Z',
+            createdByPersonId: 'person-tech-001',
+          },
+        }}
+        tasks={[]}
+        labor={[]}
+        evidence={[
+          {
+            evidenceId: 'ev-1',
+            workOrderId: baseWorkOrder.workOrderId,
+            evidenceTypeKey: 'after_photo',
+            fileName: 'after.jpg',
+            contentType: 'image/jpeg',
+            sizeBytes: 2048,
+            notes: 'Post-repair evidence',
+            uploadedByUserId: 'user-001',
+            createdAt: '2026-05-27T13:45:00Z',
+          },
+        ]}
+        isDetailLoading={false}
+      />,
+    )
+
+    expect(screen.getByTestId('work-order-closeout-summary')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('closed')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Yes')
+    expect(screen.getByTestId('work-order-closeout-evidence')).toHaveTextContent('after.jpg')
+    expect(screen.getByTestId('work-order-closeout-evidence')).not.toHaveTextContent('ev-1')
+  })
+
   it('shows capture hint when in progress without full signals', () => {
     render(
       <WorkOrderLifecyclePanel

@@ -38,6 +38,18 @@ function totalLaborHours(labor: WorkOrderLaborEntryResponse[]): number {
   return labor.reduce((sum, entry) => sum + entry.hoursWorked, 0)
 }
 
+function formatEvidenceLabel(
+  evidenceId: string,
+  evidence: WorkOrderEvidenceResponse[],
+): string {
+  const item = evidence.find((entry) => entry.evidenceId === evidenceId)
+  if (!item) {
+    return `${evidenceId.slice(0, 8)}`
+  }
+
+  return `${item.fileName} (${item.evidenceTypeKey.replaceAll('_', ' ')})`
+}
+
 export function WorkOrderLifecyclePanel({
   workOrder,
   tasks,
@@ -63,6 +75,10 @@ export function WorkOrderLifecyclePanel({
   const laborHoursTotal = totalLaborHours(labor)
   const completionReady =
     workOrder.status === 'in_progress' && tasks.length > 0 && labor.length > 0 && evidence.length > 0
+  const closeout = workOrder.closeout
+  const acceptedEvidenceLabels = closeout?.evidenceRecordRefs?.map((evidenceId) =>
+    formatEvidenceLabel(evidenceId, evidence),
+  ) ?? []
 
   return (
     <section
@@ -158,6 +174,56 @@ export function WorkOrderLifecyclePanel({
               </li>
             </ul>
           </div>
+
+          {closeout ? (
+            <section
+              className="rounded-lg border border-slate-700 bg-slate-950/40 p-3"
+              data-testid="work-order-closeout-summary"
+            >
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Closeout
+              </h4>
+              <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-slate-500">Final status</dt>
+                  <dd className="text-slate-200">{closeout.finalStatus ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Evidence accepted</dt>
+                  <dd className="text-slate-200">{closeout.evidenceAccepted ? 'Yes' : 'No'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Returned to service</dt>
+                  <dd className="text-slate-200">
+                    {closeout.assetReturnedToService ? formatTimestamp(closeout.returnToServiceAt) : 'No'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Readiness</dt>
+                  <dd className="text-slate-200">{closeout.finalAssetReadinessStatus ?? '—'}</dd>
+                </div>
+              </dl>
+              <div className="mt-3" data-testid="work-order-closeout-evidence">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Accepted evidence
+                </h5>
+                {acceptedEvidenceLabels.length > 0 ? (
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {acceptedEvidenceLabels.map((label, index) => (
+                      <li
+                        key={`${closeout.closeoutId}-evidence-${index}`}
+                        className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200"
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-500">No closeout evidence was attached.</p>
+                )}
+              </div>
+            </section>
+          ) : null}
 
           {workOrder.status === 'in_progress' ? (
             <p

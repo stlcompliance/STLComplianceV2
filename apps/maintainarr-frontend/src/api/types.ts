@@ -573,7 +573,41 @@ export interface WorkOrderDetailResponse {
   startedAt: string | null
   completedAt: string | null
   cancelledAt: string | null
+  closeout?: WorkOrderCloseoutResponse | null
   downtimeFollowUp?: DowntimeFollowUpResponse | null
+}
+
+export interface WorkOrderCloseoutResponse {
+  closeoutId: string
+  workOrderId: string
+  completionSummary: string
+  rootCause: string | null
+  correctiveAction: string | null
+  preventiveActionRecommendation: string | null
+  assetReturnedToService: boolean
+  returnToServiceAt: string | null
+  returnToServiceByPersonId: string | null
+  postRepairInspectionRequired: boolean
+  postRepairInspectionRef: string | null
+  supervisorReviewRequired: boolean
+  supervisorReviewedByPersonId: string | null
+  supervisorReviewedAt: string | null
+  complianceReviewRequired: boolean
+  complianceReviewedByPersonId: string | null
+  complianceReviewedAt: string | null
+  qualityReviewRequired: boolean
+  qualityReviewedByPersonId: string | null
+  qualityReviewedAt: string | null
+  evidenceAccepted: boolean
+  unresolvedDefectRefs: string | null
+  followUpWorkOrderRefs: string | null
+  customerImpactSummary: string | null
+  downtimeSummary: string | null
+  finalAssetReadinessStatus: string | null
+  finalStatus: string | null
+  evidenceRecordRefs: string[]
+  createdAt: string
+  createdByPersonId: string | null
 }
 
 export interface WorkOrderTaskLineResponse {
