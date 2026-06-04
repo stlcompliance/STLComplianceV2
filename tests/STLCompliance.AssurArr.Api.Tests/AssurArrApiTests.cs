@@ -634,6 +634,18 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(audit.Id, auditDetail!.Id);
         Assert.Equal(audit.Number, auditDetail.Number);
 
+        var startAuditResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/audits/{audit.Id}/status",
+            new UpdateAssurArrStatusRequest("in_progress", "Audit execution started."));
+
+        Assert.Equal(HttpStatusCode.OK, startAuditResponse.StatusCode);
+
+        var startedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        startedDashboardResponse.EnsureSuccessStatusCode();
+        var startedDashboard = await startedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(startedDashboard);
+        Assert.Contains(startedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.started");
+
         var checklistTitle = $"Test checklist {Guid.NewGuid():N}";
         var checklistResponse = await _client.PostAsJsonAsync(
             $"/api/v1/audits/{audit!.Id}/checklists",
@@ -698,6 +710,31 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(finding.Id, findingDetail!.Id);
         Assert.Equal(finding.Number, findingDetail.Number);
 
+        var findingCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        findingCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var findingCreatedDashboard = await findingCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(findingCreatedDashboard);
+        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.finding_created");
+
+        var acceptFindingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/findings/{finding.Id}/status",
+            new UpdateAssurArrStatusRequest("accepted", "Finding accepted for follow-up."));
+
+        Assert.Equal(HttpStatusCode.OK, acceptFindingResponse.StatusCode);
+
+        var escalateFindingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/findings/{finding.Id}/status",
+            new UpdateAssurArrStatusRequest("nonconformance_created", "Finding escalated to a nonconformance."));
+
+        Assert.Equal(HttpStatusCode.OK, escalateFindingResponse.StatusCode);
+
+        var findingStatusDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        findingStatusDashboardResponse.EnsureSuccessStatusCode();
+        var findingStatusDashboard = await findingStatusDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(findingStatusDashboard);
+        Assert.Contains(findingStatusDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.accepted");
+        Assert.Contains(findingStatusDashboard.RecentEvents, entry => entry.EventType == "assurarr.finding.nonconformance_created");
+
         var checklistListResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists");
         checklistListResponse.EnsureSuccessStatusCode();
         var checklists = await checklistListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityAuditChecklistResponse>>();
@@ -722,6 +759,31 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 DateTimeOffset.UtcNow));
 
         Assert.Equal(HttpStatusCode.OK, responseUpdate.StatusCode);
+
+        var reviewAuditResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/audits/{audit.Id}/status",
+            new UpdateAssurArrStatusRequest("findings_review", "Audit findings reviewed."));
+
+        Assert.Equal(HttpStatusCode.OK, reviewAuditResponse.StatusCode);
+
+        var closeFindingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/findings/{finding.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Finding closed after escalation."));
+
+        Assert.Equal(HttpStatusCode.OK, closeFindingResponse.StatusCode);
+
+        var closeAuditResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/audits/{audit.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Audit completed after checklist review."));
+
+        Assert.Equal(HttpStatusCode.OK, closeAuditResponse.StatusCode);
+
+        var dashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = await dashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(dashboard);
+        Assert.Contains(dashboard.RecentEvents, entry => entry.EventType == "assurarr.finding.closed");
+        Assert.Contains(dashboard.RecentEvents, entry => entry.EventType == "assurarr.audit.closed");
     }
 
     [Fact]

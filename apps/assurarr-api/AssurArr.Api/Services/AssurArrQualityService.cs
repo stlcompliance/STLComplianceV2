@@ -1793,10 +1793,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(entity.Status, request.Status, AuditTransitions, "quality audit");
         entity.Status = Normalize(request.Status, entity.Status);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "in_progress", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("audit", entity.Id, "assurarr.audit.started", entity.Title, cancellationToken);
+        }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            await AddTimelineAsync("audit", entity.Id, "assurarr.audit.closed", entity.Title, cancellationToken);
         }
         await AddTimelineAsync("audit", entity.Id, "assurarr.audit.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
@@ -1981,6 +1986,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         db.AuditFindings.Add(entity);
         await AddTimelineAsync("finding", entity.Id, "assurarr.finding.created", entity.Title, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(entity.AuditRef))
+        {
+            await AddTimelineAsync("finding", entity.Id, "assurarr.audit.finding_created", entity.Title, cancellationToken);
+        }
         await db.SaveChangesAsync(cancellationToken);
         return ToFindingResponse(entity);
     }
@@ -1992,10 +2001,19 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(entity.Status, request.Status, FindingTransitions, "audit finding");
         entity.Status = Normalize(request.Status, entity.Status);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "accepted", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("finding", entity.Id, "assurarr.finding.accepted", entity.Title, cancellationToken);
+        }
+        if (string.Equals(entity.Status, "nonconformance_created", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("finding", entity.Id, "assurarr.finding.nonconformance_created", entity.Title, cancellationToken);
+        }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            await AddTimelineAsync("finding", entity.Id, "assurarr.finding.closed", entity.Title, cancellationToken);
         }
         await AddTimelineAsync("finding", entity.Id, "assurarr.finding.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
