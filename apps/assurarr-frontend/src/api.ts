@@ -510,6 +510,7 @@ export const assurarrApi = {
   updateVerificationPlanStatus: (capaId: string, verificationPlanId: string, status: string, closureSummary?: string) =>
     sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans/${verificationPlanId}/status`, 'PATCH', { status, closureSummary }),
   listAudits: () => getJson<Audit[]>('/api/v1/audits'),
+  getAudit: (id: string) => getJson<Audit>(`/api/v1/audits/${id}`),
   createAudit: (body: CreateBase & { auditType: string; auditScope?: string; auditorPersonIds?: string[]; leadAuditorPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; supplierRef?: string; customerRef?: string; plannedStartAt?: string; plannedEndAt?: string; checklistRefs?: string[] }) =>
     sendJson<Audit>('/api/v1/audits', 'POST', {
       ...body,
@@ -576,6 +577,7 @@ export const assurarrApi = {
       answeredAt: body.answeredAt ? new Date(body.answeredAt).toISOString() : null,
     }),
   listFindings: () => getJson<Finding[]>('/api/v1/findings'),
+  getFinding: (id: string) => getJson<Finding>(`/api/v1/findings/${id}`),
   createFinding: (body: CreateBase & { findingType: string; auditRef?: string; nonconformanceRef?: string; capaRef?: string; dueAt?: string }) =>
     sendJson<Finding>('/api/v1/findings', 'POST', {
       ...body,

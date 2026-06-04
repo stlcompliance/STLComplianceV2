@@ -1765,10 +1765,171 @@ function AuditPage() {
           emptyLabel="No audits yet."
           onStatusChange={(id, status) => assurarrApi.updateAuditStatus(id, status)}
           statusChoices={statusOptions.audit}
+          detailBasePath="/audits"
         />
       ) : (
         <LoadingCard label="Loading audits" />
       )}
+    </div>
+  )
+}
+
+function AuditDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'audit', id],
+    queryFn: () => assurarrApi.getAudit(id),
+    enabled: Boolean(id),
+  })
+  const checklistQuery = useRecords(['assurarr', 'audit-checklists', id], () => assurarrApi.listAuditChecklists(id))
+  const findingsQuery = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
+  const dashboard = useDashboard()
+  const [selectedChecklistId, setSelectedChecklistId] = useState('')
+
+  useEffect(() => {
+    setSelectedChecklistId('')
+  }, [id])
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading audit detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Audit detail" description="Could not load the requested audit." />
+        <EmptyState title="Audit not found." />
+      </div>
+    )
+  }
+
+  const audit = query.data
+  const activeChecklistId = selectedChecklistId || checklistQuery.data?.[0]?.id || ''
+  const selectedChecklist = checklistQuery.data?.find((checklist) => checklist.id === activeChecklistId) ?? null
+  const itemQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist-items', id, activeChecklistId],
+    queryFn: () => assurarrApi.listAuditChecklistItems(id, activeChecklistId),
+    enabled: Boolean(id && activeChecklistId),
+    staleTime: 15_000,
+  })
+  const relatedFindings = findingsQuery.data?.filter((finding) => finding.auditRef === audit.number || audit.findingRefs.includes(finding.number)) ?? []
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'audit' && event.subjectId === audit.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${audit.number} · ${audit.title}`}
+        description="Audit scope, checklist structure, findings, and the linked evidence trail."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{audit.status}</span>
+                <span className="assurarr-pill">{audit.severity}</span>
+                <span className="assurarr-pill">{audit.auditType}</span>
+                <span className="assurarr-pill">{audit.auditScope ?? 'no scope'}</span>
+              </div>
+              <p className="text-sm text-slate-300">{audit.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {audit.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {audit.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Lead auditor:</span> {audit.leadAuditorPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {audit.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Planned start:</span> {audit.plannedStartAt ? new Date(audit.plannedStartAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Planned end:</span> {audit.plannedEndAt ? new Date(audit.plannedEndAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Coverage</p>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Auditors:</span> {audit.auditorPersonIds.length ? audit.auditorPersonIds.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Sites:</span> {audit.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Locations:</span> {audit.staffArrLocationId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {audit.supplierRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Customer:</span> {audit.customerRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Record refs:</span> {audit.recordRefs.length ? audit.recordRefs.join(', ') : 'none'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-4">
+              <p className="assurarr-label">Checklists</p>
+              {checklistQuery.data?.length ? (
+                <div className="space-y-2">
+                  {checklistQuery.data.map((checklist) => (
+                    <button
+                      key={checklist.id}
+                      type="button"
+                      className={`w-full rounded-xl border px-4 py-3 text-left transition ${checklist.id === activeChecklistId ? 'border-cyan-400/70 bg-cyan-400/10' : 'border-slate-700/70 bg-slate-900/80'}`}
+                      onClick={() => setSelectedChecklistId(checklist.id)}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <strong className="text-sm text-slate-50">{checklist.number}</strong>
+                        <span className="assurarr-pill">{checklist.status}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-300">{checklist.title}</p>
+                      <p className="mt-1 text-xs text-slate-400">{checklist.itemRefs.length} item refs</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="No checklists yet." />
+              )}
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-4">
+              <p className="assurarr-label">Selected checklist items</p>
+              {selectedChecklist ? (
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-50">{selectedChecklist.number}</strong>
+                    <span className="assurarr-pill">{selectedChecklist.status}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{selectedChecklist.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">{selectedChecklist.description}</p>
+                </div>
+              ) : null}
+              {itemQuery.data?.length ? (
+                <div className="space-y-3">
+                  {itemQuery.data.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <strong className="text-sm text-slate-50">{item.sequence}. {item.prompt}</strong>
+                        <span className="assurarr-pill">{item.result ?? item.responseValue ?? 'unanswered'}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">{item.responseType} {item.required ? 'required' : 'optional'}</p>
+                      {item.helpText ? <p className="mt-2 text-sm text-slate-300">{item.helpText}</p> : null}
+                      {item.evidenceRecordRefs.length ? <p className="mt-2 text-xs text-slate-400">{item.evidenceRecordRefs.join(', ')}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title={activeChecklistId ? 'No items on this checklist yet.' : 'Select a checklist first.'} />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Related findings"
+          items={relatedFindings.map((finding) => `${finding.number} · ${finding.title} · ${finding.status}`)}
+          emptyLabel="No linked findings were found."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -1795,10 +1956,101 @@ function FindingsPage() {
           emptyLabel="No findings yet."
           onStatusChange={(id, status) => assurarrApi.updateFindingStatus(id, status)}
           statusChoices={statusOptions.finding}
+          detailBasePath="/findings"
         />
       ) : (
         <LoadingCard label="Loading findings" />
       )}
+    </div>
+  )
+}
+
+function FindingDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'finding', id],
+    queryFn: () => assurarrApi.getFinding(id),
+    enabled: Boolean(id),
+  })
+  const audits = useRecords(['assurarr', 'audits'], assurarrApi.listAudits)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading finding detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Finding detail" description="Could not load the requested audit finding." />
+        <EmptyState title="Finding not found." />
+      </div>
+    )
+  }
+
+  const finding = query.data
+  const relatedAudit = audits.data?.find((audit) => audit.number === finding.auditRef) ?? null
+  const relatedNonconformance = nonconformances.data?.find((item) => item.number === finding.nonconformanceRef) ?? null
+  const relatedCapa = capas.data?.find((item) => item.number === finding.capaRef) ?? null
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'finding' && event.subjectId === finding.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${finding.number} · ${finding.title}`}
+        description="Audit finding details, linked quality records, evidence, and follow-up action references."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{finding.status}</span>
+                <span className="assurarr-pill">{finding.severity}</span>
+                <span className="assurarr-pill">{finding.findingType}</span>
+              </div>
+              <p className="text-sm text-slate-300">{finding.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {finding.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {finding.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {finding.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Due:</span> {finding.dueAt ? new Date(finding.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {finding.closedAt ? new Date(finding.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Record refs:</span> {finding.recordRefs.length ? finding.recordRefs.join(', ') : 'none'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Linked quality records</p>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Audit:</span> {relatedAudit ? `${relatedAudit.number} · ${relatedAudit.title}` : finding.auditRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Nonconformance:</span> {relatedNonconformance ? `${relatedNonconformance.number} · ${relatedNonconformance.title}` : finding.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">CAPA:</span> {relatedCapa ? `${relatedCapa.number} · ${relatedCapa.title}` : finding.capaRef ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Affected objects"
+          items={finding.affectedObjectRefs.map((ref) => ref)}
+          emptyLabel="No affected objects recorded."
+        />
+        <SectionCard
+          title="Evidence"
+          items={finding.recordRefs.map((ref) => ref)}
+          emptyLabel="No evidence records linked to this finding."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -3140,7 +3392,9 @@ export function App() {
         <Route path="/capa" element={<CapaPage />} />
         <Route path="/capa/:id" element={<CapaDetailPage />} />
         <Route path="/audits" element={<AuditPage />} />
+        <Route path="/audits/:id" element={<AuditDetailPage />} />
         <Route path="/findings" element={<FindingsPage />} />
+        <Route path="/findings/:id" element={<FindingDetailPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/releases" element={<ReleasePage />} />
         <Route path="/containment" element={<ContainmentPage />} />

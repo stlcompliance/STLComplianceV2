@@ -1353,6 +1353,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToAuditResponse).ToList();
     }
 
+    public async Task<AssurArrQualityAuditResponse?> GetAuditAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityAudits.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToAuditResponse(entity)
+            : null;
+
     public async Task<AssurArrQualityAuditResponse> CreateAuditAsync(CreateAssurArrQualityAuditRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -1552,6 +1557,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         return entities.Select(ToFindingResponse).ToList();
     }
+
+    public async Task<AssurArrAuditFindingResponse?> GetFindingAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.AuditFindings.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToFindingResponse(entity)
+            : null;
 
     public async Task<AssurArrAuditFindingResponse> CreateFindingAsync(CreateAssurArrAuditFindingRequest request, CancellationToken cancellationToken = default)
     {

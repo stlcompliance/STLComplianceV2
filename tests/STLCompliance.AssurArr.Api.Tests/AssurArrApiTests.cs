@@ -429,6 +429,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var audit = await auditResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
         Assert.NotNull(audit);
 
+        var auditDetailResponse = await _client.GetAsync($"/api/v1/audits/{audit!.Id}");
+        Assert.Equal(HttpStatusCode.OK, auditDetailResponse.StatusCode);
+        var auditDetail = await auditDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
+        Assert.NotNull(auditDetail);
+        Assert.Equal(audit.Id, auditDetail!.Id);
+        Assert.Equal(audit.Number, auditDetail.Number);
+
         var checklistTitle = $"Test checklist {Guid.NewGuid():N}";
         var checklistResponse = await _client.PostAsJsonAsync(
             $"/api/v1/audits/{audit!.Id}/checklists",
@@ -464,6 +471,34 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var item = await itemResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistItemResponse>();
         Assert.NotNull(item);
         Assert.Equal(itemPrompt, item!.Prompt);
+
+        var findingTitle = $"Test finding {Guid.NewGuid():N}";
+        var findingResponse = await _client.PostAsJsonAsync(
+            "/api/v1/findings",
+            new CreateAssurArrAuditFindingRequest(
+                findingTitle,
+                "Automated coverage for finding creation.",
+                "moderate",
+                "major_nonconformance",
+                "assurarr",
+                "workflow:finding:test",
+                ["loadarr:inventory:test"],
+                null,
+                audit.Number,
+                null,
+                null,
+                DateTimeOffset.UtcNow.AddDays(4)));
+
+        Assert.Equal(HttpStatusCode.OK, findingResponse.StatusCode);
+        var finding = await findingResponse.Content.ReadFromJsonAsync<AssurArrAuditFindingResponse>();
+        Assert.NotNull(finding);
+
+        var findingDetailResponse = await _client.GetAsync($"/api/v1/findings/{finding!.Id}");
+        Assert.Equal(HttpStatusCode.OK, findingDetailResponse.StatusCode);
+        var findingDetail = await findingDetailResponse.Content.ReadFromJsonAsync<AssurArrAuditFindingResponse>();
+        Assert.NotNull(findingDetail);
+        Assert.Equal(finding.Id, findingDetail!.Id);
+        Assert.Equal(finding.Number, findingDetail.Number);
 
         var checklistListResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists");
         checklistListResponse.EnsureSuccessStatusCode();

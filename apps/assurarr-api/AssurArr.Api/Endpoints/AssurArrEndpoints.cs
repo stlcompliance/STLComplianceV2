@@ -120,6 +120,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListAuditsAsync(cancellationToken)))
             .WithName("ListAssurArrAudits");
 
+        group.MapGet("/audits/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetAuditAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrAudit");
+
         group.MapPost("/audits", async (CreateAssurArrQualityAuditRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateAuditAsync(request, cancellationToken)))
             .WithName("CreateAssurArrAudit");
@@ -155,6 +161,12 @@ public static class AssurArrEndpoints
         group.MapGet("/findings", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListFindingsAsync(cancellationToken)))
             .WithName("ListAssurArrFindings");
+
+        group.MapGet("/findings/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetFindingAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrFinding");
 
         group.MapPost("/findings", async (CreateAssurArrAuditFindingRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateFindingAsync(request, cancellationToken)))
