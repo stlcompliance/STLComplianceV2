@@ -2629,6 +2629,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         };
 
         db.QualityStatusSnapshots.Add(entity);
+        await AddTimelineAsync("status", entity.Id, "assurarr.quality_status.changed", entity.QualityStatus, cancellationToken);
         await AddTimelineAsync("status", entity.Id, "assurarr.quality_status.published", entity.TargetObjectRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToStatusSnapshotResponse(entity);

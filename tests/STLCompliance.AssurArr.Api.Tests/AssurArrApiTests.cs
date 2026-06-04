@@ -986,6 +986,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var statuses = await listResponse.Content.ReadFromJsonAsync<List<AssurArrQualityStatusSnapshotResponse>>();
         Assert.NotNull(statuses);
         Assert.Contains(statuses!, item => item.TargetProduct == targetProduct);
+
+        var dashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = await dashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(dashboard);
+        Assert.Contains(dashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.quality_status.changed" && eventItem.SubjectId == created.Id);
     }
 
     [Fact]
