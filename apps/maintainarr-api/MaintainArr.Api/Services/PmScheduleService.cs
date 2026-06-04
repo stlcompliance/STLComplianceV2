@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class PmScheduleService(
     MaintainArrDbContext db,
     AssetService assetService,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     private static readonly HashSet<string> AllowedScheduleStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -114,6 +115,26 @@ public sealed class PmScheduleService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
+        await EnqueuePlanLifecycleEventAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            MaintenancePlatformOutboxEventKinds.PmPlanCreated,
+            $"PM plan {entity.ScheduleKey} created for asset {request.AssetId:D}.",
+            "created",
+            now,
+            cancellationToken);
+
+        await EnqueuePlanLifecycleEventAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            MaintenancePlatformOutboxEventKinds.PmPlanActivated,
+            $"PM plan {entity.ScheduleKey} activated for asset {request.AssetId:D}.",
+            "active",
+            now,
+            cancellationToken);
+
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
@@ -189,8 +210,10 @@ public sealed class PmScheduleService(
             throw new StlApiException("pm_schedule.not_found", "PM schedule was not found.", 404);
         }
 
+        var previousStatus = entity.Status;
         entity.Status = status;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = now;
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "pm_schedule.status.update",
@@ -200,6 +223,20 @@ public sealed class PmScheduleService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        if (!string.Equals(previousStatus, status, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            await EnqueuePlanLifecycleEventAsync(
+                tenantId,
+                actorUserId,
+                entity,
+                MaintenancePlatformOutboxEventKinds.PmPlanActivated,
+                $"PM plan {entity.ScheduleKey} activated for asset {entity.AssetId:D}.",
+                "active",
+                now,
+                cancellationToken);
+        }
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
@@ -403,6 +440,36 @@ public sealed class PmScheduleService(
         Guid? AssetMeterId,
         decimal? IntervalUsage,
         decimal? NextDueAtUsage);
+
+    private async Task EnqueuePlanLifecycleEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        PmSchedule schedule,
+        string eventKind,
+        string summary,
+        string eventResult,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmScheduleEventAsync(
+            tenantId,
+            eventKind,
+            schedule,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult,
+            cancellationToken: cancellationToken);
+    }
 
     private async Task<IReadOnlyList<PmScheduleResponse>> EnrichWithLinkedWorkOrdersAsync(
         Guid tenantId,

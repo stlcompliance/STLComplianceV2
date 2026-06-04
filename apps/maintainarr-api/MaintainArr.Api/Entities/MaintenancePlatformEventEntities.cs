@@ -120,6 +120,10 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string PmOverdue = "pm.overdue";
 
+    public const string PmPlanCreated = "pm_plan.created";
+
+    public const string PmPlanActivated = "pm_plan.activated";
+
     public const string MeterReadingRecorded = "meter_reading.recorded";
 
     public const string MeterReadingRejected = "meter_reading.rejected";

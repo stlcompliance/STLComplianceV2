@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Services;
+using static MaintainArr.Api.Entities.MaintenancePlatformEventRelatedEntityTypes;
+using static MaintainArr.Api.Entities.MaintenancePlatformOutboxEventKinds;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
@@ -83,6 +85,20 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     {
         var token = await RedeemMaintainArrTokenAsync();
         var (assetTypeId, assetId, scheduleId) = await SeedAssetWithPmScheduleAsync(token);
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var outbox = await db.MaintenancePlatformOutboxEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.RelatedEntityType == PmSchedule
+                    && x.RelatedEntityId == scheduleId)
+                .ToListAsync();
+
+            Assert.Contains(outbox, x => x.EventKind == PmPlanCreated);
+            Assert.Contains(outbox, x => x.EventKind == PmPlanActivated);
+        }
 
         var createProgramRequest = Authorized(HttpMethod.Post, "/api/preventive-maintenance/programs", token);
         createProgramRequest.Content = JsonContent.Create(new CreatePmProgramRequest(
