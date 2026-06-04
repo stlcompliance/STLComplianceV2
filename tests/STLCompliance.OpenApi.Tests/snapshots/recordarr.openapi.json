@@ -112,6 +112,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessPolicy/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-policies/{accessPolicyId}/update": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationAccessPolicy/api/integrations",
+        "parameters": [
+          {
+            "name": "accessPolicyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/integrations/controlled-documents": {
@@ -1863,6 +1917,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessPolicy/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-policies/{accessPolicyId}/update": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationAccessPolicy/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "accessPolicyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/integrations/controlled-documents": {
@@ -3588,6 +3696,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrAccessPolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-policies/{accessPolicyId}/update": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "UpdateRecordArrAccessPolicy",
+        "parameters": [
+          {
+            "name": "accessPolicyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccessPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/workspace/controlled-documents/{controlledDocumentId}/acknowledgements": {
@@ -5155,6 +5317,71 @@
           }
         }
       },
+      "CreateAccessPolicyRequest": {
+        "required": [
+          "recordId",
+          "policyType",
+          "status",
+          "readRules",
+          "writeRules",
+          "downloadRules",
+          "shareRules",
+          "exportRules",
+          "purgeRules",
+          "createdByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "policyType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "readRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "writeRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "downloadRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shareRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exportRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "purgeRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdByPersonId": {
+            "type": "string"
+          }
+        }
+      },
       "CreateControlledDocumentRequest": {
         "required": [
           "title",
@@ -5835,6 +6062,71 @@
             "type": "string"
           },
           "supersededByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateAccessPolicyRequest": {
+        "required": [
+          "recordId",
+          "policyType",
+          "status",
+          "readRules",
+          "writeRules",
+          "downloadRules",
+          "shareRules",
+          "exportRules",
+          "purgeRules",
+          "updatedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "policyType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "readRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "writeRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "downloadRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shareRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exportRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "purgeRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updatedByPersonId": {
             "type": "string"
           }
         }

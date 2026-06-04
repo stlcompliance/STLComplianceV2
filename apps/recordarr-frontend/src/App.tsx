@@ -44,6 +44,7 @@ import {
   createExternalShare,
   createRedaction,
   createLegalHold,
+  createAccessPolicy,
   createPackage,
   archivePackage,
   createRecord,
@@ -89,10 +90,12 @@ import {
   completeDocumentAcknowledgement,
   completeDocumentReview,
   completeDisposalReview,
+  updateAccessPolicy,
   revokeAccessGrant,
   revokeDocumentDistribution,
   lockPackage,
   updateRecord,
+  type RecordArrAccessPolicy,
   type RecordArrControlledDocument,
   type RecordArrLegalHold,
   type RecordArrPackage,
@@ -2169,6 +2172,18 @@ function AccessPage({ accessToken }: { accessToken: string }) {
     grantedByPersonId: 'person-doc-controller',
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   })
+  const [policyForm, setPolicyForm] = useState({
+    recordId: 'rec-bol-001',
+    policyType: 'product_scoped',
+    status: 'active',
+    readRules: 'recordarr.records.read\nrecordarr.files.download',
+    writeRules: 'recordarr.records.update',
+    downloadRules: 'recordarr.files.download',
+    shareRules: 'recordarr.external_shares.create',
+    exportRules: 'recordarr.packages.export',
+    purgeRules: 'recordarr.records.purge',
+    createdByPersonId: 'person-doc-controller',
+  })
   const [redactionForm, setRedactionForm] = useState({
     sourceRecordId: 'rec-bol-001',
     redactedRecordId: 'rec-bol-001-redacted',
@@ -2189,6 +2204,39 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       createExternalShare(accessToken, {
         ...shareForm,
         allowedActions: shareForm.allowedActions.split('\n').map((item) => item.trim()).filter(Boolean),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const policyMutation = useMutation({
+    mutationFn: () =>
+      createAccessPolicy(accessToken, {
+        ...policyForm,
+        readRules: policyForm.readRules.split('\n').map((item) => item.trim()).filter(Boolean),
+        writeRules: policyForm.writeRules.split('\n').map((item) => item.trim()).filter(Boolean),
+        downloadRules: policyForm.downloadRules.split('\n').map((item) => item.trim()).filter(Boolean),
+        shareRules: policyForm.shareRules.split('\n').map((item) => item.trim()).filter(Boolean),
+        exportRules: policyForm.exportRules.split('\n').map((item) => item.trim()).filter(Boolean),
+        purgeRules: policyForm.purgeRules.split('\n').map((item) => item.trim()).filter(Boolean),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const togglePolicyStatusMutation = useMutation({
+    mutationFn: ({ policy, status }: { policy: RecordArrAccessPolicy; status: string }) =>
+      updateAccessPolicy(accessToken, policy.accessPolicyId, {
+        recordId: policy.recordId,
+        policyType: policy.policyType,
+        status,
+        readRules: [...policy.readRules],
+        writeRules: [...policy.writeRules],
+        downloadRules: [...policy.downloadRules],
+        shareRules: [...policy.shareRules],
+        exportRules: [...policy.exportRules],
+        purgeRules: [...policy.purgeRules],
+        updatedByPersonId: 'person-doc-controller',
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -2277,6 +2325,30 @@ function AccessPage({ accessToken }: { accessToken: string }) {
         </div>
       </div>
 
+      <div className="recordarr-card mt-6">
+        <div className="recordarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-cyan-300" />
+            <h2 className="text-lg font-semibold text-slate-50">Access policy management</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Record id"><input className="recordarr-input" value={policyForm.recordId} onChange={(e) => setPolicyForm({ ...policyForm, recordId: e.target.value })} /></Field>
+            <Field label="Policy type"><input className="recordarr-input" value={policyForm.policyType} onChange={(e) => setPolicyForm({ ...policyForm, policyType: e.target.value })} /></Field>
+            <Field label="Status"><input className="recordarr-input" value={policyForm.status} onChange={(e) => setPolicyForm({ ...policyForm, status: e.target.value })} /></Field>
+            <Field label="Created by"><input className="recordarr-input" value={policyForm.createdByPersonId} onChange={(e) => setPolicyForm({ ...policyForm, createdByPersonId: e.target.value })} /></Field>
+            <Field label="Read rules" wide><textarea className="recordarr-textarea" value={policyForm.readRules} onChange={(e) => setPolicyForm({ ...policyForm, readRules: e.target.value })} /></Field>
+            <Field label="Write rules" wide><textarea className="recordarr-textarea" value={policyForm.writeRules} onChange={(e) => setPolicyForm({ ...policyForm, writeRules: e.target.value })} /></Field>
+            <Field label="Download rules" wide><textarea className="recordarr-textarea" value={policyForm.downloadRules} onChange={(e) => setPolicyForm({ ...policyForm, downloadRules: e.target.value })} /></Field>
+            <Field label="Share rules" wide><textarea className="recordarr-textarea" value={policyForm.shareRules} onChange={(e) => setPolicyForm({ ...policyForm, shareRules: e.target.value })} /></Field>
+            <Field label="Export rules" wide><textarea className="recordarr-textarea" value={policyForm.exportRules} onChange={(e) => setPolicyForm({ ...policyForm, exportRules: e.target.value })} /></Field>
+            <Field label="Purge rules" wide><textarea className="recordarr-textarea" value={policyForm.purgeRules} onChange={(e) => setPolicyForm({ ...policyForm, purgeRules: e.target.value })} /></Field>
+          </div>
+          <button type="button" className="recordarr-button" onClick={() => policyMutation.mutate()} disabled={policyMutation.isPending}>
+            {policyMutation.isPending ? 'Creating...' : 'Create access policy'}
+          </button>
+        </div>
+      </div>
+
       <div className="recordarr-grid cols-2">
         <Card title="Access policies" icon={<LockKeyhole className="h-4 w-4 text-cyan-300" />}>
           {policiesQuery.data?.map((policy) => (
@@ -2287,6 +2359,24 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               </div>
               <p className="mt-1">{policy.recordId}</p>
               <p className="mt-2 text-xs text-slate-400">Read: {policy.readRules.join(', ')}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => togglePolicyStatusMutation.mutate({ policy, status: 'active' })}
+                  disabled={togglePolicyStatusMutation.isPending || policy.status === 'active'}
+                >
+                  Activate
+                </button>
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => togglePolicyStatusMutation.mutate({ policy, status: 'inactive' })}
+                  disabled={togglePolicyStatusMutation.isPending || policy.status === 'inactive'}
+                >
+                  Deactivate
+                </button>
+              </div>
             </div>
           ))}
           {!policiesQuery.data?.length && !policiesQuery.isLoading ? <EmptyState title="No access policies." /> : null}

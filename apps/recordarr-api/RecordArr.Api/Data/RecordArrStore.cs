@@ -1323,6 +1323,76 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrAccessPolicyResponse CreateAccessPolicy(
+        string recordId,
+        string policyType,
+        string status,
+        IEnumerable<string> readRules,
+        IEnumerable<string> writeRules,
+        IEnumerable<string> downloadRules,
+        IEnumerable<string> shareRules,
+        IEnumerable<string> exportRules,
+        IEnumerable<string> purgeRules,
+        string createdByPersonId)
+    {
+        lock (_gate)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var policy = new RecordArrAccessPolicyResponse(
+                $"acc-{Guid.NewGuid():N}"[..12],
+                recordId,
+                policyType,
+                status,
+                readRules.ToArray(),
+                writeRules.ToArray(),
+                downloadRules.ToArray(),
+                shareRules.ToArray(),
+                exportRules.ToArray(),
+                purgeRules.ToArray());
+            _accessPolicies.Add(policy);
+            AddAccessLog(recordId, "access_policy.created", "allowed", createdByPersonId, null, null, null, null, $"{policyType}:{status}");
+            return policy;
+        }
+    }
+
+    public RecordArrAccessPolicyResponse UpdateAccessPolicy(
+        string accessPolicyId,
+        string recordId,
+        string policyType,
+        string status,
+        IEnumerable<string> readRules,
+        IEnumerable<string> writeRules,
+        IEnumerable<string> downloadRules,
+        IEnumerable<string> shareRules,
+        IEnumerable<string> exportRules,
+        IEnumerable<string> purgeRules,
+        string updatedByPersonId)
+    {
+        lock (_gate)
+        {
+            var index = _accessPolicies.FindIndex(policy => string.Equals(policy.AccessPolicyId, accessPolicyId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Access policy {accessPolicyId} not found.");
+            }
+
+            var updated = new RecordArrAccessPolicyResponse(
+                accessPolicyId,
+                recordId,
+                policyType,
+                status,
+                readRules.ToArray(),
+                writeRules.ToArray(),
+                downloadRules.ToArray(),
+                shareRules.ToArray(),
+                exportRules.ToArray(),
+                purgeRules.ToArray());
+            _accessPolicies[index] = updated;
+            AddAccessLog(recordId, "access_policy.updated", "allowed", updatedByPersonId, null, null, null, null, $"{policyType}:{status}");
+            return updated;
+        }
+    }
+
     public IReadOnlyList<RecordArrAccessGrantResponse> GetAccessGrants()
     {
         lock (_gate)

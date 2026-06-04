@@ -352,6 +352,39 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/access-policies", (RecordArrStore store) => Results.Ok(store.GetAccessPolicies()))
             .WithName($"ListRecordArrIntegrationAccessPolicies{routePrefix}");
 
+        group.MapPost("/access-policies", (WorkspaceEndpoints.CreateAccessPolicyRequest request, RecordArrStore store) =>
+        {
+            var policy = store.CreateAccessPolicy(
+                request.RecordId,
+                request.PolicyType,
+                request.Status,
+                request.ReadRules,
+                request.WriteRules,
+                request.DownloadRules,
+                request.ShareRules,
+                request.ExportRules,
+                request.PurgeRules,
+                request.CreatedByPersonId);
+            return Results.Created($"{routePrefix}/access-policies/{policy.AccessPolicyId}", policy);
+        }).WithName($"CreateRecordArrIntegrationAccessPolicy{routePrefix}");
+
+        group.MapPost("/access-policies/{accessPolicyId}/update", (string accessPolicyId, WorkspaceEndpoints.UpdateAccessPolicyRequest request, RecordArrStore store) =>
+        {
+            var policy = store.UpdateAccessPolicy(
+                accessPolicyId,
+                request.RecordId,
+                request.PolicyType,
+                request.Status,
+                request.ReadRules,
+                request.WriteRules,
+                request.DownloadRules,
+                request.ShareRules,
+                request.ExportRules,
+                request.PurgeRules,
+                request.UpdatedByPersonId);
+            return Results.Ok(policy);
+        }).WithName($"UpdateRecordArrIntegrationAccessPolicy{routePrefix}");
+
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName($"ListRecordArrIntegrationAccessGrants{routePrefix}");
 

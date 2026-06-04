@@ -999,6 +999,48 @@ export async function listAccessPolicies(accessToken: string): Promise<RecordArr
   return getJson<RecordArrAccessPolicy[]>('/api/v1/workspace/access-policies', accessToken)
 }
 
+export async function createAccessPolicy(
+  accessToken: string,
+  body: {
+    recordId: string
+    policyType: string
+    status: string
+    readRules: string[]
+    writeRules: string[]
+    downloadRules: string[]
+    shareRules: string[]
+    exportRules: string[]
+    purgeRules: string[]
+    createdByPersonId: string
+  },
+): Promise<RecordArrAccessPolicy> {
+  return sendJson<RecordArrAccessPolicy>('/api/v1/workspace/access-policies', accessToken, 'POST', body)
+}
+
+export async function updateAccessPolicy(
+  accessToken: string,
+  accessPolicyId: string,
+  body: {
+    recordId: string
+    policyType: string
+    status: string
+    readRules: string[]
+    writeRules: string[]
+    downloadRules: string[]
+    shareRules: string[]
+    exportRules: string[]
+    purgeRules: string[]
+    updatedByPersonId: string
+  },
+): Promise<RecordArrAccessPolicy> {
+  return sendJson<RecordArrAccessPolicy>(
+    `/api/v1/workspace/access-policies/${encodeURIComponent(accessPolicyId)}/update`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function listAccessGrants(accessToken: string): Promise<RecordArrAccessGrant[]> {
   return getJson<RecordArrAccessGrant[]>('/api/v1/workspace/access-grants', accessToken)
 }

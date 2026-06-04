@@ -311,6 +311,39 @@ public static class WorkspaceEndpoints
         group.MapGet("/access-policies", (RecordArrStore store) => Results.Ok(store.GetAccessPolicies()))
             .WithName("ListRecordArrAccessPolicies");
 
+        group.MapPost("/access-policies", (CreateAccessPolicyRequest request, RecordArrStore store) =>
+        {
+            var policy = store.CreateAccessPolicy(
+                request.RecordId,
+                request.PolicyType,
+                request.Status,
+                request.ReadRules,
+                request.WriteRules,
+                request.DownloadRules,
+                request.ShareRules,
+                request.ExportRules,
+                request.PurgeRules,
+                request.CreatedByPersonId);
+            return Results.Created($"/api/v1/workspace/access-policies/{policy.AccessPolicyId}", policy);
+        }).WithName("CreateRecordArrAccessPolicy");
+
+        group.MapPost("/access-policies/{accessPolicyId}/update", (string accessPolicyId, UpdateAccessPolicyRequest request, RecordArrStore store) =>
+        {
+            var policy = store.UpdateAccessPolicy(
+                accessPolicyId,
+                request.RecordId,
+                request.PolicyType,
+                request.Status,
+                request.ReadRules,
+                request.WriteRules,
+                request.DownloadRules,
+                request.ShareRules,
+                request.ExportRules,
+                request.PurgeRules,
+                request.UpdatedByPersonId);
+            return Results.Ok(policy);
+        }).WithName("UpdateRecordArrAccessPolicy");
+
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName("ListRecordArrAccessGrants");
 
@@ -443,6 +476,28 @@ public static class WorkspaceEndpoints
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
     public sealed record UpdateControlledDocumentStatusRequest(string UpdatedByPersonId);
     public sealed record SupersedeControlledDocumentRequest(string SupersededByDocumentRef, string SupersededByPersonId);
+    public sealed record CreateAccessPolicyRequest(
+        string RecordId,
+        string PolicyType,
+        string Status,
+        IReadOnlyList<string> ReadRules,
+        IReadOnlyList<string> WriteRules,
+        IReadOnlyList<string> DownloadRules,
+        IReadOnlyList<string> ShareRules,
+        IReadOnlyList<string> ExportRules,
+        IReadOnlyList<string> PurgeRules,
+        string CreatedByPersonId);
+    public sealed record UpdateAccessPolicyRequest(
+        string RecordId,
+        string PolicyType,
+        string Status,
+        IReadOnlyList<string> ReadRules,
+        IReadOnlyList<string> WriteRules,
+        IReadOnlyList<string> DownloadRules,
+        IReadOnlyList<string> ShareRules,
+        IReadOnlyList<string> ExportRules,
+        IReadOnlyList<string> PurgeRules,
+        string UpdatedByPersonId);
     public sealed record CreateAccessGrantRequest(string RecordId, string GranteeType, string GranteeRef, string Permission, string GrantedByPersonId, DateTimeOffset? ExpiresAt);
     public sealed record RevokeAccessGrantRequest(string RevokedByPersonId, string? RevokeReason);
     public sealed record RecordExternalShareAccessRequest(string AccessedByPersonId, string AccessAction, string? SourceIp, string? UserAgent);
