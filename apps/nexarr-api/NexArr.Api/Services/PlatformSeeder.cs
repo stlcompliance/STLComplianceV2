@@ -54,6 +54,7 @@ public static class PlatformSeeder
     {
         var now = DateTimeOffset.UtcNow;
         await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
+        await EnsurePlatformSessionSettingsColumnsAsync(db, cancellationToken);
         await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
         await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
 
@@ -238,6 +239,26 @@ public static class PlatformSeeder
                 ADD COLUMN IF NOT EXISTS "EnvironmentKey" character varying(64) NOT NULL DEFAULT 'local',
                 ADD COLUMN IF NOT EXISTS "EntitlementDependencyRules" character varying(2048) NOT NULL DEFAULT '',
                 ADD COLUMN IF NOT EXISTS "ProductDependencyMetadata" character varying(2048) NOT NULL DEFAULT '';
+            """,
+            cancellationToken);
+    }
+
+    private static async Task EnsurePlatformSessionSettingsColumnsAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        if (!db.Database.IsRelational())
+        {
+            return;
+        }
+
+        // Keep login and password-policy reads resilient when a deployed DB
+        // is missing the newer session-settings columns.
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            ALTER TABLE nexarr_platform_session_settings
+                ADD COLUMN IF NOT EXISTS "PasswordMinLength" integer NOT NULL DEFAULT 12,
+                ADD COLUMN IF NOT EXISTS "RequirePasswordComplexity" boolean NOT NULL DEFAULT true;
             """,
             cancellationToken);
     }
