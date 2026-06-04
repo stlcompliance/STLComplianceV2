@@ -787,6 +787,96 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(capaClosedDashboard);
         Assert.Contains(capaClosedDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.verified_effective");
         Assert.Contains(capaClosedDashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.closed");
+
+        var reopenedCapaTitle = $"Test reopened CAPA {Guid.NewGuid():N}";
+        var reopenedCapaResponse = await _client.PostAsJsonAsync(
+            "/api/v1/capas",
+            new CreateAssurArrCapaRequest(
+                reopenedCapaTitle,
+                "Automated coverage for ineffective CAPA verification.",
+                "high",
+                "corrective_and_preventive",
+                "manual",
+                "assurarr",
+                "workflow:capa:reopen:test",
+                ["loadarr:inventory:test"],
+                null,
+                null,
+                "Awaiting verification retry",
+                DateTimeOffset.UtcNow.AddDays(7),
+                ["NCR-000001"],
+                ["FIND-000001"],
+                []));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedCapaResponse.StatusCode);
+        var reopenedCapa = await reopenedCapaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
+        Assert.NotNull(reopenedCapa);
+
+        var reopenedRootCauseResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa!.Id}/status",
+            new UpdateAssurArrStatusRequest("root_cause", "Reopened CAPA root cause review started."));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedRootCauseResponse.StatusCode);
+
+        var reopenedActionPlanResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa.Id}/status",
+            new UpdateAssurArrStatusRequest("action_plan", "Reopened CAPA action plan defined."));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedActionPlanResponse.StatusCode);
+
+        var reopenedImplementationResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa.Id}/status",
+            new UpdateAssurArrStatusRequest("implementation", "Reopened CAPA actions underway."));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedImplementationResponse.StatusCode);
+
+        var reopenedVerificationStageResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa.Id}/status",
+            new UpdateAssurArrStatusRequest("verification", "Reopened CAPA ready for verification."));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedVerificationStageResponse.StatusCode);
+
+        var reopenedVerificationResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa!.Id}/effectiveness-verifications",
+            new CreateAssurArrEffectivenessVerificationRequest(
+                null,
+                "scheduled",
+                null,
+                null,
+                "Reverification scheduled after reopened CAPA.",
+                ["recordarr:doc:test"],
+                ["actions_completed=0", "open_nc_count=1"],
+                true,
+                true,
+                reopenedCapa.Number));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedVerificationResponse.StatusCode);
+        var reopenedVerification = await reopenedVerificationResponse.Content.ReadFromJsonAsync<AssurArrEffectivenessVerificationResponse>();
+        Assert.NotNull(reopenedVerification);
+
+        var reopenedVerificationStatusResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{reopenedCapa.Id}/effectiveness-verifications/{reopenedVerification!.Id}/status",
+            new UpdateAssurArrEffectivenessVerificationStatusRequest(
+                "ineffective",
+                "Verification found the corrective action ineffective.",
+                true,
+                true,
+                reopenedCapa.Id.ToString()));
+
+        Assert.Equal(HttpStatusCode.OK, reopenedVerificationStatusResponse.StatusCode);
+
+        var reopenedCapaResponseAfterVerification = await _client.GetAsync($"/api/v1/capas/{reopenedCapa.Id}");
+        reopenedCapaResponseAfterVerification.EnsureSuccessStatusCode();
+        var reopenedCapaAfterVerification = await reopenedCapaResponseAfterVerification.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
+        Assert.NotNull(reopenedCapaAfterVerification);
+        Assert.Equal("ineffective", reopenedCapaAfterVerification!.Status);
+
+        var reopenedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        reopenedDashboardResponse.EnsureSuccessStatusCode();
+        var reopenedDashboard = await reopenedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(reopenedDashboard);
+        Assert.Contains(reopenedDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.reopened");
+        Assert.Contains(reopenedDashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.verified_ineffective");
     }
 
     [Fact]
