@@ -4267,6 +4267,11 @@ function StatusPage() {
                     <div>Critical issues: {profile.criticalIssueCount}</div>
                     <div>Reviewed: {profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleString() : 'n/a'}</div>
                   </div>
+                  <p className="mt-2 text-xs text-cyan-300">
+                    <Link to={`/risk-profiles/${profile.id}`} className="hover:text-cyan-200">
+                      Open detail
+                    </Link>
+                  </p>
                   <p className="mt-3 text-xs text-slate-400">Risk factors: {profile.riskFactors.length ? profile.riskFactors.join(', ') : 'none'}</p>
                   <p className="mt-1 text-xs text-slate-400">Mitigation: {profile.mitigationActions.length ? profile.mitigationActions.join(', ') : 'none'}</p>
                 </div>
@@ -4274,6 +4279,77 @@ function StatusPage() {
             ) : (
               <EmptyState title="No risk profiles yet." />
             )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RiskProfileDetailPage() {
+  const { id = '' } = useParams<{ id: string }>()
+  const query = useRecords(['assurarr', 'risk-profile', id], () => assurarrApi.getRiskProfile(id))
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading risk profile detail" />
+  }
+
+  if (!query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Risk profile detail" description="Could not load the requested risk profile." />
+      </div>
+    )
+  }
+
+  const profile = query.data
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={profile.targetRef}
+        description={`Risk profile for ${profile.targetType}`}
+        action={<span className="assurarr-pill">{profile.riskLevel}</span>}
+      />
+      <div className="assurarr-grid cols-2">
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Overview</p>
+            <div className="space-y-2 text-sm text-slate-300">
+              <div><span className="text-slate-500">Target type:</span> {profile.targetType}</div>
+              <div><span className="text-slate-500">Target ref:</span> {profile.targetRef}</div>
+              <div><span className="text-slate-500">Open issues:</span> {profile.openIssueCount}</div>
+              <div><span className="text-slate-500">Repeat issues:</span> {profile.repeatIssueCount}</div>
+              <div><span className="text-slate-500">Critical issues:</span> {profile.criticalIssueCount}</div>
+              <div><span className="text-slate-500">Reviewed:</span> {profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleString() : 'n/a'}</div>
+              <div><span className="text-slate-500">Reviewed by:</span> {profile.reviewedByPersonId ?? 'n/a'}</div>
+              <div><span className="text-slate-500">Last incident:</span> {profile.lastIncidentAt ? new Date(profile.lastIncidentAt).toLocaleString() : 'n/a'}</div>
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Risk factors and mitigation</p>
+            <div className="space-y-4 text-sm text-slate-300">
+              <div>
+                <div className="text-slate-500">Risk factors</div>
+                <div>{profile.riskFactors.length ? profile.riskFactors.join(', ') : 'none'}</div>
+              </div>
+              <div>
+                <div className="text-slate-500">Mitigation actions</div>
+                <div>{profile.mitigationActions.length ? profile.mitigationActions.join(', ') : 'none'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="assurarr-card mt-6">
+        <div className="assurarr-card-inner space-y-3">
+          <p className="assurarr-label">Timeline</p>
+          <div className="space-y-2">
+            <div className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3 text-sm text-slate-300">
+              Quality risk profiles are published through the status workspace and reflected in the dashboard count for elevated risk.
+            </div>
           </div>
         </div>
       </div>
@@ -4550,6 +4626,7 @@ export function App() {
     if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
+    if (path.startsWith('/risk-profiles')) return 'Risk profiles'
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
     return 'Dashboard'
@@ -4582,6 +4659,7 @@ export function App() {
         <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/complaints/:id" element={<CustomerComplaintDetailPage />} />
         <Route path="/status" element={<StatusPage />} />
+        <Route path="/risk-profiles/:id" element={<RiskProfileDetailPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/scorecards/:id" element={<ScorecardDetailPage />} />
         <Route path="/history" element={<HistoryPage />} />
