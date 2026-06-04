@@ -1191,6 +1191,14 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(supplierIssue.Id, supplierDetail!.Id);
         Assert.Equal(supplierIssue.Number, supplierDetail.Number);
 
+        var supplierInitialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/supplyarr/test");
+        supplierInitialStatusResponse.EnsureSuccessStatusCode();
+        var supplierInitialStatus = await supplierInitialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(supplierInitialStatus);
+        Assert.Equal("warning", supplierInitialStatus!.QualityStatus);
+        Assert.Equal("loadarr:receipt:test", supplierInitialStatus.TargetObjectRef);
+        Assert.Contains(supplierInitialStatus.OpenNonconformanceRefs, item => item == "NCR-000001");
+
         var supplierNotifiedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
             new UpdateAssurArrStatusRequest("supplier_notified", "Supplier notified."));
@@ -1214,6 +1222,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             new UpdateAssurArrStatusRequest("closed", "Supplier issue closed."));
 
         Assert.Equal(HttpStatusCode.OK, supplierClosedResponse.StatusCode);
+
+        var supplierClosedStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/supplyarr/test");
+        supplierClosedStatusResponse.EnsureSuccessStatusCode();
+        var supplierClosedStatus = await supplierClosedStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(supplierClosedStatus);
+        Assert.Equal("acceptable", supplierClosedStatus!.QualityStatus);
+        Assert.Empty(supplierClosedStatus.OpenNonconformanceRefs);
 
         var supplierDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         supplierDashboardResponse.EnsureSuccessStatusCode();
@@ -1260,6 +1275,15 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(complaint.Id, complaintDetail!.Id);
         Assert.Equal(complaint.Number, complaintDetail.Number);
 
+        var complaintInitialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/customarr/test");
+        complaintInitialStatusResponse.EnsureSuccessStatusCode();
+        var complaintInitialStatus = await complaintInitialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(complaintInitialStatus);
+        Assert.Equal("warning", complaintInitialStatus!.QualityStatus);
+        Assert.Equal("routarr:shipment:test", complaintInitialStatus.TargetObjectRef);
+        Assert.Contains(complaintInitialStatus.OpenNonconformanceRefs, item => item == "NCR-000001");
+        Assert.Contains(complaintInitialStatus.OpenCapaRefs, item => item == "CAPA-000001");
+
         var complaintTriageResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}/status",
             new UpdateAssurArrStatusRequest("triage", "Complaint triaged."));
@@ -1272,11 +1296,26 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         Assert.Equal(HttpStatusCode.OK, complaintResponsePending.StatusCode);
 
+        var complaintPendingStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/customarr/test");
+        complaintPendingStatusResponse.EnsureSuccessStatusCode();
+        var complaintPendingStatus = await complaintPendingStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(complaintPendingStatus);
+        Assert.Equal("under_review", complaintPendingStatus!.QualityStatus);
+        Assert.Contains(complaintPendingStatus.OpenCapaRefs, item => item == "CAPA-000001");
+
         var complaintClosedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}/status",
             new UpdateAssurArrStatusRequest("closed", "Complaint closed after response."));
 
         Assert.Equal(HttpStatusCode.OK, complaintClosedResponse.StatusCode);
+
+        var complaintClosedStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/customarr/test");
+        complaintClosedStatusResponse.EnsureSuccessStatusCode();
+        var complaintClosedStatus = await complaintClosedStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(complaintClosedStatus);
+        Assert.Equal("acceptable", complaintClosedStatus!.QualityStatus);
+        Assert.Empty(complaintClosedStatus.OpenNonconformanceRefs);
+        Assert.Empty(complaintClosedStatus.OpenCapaRefs);
 
         var complaintDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         complaintDashboardResponse.EnsureSuccessStatusCode();

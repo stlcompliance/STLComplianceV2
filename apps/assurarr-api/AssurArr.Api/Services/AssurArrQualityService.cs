@@ -2531,6 +2531,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         db.SupplierQualityIssues.Add(entity);
         await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.created", entity.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToSupplierQualityIssueResponse(entity);
     }
@@ -2554,6 +2555,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
 
         await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.status_changed", entity.Status, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToSupplierQualityIssueResponse(entity);
     }
@@ -2723,6 +2725,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         db.CustomerComplaintQualityCases.Add(entity);
         await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.created", entity.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCustomerComplaintQualityCaseResponse(entity);
     }
@@ -2750,9 +2753,103 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
 
         await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.status_changed", entity.Status, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCustomerComplaintQualityCaseResponse(entity);
     }
+
+    private async Task PublishQualityStatusSnapshotAsync(AssurArrSupplierQualityIssue entity, CancellationToken cancellationToken)
+    {
+        var targetProduct = "supplyarr";
+        var targetObjectRef = NormalizeNullable(entity.SourceObjectRef) ?? $"assurarr:supplier-quality-issue:{entity.Number}";
+        var qualityStatus = DetermineSupplierIssueQualityStatus(entity.Status, entity.Severity);
+        var openNonconformanceRefs = string.IsNullOrWhiteSpace(entity.NonconformanceRef)
+            || string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : [entity.NonconformanceRef!];
+
+        await CreateStatusSnapshotAsync(
+            new CreateAssurArrQualityStatusSnapshotRequest(
+                targetProduct,
+                targetObjectRef,
+                qualityStatus,
+                entity.Severity,
+                entity.Title,
+                entity.Description,
+                entity.SourceProduct,
+                entity.SourceObjectRef,
+                entity.AffectedItemRefs.ToArray(),
+                entity.OwnerPersonId,
+                [],
+                openNonconformanceRefs,
+                [],
+                [],
+                entity.OpenedAt),
+            cancellationToken);
+    }
+
+    private static string DetermineSupplierIssueQualityStatus(string status, string severity) =>
+        string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "resolved", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase) ? "unknown"
+        : string.Equals(status, "response_pending", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "under_review", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "corrective_action", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "supplier_notified", StringComparison.OrdinalIgnoreCase) ? "warning"
+        : string.Equals(status, "open", StringComparison.OrdinalIgnoreCase) ? "warning"
+        : (string.Equals(severity, "critical", StringComparison.OrdinalIgnoreCase) || string.Equals(severity, "high", StringComparison.OrdinalIgnoreCase))
+            ? "warning"
+            : "under_review";
+
+    private async Task PublishQualityStatusSnapshotAsync(AssurArrCustomerComplaintQualityCase entity, CancellationToken cancellationToken)
+    {
+        var targetProduct = "customarr";
+        var targetObjectRef = NormalizeNullable(entity.SourceObjectRef) ?? $"assurarr:customer-complaint:{entity.Number}";
+        var qualityStatus = DetermineCustomerComplaintQualityStatus(entity.Status, entity.Severity);
+        var openNonconformanceRefs = string.IsNullOrWhiteSpace(entity.NonconformanceRef)
+            || string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : [entity.NonconformanceRef!];
+        var openCapaRefs = string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : entity.CapaRefs.ToArray();
+
+        await CreateStatusSnapshotAsync(
+            new CreateAssurArrQualityStatusSnapshotRequest(
+                targetProduct,
+                targetObjectRef,
+                qualityStatus,
+                entity.Severity,
+                entity.Title,
+                entity.Description,
+                entity.SourceProduct,
+                entity.SourceObjectRef,
+                entity.AffectedItemRefs.Concat(entity.AffectedShipmentRefs).Concat(entity.AffectedOrderRefs).Concat(entity.AffectedAssetRefs).ToArray(),
+                entity.OwnerPersonId,
+                [],
+                openNonconformanceRefs,
+                openCapaRefs,
+                [],
+                entity.CustomerResponseDueAt),
+            cancellationToken);
+    }
+
+    private static string DetermineCustomerComplaintQualityStatus(string status, string severity) =>
+        string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "resolved", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase) ? "unknown"
+        : string.Equals(status, "response_pending", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "investigation", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "containment", StringComparison.OrdinalIgnoreCase) ? "on_hold"
+        : string.Equals(status, "corrective_action", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : string.Equals(status, "triage", StringComparison.OrdinalIgnoreCase) ? "warning"
+        : string.Equals(status, "received", StringComparison.OrdinalIgnoreCase) ? "warning"
+        : (string.Equals(severity, "critical", StringComparison.OrdinalIgnoreCase) || string.Equals(severity, "high", StringComparison.OrdinalIgnoreCase))
+            ? "warning"
+            : "under_review";
 
     public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListStatusSnapshotsAsync(CancellationToken cancellationToken = default)
     {
