@@ -440,6 +440,7 @@ export const assurarrApi = {
   updateNonconformanceStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Nonconformance>(`/api/v1/nonconformances/${id}/status`, 'PATCH', { status, closureSummary }),
   listHolds: () => getJson<QualityHold[]>('/api/v1/holds'),
+  getHold: (id: string) => getJson<QualityHold>(`/api/v1/holds/${id}`),
   createHold: (body: CreateBase & { holdType: string; holdScope: string; holdReason?: string; quantityHeld?: number; unitOfMeasure?: string; lotNumber?: string; serialNumber?: string; expiresAt?: string }) =>
     sendJson<QualityHold>('/api/v1/holds', 'POST', {
       ...body,
@@ -465,6 +466,7 @@ export const assurarrApi = {
   rejectHoldRelease: (holdId: string, closureSummary?: string) =>
     sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/reject`, 'POST', { status: 'rejected', closureSummary }),
   listCapas: () => getJson<Capa[]>('/api/v1/capas'),
+  getCapa: (id: string) => getJson<Capa>(`/api/v1/capas/${id}`),
   createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[] }) =>
     sendJson<Capa>('/api/v1/capas', 'POST', {
       ...body,

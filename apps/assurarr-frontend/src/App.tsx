@@ -772,10 +772,114 @@ function HoldPage() {
           emptyLabel="No quality holds yet."
           onStatusChange={(id, status) => assurarrApi.updateHoldStatus(id, status)}
           statusChoices={statusOptions.hold}
+          detailBasePath="/holds"
         />
       ) : (
         <LoadingCard label="Loading holds" />
       )}
+    </div>
+  )
+}
+
+function HoldDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'hold', id],
+    queryFn: () => assurarrApi.getHold(id),
+    enabled: Boolean(id),
+  })
+  const releases = useRecords(['assurarr', 'releases'], assurarrApi.listQualityReleases)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading hold detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Hold detail" description="Could not load the requested quality hold." />
+        <EmptyState title="Quality hold not found." />
+      </div>
+    )
+  }
+
+  const hold = query.data
+  const relatedReleases = releases.data?.filter((release) => release.holdRef === hold.number) ?? []
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'hold' && event.subjectId === hold.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${hold.number} · ${hold.title}`}
+        description="Hold detail, release requirements, release evidence, and the downstream records blocked by this quality decision."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{hold.status}</span>
+                <span className="assurarr-pill">{hold.severity}</span>
+                <span className="assurarr-pill">{hold.holdType}</span>
+                <span className="assurarr-pill">{hold.holdScope}</span>
+              </div>
+              <p className="text-sm text-slate-300">{hold.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {hold.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {hold.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {hold.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Placed:</span> {hold.placedAt ? new Date(hold.placedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Released:</span> {hold.releasedAt ? new Date(hold.releasedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Rejected:</span> {hold.rejectedAt ? new Date(hold.rejectedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Blocking context</p>
+              <div className="flex flex-wrap gap-2 text-xs text-slate-200">
+                {hold.affectedObjectRefs.length > 0 ? hold.affectedObjectRefs.map((ref) => <span key={ref} className="assurarr-pill">{ref}</span>) : <span className="assurarr-pill">No affected objects</span>}
+              </div>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Quantity held:</span> {hold.quantityHeld ?? 'n/a'} {hold.unitOfMeasure ?? ''}</div>
+                <div><span className="text-slate-500">Lot:</span> {hold.lotNumber ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Serial:</span> {hold.serialNumber ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Hold reason:</span> {hold.holdReason ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Release reason:</span> {hold.releaseReason ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Rejection reason:</span> {hold.rejectionReason ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Release requirements"
+          items={hold.releaseRequirements.map((item) => item)}
+          emptyLabel="No release requirements have been captured yet."
+        />
+        <SectionCard
+          title="Release approvals"
+          items={hold.releaseApprovalRefs.map((item) => item)}
+          emptyLabel="No release approvals have been captured yet."
+        />
+        <SectionCard
+          title="Evidence"
+          items={hold.recordRefs.map((item) => item)}
+          emptyLabel="No evidence records are linked to this hold."
+        />
+        <SectionCard
+          title="Related quality releases"
+          items={relatedReleases.map((release) => `${release.number} · ${release.status} · ${release.releaseType}${release.evidenceRecordRefs.length ? ` · evidence ${release.evidenceRecordRefs.length}` : ''}`)}
+          emptyLabel="No quality release requests are linked to this hold."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -1199,10 +1303,203 @@ function CapaPage() {
           emptyLabel="No CAPA records yet."
           onStatusChange={(id, status) => assurarrApi.updateCapaStatus(id, status)}
           statusChoices={statusOptions.capa}
+          detailBasePath="/capa"
         />
       ) : (
         <LoadingCard label="Loading CAPA" />
       )}
+    </div>
+  )
+}
+
+function CapaDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'capa', id],
+    queryFn: () => assurarrApi.getCapa(id),
+    enabled: Boolean(id),
+  })
+  const actionQuery = useRecords(['assurarr', 'capa-actions', id], () => assurarrApi.listCapaActions(id))
+  const verificationQuery = useRecords(['assurarr', 'verification-plans', id], () => assurarrApi.listVerificationPlans(id))
+  const nonconformanceQuery = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const findingQuery = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
+  const dashboard = useDashboard()
+  const [selectedActionId, setSelectedActionId] = useState('')
+
+  useEffect(() => {
+    setSelectedActionId('')
+  }, [id])
+
+  const activeActionId = selectedActionId || actionQuery.data?.[0]?.id || ''
+  const blockerQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action-blockers', id, activeActionId],
+    queryFn: () => assurarrApi.listCapaActionBlockers(id, activeActionId),
+    enabled: Boolean(id && activeActionId),
+    staleTime: 15_000,
+  })
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading CAPA detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="CAPA detail" description="Could not load the requested corrective action plan." />
+        <EmptyState title="CAPA not found." />
+      </div>
+    )
+  }
+
+  const capa = query.data
+  const relatedNonconformances = nonconformanceQuery.data?.filter((item) => capa.relatedNonconformanceRefs.includes(item.number)) ?? []
+  const relatedFindings = findingQuery.data?.filter((item) => capa.relatedAuditFindingRefs.includes(item.number) || item.capaRef === capa.number) ?? []
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa' && event.subjectId === capa.id) ?? []
+  const currentAction = actionQuery.data?.find((action) => action.id === activeActionId) ?? null
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${capa.number} · ${capa.title}`}
+        description="Root cause, action plan, assigned actions, blockers, verification plans, and the evidence trail for the CAPA."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{capa.status}</span>
+                <span className="assurarr-pill">{capa.severity}</span>
+                <span className="assurarr-pill">{capa.capaType}</span>
+                <span className="assurarr-pill">{capa.sourceType}</span>
+              </div>
+              <p className="text-sm text-slate-300">{capa.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {capa.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {capa.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {capa.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Sponsor:</span> {capa.sponsorPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Due:</span> {capa.dueAt ? new Date(capa.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {capa.closedAt ? new Date(capa.closedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Root cause and sources</p>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Root cause:</span> {capa.rootCauseSummary ?? 'Awaiting analysis'}</div>
+                <div><span className="text-slate-500">Source refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Related nonconformances:</span> {capa.relatedNonconformanceRefs.length ? capa.relatedNonconformanceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Related findings:</span> {capa.relatedAuditFindingRefs.length ? capa.relatedAuditFindingRefs.join(', ') : 'none'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-4">
+              <p className="assurarr-label">Assigned actions</p>
+              {actionQuery.data?.length ? (
+                <div className="space-y-2">
+                  {actionQuery.data.map((action) => (
+                    <button
+                      key={action.id}
+                      type="button"
+                      className={`w-full rounded-xl border p-3 text-left transition ${action.id === activeActionId ? 'border-cyan-500/70 bg-slate-900/90' : 'border-slate-700/70 bg-slate-900/80'}`}
+                      onClick={() => setSelectedActionId(action.id)}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <strong className="text-sm text-slate-50">{action.number}</strong>
+                        <span className="assurarr-pill">{action.status}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-300">{action.title}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {action.actionType} - {action.targetProduct}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Blockers: {action.blockerRefs.length > 0 ? action.blockerRefs.join(', ') : 'none'}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="No CAPA actions yet." />
+              )}
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-4">
+              <p className="assurarr-label">Blockers and verification</p>
+              <div className="grid gap-3">
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-50">Selected action</strong>
+                    <span className="assurarr-pill">{currentAction?.status ?? 'none'}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{currentAction ? currentAction.title : 'Select an action to see its blockers.'}</p>
+                </div>
+                {blockerQuery.data?.length ? (
+                  <div className="space-y-2">
+                    {blockerQuery.data.map((blocker) => (
+                      <div key={blocker.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-sm text-slate-50">{blocker.number}</strong>
+                          <span className="assurarr-pill">{blocker.status}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-300">{blocker.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">{blocker.blockerType}{blocker.sourceProduct ? ` - ${blocker.sourceProduct}` : ''}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title={activeActionId ? 'No blockers for the selected action.' : 'Select an action first.'} />
+                )}
+                {verificationQuery.data?.length ? (
+                  <div className="space-y-2">
+                    {verificationQuery.data.map((plan) => (
+                      <div key={plan.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-sm text-slate-50">{plan.number}</strong>
+                          <span className="assurarr-pill">{plan.status}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-300">{plan.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">{plan.verificationType}</p>
+                        <p className="mt-1 text-xs text-slate-400">{plan.successCriteria}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="No verification plans yet." />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Effectiveness evidence"
+          items={capa.recordRefs.map((item) => item)}
+          emptyLabel="No evidence records are linked to this CAPA."
+        />
+        <SectionCard
+          title="Related nonconformances"
+          items={relatedNonconformances.map((item) => `${item.number} · ${item.title} · ${item.status}`)}
+          emptyLabel="No linked nonconformances were found."
+        />
+        <SectionCard
+          title="Related findings"
+          items={relatedFindings.map((item) => `${item.number} · ${item.title} · ${item.status}`)}
+          emptyLabel="No linked findings were found."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
     </div>
   )
 }
@@ -2839,7 +3136,9 @@ export function App() {
         <Route path="/nonconformances" element={<NonconformancePage />} />
         <Route path="/nonconformances/:id" element={<NonconformanceDetailPage />} />
         <Route path="/holds" element={<HoldPage />} />
+        <Route path="/holds/:id" element={<HoldDetailPage />} />
         <Route path="/capa" element={<CapaPage />} />
+        <Route path="/capa/:id" element={<CapaDetailPage />} />
         <Route path="/audits" element={<AuditPage />} />
         <Route path="/findings" element={<FindingsPage />} />
         <Route path="/reviews" element={<ReviewPage />} />

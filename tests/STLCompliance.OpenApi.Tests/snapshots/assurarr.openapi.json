@@ -462,6 +462,132 @@
         }
       }
     },
+    "/api/v1/capas/{capaId}/actions/{actionId}/blockers": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrCapaActionBlockers",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrCapaActionBlocker",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCapaActionBlockerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/actions/{actionId}/blockers/{blockerId}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrCapaActionBlockerStatus",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "blockerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrCapaActionBlockerStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/capas/{capaId}/actions/{actionId}/status": {
       "patch": {
         "tags": [
@@ -597,6 +723,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrCapa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -772,6 +922,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/holds/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrQualityHold",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1005,6 +1179,108 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds/{holdId}/reject": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "RejectAssurArrHoldRelease",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds/{holdId}/release": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ApproveAssurArrHoldRelease",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds/{holdId}/release-requests": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrHoldReleaseRequest",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityReleaseRequest"
               }
             }
           },
@@ -1697,6 +1973,39 @@
           }
         }
       },
+      "CreateAssurArrCapaActionBlockerRequest": {
+        "required": [
+          "blockerType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "title",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "blockerType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
       "CreateAssurArrCapaActionRequest": {
         "required": [
           "title",
@@ -2269,6 +2578,7 @@
           "complianceImpact",
           "recurrenceFlag",
           "repeatOfNonconformanceRef",
+          "blockerRefs",
           "dueAt"
         ],
         "type": "object",
@@ -2345,6 +2655,12 @@
               "null",
               "string"
             ]
+          },
+          "blockerRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "dueAt": {
             "type": [
@@ -3396,6 +3712,33 @@
             "format": "uuid"
           },
           "plannedVerificationAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateAssurArrCapaActionBlockerStatusRequest": {
+        "required": [
+          "status",
+          "resolvedByPersonId",
+          "resolvedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "resolvedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "resolvedAt": {
             "type": [
               "null",
               "string"

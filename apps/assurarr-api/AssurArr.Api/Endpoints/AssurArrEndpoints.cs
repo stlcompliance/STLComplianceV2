@@ -36,6 +36,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListQualityHoldsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityHolds");
 
+        group.MapGet("/holds/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetQualityHoldAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityHold");
+
         group.MapPost("/holds", async (CreateAssurArrQualityHoldRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityHoldAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityHold");
@@ -59,6 +65,12 @@ public static class AssurArrEndpoints
         group.MapGet("/capas", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListCapasAsync(cancellationToken)))
             .WithName("ListAssurArrCapas");
+
+        group.MapGet("/capas/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetCapaAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrCapa");
 
         group.MapPost("/capas", async (CreateAssurArrCapaRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateCapaAsync(request, cancellationToken)))

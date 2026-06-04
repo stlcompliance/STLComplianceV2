@@ -104,6 +104,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var approvalHold = await approvalHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(approvalHold);
 
+        var approvalHoldDetailResponse = await _client.GetAsync($"/api/v1/holds/{approvalHold!.Id}");
+        Assert.Equal(HttpStatusCode.OK, approvalHoldDetailResponse.StatusCode);
+        var approvalHoldDetail = await approvalHoldDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(approvalHoldDetail);
+        Assert.Equal(approvalHold.Id, approvalHoldDetail!.Id);
+        Assert.Equal(approvalHold.Number, approvalHoldDetail.Number);
+
         var approvalReleaseResponse = await _client.PostAsJsonAsync(
             $"/api/v1/integrations/holds/{approvalHold!.Id}/release-requests",
             new CreateAssurArrQualityReleaseRequest(
@@ -301,6 +308,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(HttpStatusCode.OK, capaResponse.StatusCode);
         var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(capa);
+
+        var capaDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa!.Id}");
+        Assert.Equal(HttpStatusCode.OK, capaDetailResponse.StatusCode);
+        var capaDetail = await capaDetailResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
+        Assert.NotNull(capaDetail);
+        Assert.Equal(capa.Id, capaDetail!.Id);
+        Assert.Equal(capa.Number, capaDetail.Number);
 
         var actionTitle = $"Test CAPA action {Guid.NewGuid():N}";
         var actionResponse = await _client.PostAsJsonAsync(

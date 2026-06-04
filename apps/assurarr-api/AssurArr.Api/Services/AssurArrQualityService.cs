@@ -879,6 +879,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToQualityHoldResponse).ToList();
     }
 
+    public async Task<AssurArrQualityHoldResponse?> GetQualityHoldAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityHolds.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToQualityHoldResponse(entity)
+            : null;
+
     public async Task<AssurArrQualityHoldResponse> CreateQualityHoldAsync(CreateAssurArrQualityHoldRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -1069,6 +1074,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         return entities.Select(ToCapaResponse).ToList();
     }
+
+    public async Task<AssurArrCapaResponse?> GetCapaAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.Capas.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToCapaResponse(entity)
+            : null;
 
     public async Task<AssurArrCapaResponse> CreateCapaAsync(CreateAssurArrCapaRequest request, CancellationToken cancellationToken = default)
     {
