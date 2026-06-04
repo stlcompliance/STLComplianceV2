@@ -406,6 +406,204 @@
         }
       }
     },
+    "/api/v1/capas/{capaId}/actions": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrCapaActions",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrCapaAction",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCapaActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/actions/{actionId}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrCapaActionStatus",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrCapaActionStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/verification-plans": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrVerificationPlans",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrVerificationPlan",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrVerificationPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/verification-plans/{verificationPlanId}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrVerificationPlanStatus",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "verificationPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrVerificationPlanStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/capas/{id}/status": {
       "patch": {
         "tags": [
@@ -1022,6 +1220,74 @@
         }
       }
     },
+    "/api/v1/integrations/scars": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrSupplierCorrectiveActionRequests",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrSupplierCorrectiveActionRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrSupplierCorrectiveActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/scars/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrSupplierCorrectiveActionRequestStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/scorecards": {
       "get": {
         "tags": [
@@ -1428,6 +1694,91 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrCapaActionRequest": {
+        "required": [
+          "title",
+          "description",
+          "actionType",
+          "assignedPersonId",
+          "assignedTeamRef",
+          "sourceProductActionRef",
+          "targetProduct",
+          "targetObjectRef",
+          "dueAt",
+          "verificationRequired",
+          "evidenceRecordRefs",
+          "blockerRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "actionType": {
+            "type": "string"
+          },
+          "assignedPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductActionRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetProduct": {
+            "type": "string"
+          },
+          "targetObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "verificationRequired": {
+            "type": "boolean"
+          },
+          "evidenceRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockerRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2741,6 +3092,143 @@
           }
         }
       },
+      "CreateAssurArrSupplierCorrectiveActionRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "supplierRef",
+          "sourceNonconformanceRef",
+          "sourceCapaRef",
+          "requestedByPersonId",
+          "requestedAt",
+          "supplierDueAt",
+          "supplierResponseRecordRefs",
+          "reviewPersonId",
+          "reviewedAt",
+          "reviewDecision",
+          "followUpCapaRef",
+          "recordRefs",
+          "ownerPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supplierRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceNonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceCapaRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requestedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "supplierDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "supplierResponseRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewDecision": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "followUpCapaRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "CreateAssurArrSupplierQualityIssueRequest": {
         "required": [
           "title",
@@ -2850,6 +3338,122 @@
           }
         }
       },
+      "CreateAssurArrVerificationPlanRequest": {
+        "required": [
+          "title",
+          "description",
+          "verificationType",
+          "successCriteria",
+          "sampleSize",
+          "observationPeriodDays",
+          "requiredEvidenceTypes",
+          "responsiblePersonId",
+          "plannedVerificationAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "verificationType": {
+            "type": "string"
+          },
+          "successCriteria": {
+            "type": "string"
+          },
+          "sampleSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "observationPeriodDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requiredEvidenceTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "responsiblePersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "plannedVerificationAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateAssurArrCapaActionStatusRequest": {
+        "required": [
+          "status",
+          "completedByPersonId",
+          "completedAt",
+          "verifiedByPersonId",
+          "verifiedAt",
+          "closureSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "completedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "verifiedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "verifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "closureSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpdateAssurArrQualityAuditChecklistItemResponseRequest": {
         "required": [
           "responseValue",
@@ -2906,6 +3510,23 @@
         }
       },
       "UpdateAssurArrStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "closureSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateAssurArrVerificationPlanStatusRequest": {
         "required": [
           "status"
         ],

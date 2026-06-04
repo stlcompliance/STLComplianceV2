@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FolderKanban,
   Gauge,
+  Send,
   Plus,
   ShieldAlert,
   ShieldCheck,
@@ -37,6 +38,7 @@ const navItems: ProductNavItem[] = [
   { label: 'Containment', to: '/containment', icon: asNavIcon(ShieldCheck) },
   { label: 'Dispositions', to: '/dispositions', icon: asNavIcon(ClipboardList) },
   { label: 'Supplier quality', to: '/supplier-quality', icon: asNavIcon(ShieldAlert) },
+  { label: 'SCARs', to: '/scars', icon: asNavIcon(Send) },
   { label: 'Complaints', to: '/complaints', icon: asNavIcon(ClipboardList) },
   { label: 'Status', to: '/status', icon: asNavIcon(BookCheck), sectionBreakBefore: true },
   { label: 'Scorecards', to: '/scorecards', icon: asNavIcon(BarChart3) },
@@ -55,6 +57,7 @@ const statusOptions: Record<string, readonly string[]> = {
   containment: ['open', 'assigned', 'in_progress', 'completed', 'verified', 'canceled'],
   disposition: ['proposed', 'pending_approval', 'approved', 'executed', 'rejected', 'canceled'],
   supplierQuality: ['open', 'supplier_notified', 'response_pending', 'under_review', 'corrective_action', 'resolved', 'closed', 'canceled'],
+  scar: ['draft', 'sent', 'acknowledged', 'supplier_response_pending', 'response_received', 'under_review', 'accepted', 'rejected', 'closed', 'canceled'],
   customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
 
@@ -1888,7 +1891,7 @@ function SupplierQualityPage() {
               <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
             </Field>
             <Field label="SCAR ref">
-              <input className="assurarr-input" value={form.scarRef} onChange={(event) => setForm({ ...form, scarRef: event.target.value })} />
+              <input className="assurarr-input" value={form.scarRef} onChange={(event) => setForm({ ...form, scarRef: event.target.value })} placeholder="SCAR-000001" />
             </Field>
             <Field label="Owner person id">
               <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
@@ -1911,6 +1914,175 @@ function SupplierQualityPage() {
         />
       ) : (
         <LoadingCard label="Loading supplier quality issues" />
+      )}
+    </div>
+  )
+}
+
+function ScarPage() {
+  const query = useRecords(['assurarr', 'scars'], assurarrApi.listScars)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'high',
+    sourceProduct: 'assurarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    supplierRef: '',
+    sourceNonconformanceRef: '',
+    sourceCapaRef: '',
+    requestedByPersonId: '',
+    requestedAt: '',
+    supplierDueAt: '',
+    supplierResponseRecordRefs: '',
+    reviewPersonId: '',
+    reviewedAt: '',
+    reviewDecision: '',
+    followUpCapaRef: '',
+    recordRefs: '',
+    ownerPersonId: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createScar({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        supplierRef: form.supplierRef || undefined,
+        sourceNonconformanceRef: form.sourceNonconformanceRef || undefined,
+        sourceCapaRef: form.sourceCapaRef || undefined,
+        requestedByPersonId: form.requestedByPersonId || undefined,
+        requestedAt: form.requestedAt || undefined,
+        supplierDueAt: form.supplierDueAt || undefined,
+        supplierResponseRecordRefs: joinRefs(form.supplierResponseRecordRefs),
+        reviewPersonId: form.reviewPersonId || undefined,
+        reviewedAt: form.reviewedAt || undefined,
+        reviewDecision: form.reviewDecision || undefined,
+        followUpCapaRef: form.followUpCapaRef || undefined,
+        recordRefs: joinRefs(form.recordRefs),
+        ownerPersonId: form.ownerPersonId || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'high',
+        sourceProduct: 'assurarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        supplierRef: '',
+        sourceNonconformanceRef: '',
+        sourceCapaRef: '',
+        requestedByPersonId: '',
+        requestedAt: '',
+        supplierDueAt: '',
+        supplierResponseRecordRefs: '',
+        reviewPersonId: '',
+        reviewedAt: '',
+        reviewDecision: '',
+        followUpCapaRef: '',
+        recordRefs: '',
+        ownerPersonId: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="SCARs"
+        description="Send supplier corrective action requests, review responses, and close the loop with evidence."
+        action={<span className="assurarr-pill"><Send className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create SCAR</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Supplier ref">
+              <input className="assurarr-input" value={form.supplierRef} onChange={(event) => setForm({ ...form, supplierRef: event.target.value })} placeholder="supplyarr:supplier:acme" />
+            </Field>
+            <Field label="Source product">
+              <input className="assurarr-input" value={form.sourceProduct} onChange={(event) => setForm({ ...form, sourceProduct: event.target.value })} />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="SQA-000001" />
+            </Field>
+            <Field label="Source nonconformance ref">
+              <input className="assurarr-input" value={form.sourceNonconformanceRef} onChange={(event) => setForm({ ...form, sourceNonconformanceRef: event.target.value })} placeholder="NCR-000001" />
+            </Field>
+            <Field label="Source CAPA ref">
+              <input className="assurarr-input" value={form.sourceCapaRef} onChange={(event) => setForm({ ...form, sourceCapaRef: event.target.value })} placeholder="CAPA-000001" />
+            </Field>
+            <Field label="Affected object refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} placeholder="One reference per line or comma-separated" />
+            </Field>
+            <Field label="Supplier response record refs" wide>
+              <textarea className="assurarr-textarea" value={form.supplierResponseRecordRefs} onChange={(event) => setForm({ ...form, supplierResponseRecordRefs: event.target.value })} />
+            </Field>
+            <Field label="Record refs" wide>
+              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Requested by person id">
+              <input className="assurarr-input" value={form.requestedByPersonId} onChange={(event) => setForm({ ...form, requestedByPersonId: event.target.value })} />
+            </Field>
+            <Field label="Requested at">
+              <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
+            </Field>
+            <Field label="Supplier due at">
+              <input className="assurarr-input" type="datetime-local" value={form.supplierDueAt} onChange={(event) => setForm({ ...form, supplierDueAt: event.target.value })} />
+            </Field>
+            <Field label="Review person id">
+              <input className="assurarr-input" value={form.reviewPersonId} onChange={(event) => setForm({ ...form, reviewPersonId: event.target.value })} />
+            </Field>
+            <Field label="Reviewed at">
+              <input className="assurarr-input" type="datetime-local" value={form.reviewedAt} onChange={(event) => setForm({ ...form, reviewedAt: event.target.value })} />
+            </Field>
+            <Field label="Review decision">
+              <input className="assurarr-input" value={form.reviewDecision} onChange={(event) => setForm({ ...form, reviewDecision: event.target.value })} />
+            </Field>
+            <Field label="Follow-up CAPA ref">
+              <input className="assurarr-input" value={form.followUpCapaRef} onChange={(event) => setForm({ ...form, followUpCapaRef: event.target.value })} placeholder="CAPA-000001" />
+            </Field>
+            <Field label="Owner person id">
+              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create SCAR'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No SCARs yet."
+          onStatusChange={(id, status) => assurarrApi.updateScarStatus(id, status)}
+          statusChoices={statusOptions.scar}
+        />
+      ) : (
+        <LoadingCard label="Loading SCARs" />
       )}
     </div>
   )
@@ -2279,6 +2451,7 @@ export function App() {
     if (path.startsWith('/containment')) return 'Containment'
     if (path.startsWith('/dispositions')) return 'Dispositions'
     if (path.startsWith('/supplier-quality')) return 'Supplier quality'
+    if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
     if (path.startsWith('/scorecards')) return 'Scorecards'
@@ -2300,6 +2473,7 @@ export function App() {
         <Route path="/containment" element={<ContainmentPage />} />
         <Route path="/dispositions" element={<DispositionPage />} />
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
+        <Route path="/scars" element={<ScarPage />} />
         <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />

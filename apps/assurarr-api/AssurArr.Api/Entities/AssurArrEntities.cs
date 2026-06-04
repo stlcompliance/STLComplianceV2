@@ -464,6 +464,38 @@ public sealed class AssurArrSupplierQualityIssue
     public DateTimeOffset? OpenedAt { get; set; }
 }
 
+public sealed class AssurArrSupplierCorrectiveActionRequest
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "draft";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public string? SupplierRef { get; set; }
+    public string? SourceNonconformanceRef { get; set; }
+    public string? SourceCapaRef { get; set; }
+    public Guid? RequestedByPersonId { get; set; }
+    public DateTimeOffset? RequestedAt { get; set; }
+    public DateTimeOffset? SupplierDueAt { get; set; }
+    public string[] SupplierResponseRecordRefs { get; set; } = [];
+    public Guid? ReviewPersonId { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public string? ReviewDecision { get; set; }
+    public string? FollowUpCapaRef { get; set; }
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+    public Guid? OwnerPersonId { get; set; }
+}
+
 public sealed class AssurArrCustomerComplaintQualityCase
 {
     public Guid Id { get; set; }

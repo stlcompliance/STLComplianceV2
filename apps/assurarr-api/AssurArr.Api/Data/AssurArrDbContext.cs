@@ -22,6 +22,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrContainmentAction> ContainmentActions => Set<AssurArrContainmentAction>();
     public DbSet<AssurArrDisposition> Dispositions => Set<AssurArrDisposition>();
     public DbSet<AssurArrSupplierQualityIssue> SupplierQualityIssues => Set<AssurArrSupplierQualityIssue>();
+    public DbSet<AssurArrSupplierCorrectiveActionRequest> SupplierCorrectiveActionRequests => Set<AssurArrSupplierCorrectiveActionRequest>();
     public DbSet<AssurArrCustomerComplaintQualityCase> CustomerComplaintQualityCases => Set<AssurArrCustomerComplaintQualityCase>();
     public DbSet<AssurArrTimelineEvent> TimelineEvents => Set<AssurArrTimelineEvent>();
 
@@ -45,6 +46,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureContainmentAction(modelBuilder);
         ConfigureDisposition(modelBuilder);
         ConfigureSupplierQualityIssue(modelBuilder);
+        ConfigureSupplierCorrectiveActionRequest(modelBuilder);
         ConfigureCustomerComplaintQualityCase(modelBuilder);
 
         modelBuilder.Entity<AssurArrTimelineEvent>(entity =>
@@ -391,6 +393,47 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.SupplierRef });
+        });
+    }
+
+    private static void ConfigureSupplierCorrectiveActionRequest(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrSupplierCorrectiveActionRequest>(entity =>
+        {
+            entity.ToTable("assurarr_supplier_corrective_action_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.SupplierRef).HasMaxLength(256);
+            entity.Property(x => x.SourceNonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.SourceCapaRef).HasMaxLength(256);
+            entity.Property(x => x.RequestedByPersonId);
+            entity.Property(x => x.RequestedAt);
+            entity.Property(x => x.SupplierDueAt);
+            entity.Property(x => x.SupplierResponseRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ReviewPersonId);
+            entity.Property(x => x.ReviewedAt);
+            entity.Property(x => x.ReviewDecision).HasMaxLength(128);
+            entity.Property(x => x.FollowUpCapaRef).HasMaxLength(256);
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.OwnerPersonId);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.SupplierRef });
+            entity.HasIndex(x => new { x.TenantId, x.SourceNonconformanceRef });
         });
     }
 

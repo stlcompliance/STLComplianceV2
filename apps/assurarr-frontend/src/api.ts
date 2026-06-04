@@ -321,6 +321,25 @@ export type SupplierQualityIssue = ListItem & {
   openedAt: string | null
 }
 
+export type SupplierCorrectiveActionRequest = ListItem & {
+  affectedObjectRefs: string[]
+  supplierRef: string | null
+  sourceNonconformanceRef: string | null
+  sourceCapaRef: string | null
+  requestedByPersonId: string | null
+  requestedAt: string | null
+  supplierDueAt: string | null
+  supplierResponseRecordRefs: string[]
+  reviewPersonId: string | null
+  reviewedAt: string | null
+  reviewDecision: string | null
+  followUpCapaRef: string | null
+  recordRefs: string[]
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+}
+
 export type CustomerComplaintQualityCase = ListItem & {
   complaintType: string
   affectedObjectRefs: string[]
@@ -591,6 +610,19 @@ export const assurarrApi = {
     }),
   updateSupplierQualityIssueStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<SupplierQualityIssue>(`/api/v1/integrations/supplier-quality-issues/${id}/status`, 'PATCH', { status, closureSummary }),
+  listScars: () => getJson<SupplierCorrectiveActionRequest[]>('/api/v1/integrations/scars'),
+  createScar: (body: CreateBase & { supplierRef?: string; sourceNonconformanceRef?: string; sourceCapaRef?: string; requestedByPersonId?: string; requestedAt?: string; supplierDueAt?: string; supplierResponseRecordRefs?: string[]; reviewPersonId?: string; reviewedAt?: string; reviewDecision?: string; followUpCapaRef?: string; recordRefs?: string[] }) =>
+    sendJson<SupplierCorrectiveActionRequest>('/api/v1/integrations/scars', 'POST', {
+      ...body,
+      affectedObjectRefs: body.affectedObjectRefs ?? [],
+      requestedAt: body.requestedAt ? new Date(body.requestedAt).toISOString() : null,
+      supplierDueAt: body.supplierDueAt ? new Date(body.supplierDueAt).toISOString() : null,
+      supplierResponseRecordRefs: body.supplierResponseRecordRefs ?? [],
+      reviewedAt: body.reviewedAt ? new Date(body.reviewedAt).toISOString() : null,
+      recordRefs: body.recordRefs ?? [],
+    }),
+  updateScarStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<SupplierCorrectiveActionRequest>(`/api/v1/integrations/scars/${id}/status`, 'PATCH', { status, closureSummary }),
   listCustomerComplaintQualityCases: () => getJson<CustomerComplaintQualityCase[]>('/api/v1/integrations/customer-complaint-quality-cases'),
   createCustomerComplaintQualityCase: (body: CreateBase & { complaintType: string; affectedOrderRefs?: string[]; affectedShipmentRefs?: string[]; affectedItemRefs?: string[]; affectedAssetRefs?: string[]; customerRef?: string; customerContactSnapshot?: string; customerLocationRef?: string; nonconformanceRef?: string; holdRefs?: string[]; capaRefs?: string[]; customerResponseRecordRefs?: string[]; recordRefs?: string[]; receivedAt?: string; receivedByPersonId?: string; customerResponseDueAt?: string }) =>
     sendJson<CustomerComplaintQualityCase>('/api/v1/integrations/customer-complaint-quality-cases', 'POST', {

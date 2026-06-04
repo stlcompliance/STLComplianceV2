@@ -28,6 +28,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(dashboard);
         Assert.Contains(dashboard!.Cards, card => card.Key == "nonconformances" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "holds" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "scars" && card.Count >= 1);
     }
 
     [Fact]
@@ -376,6 +377,53 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var complaintCases = await complaintList.Content.ReadFromJsonAsync<List<AssurArrCustomerComplaintQualityCaseResponse>>();
         Assert.NotNull(complaintCases);
         Assert.Contains(complaintCases!, item => item.Title == complaintTitle);
+    }
+
+    [Fact]
+    public async Task Can_create_and_update_scar_records()
+    {
+        var title = $"Test SCAR {Guid.NewGuid():N}";
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/scars",
+            new CreateAssurArrSupplierCorrectiveActionRequest(
+                title,
+                "Automated coverage for supplier corrective action requests.",
+                "high",
+                "assurarr",
+                "SQA-000001",
+                ["loadarr:receipt:test", "supplyarr:po:test"],
+                "supplyarr:supplier:test",
+                "NCR-000001",
+                "CAPA-000001",
+                null,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(3),
+                ["recordarr:doc:response-test"],
+                null,
+                null,
+                null,
+                "CAPA-000001",
+                ["recordarr:doc:test"],
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<AssurArrSupplierCorrectiveActionRequestResponse>();
+        Assert.NotNull(created);
+        Assert.Equal(title, created!.Title);
+
+        var listResponse = await _client.GetAsync("/api/v1/integrations/scars");
+        listResponse.EnsureSuccessStatusCode();
+
+        var list = await listResponse.Content.ReadFromJsonAsync<List<AssurArrSupplierCorrectiveActionRequestResponse>>();
+        Assert.NotNull(list);
+        Assert.Contains(list!, item => item.Title == title);
+
+        var updateResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{created.Id}/status",
+            new UpdateAssurArrStatusRequest("sent", "Ready for supplier transmission."));
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
     }
 
     [Fact]
