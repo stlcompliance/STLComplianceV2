@@ -7,54 +7,64 @@ public static class CompanionFieldWorkOrderEndpoints
 {
     public static void MapCompanionFieldWorkOrderEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/field-tasks/work-order")
-            .WithTags("CompanionFieldWorkOrder")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            string taskKey,
-            CompanionFieldWorkOrderService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        app.MapLegacyAndCanonical("/api/companion/field-tasks/work-order", "/api/v1/mobile/field-tasks/work-order", (group, isCanonical) =>
         {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.GetDetailAsync(
-                context.User,
-                accessToken,
-                taskKey,
-                cancellationToken));
-        })
-        .WithName("GetCompanionFieldWorkOrderDetail");
+            group.WithTags("FieldCompanion").RequireAuthorization();
 
-        group.MapPost("/status", async (
-            UpdateCompanionFieldWorkOrderStatusRequest request,
-            CompanionFieldWorkOrderService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.UpdateStatusAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("UpdateCompanionFieldWorkOrderStatus");
+            var getDetail = group.MapGet("/", async (
+                string taskKey,
+                CompanionFieldWorkOrderService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.GetDetailAsync(
+                    context.User,
+                    accessToken,
+                    taskKey,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                getDetail.WithName("GetCompanionFieldWorkOrderDetail");
+            }
 
-        group.MapPost("/labor", async (
-            LogCompanionFieldWorkOrderLaborRequest request,
-            CompanionFieldWorkOrderService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.LogLaborAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("LogCompanionFieldWorkOrderLabor");
+            var updateStatus = group.MapPost("/status", async (
+                UpdateCompanionFieldWorkOrderStatusRequest request,
+                CompanionFieldWorkOrderService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.UpdateStatusAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                updateStatus.WithName("UpdateCompanionFieldWorkOrderStatus");
+            }
+
+            var logLabor = group.MapPost("/labor", async (
+                LogCompanionFieldWorkOrderLaborRequest request,
+                CompanionFieldWorkOrderService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.LogLaborAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                logLabor.WithName("LogCompanionFieldWorkOrderLabor");
+            }
+        });
     }
 
     private static string ExtractBearerToken(HttpContext context)

@@ -2609,7 +2609,7 @@ export async function ensureMaintainArrFieldInboxFixture(): Promise<MaintainArrF
       body: JSON.stringify({
         assetId: asset.assetId,
         title: `E2E work order ${suffix}`,
-        description: 'Companion deep-link smoke',
+        description: 'Field Companion deep-link smoke',
         priority: 'high',
         assignedTechnicianPersonId: journeySubjectPersonId,
         pmScheduleId: null,

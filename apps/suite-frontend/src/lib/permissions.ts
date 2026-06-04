@@ -1,11 +1,16 @@
 import type { LaunchContextResponse, MeResponse } from '../api/types'
+import { getProductRouteSlug } from '@stl/shared-ui'
 
 export function hasProductEntitlement(
   entitlements: readonly string[],
   productKey: string,
 ): boolean {
   const normalized = productKey.trim().toLowerCase()
-  return entitlements.some((e) => e.trim().toLowerCase() === normalized)
+  const canonical = normalized === 'companion' ? 'fieldcompanion' : normalized
+  return entitlements.some((e) => {
+    const entitlement = e.trim().toLowerCase()
+    return (entitlement === 'companion' ? 'fieldcompanion' : entitlement) === canonical
+  })
 }
 
 export function canAccessProductRoute(
@@ -29,6 +34,6 @@ export function isInSuiteProduct(productKey: string): boolean {
 }
 
 export function buildProductCallbackUrl(productKey: string): string {
-  const path = `/app/${productKey.trim().toLowerCase()}`
+  const path = `/app/${getProductRouteSlug(productKey)}`
   return `${window.location.origin}${path}`
 }

@@ -8,8 +8,8 @@ export function buildCompanionProductCallbackUrl(
   productLaunchUrls: Record<string, string>,
 ): string {
   const normalized = normalizeProductKey(productKey)
-  if (normalized === 'companion') {
-    const companionLaunch = productLaunchUrls.companion
+  if (normalized === 'fieldcompanion') {
+    const companionLaunch = productLaunchUrls.fieldcompanion
     if (companionLaunch) {
       return companionLaunch
     }

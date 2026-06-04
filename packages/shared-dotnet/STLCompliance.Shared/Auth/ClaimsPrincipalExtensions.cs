@@ -57,7 +57,12 @@ public static class ClaimsPrincipalExtensions
     }
 
     public static bool HasProductEntitlement(this ClaimsPrincipal principal, string productKey) =>
-        principal.IsPlatformAdmin() || principal.GetEntitlements().Contains(productKey, StringComparer.OrdinalIgnoreCase);
+        principal.IsPlatformAdmin()
+        || principal.GetEntitlements().Any(entitlement =>
+            string.Equals(
+                ProductKeyAliases.Normalize(entitlement),
+                ProductKeyAliases.Normalize(productKey),
+                StringComparison.OrdinalIgnoreCase));
 
     public static Guid GetPersonId(this ClaimsPrincipal principal)
     {

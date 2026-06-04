@@ -1,7 +1,17 @@
 import type { NavigationItem, NavigationSurfaceItem } from '../api/types'
+import { getProductRouteSlug } from '@stl/shared-ui'
 
 export function normalizeProductKey(productKey: string): string {
-  return productKey.trim().toLowerCase()
+  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
+  return normalized === 'companion' ? 'fieldcompanion' : normalized
+}
+
+export function getProductDisplayName(productKey: string, fallback?: string): string {
+  const normalized = normalizeProductKey(productKey)
+  if (normalized === 'fieldcompanion') {
+    return 'Field Companion'
+  }
+  return fallback?.trim() || normalized
 }
 
 export function findNavigationProduct(
@@ -13,7 +23,7 @@ export function findNavigationProduct(
 }
 
 export function buildProductSurfacePath(productKey: string, surface: NavigationSurfaceItem): string {
-  const base = `/app/${normalizeProductKey(productKey)}`
+  const base = `/app/${getProductRouteSlug(productKey)}`
   if (!surface.relativePath) {
     return base
   }

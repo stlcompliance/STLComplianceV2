@@ -21,6 +21,929 @@
         }
       }
     },
+    "/api/integrations/adjustments": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationAdjustment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/availability-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CheckLoadArrIntegrationAvailability",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/balances": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationBalances",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/balances/{balanceId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationBalance",
+        "parameters": [
+          {
+            "name": "balanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/counts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationCount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/counts/{countId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationCount",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/counts/{countId}/lines": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AddLoadArrIntegrationCountLine",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/counts/{countId}/post": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PostLoadArrIntegrationCount",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/discrepancies": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationDiscrepancy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/disposition-movements": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationDispositionMovement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/expected-receipts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationExpectedReceipt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/expected-receipts/{expectedReceiptId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationExpectedReceipt",
+        "parameters": [
+          {
+            "name": "expectedReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/expected-receipts/{expectedReceiptId}/status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateLoadArrIntegrationExpectedReceiptStatus",
+        "parameters": [
+          {
+            "name": "expectedReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/hold-releases": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseLoadArrIntegrationHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/issues": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationIssue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/items": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationItems",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationItem",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/items/{itemId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/location-profiles": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationLocationProfiles",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationLocationProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/location-profiles/{wmsLocationProfileId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationLocationProfile",
+        "parameters": [
+          {
+            "name": "wmsLocationProfileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/order-demands": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationOrderDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/pick-tasks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationPickTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/pick-tasks/{pickTaskId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteLoadArrIntegrationPickTask",
+        "parameters": [
+          {
+            "name": "pickTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/putaway-tasks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationPutawayTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/putaway-tasks/{putawayTaskId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteLoadArrIntegrationPutawayTask",
+        "parameters": [
+          {
+            "name": "putawayTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/receipts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReceipt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/receipts/{receiptId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationReceipt",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/receipts/{receiptId}/close": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseLoadArrIntegrationReceipt",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/receipts/{receiptId}/lines": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AddLoadArrIntegrationReceiptLine",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/reservations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReservation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/reservations/{reservationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationReservation",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/reservations/{reservationId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseLoadArrIntegrationReservation",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/returns": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReturn",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stock-movements": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationStockMovements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stock-movements/{movementId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationStockMovement",
+        "parameters": [
+          {
+            "name": "movementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/transfers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationTransfer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-order-demands": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationWorkOrderDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/launch/catalog": {
       "get": {
         "tags": [
@@ -444,6 +1367,929 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ReleaseLoadArrInventoryHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/adjustments": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationAdjustmentV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/availability-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CheckLoadArrIntegrationAvailabilityV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/balances": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationBalancesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/balances/{balanceId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationBalanceV1",
+        "parameters": [
+          {
+            "name": "balanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/counts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationCountV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/counts/{countId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationCountV1",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/counts/{countId}/lines": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AddLoadArrIntegrationCountLineV1",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/counts/{countId}/post": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PostLoadArrIntegrationCountV1",
+        "parameters": [
+          {
+            "name": "countId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/discrepancies": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationDiscrepancyV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/disposition-movements": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationDispositionMovementV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/expected-receipts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationExpectedReceiptV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/expected-receipts/{expectedReceiptId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationExpectedReceiptV1",
+        "parameters": [
+          {
+            "name": "expectedReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/expected-receipts/{expectedReceiptId}/status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateLoadArrIntegrationExpectedReceiptStatusV1",
+        "parameters": [
+          {
+            "name": "expectedReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/hold-releases": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseLoadArrIntegrationHoldV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationHoldV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/issues": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationIssueV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/items": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationItemsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationItemV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/items/{itemId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationItemV1",
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/location-profiles": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationLocationProfilesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationLocationProfileV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/location-profiles/{wmsLocationProfileId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationLocationProfileV1",
+        "parameters": [
+          {
+            "name": "wmsLocationProfileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/order-demands": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationOrderDemandV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/pick-tasks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationPickTaskV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/pick-tasks/{pickTaskId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteLoadArrIntegrationPickTaskV1",
+        "parameters": [
+          {
+            "name": "pickTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/putaway-tasks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationPutawayTaskV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/putaway-tasks/{putawayTaskId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteLoadArrIntegrationPutawayTaskV1",
+        "parameters": [
+          {
+            "name": "putawayTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/receipts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReceiptV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/receipts/{receiptId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationReceiptV1",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/receipts/{receiptId}/close": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseLoadArrIntegrationReceiptV1",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/receipts/{receiptId}/lines": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AddLoadArrIntegrationReceiptLineV1",
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/reservations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReservationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/reservations/{reservationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationReservationV1",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/reservations/{reservationId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseLoadArrIntegrationReservationV1",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/returns": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationReturnV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stock-movements": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListLoadArrIntegrationStockMovementsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stock-movements/{movementId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetLoadArrIntegrationStockMovementV1",
+        "parameters": [
+          {
+            "name": "movementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/transfers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationTransferV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-order-demands": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadArrIntegrationWorkOrderDemandV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -2722,6 +4568,7 @@
           }
         }
       },
+      "JsonElement": {},
       "KitAssignRequest": {
         "required": [
           "personId",
@@ -3076,6 +4923,9 @@
     },
     {
       "name": "Kits"
+    },
+    {
+      "name": "Integrations"
     }
   ]
 }

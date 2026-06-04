@@ -13,7 +13,7 @@ export function LaunchPage() {
   useEffect(() => {
     const handoff = searchParams.get('handoff')
     if (!handoff) {
-      setError('Missing handoff code. Launch the Companion app from the suite.')
+      setError('Missing handoff code. Launch the Field Companion app from the suite.')
       return
     }
 
@@ -30,7 +30,7 @@ export function LaunchPage() {
       } catch (err) {
         if (!cancelled) {
           if (err instanceof CompanionApiError && err.status === 403) {
-            setError('Your account is not entitled to the Companion app for this tenant.')
+            setError('Your account is not entitled to the Field Companion app for this tenant.')
             return
           }
           if (err instanceof CompanionApiError && err.status === 401) {
@@ -55,7 +55,7 @@ export function LaunchPage() {
             <ApiErrorCallout title="Launch failed" message={error} />
           </>
         ) : (
-          <p className="text-slate-300">Redeeming Companion handoff…</p>
+          <p className="text-slate-300">Redeeming Field Companion handoff…</p>
         )}
       </div>
     </main>

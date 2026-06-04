@@ -422,7 +422,7 @@ export function PrivacyPage() {
               This Privacy Policy explains how STL Compliance collects, uses, stores, shares, and
               protects information when you use our websites, applications, products, software, APIs,
               and related services, including StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr,
-              LoadArr, Compliance Core, Companion, and related STL Compliance services collectively
+              LoadArr, Compliance Core, Field Companion, and related STL Compliance services collectively
               referred to as the Services.
             </p>
             <p>

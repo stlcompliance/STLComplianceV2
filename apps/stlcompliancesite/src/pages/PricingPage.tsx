@@ -7,7 +7,7 @@ import {
   LICENSING_PILLARS,
   PRICING_DISCLAIMER,
 } from '../content/pricing'
-import { getMarketingProduct } from '../content/products'
+import { getMarketingProduct, productPagePath } from '../content/products'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 export function PricingPage() {
@@ -81,7 +81,7 @@ export function PricingPage() {
                   <BrandLogoFrame src={product.brandImageSrc} size="sm" className="mb-3" />
                 ) : null}
                 <Link
-                  to={`/products/${item.productKey}`}
+                  to={productPagePath(item.productKey)}
                   className="font-semibold text-teal-400 hover:text-teal-300"
                 >
                   {item.displayName}

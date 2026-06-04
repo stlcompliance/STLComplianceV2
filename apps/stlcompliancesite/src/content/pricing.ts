@@ -70,8 +70,8 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
     summary: 'Rules, evidence mapping, citations, and compliance checks.',
   },
   {
-    productKey: 'companion',
-    displayName: 'Companion',
+    productKey: 'fieldcompanion',
+    displayName: 'Field Companion',
     summary: 'Field inbox, task handoffs, and quick product navigation.',
   },
 ]

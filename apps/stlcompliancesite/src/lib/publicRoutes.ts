@@ -1,4 +1,11 @@
 /** Public marketing routes included in sitemap generation (no auth or API routes). */
+function routeSlug(productKey: string): string {
+  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
+  return normalized === 'companion' ? 'fieldcompanion' : normalized === 'fieldcompanion'
+    ? 'field-companion'
+    : normalized
+}
+
 export const MARKETING_PRODUCT_KEYS = [
   'staffarr',
   'trainarr',
@@ -6,11 +13,11 @@ export const MARKETING_PRODUCT_KEYS = [
   'routarr',
   'supplyarr',
   'compliancecore',
-  'companion',
+  'fieldcompanion',
 ] as const
 
 export function productPath(productKey: string): string {
-  return `/products/${productKey.trim().toLowerCase()}`
+  return `/products/${routeSlug(productKey)}`
 }
 
 export function buildStaticPublicPaths(): string[] {

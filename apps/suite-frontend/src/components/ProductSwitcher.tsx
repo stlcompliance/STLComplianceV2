@@ -11,7 +11,7 @@ import {
   hasProductEntitlement,
   isInSuiteProduct,
 } from '../lib/permissions'
-import { normalizeProductKey } from '../navigation/suiteNavigation'
+import { getProductDisplayName, normalizeProductKey } from '../navigation/suiteNavigation'
 
 const PRODUCT_DESCRIPTIONS: Record<string, string> = {
   nexarr: 'Suite dashboard and control plane',
@@ -21,7 +21,7 @@ const PRODUCT_DESCRIPTIONS: Record<string, string> = {
   routarr: 'Routes and dispatch',
   supplyarr: 'Procurement and inventory',
   compliancecore: 'Rules, vocabulary, and references',
-  companion: 'Field inbox and mobile tasks',
+  fieldcompanion: 'Field inbox and mobile tasks',
 }
 
 function resolveProductDescription(productKey: string): string | undefined {
@@ -129,7 +129,9 @@ export function ProductSwitcher() {
       >
         <CurrentIcon className="h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
         <span className="min-w-0 truncate font-medium">
-          {currentProductKey === 'nexarr' ? 'Suite' : (currentProduct?.displayName ?? 'Suite')}
+          {currentProductKey === 'nexarr'
+            ? 'Suite'
+            : getProductDisplayName(currentProductKey, currentProduct?.displayName ?? 'Suite')}
         </span>
         <ChevronDown
           className={['h-4 w-4 shrink-0 text-slate-300 transition-transform', open ? 'rotate-180' : ''].join(
@@ -168,7 +170,9 @@ export function ProductSwitcher() {
                 >
                   <Icon className="mt-0.5 h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
                   <span className="min-w-0">
-                    <span className="block font-medium">{product.displayName}</span>
+                    <span className="block font-medium">
+                      {getProductDisplayName(product.productKey, product.displayName)}
+                    </span>
                     {resolveProductDescription(product.productKey) ? (
                       <span className="mt-0.5 block text-xs text-slate-400">
                         {resolveProductDescription(product.productKey)}

@@ -83,6 +83,11 @@ public static class LaunchEndpoints
         .AllowAnonymous()
         .WithName("RedeemHandoff");
 
+        app.MapPost("/api/v1/platform/handoff/redeem", RedeemHandoffEndpoint)
+        .WithTags("Launch")
+        .AllowAnonymous()
+        .WithName("RedeemHandoffPlatformV1");
+
         app.MapPost("/api/v1/handoff/redeem", RedeemHandoffEndpoint)
         .WithTags("Launch")
         .AllowAnonymous()

@@ -13,7 +13,7 @@ const proofPoints = [
 ] as const
 
 export function HomePage() {
-  const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'companion')
+  const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'fieldcompanion')
 
   return (
     <>

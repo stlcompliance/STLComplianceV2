@@ -8,7 +8,7 @@ Optional smoke tests for **suite-frontend**: NexArr login → unified dashboard 
 # APIs
 ./scripts/ops/e2e-stack-up.ps1
 
-# Suite + seven product frontends (5175–5180 and 5182) and Companion (5181)
+# Suite + seven product frontends (5175–5180 and 5182) and Field Companion (5181)
 ./scripts/ops/e2e-frontends-preview.ps1
 
 cd tests/e2e-playwright
@@ -42,7 +42,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 |-----------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Login, StaffArr launch surface, StaffArr handoff redirect |
 | `product-handoff-smoke.spec.ts` | Handoff redirect for all seven product frontends |
-| `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link (W133) |
+| `companion-field-inbox-trainarr-deep-link.spec.ts` | Field Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
 | `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
 | `platform-admin-worker-health-orchestration-smoke.spec.ts` | Suite platform-admin orchestration panel: product health, token inventory, lifecycle worker sections + trigger controls visible (W260/W262; no live triggers) |
@@ -134,10 +134,10 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `staffarr-reports-audit-export-smoke.spec.ts` | StaffArr handoff → `/reports` audit package export: manifest, summary, timeline, filters, background ZIP job (Worker 5) |
 | `staffarr-settings-admin-workspace-smoke.spec.ts` | StaffArr handoff → `/admin` `staffarr-settings-admin-workspace`: all six product-admin panels visible with save controls; export delivery pending/runs/notifications + worker pending/run sections loaded (W325; audit export panel outside wrapper W238; no save mutations) |
 | `routarr-reports-audit-export-smoke.spec.ts` | RoutArr handoff → Reports audit package panel: manifest, summary, filters, sync ZIP/JSON/CSV, background job (W227/W241) |
-| `companion-field-inbox-operations-deep-links.spec.ts` | Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
-| `companion-offline-queue-notification.spec.ts` | Offline acknowledge queue sync + notification/push readiness surfaces (W146) |
-| `companion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via companion API (W147) |
-| `companion-field-scan.spec.ts` | Companion manual scan resolve → field inbox task highlight (M11) |
+| `companion-field-inbox-operations-deep-links.spec.ts` | Field Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
+| `companion-offline-queue-notification.spec.ts` | Field Companion offline acknowledge queue sync + notification/push readiness surfaces (W146) |
+| `companion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via Field Companion API (W147) |
+| `companion-field-scan.spec.ts` | Field Companion manual scan resolve → field inbox task highlight (M11) |
 | `compliancecore-operator-rule-evaluate-smoke.spec.ts` | Compliance Core handoff → rule pack seed + evaluate (operator path) |
 | `compliancecore-operator-workflow-gate-journey-smoke.spec.ts` | Compliance Core journey seed → `/findings` dispatch gate check (allow) + `/operator` dashboard summary sections (W326) |
 | `compliancecore-operator-batch-evaluate-findings-emit-journey-smoke.spec.ts` | Compliance Core journey seed → `/evaluation` batch rule evaluate (allow) + `/findings` gate check with emit-on-block finding (W327) |

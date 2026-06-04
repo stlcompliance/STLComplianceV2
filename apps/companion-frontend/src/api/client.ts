@@ -70,7 +70,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<CompanionSessionResponse> {
-  const response = await fetch(`${apiBase}/api/companion/auth/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/v1/platform/handoff/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
@@ -103,14 +103,14 @@ export async function createHandoff(
 }
 
 export async function getMe(accessToken: string): Promise<CompanionMeResponse> {
-  const response = await fetch(`${apiBase}/api/companion/me`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/me`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionMeResponse>(response, 'Failed to load profile')
 }
 
 export async function getFieldInbox(accessToken: string): Promise<AggregatedFieldInboxResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-inbox`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-inbox`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AggregatedFieldInboxResponse>(response, 'Failed to load field inbox')
@@ -119,7 +119,7 @@ export async function getFieldInbox(accessToken: string): Promise<AggregatedFiel
 export async function getCompanionNotificationSettings(
   accessToken: string,
 ): Promise<CompanionNotificationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/companion/notification-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/notification-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionNotificationSettingsResponse>(
@@ -132,7 +132,7 @@ export async function upsertCompanionNotificationSettings(
   accessToken: string,
   body: UpsertCompanionNotificationSettingsRequest,
 ): Promise<CompanionNotificationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/companion/notification-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/notification-settings`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -146,7 +146,7 @@ export async function upsertCompanionNotificationSettings(
 export async function getCompanionPushVapidPublicKey(
   accessToken: string,
 ): Promise<CompanionPushVapidPublicKeyResponse> {
-  const response = await fetch(`${apiBase}/api/companion/push/vapid-public-key`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/push/vapid-public-key`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionPushVapidPublicKeyResponse>(
@@ -159,7 +159,7 @@ export async function subscribeCompanionPush(
   accessToken: string,
   body: UpsertCompanionPushSubscriptionRequest,
 ): Promise<CompanionPushSubscriptionResponse> {
-  const response = await fetch(`${apiBase}/api/companion/push/subscribe`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/push/subscribe`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -174,7 +174,7 @@ export async function unsubscribeCompanionPush(
   accessToken: string,
   body: UnsubscribeCompanionPushRequest,
 ): Promise<void> {
-  const response = await fetch(`${apiBase}/api/companion/push/subscribe`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/push/subscribe`, {
     method: 'DELETE',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -195,7 +195,7 @@ export async function getCompanionNotificationDispatches(
 ): Promise<CompanionNotificationDispatchesResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
   const response = await fetch(
-    `${apiBase}/api/companion/notification-settings/dispatches?${search}`,
+    `${apiBase}/api/v1/mobile/notification-settings/dispatches?${search}`,
     {
       headers: authHeaders(accessToken),
     },
@@ -210,7 +210,7 @@ export async function syncCompanionOfflineActions(
   accessToken: string,
   body: SyncCompanionOfflineActionsRequest,
 ): Promise<SyncCompanionOfflineActionsResponse> {
-  const response = await fetch(`${apiBase}/api/companion/offline-actions/sync`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/offline-actions/sync`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -226,7 +226,7 @@ export async function listCompanionOfflineActions(
   limit = 20,
 ): Promise<CompanionOfflineActionsListResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/companion/offline-actions?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/offline-actions?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionOfflineActionsListResponse>(
@@ -239,7 +239,7 @@ export async function validateCompanionFieldTask(
   accessToken: string,
   body: ValidateCompanionFieldTaskRequest,
 ): Promise<ValidateCompanionFieldTaskResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/validate`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/validate`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -258,7 +258,7 @@ export async function getFieldTaskSubmissionStatus(
     taskKeys: taskKeys.slice(0, 50).join(','),
   })
   const response = await fetch(
-    `${apiBase}/api/companion/field-tasks/submission-status?${search}`,
+    `${apiBase}/api/v1/mobile/field-tasks/submission-status?${search}`,
     {
       headers: authHeaders(accessToken),
     },
@@ -273,7 +273,7 @@ export async function resolveCompanionScan(
   accessToken: string,
   body: CompanionScanResolveRequest,
 ): Promise<CompanionScanResolveResponse> {
-  const response = await fetch(`${apiBase}/api/companion/scan/resolve`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/scan/resolve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -285,7 +285,7 @@ export async function submitCompanionFieldEvidence(
   accessToken: string,
   body: SubmitCompanionFieldEvidenceRequest,
 ): Promise<CompanionFieldEvidenceResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/evidence`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/evidence`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -300,7 +300,7 @@ export async function submitCompanionFieldDvir(
   accessToken: string,
   body: SubmitCompanionFieldDvirRequest,
 ): Promise<CompanionFieldDvirResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/dvir`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/dvir`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -316,7 +316,7 @@ export async function getCompanionFieldInspectionDetail(
   taskKey: string,
 ): Promise<CompanionFieldInspectionDetailResponse> {
   const search = new URLSearchParams({ taskKey })
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/inspection?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionFieldInspectionDetailResponse>(
@@ -329,7 +329,7 @@ export async function submitCompanionFieldInspectionAnswers(
   accessToken: string,
   body: SubmitCompanionFieldInspectionAnswersRequest,
 ): Promise<CompanionFieldInspectionAnswersResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection/answers`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/inspection/answers`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -344,7 +344,7 @@ export async function completeCompanionFieldInspection(
   accessToken: string,
   body: CompleteCompanionFieldInspectionRequest,
 ): Promise<CompanionFieldInspectionCompleteResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection/complete`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/inspection/complete`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -360,7 +360,7 @@ export async function getCompanionFieldWorkOrderDetail(
   taskKey: string,
 ): Promise<CompanionFieldWorkOrderDetailResponse> {
   const search = new URLSearchParams({ taskKey })
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/work-order?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionFieldWorkOrderDetailResponse>(
@@ -373,7 +373,7 @@ export async function updateCompanionFieldWorkOrderStatus(
   accessToken: string,
   body: UpdateCompanionFieldWorkOrderStatusRequest,
 ): Promise<CompanionFieldWorkOrderStatusResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order/status`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/work-order/status`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -388,7 +388,7 @@ export async function logCompanionFieldWorkOrderLabor(
   accessToken: string,
   body: LogCompanionFieldWorkOrderLaborRequest,
 ): Promise<CompanionFieldWorkOrderLaborResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order/labor`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/work-order/labor`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -404,7 +404,7 @@ export async function getCompanionFieldReceivingDetail(
   taskKey: string,
 ): Promise<CompanionFieldReceivingDetailResponse> {
   const search = new URLSearchParams({ taskKey })
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/receiving?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CompanionFieldReceivingDetailResponse>(
@@ -417,7 +417,7 @@ export async function updateCompanionFieldReceivingLine(
   accessToken: string,
   body: UpdateCompanionFieldReceivingLineRequest,
 ): Promise<CompanionFieldReceivingLineResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving/line`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/receiving/line`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),
@@ -432,7 +432,7 @@ export async function postCompanionFieldReceiving(
   accessToken: string,
   body: PostCompanionFieldReceivingRequest,
 ): Promise<CompanionFieldReceivingPostResponse> {
-  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving/post`, {
+  const response = await fetch(`${apiBase}/api/v1/mobile/field-tasks/receiving/post`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(body),

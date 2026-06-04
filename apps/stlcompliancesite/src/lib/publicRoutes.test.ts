@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildStaticPublicPaths, MARKETING_PRODUCT_KEYS } from './publicRoutes'
+import { buildStaticPublicPaths, MARKETING_PRODUCT_KEYS, productPath } from './publicRoutes'
 
 
 
@@ -19,10 +19,10 @@ describe('publicRoutes', () => {
     expect(paths).toContain('/pricing')
 
     for (const key of MARKETING_PRODUCT_KEYS) {
-
-      expect(paths).toContain(`/products/${key}`)
-
+      expect(paths).toContain(productPath(key))
     }
+
+    expect(paths).toContain('/products/field-companion')
 
     expect(new Set(paths).size).toBe(paths.length)
 

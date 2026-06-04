@@ -13,7 +13,7 @@ export function useCompanionProductLaunch(input: {
   return useMutation({
     mutationFn: async (productKey: string) => {
       const normalized = normalizeProductKey(productKey)
-      if (normalized === 'companion') {
+      if (normalized === 'fieldcompanion') {
         return { mode: 'current' as const, productKey: normalized }
       }
 

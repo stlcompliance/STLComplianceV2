@@ -67,7 +67,7 @@ public sealed class CompanionFieldInboxService(
 
         throw new StlApiException(
             "auth.not_entitled",
-            "Companion field inbox requires companion or field-product entitlement.",
+            "Field Companion field inbox requires a Field Companion entitlement or a field-product entitlement.",
             403);
     }
 }

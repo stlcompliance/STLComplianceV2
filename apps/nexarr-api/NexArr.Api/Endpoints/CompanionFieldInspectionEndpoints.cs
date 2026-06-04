@@ -7,54 +7,64 @@ public static class CompanionFieldInspectionEndpoints
 {
     public static void MapCompanionFieldInspectionEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/field-tasks/inspection")
-            .WithTags("CompanionFieldInspection")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            string taskKey,
-            CompanionFieldInspectionService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        app.MapLegacyAndCanonical("/api/companion/field-tasks/inspection", "/api/v1/mobile/field-tasks/inspection", (group, isCanonical) =>
         {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.GetDetailAsync(
-                context.User,
-                accessToken,
-                taskKey,
-                cancellationToken));
-        })
-        .WithName("GetCompanionFieldInspectionDetail");
+            group.WithTags("FieldCompanion").RequireAuthorization();
 
-        group.MapPost("/answers", async (
-            SubmitCompanionFieldInspectionAnswersRequest request,
-            CompanionFieldInspectionService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.SubmitAnswersAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("SubmitCompanionFieldInspectionAnswers");
+            var getDetail = group.MapGet("/", async (
+                string taskKey,
+                CompanionFieldInspectionService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.GetDetailAsync(
+                    context.User,
+                    accessToken,
+                    taskKey,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                getDetail.WithName("GetCompanionFieldInspectionDetail");
+            }
 
-        group.MapPost("/complete", async (
-            CompleteCompanionFieldInspectionRequest request,
-            CompanionFieldInspectionService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.CompleteAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("CompleteCompanionFieldInspection");
+            var submitAnswers = group.MapPost("/answers", async (
+                SubmitCompanionFieldInspectionAnswersRequest request,
+                CompanionFieldInspectionService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.SubmitAnswersAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                submitAnswers.WithName("SubmitCompanionFieldInspectionAnswers");
+            }
+
+            var complete = group.MapPost("/complete", async (
+                CompleteCompanionFieldInspectionRequest request,
+                CompanionFieldInspectionService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.CompleteAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                complete.WithName("CompleteCompanionFieldInspection");
+            }
+        });
     }
 
     private static string ExtractBearerToken(HttpContext context)

@@ -26,7 +26,7 @@ public sealed class LaunchService(
         string productKey,
         CancellationToken cancellationToken = default)
     {
-        var normalizedKey = productKey.Trim().ToLowerInvariant();
+        var normalizedKey = ProductKeyAliases.Normalize(productKey);
         var userId = principal.GetUserId();
         var tenantId = principal.GetTenantId();
 
@@ -75,7 +75,7 @@ public sealed class LaunchService(
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, cancellationToken);
         var normalizedCurrentProductKey = string.IsNullOrWhiteSpace(currentProductKey)
             ? null
-            : currentProductKey.Trim().ToLowerInvariant();
+            : ProductKeyAliases.Normalize(currentProductKey);
 
         var launchableProductKeys = await db.LaunchProfiles.AsNoTracking()
             .Where(profile => profile.IsActive && profile.BaseUrl != "")
@@ -141,7 +141,7 @@ public sealed class LaunchService(
     {
         await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
 
-        var productKey = request.ProductKey.Trim().ToLowerInvariant();
+        var productKey = ProductKeyAliases.Normalize(request.ProductKey);
         var tenantId = request.TenantId ?? principal.GetTenantId();
 
         if (!principal.IsPlatformAdmin())
@@ -182,7 +182,7 @@ public sealed class LaunchService(
         CreateHandoffRequest request,
         CancellationToken cancellationToken = default)
     {
-        var normalizedKey = request.ProductKey.Trim().ToLowerInvariant();
+        var normalizedKey = ProductKeyAliases.Normalize(request.ProductKey);
         var userId = principal.GetUserId();
         var tenantId = principal.GetTenantId();
         var sessionId = principal.GetSessionId();

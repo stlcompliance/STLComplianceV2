@@ -5,7 +5,7 @@ export type HandoffProductFrontend = {
 }
 
 export const companionFrontend: HandoffProductFrontend = {
-  productKey: 'companion',
+  productKey: 'fieldcompanion',
   port: 5181,
   baseUrl: process.env.E2E_COMPANION_URL ?? 'http://localhost:5181',
 }

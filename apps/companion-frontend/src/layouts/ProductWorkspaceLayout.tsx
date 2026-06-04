@@ -61,8 +61,8 @@ export function ProductWorkspaceLayout() {
 
   return (
     <ProductWorkspaceFrame
-      productName="Companion"
-      productKey="companion"
+      productName="Field Companion"
+      productKey="fieldcompanion"
       workspaceSubtitle="Field inbox and mobile tasks"
       navItems={navItems}
       layoutVariant="compact"

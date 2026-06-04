@@ -77,8 +77,8 @@ export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
     sortOrder: 65,
   },
   {
-    productKey: 'companion',
-    displayName: 'Companion',
+    productKey: 'fieldcompanion',
+    displayName: 'Field Companion',
     description: 'Field inbox and mobile tasks',
     icon: Inbox,
     sortOrder: 70,
@@ -86,7 +86,13 @@ export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
 ]
 
 export function normalizeProductKey(productKey: string): string {
-  return productKey.trim().toLowerCase()
+  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
+  return normalized === 'companion' ? 'fieldcompanion' : normalized
+}
+
+export function getProductRouteSlug(productKey: string): string {
+  const normalized = normalizeProductKey(productKey)
+  return normalized === 'fieldcompanion' ? 'field-companion' : normalized
 }
 
 export function getSuiteProductIcon(productKey: string): LucideIcon {

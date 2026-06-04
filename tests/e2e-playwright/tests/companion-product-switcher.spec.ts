@@ -14,7 +14,7 @@ import {
 
 const trainarrFrontend = handoffProductFrontends.find((entry) => entry.productKey === 'trainarr')!
 
-test.describe('Companion product switcher @requires-live', () => {
+test.describe('Field Companion product switcher @requires-live', () => {
   test.beforeAll(async ({}, testInfo) => {
     if (!isLiveModeEnabled()) {
       testInfo.skip(true, 'Set E2E_LIVE=1 to run browser E2E against docker-compose.')
@@ -23,19 +23,19 @@ test.describe('Companion product switcher @requires-live', () => {
       testInfo.skip(true, 'Suite and NexArr API must be reachable for live E2E.')
     }
     if (!(await isCompanionFrontendReachable())) {
-      testInfo.skip(true, 'Companion preview (5181) must be running.')
+      testInfo.skip(true, 'Field Companion preview (5181) must be running.')
     }
 
     await ensureTrainArrFieldInboxFixture()
   })
 
-  test('handoffs from companion to TrainArr via product switcher', async ({ page }, testInfo) => {
+  test('handoffs from Field Companion to TrainArr via product switcher', async ({ page }, testInfo) => {
     if (!isLiveModeEnabled()) {
       testInfo.skip(true, 'Set E2E_LIVE=1 to run browser E2E against docker-compose.')
     }
 
     await signInFromSuite(page)
-    await page.goto('/app/companion/launch')
+    await page.goto('/app/field-companion/launch')
 
     const launchButton = page.getByRole('button', { name: 'Launch product (handoff)' })
     await expect(launchButton).toBeVisible({ timeout: 15_000 })
@@ -44,7 +44,7 @@ test.describe('Companion product switcher @requires-live', () => {
       launchButton.click(),
     ])
 
-    const switcher = page.getByRole('button', { name: /Companion/i })
+    const switcher = page.getByRole('button', { name: /Field Companion/i })
     await expect(switcher).toBeVisible({ timeout: 15_000 })
     await switcher.click()
     await page.getByRole('menuitem', { name: /TrainArr/i }).click()

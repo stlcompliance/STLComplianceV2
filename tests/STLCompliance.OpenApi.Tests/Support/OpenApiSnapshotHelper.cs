@@ -31,6 +31,14 @@ internal static class OpenApiSnapshotHelper
             root["paths"] = sortedPaths;
         }
 
+        if (root["servers"] is JsonArray servers)
+        {
+            foreach (var server in servers.OfType<JsonObject>())
+            {
+                server["url"] = "http://localhost/";
+            }
+        }
+
         return root.ToJsonString(WriteOptions);
     }
 

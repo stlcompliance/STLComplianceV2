@@ -35,7 +35,7 @@ public static class CompanionDeniedReasonCatalog
         [CompanionScanReasonCodes.NotInInbox] =
             "This task is not in your field inbox.",
         ["auth.not_entitled"] =
-            "Companion access requires companion or field-product entitlement.",
+            "Field Companion access requires a Field Companion entitlement or a field-product entitlement.",
         ["auth.unauthorized"] = "Sign in again to continue field work.",
         ["companion.offline_actions.idempotency_required"] =
             "Each offline action needs a unique idempotency key before sync.",

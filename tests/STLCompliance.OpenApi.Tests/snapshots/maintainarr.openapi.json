@@ -2623,109 +2623,17 @@
         }
       }
     },
-    "/api/integrations/asset-readiness": {
-      "get": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "AssetReadinessIntegration",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "vehicleRefKey",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assetTag",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/integrations/routarr-asset-readiness": {
-      "get": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RoutarrAssetReadinessCheck",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "vehicleRefKey",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assetTag",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/integrations/routarr-events": {
+    "/api/integrations/asset-readiness-checks": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestRoutarrEvent",
+        "operationId": "CheckMaintainArrAssetReadiness",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -2738,17 +2646,76 @@
         }
       }
     },
-    "/api/integrations/staffarr-person-sync": {
+    "/api/integrations/assets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationAssets",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationAsset",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/assets/{assetId}/readiness": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationAssetReadiness",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/defects": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestStaffarrPersonSync",
+        "operationId": "CreateMaintainArrIntegrationDefect",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestStaffarrPersonSyncRequest"
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -2761,17 +2728,412 @@
         }
       }
     },
-    "/api/integrations/supplyarr-demand-status": {
+    "/api/integrations/defects/{defectId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationDefect",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/defects/{defectId}/status-updates": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestSupplyarrDemandStatus",
+        "operationId": "UpdateMaintainArrIntegrationDefectStatus",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/inspections": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationInspection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/inspections/{inspectionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationInspection",
+        "parameters": [
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/inspections/{inspectionId}/answers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AnswerMaintainArrIntegrationInspection",
+        "parameters": [
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/part-demand-status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestMaintainArrPartDemandStatusUpdate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/part-issue-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrPartIssueEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/quality-hold-releases": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseMaintainArrIntegrationQualityHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/quality-holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationQualityHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/route-exceptions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReportMaintainArrIntegrationRouteException",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/supplier-work-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReportMaintainArrSupplierWorkStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/blockers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrderBlocker",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/closeout": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseMaintainArrIntegrationWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateMaintainArrIntegrationWorkOrderStatus",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -7743,109 +8105,17 @@
         }
       }
     },
-    "/api/v1/integrations/asset-readiness": {
-      "get": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "AssetReadinessIntegrationV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "vehicleRefKey",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assetTag",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/integrations/routarr-asset-readiness": {
-      "get": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RoutarrAssetReadinessCheckV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "vehicleRefKey",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assetTag",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/integrations/routarr-events": {
+    "/api/v1/integrations/asset-readiness-checks": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestRoutarrEventV1",
+        "operationId": "CheckMaintainArrAssetReadinessV1",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -7858,17 +8128,76 @@
         }
       }
     },
-    "/api/v1/integrations/staffarr-person-sync": {
+    "/api/v1/integrations/assets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationAssetsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationAssetV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/assets/{assetId}/readiness": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationAssetReadinessV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/defects": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestStaffarrPersonSyncV1",
+        "operationId": "CreateMaintainArrIntegrationDefectV1",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestStaffarrPersonSyncRequest"
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -7881,17 +8210,412 @@
         }
       }
     },
-    "/api/v1/integrations/supplyarr-demand-status": {
+    "/api/v1/integrations/defects/{defectId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationDefectV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/defects/{defectId}/status-updates": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestSupplyarrDemandStatusV1",
+        "operationId": "UpdateMaintainArrIntegrationDefectStatusV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/inspections": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationInspectionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/inspections/{inspectionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationInspectionV1",
+        "parameters": [
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/inspections/{inspectionId}/answers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AnswerMaintainArrIntegrationInspectionV1",
+        "parameters": [
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/part-demand-status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestMaintainArrPartDemandStatusUpdateV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/part-issue-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrPartIssueEventV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-hold-releases": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseMaintainArrIntegrationQualityHoldV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/quality-holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationQualityHoldV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/route-exceptions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReportMaintainArrIntegrationRouteExceptionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplier-work-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReportMaintainArrSupplierWorkStatusV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrderV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrIntegrationWorkOrderV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/blockers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrderBlockerV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/closeout": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseMaintainArrIntegrationWorkOrderV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateMaintainArrIntegrationWorkOrderStatusV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonElement"
               }
             }
           },
@@ -11688,181 +12412,6 @@
           }
         }
       },
-      "IngestRoutarrEventRequest": {
-        "required": [
-          "tenantId",
-          "sourceEventId",
-          "eventKind",
-          "relatedEntityType",
-          "relatedEntityId",
-          "correlationId",
-          "payload"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "sourceEventId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "eventKind": {
-            "type": "string"
-          },
-          "relatedEntityType": {
-            "type": "string"
-          },
-          "relatedEntityId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "correlationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "payload": {
-            "$ref": "#/components/schemas/RoutarrEventPayload"
-          },
-          "occurredAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          }
-        }
-      },
-      "IngestStaffarrPersonSyncRequest": {
-        "required": [
-          "tenantId",
-          "staffarrPersonId",
-          "displayName",
-          "employmentStatus",
-          "primarySite",
-          "eventType",
-          "occurredAt",
-          "correlationId"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "staffarrPersonId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "employmentStatus": {
-            "type": "string"
-          },
-          "primarySite": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "eventType": {
-            "type": "string"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "correlationId": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "IngestSupplyarrDemandStatusRequest": {
-        "required": [
-          "tenantId",
-          "maintainarrPublicationId",
-          "supplyarrDemandRefId",
-          "supplyarrCallbackPublicationId",
-          "eventType",
-          "procurementStatus",
-          "supplyarrPurchaseRequestId",
-          "supplyarrPurchaseOrderId",
-          "supplyarrReceivingReceiptId",
-          "quantityReceivedDelta",
-          "message",
-          "occurredAt"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "maintainarrPublicationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "supplyarrDemandRefId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "supplyarrCallbackPublicationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "eventType": {
-            "type": "string"
-          },
-          "procurementStatus": {
-            "type": "string"
-          },
-          "supplyarrPurchaseRequestId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "supplyarrPurchaseOrderId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "supplyarrReceivingReceiptId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "quantityReceivedDelta": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "message": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "InspectionRunAnswerInput": {
         "required": [
           "checklistItemId",
@@ -11899,6 +12448,7 @@
           }
         }
       },
+      "JsonElement": {},
       "NormalizeVoiceNumericRequest": {
         "required": [
           "transcript"
@@ -12319,188 +12869,6 @@
               "type": "string",
               "format": "uuid"
             }
-          }
-        }
-      },
-      "RoutarrEventPayload": {
-        "required": [
-          "tenantId",
-          "summary",
-          "tripId"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "summary": {
-            "type": "string"
-          },
-          "tripId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "tripNumber": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "driverPersonId": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "vehicleRefKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "dispatchStatus": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "routeId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "stopId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "stopKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "stopStatus": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "proofId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "proofType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "dvirId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "dvirPhase": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "dvirResult": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "defectNotes": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "exceptionId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "exceptionKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "exceptionCategory": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "incidentType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "incidentSeverity": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "incidentReviewStatus": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "incidentRoutedProduct": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "overrideTargetType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "overrideKinds": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "type": "string"
-            }
-          },
-          "routeNumber": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "routeStatus": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },

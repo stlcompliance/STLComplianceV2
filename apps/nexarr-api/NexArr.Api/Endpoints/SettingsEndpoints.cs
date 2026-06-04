@@ -33,7 +33,7 @@ public static class SettingsEndpoints
                     new("platform_outbox_publisher_settings", "/api/platform/outbox-publisher/settings", "Platform outbox publishing worker settings."),
                     new("platform_entitlement_reconciliation_settings", "/api/platform/entitlement-reconciliation/settings", "Entitlement reconciliation worker settings."),
                     new("platform_tenant_lifecycle_settings", "/api/platform/tenant-lifecycle/settings", "Tenant lifecycle worker automation settings."),
-                    new("companion_notification_settings", "/api/companion/notification-settings", "Companion notification defaults and routing settings."),
+                    new("companion_notification_settings", "/api/v1/mobile/notification-settings", "Field Companion notification defaults and routing settings."),
                 ]);
 
                 return Results.Ok(response);

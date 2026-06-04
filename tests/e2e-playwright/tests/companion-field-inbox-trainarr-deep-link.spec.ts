@@ -9,7 +9,7 @@ import {
 } from '../support/liveProbe.js'
 import { companionFrontend, handoffProductFrontends, handoffUrlPattern } from '../support/productFrontends.js'
 
-test.describe('Companion field inbox → TrainArr deep links @requires-live', () => {
+test.describe('Field Companion field inbox → TrainArr deep links @requires-live', () => {
   let assignmentId: string
 
   test.beforeAll(async ({}, testInfo) => {
@@ -20,7 +20,7 @@ test.describe('Companion field inbox → TrainArr deep links @requires-live', ()
       testInfo.skip(true, 'Suite and NexArr API must be reachable for live E2E.')
     }
     if (!(await isCompanionFrontendReachable()) || !(await isHandoffFrontendReachable('trainarr'))) {
-      testInfo.skip(true, 'Companion (5181) and TrainArr (5176) previews must be running.')
+      testInfo.skip(true, 'Field Companion (5181) and TrainArr (5176) previews must be running.')
     }
 
     const fixture = await ensureTrainArrFieldInboxFixture()
@@ -35,7 +35,7 @@ test.describe('Companion field inbox → TrainArr deep links @requires-live', ()
     const trainarr = handoffProductFrontends.find((p) => p.productKey === 'trainarr')!
 
     await signInFromSuite(page)
-    await page.goto('/app/companion/launch')
+    await page.goto('/app/field-companion/launch')
 
     const launchButton = page.getByRole('button', { name: 'Launch product (handoff)' })
     await expect(launchButton).toBeVisible({ timeout: 15_000 })

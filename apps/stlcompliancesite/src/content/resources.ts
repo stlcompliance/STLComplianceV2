@@ -14,7 +14,7 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     id: 'products-hub',
     title: 'Products hub',
     summary:
-      'Compare StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Companion in plain language.',
+      'Compare StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, and Field Companion in plain language.',
     href: '/products',
     category: 'suite',
   },

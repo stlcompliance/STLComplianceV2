@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
 import { COMPLIANCE_CORE_EDUCATION } from '../content/ownershipBoundaries'
-import { getMarketingProduct } from '../content/products'
+import { getMarketingProduct, productPagePath } from '../content/products'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 type DetailListProps = {
@@ -49,7 +49,7 @@ export function ProductPage() {
       <SiteSeo
         title={`${product.displayName} — ${siteConfig.siteName}`}
         description={`${product.displayName}: ${product.tagline}. ${product.owns}`}
-        path={`/products/${product.productKey}`}
+        path={productPagePath(product.productKey)}
       />
       <PageHero
         eyebrow="Product"

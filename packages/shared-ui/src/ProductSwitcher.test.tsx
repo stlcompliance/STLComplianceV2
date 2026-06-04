@@ -8,18 +8,18 @@ describe('ProductSwitcher', () => {
 
     render(
       <ProductSwitcher
-        currentProductKey="companion"
-        entitlements={['companion', 'trainarr']}
+        currentProductKey="fieldcompanion"
+        entitlements={['fieldcompanion', 'trainarr']}
         suiteHomeUrl="http://localhost:5174"
         productLaunchUrls={{
-          companion: 'http://localhost:5181/launch',
+          fieldcompanion: 'http://localhost:5181/field-companion/launch',
           trainarr: 'http://localhost:5176/launch',
         }}
         onSelectProduct={onSelectProduct}
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Companion/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Field Companion/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /TrainArr/i }))
 
     expect(onSelectProduct).toHaveBeenCalledWith('trainarr')

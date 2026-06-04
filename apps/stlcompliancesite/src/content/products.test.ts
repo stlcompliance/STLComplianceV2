@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getMarketingProduct, MARKETING_PRODUCTS } from './products'
+import { getMarketingProduct, MARKETING_PRODUCTS, productPagePath } from './products'
 
 const removedPublicProductKey = 'nex' + 'arr'
 
@@ -17,6 +17,8 @@ describe('MARKETING_PRODUCTS', () => {
 
   it('assigns product categories', () => {
     expect(getMarketingProduct('staffarr')?.category).toBe('workforce')
+    expect(getMarketingProduct('fieldcompanion')?.category).toBe('field')
+    expect(getMarketingProduct('field-companion')?.category).toBe('field')
     expect(getMarketingProduct('companion')?.category).toBe('field')
     expect(MARKETING_PRODUCTS.every((p) => p.tagline.length > 0)).toBe(true)
   })
@@ -29,5 +31,10 @@ describe('MARKETING_PRODUCTS', () => {
     expect(maintainarr.connectedReasons.training).toMatch(/qualification/i)
     expect(routarr.checklist.warehouse).toBe('connected')
     expect(routarr.connectedReasons.warehouse).toMatch(/stock|load/i)
+  })
+
+  it('keeps legacy companion links on the canonical field companion page', () => {
+    expect(productPagePath('companion')).toBe('/products/field-companion')
+    expect(productPagePath('field-companion')).toBe('/products/field-companion')
   })
 })

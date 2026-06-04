@@ -1,6 +1,6 @@
-import { normalizeProductKey, SUITE_PRODUCT_CATALOG } from './productCatalog'
+import { getProductRouteSlug, normalizeProductKey, SUITE_PRODUCT_CATALOG } from './productCatalog'
 
-/** Local Vite preview bases aligned with StlE2eFrontendCatalog (+ companion). */
+/** Local Vite preview bases aligned with StlE2eFrontendCatalog (+ Field Companion). */
 const LOCAL_FRONTEND_BASES: Record<string, string> = {
   staffarr: 'http://localhost:5175',
   trainarr: 'http://localhost:5176',
@@ -8,7 +8,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   maintainarr: 'http://localhost:5178',
   supplyarr: 'http://localhost:5179',
   routarr: 'http://localhost:5180',
-  companion: 'http://localhost:5181',
+  fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',
 }
 
@@ -29,6 +29,9 @@ function readFrontendBase(
     env[`VITE_${upper}_FRONTEND_BASE`],
     env[`VITE_${upper}_FRONTEND_URL`],
   ]
+  if (productKey === 'fieldcompanion') {
+    candidates.push(env.VITE_COMPANION_FRONTEND_BASE, env.VITE_COMPANION_FRONTEND_URL)
+  }
   for (const value of candidates) {
     const trimmed = value?.trim()
     if (trimmed) {
@@ -54,7 +57,7 @@ export function buildProductLaunchUrlMap(
       continue
     }
     if (appBase) {
-      map[entry.productKey] = `${appBase}/${entry.productKey}/launch`
+      map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}/launch`
       continue
     }
     const base = readFrontendBase(env, entry.productKey)
@@ -82,5 +85,5 @@ export function resolveProductLaunchUrl(
   }
 
   const suiteUrl = resolveSuiteHomeUrl(suiteHomeUrl)
-  return `${suiteUrl}/${normalized}/launch`
+  return `${suiteUrl}/${getProductRouteSlug(normalized)}/launch`
 }

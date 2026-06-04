@@ -187,6 +187,25 @@ GET /api/v1/rulepack-diffs/{diffId}
 POST /api/v1/change-impact-analyses
 ```
 
+## Audit package API surface
+
+```text
+GET /api/audit-packages/manifest
+GET /api/audit-packages/export
+GET /api/audit-packages/export/stream
+POST /api/audit-packages/jobs
+GET /api/audit-packages/jobs/{jobId}
+GET /api/audit-packages/jobs/{jobId}/download
+
+GET /api/v1/audit/events
+POST /api/v1/audit/packages
+GET /api/v1/audit/packages
+GET /api/v1/audit/packages/{id}
+GET /api/v1/audit/packages/{id}/download
+GET /api/v1/events
+GET /api/events
+```
+
 ## APIs Compliance Core should consume
 
 ```text

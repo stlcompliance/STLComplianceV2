@@ -79,7 +79,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
     >
       <h2 className="text-lg font-semibold text-slate-50">Operational notifications</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Configure HTTPS webhooks and browser Web Push for Companion handoff and field inbox lifecycle events.
+        Configure HTTPS webhooks and browser Web Push for Field Companion handoff and field inbox lifecycle events.
         Dispatch runs on the shared worker notification job.
       </p>
 

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   buildProductSurfacePath,
   findNavigationProduct,
+  getProductDisplayName,
   isLaunchSurface,
+  normalizeProductKey,
   resolveActiveSurface,
 } from './suiteNavigation'
 import type { NavigationSurfaceItem } from '../api/types'
@@ -68,5 +70,13 @@ describe('suiteNavigation', () => {
     )
 
     expect(product?.productKey).toBe('staffarr')
+  })
+
+  it('canonicalizes the legacy companion alias', () => {
+    expect(normalizeProductKey('Companion')).toBe('fieldcompanion')
+    expect(normalizeProductKey('field-companion')).toBe('fieldcompanion')
+    expect(buildProductSurfacePath('companion', surfaces[0])).toBe('/app/field-companion')
+    expect(buildProductSurfacePath('field-companion', surfaces[1])).toBe('/app/field-companion/dispatch')
+    expect(getProductDisplayName('companion', 'Companion App')).toBe('Field Companion')
   })
 })

@@ -55,7 +55,7 @@ export function PlatformSessionSettingsPanel() {
     >
       <h2 className="text-lg font-semibold text-white">Session policy</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Controls access-token and refresh-session lifetimes for NexArr, Companion, and launched
+        Controls access-token and refresh-session lifetimes for NexArr, Field Companion, and launched
         product sessions.
       </p>
 

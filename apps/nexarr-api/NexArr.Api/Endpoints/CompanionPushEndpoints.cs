@@ -12,52 +12,62 @@ public static class CompanionPushEndpoints
 {
     public static void MapCompanionPushEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/push")
-            .WithTags("CompanionPush")
-            .RequireAuthorization();
-
-        group.MapGet("/vapid-public-key", (
-            IOptions<CompanionWebPushOptions> options) =>
+        app.MapLegacyAndCanonical("/api/companion/push", "/api/v1/mobile/push", (group, isCanonical) =>
         {
-            var settings = options.Value;
-            if (!settings.IsConfigured || string.IsNullOrWhiteSpace(settings.PublicKey))
+            group.WithTags("FieldCompanion").RequireAuthorization();
+
+            var vapid = group.MapGet("/vapid-public-key", (
+                IOptions<CompanionWebPushOptions> options) =>
             {
-                throw new StlApiException(
-                    "companion.push.vapid_unavailable",
-                    "Web Push is not configured for this environment.",
-                    503);
+                var settings = options.Value;
+                if (!settings.IsConfigured || string.IsNullOrWhiteSpace(settings.PublicKey))
+                {
+                    throw new StlApiException(
+                        "companion.push.vapid_unavailable",
+                        "Web Push is not configured for this environment.",
+                        503);
+                }
+
+                return Results.Ok(new CompanionPushVapidPublicKeyResponse(settings.PublicKey));
+            });
+            if (isCanonical)
+            {
+                vapid.WithName("GetCompanionPushVapidPublicKey");
             }
 
-            return Results.Ok(new CompanionPushVapidPublicKeyResponse(settings.PublicKey));
-        })
-        .WithName("GetCompanionPushVapidPublicKey");
+            var subscribe = group.MapPost("/subscribe", async (
+                [FromBody] UpsertCompanionPushSubscriptionRequest request,
+                CompanionPushSubscriptionService subscriptionService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                CompanionFieldInboxService.RequireCompanionAccess(context.User);
+                var tenantId = context.User.GetTenantId();
+                var userId = context.User.GetUserId();
+                var result = await subscriptionService.UpsertAsync(tenantId, userId, request, cancellationToken);
+                return Results.Ok(result);
+            });
+            if (isCanonical)
+            {
+                subscribe.WithName("SubscribeCompanionPush");
+            }
 
-        group.MapPost("/subscribe", async (
-            [FromBody] UpsertCompanionPushSubscriptionRequest request,
-            CompanionPushSubscriptionService subscriptionService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            CompanionFieldInboxService.RequireCompanionAccess(context.User);
-            var tenantId = context.User.GetTenantId();
-            var userId = context.User.GetUserId();
-            var result = await subscriptionService.UpsertAsync(tenantId, userId, request, cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("SubscribeCompanionPush");
-
-        group.MapDelete("/subscribe", async (
-            [FromBody] UnsubscribeCompanionPushRequest request,
-            CompanionPushSubscriptionService subscriptionService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            CompanionFieldInboxService.RequireCompanionAccess(context.User);
-            var tenantId = context.User.GetTenantId();
-            var userId = context.User.GetUserId();
-            await subscriptionService.UnsubscribeAsync(tenantId, userId, request, cancellationToken);
-            return Results.NoContent();
-        })
-        .WithName("UnsubscribeCompanionPush");
+            var unsubscribe = group.MapDelete("/subscribe", async (
+                [FromBody] UnsubscribeCompanionPushRequest request,
+                CompanionPushSubscriptionService subscriptionService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                CompanionFieldInboxService.RequireCompanionAccess(context.User);
+                var tenantId = context.User.GetTenantId();
+                var userId = context.User.GetUserId();
+                await subscriptionService.UnsubscribeAsync(tenantId, userId, request, cancellationToken);
+                return Results.NoContent();
+            });
+            if (isCanonical)
+            {
+                unsubscribe.WithName("UnsubscribeCompanionPush");
+            }
+        });
     }
 }

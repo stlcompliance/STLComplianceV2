@@ -4,7 +4,11 @@ import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSurfaceNav } from '../components/ProductSurfaceNav'
 import { canAccessProductRoute } from '../lib/permissions'
-import { findNavigationProduct, normalizeProductKey } from '../navigation/suiteNavigation'
+import {
+  findNavigationProduct,
+  getProductDisplayName,
+  normalizeProductKey,
+} from '../navigation/suiteNavigation'
 
 export function ProductShellLayout() {
   const { productKey = '' } = useParams<{ productKey: string }>()
@@ -28,7 +32,9 @@ export function ProductShellLayout() {
     <div className="flex min-h-0 gap-6">
       <aside className="w-56 shrink-0">
         <div className="rounded-lg border border-slate-700/70 bg-[#0a101c] p-3">
-          <p className="px-3 text-sm font-semibold text-white">{product?.displayName ?? normalized}</p>
+          <p className="px-3 text-sm font-semibold text-white">
+            {getProductDisplayName(normalized, product?.displayName)}
+          </p>
           {navigationQuery.isLoading && (
             <p className="px-3 pt-2 text-xs text-slate-500">Loading navigation…</p>
           )}

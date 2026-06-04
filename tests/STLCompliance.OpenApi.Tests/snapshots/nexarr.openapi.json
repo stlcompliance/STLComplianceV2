@@ -149,544 +149,6 @@
         }
       }
     },
-    "/api/companion/auth/handoff/redeem": {
-      "post": {
-        "tags": [
-          "CompanionAuth"
-        ],
-        "operationId": "CompanionRedeemHandoff",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompanionRedeemHandoffRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-inbox": {
-      "get": {
-        "tags": [
-          "Companion"
-        ],
-        "operationId": "CompanionGetFieldInbox",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/dvir": {
-      "post": {
-        "tags": [
-          "CompanionFieldDvir"
-        ],
-        "operationId": "SubmitCompanionFieldDvir",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldDvirRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/evidence": {
-      "post": {
-        "tags": [
-          "CompanionFieldEvidence"
-        ],
-        "operationId": "SubmitCompanionFieldEvidence",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldEvidenceRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/inspection": {
-      "get": {
-        "tags": [
-          "CompanionFieldInspection"
-        ],
-        "operationId": "GetCompanionFieldInspectionDetail",
-        "parameters": [
-          {
-            "name": "taskKey",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/inspection/answers": {
-      "post": {
-        "tags": [
-          "CompanionFieldInspection"
-        ],
-        "operationId": "SubmitCompanionFieldInspectionAnswers",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldInspectionAnswersRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/inspection/complete": {
-      "post": {
-        "tags": [
-          "CompanionFieldInspection"
-        ],
-        "operationId": "CompleteCompanionFieldInspection",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteCompanionFieldInspectionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/receiving": {
-      "get": {
-        "tags": [
-          "CompanionFieldReceiving"
-        ],
-        "operationId": "GetCompanionFieldReceivingDetail",
-        "parameters": [
-          {
-            "name": "taskKey",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/receiving/line": {
-      "post": {
-        "tags": [
-          "CompanionFieldReceiving"
-        ],
-        "operationId": "UpdateCompanionFieldReceivingLine",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCompanionFieldReceivingLineRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/receiving/post": {
-      "post": {
-        "tags": [
-          "CompanionFieldReceiving"
-        ],
-        "operationId": "PostCompanionFieldReceiving",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PostCompanionFieldReceivingRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/submission-status": {
-      "get": {
-        "tags": [
-          "CompanionFieldSubmissions"
-        ],
-        "operationId": "GetCompanionFieldTaskSubmissionStatus",
-        "parameters": [
-          {
-            "name": "taskKeys",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/validate": {
-      "post": {
-        "tags": [
-          "CompanionFieldSubmissions"
-        ],
-        "operationId": "ValidateCompanionFieldTask",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ValidateCompanionFieldTaskRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/work-order": {
-      "get": {
-        "tags": [
-          "CompanionFieldWorkOrder"
-        ],
-        "operationId": "GetCompanionFieldWorkOrderDetail",
-        "parameters": [
-          {
-            "name": "taskKey",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/work-order/labor": {
-      "post": {
-        "tags": [
-          "CompanionFieldWorkOrder"
-        ],
-        "operationId": "LogCompanionFieldWorkOrderLabor",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LogCompanionFieldWorkOrderLaborRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/field-tasks/work-order/status": {
-      "post": {
-        "tags": [
-          "CompanionFieldWorkOrder"
-        ],
-        "operationId": "UpdateCompanionFieldWorkOrderStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCompanionFieldWorkOrderStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/me": {
-      "get": {
-        "tags": [
-          "Companion"
-        ],
-        "operationId": "CompanionGetMe",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/notification-settings": {
-      "get": {
-        "tags": [
-          "CompanionNotifications"
-        ],
-        "operationId": "GetCompanionNotificationSettings",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "CompanionNotifications"
-        ],
-        "operationId": "UpsertCompanionNotificationSettings",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertCompanionNotificationSettingsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/notification-settings/dispatches": {
-      "get": {
-        "tags": [
-          "CompanionNotifications"
-        ],
-        "operationId": "ListCompanionNotificationDispatches",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/offline-actions": {
-      "get": {
-        "tags": [
-          "CompanionOffline"
-        ],
-        "operationId": "ListCompanionOfflineActions",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/offline-actions/sync": {
-      "post": {
-        "tags": [
-          "CompanionOffline"
-        ],
-        "operationId": "SyncCompanionOfflineActions",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SyncCompanionOfflineActionsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/push/subscribe": {
-      "post": {
-        "tags": [
-          "CompanionPush"
-        ],
-        "operationId": "SubscribeCompanionPush",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertCompanionPushSubscriptionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "CompanionPush"
-        ],
-        "operationId": "UnsubscribeCompanionPush",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnsubscribeCompanionPushRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/push/vapid-public-key": {
-      "get": {
-        "tags": [
-          "CompanionPush"
-        ],
-        "operationId": "GetCompanionPushVapidPublicKey",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/companion/scan/resolve": {
-      "post": {
-        "tags": [
-          "CompanionScan"
-        ],
-        "operationId": "CompanionResolveScan",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompanionScanResolveRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/config": {
       "get": {
         "tags": [
@@ -5435,6 +4897,521 @@
         }
       }
     },
+    "/api/v1/mobile/field-inbox": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "CompanionGetFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/dvir": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "SubmitCompanionFieldDvir",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldDvirRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/evidence": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "SubmitCompanionFieldEvidence",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/inspection": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionFieldInspectionDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/inspection/answers": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "SubmitCompanionFieldInspectionAnswers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldInspectionAnswersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/inspection/complete": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "CompleteCompanionFieldInspection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteCompanionFieldInspectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/receiving": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionFieldReceivingDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/receiving/line": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "UpdateCompanionFieldReceivingLine",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionFieldReceivingLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/receiving/post": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "PostCompanionFieldReceiving",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostCompanionFieldReceivingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/submission-status": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionFieldTaskSubmissionStatus",
+        "parameters": [
+          {
+            "name": "taskKeys",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/validate": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "ValidateCompanionFieldTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCompanionFieldTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/work-order": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionFieldWorkOrderDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/work-order/labor": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "LogCompanionFieldWorkOrderLabor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogCompanionFieldWorkOrderLaborRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/field-tasks/work-order/status": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "UpdateCompanionFieldWorkOrderStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionFieldWorkOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/me": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "CompanionGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/notification-settings": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionNotificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "UpsertCompanionNotificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCompanionNotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/notification-settings/dispatches": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "ListCompanionNotificationDispatches",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/offline-actions": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "ListCompanionOfflineActions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/offline-actions/sync": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "SyncCompanionOfflineActions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCompanionOfflineActionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/push/subscribe": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "SubscribeCompanionPush",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCompanionPushSubscriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "UnsubscribeCompanionPush",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsubscribeCompanionPushRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/push/vapid-public-key": {
+      "get": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "GetCompanionPushVapidPublicKey",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/scan/resolve": {
+      "post": {
+        "tags": [
+          "FieldCompanion"
+        ],
+        "operationId": "CompanionResolveScan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanionScanResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/platform-admin/dashboard": {
       "get": {
         "tags": [
@@ -6598,6 +6575,29 @@
         }
       }
     },
+    "/api/v1/platform/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "RedeemHandoffPlatformV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/products": {
       "get": {
         "tags": [
@@ -7702,17 +7702,6 @@
             "type": "string"
           },
           "auth": {
-            "type": "string"
-          }
-        }
-      },
-      "CompanionRedeemHandoffRequest": {
-        "required": [
-          "handoffCode"
-        ],
-        "type": "object",
-        "properties": {
-          "handoffCode": {
             "type": "string"
           }
         }
@@ -9286,40 +9275,7 @@
       "name": "HybridDataPlane"
     },
     {
-      "name": "CompanionAuth"
-    },
-    {
-      "name": "Companion"
-    },
-    {
-      "name": "CompanionNotifications"
-    },
-    {
-      "name": "CompanionPush"
-    },
-    {
-      "name": "CompanionOffline"
-    },
-    {
-      "name": "CompanionFieldEvidence"
-    },
-    {
-      "name": "CompanionFieldDvir"
-    },
-    {
-      "name": "CompanionFieldInspection"
-    },
-    {
-      "name": "CompanionFieldWorkOrder"
-    },
-    {
-      "name": "CompanionFieldReceiving"
-    },
-    {
-      "name": "CompanionFieldSubmissions"
-    },
-    {
-      "name": "CompanionScan"
+      "name": "FieldCompanion"
     }
   ]
 }

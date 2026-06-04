@@ -35,7 +35,7 @@ const PLAIN_MESSAGES: Record<string, string> = {
     'You are not entitled to open tasks for this product.',
   [CompanionScanReasonCodes.NotInInbox]: 'This task is not in your field inbox.',
   [CompanionAuthReasonCodes.NotEntitled]:
-    'Companion access requires companion or field-product entitlement.',
+    'Field Companion access requires a Field Companion entitlement or a field-product entitlement.',
   [CompanionAuthReasonCodes.Unauthorized]: 'Sign in again to continue field work.',
   [CompanionOfflineActionReasonCodes.IdempotencyRequired]:
     'Each offline action needs a unique idempotency key before sync.',

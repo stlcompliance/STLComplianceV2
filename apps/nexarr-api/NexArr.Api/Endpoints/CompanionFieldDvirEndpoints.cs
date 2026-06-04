@@ -7,35 +7,39 @@ public static class CompanionFieldDvirEndpoints
 {
     public static void MapCompanionFieldDvirEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/field-tasks/dvir")
-            .WithTags("CompanionFieldDvir")
-            .RequireAuthorization();
-
-        group.MapPost("/", async (
-            SubmitCompanionFieldDvirRequest request,
-            CompanionFieldDvirService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        app.MapLegacyAndCanonical("/api/companion/field-tasks/dvir", "/api/v1/mobile/field-tasks/dvir", (group, isCanonical) =>
         {
-            var authorization = context.Request.Headers.Authorization.ToString();
-            var accessToken = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? authorization["Bearer ".Length..].Trim()
-                : string.Empty;
+            group.WithTags("FieldCompanion").RequireAuthorization();
 
-            if (string.IsNullOrWhiteSpace(accessToken))
+            var submit = group.MapPost("/", async (
+                SubmitCompanionFieldDvirRequest request,
+                CompanionFieldDvirService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
             {
-                throw new STLCompliance.Shared.Contracts.StlApiException(
-                    "auth.unauthorized",
-                    "Bearer access token is required.",
-                    401);
-            }
+                var authorization = context.Request.Headers.Authorization.ToString();
+                var accessToken = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? authorization["Bearer ".Length..].Trim()
+                    : string.Empty;
 
-            return Results.Ok(await service.SubmitAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("SubmitCompanionFieldDvir");
+                if (string.IsNullOrWhiteSpace(accessToken))
+                {
+                    throw new STLCompliance.Shared.Contracts.StlApiException(
+                        "auth.unauthorized",
+                        "Bearer access token is required.",
+                        401);
+                }
+
+                return Results.Ok(await service.SubmitAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                submit.WithName("SubmitCompanionFieldDvir");
+            }
+        });
     }
 }

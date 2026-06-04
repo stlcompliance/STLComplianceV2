@@ -442,10 +442,20 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
             .Select(x => x.GetProperty("path").GetString())
             .ToList();
 
-        Assert.Contains("/api/v1/integrations/asset-readiness", paths);
-        Assert.Contains("/api/v1/integrations/routarr-events", paths);
-        Assert.Contains("/api/v1/integrations/supplyarr-demand-status", paths);
-        Assert.Contains("/api/v1/integrations/staffarr-person-sync", paths);
+        Assert.Contains("/api/v1/integrations/assets", paths);
+        Assert.Contains("/api/v1/integrations/assets/{assetId}", paths);
+        Assert.Contains("/api/v1/integrations/assets/{assetId}/readiness", paths);
+        Assert.Contains("/api/v1/integrations/asset-readiness-checks", paths);
+        Assert.Contains("/api/v1/integrations/work-orders", paths);
+        Assert.Contains("/api/v1/integrations/part-demand-status-updates", paths);
+        Assert.Contains("/api/v1/integrations/part-issue-events", paths);
+        Assert.Contains("/api/v1/integrations/supplier-work-status", paths);
+
+        Assert.DoesNotContain("/api/v1/integrations/asset-readiness", paths);
+        Assert.DoesNotContain("/api/v1/integrations/routarr-asset-readiness", paths);
+        Assert.DoesNotContain("/api/v1/integrations/routarr-events", paths);
+        Assert.DoesNotContain("/api/v1/integrations/supplyarr-demand-status", paths);
+        Assert.DoesNotContain("/api/v1/integrations/staffarr-person-sync", paths);
     }
 
     private async Task<Guid> SeedAssetOnlyAsync(string token)

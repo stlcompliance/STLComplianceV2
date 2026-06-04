@@ -16,7 +16,7 @@ import { companionFrontend, handoffProductFrontends, handoffUrlPattern } from '.
 
 async function launchCompanionFieldInbox(page: import('@playwright/test').Page) {
   await signInFromSuite(page)
-  await page.goto('/app/companion/launch')
+  await page.goto('/app/field-companion/launch')
 
   const launchButton = page.getByRole('button', { name: 'Launch product (handoff)' })
   await expect(launchButton).toBeVisible({ timeout: 15_000 })
@@ -29,7 +29,7 @@ async function launchCompanionFieldInbox(page: import('@playwright/test').Page) 
   await expect(page.getByRole('heading', { name: 'Field inbox' })).toBeVisible({ timeout: 20_000 })
 }
 
-test.describe('Companion field inbox → operations product deep links @requires-live', () => {
+test.describe('Field Companion field inbox → operations product deep links @requires-live', () => {
   test.beforeEach(async ({}, testInfo) => {
     if (!isLiveModeEnabled()) {
       testInfo.skip(true, 'Set E2E_LIVE=1 to run browser E2E against docker-compose.')
@@ -38,7 +38,7 @@ test.describe('Companion field inbox → operations product deep links @requires
       testInfo.skip(true, 'Suite and NexArr API must be reachable for live E2E.')
     }
     if (!(await isCompanionFrontendReachable())) {
-      testInfo.skip(true, 'Companion (5181) preview must be running.')
+      testInfo.skip(true, 'Field Companion (5181) preview must be running.')
     }
   })
 

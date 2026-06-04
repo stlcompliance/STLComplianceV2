@@ -7,54 +7,64 @@ public static class CompanionFieldReceivingEndpoints
 {
     public static void MapCompanionFieldReceivingEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/field-tasks/receiving")
-            .WithTags("CompanionFieldReceiving")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            string taskKey,
-            CompanionFieldReceivingService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        app.MapLegacyAndCanonical("/api/companion/field-tasks/receiving", "/api/v1/mobile/field-tasks/receiving", (group, isCanonical) =>
         {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.GetDetailAsync(
-                context.User,
-                accessToken,
-                taskKey,
-                cancellationToken));
-        })
-        .WithName("GetCompanionFieldReceivingDetail");
+            group.WithTags("FieldCompanion").RequireAuthorization();
 
-        group.MapPost("/line", async (
-            UpdateCompanionFieldReceivingLineRequest request,
-            CompanionFieldReceivingService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.UpdateLineAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("UpdateCompanionFieldReceivingLine");
+            var getDetail = group.MapGet("/", async (
+                string taskKey,
+                CompanionFieldReceivingService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.GetDetailAsync(
+                    context.User,
+                    accessToken,
+                    taskKey,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                getDetail.WithName("GetCompanionFieldReceivingDetail");
+            }
 
-        group.MapPost("/post", async (
-            PostCompanionFieldReceivingRequest request,
-            CompanionFieldReceivingService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            var accessToken = ExtractBearerToken(context);
-            return Results.Ok(await service.PostAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("PostCompanionFieldReceiving");
+            var updateLine = group.MapPost("/line", async (
+                UpdateCompanionFieldReceivingLineRequest request,
+                CompanionFieldReceivingService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.UpdateLineAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                updateLine.WithName("UpdateCompanionFieldReceivingLine");
+            }
+
+            var post = group.MapPost("/post", async (
+                PostCompanionFieldReceivingRequest request,
+                CompanionFieldReceivingService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var accessToken = ExtractBearerToken(context);
+                return Results.Ok(await service.PostAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                post.WithName("PostCompanionFieldReceiving");
+            }
+        });
     }
 
     private static string ExtractBearerToken(HttpContext context)

@@ -12,6 +12,7 @@ import { useLaunchContextGate } from '../hooks/useLaunchContextGate'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import {
   findNavigationProduct,
+  getProductDisplayName,
   isLaunchSurface,
   normalizeProductKey,
   resolveActiveSurface,
@@ -118,7 +119,7 @@ export function ProductSurfacePage() {
       <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
       <p className="text-sm text-slate-300">
         This in-suite surface is wired to NexArr navigation and entitlements. Product-specific
-        workflows launch in the dedicated {product?.displayName ?? normalized} application when
+        workflows launch in the dedicated {getProductDisplayName(normalized, product?.displayName)} application when
         shipped.
       </p>
       {surface.permissionHint && (

@@ -48,7 +48,7 @@ export const PRODUCT_OWNERSHIP: Record<string, ProductOwnershipCopy> = {
     doesNotOwn:
       'The daily work records created by employees, trainers, mechanics, dispatchers, buyers, or warehouse teams.',
   },
-  companion: {
+  fieldcompanion: {
     owns:
       'A simple field inbox that brings tasks and messages together and sends workers to the right product when action is needed.',
     doesNotOwn:

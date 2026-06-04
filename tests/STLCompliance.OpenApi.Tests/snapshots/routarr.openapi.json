@@ -4112,6 +4112,29 @@
         }
       }
     },
+    "/api/trips/by-number/{tripNumber}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "GetTripByNumber",
+        "parameters": [
+          {
+            "name": "tripNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/trips/{tripId}": {
       "get": {
         "tags": [
@@ -6599,6 +6622,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/trips/by-number/{tripNumber}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "GetTripByNumberV1Alias",
+        "parameters": [
+          {
+            "name": "tripNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

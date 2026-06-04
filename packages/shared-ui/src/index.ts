@@ -9,6 +9,7 @@ export {
   getSuiteProductIcon,
   hasProductEntitlement,
   listEntitledSuiteProducts,
+  getProductRouteSlug,
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
 } from './productCatalog'

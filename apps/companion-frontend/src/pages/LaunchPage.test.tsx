@@ -18,7 +18,7 @@ describe('LaunchPage', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText('Missing handoff code. Launch the Companion app from the suite.')).toBeInTheDocument()
+    expect(await screen.findByText('Missing handoff code. Launch the Field Companion app from the suite.')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 })

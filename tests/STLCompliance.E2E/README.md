@@ -38,10 +38,10 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 | `suite-login-handoff-smoke.spec.ts` | Suite login → StaffArr handoff |
 | `product-handoff-smoke.spec.ts` | Handoff to all seven product frontends |
 | `product-handoff-tenant-chrome.spec.ts` | Tenant name/slug in product shell after handoff |
-| `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link |
+| `companion-field-inbox-trainarr-deep-link.spec.ts` | Field Companion field inbox → TrainArr assignment deep link |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route |
 
-Requires `E2E_LIVE=1` and `scripts/ops/e2e-frontends-preview` (suite 5174, products 5175–5180 and 5182, companion 5181). See `tests/e2e-playwright/README.md` and `docs/implementation/worker-slices/W134_M13_PLAYWRIGHT_DEEP_LINK_E2E.md`.
+Requires `E2E_LIVE=1` and `scripts/ops/e2e-frontends-preview` (suite 5174, products 5175–5180 and 5182, Field Companion 5181). See `tests/e2e-playwright/README.md` and `docs/implementation/worker-slices/W134_M13_PLAYWRIGHT_DEEP_LINK_E2E.md`.
 
 ## Live URL configuration
 

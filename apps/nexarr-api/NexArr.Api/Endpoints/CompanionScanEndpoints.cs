@@ -7,35 +7,39 @@ public static class CompanionScanEndpoints
 {
     public static void MapCompanionScanEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/companion/scan")
-            .WithTags("CompanionScan")
-            .RequireAuthorization();
-
-        group.MapPost("/resolve", async (
-            CompanionScanResolveRequest request,
-            CompanionScanResolveService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        app.MapLegacyAndCanonical("/api/companion/scan", "/api/v1/mobile/scan", (group, isCanonical) =>
         {
-            var authorization = context.Request.Headers.Authorization.ToString();
-            var accessToken = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? authorization["Bearer ".Length..].Trim()
-                : string.Empty;
+            group.WithTags("FieldCompanion").RequireAuthorization();
 
-            if (string.IsNullOrWhiteSpace(accessToken))
+            var resolve = group.MapPost("/resolve", async (
+                CompanionScanResolveRequest request,
+                CompanionScanResolveService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
             {
-                throw new STLCompliance.Shared.Contracts.StlApiException(
-                    "auth.unauthorized",
-                    "Bearer access token is required.",
-                    401);
-            }
+                var authorization = context.Request.Headers.Authorization.ToString();
+                var accessToken = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? authorization["Bearer ".Length..].Trim()
+                    : string.Empty;
 
-            return Results.Ok(await service.ResolveAsync(
-                context.User,
-                accessToken,
-                request,
-                cancellationToken));
-        })
-        .WithName("CompanionResolveScan");
+                if (string.IsNullOrWhiteSpace(accessToken))
+                {
+                    throw new STLCompliance.Shared.Contracts.StlApiException(
+                        "auth.unauthorized",
+                        "Bearer access token is required.",
+                        401);
+                }
+
+                return Results.Ok(await service.ResolveAsync(
+                    context.User,
+                    accessToken,
+                    request,
+                    cancellationToken));
+            });
+            if (isCanonical)
+            {
+                resolve.WithName("CompanionResolveScan");
+            }
+        });
     }
 }

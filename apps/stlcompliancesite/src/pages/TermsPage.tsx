@@ -390,7 +390,7 @@ export function TermsPage() {
               These Terms and Conditions govern your access to and use of STL Compliance websites,
               applications, products, services, software, content, and related offerings, including
               but not limited to StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr,
-              Compliance Core, Companion, and any related STL Compliance services collectively
+              Compliance Core, Field Companion, and any related STL Compliance services collectively
               referred to as the Services.
             </p>
             <p>

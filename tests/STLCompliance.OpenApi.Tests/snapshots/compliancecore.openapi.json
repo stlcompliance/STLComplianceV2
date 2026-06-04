@@ -98,6 +98,37 @@
         }
       }
     },
+    "/api/audit-packages/export/stream": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "StreamAuditPackageExport",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/jobs": {
       "post": {
         "tags": [
@@ -198,6 +229,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/calculators/title49/summary": {
+      "get": {
+        "tags": [
+          "Title49Calculators"
+        ],
+        "operationId": "GetTitle49CalculatorSummary",
+        "parameters": [
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/calculators/title49/summary/export": {
+      "get": {
+        "tags": [
+          "Title49Calculators"
+        ],
+        "operationId": "ExportTitle49CalculatorSummary",
+        "parameters": [
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2905,6 +2994,272 @@
         }
       }
     },
+    "/api/reports/citation-review/summary": {
+      "get": {
+        "tags": [
+          "CitationReviewReports"
+        ],
+        "operationId": "GetComplianceCoreCitationReviewReportSummary",
+        "parameters": [
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "programKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/citation-review/summary/export": {
+      "get": {
+        "tags": [
+          "CitationReviewReports"
+        ],
+        "operationId": "ExportComplianceCoreCitationReviewReportSummary",
+        "parameters": [
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "programKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/evaluations/summary": {
+      "get": {
+        "tags": [
+          "EvaluationHistoryReports"
+        ],
+        "operationId": "GetComplianceCoreEvaluationHistoryReportSummary",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "overallResult",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/evaluations/summary/export": {
+      "get": {
+        "tags": [
+          "EvaluationHistoryReports"
+        ],
+        "operationId": "ExportComplianceCoreEvaluationHistoryReportSummary",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "overallResult",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/evidence/completeness/summary": {
+      "get": {
+        "tags": [
+          "EvidenceCompletenessReports"
+        ],
+        "operationId": "GetComplianceCoreEvidenceCompletenessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/evidence/completeness/summary/export": {
+      "get": {
+        "tags": [
+          "EvidenceCompletenessReports"
+        ],
+        "operationId": "ExportComplianceCoreEvidenceCompletenessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/evidence/missing/summary": {
       "get": {
         "tags": [
@@ -3107,6 +3462,32 @@
         }
       }
     },
+    "/api/reports/hazmat-table/summary": {
+      "get": {
+        "tags": [
+          "HazmatTableCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreHazmatTableCoverageReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/hazmat-table/summary/export": {
+      "get": {
+        "tags": [
+          "HazmatTableCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreHazmatTableCoverageReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/integration-health/summary": {
       "get": {
         "tags": [
@@ -3183,6 +3564,32 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/regulatory-domains/summary": {
+      "get": {
+        "tags": [
+          "RegulatoryDomainCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreRegulatoryDomainCoverageReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/regulatory-domains/summary/export": {
+      "get": {
+        "tags": [
+          "RegulatoryDomainCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreRegulatoryDomainCoverageReportSummary",
         "responses": {
           "200": {
             "description": "OK"
@@ -3281,6 +3688,102 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/rule-changes/impact/summary": {
+      "get": {
+        "tags": [
+          "RuleChangeImpactReports"
+        ],
+        "operationId": "GetComplianceCoreRuleChangeImpactReportSummary",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/rule-changes/impact/summary/export": {
+      "get": {
+        "tags": [
+          "RuleChangeImpactReports"
+        ],
+        "operationId": "ExportComplianceCoreRuleChangeImpactReportSummary",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/title49/citations/summary": {
+      "get": {
+        "tags": [
+          "Title49CitationCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreTitle49CitationCoverageReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/title49/citations/summary/export": {
+      "get": {
+        "tags": [
+          "Title49CitationCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreTitle49CitationCoverageReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/title49/summary": {
+      "get": {
+        "tags": [
+          "Title49CoverageReports"
+        ],
+        "operationId": "GetComplianceCoreTitle49CoverageExplorerSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/title49/summary/export": {
+      "get": {
+        "tags": [
+          "Title49CoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreTitle49CoverageExplorerSummary",
         "responses": {
           "200": {
             "description": "OK"
@@ -4639,6 +5142,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/calculators/title49/summary": {
+      "get": {
+        "tags": [
+          "Title49Calculators"
+        ],
+        "operationId": "GetTitle49CalculatorSummaryV1",
+        "parameters": [
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/calculators/title49/summary/export": {
+      "get": {
+        "tags": [
+          "Title49Calculators"
+        ],
+        "operationId": "ExportTitle49CalculatorSummaryV1",
+        "parameters": [
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7538,6 +8099,272 @@
         }
       }
     },
+    "/api/v1/reports/citation-review/summary": {
+      "get": {
+        "tags": [
+          "CitationReviewReports"
+        ],
+        "operationId": "GetComplianceCoreCitationReviewReportSummaryV1",
+        "parameters": [
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "programKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/citation-review/summary/export": {
+      "get": {
+        "tags": [
+          "CitationReviewReports"
+        ],
+        "operationId": "ExportComplianceCoreCitationReviewReportSummaryV1",
+        "parameters": [
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "programKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/evaluations/summary": {
+      "get": {
+        "tags": [
+          "EvaluationHistoryReports"
+        ],
+        "operationId": "GetComplianceCoreEvaluationHistoryReportSummaryV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "overallResult",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/evaluations/summary/export": {
+      "get": {
+        "tags": [
+          "EvaluationHistoryReports"
+        ],
+        "operationId": "ExportComplianceCoreEvaluationHistoryReportSummaryV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "overallResult",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/evidence/completeness/summary": {
+      "get": {
+        "tags": [
+          "EvidenceCompletenessReports"
+        ],
+        "operationId": "GetComplianceCoreEvidenceCompletenessReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/evidence/completeness/summary/export": {
+      "get": {
+        "tags": [
+          "EvidenceCompletenessReports"
+        ],
+        "operationId": "ExportComplianceCoreEvidenceCompletenessReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/evidence/missing/summary": {
       "get": {
         "tags": [
@@ -7740,6 +8567,32 @@
         }
       }
     },
+    "/api/v1/reports/hazmat-table/summary": {
+      "get": {
+        "tags": [
+          "HazmatTableCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreHazmatTableCoverageReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/hazmat-table/summary/export": {
+      "get": {
+        "tags": [
+          "HazmatTableCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreHazmatTableCoverageReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/integration-health/summary": {
       "get": {
         "tags": [
@@ -7816,6 +8669,32 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/regulatory-domains/summary": {
+      "get": {
+        "tags": [
+          "RegulatoryDomainCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreRegulatoryDomainCoverageReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/regulatory-domains/summary/export": {
+      "get": {
+        "tags": [
+          "RegulatoryDomainCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreRegulatoryDomainCoverageReportSummaryV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -7914,6 +8793,102 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/rule-changes/impact/summary": {
+      "get": {
+        "tags": [
+          "RuleChangeImpactReports"
+        ],
+        "operationId": "GetComplianceCoreRuleChangeImpactReportSummaryV1",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/rule-changes/impact/summary/export": {
+      "get": {
+        "tags": [
+          "RuleChangeImpactReports"
+        ],
+        "operationId": "ExportComplianceCoreRuleChangeImpactReportSummaryV1",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/title49/citations/summary": {
+      "get": {
+        "tags": [
+          "Title49CitationCoverageReports"
+        ],
+        "operationId": "GetComplianceCoreTitle49CitationCoverageReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/title49/citations/summary/export": {
+      "get": {
+        "tags": [
+          "Title49CitationCoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreTitle49CitationCoverageReportSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/title49/summary": {
+      "get": {
+        "tags": [
+          "Title49CoverageReports"
+        ],
+        "operationId": "GetComplianceCoreTitle49CoverageExplorerSummaryV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/title49/summary/export": {
+      "get": {
+        "tags": [
+          "Title49CoverageReports"
+        ],
+        "operationId": "ExportComplianceCoreTitle49CoverageExplorerSummaryV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -8554,6 +9529,200 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/test-cases": {
+      "get": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "ListRuleTestCasesV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "CreateRuleTestCaseV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRuleTestCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/test-cases/{testCaseId}": {
+      "get": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "GetRuleTestCaseV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "testCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "PatchRuleTestCaseV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "testCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRuleTestCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "DeleteRuleTestCaseV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "testCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/test-cases/{testCaseId}/run": {
+      "post": {
+        "tags": [
+          "RuleTestCases"
+        ],
+        "operationId": "RunRuleTestCaseV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "testCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -9390,6 +10559,30 @@
           "TheoreticalSituations"
         ],
         "operationId": "SaveTheoreticalSituationTemplateV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/simulation-report": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationSimulationReportV1",
         "parameters": [
           {
             "name": "id",
@@ -11536,6 +12729,40 @@
           }
         }
       },
+      "CreateRuleTestCaseRequest": {
+        "required": [
+          "ruleKey",
+          "testKey",
+          "label",
+          "description",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleKey": {
+            "type": "string"
+          },
+          "testKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "expectedResult": {
+            "type": "string",
+            "default": "pass"
+          }
+        }
+      },
       "CreateSdsReferenceRequest": {
         "required": [
           "sdsKey",
@@ -12639,6 +13866,50 @@
             ]
           },
           "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PatchRuleTestCaseRequest": {
+        "type": "object",
+        "properties": {
+          "ruleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "testKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "expectedResult": {
             "type": [
               "null",
               "string"
@@ -14260,6 +15531,9 @@
       "name": "Rules"
     },
     {
+      "name": "RuleTestCases"
+    },
+    {
       "name": "Citations"
     },
     {
@@ -14359,6 +15633,9 @@
       "name": "MissingEvidenceReports"
     },
     {
+      "name": "EvidenceCompletenessReports"
+    },
+    {
       "name": "WaiverReports"
     },
     {
@@ -14372,6 +15649,30 @@
     },
     {
       "name": "RemediationQueueReports"
+    },
+    {
+      "name": "RegulatoryDomainCoverageReports"
+    },
+    {
+      "name": "HazmatTableCoverageReports"
+    },
+    {
+      "name": "Title49CoverageReports"
+    },
+    {
+      "name": "Title49CitationCoverageReports"
+    },
+    {
+      "name": "CitationReviewReports"
+    },
+    {
+      "name": "RuleChangeImpactReports"
+    },
+    {
+      "name": "EvaluationHistoryReports"
+    },
+    {
+      "name": "Title49Calculators"
     },
     {
       "name": "EntityExports"

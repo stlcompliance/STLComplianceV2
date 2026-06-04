@@ -114,6 +114,11 @@ function reasons(entries: Partial<Record<CapabilityKey, string>>): Partial<Recor
   return entries
 }
 
+function normalizeProductKey(productKey: string): string {
+  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
+  return normalized === 'companion' ? 'fieldcompanion' : normalized
+}
+
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     productKey: 'staffarr',
@@ -529,13 +534,13 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     brandAccentClass: 'from-indigo-500/20 to-sky-400/10',
   },
   {
-    productKey: 'companion',
-    displayName: 'Companion',
+    productKey: 'fieldcompanion',
+    displayName: 'Field Companion',
     tagline: 'A focused field inbox for tasks, messages, and quick handoffs.',
     overview:
-      'Companion gives frontline workers a focused inbox for tasks, messages, and quick handoffs into the product where action belongs. It is not the system of record for every workflow; it is the practical field surface that helps people find and complete the right work faster.',
-    owns: PRODUCT_OWNERSHIP.companion.owns,
-    doesNotOwn: PRODUCT_OWNERSHIP.companion.doesNotOwn,
+      'Field Companion gives frontline workers a focused inbox for tasks, messages, and quick handoffs into the product where action belongs. It is not the system of record for every workflow; it is the practical field surface that helps people find and complete the right work faster.',
+    owns: PRODUCT_OWNERSHIP.fieldcompanion.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.fieldcompanion.doesNotOwn,
     primaryWorkflows: [
       'Show field tasks and messages in one focused inbox.',
       'Route workers into the product workspace that owns the underlying record.',
@@ -578,12 +583,12 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 ]
 
 export function getMarketingProduct(productKey: string): MarketingProduct | undefined {
-  const normalized = productKey.trim().toLowerCase()
+  const normalized = normalizeProductKey(productKey)
   return MARKETING_PRODUCTS.find((p) => p.productKey === normalized)
 }
 
 export function productPagePath(productKey: string): string {
-  return productPath(productKey)
+  return productPath(normalizeProductKey(productKey))
 }
 
 export function productsByCategory(category: ProductCategoryKey): MarketingProduct[] {
