@@ -85,6 +85,8 @@ public sealed class WorkOrderCloseout : IHasTenant
 
     public bool EvidenceAccepted { get; set; }
 
+    public string EvidenceRecordRefsJson { get; set; } = "[]";
+
     public string? UnresolvedDefectRefs { get; set; }
 
     public string? FollowUpWorkOrderRefs { get; set; }

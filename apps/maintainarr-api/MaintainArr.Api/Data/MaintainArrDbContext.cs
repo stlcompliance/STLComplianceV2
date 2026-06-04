@@ -665,6 +665,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.SupervisorReviewedByPersonId).HasMaxLength(128);
             entity.Property(x => x.ComplianceReviewedByPersonId).HasMaxLength(128);
             entity.Property(x => x.QualityReviewedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.EvidenceRecordRefsJson).HasMaxLength(2048);
             entity.Property(x => x.UnresolvedDefectRefs).HasMaxLength(512);
             entity.Property(x => x.FollowUpWorkOrderRefs).HasMaxLength(512);
             entity.Property(x => x.CustomerImpactSummary).HasMaxLength(1024);

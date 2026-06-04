@@ -123,7 +123,8 @@ public sealed record CreateWorkOrderCloseoutRequest(
     string? CustomerImpactSummary,
     string? DowntimeSummary,
     string? FinalAssetReadinessStatus,
-    string? FinalStatus);
+    string? FinalStatus,
+    IReadOnlyList<Guid>? EvidenceRecordRefs = null);
 
 public sealed record WorkOrderCloseoutResponse(
     Guid CloseoutId,
@@ -153,6 +154,7 @@ public sealed record WorkOrderCloseoutResponse(
     string? DowntimeSummary,
     string? FinalAssetReadinessStatus,
     string? FinalStatus,
+    IReadOnlyList<Guid> EvidenceRecordRefs,
     DateTimeOffset CreatedAt,
     string? CreatedByPersonId);
 

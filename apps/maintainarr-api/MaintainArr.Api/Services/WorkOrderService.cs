@@ -833,6 +833,15 @@ public sealed class WorkOrderService(
         var closeout = await db.WorkOrderCloseouts
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrderId, cancellationToken);
 
+        var evidenceRecordRefs = request.EvidenceRecordRefs is null
+            ? DeserializeGuidList(closeout?.EvidenceRecordRefsJson)
+            : NormalizeGuidList(request.EvidenceRecordRefs);
+        await EnsureCloseoutEvidenceRecordRefsAsync(
+            tenantId,
+            workOrderId,
+            evidenceRecordRefs,
+            cancellationToken);
+
         if (closeout is null)
         {
             closeout = new WorkOrderCloseout
@@ -873,6 +882,7 @@ public sealed class WorkOrderService(
         closeout.DowntimeSummary = downtimeSummary;
         closeout.FinalAssetReadinessStatus = finalAssetReadinessStatus;
         closeout.FinalStatus = finalStatus ?? (request.AssetReturnedToService ? "closed" : "review_pending");
+        closeout.EvidenceRecordRefsJson = SerializeGuidList(evidenceRecordRefs);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -1532,6 +1542,7 @@ public sealed class WorkOrderService(
             closeout.DowntimeSummary,
             closeout.FinalAssetReadinessStatus,
             closeout.FinalStatus,
+            DeserializeGuidList(closeout.EvidenceRecordRefsJson),
             closeout.CreatedAt,
             closeout.CreatedByPersonId);
 
@@ -1607,7 +1618,57 @@ public sealed class WorkOrderService(
             closeout.DowntimeSummary,
             closeout.FinalAssetReadinessStatus,
             closeout.FinalStatus,
+            EvidenceRecordRefs = DeserializeGuidList(closeout.EvidenceRecordRefsJson),
         });
+
+    private static IReadOnlyList<Guid> NormalizeGuidList(IEnumerable<Guid>? refs) =>
+        refs?.Distinct().ToArray() ?? Array.Empty<Guid>();
+
+    private static IReadOnlyList<Guid> DeserializeGuidList(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return Array.Empty<Guid>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<Guid>>(json)?.ToArray() ?? Array.Empty<Guid>();
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Invalid serialized GUID list.", ex);
+        }
+    }
+
+    private static string SerializeGuidList(IReadOnlyList<Guid> refs) =>
+        JsonSerializer.Serialize(refs);
+
+    private async Task EnsureCloseoutEvidenceRecordRefsAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        IReadOnlyList<Guid> evidenceRecordRefs,
+        CancellationToken cancellationToken)
+    {
+        if (evidenceRecordRefs.Count == 0)
+        {
+            return;
+        }
+
+        var validRefs = await db.WorkOrderEvidence
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrderId && evidenceRecordRefs.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (validRefs.Count != evidenceRecordRefs.Count)
+        {
+            throw new StlApiException(
+                "work_order.closeout_evidence_invalid",
+                "All closeout evidence references must belong to the same work order.",
+                400);
+        }
+    }
 
     private static string GetStatusTimelineEventType(string status) =>
         status.ToLowerInvariant() switch

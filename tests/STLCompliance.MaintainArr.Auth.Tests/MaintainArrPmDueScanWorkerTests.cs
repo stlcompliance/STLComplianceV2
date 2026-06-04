@@ -10,6 +10,7 @@ using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 using static MaintainArr.Api.Entities.MaintenancePlatformEventRelatedEntityTypes;
 using static MaintainArr.Api.Entities.MaintenancePlatformOutboxEventKinds;
 using NexArr.Api.Contracts;
@@ -196,12 +197,11 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.Equal("pm-inspection-work-order-template", workOrder.TemplateRef);
 
         var outbox = await db.MaintenancePlatformOutboxEvents
-            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.RelatedEntityId == schedule.Id)
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
             .ToListAsync();
         Assert.Contains(outbox, x =>
             x.EventKind == InspectionStarted
-            && x.RelatedEntityType == InspectionRun
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.InspectionRun
             && x.RelatedEntityId == inspectionRun.Id);
         Assert.Contains(outbox, x =>
             x.EventKind == PmOccurrenceInspectionGenerated

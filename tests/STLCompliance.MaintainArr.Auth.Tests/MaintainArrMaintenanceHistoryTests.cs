@@ -249,6 +249,17 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         startRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
         await _maintainarrClient.SendAsync(startRequest);
 
+        var evidenceRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrder.WorkOrderId}/evidence", token);
+        evidenceRequest.Content = JsonContent.Create(new CreateWorkOrderEvidenceRequest(
+            "after_photo",
+            "history-after.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("history-after-photo")),
+            "History closeout evidence"));
+        var evidenceResponse = await _maintainarrClient.SendAsync(evidenceRequest);
+        evidenceResponse.EnsureSuccessStatusCode();
+        var evidence = (await evidenceResponse.Content.ReadFromJsonAsync<WorkOrderEvidenceResponse>())!;
+
         var completeRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.WorkOrderId}/status", token);
         completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
         await _maintainarrClient.SendAsync(completeRequest);
@@ -282,7 +293,8 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             "Customer reported brief downtime.",
             "2.5 hours downtime.",
             "ready",
-            "closed"));
+            "closed",
+            new[] { evidence.EvidenceId }));
         await _maintainarrClient.SendAsync(closeoutRequest);
 
         var historyResponse = await _maintainarrClient.SendAsync(
@@ -297,6 +309,19 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_started" && x.SourceEntityId == workOrder.WorkOrderId.ToString());
         Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_completed" && x.SourceEntityId == workOrder.WorkOrderId.ToString());
         Assert.Contains(history.Items, x => x.Category == "work_order" && x.EventType == "work_order_closed" && x.SourceEntityType == "work_order_closeout" && x.RelatedEntityId == defect.DefectId.ToString());
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var closeoutTimeline = await db.WorkOrderTimelineEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.WorkOrderId == workOrder.WorkOrderId
+                && x.EventType == "maintainarr.work_order.closed")
+            .OrderByDescending(x => x.OccurredAt)
+            .FirstOrDefaultAsync();
+
+        Assert.NotNull(closeoutTimeline);
+        Assert.Contains(evidence.EvidenceId.ToString("D"), closeoutTimeline!.AfterSnapshot);
     }
 
     [Fact]

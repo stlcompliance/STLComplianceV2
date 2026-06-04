@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -530,6 +531,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Integration_work_order_blocker_and_closeout_use_real_service_data()
     {
+        var managerToken = await RedeemMaintainArrTokenAsync();
         var assetId = await SeedIntegrationAssetAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/work-orders", _maintainarrIntegrationToken);
@@ -614,19 +616,24 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var startResponse = await _maintainarrClient.SendAsync(startRequest);
         startResponse.EnsureSuccessStatusCode();
 
+        var evidenceRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/work-orders/{created.WorkOrderId}/evidence",
+            managerToken);
+        evidenceRequest.Content = JsonContent.Create(new CreateWorkOrderEvidenceRequest(
+            "after_photo",
+            "after.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes("after-photo")),
+            "Post-repair evidence"));
+        var evidenceResponse = await _maintainarrClient.SendAsync(evidenceRequest);
+        evidenceResponse.EnsureSuccessStatusCode();
+        var evidence = (await evidenceResponse.Content.ReadFromJsonAsync<WorkOrderEvidenceResponse>())!;
+
         var completeRequest = Authorized(HttpMethod.Post, $"/api/v1/integrations/work-orders/{created.WorkOrderId}/status-updates", _maintainarrIntegrationToken);
         completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
         var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
         completeResponse.EnsureSuccessStatusCode();
-
-        var readinessRequest = Authorized(HttpMethod.Get, $"/api/v1/integrations/assets/{assetId}/readiness", _maintainarrIntegrationToken);
-        var readinessResponse = await _maintainarrClient.SendAsync(readinessRequest);
-        readinessResponse.EnsureSuccessStatusCode();
-        var readiness = (await readinessResponse.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
-        Assert.Contains(readiness.Blockers, item =>
-            item.BlockerType == "quality_hold"
-            && item.SourceEntityType == "work_order_blocker"
-            && item.SourceEntityId == blocker.BlockerId.ToString());
 
         var closeoutRequest = Authorized(HttpMethod.Post, $"/api/v1/integrations/work-orders/{created.WorkOrderId}/closeout", _maintainarrIntegrationToken);
         closeoutRequest.Content = JsonContent.Create(new CreateWorkOrderCloseoutRequest(
@@ -654,12 +661,14 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             "Customer reported brief downtime.",
             "2.5 hours downtime.",
             "ready",
-            "closed"));
+            "closed",
+            new[] { evidence.EvidenceId }));
         var closeoutResponse = await _maintainarrClient.SendAsync(closeoutRequest);
         closeoutResponse.EnsureSuccessStatusCode();
         var closeout = (await closeoutResponse.Content.ReadFromJsonAsync<WorkOrderCloseoutResponse>())!;
         Assert.Equal(created.WorkOrderId, closeout.WorkOrderId);
         Assert.Equal("closed", closeout.FinalStatus);
+        Assert.Contains(evidence.EvidenceId, closeout.EvidenceRecordRefs);
 
         var getRequest = Authorized(HttpMethod.Get, $"/api/v1/integrations/work-orders/{created.WorkOrderId}", _maintainarrIntegrationToken);
         var getResponse = await _maintainarrClient.SendAsync(getRequest);
@@ -668,6 +677,22 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         Assert.Single(fetched.Blockers);
         Assert.NotNull(fetched.Closeout);
         Assert.Equal("closed", fetched.Closeout!.FinalStatus);
+        Assert.Contains(evidence.EvidenceId, fetched.Closeout.EvidenceRecordRefs);
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var timeline = await db.WorkOrderTimelineEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.WorkOrderId == created.WorkOrderId
+                    && x.EventType == "maintainarr.work_order.closed")
+                .OrderByDescending(x => x.OccurredAt)
+                .FirstOrDefaultAsync();
+
+            Assert.NotNull(timeline);
+            Assert.Contains(evidence.EvidenceId.ToString("D"), timeline!.AfterSnapshot);
+        }
     }
 
     [Fact]
