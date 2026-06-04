@@ -89,6 +89,24 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(scan);
         }).WithName($"ApplyRecordArrIntegrationManualCorrection{routePrefix}");
 
+        group.MapGet("/ocr-results/{ocrResultId}", (string ocrResultId, RecordArrStore store) =>
+        {
+            var result = store.GetOcrResult(ocrResultId);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }).WithName($"GetRecordArrIntegrationOcrResult{routePrefix}");
+
+        group.MapGet("/extraction-results/{extractionResultId}", (string extractionResultId, RecordArrStore store) =>
+        {
+            var result = store.GetExtractionResult(extractionResultId);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }).WithName($"GetRecordArrIntegrationExtractionResult{routePrefix}");
+
+        group.MapPost("/extraction-results/{extractionResultId}/review", (string extractionResultId, WorkspaceEndpoints.ReviewExtractionResultRequest request, RecordArrStore store) =>
+        {
+            var result = store.ReviewExtractionResult(extractionResultId, request.ReviewedByPersonId, request.Status, request.FailureReason);
+            return Results.Ok(result);
+        }).WithName($"ReviewRecordArrIntegrationExtractionResult{routePrefix}");
+
         group.MapGet("/evidence-mappings", (RecordArrStore store) => Results.Ok(store.GetEvidenceMappings()))
             .WithName($"ListRecordArrIntegrationEvidenceMappings{routePrefix}");
 

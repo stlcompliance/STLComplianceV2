@@ -42,6 +42,8 @@ import {
   createScan,
   createUploadSession,
   getDashboard,
+  getExtractionResult,
+  getOcrResult,
   getPackageManifest,
   getRecord,
   getRetentionStatus,
@@ -66,6 +68,7 @@ import {
   listRedactions,
   rejectEvidenceMapping,
   releaseLegalHold,
+  reviewExtractionResult,
   revokeExternalShare,
   lockPackage,
   updateRecord,
@@ -642,6 +645,7 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     requiresOcr: true,
     requiresManualReview: true,
   })
+  const [selectedScanId, setSelectedScanId] = useState('')
   const [scan, setScan] = useState({
     recordId: 'rec-bol-001',
     originalFileName: 'bol-7781.jpg',
@@ -657,6 +661,11 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     evidenceTypeKey: 'proof_of_delivery',
     mappingSource: 'manual_review',
     confidenceScore: 0.94,
+  })
+  const [extractionReview, setExtractionReview] = useState({
+    reviewedByPersonId: 'person-doc-controller',
+    status: 'completed',
+    failureReason: '',
   })
 
   const uploadSessionsQuery = useQuery({
@@ -675,6 +684,12 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     enabled: Boolean(accessToken),
   })
 
+  useEffect(() => {
+    if (!selectedScanId && scansQuery.data?.[0]) {
+      setSelectedScanId(scansQuery.data[0].scanProcessingId)
+    }
+  }, [scansQuery.data, selectedScanId])
+
   const uploadMutation = useMutation({
     mutationFn: () => createUploadSession(accessToken, upload),
     onSuccess: async () => {
@@ -688,7 +703,29 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     },
   })
   const correctionMutation = useMutation({
-    mutationFn: () => applyManualCorrection(accessToken, scansQuery.data?.[0]?.scanProcessingId ?? '', { edgeCoordinates: scan.edgeCoordinates }),
+    mutationFn: () => applyManualCorrection(accessToken, selectedScan?.scanProcessingId ?? '', { edgeCoordinates: scan.edgeCoordinates }),
+  })
+  const selectedScan = scansQuery.data?.find((entry) => entry.scanProcessingId === selectedScanId) ?? null
+  const ocrQuery = useQuery({
+    queryKey: ['recordarr', 'ocr-result', selectedScan?.ocrResultId],
+    queryFn: () => getOcrResult(accessToken, selectedScan!.ocrResultId!),
+    enabled: Boolean(accessToken && selectedScan?.ocrResultId),
+  })
+  const extractionQuery = useQuery({
+    queryKey: ['recordarr', 'extraction-result', selectedScan?.extractionResultId],
+    queryFn: () => getExtractionResult(accessToken, selectedScan!.extractionResultId!),
+    enabled: Boolean(accessToken && selectedScan?.extractionResultId),
+  })
+  const reviewExtractionMutation = useMutation({
+    mutationFn: () =>
+      reviewExtractionResult(accessToken, extractionQuery.data?.extractionResultId ?? '', {
+        reviewedByPersonId: extractionReview.reviewedByPersonId,
+        status: extractionReview.status,
+        failureReason: extractionReview.failureReason || null,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
   })
   const mappingMutation = useMutation({
     mutationFn: () => createEvidenceMapping(accessToken, mapping),
@@ -696,8 +733,6 @@ function CapturePage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
-
-  const selectedScan = scansQuery.data?.[0] ?? null
 
   return (
     <div className="recordarr-page">
@@ -744,6 +779,15 @@ function CapturePage({ accessToken }: { accessToken: string }) {
             <Field label="Original file"><input className="recordarr-input" value={scan.originalFileName} onChange={(e) => setScan({ ...scan, originalFileName: e.target.value })} /></Field>
             <Field label="Scan purpose"><input className="recordarr-input" value={scan.scanPurpose} onChange={(e) => setScan({ ...scan, scanPurpose: e.target.value })} /></Field>
             <Field label="Edge coordinates" wide><input className="recordarr-input" value={scan.edgeCoordinates} onChange={(e) => setScan({ ...scan, edgeCoordinates: e.target.value })} /></Field>
+            <Field label="Selected scan">
+              <select className="recordarr-select" value={selectedScanId} onChange={(e) => setSelectedScanId(e.target.value)}>
+                {scansQuery.data?.map((entry) => (
+                  <option key={entry.scanProcessingId} value={entry.scanProcessingId}>
+                    {entry.originalFileName} · {entry.status}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <button type="button" className="recordarr-button" onClick={() => scanMutation.mutate()} disabled={scanMutation.isPending}>
@@ -755,16 +799,100 @@ function CapturePage({ accessToken }: { accessToken: string }) {
           </div>
           <div className="mt-4 space-y-3">
             {scansQuery.data?.map((entry) => (
-              <div key={entry.scanProcessingId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+              <button
+                key={entry.scanProcessingId}
+                type="button"
+                className={[
+                  'w-full rounded-xl border p-3 text-left text-sm transition-colors',
+                  entry.scanProcessingId === selectedScanId
+                    ? 'border-cyan-400/40 bg-cyan-500/10 text-slate-200'
+                    : 'border-slate-700/70 bg-slate-900/70 text-slate-300 hover:bg-slate-900/90',
+                ].join(' ')}
+                onClick={() => setSelectedScanId(entry.scanProcessingId)}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <strong className="text-slate-100">{entry.originalFileName}</strong>
                   <span className="recordarr-pill text-[0.7rem]">{entry.status}</span>
                 </div>
                 <p className="mt-1">{entry.scanPurpose} · confidence {entry.confidenceScore.toFixed(2)}</p>
-              </div>
+                <p className="mt-1 text-xs text-slate-400">OCR {entry.ocrResultId ?? 'pending'} · extraction {entry.extractionResultId ?? 'pending'}</p>
+              </button>
             ))}
             {!scansQuery.data?.length && !scansQuery.isLoading ? <EmptyState title="No scan processing yet." /> : null}
           </div>
+        </Card>
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card title="OCR and extraction review" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
+          {selectedScan ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-100">{selectedScan.originalFileName}</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{selectedScan.status}</span>
+                </div>
+                <p className="mt-1">OCR result {selectedScan.ocrResultId ?? 'pending'} · extraction result {selectedScan.extractionResultId ?? 'pending'}</p>
+              </div>
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-100">OCR result</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{ocrQuery.data?.status ?? 'unloaded'}</span>
+                </div>
+                {ocrQuery.data ? (
+                  <div className="mt-3 space-y-2">
+                    <p><strong className="text-slate-100">Engine:</strong> {ocrQuery.data.engine}</p>
+                    <p><strong className="text-slate-100">Confidence:</strong> {ocrQuery.data.confidenceScore.toFixed(2)}</p>
+                    <p><strong className="text-slate-100">Language:</strong> {ocrQuery.data.language}</p>
+                    <p><strong className="text-slate-100">Extracted:</strong> {formatDate(ocrQuery.data.extractedAt)}</p>
+                    <p className="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3 text-xs leading-6 text-slate-300">{ocrQuery.data.fullText}</p>
+                  </div>
+                ) : (
+                  <div className="mt-3"><EmptyState title="Select a scan with an OCR result." /></div>
+                )}
+              </div>
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-100">Extraction result</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{extractionQuery.data?.status ?? 'unloaded'}</span>
+                </div>
+                {extractionQuery.data ? (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Field label="Reviewed by"><input className="recordarr-input" value={extractionReview.reviewedByPersonId} onChange={(e) => setExtractionReview({ ...extractionReview, reviewedByPersonId: e.target.value })} /></Field>
+                      <Field label="Review status">
+                        <select className="recordarr-select" value={extractionReview.status} onChange={(e) => setExtractionReview({ ...extractionReview, status: e.target.value })}>
+                          <option value="completed">completed</option>
+                          <option value="manual_review_required">manual_review_required</option>
+                          <option value="failed">failed</option>
+                        </select>
+                      </Field>
+                      <Field label="Failure reason" wide><input className="recordarr-input" value={extractionReview.failureReason} onChange={(e) => setExtractionReview({ ...extractionReview, failureReason: e.target.value })} /></Field>
+                    </div>
+                    <button type="button" className="recordarr-button secondary" onClick={() => reviewExtractionMutation.mutate()} disabled={reviewExtractionMutation.isPending}>
+                      {reviewExtractionMutation.isPending ? 'Saving...' : 'Save review'}
+                    </button>
+                    <div className="space-y-2">
+                      <p><strong className="text-slate-100">Type:</strong> {extractionQuery.data.extractionType}</p>
+                      <p><strong className="text-slate-100">Confidence:</strong> {extractionQuery.data.confidenceScore.toFixed(2)}</p>
+                      <p><strong className="text-slate-100">Extracted:</strong> {formatDate(extractionQuery.data.extractedAt)}</p>
+                      <p><strong className="text-slate-100">Reviewed by:</strong> {extractionQuery.data.reviewedByPersonId ?? 'n/a'}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {extractionQuery.data.extractedFields.map((field) => (
+                          <span key={field.extractedFieldId} className="recordarr-pill text-[0.7rem]">
+                            {field.label}: {field.value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3"><EmptyState title="Select a scan with an extraction result." /></div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <EmptyState title="Select a scan to review OCR and extraction results." />
+          )}
         </Card>
       </div>
       <Card title="Evidence mappings" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>

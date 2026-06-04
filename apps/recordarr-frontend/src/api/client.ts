@@ -102,6 +102,46 @@ export type RecordArrScanProcessing = {
   failureReason: string | null
 }
 
+export type RecordArrOcrResult = {
+  ocrResultId: string
+  recordId: string
+  fileId: string
+  engine: string
+  status: string
+  language: string
+  confidenceScore: number
+  fullText: string
+  extractedAt: string
+  failureReason: string | null
+}
+
+export type RecordArrExtractedField = {
+  extractedFieldId: string
+  extractionResultId: string
+  fieldKey: string
+  label: string
+  value: string
+  valueType: string
+  confidenceScore: number
+  reviewStatus: string
+  correctedValue: string | null
+  correctedByPersonId: string | null
+  correctedAt: string | null
+}
+
+export type RecordArrExtractionResult = {
+  extractionResultId: string
+  recordId: string
+  extractionType: string
+  status: string
+  extractedFields: RecordArrExtractedField[]
+  confidenceScore: number
+  extractedAt: string
+  reviewedByPersonId: string | null
+  reviewedAt: string | null
+  failureReason: string | null
+}
+
 export type RecordArrEvidenceMapping = {
   evidenceMappingId: string
   recordId: string
@@ -511,6 +551,33 @@ export async function applyManualCorrection(
 ): Promise<RecordArrScanProcessing> {
   return sendJson<RecordArrScanProcessing>(
     `/api/v1/workspace/document-scans/${encodeURIComponent(scanProcessingId)}/manual-correction`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
+export async function getOcrResult(accessToken: string, ocrResultId: string): Promise<RecordArrOcrResult> {
+  return getJson<RecordArrOcrResult>(`/api/v1/workspace/ocr-results/${encodeURIComponent(ocrResultId)}`, accessToken)
+}
+
+export async function getExtractionResult(
+  accessToken: string,
+  extractionResultId: string,
+): Promise<RecordArrExtractionResult> {
+  return getJson<RecordArrExtractionResult>(
+    `/api/v1/workspace/extraction-results/${encodeURIComponent(extractionResultId)}`,
+    accessToken,
+  )
+}
+
+export async function reviewExtractionResult(
+  accessToken: string,
+  extractionResultId: string,
+  body: { reviewedByPersonId: string; status: string; failureReason?: string | null },
+): Promise<RecordArrExtractionResult> {
+  return sendJson<RecordArrExtractionResult>(
+    `/api/v1/workspace/extraction-results/${encodeURIComponent(extractionResultId)}/review`,
     accessToken,
     'POST',
     body,

@@ -104,6 +104,24 @@ public static class WorkspaceEndpoints
             return Results.Ok(scan);
         }).WithName("ApplyRecordArrManualCorrection");
 
+        group.MapGet("/ocr-results/{ocrResultId}", (string ocrResultId, RecordArrStore store) =>
+        {
+            var result = store.GetOcrResult(ocrResultId);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }).WithName("GetRecordArrOcrResult");
+
+        group.MapGet("/extraction-results/{extractionResultId}", (string extractionResultId, RecordArrStore store) =>
+        {
+            var result = store.GetExtractionResult(extractionResultId);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }).WithName("GetRecordArrExtractionResult");
+
+        group.MapPost("/extraction-results/{extractionResultId}/review", (string extractionResultId, ReviewExtractionResultRequest request, RecordArrStore store) =>
+        {
+            var result = store.ReviewExtractionResult(extractionResultId, request.ReviewedByPersonId, request.Status, request.FailureReason);
+            return Results.Ok(result);
+        }).WithName("ReviewRecordArrExtractionResult");
+
         group.MapGet("/evidence-mappings", (RecordArrStore store) => Results.Ok(store.GetEvidenceMappings()))
             .WithName("ListRecordArrEvidenceMappings");
 
@@ -261,6 +279,7 @@ public static class WorkspaceEndpoints
     public sealed record RevokeUploadSessionRequest(string Reason);
     public sealed record CreateDocumentScanRequest(string RecordId, string OriginalFileName, string ScanPurpose);
     public sealed record ManualCorrectionRequest(string EdgeCoordinates);
+    public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
 
     public sealed record CreateEvidenceMappingRequest(
         string RecordId,

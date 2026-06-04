@@ -83,6 +83,43 @@ public sealed record RecordArrScanProcessingResponse(
     DateTimeOffset? ProcessedAt,
     string? FailureReason);
 
+public sealed record RecordArrOcrResultResponse(
+    string OcrResultId,
+    string RecordId,
+    string FileId,
+    string Engine,
+    string Status,
+    string Language,
+    decimal ConfidenceScore,
+    string FullText,
+    DateTimeOffset ExtractedAt,
+    string? FailureReason);
+
+public sealed record RecordArrExtractedFieldResponse(
+    string ExtractedFieldId,
+    string ExtractionResultId,
+    string FieldKey,
+    string Label,
+    string Value,
+    string ValueType,
+    decimal ConfidenceScore,
+    string ReviewStatus,
+    string? CorrectedValue,
+    string? CorrectedByPersonId,
+    DateTimeOffset? CorrectedAt);
+
+public sealed record RecordArrExtractionResultResponse(
+    string ExtractionResultId,
+    string RecordId,
+    string ExtractionType,
+    string Status,
+    IReadOnlyList<RecordArrExtractedFieldResponse> ExtractedFields,
+    decimal ConfidenceScore,
+    DateTimeOffset ExtractedAt,
+    string? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string? FailureReason);
+
 public sealed record RecordArrEvidenceMappingResponse(
     string EvidenceMappingId,
     string RecordId,

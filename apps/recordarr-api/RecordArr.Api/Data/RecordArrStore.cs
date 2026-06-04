@@ -8,6 +8,8 @@ public sealed class RecordArrStore
     private readonly List<RecordArrRecordResponse> _records;
     private readonly List<RecordArrUploadSessionResponse> _uploadSessions;
     private readonly List<RecordArrScanProcessingResponse> _scans;
+    private readonly List<RecordArrOcrResultResponse> _ocrResults;
+    private readonly List<RecordArrExtractionResultResponse> _extractionResults;
     private readonly List<RecordArrEvidenceMappingResponse> _evidenceMappings;
     private readonly List<RecordArrPackageResponse> _packages;
     private readonly List<RecordArrPackageManifestResponse> _manifests;
@@ -117,6 +119,39 @@ public sealed class RecordArrStore
                 0.94m,
                 now.AddHours(-2),
                 null),
+        ];
+
+        _ocrResults =
+        [
+            new RecordArrOcrResultResponse(
+                "ocr-001",
+                "rec-bol-001",
+                "file-bol-001",
+                "azure_document_intelligence",
+                "completed",
+                "en",
+                0.93m,
+                "Bill of lading number RT-7781 with delivery signature and pickup confirmation.",
+                now.AddHours(-2),
+                null),
+        ];
+
+        _extractionResults =
+        [
+            new RecordArrExtractionResultResponse(
+                "ext-001",
+                "rec-bol-001",
+                "bol",
+                "manual_review_required",
+                [
+                    new RecordArrExtractedFieldResponse("fld-001", "ext-001", "bol_number", "BOL Number", "RT-7781", "string", 0.98m, "unreviewed", null, null, null),
+                    new RecordArrExtractedFieldResponse("fld-002", "ext-001", "delivery_signature", "Delivery Signature", "Avery Auditor", "string", 0.77m, "unreviewed", null, null, null),
+                ],
+                0.88m,
+                now.AddHours(-2),
+                null,
+                null,
+                "Fields with lower confidence need a quick human review."),
         ];
 
         _evidenceMappings =
@@ -667,6 +702,55 @@ public sealed class RecordArrStore
                 ConfidenceScore = 0.91m
             };
             _scans[index] = updated;
+            return updated;
+        }
+    }
+
+    public RecordArrOcrResultResponse? GetOcrResult(string ocrResultId)
+    {
+        lock (_gate)
+        {
+            return _ocrResults.FirstOrDefault(result => string.Equals(result.OcrResultId, ocrResultId, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    public RecordArrExtractionResultResponse? GetExtractionResult(string extractionResultId)
+    {
+        lock (_gate)
+        {
+            return _extractionResults.FirstOrDefault(result => string.Equals(result.ExtractionResultId, extractionResultId, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    public RecordArrExtractionResultResponse ReviewExtractionResult(string extractionResultId, string reviewedByPersonId, string status, string? failureReason)
+    {
+        lock (_gate)
+        {
+            var index = _extractionResults.FindIndex(result => string.Equals(result.ExtractionResultId, extractionResultId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Extraction result {extractionResultId} not found.");
+            }
+
+            var current = _extractionResults[index];
+            var reviewedFields = current.ExtractedFields.Select(field =>
+                field with
+                {
+                    ReviewStatus = status == "completed" ? "accepted" : field.ReviewStatus,
+                    CorrectedByPersonId = status == "completed" ? reviewedByPersonId : field.CorrectedByPersonId,
+                    CorrectedAt = status == "completed" ? DateTimeOffset.UtcNow : field.CorrectedAt,
+                }).ToArray();
+
+            var updated = current with
+            {
+                Status = status,
+                ReviewedByPersonId = reviewedByPersonId,
+                ReviewedAt = DateTimeOffset.UtcNow,
+                FailureReason = failureReason,
+                ExtractedFields = reviewedFields,
+                ConfidenceScore = status == "completed" ? Math.Max(current.ConfidenceScore, 0.92m) : current.ConfidenceScore
+            };
+            _extractionResults[index] = updated;
             return updated;
         }
     }

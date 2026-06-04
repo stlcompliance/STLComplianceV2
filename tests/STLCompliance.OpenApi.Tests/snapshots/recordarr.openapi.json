@@ -582,6 +582,62 @@
         }
       }
     },
+    "/api/integrations/extraction-results/{extractionResultId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationExtractionResult/api/integrations",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/extraction-results/{extractionResultId}/review": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReviewRecordArrIntegrationExtractionResult/api/integrations",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewExtractionResultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/legal-holds": {
       "post": {
         "tags": [
@@ -642,6 +698,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/ocr-results/{ocrResultId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationOcrResult/api/integrations",
+        "parameters": [
+          {
+            "name": "ocrResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1657,6 +1736,62 @@
         }
       }
     },
+    "/api/v1/integrations/extraction-results/{extractionResultId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationExtractionResult/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/extraction-results/{extractionResultId}/review": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReviewRecordArrIntegrationExtractionResult/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewExtractionResultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/legal-holds": {
       "post": {
         "tags": [
@@ -1717,6 +1852,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/ocr-results/{ocrResultId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationOcrResult/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "ocrResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2492,6 +2650,62 @@
         }
       }
     },
+    "/api/v1/workspace/extraction-results/{extractionResultId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrExtractionResult",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/extraction-results/{extractionResultId}/review": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ReviewRecordArrExtractionResult",
+        "parameters": [
+          {
+            "name": "extractionResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewExtractionResultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/legal-holds": {
       "post": {
         "tags": [
@@ -2575,6 +2789,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/ocr-results/{ocrResultId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrOcrResult",
+        "parameters": [
+          {
+            "name": "ocrResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3456,6 +3693,28 @@
           },
           "releaseReason": {
             "type": "string"
+          }
+        }
+      },
+      "ReviewExtractionResultRequest": {
+        "required": [
+          "reviewedByPersonId",
+          "status",
+          "failureReason"
+        ],
+        "type": "object",
+        "properties": {
+          "reviewedByPersonId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
