@@ -60,6 +60,12 @@ public sealed record InspectionChecklistItemResponse(
 
     IReadOnlyList<string> ControlledOptions,
 
+    decimal? AcceptableRangeMin,
+
+    decimal? AcceptableRangeMax,
+
+    string? UnitOfMeasure,
+
     bool IsRequired,
 
     int SortOrder,
@@ -164,7 +170,13 @@ public sealed record CreateInspectionChecklistItemRequest(
 
     Guid? CategoryId,
 
-    IReadOnlyList<string>? ControlledOptions = null);
+    IReadOnlyList<string>? ControlledOptions = null,
+
+    decimal? AcceptableRangeMin = null,
+
+    decimal? AcceptableRangeMax = null,
+
+    string? UnitOfMeasure = null);
 
 
 
@@ -180,7 +192,13 @@ public sealed record UpdateInspectionChecklistItemRequest(
 
     Guid? CategoryId,
 
-    IReadOnlyList<string>? ControlledOptions = null);
+    IReadOnlyList<string>? ControlledOptions = null,
+
+    decimal? AcceptableRangeMin = null,
+
+    decimal? AcceptableRangeMax = null,
+
+    string? UnitOfMeasure = null);
 
 
 

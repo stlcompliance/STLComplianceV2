@@ -30,6 +30,9 @@ export function InspectionTemplatesSection({ state }: Props) {
         itemPrompt={s.itemPrompt}
         itemType={s.itemType}
         itemControlledOptionsText={s.itemControlledOptionsText}
+        itemMeterReadingMin={s.itemMeterReadingMin}
+        itemMeterReadingMax={s.itemMeterReadingMax}
+        itemUnitOfMeasure={s.itemUnitOfMeasure}
         selectedCategoryId={s.selectedCategoryId}
         selectedAssetTypeIds={s.selectedAssetTypeIds}
         selectedTemplateId={s.selectedTemplateId}
@@ -42,6 +45,9 @@ export function InspectionTemplatesSection({ state }: Props) {
         onItemPromptChange={s.setItemPrompt}
         onItemTypeChange={s.setItemType}
         onItemControlledOptionsTextChange={s.setItemControlledOptionsText}
+        onItemMeterReadingMinChange={s.setItemMeterReadingMin}
+        onItemMeterReadingMaxChange={s.setItemMeterReadingMax}
+        onItemUnitOfMeasureChange={s.setItemUnitOfMeasure}
         onSelectedCategoryIdChange={s.setSelectedCategoryId}
         onSelectedAssetTypeIdsChange={s.setSelectedAssetTypeIds}
         onSelectedTemplateIdChange={s.setSelectedTemplateId}

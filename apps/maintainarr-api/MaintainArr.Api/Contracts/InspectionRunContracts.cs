@@ -25,6 +25,9 @@ public sealed record InspectionRunChecklistItemSnapshot(
     string Prompt,
     string ItemType,
     IReadOnlyList<string> ControlledOptions,
+    decimal? AcceptableRangeMin,
+    decimal? AcceptableRangeMax,
+    string? UnitOfMeasure,
     bool IsRequired,
     int SortOrder);
 
@@ -36,6 +39,7 @@ public sealed record InspectionRunAnswerResponse(
     decimal? NumericValue,
     string? TextValue,
     IReadOnlyList<string> SelectedOptions,
+    string? UnitOfMeasure,
     DateTimeOffset AnsweredAt,
     Guid AnsweredByUserId);
 

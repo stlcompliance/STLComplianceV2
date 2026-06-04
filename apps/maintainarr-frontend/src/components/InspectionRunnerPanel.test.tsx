@@ -249,6 +249,32 @@ describe('InspectionRunnerPanel', () => {
     expect(screen.getByRole('combobox', { name: /Cab door position/ })).toBeInTheDocument()
   })
 
+  it('renders meter reading checklist items with unit and range hints', () => {
+    render(
+      <InspectionRunnerPanel
+        {...baseProps}
+        activeRun={{
+          ...baseProps.activeRun!,
+          checklistItems: [
+            {
+              ...baseProps.activeRun!.checklistItems[0],
+              itemType: 'meter_reading',
+              prompt: 'Engine hour meter',
+              itemKey: 'engine-hour-meter',
+              unitOfMeasure: 'hours',
+              acceptableRangeMin: 100,
+              acceptableRangeMax: 500,
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('spinbutton', { name: /Engine hour meter/ })).toBeInTheDocument()
+    expect(screen.getByText('hours')).toBeInTheDocument()
+    expect(screen.getByText(/Min 100/)).toBeInTheDocument()
+  })
+
   it('renders evidence guidance for photo and signature checklist items', () => {
     render(
       <InspectionRunnerPanel

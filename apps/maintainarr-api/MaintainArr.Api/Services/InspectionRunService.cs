@@ -527,6 +527,9 @@ public sealed class InspectionRunService(
                 item.Prompt,
                 item.ItemType,
                 DeserializeStringList(item.ControlledOptionsJson),
+                item.AcceptableRangeMin,
+                item.AcceptableRangeMax,
+                item.UnitOfMeasure,
                 item.IsRequired,
                 item.SortOrder))
             .ToList();
@@ -536,17 +539,18 @@ public sealed class InspectionRunService(
             .Where(x => x.TenantId == tenantId && x.InspectionRunId == run.Id)
             .ToListAsync(cancellationToken);
 
-        var itemKeys = checklistItemEntities.ToDictionary(x => x.Id, x => x.ItemKey);
+        var itemMap = checklistItemEntities.ToDictionary(x => x.Id);
 
         var answers = answerEntities
             .Select(answer => new InspectionRunAnswerResponse(
                 answer.Id,
                 answer.ChecklistItemId,
-                itemKeys.GetValueOrDefault(answer.ChecklistItemId, string.Empty),
+                itemMap.GetValueOrDefault(answer.ChecklistItemId)?.ItemKey ?? string.Empty,
                 answer.PassFailValue,
                 answer.NumericValue,
                 answer.TextValue,
                 DeserializeStringList(answer.SelectedOptionsJson),
+                itemMap.GetValueOrDefault(answer.ChecklistItemId)?.UnitOfMeasure,
                 answer.AnsweredAt,
                 answer.AnsweredByUserId))
             .OrderBy(x => x.ItemKey)
@@ -640,6 +644,19 @@ public sealed class InspectionRunService(
                 400);
         }
 
+        if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!input.NumericValue.HasValue)
+            {
+                throw new StlApiException(
+                    "inspection_run.invalid_meter_reading_answer",
+                    "Meter reading checklist items require a numeric value.",
+                    400);
+            }
+
+            return (null, input.NumericValue.Value, null, []);
+        }
+
         if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Numeric, StringComparison.OrdinalIgnoreCase))
         {
             if (!input.NumericValue.HasValue)
@@ -707,6 +724,11 @@ public sealed class InspectionRunService(
             return answer.NumericValue.HasValue;
         }
 
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            return answer.NumericValue.HasValue;
+        }
+
         return !string.IsNullOrWhiteSpace(answer.TextValue);
     }
 
@@ -720,6 +742,24 @@ public sealed class InspectionRunService(
         if (string.Equals(item.ItemType, InspectionChecklistItemTypes.PassFail, StringComparison.OrdinalIgnoreCase))
         {
             return string.Equals(answer.PassFailValue, InspectionAnswerPassFailValues.Fail, StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!answer.NumericValue.HasValue)
+            {
+                return true;
+            }
+
+            if (item.AcceptableRangeMin.HasValue && answer.NumericValue.Value < item.AcceptableRangeMin.Value)
+            {
+                return true;
+            }
+
+            if (item.AcceptableRangeMax.HasValue && answer.NumericValue.Value > item.AcceptableRangeMax.Value)
+            {
+                return true;
+            }
         }
 
         return false;

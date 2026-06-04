@@ -23,6 +23,9 @@ interface InspectionTemplateBuilderPanelProps {
   itemPrompt: string
   itemType: string
   itemControlledOptionsText: string
+  itemMeterReadingMin: string
+  itemMeterReadingMax: string
+  itemUnitOfMeasure: string
   selectedCategoryId: string
   selectedAssetTypeIds: string[]
   selectedTemplateId: string
@@ -35,6 +38,9 @@ interface InspectionTemplateBuilderPanelProps {
   onItemPromptChange: (value: string) => void
   onItemTypeChange: (value: string) => void
   onItemControlledOptionsTextChange: (value: string) => void
+  onItemMeterReadingMinChange: (value: string) => void
+  onItemMeterReadingMaxChange: (value: string) => void
+  onItemUnitOfMeasureChange: (value: string) => void
   onSelectedCategoryIdChange: (value: string) => void
   onSelectedAssetTypeIdsChange: (value: string[]) => void
   onSelectedTemplateIdChange: (value: string) => void
@@ -64,6 +70,9 @@ export function InspectionTemplateBuilderPanel({
   itemPrompt,
   itemType,
   itemControlledOptionsText,
+  itemMeterReadingMin,
+  itemMeterReadingMax,
+  itemUnitOfMeasure,
   selectedCategoryId,
   selectedAssetTypeIds,
   selectedTemplateId,
@@ -76,6 +85,9 @@ export function InspectionTemplateBuilderPanel({
   onItemPromptChange,
   onItemTypeChange,
   onItemControlledOptionsTextChange,
+  onItemMeterReadingMinChange,
+  onItemMeterReadingMaxChange,
+  onItemUnitOfMeasureChange,
   onSelectedCategoryIdChange,
   onSelectedAssetTypeIdsChange,
   onSelectedTemplateIdChange,
@@ -370,6 +382,7 @@ export function InspectionTemplateBuilderPanel({
                 <option value="multi_select">Multi-select</option>
                 <option value="photo">Photo</option>
                 <option value="signature">Signature</option>
+                <option value="meter_reading">Meter reading</option>
               </select>
             </label>
             {itemType === 'select' || itemType === 'multi_select' ? (
@@ -390,6 +403,46 @@ export function InspectionTemplateBuilderPanel({
               <p className="text-xs text-slate-500 md:col-span-2">
                 Evidence-based items are completed in the inspection evidence panel; they do not need controlled options.
               </p>
+            ) : itemType === 'meter_reading' ? (
+              <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                <label className="block text-sm" htmlFor="inspectiontemplatebuilder-meter-unit">
+                  <span className="text-slate-300">Unit of measure</span>
+                  <input
+                    id="inspectiontemplatebuilder-meter-unit"
+                    className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+                    value={itemUnitOfMeasure}
+                    onChange={(e) => onItemUnitOfMeasureChange(e.target.value)}
+                    placeholder="hours"
+                  />
+                </label>
+                <label className="block text-sm" htmlFor="inspectiontemplatebuilder-meter-min">
+                  <span className="text-slate-300">Acceptable minimum</span>
+                  <input
+                    id="inspectiontemplatebuilder-meter-min"
+                    type="number"
+                    step="any"
+                    className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+                    value={itemMeterReadingMin}
+                    onChange={(e) => onItemMeterReadingMinChange(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </label>
+                <label className="block text-sm" htmlFor="inspectiontemplatebuilder-meter-max">
+                  <span className="text-slate-300">Acceptable maximum</span>
+                  <input
+                    id="inspectiontemplatebuilder-meter-max"
+                    type="number"
+                    step="any"
+                    className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+                    value={itemMeterReadingMax}
+                    onChange={(e) => onItemMeterReadingMaxChange(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </label>
+                <p className="text-xs text-slate-500 md:col-span-3">
+                  Meter-reading items capture a numeric value plus an optional acceptable range and required unit.
+                </p>
+              </div>
             ) : null}
             <label className="block text-sm md:col-span-2" htmlFor="inspectiontemplatebuilder-prompt">
           <span className="text-slate-300">Prompt</span>
@@ -422,7 +475,8 @@ export function InspectionTemplateBuilderPanel({
                   isSavingBuilder ||
                   !itemKey.trim() ||
                   !itemPrompt.trim() ||
-                  ((itemType === 'select' || itemType === 'multi_select') && !itemControlledOptionsText.trim())
+                  ((itemType === 'select' || itemType === 'multi_select') && !itemControlledOptionsText.trim()) ||
+                  (itemType === 'meter_reading' && !itemUnitOfMeasure.trim())
                 }
                 onClick={onCreateItem}
               >

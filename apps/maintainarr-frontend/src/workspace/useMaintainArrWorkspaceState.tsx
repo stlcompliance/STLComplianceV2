@@ -142,6 +142,9 @@ export function useMaintainArrWorkspaceState() {
   const [itemPrompt, setItemPrompt] = useState('')
   const [itemType, setItemType] = useState('pass_fail')
   const [itemControlledOptionsText, setItemControlledOptionsText] = useState('')
+  const [itemMeterReadingMin, setItemMeterReadingMin] = useState('')
+  const [itemMeterReadingMax, setItemMeterReadingMax] = useState('')
+  const [itemUnitOfMeasure, setItemUnitOfMeasure] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedAssetTypeIds, setSelectedAssetTypeIds] = useState<string[]>([])
   const [runAssetId, setRunAssetId] = useState('')
@@ -637,22 +640,45 @@ export function useMaintainArrWorkspaceState() {
 
   const createItemMutation = useMutation({
     mutationFn: () =>
-      createInspectionChecklistItem(accessToken, selectedTemplateId, {
-        itemKey,
-        prompt: itemPrompt,
-        itemType,
-        isRequired: true,
-        sortOrder: 10,
-        categoryId: selectedCategoryId || null,
-        controlledOptions:
-          itemType === 'select' || itemType === 'multi_select'
-            ? splitControlledOptions(itemControlledOptionsText)
-            : undefined,
-      }),
+      {
+        const acceptableRangeMin =
+          itemType === 'meter_reading' && itemMeterReadingMin.trim()
+            ? Number(itemMeterReadingMin)
+            : undefined
+        const acceptableRangeMax =
+          itemType === 'meter_reading' && itemMeterReadingMax.trim()
+            ? Number(itemMeterReadingMax)
+            : undefined
+        if (acceptableRangeMin != null && Number.isNaN(acceptableRangeMin)) {
+          throw new Error('Meter reading minimum must be numeric')
+        }
+        if (acceptableRangeMax != null && Number.isNaN(acceptableRangeMax)) {
+          throw new Error('Meter reading maximum must be numeric')
+        }
+
+        return createInspectionChecklistItem(accessToken, selectedTemplateId, {
+          itemKey,
+          prompt: itemPrompt,
+          itemType,
+          isRequired: true,
+          sortOrder: 10,
+          categoryId: selectedCategoryId || null,
+          controlledOptions:
+            itemType === 'select' || itemType === 'multi_select'
+              ? splitControlledOptions(itemControlledOptionsText)
+              : undefined,
+          acceptableRangeMin,
+          acceptableRangeMax,
+          unitOfMeasure: itemType === 'meter_reading' ? itemUnitOfMeasure.trim() : undefined,
+        })
+      },
     onSuccess: async () => {
       setItemKey('')
       setItemPrompt('')
       setItemControlledOptionsText('')
+      setItemMeterReadingMin('')
+      setItemMeterReadingMax('')
+      setItemUnitOfMeasure('')
       setApiError(null)
       await invalidateTemplates(selectedTemplateId)
     },
@@ -781,6 +807,19 @@ export function useMaintainArrWorkspaceState() {
             }
           }
           if (item.itemType === 'numeric') {
+            const raw = draft?.numericValue ?? existing?.numericValue?.toString()
+            if (!raw) {
+              return null
+            }
+            return {
+              checklistItemId: item.checklistItemId,
+              passFailValue: null,
+              numericValue: Number(raw),
+              textValue: null,
+              selectedOptions: null,
+            }
+          }
+          if (item.itemType === 'meter_reading') {
             const raw = draft?.numericValue ?? existing?.numericValue?.toString()
             if (!raw) {
               return null
@@ -1231,7 +1270,7 @@ export function useMaintainArrWorkspaceState() {
             selectedOptions,
           },
         }))
-      } else if (currentVoicePrompt.itemType === 'numeric') {
+      } else if (currentVoicePrompt.itemType === 'numeric' || currentVoicePrompt.itemType === 'meter_reading') {
         const normalized = await normalizeInspectionVoiceNumeric(accessToken, transcript)
         if (!normalized.understood || normalized.value == null) {
           throw new Error(`Could not normalize "${transcript}" as a number.`)
@@ -1281,6 +1320,9 @@ export function useMaintainArrWorkspaceState() {
     itemPrompt,
     itemType,
     itemControlledOptionsText,
+    itemMeterReadingMin,
+    itemMeterReadingMax,
+    itemUnitOfMeasure,
     selectedCategoryId,
     selectedAssetTypeIds,
     runAssetId,
@@ -1363,6 +1405,9 @@ export function useMaintainArrWorkspaceState() {
     setItemPrompt,
     setItemType,
     setItemControlledOptionsText,
+    setItemMeterReadingMin,
+    setItemMeterReadingMax,
+    setItemUnitOfMeasure,
     setSelectedCategoryId,
     setSelectedAssetTypeIds,
     setRunAssetId,

@@ -430,6 +430,33 @@ export function InspectionRunnerPanel({
                               )}
                             </div>
                           </div>
+                        ) : item.itemType === 'meter_reading' ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                id={`inspection-answer-meter-reading-${item.checklistItemId}`}
+                                type="number"
+                                step="any"
+                                className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
+                                value={draft.numericValue ?? (existing?.numericValue?.toString() ?? '')}
+                                aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
+                                onChange={(event) =>
+                                  onAnswerDraftChange(item.checklistItemId, 'numericValue', event.target.value)
+                                }
+                              />
+                              {item.unitOfMeasure ? (
+                                <span className="shrink-0 text-xs text-slate-400">{item.unitOfMeasure}</span>
+                              ) : null}
+                            </div>
+                            {item.acceptableRangeMin != null || item.acceptableRangeMax != null ? (
+                              <p className="text-xs text-slate-500">
+                                {item.acceptableRangeMin != null ? `Min ${item.acceptableRangeMin}` : ''}
+                                {item.acceptableRangeMin != null && item.acceptableRangeMax != null ? ' · ' : ''}
+                                {item.acceptableRangeMax != null ? `Max ${item.acceptableRangeMax}` : ''}
+                                {item.unitOfMeasure ? ` ${item.unitOfMeasure}` : ''}
+                              </p>
+                            ) : null}
+                          </div>
                         ) : item.itemType === 'numeric' ? (
                           <input
                             id={`inspection-answer-numeric-${item.checklistItemId}`}
@@ -476,13 +503,18 @@ export function InspectionRunnerPanel({
                         <div className="space-y-2">
                           <p className="text-slate-300">
                             {existing?.passFailValue ??
-                              existing?.numericValue?.toString() ??
+                              (item.itemType === 'meter_reading' && existing?.numericValue != null && item.unitOfMeasure
+                                ? `${existing.numericValue} ${item.unitOfMeasure}`
+                                : existing?.numericValue?.toString()) ??
                               existing?.textValue ??
                               existing?.selectedOptions?.join(', ') ??
                               (isEvidenceItem(item.itemType)
                                 ? 'Evidence uploaded below'
                                 : 'No answer')}
                           </p>
+                          {item.itemType === 'meter_reading' && item.unitOfMeasure ? (
+                            <p className="text-xs text-slate-500">{item.unitOfMeasure}</p>
+                          ) : null}
                           {isEvidenceItem(item.itemType) && itemEvidence.length > 0 ? (
                             <p className="text-xs text-slate-500">
                               {itemEvidence.map((evidence) => evidence.fileName).join(', ')}

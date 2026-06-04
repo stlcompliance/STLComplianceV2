@@ -93,6 +93,9 @@ describe('InspectionTemplateBuilderPanel', () => {
     itemPrompt: '',
     itemType: 'pass_fail',
     itemControlledOptionsText: '',
+    itemMeterReadingMin: '',
+    itemMeterReadingMax: '',
+    itemUnitOfMeasure: '',
     selectedCategoryId: '',
     selectedAssetTypeIds: ['44444444-4444-4444-4444-444444444444'],
     selectedTemplateId: '11111111-1111-1111-1111-111111111111',
@@ -105,6 +108,9 @@ describe('InspectionTemplateBuilderPanel', () => {
     onItemPromptChange: vi.fn(),
     onItemTypeChange: vi.fn(),
     onItemControlledOptionsTextChange: vi.fn(),
+    onItemMeterReadingMinChange: vi.fn(),
+    onItemMeterReadingMaxChange: vi.fn(),
+    onItemUnitOfMeasureChange: vi.fn(),
     onSelectedCategoryIdChange: vi.fn(),
     onSelectedAssetTypeIdsChange: vi.fn(),
     onSelectedTemplateIdChange: vi.fn(),
@@ -146,6 +152,15 @@ describe('InspectionTemplateBuilderPanel', () => {
 
     expect(screen.getByText(/Evidence-based items are completed in the inspection evidence panel/)).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /Controlled options/ })).not.toBeInTheDocument()
+  })
+
+  it('shows meter reading controls for meter reading items', () => {
+    render(<InspectionTemplateBuilderPanel {...baseProps} itemType="meter_reading" />)
+
+    expect(screen.getByRole('textbox', { name: /Unit of measure/ })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Acceptable minimum/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Acceptable maximum/)).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Meter reading' })).toBeInTheDocument()
   })
 
   it('downloads the selected template JSON export', () => {

@@ -84,6 +84,7 @@ public static class InspectionChecklistItemTypes
     public const string MultiSelect = "multi_select";
     public const string Photo = "photo";
     public const string Signature = "signature";
+    public const string MeterReading = "meter_reading";
 }
 
 

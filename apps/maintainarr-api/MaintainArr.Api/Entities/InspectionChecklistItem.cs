@@ -38,6 +38,12 @@ public sealed class InspectionChecklistItem : IHasTenant
 
     public string ControlledOptionsJson { get; set; } = "[]";
 
+    public decimal? AcceptableRangeMin { get; set; }
+
+    public decimal? AcceptableRangeMax { get; set; }
+
+    public string? UnitOfMeasure { get; set; }
+
     public bool IsRequired { get; set; } = true;
 
 

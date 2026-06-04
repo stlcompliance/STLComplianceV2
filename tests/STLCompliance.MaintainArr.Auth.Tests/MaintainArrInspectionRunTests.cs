@@ -273,6 +273,45 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_accepts_meter_reading_checklist_items()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, meterItemId) = await SeedMeterReadingTemplateWithAssetAsync(token);
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Contains(started.ChecklistItems, x =>
+            x.ChecklistItemId == meterItemId &&
+            x.ItemType == "meter_reading" &&
+            x.UnitOfMeasure == "hours" &&
+            x.AcceptableRangeMin == 100 &&
+            x.AcceptableRangeMax == 200);
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/inspections/{started.InspectionRunId}/answers", token);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([
+            new InspectionRunAnswerInput(meterItemId, null, 150m, null),
+        ]));
+        var submitResponse = await _maintainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/complete", token);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Equal("completed", completed.Status);
+        Assert.Equal("passed", completed.Result);
+        Assert.Contains(completed.Answers, x =>
+            x.ChecklistItemId == meterItemId &&
+            x.NumericValue == 150m &&
+            x.UnitOfMeasure == "hours");
+    }
+
+    [Fact]
     public async Task Inspection_run_accepts_photo_and_signature_evidence_without_text_answers()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -585,6 +624,68 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
 
         return (asset.AssetId, template.InspectionTemplateId, selectItem.ChecklistItemId, multiSelectItem.ChecklistItemId);
+    }
+
+    private async Task<(Guid AssetId, Guid TemplateId, Guid MeterItemId)> SeedMeterReadingTemplateWithAssetAsync(string token)
+    {
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "meter-readings",
+            "Meter Readings",
+            "Meter reading inspection template"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createMeterItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createMeterItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "engine-hours",
+            "Engine hour meter",
+            "meter_reading",
+            true,
+            10,
+            null,
+            null,
+            100m,
+            200m,
+            "hours"));
+        var createMeterItemResponse = await _maintainarrClient.SendAsync(createMeterItemRequest);
+        createMeterItemResponse.EnsureSuccessStatusCode();
+        var meterItem = (await createMeterItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var activateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/status",
+            token);
+        activateRequest.Content = JsonContent.Create(new UpdateInspectionTemplateStatusRequest("active"));
+        var activateResponse = await _maintainarrClient.SendAsync(activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetTypeId,
+            "RUN-METER-1",
+            "Meter Test Asset",
+            string.Empty,
+            null));
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        return (asset.AssetId, template.InspectionTemplateId, meterItem.ChecklistItemId);
     }
 
     private async Task<(Guid AssetId, Guid TemplateId, Guid PhotoItemId, Guid SignatureItemId)> SeedEvidenceOnlyTemplateWithAssetAsync(string token)

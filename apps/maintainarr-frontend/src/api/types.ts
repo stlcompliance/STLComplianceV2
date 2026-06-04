@@ -243,6 +243,9 @@ export interface InspectionChecklistItemResponse {
   prompt: string
   itemType: string
   controlledOptions: string[]
+  acceptableRangeMin?: number | null
+  acceptableRangeMax?: number | null
+  unitOfMeasure?: string | null
   isRequired: boolean
   sortOrder: number
   createdAt: string
@@ -291,6 +294,9 @@ export interface CreateInspectionChecklistItemRequest {
   sortOrder: number
   categoryId: string | null
   controlledOptions?: string[] | null
+  acceptableRangeMin?: number | null
+  acceptableRangeMax?: number | null
+  unitOfMeasure?: string | null
 }
 
 export interface InspectionRunSummaryResponse {
@@ -319,6 +325,9 @@ export interface InspectionRunChecklistItemSnapshot {
   prompt: string
   itemType: string
   controlledOptions: string[]
+  acceptableRangeMin?: number | null
+  acceptableRangeMax?: number | null
+  unitOfMeasure?: string | null
   isRequired: boolean
   sortOrder: number
 }
@@ -331,6 +340,7 @@ export interface InspectionRunAnswerResponse {
   numericValue: number | null
   textValue: string | null
   selectedOptions: string[]
+  unitOfMeasure?: string | null
   answeredAt: string
   answeredByUserId: string
 }

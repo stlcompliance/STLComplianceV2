@@ -54,6 +54,9 @@ public sealed class InspectionVoiceGuidanceService(
             InspectionChecklistItemTypes.Numeric => "Say a number, for example twelve point five.",
             InspectionChecklistItemTypes.Select => FormatOptionsHint(item.ControlledOptions, allowMultiple: false),
             InspectionChecklistItemTypes.MultiSelect => FormatOptionsHint(item.ControlledOptions, allowMultiple: true),
+            InspectionChecklistItemTypes.MeterReading => string.IsNullOrWhiteSpace(item.UnitOfMeasure)
+                ? "Say a number."
+                : $"Say a number in {item.UnitOfMeasure}.",
             InspectionChecklistItemTypes.Photo => "Use the inspection evidence panel to upload a photo.",
             InspectionChecklistItemTypes.Signature => "Use the inspection evidence panel to upload a signature.",
             InspectionChecklistItemTypes.Text => "Say your observation.",

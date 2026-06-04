@@ -58,7 +58,9 @@ public sealed class InspectionTemplateService(
 
         InspectionChecklistItemTypes.Photo,
 
-        InspectionChecklistItemTypes.Signature
+        InspectionChecklistItemTypes.Signature,
+
+        InspectionChecklistItemTypes.MeterReading
 
     };
 
@@ -942,6 +944,12 @@ public sealed class InspectionTemplateService(
 
             ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions)),
 
+            AcceptableRangeMin = NormalizeAcceptableRangeMin(request.ItemType, request.AcceptableRangeMin),
+
+            AcceptableRangeMax = NormalizeAcceptableRangeMax(request.ItemType, request.AcceptableRangeMax),
+
+            UnitOfMeasure = NormalizeUnitOfMeasure(request.ItemType, request.UnitOfMeasure),
+
             IsRequired = request.IsRequired,
 
             SortOrder = NormalizeSortOrder(request.SortOrder),
@@ -951,6 +959,8 @@ public sealed class InspectionTemplateService(
             UpdatedAt = now
 
         };
+
+        ValidateAcceptableRange(entity.AcceptableRangeMin, entity.AcceptableRangeMax);
 
 
 
@@ -1027,6 +1037,14 @@ public sealed class InspectionTemplateService(
         entity.ItemType = NormalizeItemType(request.ItemType);
 
         entity.ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions));
+
+        entity.AcceptableRangeMin = NormalizeAcceptableRangeMin(request.ItemType, request.AcceptableRangeMin);
+
+        entity.AcceptableRangeMax = NormalizeAcceptableRangeMax(request.ItemType, request.AcceptableRangeMax);
+
+        entity.UnitOfMeasure = NormalizeUnitOfMeasure(request.ItemType, request.UnitOfMeasure);
+
+        ValidateAcceptableRange(entity.AcceptableRangeMin, entity.AcceptableRangeMax);
 
         entity.IsRequired = request.IsRequired;
 
@@ -1448,6 +1466,12 @@ public sealed class InspectionTemplateService(
 
             DeserializeStringList(entity.ControlledOptionsJson),
 
+            entity.AcceptableRangeMin,
+
+            entity.AcceptableRangeMax,
+
+            entity.UnitOfMeasure,
+
             entity.IsRequired,
 
             entity.SortOrder,
@@ -1646,7 +1670,7 @@ public sealed class InspectionTemplateService(
 
                 "inspection_template.item.invalid_type",
 
-                "Item type must be pass_fail, yes_no, numeric, text, select, multi_select, photo, or signature.",
+                "Item type must be pass_fail, yes_no, numeric, text, select, multi_select, photo, signature, or meter_reading.",
 
                 400);
 
@@ -1694,6 +1718,64 @@ public sealed class InspectionTemplateService(
         }
 
         return normalized;
+    }
+
+    private static decimal? NormalizeAcceptableRangeMin(string itemType, decimal? acceptableRangeMin)
+    {
+        if (!string.Equals(itemType.Trim(), InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return acceptableRangeMin;
+    }
+
+    private static decimal? NormalizeAcceptableRangeMax(string itemType, decimal? acceptableRangeMax)
+    {
+        if (!string.Equals(itemType.Trim(), InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return acceptableRangeMax;
+    }
+
+    private static string? NormalizeUnitOfMeasure(string itemType, string? unitOfMeasure)
+    {
+        if (!string.Equals(itemType.Trim(), InspectionChecklistItemTypes.MeterReading, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var normalized = unitOfMeasure?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            throw new StlApiException(
+                "inspection_template.item.unit_required",
+                "Meter reading checklist items require a unit of measure.",
+                400);
+        }
+
+        if (normalized.Length is < 1 or > 32)
+        {
+            throw new StlApiException(
+                "inspection_template.item.invalid_unit",
+                "Unit of measure must be 32 characters or fewer.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static void ValidateAcceptableRange(decimal? acceptableRangeMin, decimal? acceptableRangeMax)
+    {
+        if (acceptableRangeMin.HasValue && acceptableRangeMax.HasValue && acceptableRangeMin.Value > acceptableRangeMax.Value)
+        {
+            throw new StlApiException(
+                "inspection_template.item.invalid_range",
+                "Acceptable range minimum cannot be greater than the maximum.",
+                400);
+        }
     }
 
     private static string SerializeControlledOptions(IReadOnlyList<string> controlledOptions) =>
