@@ -370,6 +370,10 @@ public static class WorkspaceEndpoints
         group.MapGet("/external-shares", (RecordArrStore store) => Results.Ok(store.GetExternalShares()))
             .WithName("ListRecordArrExternalShares");
 
+        group.MapPost("/external-shares/refresh-statuses", (RecordArrStore store) =>
+            Results.Ok(store.RefreshExternalShares()))
+            .WithName("RefreshRecordArrExternalShares");
+
         group.MapPost("/external-shares/{externalShareId}/access", (string externalShareId, RecordExternalShareAccessRequest request, RecordArrStore store) =>
         {
             var share = store.RecordExternalShareAccess(externalShareId, request.AccessedByPersonId, request.AccessAction, request.SourceIp, request.UserAgent);

@@ -1560,6 +1560,33 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrExternalShareResponse> RefreshExternalShares()
+    {
+        lock (_gate)
+        {
+            var now = DateTimeOffset.UtcNow;
+            for (var i = 0; i < _externalShares.Count; i++)
+            {
+                var current = _externalShares[i];
+                if (string.Equals(current.Status, "revoked", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(current.Status, "expired", StringComparison.OrdinalIgnoreCase) ||
+                    !current.ExpiresAt.HasValue ||
+                    current.ExpiresAt > now)
+                {
+                    continue;
+                }
+
+                _externalShares[i] = current with
+                {
+                    Status = "expired"
+                };
+                AddAccessLog(current.RecordId, "external_share.expired", "allowed", current.CreatedByPersonId, null, current.ExternalShareId, null, null, "share-expired");
+            }
+
+            return _externalShares.OrderByDescending(share => share.CreatedAt).ToArray();
+        }
+    }
+
     public IReadOnlyList<RecordArrRedactionResponse> GetRedactions()
     {
         lock (_gate)
@@ -2104,6 +2131,18 @@ public sealed class RecordArrStore
             {
                 AddAccessLog(current.RecordId, "external_share.accessed", "denied", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, "external-share-status");
                 throw new InvalidOperationException($"External share {shareId} is not active.");
+            }
+
+            if (current.ExpiresAt.HasValue && current.ExpiresAt <= DateTimeOffset.UtcNow)
+            {
+                var expired = current with
+                {
+                    Status = "expired"
+                };
+                _externalShares[index] = expired;
+                AddAccessLog(current.RecordId, "external_share.expired", "allowed", current.CreatedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, "share-expired");
+                AddAccessLog(current.RecordId, "external_share.accessed", "denied", accessedByPersonId, null, current.ExternalShareId, sourceIp, userAgent, "external-share-expired");
+                throw new InvalidOperationException($"External share {shareId} has expired.");
             }
 
             var accessPolicy = _accessPolicies.FirstOrDefault(policy =>

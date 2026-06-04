@@ -1098,6 +1098,15 @@ export async function listExternalShares(accessToken: string): Promise<RecordArr
   return getJson<RecordArrExternalShare[]>('/api/v1/workspace/external-shares', accessToken)
 }
 
+export async function refreshExternalShares(accessToken: string): Promise<RecordArrExternalShare[]> {
+  return sendJson<RecordArrExternalShare[]>(
+    '/api/v1/workspace/external-shares/refresh-statuses',
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
 export async function createExternalShare(
   accessToken: string,
   body: {

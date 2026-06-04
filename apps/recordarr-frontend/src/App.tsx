@@ -87,6 +87,7 @@ import {
   recalculateRetentionStatuses,
   refreshControlledDocumentWorkflows,
   refreshAccessGrants,
+  refreshExternalShares,
   expireDocumentDistribution,
   expireExternalShare,
   supersedeControlledDocument,
@@ -2434,6 +2435,12 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const refreshSharesMutation = useMutation({
+    mutationFn: () => refreshExternalShares(accessToken),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const accessShareMutation = useMutation({
     mutationFn: (externalShareId: string) =>
       recordExternalShareAccess(accessToken, externalShareId, {
@@ -2483,6 +2490,14 @@ function AccessPage({ accessToken }: { accessToken: string }) {
         description="Inspect access policies, grants, shares, redactions, and usage history for record governance."
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="recordarr-button secondary"
+              onClick={() => refreshSharesMutation.mutate()}
+              disabled={refreshSharesMutation.isPending}
+            >
+              {refreshSharesMutation.isPending ? 'Refreshing...' : 'Refresh shares'}
+            </button>
             <button
               type="button"
               className="recordarr-button secondary"
@@ -2643,6 +2658,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               <p className="mt-1 text-xs text-slate-400">
                 Policy: {getSharePolicy(share.recordId)?.policyType ?? 'none'}
               </p>
+              <p className="mt-1 text-xs text-slate-400">Expires {formatDate(share.expiresAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: 'person-doc-controller' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Revoke

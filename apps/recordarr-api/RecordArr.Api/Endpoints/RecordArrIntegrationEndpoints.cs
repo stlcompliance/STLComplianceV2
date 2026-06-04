@@ -346,6 +346,10 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(share);
         }).WithName($"AccessRecordArrIntegrationExternalShare{routePrefix}");
 
+        group.MapPost("/external-shares/refresh-statuses", (RecordArrStore store) =>
+            Results.Ok(store.RefreshExternalShares()))
+            .WithName($"RefreshRecordArrIntegrationExternalShares{routePrefix}");
+
         group.MapPost("/external-shares/{externalShareId}/expire", (string externalShareId, WorkspaceEndpoints.ExpireExternalShareRequest request, RecordArrStore store) =>
         {
             var share = store.ExpireExternalShare(externalShareId, request.ExpiredByPersonId);

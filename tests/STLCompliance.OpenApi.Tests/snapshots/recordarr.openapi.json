@@ -1161,6 +1161,19 @@
         }
       }
     },
+    "/api/integrations/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationExternalShares/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -3005,6 +3018,19 @@
         }
       }
     },
+    "/api/v1/integrations/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationExternalShares/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -4602,6 +4628,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrExternalShares",
         "responses": {
           "200": {
             "description": "OK"
