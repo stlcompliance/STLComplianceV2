@@ -11,6 +11,7 @@ public sealed class RecordArrStore
     private readonly List<RecordArrOcrResultResponse> _ocrResults;
     private readonly List<RecordArrExtractionResultResponse> _extractionResults;
     private readonly List<RecordArrEvidenceMappingResponse> _evidenceMappings;
+    private readonly List<RecordArrEvidenceCoverageResponse> _evidenceCoverage;
     private readonly List<RecordArrPackageResponse> _packages;
     private readonly List<RecordArrPackageManifestResponse> _manifests;
     private readonly List<RecordArrRecordMetadataResponse> _recordMetadata;
@@ -245,6 +246,8 @@ public sealed class RecordArrStore
                 null,
                 "Mapped by dispatch evidence review."),
         ];
+
+        _evidenceCoverage = BuildEvidenceCoverage();
 
         _packages =
         [
@@ -1165,6 +1168,16 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrEvidenceCoverageResponse> GetEvidenceCoverage()
+    {
+        lock (_gate)
+        {
+            _evidenceCoverage.Clear();
+            _evidenceCoverage.AddRange(BuildEvidenceCoverage());
+            return _evidenceCoverage.ToArray();
+        }
+    }
+
     public RecordArrEvidenceMappingResponse CreateEvidenceMapping(string recordId, string sourceProduct, string sourceObjectType, string sourceObjectId, string complianceRequirementRef, string evidenceTypeKey, string mappingSource, decimal confidenceScore)
     {
         lock (_gate)
@@ -1187,6 +1200,8 @@ public sealed class RecordArrStore
                 null,
                 null);
             _evidenceMappings.Add(mapping);
+            _evidenceCoverage.Clear();
+            _evidenceCoverage.AddRange(BuildEvidenceCoverage());
             return mapping;
         }
     }
@@ -1213,6 +1228,8 @@ public sealed class RecordArrStore
                 Notes = notes ?? current.Notes
             };
             _evidenceMappings[index] = updated;
+            _evidenceCoverage.Clear();
+            _evidenceCoverage.AddRange(BuildEvidenceCoverage());
             return updated;
         }
     }
@@ -2529,6 +2546,49 @@ public sealed class RecordArrStore
             "sign" => policy.ShareRules.Count > 0 || policy.WriteRules.Count > 0,
             _ => policy.ReadRules.Count > 0 || policy.WriteRules.Count > 0 || policy.DownloadRules.Count > 0 || policy.ShareRules.Count > 0 || policy.ExportRules.Count > 0 || policy.PurgeRules.Count > 0
         };
+    }
+
+    private List<RecordArrEvidenceCoverageResponse> BuildEvidenceCoverage()
+    {
+        var coverage = new List<RecordArrEvidenceCoverageResponse>();
+        foreach (var group in _evidenceMappings.GroupBy(mapping =>
+                     $"{mapping.SourceProduct}|{mapping.SourceObjectType}|{mapping.SourceObjectId}|{mapping.ComplianceRequirementRef}",
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            var recordRefs = group.Select(mapping => mapping.RecordId).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            var statuses = group.Select(mapping => mapping.Status.Trim().ToLowerInvariant()).ToArray();
+            var status = statuses.Contains("confirmed")
+                ? "satisfied"
+                : statuses.Contains("rejected")
+                    ? "invalid"
+                    : statuses.Contains("expired")
+                        ? "expired"
+                        : statuses.Contains("suggested")
+                            ? "warning"
+                            : "unknown";
+            var missingEvidenceTypes = status == "warning"
+                ? group.Select(mapping => mapping.EvidenceTypeKey).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+                : Array.Empty<string>();
+            var invalidRecordRefs = status is "invalid" or "expired"
+                ? recordRefs
+                : Array.Empty<string>();
+            var sourceObjectRef = $"{group.First().SourceProduct}:{group.First().SourceObjectType}:{group.First().SourceObjectId}";
+            var seed = $"{group.First().SourceProduct}-{group.First().SourceObjectType}-{group.First().SourceObjectId}-{group.First().ComplianceRequirementRef}".ToLowerInvariant();
+            coverage.Add(new RecordArrEvidenceCoverageResponse(
+                $"cov-{seed}"[..Math.Min(48, $"cov-{seed}".Length)],
+                "tenant-demo",
+                group.First().SourceProduct,
+                sourceObjectRef,
+                group.First().ComplianceRequirementRef,
+                status,
+                recordRefs,
+                missingEvidenceTypes,
+                invalidRecordRefs,
+                DateTimeOffset.UtcNow,
+                $"eval-{seed}"[..Math.Min(48, $"eval-{seed}".Length)]));
+        }
+
+        return coverage;
     }
 
     public RecordArrRedactionResponse CreateRedaction(string sourceRecordId, string redactedRecordId, string redactionReason, string redactedByPersonId, IEnumerable<string> redactionRules)

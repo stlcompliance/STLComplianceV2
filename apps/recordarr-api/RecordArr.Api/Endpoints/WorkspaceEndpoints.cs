@@ -200,6 +200,9 @@ public static class WorkspaceEndpoints
             return Results.Ok(mapping);
         }).WithName("RejectRecordArrEvidenceMapping");
 
+        group.MapGet("/evidence-coverage", (RecordArrStore store) => Results.Ok(store.GetEvidenceCoverage()))
+            .WithName("ListRecordArrEvidenceCoverage");
+
         group.MapPost("/record-packages", (CreatePackageRequest request, RecordArrStore store) =>
         {
             var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef);

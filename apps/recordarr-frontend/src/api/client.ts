@@ -161,6 +161,20 @@ export type RecordArrEvidenceMapping = {
   notes: string | null
 }
 
+export type RecordArrEvidenceCoverage = {
+  evidenceCoverageId: string
+  tenantId: string
+  sourceProduct: string
+  sourceObjectRef: string
+  complianceCoreRequirementRef: string
+  status: string
+  recordRefs: string[]
+  missingEvidenceTypes: string[]
+  invalidRecordRefs: string[]
+  evaluatedAt: string
+  evaluationRef: string
+}
+
 export type RecordArrPackage = {
   packageId: string
   packageNumber: string
@@ -726,6 +740,10 @@ export async function reviewExtractionResult(
 
 export async function listEvidenceMappings(accessToken: string): Promise<RecordArrEvidenceMapping[]> {
   return getJson<RecordArrEvidenceMapping[]>('/api/v1/workspace/evidence-mappings', accessToken)
+}
+
+export async function listEvidenceCoverage(accessToken: string): Promise<RecordArrEvidenceCoverage[]> {
+  return getJson<RecordArrEvidenceCoverage[]>('/api/v1/workspace/evidence-coverage', accessToken)
 }
 
 export async function createEvidenceMapping(

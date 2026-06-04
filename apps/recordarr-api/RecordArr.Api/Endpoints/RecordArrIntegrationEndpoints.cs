@@ -185,6 +185,9 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(mapping);
         }).WithName($"RejectRecordArrIntegrationEvidenceMapping{routePrefix}");
 
+        group.MapGet("/evidence-coverage", (RecordArrStore store) => Results.Ok(store.GetEvidenceCoverage()))
+            .WithName($"ListRecordArrIntegrationEvidenceCoverage{routePrefix}");
+
         group.MapGet("/record-packages", (RecordArrStore store) => Results.Ok(store.GetPackages()))
             .WithName($"ListRecordArrIntegrationPackages{routePrefix}");
 

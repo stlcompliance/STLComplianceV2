@@ -928,6 +928,19 @@
         }
       }
     },
+    "/api/integrations/evidence-coverage": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationEvidenceCoverage/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/evidence-mappings": {
       "get": {
         "tags": [
@@ -2988,6 +3001,19 @@
         }
       }
     },
+    "/api/v1/integrations/evidence-coverage": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationEvidenceCoverage/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/evidence-mappings": {
       "get": {
         "tags": [
@@ -4855,6 +4881,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/evidence-coverage": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrEvidenceCoverage",
         "responses": {
           "200": {
             "description": "OK"

@@ -138,6 +138,19 @@ public sealed record RecordArrEvidenceMappingResponse(
     string? RejectionReason,
     string? Notes);
 
+public sealed record RecordArrEvidenceCoverageResponse(
+    string EvidenceCoverageId,
+    string TenantId,
+    string SourceProduct,
+    string SourceObjectRef,
+    string ComplianceCoreRequirementRef,
+    string Status,
+    IReadOnlyList<string> RecordRefs,
+    IReadOnlyList<string> MissingEvidenceTypes,
+    IReadOnlyList<string> InvalidRecordRefs,
+    DateTimeOffset EvaluatedAt,
+    string EvaluationRef);
+
 public sealed record RecordArrPackageResponse(
     string PackageId,
     string PackageNumber,

@@ -42,6 +42,7 @@ import {
   archiveControlledDocument,
   createDisposalReview,
   createEvidenceMapping,
+  listEvidenceCoverage,
   createExternalShare,
   createRedaction,
   createLegalHold,
@@ -1154,6 +1155,11 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     queryFn: () => listEvidenceMappings(accessToken),
     enabled: Boolean(accessToken),
   })
+  const coverageQuery = useQuery({
+    queryKey: ['recordarr', 'evidence-coverage'],
+    queryFn: () => listEvidenceCoverage(accessToken),
+    enabled: Boolean(accessToken),
+  })
 
   useEffect(() => {
     if (!selectedScanId && scansQuery.data?.[0]) {
@@ -1401,6 +1407,30 @@ function CapturePage({ accessToken }: { accessToken: string }) {
             </div>
           ))}
           {!mappingsQuery.data?.length && !mappingsQuery.isLoading ? <EmptyState title="No evidence mappings yet." /> : null}
+        </div>
+        <div className="mt-6 border-t border-slate-800 pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-slate-100">Evidence coverage</h3>
+            <span className="recordarr-pill text-[0.7rem]">{coverageQuery.data?.length ?? 0} rows</span>
+          </div>
+          <div className="mt-3 space-y-3">
+            {coverageQuery.data?.map((coverage) => (
+              <div key={coverage.evidenceCoverageId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <strong className="text-slate-100">{coverage.complianceCoreRequirementRef}</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{coverage.status}</span>
+                </div>
+                <p className="mt-1">{coverage.sourceObjectRef}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Records: {coverage.recordRefs.join(', ') || 'none'} · Evaluated {formatDate(coverage.evaluatedAt)}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Missing: {coverage.missingEvidenceTypes.join(', ') || 'none'} · Invalid: {coverage.invalidRecordRefs.join(', ') || 'none'}
+                </p>
+              </div>
+            ))}
+            {!coverageQuery.data?.length && !coverageQuery.isLoading ? <EmptyState title="No evidence coverage yet." /> : null}
+          </div>
         </div>
       </Card>
     </div>
