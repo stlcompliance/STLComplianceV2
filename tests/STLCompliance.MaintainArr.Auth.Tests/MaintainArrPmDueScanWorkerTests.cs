@@ -163,6 +163,61 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Process_due_scan_auto_generates_pm_inspection_and_history_entry()
+    {
+        var schedule = await SeedPastDuePmScheduleAsync(daysPastDue: 0);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+
+        var inspectionTemplate = await SeedInspectionProgramAsync(schedule, token);
+
+        var processRequest = new HttpRequestMessage(HttpMethod.Post, "/api/internal/pm/process-due-scan");
+        processRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            _sharedWorkerToMaintainArrToken);
+        processRequest.Content = JsonContent.Create(new ProcessPmDueScanRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50,
+            1));
+
+        var processResponse = await _maintainarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+        var body = (await processResponse.Content.ReadFromJsonAsync<ProcessPmDueScanResponse>())!;
+        Assert.Equal(1, body.WorkOrdersCreatedCount);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+
+        var inspectionRun = await db.InspectionRuns.SingleAsync(x => x.PmScheduleId == schedule.Id);
+        Assert.Equal(inspectionTemplate, inspectionRun.InspectionTemplateId);
+        Assert.Equal(InspectionRunStatuses.InProgress, inspectionRun.Status);
+
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityId == schedule.Id)
+            .ToListAsync();
+        Assert.Contains(outbox, x =>
+            x.EventKind == InspectionStarted
+            && x.RelatedEntityType == InspectionRun
+            && x.RelatedEntityId == inspectionRun.Id);
+        Assert.Contains(outbox, x =>
+            x.EventKind == PmOccurrenceInspectionGenerated
+            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityId == schedule.Id
+            && x.PayloadJson.Contains(inspectionRun.Id.ToString("D"), StringComparison.OrdinalIgnoreCase));
+
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var historyResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/maintenance-history?assetId={schedule.AssetId}&page=1&pageSize=50", managerToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<PagedResult<MaintenanceHistoryEntryResponse>>())!;
+        Assert.Contains(history.Items, x =>
+            x.Category == "inspection"
+            && x.EventType == "pm_occurrence_inspection_generated"
+            && x.RelatedEntityId == schedule.Id.ToString("D"));
+    }
+
+    [Fact]
     public async Task Settings_put_requires_admin()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
@@ -555,6 +610,79 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         db.PmSchedules.Add(schedule);
         await db.SaveChangesAsync();
         return schedule;
+    }
+
+    private async Task<Guid> SeedInspectionProgramAsync(PmSchedule schedule, string token)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var asset = await db.Assets.AsNoTracking().FirstAsync(x => x.Id == schedule.AssetId);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "pm-inspection",
+            "PM Inspection",
+            "PM generated inspection template"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "pm-check",
+            "PM check",
+            "pass_fail",
+            true,
+            10,
+            null));
+        var createItemResponse = await _maintainarrClient.SendAsync(createItemRequest);
+        createItemResponse.EnsureSuccessStatusCode();
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([asset.AssetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var activateTemplateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/status",
+            token);
+        activateTemplateRequest.Content = JsonContent.Create(new UpdateInspectionTemplateStatusRequest("active"));
+        var activateTemplateResponse = await _maintainarrClient.SendAsync(activateTemplateRequest);
+        activateTemplateResponse.EnsureSuccessStatusCode();
+
+        var createProgramRequest = Authorized(HttpMethod.Post, "/api/preventive-maintenance/programs", token);
+        createProgramRequest.Content = JsonContent.Create(new CreatePmProgramRequest(
+            "pm-inspection-program",
+            "PM Inspection Program",
+            "Auto-generated PM inspection program",
+            "asset_type",
+            asset.AssetTypeId,
+            null,
+            [schedule.Id],
+            true,
+            template.InspectionTemplateId));
+        var createProgramResponse = await _maintainarrClient.SendAsync(createProgramRequest);
+        createProgramResponse.EnsureSuccessStatusCode();
+        var program = (await createProgramResponse.Content.ReadFromJsonAsync<PmProgramDetailResponse>())!;
+        Assert.True(program.AutoGenerateInspection);
+        Assert.Equal(template.InspectionTemplateId, program.InspectionTemplateId);
+
+        var activateProgramRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/preventive-maintenance/programs/{program.PmProgramId}/status",
+            token);
+        activateProgramRequest.Content = JsonContent.Create(new UpdatePmProgramStatusRequest("active"));
+        var activateProgramResponse = await _maintainarrClient.SendAsync(activateProgramRequest);
+        activateProgramResponse.EnsureSuccessStatusCode();
+
+        return template.InspectionTemplateId;
     }
 
     private string CreateMaintainArrAccessToken(

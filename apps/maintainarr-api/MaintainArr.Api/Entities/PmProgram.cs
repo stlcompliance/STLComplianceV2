@@ -22,6 +22,10 @@ public sealed class PmProgram : IHasTenant
 
     public string Status { get; set; } = PmProgramStatuses.Draft;
 
+    public bool AutoGenerateInspection { get; set; }
+
+    public Guid? InspectionTemplateId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
@@ -29,6 +33,8 @@ public sealed class PmProgram : IHasTenant
     public AssetType? AssetType { get; set; }
 
     public Asset? Asset { get; set; }
+
+    public InspectionTemplate? InspectionTemplate { get; set; }
 
     public ICollection<PmProgramSchedule> ProgramSchedules { get; set; } = [];
 }

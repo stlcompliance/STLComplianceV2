@@ -27,6 +27,7 @@ public static class MaintenanceHistoryTimelineBuilder
             {
                 run.Id,
                 run.AssetId,
+                run.PmScheduleId,
                 run.StartedAt,
                 run.CompletedAt,
                 run.StartedByUserId,
@@ -50,6 +51,22 @@ public static class MaintenanceHistoryTimelineBuilder
                 "inspection_run",
                 run.Id.ToString(),
                 null));
+
+            if (run.PmScheduleId is Guid pmScheduleId)
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"inspection:{run.Id}:pm_occurrence_generated",
+                    run.AssetId,
+                    "inspection",
+                    "pm_occurrence_inspection_generated",
+                    $"PM occurrence generated inspection: {run.TemplateName}",
+                    run.TemplateKey,
+                    run.StartedAt,
+                    run.StartedByUserId,
+                    "inspection_run",
+                    run.Id.ToString(),
+                    pmScheduleId.ToString()));
+            }
 
             if (run.CompletedAt is DateTimeOffset completedAt)
             {

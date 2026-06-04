@@ -7,12 +7,16 @@ public sealed record CreatePmProgramRequest(
     string ScopeType,
     Guid? AssetTypeId,
     Guid? AssetId,
-    IReadOnlyList<Guid>? PmScheduleIds = null);
+    IReadOnlyList<Guid>? PmScheduleIds = null,
+    bool AutoGenerateInspection = false,
+    Guid? InspectionTemplateId = null);
 
 public sealed record UpdatePmProgramRequest(
     string Name,
     string Description,
-    string Status);
+    string Status,
+    bool AutoGenerateInspection = false,
+    Guid? InspectionTemplateId = null);
 
 public sealed record UpdatePmProgramStatusRequest(string Status);
 
@@ -28,6 +32,10 @@ public sealed record PmProgramSummaryResponse(
     Guid? AssetId,
     string? AssetTag,
     string Status,
+    bool AutoGenerateInspection,
+    Guid? InspectionTemplateId,
+    string? InspectionTemplateKey,
+    string? InspectionTemplateName,
     int ScheduleCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -55,6 +63,10 @@ public sealed record PmProgramDetailResponse(
     string? AssetTag,
     string? AssetName,
     string Status,
+    bool AutoGenerateInspection,
+    Guid? InspectionTemplateId,
+    string? InspectionTemplateKey,
+    string? InspectionTemplateName,
     IReadOnlyList<PmProgramScheduleLinkResponse> Schedules,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

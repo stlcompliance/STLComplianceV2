@@ -31,6 +31,9 @@ public sealed class PmProgramService(
             join asset in db.Assets.AsNoTracking()
                 on program.AssetId equals asset.Id into assets
             from asset in assets.DefaultIfEmpty()
+            join inspectionTemplate in db.InspectionTemplates.AsNoTracking()
+                on program.InspectionTemplateId equals inspectionTemplate.Id into inspectionTemplates
+            from inspectionTemplate in inspectionTemplates.DefaultIfEmpty()
             orderby program.Name, program.ProgramKey
             select new PmProgramSummaryResponse(
                 program.Id,
@@ -42,6 +45,10 @@ public sealed class PmProgramService(
                 program.AssetId,
                 asset != null ? asset.AssetTag : null,
                 program.Status,
+                program.AutoGenerateInspection,
+                program.InspectionTemplateId,
+                inspectionTemplate != null ? inspectionTemplate.TemplateKey : null,
+                inspectionTemplate != null ? inspectionTemplate.Name : null,
                 program.ProgramSchedules.Count,
                 program.CreatedAt,
                 program.UpdatedAt))
@@ -72,6 +79,14 @@ public sealed class PmProgramService(
             scopeType,
             request.AssetTypeId,
             request.AssetId,
+            cancellationToken);
+        var inspectionTemplate = await ResolveInspectionTemplateAsync(
+            tenantId,
+            scopeType,
+            assetTypeId,
+            assetId,
+            request.AutoGenerateInspection,
+            request.InspectionTemplateId,
             cancellationToken);
 
         var exists = await db.PmPrograms.AnyAsync(
@@ -106,6 +121,8 @@ public sealed class PmProgramService(
             ScopeType = scopeType,
             AssetTypeId = assetTypeId,
             AssetId = assetId,
+            AutoGenerateInspection = request.AutoGenerateInspection,
+            InspectionTemplateId = inspectionTemplate?.Id,
             Status = PmProgramStatuses.Draft,
             CreatedAt = now,
             UpdatedAt = now,
@@ -147,6 +164,14 @@ public sealed class PmProgramService(
     {
         var program = await LoadProgramAsync(tenantId, pmProgramId, cancellationToken, tracking: true);
         var status = NormalizeStatus(request.Status);
+        var inspectionTemplate = await ResolveInspectionTemplateAsync(
+            tenantId,
+            program.ScopeType,
+            program.AssetTypeId,
+            program.AssetId,
+            request.AutoGenerateInspection,
+            request.InspectionTemplateId,
+            cancellationToken);
 
         if (string.Equals(status, PmProgramStatuses.Active, StringComparison.OrdinalIgnoreCase)
             && program.ProgramSchedules.Count == 0)
@@ -159,6 +184,8 @@ public sealed class PmProgramService(
 
         program.Name = NormalizeName(request.Name);
         program.Description = NormalizeDescription(request.Description);
+        program.AutoGenerateInspection = request.AutoGenerateInspection;
+        program.InspectionTemplateId = inspectionTemplate?.Id;
         program.Status = status;
         program.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -260,6 +287,7 @@ public sealed class PmProgramService(
         var query = db.PmPrograms
             .Include(x => x.AssetType)
             .Include(x => x.Asset)
+            .Include(x => x.InspectionTemplate)
             .Include(x => x.ProgramSchedules)
             .ThenInclude(x => x.PmSchedule)
             .ThenInclude(x => x.Asset)
@@ -396,6 +424,92 @@ public sealed class PmProgramService(
         return (assetTypeId.Value, null);
     }
 
+    private async Task<InspectionTemplate?> ResolveInspectionTemplateAsync(
+        Guid tenantId,
+        string scopeType,
+        Guid? assetTypeId,
+        Guid? assetId,
+        bool autoGenerateInspection,
+        Guid? inspectionTemplateId,
+        CancellationToken cancellationToken)
+    {
+        if (!autoGenerateInspection)
+        {
+            if (!inspectionTemplateId.HasValue)
+            {
+                return null;
+            }
+        }
+        else if (!inspectionTemplateId.HasValue)
+        {
+            throw new StlApiException(
+                "pm_program.inspection_template_required",
+                "Inspection template is required when auto-generate inspection is enabled.",
+                400);
+        }
+
+        if (!inspectionTemplateId.HasValue)
+        {
+            return null;
+        }
+
+        var template = await db.InspectionTemplates
+            .Include(x => x.AssetTypeLinks)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == inspectionTemplateId.Value,
+                cancellationToken);
+
+        if (template is null)
+        {
+            throw new StlApiException(
+                "pm_program.inspection_template_not_found",
+                "Inspection template was not found.",
+                404);
+        }
+
+        if (!string.Equals(template.Status, InspectionTemplateStatuses.Active, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "pm_program.inspection_template_not_active",
+                "Inspection template must be active before it can be assigned to a PM program.",
+                400);
+        }
+
+        var linkedAssetTypeIds = template.AssetTypeLinks.Select(x => x.AssetTypeId).ToHashSet();
+        if (linkedAssetTypeIds.Count > 0)
+        {
+            if (string.Equals(scopeType, PmProgramScopeTypes.Asset, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!assetId.HasValue)
+                {
+                    throw new StlApiException(
+                        "pm_program.asset_required",
+                        "Asset scope requires assetId.",
+                        400);
+                }
+
+                var asset = await assetService.GetAsync(tenantId, assetId.Value, cancellationToken);
+                if (!linkedAssetTypeIds.Contains(asset.AssetTypeId))
+                {
+                    throw new StlApiException(
+                        "pm_program.inspection_template_scope_mismatch",
+                        "Inspection template does not apply to the program's asset scope.",
+                        400);
+                }
+            }
+            else if (assetTypeId.HasValue && !linkedAssetTypeIds.Contains(assetTypeId.Value))
+            {
+                throw new StlApiException(
+                    "pm_program.inspection_template_scope_mismatch",
+                    "Inspection template does not apply to the program's asset type scope.",
+                    400);
+            }
+        }
+
+        return template;
+    }
+
     private static PmProgramDetailResponse MapDetail(PmProgram program) =>
         new(
             program.Id,
@@ -410,6 +524,10 @@ public sealed class PmProgramService(
             program.Asset?.AssetTag,
             program.Asset?.Name,
             program.Status,
+            program.AutoGenerateInspection,
+            program.InspectionTemplateId,
+            program.InspectionTemplate?.TemplateKey,
+            program.InspectionTemplate?.Name,
             program.ProgramSchedules
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new PmProgramScheduleLinkResponse(

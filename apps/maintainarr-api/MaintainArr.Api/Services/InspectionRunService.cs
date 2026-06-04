@@ -67,7 +67,8 @@ public sealed class InspectionRunService(
         Guid tenantId,
         Guid actorUserId,
         StartInspectionRunRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? pmScheduleId = null)
     {
         var asset = await assetService.GetAsync(tenantId, request.AssetId, cancellationToken);
         if (!string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
@@ -134,6 +135,7 @@ public sealed class InspectionRunService(
             TenantId = tenantId,
             AssetId = request.AssetId,
             InspectionTemplateId = template.Id,
+            PmScheduleId = pmScheduleId,
             TemplateVersion = template.Version,
             Status = InspectionRunStatuses.InProgress,
             StartedByUserId = actorUserId,
@@ -162,6 +164,30 @@ public sealed class InspectionRunService(
             now,
             $"Inspection {template.TemplateKey} started for asset {asset.AssetTag}.",
             cancellationToken: cancellationToken);
+
+        if (pmScheduleId.HasValue)
+        {
+            var schedule = await LoadPmScheduleAsync(tenantId, pmScheduleId.Value, cancellationToken);
+            var pmAsset = await db.Assets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == schedule.AssetId, cancellationToken);
+            if (pmAsset is null)
+            {
+                return await MapDetailAsync(tenantId, entity, cancellationToken);
+            }
+
+            await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.PmOccurrenceInspectionGenerated,
+                schedule,
+                pmAsset,
+                actorUserId,
+                now,
+                $"PM occurrence generated inspection {entity.Id} for asset {asset.AssetTag}.",
+                eventResult: entity.Id.ToString("D"),
+                idempotencyDiscriminator: entity.Id.ToString("D"),
+                cancellationToken: cancellationToken);
+        }
 
         return await MapDetailAsync(tenantId, entity, cancellationToken);
     }
@@ -436,6 +462,23 @@ public sealed class InspectionRunService(
         return run;
     }
 
+    private async Task<PmSchedule> LoadPmScheduleAsync(
+        Guid tenantId,
+        Guid pmScheduleId,
+        CancellationToken cancellationToken)
+    {
+        var schedule = await db.PmSchedules
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == pmScheduleId, cancellationToken);
+
+        if (schedule is null)
+        {
+            throw new StlApiException("pm_schedule.not_found", "PM schedule was not found.", 404);
+        }
+
+        return schedule;
+    }
+
     private async Task<IReadOnlyList<InspectionRunSummaryResponse>> MapSummariesAsync(
         Guid tenantId,
         IReadOnlyList<InspectionRun> runs,
@@ -481,6 +524,7 @@ public sealed class InspectionRunService(
                     asset?.AssetTag ?? string.Empty,
                     asset?.Name ?? string.Empty,
                     run.InspectionTemplateId,
+                    run.PmScheduleId,
                     template?.TemplateKey ?? string.Empty,
                     template?.Name ?? string.Empty,
                     run.TemplateVersion,
@@ -562,6 +606,7 @@ public sealed class InspectionRunService(
             asset.AssetTag,
             asset.Name,
             run.InspectionTemplateId,
+            run.PmScheduleId,
             template.TemplateKey,
             template.Name,
             run.TemplateVersion,

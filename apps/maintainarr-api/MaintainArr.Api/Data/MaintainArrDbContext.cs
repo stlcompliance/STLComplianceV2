@@ -224,6 +224,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.AutoGenerateInspection).HasDefaultValue(false);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ProgramKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
@@ -236,6 +237,10 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasOne(x => x.Asset)
                 .WithMany()
                 .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.InspectionTemplate)
+                .WithMany()
+                .HasForeignKey(x => x.InspectionTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -395,6 +400,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.InspectionTemplateId });
+            entity.HasIndex(x => new { x.TenantId, x.PmScheduleId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.StartedByUserId, x.StartedAt });
             entity.HasOne(x => x.Asset)
                 .WithMany()
@@ -404,6 +410,10 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany()
                 .HasForeignKey(x => x.InspectionTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.PmSchedule)
+                .WithMany()
+                .HasForeignKey(x => x.PmScheduleId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<InspectionRunAnswer>(entity =>

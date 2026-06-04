@@ -12,6 +12,8 @@ public sealed class InspectionRun : IHasTenant
 
     public Guid InspectionTemplateId { get; set; }
 
+    public Guid? PmScheduleId { get; set; }
+
     public int TemplateVersion { get; set; }
 
     public string Status { get; set; } = InspectionRunStatuses.InProgress;
@@ -29,6 +31,8 @@ public sealed class InspectionRun : IHasTenant
     public Asset Asset { get; set; } = null!;
 
     public InspectionTemplate InspectionTemplate { get; set; } = null!;
+
+    public PmSchedule? PmSchedule { get; set; }
 
     public ICollection<InspectionRunAnswer> Answers { get; set; } = [];
 

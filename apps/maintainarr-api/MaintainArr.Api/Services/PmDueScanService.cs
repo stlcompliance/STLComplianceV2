@@ -9,6 +9,7 @@ namespace MaintainArr.Api.Services;
 public sealed class PmDueScanService(
     MaintainArrDbContext db,
     WorkOrderService workOrders,
+    InspectionRunService inspectionRuns,
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
     MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
@@ -173,10 +174,12 @@ public sealed class PmDueScanService(
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
-                        workOrderGenerationSkipped.Add(
-                            new PmWorkOrderGenerationSkip(candidate.PmScheduleId, ex.Message));
+                            workOrderGenerationSkipped.Add(
+                                new PmWorkOrderGenerationSkip(candidate.PmScheduleId, ex.Message));
                     }
                 }
+
+                await TryGenerateInspectionAsync(candidate.PmScheduleId, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -443,6 +446,55 @@ public sealed class PmDueScanService(
             $"PM occurrence {schedule.ScheduleKey} changed to {targetDueStatus} for asset {asset.AssetTag}.",
             eventResult: targetDueStatus,
             cancellationToken: cancellationToken);
+    }
+
+    private async Task TryGenerateInspectionAsync(
+        Guid pmScheduleId,
+        CancellationToken cancellationToken)
+    {
+        var program = await db.PmProgramSchedules
+            .AsNoTracking()
+            .Where(x => x.PmScheduleId == pmScheduleId
+                && x.PmProgram.Status == PmProgramStatuses.Active
+                && x.PmProgram.AutoGenerateInspection
+                && x.PmProgram.InspectionTemplateId.HasValue)
+            .Select(x => new
+            {
+                x.PmProgramId,
+                x.PmProgram.InspectionTemplateId,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (program?.InspectionTemplateId is not Guid inspectionTemplateId)
+        {
+            return;
+        }
+
+        var schedule = await db.PmSchedules
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == pmScheduleId, cancellationToken);
+        if (schedule is null)
+        {
+            return;
+        }
+
+        var existingRun = await db.InspectionRuns.AnyAsync(
+            x => x.TenantId == schedule.TenantId
+                && x.AssetId == schedule.AssetId
+                && x.InspectionTemplateId == inspectionTemplateId
+                && x.Status == InspectionRunStatuses.InProgress,
+            cancellationToken);
+        if (existingRun)
+        {
+            return;
+        }
+
+        await inspectionRuns.StartAsync(
+            schedule.TenantId,
+            WorkerActorUserId,
+            new StartInspectionRunRequest(schedule.AssetId, inspectionTemplateId),
+            cancellationToken,
+            pmScheduleId);
     }
 
     private async Task<IReadOnlyList<PendingPmDueItem>> LoadPendingCandidatesAsync(
