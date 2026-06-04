@@ -278,6 +278,18 @@ public static class WorkspaceEndpoints
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName("ListRecordArrAccessGrants");
 
+        group.MapPost("/access-grants", (CreateAccessGrantRequest request, RecordArrStore store) =>
+        {
+            var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, request.GrantedByPersonId, request.ExpiresAt);
+            return Results.Created($"/api/v1/workspace/access-grants/{grant.AccessGrantId}", grant);
+        }).WithName("CreateRecordArrAccessGrant");
+
+        group.MapPost("/access-grants/{accessGrantId}/revoke", (string accessGrantId, RevokeAccessGrantRequest request, RecordArrStore store) =>
+        {
+            var grant = store.RevokeAccessGrant(accessGrantId, request.RevokedByPersonId, request.RevokeReason);
+            return Results.Ok(grant);
+        }).WithName("RevokeRecordArrAccessGrant");
+
         group.MapGet("/external-shares", (RecordArrStore store) => Results.Ok(store.GetExternalShares()))
             .WithName("ListRecordArrExternalShares");
 
@@ -379,6 +391,8 @@ public static class WorkspaceEndpoints
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
+    public sealed record CreateAccessGrantRequest(string RecordId, string GranteeType, string GranteeRef, string Permission, string GrantedByPersonId, DateTimeOffset? ExpiresAt);
+    public sealed record RevokeAccessGrantRequest(string RevokedByPersonId, string? RevokeReason);
     public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);
     public sealed record CompleteDisposalReviewRequest(string Status, string? ReviewedByPersonId, string? DecisionReason);
 

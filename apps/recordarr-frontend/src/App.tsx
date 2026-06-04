@@ -33,6 +33,7 @@ import {
   archiveRecord,
   confirmEvidenceMapping,
   createControlledDocument,
+  createAccessGrant,
   createDocumentAcknowledgement,
   createDocumentDistribution,
   createDocumentReview,
@@ -79,6 +80,7 @@ import {
   promoteDocumentVersion,
   completeDocumentAcknowledgement,
   completeDisposalReview,
+  revokeAccessGrant,
   lockPackage,
   updateRecord,
   type RecordArrControlledDocument,
@@ -1928,6 +1930,14 @@ function AccessPage({ accessToken }: { accessToken: string }) {
     allowedActions: 'view\ndownload',
     createdByPersonId: 'person-doc-controller',
   })
+  const [grantForm, setGrantForm] = useState({
+    recordId: 'rec-bol-001',
+    granteeType: 'role',
+    granteeRef: 'evidence-manager',
+    permission: 'read',
+    grantedByPersonId: 'person-doc-controller',
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  })
 
   const policiesQuery = useQuery({ queryKey: ['recordarr', 'access-policies'], queryFn: () => listAccessPolicies(accessToken), enabled: Boolean(accessToken) })
   const grantsQuery = useQuery({ queryKey: ['recordarr', 'access-grants'], queryFn: () => listAccessGrants(accessToken), enabled: Boolean(accessToken) })
@@ -1941,6 +1951,16 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       createExternalShare(accessToken, {
         ...shareForm,
         allowedActions: shareForm.allowedActions.split('\n').map((item) => item.trim()).filter(Boolean),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const grantMutation = useMutation({
+    mutationFn: () =>
+      createAccessGrant(accessToken, {
+        ...grantForm,
+        expiresAt: grantForm.expiresAt || null,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -1970,6 +1990,26 @@ function AccessPage({ accessToken }: { accessToken: string }) {
         </div>
       </div>
 
+      <div className="recordarr-card mt-6">
+        <div className="recordarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-cyan-300" />
+            <h2 className="text-lg font-semibold text-slate-50">Access grant management</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Record id"><input className="recordarr-input" value={grantForm.recordId} onChange={(e) => setGrantForm({ ...grantForm, recordId: e.target.value })} /></Field>
+            <Field label="Grantee type"><input className="recordarr-input" value={grantForm.granteeType} onChange={(e) => setGrantForm({ ...grantForm, granteeType: e.target.value })} /></Field>
+            <Field label="Grantee ref"><input className="recordarr-input" value={grantForm.granteeRef} onChange={(e) => setGrantForm({ ...grantForm, granteeRef: e.target.value })} /></Field>
+            <Field label="Permission"><input className="recordarr-input" value={grantForm.permission} onChange={(e) => setGrantForm({ ...grantForm, permission: e.target.value })} /></Field>
+            <Field label="Granted by"><input className="recordarr-input" value={grantForm.grantedByPersonId} onChange={(e) => setGrantForm({ ...grantForm, grantedByPersonId: e.target.value })} /></Field>
+            <Field label="Expires at"><input className="recordarr-input" value={grantForm.expiresAt} onChange={(e) => setGrantForm({ ...grantForm, expiresAt: e.target.value })} /></Field>
+          </div>
+          <button type="button" className="recordarr-button" onClick={() => grantMutation.mutate()} disabled={grantMutation.isPending}>
+            {grantMutation.isPending ? 'Creating...' : 'Create access grant'}
+          </button>
+        </div>
+      </div>
+
       <div className="recordarr-grid cols-2">
         <Card title="Access policies" icon={<LockKeyhole className="h-4 w-4 text-cyan-300" />}>
           {policiesQuery.data?.map((policy) => (
@@ -1992,6 +2032,17 @@ function AccessPage({ accessToken }: { accessToken: string }) {
                 <span className="recordarr-pill text-[0.7rem]">{grant.permission}</span>
               </div>
               <p className="mt-1">{grant.recordId}</p>
+              <p className="mt-1 text-xs text-slate-400">{grant.granteeType} · {grant.status}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => revokeAccessGrant(accessToken, grant.accessGrantId, { revokedByPersonId: 'person-doc-controller', revokeReason: 'Access no longer required.' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}
+                  disabled={grant.status === 'revoked'}
+                >
+                  Revoke
+                </button>
+              </div>
             </div>
           ))}
           {!grantsQuery.data?.length && !grantsQuery.isLoading ? <EmptyState title="No access grants." /> : null}

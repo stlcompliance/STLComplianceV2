@@ -918,6 +918,33 @@ export async function listAccessGrants(accessToken: string): Promise<RecordArrAc
   return getJson<RecordArrAccessGrant[]>('/api/v1/workspace/access-grants', accessToken)
 }
 
+export async function createAccessGrant(
+  accessToken: string,
+  body: {
+    recordId: string
+    granteeType: string
+    granteeRef: string
+    permission: string
+    grantedByPersonId: string
+    expiresAt?: string | null
+  },
+): Promise<RecordArrAccessGrant> {
+  return sendJson<RecordArrAccessGrant>('/api/v1/workspace/access-grants', accessToken, 'POST', body)
+}
+
+export async function revokeAccessGrant(
+  accessToken: string,
+  accessGrantId: string,
+  body: { revokedByPersonId: string; revokeReason?: string | null },
+): Promise<RecordArrAccessGrant> {
+  return sendJson<RecordArrAccessGrant>(
+    `/api/v1/workspace/access-grants/${encodeURIComponent(accessGrantId)}/revoke`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function listExternalShares(accessToken: string): Promise<RecordArrExternalShare[]> {
   return getJson<RecordArrExternalShare[]>('/api/v1/workspace/external-shares', accessToken)
 }

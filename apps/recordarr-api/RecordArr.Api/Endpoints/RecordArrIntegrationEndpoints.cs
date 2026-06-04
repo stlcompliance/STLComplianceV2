@@ -307,6 +307,18 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName($"ListRecordArrIntegrationAccessGrants{routePrefix}");
 
+        group.MapPost("/access-grants", (WorkspaceEndpoints.CreateAccessGrantRequest request, RecordArrStore store) =>
+        {
+            var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, request.GrantedByPersonId, request.ExpiresAt);
+            return Results.Created($"{routePrefix}/access-grants/{grant.AccessGrantId}", grant);
+        }).WithName($"CreateRecordArrIntegrationAccessGrant{routePrefix}");
+
+        group.MapPost("/access-grants/{accessGrantId}/revoke", (string accessGrantId, WorkspaceEndpoints.RevokeAccessGrantRequest request, RecordArrStore store) =>
+        {
+            var grant = store.RevokeAccessGrant(accessGrantId, request.RevokedByPersonId, request.RevokeReason);
+            return Results.Ok(grant);
+        }).WithName($"RevokeRecordArrIntegrationAccessGrant{routePrefix}");
+
         group.MapGet("/external-shares", (RecordArrStore store) => Results.Ok(store.GetExternalShares()))
             .WithName($"ListRecordArrIntegrationExternalShares{routePrefix}");
 

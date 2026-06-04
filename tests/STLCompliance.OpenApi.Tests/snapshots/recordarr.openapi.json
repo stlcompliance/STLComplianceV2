@@ -32,6 +32,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessGrant/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-grants/{accessGrantId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationAccessGrant/api/integrations",
+        "parameters": [
+          {
+            "name": "accessGrantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/integrations/access-logs": {
@@ -1459,6 +1513,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessGrant/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-grants/{accessGrantId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationAccessGrant/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "accessGrantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/integrations/access-logs": {
@@ -2873,6 +2981,60 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrAccessGrant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-grants/{accessGrantId}/revoke": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RevokeRecordArrAccessGrant",
+        "parameters": [
+          {
+            "name": "accessGrantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/workspace/access-policies": {
@@ -4148,6 +4310,41 @@
           }
         }
       },
+      "CreateAccessGrantRequest": {
+        "required": [
+          "recordId",
+          "granteeType",
+          "granteeRef",
+          "permission",
+          "grantedByPersonId",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "granteeType": {
+            "type": "string"
+          },
+          "granteeRef": {
+            "type": "string"
+          },
+          "permission": {
+            "type": "string"
+          },
+          "grantedByPersonId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateControlledDocumentRequest": {
         "required": [
           "title",
@@ -4694,6 +4891,24 @@
             "type": "string"
           },
           "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RevokeAccessGrantRequest": {
+        "required": [
+          "revokedByPersonId",
+          "revokeReason"
+        ],
+        "type": "object",
+        "properties": {
+          "revokedByPersonId": {
+            "type": "string"
+          },
+          "revokeReason": {
             "type": [
               "null",
               "string"

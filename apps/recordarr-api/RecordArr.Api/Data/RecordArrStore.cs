@@ -1176,6 +1176,49 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrAccessGrantResponse CreateAccessGrant(string recordId, string granteeType, string granteeRef, string permission, string grantedByPersonId, DateTimeOffset? expiresAt)
+    {
+        lock (_gate)
+        {
+            var grant = new RecordArrAccessGrantResponse(
+                $"grant-{Guid.NewGuid():N}"[..12],
+                recordId,
+                granteeType,
+                granteeRef,
+                permission,
+                "active",
+                grantedByPersonId,
+                DateTimeOffset.UtcNow,
+                expiresAt,
+                null,
+                null);
+            _accessGrants.Add(grant);
+            return grant;
+        }
+    }
+
+    public RecordArrAccessGrantResponse RevokeAccessGrant(string accessGrantId, string revokedByPersonId, string? revokeReason)
+    {
+        lock (_gate)
+        {
+            var index = _accessGrants.FindIndex(grant => string.Equals(grant.AccessGrantId, accessGrantId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Access grant {accessGrantId} not found.");
+            }
+
+            var current = _accessGrants[index];
+            var updated = current with
+            {
+                Status = "revoked",
+                RevokedAt = DateTimeOffset.UtcNow,
+                RevokeReason = revokeReason ?? $"Revoked by {revokedByPersonId}"
+            };
+            _accessGrants[index] = updated;
+            return updated;
+        }
+    }
+
     public IReadOnlyList<RecordArrExternalShareResponse> GetExternalShares()
     {
         lock (_gate)
