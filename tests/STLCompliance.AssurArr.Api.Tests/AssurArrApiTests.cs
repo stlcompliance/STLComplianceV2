@@ -27,9 +27,11 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var dashboard = await response.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(dashboard);
         Assert.Contains(dashboard!.Cards, card => card.Key == "nonconformances" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "critical-nonconformances" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "holds" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "scars" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "capa-effectiveness");
+        Assert.Contains(dashboard.Cards, card => card.Key == "overdue-capas" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "recently-released-holds");
     }
 

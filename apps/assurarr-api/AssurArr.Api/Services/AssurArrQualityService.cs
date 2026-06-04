@@ -329,6 +329,33 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             RecurrenceFlag = false,
         });
 
+        db.Nonconformances.Add(new AssurArrNonconformance
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "NCR-000002",
+            Title = "Critical contamination risk in quarantine lot",
+            Description = "A critical contamination concern was detected during receiving review and needs escalated containment and disposition.",
+            Severity = "critical",
+            Status = "open",
+            SourceProduct = "loadarr",
+            SourceObjectRef = "RECEIPT-RR-24019",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-992"],
+            OwnerPersonId = null,
+            RecordRefs = ["recordarr:doc:inspection-photo-2"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            DueAt = now.AddDays(2),
+            NonconformanceType = "receiving",
+            Category = "contamination",
+            CustomerImpact = "Potentially unsafe stock could be released if not contained",
+            SupplierImpact = "Supplier and inbound process review required",
+            SafetyImpact = "Possible contamination exposure",
+            ComplianceImpact = "Immediate containment and verification required",
+            RecurrenceFlag = true,
+            RepeatOfNonconformanceRef = "NCR-000001",
+        });
+
         db.QualityHolds.Add(new AssurArrQualityHold
         {
             Id = Guid.NewGuid(),
@@ -375,6 +402,29 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             RelatedNonconformanceRefs = ["NCR-000001"],
         };
         db.Capas.Add(capa);
+
+        db.Capas.Add(new AssurArrCapa
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "CAPA-000002",
+            Title = "Escalate critical contamination containment follow-up",
+            Description = "Capture the corrective and preventive actions needed to verify the critical contamination risk is resolved.",
+            Severity = "critical",
+            Status = "implementation",
+            SourceProduct = "assurarr",
+            SourceObjectRef = "NCR-000002",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-992"],
+            RecordRefs = ["recordarr:doc:capa-plan-2"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            CapaType = "corrective_and_preventive",
+            SourceType = "nonconformance",
+            SponsorPersonId = null,
+            RootCauseSummary = "A quarantine escalation path was not triggered soon enough for the second lot.",
+            DueAt = now.AddDays(-2),
+            RelatedNonconformanceRefs = ["NCR-000002"],
+        });
 
         var seededAction = new AssurArrCapaAction
         {
@@ -875,8 +925,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
     {
         var now = DateTimeOffset.UtcNow;
         var openNcCount = await db.Nonconformances.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var criticalNcCount = await db.Nonconformances.CountAsync(x => x.Severity == "critical" && x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var activeHoldCount = await db.QualityHolds.CountAsync(x => x.Status == "active" || x.Status == "release_pending", cancellationToken);
         var openCapaCount = await db.Capas.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var overdueCapaCount = await db.Capas.CountAsync(x => x.DueAt != null && x.DueAt < now && x.Status != "closed" && x.Status != "canceled" && x.Status != "effective", cancellationToken);
         var openAuditCount = await db.QualityAudits.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openFindingCount = await db.AuditFindings.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var pendingReviewCount = await db.QualityReviews.CountAsync(x => x.Status == "pending" || x.Status == "in_review", cancellationToken);
@@ -895,8 +947,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var cards = new[]
         {
             new AssurArrDashboardCardResponse("nonconformances", "Open nonconformances", "Cases requiring investigation, containment, or closure.", openNcCount, "danger"),
+            new AssurArrDashboardCardResponse("critical-nonconformances", "Critical nonconformances", "High-severity cases that need immediate attention.", criticalNcCount, "danger"),
             new AssurArrDashboardCardResponse("holds", "Active holds", "Business decisions that are currently blocking target objects.", activeHoldCount, "warning"),
             new AssurArrDashboardCardResponse("capa", "Open CAPA", "Corrective and preventive actions in progress.", openCapaCount, "accent"),
+            new AssurArrDashboardCardResponse("overdue-capas", "Overdue CAPAs", "CAPA records that have passed their due date without completion.", overdueCapaCount, "warning"),
             new AssurArrDashboardCardResponse("audits", "Open audits", "Quality reviews and audits awaiting closeout.", openAuditCount, "info"),
             new AssurArrDashboardCardResponse("findings", "Open findings", "Issues or opportunities captured during audits.", openFindingCount, "soft"),
             new AssurArrDashboardCardResponse("reviews", "Quality reviews", "Evidence reviews and decision gates in progress.", pendingReviewCount, "info"),
