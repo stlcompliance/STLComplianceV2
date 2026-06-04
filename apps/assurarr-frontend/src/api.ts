@@ -49,6 +49,7 @@ export type Nonconformance = ListItem & {
   complianceImpact: string | null
   recurrenceFlag: boolean
   repeatOfNonconformanceRef: string | null
+  blockerRefs: string[]
   dueAt: string | null
 }
 
@@ -429,6 +430,7 @@ function splitLines(value?: string): string[] {
 export const assurarrApi = {
   getDashboard: () => getJson<DashboardResponse>('/api/v1/dashboard'),
   listNonconformances: () => getJson<Nonconformance[]>('/api/v1/nonconformances'),
+  getNonconformance: (id: string) => getJson<Nonconformance>(`/api/v1/nonconformances/${id}`),
   createNonconformance: (body: CreateBase & { nonconformanceType: string; category: string; recurrenceFlag?: boolean; dueAt?: string }) =>
     sendJson<Nonconformance>('/api/v1/nonconformances', 'POST', {
       ...body,

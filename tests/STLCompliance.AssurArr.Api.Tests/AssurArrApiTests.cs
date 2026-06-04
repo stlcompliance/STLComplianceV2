@@ -62,6 +62,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(title, created!.Title);
 
+        var detailResponse = await _client.GetAsync($"/api/v1/nonconformances/{created.Id}");
+        Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
+        var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(detail);
+        Assert.Equal(created.Id, detail!.Id);
+        Assert.Equal(title, detail.Title);
+
         var listResponse = await _client.GetAsync("/api/v1/nonconformances");
         listResponse.EnsureSuccessStatusCode();
 

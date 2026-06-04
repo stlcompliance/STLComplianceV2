@@ -18,7 +18,7 @@ import {
   History,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { ProductAppShell, type ProductNavItem } from '@stl/shared-ui'
 import {
   assurarrApi,
@@ -343,11 +343,13 @@ function EntityTable<T extends { id: string; number: string; title: string; stat
     emptyLabel,
     onStatusChange,
     statusChoices,
+    detailBasePath,
   }: {
     items: T[]
     emptyLabel: string
     onStatusChange?: (id: string, status: string) => Promise<unknown>
     statusChoices?: readonly string[]
+    detailBasePath?: string
   },
 ) {
   const [selectedStatus, setSelectedStatus] = useState<Record<string, string>>({})
@@ -386,8 +388,22 @@ function EntityTable<T extends { id: string; number: string; title: string; stat
           {items.map((item) => (
             <tr key={item.id}>
               <td>
-                <div className="font-semibold text-slate-50">{item.number}</div>
-                <div className="text-sm text-slate-300">{item.title}</div>
+                {detailBasePath ? (
+                  <Link to={`${detailBasePath}/${item.id}`} className="font-semibold text-cyan-300 hover:text-cyan-200">
+                    {item.number}
+                  </Link>
+                ) : (
+                  <div className="font-semibold text-slate-50">{item.number}</div>
+                )}
+                <div className="text-sm text-slate-300">
+                  {detailBasePath ? (
+                    <Link to={`${detailBasePath}/${item.id}`} className="hover:text-slate-50">
+                      {item.title}
+                    </Link>
+                  ) : (
+                    item.title
+                  )}
+                </div>
               </td>
               <td>{item.status}</td>
               <td>{item.severity}</td>
@@ -494,10 +510,116 @@ function NonconformancePage() {
           emptyLabel="No nonconformances yet."
           onStatusChange={(id, status) => assurarrApi.updateNonconformanceStatus(id, status)}
           statusChoices={statusOptions.nonconformance}
+          detailBasePath="/nonconformances"
         />
       ) : (
         <LoadingCard label="Loading nonconformances" />
       )}
+    </div>
+  )
+}
+
+function NonconformanceDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'nonconformance', id],
+    queryFn: () => assurarrApi.getNonconformance(id),
+    enabled: Boolean(id),
+  })
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const containmentActions = useRecords(['assurarr', 'containment'], assurarrApi.listContainmentActions)
+  const dispositions = useRecords(['assurarr', 'dispositions'], assurarrApi.listDispositions)
+  const findings = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
+  const dashboard = useDashboard()
+
+  const nonconformance = query.data
+  if (!nonconformance) {
+    return <LoadingCard label="Loading nonconformance detail" />
+  }
+  const relatedHolds = holds.data?.filter((hold) => hold.sourceObjectRef === nonconformance?.number || hold.sourceObjectRef === nonconformance?.sourceObjectRef || hold.sourceProduct === nonconformance?.sourceProduct || nonconformance?.number === hold.sourceObjectRef)
+  const relatedCapas = capas.data?.filter((capa) => capa.relatedNonconformanceRefs.includes(nonconformance?.number ?? '') || capa.sourceObjectRef === nonconformance?.number || capa.sourceObjectRef === nonconformance?.sourceObjectRef)
+  const relatedContainments = containmentActions.data?.filter((action) => action.nonconformanceRef === nonconformance?.number || action.nonconformanceRef === nonconformance?.sourceObjectRef)
+  const relatedDispositions = dispositions.data?.filter((item) => item.nonconformanceRef === nonconformance?.number || item.nonconformanceRef === nonconformance?.sourceObjectRef)
+  const relatedFindings = findings.data?.filter((finding) => finding.nonconformanceRef === nonconformance?.number || finding.nonconformanceRef === nonconformance?.sourceObjectRef)
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'nonconformance' && event.subjectId === nonconformance?.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={nonconformance ? `${nonconformance.number} · ${nonconformance.title}` : 'Nonconformance detail'}
+        description="Source context, holds, containment, disposition, CAPA, evidence, and timeline for the quality case."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{nonconformance.status}</span>
+                <span className="assurarr-pill">{nonconformance.severity}</span>
+                <span className="assurarr-pill">{nonconformance.nonconformanceType}</span>
+                <span className="assurarr-pill">{nonconformance.category}</span>
+              </div>
+              <p className="text-sm text-slate-300">{nonconformance.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {nonconformance.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {nonconformance.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {nonconformance.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Due:</span> {nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Impacts</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Customer:</span> {nonconformance.customerImpact ?? 'none'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {nonconformance.supplierImpact ?? 'none'}</div>
+                <div><span className="text-slate-500">Safety:</span> {nonconformance.safetyImpact ?? 'none'}</div>
+                <div><span className="text-slate-500">Compliance:</span> {nonconformance.complianceImpact ?? 'none'}</div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-slate-200">
+                {nonconformance.affectedObjectRefs.length > 0 ? nonconformance.affectedObjectRefs.map((ref) => <span key={ref} className="assurarr-pill">{ref}</span>) : <span className="assurarr-pill">No affected objects</span>}
+              </div>
+              <div className="text-sm text-slate-300">
+                <div><span className="text-slate-500">Record refs:</span> {nonconformance.recordRefs.length ? nonconformance.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Blockers:</span> {nonconformance.blockerRefs.length ? nonconformance.blockerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Recurrence:</span> {nonconformance.recurrenceFlag ? 'Yes' : 'No'}</div>
+                <div><span className="text-slate-500">Repeat of:</span> {nonconformance.repeatOfNonconformanceRef ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Related holds" items={relatedHolds?.map((hold) => `${hold.number} · ${hold.title} · ${hold.status}`) ?? []} emptyLabel="No holds linked to this nonconformance." />
+        <SectionCard title="Related CAPA" items={relatedCapas?.map((capa) => `${capa.number} · ${capa.title} · ${capa.status}`) ?? []} emptyLabel="No CAPA linked to this nonconformance." />
+        <SectionCard title="Containment actions" items={relatedContainments?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No containment actions linked to this nonconformance." />
+        <SectionCard title="Dispositions" items={relatedDispositions?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No dispositions linked to this nonconformance." />
+        <SectionCard title="Findings" items={relatedFindings?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No findings linked to this nonconformance." />
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
+      </div>
+    </div>
+  )
+}
+
+function SectionCard({ title, items, emptyLabel }: { title: string; items: string[]; emptyLabel: string }) {
+  return (
+    <div className="assurarr-card">
+      <div className="assurarr-card-inner space-y-3">
+        <p className="assurarr-label">{title}</p>
+        {items.length > 0 ? (
+          <ul className="space-y-2 text-sm text-slate-300">
+            {items.map((item) => (
+              <li key={item} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2">
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState title={emptyLabel} />
+        )}
+      </div>
     </div>
   )
 }
@@ -2715,6 +2837,7 @@ export function App() {
       <Routes>
         <Route index element={<DashboardPage />} />
         <Route path="/nonconformances" element={<NonconformancePage />} />
+        <Route path="/nonconformances/:id" element={<NonconformanceDetailPage />} />
         <Route path="/holds" element={<HoldPage />} />
         <Route path="/capa" element={<CapaPage />} />
         <Route path="/audits" element={<AuditPage />} />
