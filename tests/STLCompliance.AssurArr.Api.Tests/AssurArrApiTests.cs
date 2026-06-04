@@ -908,6 +908,36 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(supplierIssue.Id, supplierDetail!.Id);
         Assert.Equal(supplierIssue.Number, supplierDetail.Number);
 
+        var supplierNotifiedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("supplier_notified", "Supplier notified."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierNotifiedResponse.StatusCode);
+
+        var supplierResponsePending = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("response_pending", "Supplier response requested."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierResponsePending.StatusCode);
+
+        var supplierResolvedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("resolved", "Supplier issue resolved."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierResolvedResponse.StatusCode);
+
+        var supplierClosedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Supplier issue closed."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierClosedResponse.StatusCode);
+
+        var supplierDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        supplierDashboardResponse.EnsureSuccessStatusCode();
+        var supplierDashboard = await supplierDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(supplierDashboard);
+        Assert.Contains(supplierDashboard!.RecentEvents, entry => entry.EventType == "assurarr.supplier_quality_issue.closed");
+
         var complaintTitle = $"Test complaint case {Guid.NewGuid():N}";
         var complaintResponse = await _client.PostAsJsonAsync(
             "/api/v1/integrations/customer-complaint-quality-cases",
@@ -946,6 +976,31 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(complaintDetail);
         Assert.Equal(complaint.Id, complaintDetail!.Id);
         Assert.Equal(complaint.Number, complaintDetail.Number);
+
+        var complaintTriageResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}/status",
+            new UpdateAssurArrStatusRequest("triage", "Complaint triaged."));
+
+        Assert.Equal(HttpStatusCode.OK, complaintTriageResponse.StatusCode);
+
+        var complaintResponsePending = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}/status",
+            new UpdateAssurArrStatusRequest("response_pending", "Customer response prepared."));
+
+        Assert.Equal(HttpStatusCode.OK, complaintResponsePending.StatusCode);
+
+        var complaintClosedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Complaint closed after response."));
+
+        Assert.Equal(HttpStatusCode.OK, complaintClosedResponse.StatusCode);
+
+        var complaintDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        complaintDashboardResponse.EnsureSuccessStatusCode();
+        var complaintDashboard = await complaintDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(complaintDashboard);
+        Assert.Contains(complaintDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.response_sent");
+        Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.closed");
 
         var supplierList = await _client.GetAsync("/api/v1/integrations/supplier-quality-issues");
         supplierList.EnsureSuccessStatusCode();

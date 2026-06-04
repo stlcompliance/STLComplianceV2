@@ -2406,6 +2406,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
+            {
+                await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.closed", entity.Title, cancellationToken);
+            }
         }
 
         await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.status_changed", entity.Status, cancellationToken);
@@ -2589,11 +2593,19 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(entity.Status, request.Status, CustomerComplaintTransitions, "customer complaint quality case");
         entity.Status = Normalize(request.Status, entity.Status);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "response_pending", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.response_sent", entity.Title, cancellationToken);
+        }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
             || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
+            {
+                await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.closed", entity.Title, cancellationToken);
+            }
         }
 
         await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.status_changed", entity.Status, cancellationToken);
