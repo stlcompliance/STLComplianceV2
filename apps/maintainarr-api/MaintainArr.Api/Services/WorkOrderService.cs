@@ -306,6 +306,20 @@ public sealed class WorkOrderService(
                 409);
         }
 
+        var program = await db.PmProgramSchedules
+            .AsNoTracking()
+            .Where(x => x.PmScheduleId == pmScheduleId && x.PmProgram.Status == PmProgramStatuses.Active)
+            .Select(x => x.PmProgram)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (program is not null && !program.AutoGenerateWorkOrder)
+        {
+            throw new StlApiException(
+                "work_order.pm_program_work_order_generation_disabled",
+                "Work order generation is disabled for the linked PM program.",
+                409);
+        }
+
         var existing = await db.WorkOrders
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -328,6 +342,7 @@ public sealed class WorkOrderService(
             TenantId = schedule.TenantId,
             AssetId = schedule.AssetId,
             PmScheduleId = pmScheduleId,
+            TemplateRef = program?.DefaultWorkOrderTemplateRef,
             WorkOrderNumber = await GenerateWorkOrderNumberAsync(schedule.TenantId, cancellationToken),
             Title = PmWorkOrderGenerationRules.BuildTitle(schedule.Name),
             Description = PmWorkOrderGenerationRules.BuildDescription(
@@ -1372,6 +1387,7 @@ public sealed class WorkOrderService(
                     asset?.Name ?? string.Empty,
                     workOrder.DefectId,
                     workOrder.PmScheduleId,
+                    workOrder.TemplateRef,
                     workOrder.Title,
                     workOrder.Priority,
                     workOrder.Status,
@@ -1451,6 +1467,7 @@ public sealed class WorkOrderService(
             defectTitle,
             summary.PmScheduleId,
             pmScheduleName,
+            workOrder.TemplateRef,
             workOrder.Title,
             workOrder.Description,
             workOrder.Priority,
@@ -1526,6 +1543,7 @@ public sealed class WorkOrderService(
             workOrder.AssetId,
             workOrder.DefectId,
             workOrder.PmScheduleId,
+            workOrder.TemplateRef,
             workOrder.Title,
             workOrder.Description,
             workOrder.Priority,

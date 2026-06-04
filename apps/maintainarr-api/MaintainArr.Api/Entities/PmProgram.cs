@@ -22,6 +22,10 @@ public sealed class PmProgram : IHasTenant
 
     public string Status { get; set; } = PmProgramStatuses.Draft;
 
+    public bool AutoGenerateWorkOrder { get; set; } = true;
+
+    public string? DefaultWorkOrderTemplateRef { get; set; }
+
     public bool AutoGenerateInspection { get; set; }
 
     public Guid? InspectionTemplateId { get; set; }

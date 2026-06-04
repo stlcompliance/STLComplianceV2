@@ -45,6 +45,8 @@ public sealed class PmProgramService(
                 program.AssetId,
                 asset != null ? asset.AssetTag : null,
                 program.Status,
+                program.AutoGenerateWorkOrder,
+                program.DefaultWorkOrderTemplateRef,
                 program.AutoGenerateInspection,
                 program.InspectionTemplateId,
                 inspectionTemplate != null ? inspectionTemplate.TemplateKey : null,
@@ -80,6 +82,7 @@ public sealed class PmProgramService(
             request.AssetTypeId,
             request.AssetId,
             cancellationToken);
+        var defaultWorkOrderTemplateRef = NormalizeTemplateRef(request.DefaultWorkOrderTemplateRef);
         var inspectionTemplate = await ResolveInspectionTemplateAsync(
             tenantId,
             scopeType,
@@ -121,6 +124,8 @@ public sealed class PmProgramService(
             ScopeType = scopeType,
             AssetTypeId = assetTypeId,
             AssetId = assetId,
+            AutoGenerateWorkOrder = request.AutoGenerateWorkOrder,
+            DefaultWorkOrderTemplateRef = defaultWorkOrderTemplateRef,
             AutoGenerateInspection = request.AutoGenerateInspection,
             InspectionTemplateId = inspectionTemplate?.Id,
             Status = PmProgramStatuses.Draft,
@@ -164,6 +169,7 @@ public sealed class PmProgramService(
     {
         var program = await LoadProgramAsync(tenantId, pmProgramId, cancellationToken, tracking: true);
         var status = NormalizeStatus(request.Status);
+        var defaultWorkOrderTemplateRef = NormalizeTemplateRef(request.DefaultWorkOrderTemplateRef);
         var inspectionTemplate = await ResolveInspectionTemplateAsync(
             tenantId,
             program.ScopeType,
@@ -184,6 +190,8 @@ public sealed class PmProgramService(
 
         program.Name = NormalizeName(request.Name);
         program.Description = NormalizeDescription(request.Description);
+        program.AutoGenerateWorkOrder = request.AutoGenerateWorkOrder;
+        program.DefaultWorkOrderTemplateRef = defaultWorkOrderTemplateRef;
         program.AutoGenerateInspection = request.AutoGenerateInspection;
         program.InspectionTemplateId = inspectionTemplate?.Id;
         program.Status = status;
@@ -524,6 +532,8 @@ public sealed class PmProgramService(
             program.Asset?.AssetTag,
             program.Asset?.Name,
             program.Status,
+            program.AutoGenerateWorkOrder,
+            program.DefaultWorkOrderTemplateRef,
             program.AutoGenerateInspection,
             program.InspectionTemplateId,
             program.InspectionTemplate?.TemplateKey,
@@ -579,6 +589,25 @@ public sealed class PmProgramService(
             throw new StlApiException(
                 "pm_program.invalid_description",
                 "Program description must be 512 characters or fewer.",
+                400);
+        }
+
+        return trimmed;
+    }
+
+    private static string? NormalizeTemplateRef(string? templateRef)
+    {
+        if (string.IsNullOrWhiteSpace(templateRef))
+        {
+            return null;
+        }
+
+        var trimmed = templateRef.Trim();
+        if (trimmed.Length > 128)
+        {
+            throw new StlApiException(
+                "pm_program.invalid_template_ref",
+                "Template reference must be 128 characters or fewer.",
                 400);
         }
 

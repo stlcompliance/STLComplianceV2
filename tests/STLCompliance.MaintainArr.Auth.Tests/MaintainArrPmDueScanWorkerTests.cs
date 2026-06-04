@@ -192,6 +192,9 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.Equal(inspectionTemplate, inspectionRun.InspectionTemplateId);
         Assert.Equal(InspectionRunStatuses.InProgress, inspectionRun.Status);
 
+        var workOrder = await db.WorkOrders.SingleAsync(x => x.PmScheduleId == schedule.Id);
+        Assert.Equal("pm-inspection-work-order-template", workOrder.TemplateRef);
+
         var outbox = await db.MaintenancePlatformOutboxEvents
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
                 && x.RelatedEntityId == schedule.Id)
@@ -666,8 +669,10 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
             asset.AssetTypeId,
             null,
             [schedule.Id],
-            true,
-            template.InspectionTemplateId));
+            AutoGenerateWorkOrder: true,
+            DefaultWorkOrderTemplateRef: "pm-inspection-work-order-template",
+            AutoGenerateInspection: true,
+            InspectionTemplateId: template.InspectionTemplateId));
         var createProgramResponse = await _maintainarrClient.SendAsync(createProgramRequest);
         createProgramResponse.EnsureSuccessStatusCode();
         var program = (await createProgramResponse.Content.ReadFromJsonAsync<PmProgramDetailResponse>())!;

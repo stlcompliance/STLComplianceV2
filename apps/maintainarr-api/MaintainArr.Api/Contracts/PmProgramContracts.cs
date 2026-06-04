@@ -8,6 +8,8 @@ public sealed record CreatePmProgramRequest(
     Guid? AssetTypeId,
     Guid? AssetId,
     IReadOnlyList<Guid>? PmScheduleIds = null,
+    bool AutoGenerateWorkOrder = true,
+    string? DefaultWorkOrderTemplateRef = null,
     bool AutoGenerateInspection = false,
     Guid? InspectionTemplateId = null);
 
@@ -15,6 +17,8 @@ public sealed record UpdatePmProgramRequest(
     string Name,
     string Description,
     string Status,
+    bool AutoGenerateWorkOrder = true,
+    string? DefaultWorkOrderTemplateRef = null,
     bool AutoGenerateInspection = false,
     Guid? InspectionTemplateId = null);
 
@@ -32,6 +36,8 @@ public sealed record PmProgramSummaryResponse(
     Guid? AssetId,
     string? AssetTag,
     string Status,
+    bool AutoGenerateWorkOrder,
+    string? DefaultWorkOrderTemplateRef,
     bool AutoGenerateInspection,
     Guid? InspectionTemplateId,
     string? InspectionTemplateKey,
@@ -63,6 +69,8 @@ public sealed record PmProgramDetailResponse(
     string? AssetTag,
     string? AssetName,
     string Status,
+    bool AutoGenerateWorkOrder,
+    string? DefaultWorkOrderTemplateRef,
     bool AutoGenerateInspection,
     Guid? InspectionTemplateId,
     string? InspectionTemplateKey,

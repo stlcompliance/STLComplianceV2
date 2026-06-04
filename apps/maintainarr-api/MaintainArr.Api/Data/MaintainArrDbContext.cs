@@ -225,6 +225,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.AutoGenerateInspection).HasDefaultValue(false);
+            entity.Property(x => x.AutoGenerateWorkOrder).HasDefaultValue(true);
+            entity.Property(x => x.DefaultWorkOrderTemplateRef).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ProgramKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
@@ -474,6 +476,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.WorkOrderNumber).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.Property(x => x.TemplateRef).HasMaxLength(128);
             entity.Property(x => x.Priority).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Source).HasMaxLength(32).IsRequired();

@@ -20,6 +20,8 @@ public sealed class WorkOrder : IHasTenant
 
     public string Description { get; set; } = string.Empty;
 
+    public string? TemplateRef { get; set; }
+
     public string Priority { get; set; } = WorkOrderPriorities.Medium;
 
     public string Status { get; set; } = WorkOrderStatuses.Open;
