@@ -88,6 +88,38 @@ describe('WorkOrderProfile', () => {
           startedAt: null,
           completedAt: null,
           cancelledAt: null,
+          closeout: {
+            closeoutId: 'closeout-1',
+            workOrderId: 'wo-1',
+            completionSummary: 'Completed repair and returned to service.',
+            rootCause: 'wear',
+            correctiveAction: 'Replaced brake pads',
+            preventiveActionRecommendation: 'Inspect in next PM',
+            assetReturnedToService: true,
+            returnToServiceAt: '2026-05-29T18:00:00Z',
+            returnToServiceByPersonId: 'person-1',
+            postRepairInspectionRequired: true,
+            postRepairInspectionRef: 'inspection-1',
+            supervisorReviewRequired: true,
+            supervisorReviewedByPersonId: 'person-supervisor-1',
+            supervisorReviewedAt: '2026-05-29T18:15:00Z',
+            complianceReviewRequired: false,
+            complianceReviewedByPersonId: null,
+            complianceReviewedAt: null,
+            qualityReviewRequired: false,
+            qualityReviewedByPersonId: null,
+            qualityReviewedAt: null,
+            evidenceAccepted: true,
+            unresolvedDefectRefs: 'defect-a; defect-b',
+            followUpWorkOrderRefs: 'wo-200, wo-201',
+            customerImpactSummary: 'Minor production slowdown',
+            downtimeSummary: '2.5 hours downtime',
+            finalAssetReadinessStatus: 'ready',
+            finalStatus: 'closed',
+            evidenceRecordRefs: ['evidence-1'],
+            createdAt: '2026-05-29T18:20:00Z',
+            createdByPersonId: 'person-1',
+          },
         },
       },
       workOrderTasksQuery: {
@@ -109,7 +141,19 @@ describe('WorkOrderProfile', () => {
         data: [],
       },
       workOrderEvidenceQuery: {
-        data: [],
+        data: [
+          {
+            evidenceId: 'evidence-1',
+            workOrderId: 'wo-1',
+            evidenceTypeKey: 'after_photo',
+            fileName: 'after.jpg',
+            contentType: 'image/jpeg',
+            sizeBytes: 1024,
+            notes: null,
+            uploadedByUserId: 'user-1',
+            createdAt: '2026-05-29T17:45:00Z',
+          },
+        ],
       },
       canExecuteInspections: true,
       session: {
@@ -216,7 +260,10 @@ describe('WorkOrderProfile', () => {
 
     expect(screen.getByText('Supply readiness')).toBeInTheDocument()
     expect(screen.getByText('Labor and evidence')).toBeInTheDocument()
+    expect(screen.getByText('Closeout')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-supply-readiness-panel')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-supply-readiness-overall')).toHaveTextContent('Supply blocked')
+    expect(screen.getAllByText('after.jpg')).toHaveLength(2)
+    expect(screen.getByText('Completed repair and returned to service.')).toBeInTheDocument()
   })
 })

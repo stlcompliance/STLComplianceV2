@@ -51,6 +51,19 @@ function statusTone(value: string | null | undefined): DetailTone {
   return 'neutral'
 }
 
+function splitReferenceList(value: string | null | undefined): string[] {
+  if (!value) return []
+  return value
+    .split(/[\n,;]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function formatEvidenceLabel(evidenceId: string, evidence: Array<{ evidenceId: string; fileName: string; evidenceTypeKey: string }>): string {
+  const item = evidence.find((entry) => entry.evidenceId === evidenceId)
+  return item ? `${item.fileName} (${humanize(item.evidenceTypeKey)})` : evidenceId.slice(0, 8)
+}
+
 function actionLink(to: string, label: string, icon: ReactNode, primary = false) {
   return (
     <Link
@@ -367,6 +380,10 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
   const laborHours = labor.reduce((total, entry) => total + entry.hoursWorked, 0)
   const blocked = blockers.length > 0 || ['cancelled'].includes(order.status)
   const commentReady = s.woCommentBody.trim().length > 0
+  const closeout = detail?.closeout ?? null
+  const closeoutEvidenceLabels = closeout?.evidenceRecordRefs?.map((id) => formatEvidenceLabel(id, evidence)) ?? []
+  const unresolvedDefectRefs = splitReferenceList(closeout?.unresolvedDefectRefs)
+  const followUpWorkOrderRefs = splitReferenceList(closeout?.followUpWorkOrderRefs)
 
   return (
     <ProfileDetailsLayout
@@ -530,6 +547,70 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
               isUploadingEvidence={s.uploadWorkOrderEvidenceMutation.isPending}
             />
           </section>
+          {closeout ? (
+            <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+              <h3 className="text-lg font-bold text-white">Closeout</h3>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:col-span-2">
+                  <p className="text-sm text-slate-200">{closeout.completionSummary}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Final status</p>
+                  <p className="mt-1 text-white">{humanize(closeout.finalStatus)}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Evidence accepted</p>
+                  <p className="mt-1 text-white">{closeout.evidenceAccepted ? 'Yes' : 'No'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Returned to service</p>
+                  <p className="mt-1 text-white">{closeout.assetReturnedToService ? formatDate(closeout.returnToServiceAt) : 'No'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Readiness</p>
+                  <p className="mt-1 text-white">{closeout.finalAssetReadinessStatus ?? '—'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Returned by</p>
+                  <p className="mt-1 text-white">{closeout.returnToServiceByPersonId ?? '—'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:col-span-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Reviews</p>
+                  <p className="mt-1 text-white">
+                    Supervisor {closeout.supervisorReviewRequired ? `${closeout.supervisorReviewedByPersonId ?? 'required'}${closeout.supervisorReviewedAt ? ` on ${formatDate(closeout.supervisorReviewedAt)}` : ''}` : 'not required'}
+                  </p>
+                  <p className="mt-1 text-white">
+                    Compliance {closeout.complianceReviewRequired ? `${closeout.complianceReviewedByPersonId ?? 'required'}${closeout.complianceReviewedAt ? ` on ${formatDate(closeout.complianceReviewedAt)}` : ''}` : 'not required'}
+                  </p>
+                  <p className="mt-1 text-white">
+                    Quality {closeout.qualityReviewRequired ? `${closeout.qualityReviewedByPersonId ?? 'required'}${closeout.qualityReviewedAt ? ` on ${formatDate(closeout.qualityReviewedAt)}` : ''}` : 'not required'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:col-span-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Evidence</p>
+                  {closeoutEvidenceLabels.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {closeoutEvidenceLabels.map((label, index) => (
+                        <span key={`${closeout.closeoutId}-evidence-${index}`} className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200">
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-white">No accepted evidence attached.</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Unresolved defects</p>
+                  <p className="mt-1 text-white">{unresolvedDefectRefs.length > 0 ? unresolvedDefectRefs.join(', ') : 'None'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Follow-up work orders</p>
+                  <p className="mt-1 text-white">{followUpWorkOrderRefs.length > 0 ? followUpWorkOrderRefs.join(', ') : 'None'}</p>
+                </div>
+              </div>
+            </section>
+          ) : null}
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <h3 className="text-lg font-bold text-white">Supply readiness</h3>
             <WorkOrderSupplyReadinessPanel
