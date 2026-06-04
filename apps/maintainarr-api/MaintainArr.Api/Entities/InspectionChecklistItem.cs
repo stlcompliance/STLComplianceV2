@@ -36,7 +36,7 @@ public sealed class InspectionChecklistItem : IHasTenant
 
     public string ItemType { get; set; } = InspectionChecklistItemTypes.PassFail;
 
-
+    public string ControlledOptionsJson { get; set; } = "[]";
 
     public bool IsRequired { get; set; } = true;
 

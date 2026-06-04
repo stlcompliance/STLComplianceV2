@@ -51,6 +51,8 @@ public sealed class InspectionRunAnswer : IHasTenant
 
     public string? TextValue { get; set; }
 
+    public string SelectedOptionsJson { get; set; } = "[]";
+
     public DateTimeOffset AnsweredAt { get; set; }
 
     public Guid AnsweredByUserId { get; set; }

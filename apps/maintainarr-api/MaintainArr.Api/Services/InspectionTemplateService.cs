@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Microsoft.EntityFrameworkCore;
 
 using MaintainArr.Api.Contracts;
@@ -44,9 +46,15 @@ public sealed class InspectionTemplateService(
 
         InspectionChecklistItemTypes.PassFail,
 
+        InspectionChecklistItemTypes.YesNo,
+
         InspectionChecklistItemTypes.Numeric,
 
-        InspectionChecklistItemTypes.Text
+        InspectionChecklistItemTypes.Text,
+
+        InspectionChecklistItemTypes.Select,
+
+        InspectionChecklistItemTypes.MultiSelect
 
     };
 
@@ -928,6 +936,8 @@ public sealed class InspectionTemplateService(
 
             ItemType = NormalizeItemType(request.ItemType),
 
+            ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions)),
+
             IsRequired = request.IsRequired,
 
             SortOrder = NormalizeSortOrder(request.SortOrder),
@@ -1011,6 +1021,8 @@ public sealed class InspectionTemplateService(
         entity.Prompt = NormalizePrompt(request.Prompt);
 
         entity.ItemType = NormalizeItemType(request.ItemType);
+
+        entity.ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions));
 
         entity.IsRequired = request.IsRequired;
 
@@ -1430,6 +1442,8 @@ public sealed class InspectionTemplateService(
 
             entity.ItemType,
 
+            DeserializeStringList(entity.ControlledOptionsJson),
+
             entity.IsRequired,
 
             entity.SortOrder,
@@ -1628,7 +1642,7 @@ public sealed class InspectionTemplateService(
 
                 "inspection_template.item.invalid_type",
 
-                "Item type must be pass_fail, numeric, or text.",
+                "Item type must be pass_fail, yes_no, numeric, text, select, or multi_select.",
 
                 400);
 
@@ -1639,6 +1653,52 @@ public sealed class InspectionTemplateService(
         return normalized;
 
     }
+
+    private static IReadOnlyList<string> NormalizeControlledOptions(
+        string itemType,
+        IReadOnlyList<string>? controlledOptions)
+    {
+        var normalizedItemType = itemType.Trim().ToLowerInvariant();
+        var isSelectable = string.Equals(normalizedItemType, InspectionChecklistItemTypes.Select, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalizedItemType, InspectionChecklistItemTypes.MultiSelect, StringComparison.OrdinalIgnoreCase);
+
+        if (!isSelectable)
+        {
+            return [];
+        }
+
+        var normalized = (controlledOptions ?? [])
+            .Select(option => option.Trim())
+            .Where(option => !string.IsNullOrWhiteSpace(option))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (normalized.Count == 0)
+        {
+            throw new StlApiException(
+                "inspection_template.item.controlled_options_required",
+                "Selectable checklist items require at least one controlled option.",
+                400);
+        }
+
+        if (normalized.Count > 50)
+        {
+            throw new StlApiException(
+                "inspection_template.item.controlled_options_too_many",
+                "Selectable checklist items can have at most 50 controlled options.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string SerializeControlledOptions(IReadOnlyList<string> controlledOptions) =>
+        JsonSerializer.Serialize(controlledOptions);
+
+    private static IReadOnlyList<string> DeserializeStringList(string json) =>
+        string.IsNullOrWhiteSpace(json)
+            ? []
+            : JsonSerializer.Deserialize<string[]>(json) ?? [];
 
 
 

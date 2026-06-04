@@ -5,6 +5,7 @@ public sealed record InspectionVoicePromptResponse(
     string ItemKey,
     string Prompt,
     string ItemType,
+    IReadOnlyList<string> ControlledOptions,
     string TtsPrompt,
     string VoiceAnswerHint,
     int SortOrder,

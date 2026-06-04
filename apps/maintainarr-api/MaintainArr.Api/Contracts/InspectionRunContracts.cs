@@ -24,6 +24,7 @@ public sealed record InspectionRunChecklistItemSnapshot(
     string ItemKey,
     string Prompt,
     string ItemType,
+    IReadOnlyList<string> ControlledOptions,
     bool IsRequired,
     int SortOrder);
 
@@ -34,6 +35,7 @@ public sealed record InspectionRunAnswerResponse(
     string? PassFailValue,
     decimal? NumericValue,
     string? TextValue,
+    IReadOnlyList<string> SelectedOptions,
     DateTimeOffset AnsweredAt,
     Guid AnsweredByUserId);
 
@@ -66,4 +68,5 @@ public sealed record InspectionRunAnswerInput(
     Guid ChecklistItemId,
     string? PassFailValue,
     decimal? NumericValue,
-    string? TextValue);
+    string? TextValue,
+    IReadOnlyList<string>? SelectedOptions = null);

@@ -356,6 +356,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ItemKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Prompt).HasMaxLength(512).IsRequired();
             entity.Property(x => x.ItemType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ControlledOptionsJson).HasColumnName("ControlledOptionsJson").HasMaxLength(2048).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.InspectionTemplateId, x.ItemKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.InspectionTemplateId, x.SortOrder });
@@ -411,6 +412,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasKey(x => x.Id);
             entity.Property(x => x.PassFailValue).HasMaxLength(16);
             entity.Property(x => x.TextValue).HasMaxLength(512);
+            entity.Property(x => x.SelectedOptionsJson).HasColumnName("SelectedOptionsJson").HasMaxLength(2048).IsRequired();
             entity.Property(x => x.NumericValue).HasPrecision(18, 4);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.InspectionRunId, x.ChecklistItemId }).IsUnique();

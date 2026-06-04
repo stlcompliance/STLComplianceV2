@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
@@ -18,6 +19,12 @@ public sealed class InspectionRunService(
         InspectionAnswerPassFailValues.Pass,
         InspectionAnswerPassFailValues.Fail,
         InspectionAnswerPassFailValues.Na,
+    };
+
+    private static readonly HashSet<string> AllowedYesNoValues = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "yes",
+        "no",
     };
 
     public async Task<IReadOnlyList<InspectionRunSummaryResponse>> ListAsync(
@@ -211,6 +218,7 @@ public sealed class InspectionRunService(
                 existing.PassFailValue = normalized.PassFailValue;
                 existing.NumericValue = normalized.NumericValue;
                 existing.TextValue = normalized.TextValue;
+                existing.SelectedOptionsJson = SerializeStringList(normalized.SelectedOptions);
                 existing.AnsweredAt = now;
                 existing.AnsweredByUserId = actorUserId;
             }
@@ -225,6 +233,7 @@ public sealed class InspectionRunService(
                     PassFailValue = normalized.PassFailValue,
                     NumericValue = normalized.NumericValue,
                     TextValue = normalized.TextValue,
+                    SelectedOptionsJson = SerializeStringList(normalized.SelectedOptions),
                     AnsweredAt = now,
                     AnsweredByUserId = actorUserId,
                 };
@@ -510,6 +519,7 @@ public sealed class InspectionRunService(
                 item.ItemKey,
                 item.Prompt,
                 item.ItemType,
+                DeserializeStringList(item.ControlledOptionsJson),
                 item.IsRequired,
                 item.SortOrder))
             .ToList();
@@ -529,6 +539,7 @@ public sealed class InspectionRunService(
                 answer.PassFailValue,
                 answer.NumericValue,
                 answer.TextValue,
+                DeserializeStringList(answer.SelectedOptionsJson),
                 answer.AnsweredAt,
                 answer.AnsweredByUserId))
             .OrderBy(x => x.ItemKey)
@@ -553,7 +564,7 @@ public sealed class InspectionRunService(
             answers);
     }
 
-    private static (string? PassFailValue, decimal? NumericValue, string? TextValue) NormalizeAnswer(
+    private static (string? PassFailValue, decimal? NumericValue, string? TextValue, IReadOnlyList<string> SelectedOptions) NormalizeAnswer(
         InspectionChecklistItem checklistItem,
         InspectionRunAnswerInput input)
     {
@@ -576,7 +587,41 @@ public sealed class InspectionRunService(
                     400);
             }
 
-            return (normalized, null, null);
+            return (normalized, null, null, []);
+        }
+
+        if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.YesNo, StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(input.TextValue))
+            {
+                throw new StlApiException(
+                    "inspection_run.invalid_yes_no_answer",
+                    "Yes/no checklist items require a yes or no value.",
+                    400);
+            }
+
+            var normalized = input.TextValue.Trim().ToLowerInvariant();
+            if (!AllowedYesNoValues.Contains(normalized))
+            {
+                throw new StlApiException(
+                    "inspection_run.invalid_yes_no_answer",
+                    "Yes/no value must be yes or no.",
+                    400);
+            }
+
+            return (null, null, normalized, []);
+        }
+
+        if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Select, StringComparison.OrdinalIgnoreCase))
+        {
+            var selectedOptions = NormalizeSelectedOptions(checklistItem, input.SelectedOptions, allowMultiple: false);
+            return (null, null, null, selectedOptions);
+        }
+
+        if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.MultiSelect, StringComparison.OrdinalIgnoreCase))
+        {
+            var selectedOptions = NormalizeSelectedOptions(checklistItem, input.SelectedOptions, allowMultiple: true);
+            return (null, null, null, selectedOptions);
         }
 
         if (string.Equals(checklistItem.ItemType, InspectionChecklistItemTypes.Numeric, StringComparison.OrdinalIgnoreCase))
@@ -589,7 +634,7 @@ public sealed class InspectionRunService(
                     400);
             }
 
-            return (null, input.NumericValue.Value, null);
+            return (null, input.NumericValue.Value, null, []);
         }
 
         if (string.IsNullOrWhiteSpace(input.TextValue))
@@ -609,7 +654,7 @@ public sealed class InspectionRunService(
                 400);
         }
 
-        return (null, null, text);
+        return (null, null, text, []);
     }
 
     private static bool HasAnswer(InspectionChecklistItem item, InspectionRunAnswer? answer)
@@ -624,6 +669,17 @@ public sealed class InspectionRunService(
             return !string.IsNullOrWhiteSpace(answer.PassFailValue);
         }
 
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.YesNo, StringComparison.OrdinalIgnoreCase))
+        {
+            return !string.IsNullOrWhiteSpace(answer.TextValue);
+        }
+
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.Select, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(item.ItemType, InspectionChecklistItemTypes.MultiSelect, StringComparison.OrdinalIgnoreCase))
+        {
+            return DeserializeStringList(answer.SelectedOptionsJson).Count > 0;
+        }
+
         if (string.Equals(item.ItemType, InspectionChecklistItemTypes.Numeric, StringComparison.OrdinalIgnoreCase))
         {
             return answer.NumericValue.HasValue;
@@ -634,11 +690,86 @@ public sealed class InspectionRunService(
 
     private static bool IsFailedAnswer(InspectionChecklistItem item, InspectionRunAnswer answer)
     {
-        if (!string.Equals(item.ItemType, InspectionChecklistItemTypes.PassFail, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.YesNo, StringComparison.OrdinalIgnoreCase))
         {
-            return false;
+            return string.Equals(answer.TextValue, "no", StringComparison.OrdinalIgnoreCase);
         }
 
-        return string.Equals(answer.PassFailValue, InspectionAnswerPassFailValues.Fail, StringComparison.OrdinalIgnoreCase);
+        if (string.Equals(item.ItemType, InspectionChecklistItemTypes.PassFail, StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Equals(answer.PassFailValue, InspectionAnswerPassFailValues.Fail, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
     }
+
+    private static IReadOnlyList<string> NormalizeSelectedOptions(
+        InspectionChecklistItem checklistItem,
+        IReadOnlyList<string>? selectedOptions,
+        bool allowMultiple)
+    {
+        var controlledOptions = DeserializeStringList(checklistItem.ControlledOptionsJson);
+        if (controlledOptions.Count == 0)
+        {
+            throw new StlApiException(
+                "inspection_run.invalid_select_answer",
+                "Selectable checklist items require controlled options.",
+                400);
+        }
+
+        var normalized = (selectedOptions ?? [])
+            .Select(option => option.Trim())
+            .Where(option => !string.IsNullOrWhiteSpace(option))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (normalized.Count == 0)
+        {
+            throw new StlApiException(
+                "inspection_run.invalid_select_answer",
+                allowMultiple
+                    ? "Multi-select checklist items require at least one selected option."
+                    : "Select checklist items require exactly one selected option.",
+                400);
+        }
+
+        if (!allowMultiple && normalized.Count != 1)
+        {
+            throw new StlApiException(
+                "inspection_run.invalid_select_answer",
+                "Select checklist items require exactly one selected option.",
+                400);
+        }
+
+        if (allowMultiple && normalized.Count > 50)
+        {
+            throw new StlApiException(
+                "inspection_run.invalid_select_answer",
+                "Multi-select checklist items can have at most 50 selected options.",
+                400);
+        }
+
+        var controlledOptionMap = controlledOptions.ToDictionary(
+            option => option,
+            option => option,
+            StringComparer.OrdinalIgnoreCase);
+        var invalidOption = normalized.FirstOrDefault(option => !controlledOptionMap.ContainsKey(option));
+        if (invalidOption is not null)
+        {
+            throw new StlApiException(
+                "inspection_run.invalid_select_answer",
+                $"Selected option '{invalidOption}' is not available for this checklist item.",
+                400);
+        }
+
+        return normalized.Select(option => controlledOptionMap[option]).ToList();
+    }
+
+    private static string SerializeStringList(IReadOnlyList<string> values) =>
+        JsonSerializer.Serialize(values);
+
+    private static IReadOnlyList<string> DeserializeStringList(string json) =>
+        string.IsNullOrWhiteSpace(json)
+            ? []
+            : JsonSerializer.Deserialize<string[]>(json) ?? [];
 }

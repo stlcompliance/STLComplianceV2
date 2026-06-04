@@ -209,6 +209,70 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_accepts_yes_no_checklist_items()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, checklistItemId) = await SeedYesNoTemplateWithAssetAsync(token);
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/inspections/{started.InspectionRunId}/answers", token);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([
+            new InspectionRunAnswerInput(checklistItemId, null, null, "yes"),
+        ]));
+        var submitResponse = await _maintainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/complete", token);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Equal("completed", completed.Status);
+        Assert.Equal("passed", completed.Result);
+        Assert.Contains(completed.ChecklistItems, x => x.ChecklistItemId == checklistItemId && x.ItemType == "yes_no");
+        Assert.Contains(completed.Answers, x => x.ChecklistItemId == checklistItemId && x.TextValue == "yes");
+    }
+
+    [Fact]
+    public async Task Inspection_run_accepts_select_and_multi_select_checklist_items()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, selectItemId, multiSelectItemId) = await SeedSelectableTemplateWithAssetAsync(token);
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Contains(started.ChecklistItems, x => x.ChecklistItemId == selectItemId && x.ControlledOptions.SequenceEqual(["Open", "Closed"]));
+        Assert.Contains(started.ChecklistItems, x => x.ChecklistItemId == multiSelectItemId && x.ControlledOptions.SequenceEqual(["Left", "Right", "Center"]));
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/inspections/{started.InspectionRunId}/answers", token);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([
+            new InspectionRunAnswerInput(selectItemId, null, null, null, ["Closed"]),
+            new InspectionRunAnswerInput(multiSelectItemId, null, null, null, ["Left", "Center"]),
+        ]));
+        var submitResponse = await _maintainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/complete", token);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        Assert.Equal("completed", completed.Status);
+        Assert.Equal("passed", completed.Result);
+        Assert.Contains(completed.Answers, x => x.ChecklistItemId == selectItemId && x.SelectedOptions.SequenceEqual(["Closed"]));
+        Assert.Contains(completed.Answers, x => x.ChecklistItemId == multiSelectItemId && x.SelectedOptions.SequenceEqual(["Left", "Center"]));
+    }
+
+    [Fact]
     public async Task Technician_cannot_view_other_users_inspection_run()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
@@ -324,12 +388,145 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-ASSET-1",
             "Inspection Test Asset",
             string.Empty,
-            "yard-a"));
+            null));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
 
         return (asset.AssetId, template.InspectionTemplateId, item.ChecklistItemId);
+    }
+
+    private async Task<(Guid AssetId, Guid TemplateId, Guid ChecklistItemId)> SeedYesNoTemplateWithAssetAsync(string token)
+    {
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "yes-no",
+            "Yes No",
+            "Yes/no inspection template"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "seat-belt-fastened",
+            "Seat belt fastened",
+            "yes_no",
+            true,
+            10,
+            null));
+        var createItemResponse = await _maintainarrClient.SendAsync(createItemRequest);
+        createItemResponse.EnsureSuccessStatusCode();
+        var item = (await createItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var activateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/status",
+            token);
+        activateRequest.Content = JsonContent.Create(new UpdateInspectionTemplateStatusRequest("active"));
+        var activateResponse = await _maintainarrClient.SendAsync(activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetTypeId,
+            "RUN-YESNO-1",
+            "Yes/No Test Asset",
+            string.Empty,
+            null));
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        return (asset.AssetId, template.InspectionTemplateId, item.ChecklistItemId);
+    }
+
+    private async Task<(Guid AssetId, Guid TemplateId, Guid SelectItemId, Guid MultiSelectItemId)> SeedSelectableTemplateWithAssetAsync(string token)
+    {
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "choice-template",
+            "Choice Template",
+            "Selectable inspection template"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createSelectItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createSelectItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "cab-door-position",
+            "Cab door position",
+            "select",
+            true,
+            10,
+            null,
+            ["Open", "Closed"]));
+        var createSelectItemResponse = await _maintainarrClient.SendAsync(createSelectItemRequest);
+        createSelectItemResponse.EnsureSuccessStatusCode();
+        var selectItem = (await createSelectItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var createMultiSelectItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createMultiSelectItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "light-status",
+            "Cab lights are functioning",
+            "multi_select",
+            true,
+            20,
+            null,
+            ["Left", "Right", "Center"]));
+        var createMultiSelectItemResponse = await _maintainarrClient.SendAsync(createMultiSelectItemRequest);
+        createMultiSelectItemResponse.EnsureSuccessStatusCode();
+        var multiSelectItem = (await createMultiSelectItemResponse.Content.ReadFromJsonAsync<InspectionChecklistItemResponse>())!;
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+
+        var activateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/inspection-templates/{template.InspectionTemplateId}/status",
+            token);
+        activateRequest.Content = JsonContent.Create(new UpdateInspectionTemplateStatusRequest("active"));
+        var activateResponse = await _maintainarrClient.SendAsync(activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetTypeId,
+            "RUN-CHOICE-1",
+            "Choice Test Asset",
+            string.Empty,
+            null));
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        return (asset.AssetId, template.InspectionTemplateId, selectItem.ChecklistItemId, multiSelectItem.ChecklistItemId);
     }
 
     private async Task<Guid> SeedAssetTypeAsync(string token)

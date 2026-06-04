@@ -50,6 +50,7 @@ describe('InspectionTemplateBuilderPanel', () => {
           itemKey: 'horn-works',
           prompt: 'Horn operates correctly',
           itemType: 'pass_fail',
+          controlledOptions: [],
           isRequired: true,
           sortOrder: 10,
           createdAt: '2026-01-01T00:00:00Z',
@@ -91,6 +92,7 @@ describe('InspectionTemplateBuilderPanel', () => {
     itemKey: '',
     itemPrompt: '',
     itemType: 'pass_fail',
+    itemControlledOptionsText: '',
     selectedCategoryId: '',
     selectedAssetTypeIds: ['44444444-4444-4444-4444-444444444444'],
     selectedTemplateId: '11111111-1111-1111-1111-111111111111',
@@ -102,6 +104,7 @@ describe('InspectionTemplateBuilderPanel', () => {
     onItemKeyChange: vi.fn(),
     onItemPromptChange: vi.fn(),
     onItemTypeChange: vi.fn(),
+    onItemControlledOptionsTextChange: vi.fn(),
     onSelectedCategoryIdChange: vi.fn(),
     onSelectedAssetTypeIdsChange: vi.fn(),
     onSelectedTemplateIdChange: vi.fn(),
@@ -111,7 +114,6 @@ describe('InspectionTemplateBuilderPanel', () => {
     onSaveAssetTypes: vi.fn(),
     onActivateTemplate: vi.fn(),
     onCloneTemplate: vi.fn(),
-    onImportTemplateJson: vi.fn(async () => {}),
     isCreatingTemplate: false,
     isSavingBuilder: false,
   }
@@ -123,9 +125,18 @@ describe('InspectionTemplateBuilderPanel', () => {
     expect(screen.getByText('Daily Walkaround')).toBeInTheDocument()
     expect(screen.getByText('Horn operates correctly')).toBeInTheDocument()
     expect(screen.getByText('Forklift (vehicles)')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Yes / no' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clone template' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export JSON' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Template JSON')).toBeInTheDocument()
+    expect(screen.queryByText('Import template JSON')).not.toBeInTheDocument()
+  })
+
+  it('shows the controlled options editor for selectable items', () => {
+    render(<InspectionTemplateBuilderPanel {...baseProps} itemType="select" />)
+
+    expect(screen.getByRole('textbox', { name: /Controlled options/ })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Select' })).toBeInTheDocument()
+    expect(screen.queryByText('Options:')).not.toBeInTheDocument()
   })
 
   it('downloads the selected template JSON export', () => {
@@ -167,28 +178,4 @@ describe('InspectionTemplateBuilderPanel', () => {
     expect(screen.getByText('No inspection templates yet.')).toBeInTheDocument()
   })
 
-  it('submits imported JSON with key override', async () => {
-    const onImportTemplateJson = vi.fn(async () => {})
-    render(
-      <InspectionTemplateBuilderPanel
-        {...baseProps}
-        onImportTemplateJson={onImportTemplateJson}
-      />,
-    )
-
-    fireEvent.change(screen.getByLabelText('Imported template key override'), {
-      target: { value: 'imported-walkaround' },
-    })
-    fireEvent.change(screen.getByLabelText('Template JSON'), {
-      target: { value: JSON.stringify(baseProps.selectedTemplate, null, 2) },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Import template' }))
-
-    await vi.waitFor(() => {
-      expect(onImportTemplateJson).toHaveBeenCalledWith(
-        JSON.stringify(baseProps.selectedTemplate, null, 2),
-        'imported-walkaround',
-      )
-    })
-  })
 })

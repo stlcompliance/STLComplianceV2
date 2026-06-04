@@ -88,6 +88,7 @@ import {
 import {
   isSpeechRecognitionSupported,
   isSpeechSynthesisSupported,
+  parseControlledOptionsTranscript,
   listenForTranscript,
   parsePassFailTranscript,
   speakPrompt,
@@ -107,8 +108,15 @@ type InspectionTemplateImportPayload = {
   name: string
   description: string
   categories: InspectionTemplateCategoryResponse[]
-  checklistItems: InspectionChecklistItemResponse[]
+  checklistItems: Array<InspectionChecklistItemResponse & { controlledOptions?: string[] }>
   linkedAssetTypes: InspectionTemplateAssetTypeLinkResponse[]
+}
+
+function splitControlledOptions(text: string): string[] {
+  return text
+    .split(/\r?\n|,/)
+    .map((option) => option.trim())
+    .filter(Boolean)
 }
 
 export function useMaintainArrWorkspaceState() {
@@ -133,13 +141,14 @@ export function useMaintainArrWorkspaceState() {
   const [itemKey, setItemKey] = useState('')
   const [itemPrompt, setItemPrompt] = useState('')
   const [itemType, setItemType] = useState('pass_fail')
+  const [itemControlledOptionsText, setItemControlledOptionsText] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedAssetTypeIds, setSelectedAssetTypeIds] = useState<string[]>([])
   const [runAssetId, setRunAssetId] = useState('')
   const [runTemplateId, setRunTemplateId] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')
   const [answerDrafts, setAnswerDrafts] = useState<
-    Record<string, { passFailValue?: string; numericValue?: string; textValue?: string }>
+    Record<string, { passFailValue?: string; numericValue?: string; textValue?: string; selectedOptions?: string[] }>
   >({})
   const [defectAssetId, setDefectAssetId] = useState('')
   const [defectTitle, setDefectTitle] = useState('')
@@ -635,10 +644,15 @@ export function useMaintainArrWorkspaceState() {
         isRequired: true,
         sortOrder: 10,
         categoryId: selectedCategoryId || null,
+        controlledOptions:
+          itemType === 'select' || itemType === 'multi_select'
+            ? splitControlledOptions(itemControlledOptionsText)
+            : undefined,
       }),
     onSuccess: async () => {
       setItemKey('')
       setItemPrompt('')
+      setItemControlledOptionsText('')
       setApiError(null)
       await invalidateTemplates(selectedTemplateId)
     },
@@ -707,6 +721,7 @@ export function useMaintainArrWorkspaceState() {
           isRequired: item.isRequired,
           sortOrder: item.sortOrder,
           categoryId: item.categoryId ? categoryIdMap.get(item.categoryId) ?? null : null,
+          controlledOptions: item.controlledOptions ?? undefined,
         })
       }
 
@@ -757,7 +772,13 @@ export function useMaintainArrWorkspaceState() {
             if (!value) {
               return null
             }
-            return { checklistItemId: item.checklistItemId, passFailValue: value, numericValue: null, textValue: null }
+            return {
+              checklistItemId: item.checklistItemId,
+              passFailValue: value,
+              numericValue: null,
+              textValue: null,
+              selectedOptions: null,
+            }
           }
           if (item.itemType === 'numeric') {
             const raw = draft?.numericValue ?? existing?.numericValue?.toString()
@@ -769,13 +790,33 @@ export function useMaintainArrWorkspaceState() {
               passFailValue: null,
               numericValue: Number(raw),
               textValue: null,
+              selectedOptions: null,
+            }
+          }
+          if (item.itemType === 'select' || item.itemType === 'multi_select') {
+            const draftOptions = draft?.selectedOptions ?? existing?.selectedOptions ?? []
+            if (draftOptions.length === 0) {
+              return null
+            }
+            return {
+              checklistItemId: item.checklistItemId,
+              passFailValue: null,
+              numericValue: null,
+              textValue: null,
+              selectedOptions: draftOptions,
             }
           }
           const text = draft?.textValue ?? existing?.textValue
           if (!text) {
             return null
           }
-          return { checklistItemId: item.checklistItemId, passFailValue: null, numericValue: null, textValue: text }
+          return {
+            checklistItemId: item.checklistItemId,
+            passFailValue: null,
+            numericValue: null,
+            textValue: text,
+            selectedOptions: null,
+          }
         })
         .filter((answer): answer is NonNullable<typeof answer> => answer !== null)
 
@@ -1154,6 +1195,34 @@ export function useMaintainArrWorkspaceState() {
             passFailValue: value,
           },
         }))
+      } else if (currentVoicePrompt.itemType === 'yes_no') {
+        const normalized = transcript.trim().toLowerCase()
+        if (normalized !== 'yes' && normalized !== 'no') {
+          throw new Error(`Could not map "${transcript}" to yes or no.`)
+        }
+        setAnswerDrafts((current) => ({
+          ...current,
+          [currentVoicePrompt.checklistItemId]: {
+            ...current[currentVoicePrompt.checklistItemId],
+            textValue: normalized,
+          },
+        }))
+      } else if (currentVoicePrompt.itemType === 'select' || currentVoicePrompt.itemType === 'multi_select') {
+        const selectedOptions = parseControlledOptionsTranscript(
+          transcript,
+          currentVoicePrompt.controlledOptions,
+          currentVoicePrompt.itemType === 'multi_select',
+        )
+        if (!selectedOptions) {
+          throw new Error(`Could not map "${transcript}" to one of the configured options.`)
+        }
+        setAnswerDrafts((current) => ({
+          ...current,
+          [currentVoicePrompt.checklistItemId]: {
+            ...current[currentVoicePrompt.checklistItemId],
+            selectedOptions,
+          },
+        }))
       } else if (currentVoicePrompt.itemType === 'numeric') {
         const normalized = await normalizeInspectionVoiceNumeric(accessToken, transcript)
         if (!normalized.understood || normalized.value == null) {
@@ -1203,6 +1272,7 @@ export function useMaintainArrWorkspaceState() {
     itemKey,
     itemPrompt,
     itemType,
+    itemControlledOptionsText,
     selectedCategoryId,
     selectedAssetTypeIds,
     runAssetId,
@@ -1284,6 +1354,7 @@ export function useMaintainArrWorkspaceState() {
     setItemKey,
     setItemPrompt,
     setItemType,
+    setItemControlledOptionsText,
     setSelectedCategoryId,
     setSelectedAssetTypeIds,
     setRunAssetId,

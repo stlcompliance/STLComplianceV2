@@ -1141,13 +1141,31 @@ public sealed class WorkOrderService(
             throw new StlApiException("asset.not_found", "Asset was not found.", 404);
         }
 
-        if (!string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
+        var assetStatus = await db.AssetStatusHistory
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.AssetId == assetId && x.StatusFieldKey == "assetStatus")
+            .OrderByDescending(x => x.ChangedAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Select(x => x.StatusValueKey)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.Equals(assetStatus, "active", StringComparison.OrdinalIgnoreCase))
         {
-            throw new StlApiException(
-                "asset.not_active",
-                "Work orders can only be created for active assets.",
-                400);
+            return;
         }
+
+        var lifecycleIsActive = string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(asset.LifecycleStatus, "in_service", StringComparison.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(assetStatus) && lifecycleIsActive)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "asset.not_active",
+            "Work orders can only be created for active assets.",
+            400);
     }
 
     private async Task EnsurePmScheduleForAssetAsync(

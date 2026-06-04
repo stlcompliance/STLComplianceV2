@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@stl/shared-ui', async () => {
   const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
@@ -43,6 +43,10 @@ vi.mock('@stl/shared-ui', async () => {
 import { InspectionRunnerPanel } from './InspectionRunnerPanel'
 
 describe('InspectionRunnerPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   const baseProps = {
     canExecute: true,
     viewAllRuns: true,
@@ -120,12 +124,13 @@ describe('InspectionRunnerPanel', () => {
           itemKey: 'brakes-ok',
           prompt: 'Brakes operate correctly',
           itemType: 'pass_fail',
+          controlledOptions: [],
           isRequired: true,
           sortOrder: 10,
         },
       ],
-      answers: [],
-    },
+    answers: [],
+  },
     selectedAssetId: '',
     selectedTemplateId: '',
     selectedRunId: '44444444-4444-4444-4444-444444444444',
@@ -199,5 +204,48 @@ describe('InspectionRunnerPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Capture defects from run' })).toBeInTheDocument()
+  })
+
+  it('renders yes/no checklist items with a yes/no control', () => {
+    render(
+      <InspectionRunnerPanel
+        {...baseProps}
+        activeRun={{
+          ...baseProps.activeRun!,
+          checklistItems: [
+            {
+              ...baseProps.activeRun!.checklistItems[0],
+              itemType: 'yes_no',
+              prompt: 'Seat belt fastened',
+              itemKey: 'seat-belt-fastened',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('combobox', { name: /Seat belt fastened/ })).toBeInTheDocument()
+  })
+
+  it('renders selectable checklist items with controlled options', () => {
+    render(
+      <InspectionRunnerPanel
+        {...baseProps}
+        activeRun={{
+          ...baseProps.activeRun!,
+          checklistItems: [
+            {
+              ...baseProps.activeRun!.checklistItems[0],
+              itemType: 'select',
+              prompt: 'Cab door position',
+              itemKey: 'cab-door-position',
+              controlledOptions: ['Open', 'Closed'],
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('combobox', { name: /Cab door position/ })).toBeInTheDocument()
   })
 })

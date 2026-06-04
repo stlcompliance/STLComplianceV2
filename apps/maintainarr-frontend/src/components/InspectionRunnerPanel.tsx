@@ -21,7 +21,10 @@ interface InspectionRunnerPanelProps {
   selectedAssetId: string
   selectedTemplateId: string
   selectedRunId: string
-  answerDrafts: Record<string, { passFailValue?: string; numericValue?: string; textValue?: string }>
+  answerDrafts: Record<
+    string,
+    { passFailValue?: string; numericValue?: string; textValue?: string; selectedOptions?: string[] }
+  >
   isLoading: boolean
   isRunLoading: boolean
   isStarting: boolean
@@ -42,8 +45,8 @@ interface InspectionRunnerPanelProps {
   onSelectedRunIdChange: (value: string) => void
   onAnswerDraftChange: (
     checklistItemId: string,
-    field: 'passFailValue' | 'numericValue' | 'textValue',
-    value: string,
+    field: 'passFailValue' | 'numericValue' | 'textValue' | 'selectedOptions',
+    value: string | string[],
   ) => void
   onStartRun: () => void
   onSubmitAnswers: () => void
@@ -158,6 +161,15 @@ export function InspectionRunnerPanel({
       (selectedTemplateId ? { value: selectedTemplateId, label: selectedTemplateId } : undefined),
     [selectedTemplateId, templateOptions],
   )
+
+  const toggleSelectedOption = (checklistItemId: string, option: string) => {
+    const draft = answerDrafts[checklistItemId] ?? {}
+    const current = draft.selectedOptions ?? []
+    const next = current.includes(option)
+      ? current.filter((value) => value !== option)
+      : [...current, option]
+    onAnswerDraftChange(checklistItemId, 'selectedOptions', next)
+  }
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -353,6 +365,61 @@ export function InspectionRunnerPanel({
                             <option value="fail">Fail</option>
                             <option value="na">N/A</option>
                           </select>
+                        ) : item.itemType === 'yes_no' ? (
+                          <select
+                            id={`inspection-answer-yes-no-${item.checklistItemId}`}
+                            className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
+                            value={draft.textValue ?? existing?.textValue ?? ''}
+                            aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
+                            onChange={(event) =>
+                              onAnswerDraftChange(item.checklistItemId, 'textValue', event.target.value)
+                            }
+                          >
+                            <option value="">Select…</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                          </select>
+                        ) : item.itemType === 'select' ? (
+                          <div className="space-y-2">
+                            <select
+                              id={`inspection-answer-select-${item.checklistItemId}`}
+                              className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
+                              value={draft.selectedOptions?.[0] ?? existing?.selectedOptions?.[0] ?? ''}
+                              aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
+                              onChange={(event) =>
+                                onAnswerDraftChange(item.checklistItemId, 'selectedOptions', event.target.value ? [event.target.value] : [])
+                              }
+                            >
+                              <option value="">Select…</option>
+                              {item.controlledOptions.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : item.itemType === 'multi_select' ? (
+                          <div className="space-y-2">
+                            <div className="grid gap-2">
+                              {item.controlledOptions.length === 0 ? (
+                                <p className="text-xs text-slate-500">No controlled options configured.</p>
+                              ) : (
+                                item.controlledOptions.map((option) => {
+                                  const selected = (draft.selectedOptions ?? existing?.selectedOptions ?? []).includes(option)
+                                  return (
+                                    <label key={option} className="flex items-center gap-2 text-slate-200">
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        onChange={() => toggleSelectedOption(item.checklistItemId, option)}
+                                      />
+                                      <span>{option}</span>
+                                    </label>
+                                  )
+                                })
+                              )}
+                            </div>
+                          </div>
                         ) : item.itemType === 'numeric' ? (
                           <input
                             id={`inspection-answer-numeric-${item.checklistItemId}`}
@@ -381,6 +448,7 @@ export function InspectionRunnerPanel({
                           {existing?.passFailValue ??
                             existing?.numericValue?.toString() ??
                             existing?.textValue ??
+                            existing?.selectedOptions?.join(', ') ??
                             'No answer'}
                         </p>
                       )}

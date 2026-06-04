@@ -37,7 +37,15 @@ export function InspectionsSection({ state }: Props) {
         onAnswerDraftChange={(checklistItemId, field, value) =>
           s.setAnswerDrafts((current) => ({
             ...current,
-            [checklistItemId]: { ...current[checklistItemId], [field]: value },
+            [checklistItemId]: {
+              ...current[checklistItemId],
+              [field]:
+                field === 'selectedOptions'
+                  ? Array.isArray(value)
+                    ? value
+                    : []
+                  : value,
+            },
           }))
         }
         onStartRun={() => s.startRunMutation.mutate()}

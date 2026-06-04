@@ -29,6 +29,7 @@ export function InspectionTemplatesSection({ state }: Props) {
         itemKey={s.itemKey}
         itemPrompt={s.itemPrompt}
         itemType={s.itemType}
+        itemControlledOptionsText={s.itemControlledOptionsText}
         selectedCategoryId={s.selectedCategoryId}
         selectedAssetTypeIds={s.selectedAssetTypeIds}
         selectedTemplateId={s.selectedTemplateId}
@@ -40,6 +41,7 @@ export function InspectionTemplatesSection({ state }: Props) {
         onItemKeyChange={s.setItemKey}
         onItemPromptChange={s.setItemPrompt}
         onItemTypeChange={s.setItemType}
+        onItemControlledOptionsTextChange={s.setItemControlledOptionsText}
         onSelectedCategoryIdChange={s.setSelectedCategoryId}
         onSelectedAssetTypeIdsChange={s.setSelectedAssetTypeIds}
         onSelectedTemplateIdChange={s.setSelectedTemplateId}
@@ -49,9 +51,6 @@ export function InspectionTemplatesSection({ state }: Props) {
         onSaveAssetTypes={() => s.saveAssetTypesMutation.mutate()}
         onActivateTemplate={() => s.activateTemplateMutation.mutate()}
         onCloneTemplate={() => s.cloneTemplateMutation.mutate()}
-        onImportTemplateJson={async (json, templateKeyOverride) => {
-          await s.importTemplateMutation.mutateAsync({ json, templateKeyOverride })
-        }}
         isCreatingTemplate={s.createTemplateMutation.isPending}
         isSavingBuilder={
           s.createCategoryMutation.isPending ||

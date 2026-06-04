@@ -58,6 +58,8 @@ public sealed record InspectionChecklistItemResponse(
 
     string ItemType,
 
+    IReadOnlyList<string> ControlledOptions,
+
     bool IsRequired,
 
     int SortOrder,
@@ -160,7 +162,9 @@ public sealed record CreateInspectionChecklistItemRequest(
 
     int SortOrder,
 
-    Guid? CategoryId);
+    Guid? CategoryId,
+
+    IReadOnlyList<string>? ControlledOptions = null);
 
 
 
@@ -174,7 +178,9 @@ public sealed record UpdateInspectionChecklistItemRequest(
 
     int SortOrder,
 
-    Guid? CategoryId);
+    Guid? CategoryId,
+
+    IReadOnlyList<string>? ControlledOptions = null);
 
 
 

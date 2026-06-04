@@ -606,6 +606,81 @@
             "description": "OK"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "CreateAssetComponent",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetInstalledComponentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/components/{componentId}": {
+      "patch": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "UpdateAssetComponent",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "componentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssetInstalledComponentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/assets/{assetId}/lifecycle-status": {
@@ -5643,6 +5718,81 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "CreateAssetComponentV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetInstalledComponentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/components/{componentId}": {
+      "patch": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "UpdateAssetComponentV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "componentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssetInstalledComponentRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -11750,6 +11900,226 @@
           }
         }
       },
+      "CreateAssetInstalledComponentRequest": {
+        "required": [
+          "componentNumber",
+          "parentComponentId",
+          "name",
+          "description",
+          "componentType",
+          "status",
+          "make",
+          "model",
+          "serialNumber",
+          "partNumberSnapshot",
+          "installedPartUsageRef",
+          "installDate",
+          "installedByPersonId",
+          "installedMeterReading",
+          "removedDate",
+          "removedByPersonId",
+          "removedMeterReading",
+          "removalReason",
+          "warrantyStartDate",
+          "warrantyEndDate",
+          "expectedLifeHours",
+          "expectedLifeMiles",
+          "expectedLifeCycles",
+          "condition",
+          "replacementPartRefs",
+          "documentRefs",
+          "defectRefs",
+          "workOrderRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "componentNumber": {
+            "type": "string"
+          },
+          "parentComponentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "componentType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "make": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "partNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installedPartUsageRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "installedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installedMeterReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "removedDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "removedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "removedMeterReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "removalReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "warrantyStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "warrantyEndDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expectedLifeHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedLifeMiles": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedLifeCycles": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "replacementPartRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "defectRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workOrderRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "CreateAssetMeterRequest": {
         "required": [
           "meterKey",
@@ -12065,6 +12435,15 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "controlledOptions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -13282,6 +13661,15 @@
               "null",
               "string"
             ]
+          },
+          "selectedOptions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -13973,6 +14361,241 @@
           }
         }
       },
+      "UpdateAssetInstalledComponentRequest": {
+        "required": [
+          "componentNumber",
+          "parentComponentId",
+          "name",
+          "description",
+          "componentType",
+          "status",
+          "make",
+          "model",
+          "serialNumber",
+          "partNumberSnapshot",
+          "installedPartUsageRef",
+          "installDate",
+          "installedByPersonId",
+          "installedMeterReading",
+          "removedDate",
+          "removedByPersonId",
+          "removedMeterReading",
+          "removalReason",
+          "warrantyStartDate",
+          "warrantyEndDate",
+          "expectedLifeHours",
+          "expectedLifeMiles",
+          "expectedLifeCycles",
+          "condition",
+          "replacementPartRefs",
+          "documentRefs",
+          "defectRefs",
+          "workOrderRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "componentNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parentComponentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "componentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "make": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "partNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installedPartUsageRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "installedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "installedMeterReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "removedDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "removedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "removedMeterReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "removalReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "warrantyStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "warrantyEndDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expectedLifeHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedLifeMiles": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedLifeCycles": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "condition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "replacementPartRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "defectRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workOrderRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "UpdateAssetLifecycleStatusRequest": {
         "required": [
           "lifecycleStatus"
@@ -14083,6 +14706,15 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "controlledOptions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

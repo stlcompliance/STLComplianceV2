@@ -184,6 +184,46 @@ public static class MaintenanceHistoryTimelineBuilder
                 null));
         }
 
+        var installedComponents = await db.AssetInstalledComponents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.ParentAssetId == assetId)
+            .OrderBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var component in installedComponents)
+        {
+            entries.Add(new MaintenanceHistoryEntryResponse(
+                $"asset_component:{component.Id}:created",
+                assetId,
+                "component",
+                "component_created",
+                $"Component created: {component.ComponentNumber} · {component.Name}",
+                $"{component.ComponentType} · {component.Status} · {component.Condition}",
+                component.CreatedAt,
+                null,
+                "asset_installed_component",
+                component.Id.ToString(),
+                component.ParentComponentId?.ToString()));
+
+            ComponentLifecycleEvent? lifecycleEvent = ResolveComponentLifecycleEvent(component);
+            if (lifecycleEvent is not null)
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"asset_component:{component.Id}:{lifecycleEvent.EventKey}",
+                    assetId,
+                    "component",
+                    lifecycleEvent.EventType,
+                    lifecycleEvent.Title,
+                    $"{component.ComponentNumber} · {component.ComponentType} · {component.Status}",
+                    lifecycleEvent.OccurredAt,
+                    null,
+                    "asset_installed_component",
+                    component.Id.ToString(),
+                    component.ParentComponentId?.ToString()));
+            }
+        }
+
         var workOrders = await db.WorkOrders
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.AssetId == assetId)
@@ -384,4 +424,32 @@ public static class MaintenanceHistoryTimelineBuilder
             _ => element.ToString(),
         };
     }
+
+    private static ComponentLifecycleEvent? ResolveComponentLifecycleEvent(AssetInstalledComponent component)
+    {
+        var occurredAt = component.Status.ToLowerInvariant() switch
+        {
+            "removed" => component.RemovedDate ?? component.UpdatedAt,
+            "failed" => component.UpdatedAt,
+            "replaced" => component.RemovedDate ?? component.UpdatedAt,
+            "retired" => component.RemovedDate ?? component.UpdatedAt,
+            _ => component.InstallDate ?? component.CreatedAt,
+        };
+
+        return component.Status.ToLowerInvariant() switch
+        {
+            "installed" => new ComponentLifecycleEvent("component_installed", "maintainarr.component.installed", $"Component installed: {component.ComponentNumber}", occurredAt),
+            "removed" => new ComponentLifecycleEvent("component_removed", "maintainarr.component.removed", $"Component removed: {component.ComponentNumber}", occurredAt),
+            "failed" => new ComponentLifecycleEvent("component_failed", "maintainarr.component.failed", $"Component failed: {component.ComponentNumber}", occurredAt),
+            "replaced" => new ComponentLifecycleEvent("component_replaced", "maintainarr.component.replaced", $"Component replaced: {component.ComponentNumber}", occurredAt),
+            "retired" => new ComponentLifecycleEvent("component_retired", "maintainarr.component.retired", $"Component retired: {component.ComponentNumber}", occurredAt),
+            _ => null,
+        };
+    }
+
+    private sealed record ComponentLifecycleEvent(
+        string EventKey,
+        string EventType,
+        string Title,
+        DateTimeOffset OccurredAt);
 }

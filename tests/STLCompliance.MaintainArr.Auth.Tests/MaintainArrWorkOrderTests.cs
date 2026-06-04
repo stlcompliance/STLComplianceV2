@@ -12,6 +12,7 @@ using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
 using AssetClassResponse = MaintainArr.Api.Contracts.AssetClassResponse;
@@ -159,6 +160,29 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var completed = (await completeResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
         Assert.Equal("completed", completed.Status);
         Assert.NotNull(completed.CompletedAt);
+    }
+
+    [Fact]
+    public async Task Manual_work_order_create_allows_v1_asset_defaults()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedV1AssetAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Inspect lift chain",
+            "Chain inspection after service",
+            "medium",
+            null,
+            null));
+
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.Equal(assetId, created.AssetId);
+        Assert.Equal("open", created.Status);
     }
 
     [Fact]
@@ -1053,6 +1077,148 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         Assert.Equal(new[] { "wo-1" }, component.WorkOrderRefs);
     }
 
+    [Fact]
+    public async Task Asset_components_can_be_created_and_are_visible_in_history()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var request = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
+        request.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
+            ComponentNumber: "ENG-02",
+            ParentComponentId: null,
+            Name: "Secondary engine",
+            Description: "Backup power unit",
+            ComponentType: "engine",
+            Status: "installed",
+            Make: "Cummins",
+            Model: "L9",
+            SerialNumber: "SER-456",
+            PartNumberSnapshot: "PN-222",
+            InstalledPartUsageRef: "usage-2",
+            InstallDate: DateTimeOffset.UtcNow.AddHours(-2),
+            InstalledByPersonId: "person-3",
+            InstalledMeterReading: 4321,
+            RemovedDate: null,
+            RemovedByPersonId: null,
+            RemovedMeterReading: null,
+            RemovalReason: null,
+            WarrantyStartDate: DateTimeOffset.UtcNow.AddYears(-1),
+            WarrantyEndDate: DateTimeOffset.UtcNow.AddYears(1),
+            ExpectedLifeHours: 7500,
+            ExpectedLifeMiles: 300000,
+            ExpectedLifeCycles: 1500,
+            Condition: "good",
+            ReplacementPartRefs: new[] { "part-2" },
+            DocumentRefs: new[] { "doc-2" },
+            DefectRefs: Array.Empty<string>(),
+            WorkOrderRefs: new[] { "wo-2" }));
+
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var created = (await response.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+        Assert.Equal("ENG-02", created.ComponentNumber);
+        Assert.Equal("Secondary engine", created.Name);
+        Assert.Equal("installed", created.Status);
+
+        var componentsResponse = await _maintainarrClient.SendAsync(Authorized(HttpMethod.Get, $"/api/v1/assets/{assetId}/components", managerToken));
+        componentsResponse.EnsureSuccessStatusCode();
+        var components = (await componentsResponse.Content.ReadFromJsonAsync<List<AssetInstalledComponentResponse>>())!;
+        Assert.Contains(components, item => item.ComponentId == created.ComponentId);
+
+        var historyResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/maintenance-history?assetId={assetId}&page=1&pageSize=25", managerToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<PagedResult<MaintenanceHistoryEntryResponse>>())!;
+        Assert.Contains(history.Items, x => x.Category == "component" && x.EventType == "component_created" && x.SourceEntityId == created.ComponentId.ToString());
+        Assert.Contains(history.Items, x => x.Category == "component" && x.EventType == "maintainarr.component.installed" && x.SourceEntityId == created.ComponentId.ToString());
+    }
+
+    [Fact]
+    public async Task Asset_components_can_be_updated_to_removed()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
+            ComponentNumber: "ENG-03",
+            ParentComponentId: null,
+            Name: "Service engine",
+            Description: null,
+            ComponentType: "engine",
+            Status: "installed",
+            Make: "Cummins",
+            Model: "X15",
+            SerialNumber: "SER-789",
+            PartNumberSnapshot: "PN-333",
+            InstalledPartUsageRef: "usage-3",
+            InstallDate: DateTimeOffset.UtcNow.AddDays(-10),
+            InstalledByPersonId: "person-4",
+            InstalledMeterReading: 5678,
+            RemovedDate: null,
+            RemovedByPersonId: null,
+            RemovedMeterReading: null,
+            RemovalReason: null,
+            WarrantyStartDate: DateTimeOffset.UtcNow.AddYears(-2),
+            WarrantyEndDate: DateTimeOffset.UtcNow.AddYears(2),
+            ExpectedLifeHours: 8000,
+            ExpectedLifeMiles: 350000,
+            ExpectedLifeCycles: 1800,
+            Condition: "good",
+            ReplacementPartRefs: new[] { "part-3" },
+            DocumentRefs: new[] { "doc-3" },
+            DefectRefs: Array.Empty<string>(),
+            WorkOrderRefs: Array.Empty<string>()));
+
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/assets/{assetId}/components/{created.ComponentId}", managerToken);
+        updateRequest.Content = JsonContent.Create(new UpdateAssetInstalledComponentRequest(
+            ComponentNumber: null,
+            ParentComponentId: null,
+            Name: null,
+            Description: null,
+            ComponentType: null,
+            Status: "removed",
+            Make: null,
+            Model: null,
+            SerialNumber: null,
+            PartNumberSnapshot: null,
+            InstalledPartUsageRef: null,
+            InstallDate: null,
+            InstalledByPersonId: null,
+            InstalledMeterReading: null,
+            RemovedDate: DateTimeOffset.UtcNow,
+            RemovedByPersonId: "person-4",
+            RemovedMeterReading: 5690,
+            RemovalReason: "Removed during maintenance",
+            WarrantyStartDate: null,
+            WarrantyEndDate: null,
+            ExpectedLifeHours: null,
+            ExpectedLifeMiles: null,
+            ExpectedLifeCycles: null,
+            Condition: "fair",
+            ReplacementPartRefs: null,
+            DocumentRefs: null,
+            DefectRefs: null,
+            WorkOrderRefs: null));
+
+        var updateResponse = await _maintainarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+        Assert.Equal("removed", updated.Status);
+        Assert.Equal("fair", updated.Condition);
+        Assert.NotNull(updated.RemovedDate);
+        Assert.Equal("Removed during maintenance", updated.RemovalReason);
+
+        var historyResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/maintenance-history?assetId={assetId}&page=1&pageSize=25", managerToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<PagedResult<MaintenanceHistoryEntryResponse>>())!;
+        Assert.Contains(history.Items, x => x.Category == "component" && x.EventType == "maintainarr.component.removed" && x.SourceEntityId == created.ComponentId.ToString());
+    }
+
     private async Task<Guid> SeedAssetOnlyAsync(string token)
     {
         var assetTypeId = await SeedAssetTypeAsync(token);
@@ -1068,6 +1234,32 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
         return asset.AssetId;
+    }
+
+    private async Task<Guid> SeedV1AssetAsync(string token)
+    {
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var asset = await db.Assets.SingleAsync(x => x.Id == assetId);
+        asset.LifecycleStatus = "in_service";
+        asset.UpdatedAt = DateTimeOffset.UtcNow;
+
+        var now = DateTimeOffset.UtcNow;
+        db.AssetStatusHistory.Add(new AssetStatusHistory
+        {
+            Id = Guid.NewGuid(),
+            TenantId = asset.TenantId,
+            AssetId = asset.Id,
+            StatusFieldKey = "assetStatus",
+            StatusValueKey = "active",
+            ChangedAt = now,
+            CreatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
+        return assetId;
     }
 
     private async Task<Guid> SeedAssetTypeAsync(string token)

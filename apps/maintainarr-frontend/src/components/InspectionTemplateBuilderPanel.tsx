@@ -22,6 +22,7 @@ interface InspectionTemplateBuilderPanelProps {
   itemKey: string
   itemPrompt: string
   itemType: string
+  itemControlledOptionsText: string
   selectedCategoryId: string
   selectedAssetTypeIds: string[]
   selectedTemplateId: string
@@ -33,6 +34,7 @@ interface InspectionTemplateBuilderPanelProps {
   onItemKeyChange: (value: string) => void
   onItemPromptChange: (value: string) => void
   onItemTypeChange: (value: string) => void
+  onItemControlledOptionsTextChange: (value: string) => void
   onSelectedCategoryIdChange: (value: string) => void
   onSelectedAssetTypeIdsChange: (value: string[]) => void
   onSelectedTemplateIdChange: (value: string) => void
@@ -42,7 +44,6 @@ interface InspectionTemplateBuilderPanelProps {
   onSaveAssetTypes: () => void
   onActivateTemplate: () => void
   onCloneTemplate: () => void
-  onImportTemplateJson: (json: string, templateKeyOverride: string) => Promise<void>
   isCreatingTemplate: boolean
   isSavingBuilder: boolean
 }
@@ -62,6 +63,7 @@ export function InspectionTemplateBuilderPanel({
   itemKey,
   itemPrompt,
   itemType,
+  itemControlledOptionsText,
   selectedCategoryId,
   selectedAssetTypeIds,
   selectedTemplateId,
@@ -73,6 +75,7 @@ export function InspectionTemplateBuilderPanel({
   onItemKeyChange,
   onItemPromptChange,
   onItemTypeChange,
+  onItemControlledOptionsTextChange,
   onSelectedCategoryIdChange,
   onSelectedAssetTypeIdsChange,
   onSelectedTemplateIdChange,
@@ -82,15 +85,12 @@ export function InspectionTemplateBuilderPanel({
   onSaveAssetTypes,
   onActivateTemplate,
   onCloneTemplate,
-  onImportTemplateJson,
   isCreatingTemplate,
   isSavingBuilder,
 }: InspectionTemplateBuilderPanelProps) {
   const [showTemplateKeyPolicy, setShowTemplateKeyPolicy] = useState(false)
   const [showCategoryKeyPolicy, setShowCategoryKeyPolicy] = useState(false)
   const [showItemKeyPolicy, setShowItemKeyPolicy] = useState(false)
-  const [importJson, setImportJson] = useState('')
-  const [importTemplateKey, setImportTemplateKey] = useState('')
   const existingTemplateKeys = templates.map((template) => template.templateKey)
   const existingCategoryKeys = selectedTemplate?.categories.map((category) => category.categoryKey) ?? []
   const existingItemKeys = selectedTemplate?.checklistItems.map((item) => item.itemKey) ?? []
@@ -332,48 +332,6 @@ export function InspectionTemplateBuilderPanel({
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-medium text-slate-300">Import template JSON</h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Paste an exported template payload, optionally override the template key, and import it as a new draft.
-            </p>
-            <label htmlFor="inspectiontemplatebuilder-import-key" className="mt-3 block text-sm text-slate-300">
-              Imported template key override
-              <input
-                id="inspectiontemplatebuilder-import-key"
-                value={importTemplateKey}
-                onChange={(event) => setImportTemplateKey(event.target.value)}
-                placeholder="Leave blank to reuse the exported key"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-              />
-            </label>
-            <label htmlFor="inspectiontemplatebuilder-import-json" className="mt-3 block text-sm text-slate-300">
-              Template JSON
-              <textarea
-                id="inspectiontemplatebuilder-import-json"
-                value={importJson}
-                onChange={(event) => setImportJson(event.target.value)}
-                rows={8}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 font-mono text-xs"
-                placeholder="Paste exported template JSON here"
-              />
-            </label>
-            <div className="mt-3">
-              <button
-                type="button"
-                className="rounded bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
-                disabled={isSavingBuilder || !importJson.trim()}
-                onClick={async () => {
-                  await onImportTemplateJson(importJson, importTemplateKey)
-                  setImportJson('')
-                  setImportTemplateKey('')
-                }}
-              >
-                Import template
-              </button>
-            </div>
-          </div>
-
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-2">
             <div className="space-y-1 text-sm">
               <GeneratedKeyField
@@ -399,16 +357,34 @@ export function InspectionTemplateBuilderPanel({
             </div>
             <label className="block text-sm" htmlFor="inspectiontemplatebuilder-item-type">
           <span className="text-slate-300">Item type</span>
-          <select id="inspectiontemplatebuilder-item-type"
+              <select id="inspectiontemplatebuilder-item-type"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={itemType}
                 onChange={(e) => onItemTypeChange(e.target.value)}
               >
                 <option value="pass_fail">Pass / fail</option>
+                <option value="yes_no">Yes / no</option>
                 <option value="numeric">Numeric</option>
                 <option value="text">Text</option>
+                <option value="select">Select</option>
+                <option value="multi_select">Multi-select</option>
               </select>
             </label>
+            {itemType === 'select' || itemType === 'multi_select' ? (
+              <label className="block text-sm md:col-span-2" htmlFor="inspectiontemplatebuilder-controlled-options">
+                <span className="text-slate-300">Controlled options</span>
+                <textarea
+                  id="inspectiontemplatebuilder-controlled-options"
+                  className="mt-1 min-h-24 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 font-mono text-sm"
+                  value={itemControlledOptionsText}
+                  onChange={(e) => onItemControlledOptionsTextChange(e.target.value)}
+                  placeholder="One option per line"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Enter one option per line. These options are used for runner selection and voice capture.
+                </p>
+              </label>
+            ) : null}
             <label className="block text-sm md:col-span-2" htmlFor="inspectiontemplatebuilder-prompt">
           <span className="text-slate-300">Prompt</span>
           <input id="inspectiontemplatebuilder-prompt"
@@ -436,7 +412,12 @@ export function InspectionTemplateBuilderPanel({
               <button
                 type="button"
                 className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
-                disabled={isSavingBuilder || !itemKey.trim() || !itemPrompt.trim()}
+                disabled={
+                  isSavingBuilder ||
+                  !itemKey.trim() ||
+                  !itemPrompt.trim() ||
+                  ((itemType === 'select' || itemType === 'multi_select') && !itemControlledOptionsText.trim())
+                }
                 onClick={onCreateItem}
               >
                 Add checklist item
@@ -516,6 +497,11 @@ export function InspectionTemplateBuilderPanel({
                       {item.categoryKey ? ` · ${item.categoryKey}` : ''}
                       {item.isRequired ? ' · required' : ''}
                     </p>
+                    {item.controlledOptions.length > 0 ? (
+                      <p className="mt-1 text-xs text-slate-400">
+                        Options: {item.controlledOptions.join(', ')}
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>

@@ -59,6 +59,60 @@ export function parsePassFailTranscript(transcript: string): string | null {
   return null
 }
 
+function normalizeOptionText(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+}
+
+export function parseControlledOptionsTranscript(
+  transcript: string,
+  controlledOptions: string[],
+  allowMultiple: boolean,
+): string[] | null {
+  const normalizedTranscript = normalizeOptionText(transcript)
+  if (!normalizedTranscript || controlledOptions.length === 0) {
+    return null
+  }
+
+  const optionMap = new Map(
+    controlledOptions.map((option) => [normalizeOptionText(option), option] as const),
+  )
+
+  if (!allowMultiple) {
+    const exact = optionMap.get(normalizedTranscript)
+    return exact ? [exact] : null
+  }
+
+  const exact = optionMap.get(normalizedTranscript)
+  if (exact) {
+    return [exact]
+  }
+
+  const parts = normalizedTranscript
+    .split(/,|\band\b/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (parts.length === 0) {
+    return null
+  }
+
+  const selected: string[] = []
+  for (const part of parts) {
+    const exact = optionMap.get(part)
+    if (!exact) {
+      return null
+    }
+    if (!selected.some((value) => normalizeOptionText(value) === normalizeOptionText(exact))) {
+      selected.push(exact)
+    }
+  }
+
+  return selected.length > 0 ? selected : null
+}
+
 export function listenForTranscript(timeoutMs = 8000): Promise<string> {
   const Recognition = getSpeechRecognitionConstructor()
   if (!Recognition) {

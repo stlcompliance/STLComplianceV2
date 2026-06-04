@@ -242,6 +242,7 @@ export interface InspectionChecklistItemResponse {
   itemKey: string
   prompt: string
   itemType: string
+  controlledOptions: string[]
   isRequired: boolean
   sortOrder: number
   createdAt: string
@@ -289,6 +290,7 @@ export interface CreateInspectionChecklistItemRequest {
   isRequired: boolean
   sortOrder: number
   categoryId: string | null
+  controlledOptions?: string[] | null
 }
 
 export interface InspectionRunSummaryResponse {
@@ -316,6 +318,7 @@ export interface InspectionRunChecklistItemSnapshot {
   itemKey: string
   prompt: string
   itemType: string
+  controlledOptions: string[]
   isRequired: boolean
   sortOrder: number
 }
@@ -327,6 +330,7 @@ export interface InspectionRunAnswerResponse {
   passFailValue: string | null
   numericValue: number | null
   textValue: string | null
+  selectedOptions: string[]
   answeredAt: string
   answeredByUserId: string
 }
@@ -360,6 +364,7 @@ export interface InspectionRunAnswerInput {
   passFailValue?: string | null
   numericValue?: number | null
   textValue?: string | null
+  selectedOptions?: string[] | null
 }
 
 export interface SubmitInspectionRunAnswersRequest {
@@ -392,6 +397,7 @@ export interface InspectionVoicePromptResponse {
   itemKey: string
   prompt: string
   itemType: string
+  controlledOptions: string[]
   ttsPrompt: string
   voiceAnswerHint: string
   sortOrder: number

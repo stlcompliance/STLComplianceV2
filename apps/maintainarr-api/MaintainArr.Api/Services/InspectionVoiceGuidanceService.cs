@@ -50,7 +50,10 @@ public sealed class InspectionVoiceGuidanceService(
         var voiceHint = item.ItemType switch
         {
             InspectionChecklistItemTypes.PassFail => "Say pass, fail, or N A.",
+            InspectionChecklistItemTypes.YesNo => "Say yes or no.",
             InspectionChecklistItemTypes.Numeric => "Say a number, for example twelve point five.",
+            InspectionChecklistItemTypes.Select => FormatOptionsHint(item.ControlledOptions, allowMultiple: false),
+            InspectionChecklistItemTypes.MultiSelect => FormatOptionsHint(item.ControlledOptions, allowMultiple: true),
             InspectionChecklistItemTypes.Text => "Say your observation.",
             _ => "Provide your answer.",
         };
@@ -63,9 +66,26 @@ public sealed class InspectionVoiceGuidanceService(
             item.ItemKey,
             item.Prompt,
             item.ItemType,
+            item.ControlledOptions,
             ttsPrompt.Trim(),
             voiceHint,
             item.SortOrder,
             isAnswered);
+    }
+
+    private static string FormatOptionsHint(IReadOnlyList<string> controlledOptions, bool allowMultiple)
+    {
+        if (controlledOptions.Count == 0)
+        {
+            return allowMultiple
+                ? "Say one or more of the listed options."
+                : "Say one of the listed options.";
+        }
+
+        var preview = string.Join(", ", controlledOptions.Take(8));
+        var suffix = controlledOptions.Count > 8 ? ", and more" : string.Empty;
+        return allowMultiple
+            ? $"Say one or more of: {preview}{suffix}."
+            : $"Say one of: {preview}{suffix}.";
     }
 }
