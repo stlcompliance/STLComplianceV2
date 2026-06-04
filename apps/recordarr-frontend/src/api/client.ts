@@ -901,6 +901,15 @@ export async function listDocumentVersions(
   )
 }
 
+export async function refreshControlledDocumentWorkflows(accessToken: string): Promise<RecordArrControlledDocument[]> {
+  return sendJson<RecordArrControlledDocument[]>(
+    '/api/v1/workspace/controlled-documents/refresh-workflows',
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
 export async function listDocumentReviews(
   accessToken: string,
   controlledDocumentId: string,

@@ -85,6 +85,7 @@ import {
   promoteDocumentVersion,
   obsoleteControlledDocument,
   recalculateRetentionStatuses,
+  refreshControlledDocumentWorkflows,
   expireDocumentDistribution,
   expireExternalShare,
   supersedeControlledDocument,
@@ -1264,6 +1265,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
       setSelectedDocumentId(document.controlledDocumentId)
     },
   })
+  const refreshWorkflowsMutation = useMutation({
+    mutationFn: () => refreshControlledDocumentWorkflows(accessToken),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const archiveDocumentMutation = useMutation({
     mutationFn: () => archiveControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
     onSuccess: async () => {
@@ -1388,7 +1395,19 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
         eyebrow="Documents"
         title="Controlled document management"
         description="Version controlled procedures, approvals, review cadences, distributions, and acknowledgements."
-        action={<span className="recordarr-pill"><Archive className="h-4 w-4" /> {docsQuery.data?.length ?? 0} documents</span>}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="recordarr-button secondary"
+              onClick={() => refreshWorkflowsMutation.mutate()}
+              disabled={refreshWorkflowsMutation.isPending}
+            >
+              {refreshWorkflowsMutation.isPending ? 'Refreshing...' : 'Refresh workflows'}
+            </button>
+            <span className="recordarr-pill"><Archive className="h-4 w-4" /> {docsQuery.data?.length ?? 0} documents</span>
+          </div>
+        }
       />
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
@@ -1447,6 +1466,11 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                     {currentVersion?.versionLabel ?? 'n/a'}
                   </p>
                   <p className="mt-1">{currentVersion?.fileName ?? 'No effective version yet.'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Document status</p>
+                  <p className="mt-1 text-base font-semibold text-slate-50">{selectedDocument.status}</p>
+                  <p className="mt-1">Next review: {formatDate(selectedDocument.nextReviewAt)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Related records</p>
@@ -1687,6 +1711,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                           <span className="recordarr-pill text-[0.7rem]">{acknowledgement.status}</span>
                         </div>
                         <p className="mt-1">{acknowledgement.attestationText ?? 'No attestation'}</p>
+                        <p className="mt-1 text-xs text-slate-400">Due {formatDate(acknowledgement.dueAt)}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
                             type="button"
@@ -1701,6 +1726,9 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                     ))}
                     {!acknowledgementsQuery.data?.length ? <EmptyState title="No acknowledgements yet." /> : null}
                   </div>
+                  {acknowledgementsQuery.data?.some((acknowledgement) => acknowledgement.status === 'overdue') ? (
+                    <p className="mt-2 text-xs text-amber-300">One or more acknowledgements are overdue.</p>
+                  ) : null}
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100">Audit trail</h3>

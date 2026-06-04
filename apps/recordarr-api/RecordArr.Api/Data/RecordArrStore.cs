@@ -1771,6 +1771,56 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrControlledDocumentResponse> RefreshControlledDocumentWorkflows()
+    {
+        lock (_gate)
+        {
+            var now = DateTimeOffset.UtcNow;
+
+            for (var i = 0; i < _controlledDocuments.Count; i++)
+            {
+                var current = _controlledDocuments[i];
+                if (!string.Equals(current.Status, "effective", StringComparison.OrdinalIgnoreCase) ||
+                    !current.NextReviewAt.HasValue ||
+                    current.NextReviewAt > now)
+                {
+                    continue;
+                }
+
+                var updated = current with { Status = "review" };
+                _controlledDocuments[i] = updated;
+                AppendControlledDocumentAuditTrail(
+                    current.ControlledDocumentId,
+                    CreateControlledDocumentAuditTrailEntry(
+                        "periodic_review_due",
+                        "system",
+                        $"Periodic review became due at {current.NextReviewAt:O}."));
+            }
+
+            for (var i = 0; i < _documentAcknowledgements.Count; i++)
+            {
+                var current = _documentAcknowledgements[i];
+                if (!string.Equals(current.Status, "pending", StringComparison.OrdinalIgnoreCase) ||
+                    !current.DueAt.HasValue ||
+                    current.DueAt > now)
+                {
+                    continue;
+                }
+
+                var updated = current with { Status = "overdue" };
+                _documentAcknowledgements[i] = updated;
+                AppendControlledDocumentAuditTrail(
+                    current.ControlledDocumentId,
+                    CreateControlledDocumentAuditTrailEntry(
+                        "acknowledgement_overdue",
+                        "system",
+                        $"Acknowledgement {current.AcknowledgementId} became overdue at {current.DueAt:O}."));
+            }
+
+            return _controlledDocuments.OrderBy(document => document.DocumentNumber).ToArray();
+        }
+    }
+
     public RecordArrControlledDocumentResponse UpdateControlledDocumentStatus(string controlledDocumentId, string status, string updatedByPersonId)
     {
         lock (_gate)
@@ -1851,6 +1901,12 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var documentIndex = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            if (documentIndex < 0)
+            {
+                throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
+            }
+
             var review = new RecordArrDocumentReviewResponse(
                 $"drev-{Guid.NewGuid():N}"[..12],
                 controlledDocumentId,
@@ -1865,10 +1921,11 @@ public sealed class RecordArrStore
                 null,
                 null);
             _documentReviews.Add(review);
+            _controlledDocuments[documentIndex] = _controlledDocuments[documentIndex] with { Status = "review" };
             AppendControlledDocumentAuditTrail(
                 controlledDocumentId,
                 CreateControlledDocumentAuditTrailEntry(
-                    "review_requested",
+                    "submitted_for_review",
                     requestedByPersonId,
                     $"Requested {reviewType} review for version {versionId}."));
             return review;
@@ -1894,10 +1951,40 @@ public sealed class RecordArrStore
                 Comments = comments
             };
             _documentReviews[index] = updated;
+
+            var documentIndex = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, current.ControlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            if (documentIndex >= 0)
+            {
+                var document = _controlledDocuments[documentIndex];
+                var completedAt = updated.ReviewedAt ?? DateTimeOffset.UtcNow;
+                if (status.Trim().Equals("approved", StringComparison.OrdinalIgnoreCase) ||
+                    status.Trim().Equals("completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    _controlledDocuments[documentIndex] = document with
+                    {
+                        Status = "effective",
+                        EffectiveAt = document.EffectiveAt ?? completedAt,
+                        NextReviewAt = document.ReviewIntervalDays > 0 ? completedAt.AddDays(document.ReviewIntervalDays) : document.NextReviewAt
+                    };
+                }
+                else if (status.Trim().Equals("rejected", StringComparison.OrdinalIgnoreCase) ||
+                         status.Trim().Equals("changes_requested", StringComparison.OrdinalIgnoreCase))
+                {
+                    _controlledDocuments[documentIndex] = document with { Status = "review" };
+                }
+            }
+
+            var auditAction = status.Trim().ToLowerInvariant() switch
+            {
+                "approved" => "review_approved",
+                "rejected" => "review_rejected",
+                "changes_requested" => "review_changes_requested",
+                _ => "review_completed"
+            };
             AppendControlledDocumentAuditTrail(
                 current.ControlledDocumentId,
                 CreateControlledDocumentAuditTrailEntry(
-                    status,
+                    auditAction,
                     current.ReviewerPersonId,
                     $"Review {reviewId} completed with status {status}."));
             return updated;

@@ -745,6 +745,19 @@
         }
       }
     },
+    "/api/integrations/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -2563,6 +2576,19 @@
         }
       }
     },
+    "/api/v1/integrations/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -4188,6 +4214,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrControlledDocumentWorkflows",
         "responses": {
           "200": {
             "description": "OK"

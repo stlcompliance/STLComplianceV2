@@ -242,6 +242,10 @@ public static class WorkspaceEndpoints
             Results.Ok(store.GetDocumentVersions(controlledDocumentId)))
             .WithName("ListRecordArrControlledDocumentVersions");
 
+        group.MapPost("/controlled-documents/refresh-workflows", (RecordArrStore store) =>
+            Results.Ok(store.RefreshControlledDocumentWorkflows()))
+            .WithName("RefreshRecordArrControlledDocumentWorkflows");
+
         group.MapPost("/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote", (string controlledDocumentId, string versionId, PromoteControlledDocumentVersionRequest request, RecordArrStore store) =>
         {
             var version = store.PromoteDocumentVersion(controlledDocumentId, versionId, request.ApprovedByPersonId, request.EffectiveAt);

@@ -258,6 +258,10 @@ public static class RecordArrIntegrationEndpoints
             Results.Ok(store.GetDocumentVersions(controlledDocumentId)))
             .WithName($"ListRecordArrIntegrationControlledDocumentVersions{routePrefix}");
 
+        group.MapPost("/controlled-documents/refresh-workflows", (RecordArrStore store) =>
+            Results.Ok(store.RefreshControlledDocumentWorkflows()))
+            .WithName($"RefreshRecordArrIntegrationControlledDocumentWorkflows{routePrefix}");
+
         group.MapPost("/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote", (string controlledDocumentId, string versionId, WorkspaceEndpoints.PromoteControlledDocumentVersionRequest request, RecordArrStore store) =>
         {
             var version = store.PromoteDocumentVersion(controlledDocumentId, versionId, request.ApprovedByPersonId, request.EffectiveAt);
