@@ -1374,6 +1374,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   })
 
   const selectedDocument = docsQuery.data?.find((doc) => doc.controlledDocumentId === selectedDocumentId) ?? null
+  const currentVersion = useMemo(
+    () => versionsQuery.data?.find((version) => version.versionId === selectedDocument?.currentVersionId) ?? null,
+    [selectedDocument?.currentVersionId, versionsQuery.data],
+  )
+  const draftVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'draft' || version.status === 'submitted_for_review')
+  const reviewVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'under_review' || version.status === 'changes_requested')
 
   return (
     <div className="recordarr-page">
@@ -1433,6 +1439,27 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
         <Card title="Version and review" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
           {selectedDocument ? (
             <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Current effective version</p>
+                  <p className="mt-1 text-base font-semibold text-slate-50">
+                    {currentVersion?.versionLabel ?? 'n/a'}
+                  </p>
+                  <p className="mt-1">{currentVersion?.fileName ?? 'No effective version yet.'}</p>
+                </div>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Related records</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedDocument.relatedRecordRefs.length > 0 ? (
+                      selectedDocument.relatedRecordRefs.map((recordRef) => (
+                        <span key={recordRef} className="recordarr-pill text-[0.7rem]">{recordRef}</span>
+                      ))
+                    ) : (
+                      <span className="text-slate-400">No related records.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="File name"><input className="recordarr-input" value={versionForm.fileName} onChange={(e) => setVersionForm({ ...versionForm, fileName: e.target.value })} /></Field>
                 <Field label="Created by"><input className="recordarr-input" value={versionForm.createdByPersonId} onChange={(e) => setVersionForm({ ...versionForm, createdByPersonId: e.target.value })} /></Field>
@@ -1532,6 +1559,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                     ))}
                     {!versionsQuery.data?.length ? <EmptyState title="No versions yet." /> : null}
                   </div>
+                  {draftVersions.length > 0 ? (
+                    <p className="mt-2 text-xs text-slate-400">Draft/review versions: {draftVersions.map((version) => version.versionLabel).join(', ')}</p>
+                  ) : null}
+                  {reviewVersions.length > 0 ? (
+                    <p className="mt-1 text-xs text-slate-400">In review: {reviewVersions.map((version) => version.versionLabel).join(', ')}</p>
+                  ) : null}
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100">Reviews</h3>
