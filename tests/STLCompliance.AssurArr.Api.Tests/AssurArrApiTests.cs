@@ -1734,7 +1734,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         var reviewByPersonId = Guid.NewGuid();
         var reviewResponse = await _client.PostAsJsonAsync(
-            $"/api/v1/scorecards/{scorecard.Id}/review",
+            $"/api/v1/integrations/scorecards/{scorecard.Id}/review",
             new ReviewAssurArrQualityScorecardRequest(reviewByPersonId, DateTimeOffset.UtcNow));
 
         Assert.Equal(HttpStatusCode.OK, reviewResponse.StatusCode);

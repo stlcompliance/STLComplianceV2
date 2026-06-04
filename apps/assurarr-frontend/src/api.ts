@@ -767,7 +767,7 @@ export const assurarrApi = {
       metricRefs: body.metricRefs ?? [],
     }),
   reviewScorecard: (id: string, body: { reviewedByPersonId?: string | null; reviewedAt?: string | null }) =>
-    sendJson<Scorecard>(`/api/v1/scorecards/${id}/review`, 'POST', {
+    sendJson<Scorecard>(`/api/v1/integrations/scorecards/${id}/review`, 'POST', {
       reviewedByPersonId: body.reviewedByPersonId ?? null,
       reviewedAt: body.reviewedAt ? new Date(body.reviewedAt).toISOString() : null,
     }),

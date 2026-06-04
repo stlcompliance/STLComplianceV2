@@ -261,6 +261,12 @@ public static class AssurArrEndpoints
                 : Results.NotFound())
             .WithName("ReviewAssurArrQualityScorecard");
 
+        integrationGroup.MapPost("/scorecards/{id:guid}/review", async (Guid id, ReviewAssurArrQualityScorecardRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.ReviewScorecardAsync(id, request, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("ReviewAssurArrQualityScorecardIntegration");
+
         integrationGroup.MapGet("/risk-profiles", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityRiskProfilesAsync(cancellationToken)))
             .WithName("ListAssurArrQualityRiskProfiles");
