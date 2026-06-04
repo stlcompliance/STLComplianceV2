@@ -148,6 +148,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       Cors__RecordArrFrontendOrigin: http://127.0.0.1:5184
+      NexArr__BaseUrl: http://nexarr-api:8080
 
   assurarr-api:
     build:
