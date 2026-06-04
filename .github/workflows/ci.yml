@@ -55,6 +55,7 @@ jobs:
           test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs
           test -f apps/staffarr-api/StaffArr.Api/Migrations/*InitialPlatformFoundation*.cs
           test -f apps/compliancecore-api/ComplianceCore.Api/Migrations/*InitialPlatformFoundation*.cs
+          test -f apps/assurarr-api/AssurArr.Api/Migrations/*InitialPlatformFoundation*.cs
 
   stlcompliancesite:
     runs-on: ubuntu-latest
@@ -270,4 +271,28 @@ jobs:
 
       - name: Test
         working-directory: apps/loadarr-frontend
+        run: npm test
+
+  assurarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/assurarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/assurarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/assurarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/assurarr-frontend
         run: npm test

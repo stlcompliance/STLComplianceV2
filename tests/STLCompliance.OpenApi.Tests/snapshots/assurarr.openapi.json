@@ -1,0 +1,1366 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "AssurArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "AssurArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrAudits",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrAudit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrAuditStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrCapas",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrCapa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCapaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrCapaStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/findings": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrFindings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrFinding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrAuditFindingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/findings/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrFindingStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/history": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrHistory",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/holds": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrQualityHolds",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrQualityHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/holds/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrQualityHoldStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nonconformances": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrNonconformances",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrNonconformance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrNonconformanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nonconformances/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrNonconformance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nonconformances/{id}/status": {
+      "patch": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "UpdateAssurArrNonconformanceStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorecards": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrQualityScorecards",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrQualityScorecard",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityScorecardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/status-snapshots": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrQualityStatusSnapshots",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrQualityStatusSnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityStatusSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health/observability": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetObservabilityHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateAssurArrAuditFindingRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "findingType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "auditRef",
+          "nonconformanceRef",
+          "capaRef",
+          "dueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "findingType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "auditRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capaRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrCapaRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "capaType",
+          "sourceType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "sponsorPersonId",
+          "rootCauseSummary",
+          "dueAt",
+          "relatedNonconformanceRefs",
+          "relatedAuditFindingRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "capaType": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sponsorPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "rootCauseSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "relatedNonconformanceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relatedAuditFindingRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateAssurArrNonconformanceRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "nonconformanceType",
+          "category",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "customerImpact",
+          "supplierImpact",
+          "safetyImpact",
+          "complianceImpact",
+          "recurrenceFlag",
+          "repeatOfNonconformanceRef",
+          "dueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "nonconformanceType": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "customerImpact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supplierImpact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "safetyImpact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceImpact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recurrenceFlag": {
+            "type": "boolean"
+          },
+          "repeatOfNonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrQualityAuditRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "auditType",
+          "auditScope",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "auditorPersonIds",
+          "leadAuditorPersonId",
+          "staffArrSiteId",
+          "staffArrLocationId",
+          "supplierRef",
+          "customerRef",
+          "plannedStartAt",
+          "plannedEndAt",
+          "checklistRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "auditType": {
+            "type": "string"
+          },
+          "auditScope": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "auditorPersonIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "leadAuditorPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "staffArrSiteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "staffArrLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplierRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "plannedStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "plannedEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "checklistRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateAssurArrQualityHoldRequest": {
+        "required": [
+          "title",
+          "description",
+          "severity",
+          "holdType",
+          "holdScope",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "holdReason",
+          "quantityHeld",
+          "unitOfMeasure",
+          "lotNumber",
+          "serialNumber",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "holdType": {
+            "type": "string"
+          },
+          "holdScope": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "holdReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityHeld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lotNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrQualityScorecardRequest": {
+        "required": [
+          "targetType",
+          "targetRef",
+          "periodStart",
+          "periodEnd",
+          "overallScore",
+          "qualityStatus",
+          "trend",
+          "title",
+          "description",
+          "severity",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "metricRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "targetType": {
+            "type": "string"
+          },
+          "targetRef": {
+            "type": "string"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "overallScore": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "qualityStatus": {
+            "type": "string"
+          },
+          "trend": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "metricRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateAssurArrQualityStatusSnapshotRequest": {
+        "required": [
+          "targetProduct",
+          "targetObjectRef",
+          "qualityStatus",
+          "severity",
+          "title",
+          "description",
+          "sourceProduct",
+          "sourceObjectRef",
+          "affectedObjectRefs",
+          "ownerPersonId",
+          "activeHoldRefs",
+          "openNonconformanceRefs",
+          "openCapaRefs",
+          "openFindingRefs",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "targetProduct": {
+            "type": "string"
+          },
+          "targetObjectRef": {
+            "type": "string"
+          },
+          "qualityStatus": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "affectedObjectRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "activeHoldRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "openNonconformanceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "openCapaRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "openFindingRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateAssurArrStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "closureSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "AssurArr.Api"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "AssurArr"
+    }
+  ]
+}

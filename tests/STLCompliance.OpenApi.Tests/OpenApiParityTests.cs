@@ -47,6 +47,8 @@ public sealed class TrainArrOpenApiParityTests() : OpenApiParityTestsBase<global
 
 public sealed class MaintainArrOpenApiParityTests() : OpenApiParityTestsBase<global::MaintainArr.Api.Program>("maintainarr");
 
+public sealed class RecordArrOpenApiParityTests() : OpenApiParityTestsBase<global::RecordArr.Api.Program>("recordarr");
+
 public sealed class RoutArrOpenApiParityTests() : OpenApiParityTestsBase<global::RoutArr.Api.Program>("routarr");
 
 public sealed class SupplyArrOpenApiParityTests() : OpenApiParityTestsBase<global::SupplyArr.Api.Program>("supplyarr");
@@ -54,6 +56,8 @@ public sealed class SupplyArrOpenApiParityTests() : OpenApiParityTestsBase<globa
 public sealed class ComplianceCoreOpenApiParityTests() : OpenApiParityTestsBase<global::ComplianceCore.Api.Program>("compliancecore");
 
 public sealed class LoadArrOpenApiParityTests() : OpenApiParityTestsBase<global::LoadArr.Api.Program>("loadarr");
+
+public sealed class AssurArrOpenApiParityTests() : OpenApiParityTestsBase<global::AssurArr.Api.Program>("assurarr");
 
 public sealed class LoadArrWorkspaceOpenApiTests
 {

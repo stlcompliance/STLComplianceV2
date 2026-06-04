@@ -70,6 +70,21 @@ services:
       compliancecore-api:
         condition: service_started
 
+  assurarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: assurarr-frontend
+        PREVIEW_PORT: 5183
+        API_PROXY_TARGET: http://assurarr-api:8080
+    ports:
+      - "5183:5183"
+    depends_on:
+      assurarr-api:
+        condition: service_started
+
   maintainarr-frontend-e2e:
     <<: *frontend-e2e
     build:
@@ -118,7 +133,7 @@ services:
   loadarr-frontend-e2e:
     <<: *frontend-e2e
     build:
-      context: .
+      context: . 
       dockerfile: docker/Dockerfile.frontend-e2e
       args:
         FRONTEND_APP: loadarr-frontend
@@ -128,4 +143,19 @@ services:
       - "5182:5182"
     depends_on:
       loadarr-api:
+        condition: service_started
+
+  recordarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: recordarr-frontend
+        PREVIEW_PORT: 5184
+        API_PROXY_TARGET: http://recordarr-api:8080
+    ports:
+      - "5184:5184"
+    depends_on:
+      recordarr-api:
         condition: service_started

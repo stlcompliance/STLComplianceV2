@@ -13,6 +13,7 @@ export const MARKETING_PRODUCT_KEYS = [
   'routarr',
   'supplyarr',
   'compliancecore',
+  'assurarr',
   'fieldcompanion',
 ] as const
 

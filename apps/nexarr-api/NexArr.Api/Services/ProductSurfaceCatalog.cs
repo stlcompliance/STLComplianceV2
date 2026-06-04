@@ -105,6 +105,18 @@ public static class ProductSurfaceCatalog
                 new("procurement", "Procurement", "procurement", "warehouse", 20),
                 new("launch", "Open SupplyArr app", "launch", "supplyarr", 90, LaunchExternal: true),
             ],
+            "recordarr" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("records", "Records", "records", "documents", 10),
+                new("capture", "Capture", "capture", "activity", 20),
+                new("documents", "Documents", "documents", "documents", 30),
+                new("packages", "Packages", "packages", "warehouse", 40),
+                new("retention", "Retention", "retention", "warning", 50),
+                new("holds", "Holds", "holds", "shield", 60),
+                new("access", "Access", "access", "auth", 70),
+                new("launch", "Open RecordArr app", "launch", "settings", 90, LaunchExternal: true),
+            ],
             "compliancecore" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),

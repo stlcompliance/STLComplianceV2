@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj" />
+    <ProjectReference Include="..\..\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj" />
     <ProjectReference Include="..\..\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\nexarr-api\NexArr.Api\NexArr.Api.csproj" />

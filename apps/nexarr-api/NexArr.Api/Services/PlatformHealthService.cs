@@ -22,6 +22,7 @@ public sealed class PlatformHealthService(
         ("routarr", o => o.RoutArrBaseUrl),
         ("supplyarr", o => o.SupplyArrBaseUrl),
         ("compliancecore", o => o.ComplianceCoreBaseUrl),
+        ("recordarr", o => o.RecordArrBaseUrl),
     ];
 
     public async Task<PlatformHealthResponse> GetAggregateHealthAsync(CancellationToken cancellationToken = default)

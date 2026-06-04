@@ -19,4 +19,6 @@ public sealed class PlatformProductUrlsOptions
     public string ComplianceCoreBaseUrl { get; set; } = "http://localhost:5107";
 
     public string LoadArrBaseUrl { get; set; } = "http://localhost:5108";
+
+    public string RecordArrBaseUrl { get; set; } = "http://localhost:5110";
 }

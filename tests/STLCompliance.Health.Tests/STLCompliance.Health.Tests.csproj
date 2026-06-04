@@ -21,10 +21,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj" />
+    <ProjectReference Include="..\..\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\nexarr-api\NexArr.Api\NexArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\trainarr-api\TrainArr.Api\TrainArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\routarr-api\RoutArr.Api\RoutArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj" />

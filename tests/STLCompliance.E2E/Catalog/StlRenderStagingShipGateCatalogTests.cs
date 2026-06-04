@@ -10,7 +10,7 @@ public sealed class StlRenderStagingShipGateCatalogTests
     [Fact]
     public void Api_probes_cover_all_render_staging_load_test_products()
     {
-        Assert.Equal(8, StlRenderStagingShipGateCatalog.ApiProbes.Count);
+        Assert.Equal(9, StlRenderStagingShipGateCatalog.ApiProbes.Count);
         Assert.Equal(
             StlRenderStagingLoadTestCatalog.All.Count,
             StlRenderStagingShipGateCatalog.ApiProbes.Count);
@@ -53,7 +53,7 @@ public sealed class StlRenderStagingShipGateCatalogTests
     [Fact]
     public void Optional_static_site_probes_cover_blueprint_static_sites()
     {
-        Assert.Equal(10, StlRenderStagingShipGateCatalog.OptionalStaticSiteProbes.Count);
+        Assert.Equal(11, StlRenderStagingShipGateCatalog.OptionalStaticSiteProbes.Count);
 
         foreach (var site in StlRenderBlueprintCatalog.StaticSites)
         {

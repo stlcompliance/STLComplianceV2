@@ -1,0 +1,297 @@
+using RecordArr.Api.Data;
+
+namespace RecordArr.Api.Endpoints;
+
+public static class WorkspaceEndpoints
+{
+    public static void MapRecordArrWorkspaceEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/v1/workspace").WithTags("Workspace").RequireAuthorization();
+
+        group.MapGet("/summary", (RecordArrStore store) => Results.Ok(store.GetDashboard()))
+            .WithName("GetRecordArrWorkspaceSummary");
+
+        group.MapGet("/records", (RecordArrStore store) => Results.Ok(store.GetRecords()))
+            .WithName("ListRecordArrRecords");
+
+        group.MapGet("/records/{recordId}", (string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(recordId);
+            return record is null ? Results.NotFound() : Results.Ok(record);
+        }).WithName("GetRecordArrRecord");
+
+        group.MapPost("/records", (CreateRecordRequest request, RecordArrStore store) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.SourceProduct))
+            {
+                return Results.BadRequest(new { code = "missing_source_product", message = "Record creation requires a source product." });
+            }
+
+            var record = store.CreateRecord(
+                request.Title,
+                request.Description,
+                request.RecordType,
+                request.DocumentType,
+                request.SourceProduct,
+                request.SourceObjectType,
+                request.SourceObjectId,
+                request.SourceObjectDisplayName,
+                request.OwnerPersonId,
+                request.UploadedByPersonId,
+                request.CurrentFileName,
+                request.CurrentMimeType);
+            return Results.Created($"/api/v1/workspace/records/{record.RecordId}", record);
+        }).WithName("CreateRecordArrRecord");
+
+        group.MapPatch("/records/{recordId}", (string recordId, UpdateRecordRequest request, RecordArrStore store) =>
+        {
+            var updated = store.UpdateRecordStatus(recordId, request.Status, request.Classification, request.EffectiveAt, request.ExpiresAt);
+            return Results.Ok(updated);
+        }).WithName("UpdateRecordArrRecord");
+
+        group.MapPost("/upload-sessions", (CreateUploadSessionRequest request, RecordArrStore store) =>
+        {
+            var session = store.CreateUploadSession(
+                request.SourceProduct,
+                request.SourceObjectType,
+                request.SourceObjectId,
+                request.UploadPurpose,
+                request.RequiresDocumentScan,
+                request.RequiresOcr,
+                request.RequiresManualReview);
+            return Results.Created($"/api/v1/workspace/upload-sessions/{session.UploadSessionId}", session);
+        }).WithName("CreateRecordArrUploadSession");
+
+        group.MapGet("/upload-sessions", (RecordArrStore store) => Results.Ok(store.GetUploadSessions()))
+            .WithName("ListRecordArrUploadSessions");
+
+        group.MapGet("/upload-sessions/{uploadSessionId}", (string uploadSessionId, RecordArrStore store) =>
+        {
+            var session = store.GetUploadSession(uploadSessionId);
+            return session is null ? Results.NotFound() : Results.Ok(session);
+        }).WithName("GetRecordArrUploadSession");
+
+        group.MapPost("/upload-sessions/{uploadSessionId}/complete", (string uploadSessionId, CompleteUploadSessionRequest request, RecordArrStore store) =>
+        {
+            var session = store.CompleteUploadSession(uploadSessionId, request.RecordId);
+            return Results.Ok(session);
+        }).WithName("CompleteRecordArrUploadSession");
+
+        group.MapPost("/upload-sessions/{uploadSessionId}/revoke", (string uploadSessionId, RevokeUploadSessionRequest request, RecordArrStore store) =>
+        {
+            var session = store.RevokeUploadSession(uploadSessionId, request.Reason);
+            return Results.Ok(session);
+        }).WithName("RevokeRecordArrUploadSession");
+
+        group.MapPost("/document-scans", (CreateDocumentScanRequest request, RecordArrStore store) =>
+        {
+            var scan = store.CreateScanProcessing(request.RecordId, request.OriginalFileName, request.ScanPurpose);
+            return Results.Created($"/api/v1/workspace/document-scans/{scan.ScanProcessingId}", scan);
+        }).WithName("CreateRecordArrDocumentScan");
+
+        group.MapGet("/document-scans", (RecordArrStore store) => Results.Ok(store.GetScanProcessing()))
+            .WithName("ListRecordArrDocumentScans");
+
+        group.MapGet("/document-scans/{scanProcessingId}", (string scanProcessingId, RecordArrStore store) =>
+        {
+            var scan = store.GetScanProcessing(scanProcessingId);
+            return scan is null ? Results.NotFound() : Results.Ok(scan);
+        }).WithName("GetRecordArrDocumentScan");
+
+        group.MapPost("/document-scans/{scanProcessingId}/manual-correction", (string scanProcessingId, ManualCorrectionRequest request, RecordArrStore store) =>
+        {
+            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates);
+            return Results.Ok(scan);
+        }).WithName("ApplyRecordArrManualCorrection");
+
+        group.MapGet("/evidence-mappings", (RecordArrStore store) => Results.Ok(store.GetEvidenceMappings()))
+            .WithName("ListRecordArrEvidenceMappings");
+
+        group.MapPost("/evidence-mappings", (CreateEvidenceMappingRequest request, RecordArrStore store) =>
+        {
+            var mapping = store.CreateEvidenceMapping(
+                request.RecordId,
+                request.SourceProduct,
+                request.SourceObjectType,
+                request.SourceObjectId,
+                request.ComplianceRequirementRef,
+                request.EvidenceTypeKey,
+                request.MappingSource,
+                request.ConfidenceScore);
+            return Results.Created($"/api/v1/workspace/evidence-mappings/{mapping.EvidenceMappingId}", mapping);
+        }).WithName("CreateRecordArrEvidenceMapping");
+
+        group.MapPost("/evidence-mappings/{mappingId}/confirm", (string mappingId, ConfirmEvidenceMappingRequest request, RecordArrStore store) =>
+        {
+            var mapping = store.UpdateEvidenceMapping(mappingId, "confirmed", request.ConfirmedByPersonId, request.Notes, null);
+            return Results.Ok(mapping);
+        }).WithName("ConfirmRecordArrEvidenceMapping");
+
+        group.MapPost("/evidence-mappings/{mappingId}/reject", (string mappingId, RejectEvidenceMappingRequest request, RecordArrStore store) =>
+        {
+            var mapping = store.UpdateEvidenceMapping(mappingId, "rejected", request.RejectedByPersonId, request.Notes, request.RejectionReason);
+            return Results.Ok(mapping);
+        }).WithName("RejectRecordArrEvidenceMapping");
+
+        group.MapPost("/record-packages", (CreatePackageRequest request, RecordArrStore store) =>
+        {
+            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef);
+            return Results.Created($"/api/v1/workspace/record-packages/{package.PackageId}", package);
+        }).WithName("CreateRecordArrPackage");
+
+        group.MapGet("/record-packages/{packageId}", (string packageId, RecordArrStore store) =>
+        {
+            var package = store.GetPackage(packageId);
+            return package is null ? Results.NotFound() : Results.Ok(package);
+        }).WithName("GetRecordArrPackage");
+
+        group.MapPost("/record-packages/{packageId}/lock", (string packageId, RecordArrStore store) =>
+        {
+            var package = store.LockPackage(packageId);
+            return Results.Ok(package);
+        }).WithName("LockRecordArrPackage");
+
+        group.MapGet("/record-packages/{packageId}/manifest", (string packageId, RecordArrStore store) =>
+        {
+            var manifest = store.GetManifest(packageId);
+            return manifest is null ? Results.NotFound() : Results.Ok(manifest);
+        }).WithName("GetRecordArrPackageManifest");
+
+        group.MapGet("/controlled-documents/{controlledDocumentId}/versions", (string controlledDocumentId, RecordArrStore store) =>
+            Results.Ok(store.GetDocumentVersions(controlledDocumentId)))
+            .WithName("ListRecordArrControlledDocumentVersions");
+
+        group.MapGet("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, RecordArrStore store) =>
+            Results.Ok(store.GetDocumentReviews(controlledDocumentId)))
+            .WithName("ListRecordArrControlledDocumentReviews");
+
+        group.MapGet("/controlled-documents/{controlledDocumentId}/distributions", (string controlledDocumentId, RecordArrStore store) =>
+            Results.Ok(store.GetDocumentDistributions(controlledDocumentId)))
+            .WithName("ListRecordArrControlledDocumentDistributions");
+
+        group.MapGet("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, RecordArrStore store) =>
+            Results.Ok(store.GetDocumentAcknowledgements(controlledDocumentId)))
+            .WithName("ListRecordArrControlledDocumentAcknowledgements");
+
+        group.MapGet("/access-policies", (RecordArrStore store) => Results.Ok(store.GetAccessPolicies()))
+            .WithName("ListRecordArrAccessPolicies");
+
+        group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
+            .WithName("ListRecordArrAccessGrants");
+
+        group.MapGet("/external-shares", (RecordArrStore store) => Results.Ok(store.GetExternalShares()))
+            .WithName("ListRecordArrExternalShares");
+
+        group.MapGet("/redactions", (RecordArrStore store) => Results.Ok(store.GetRedactions()))
+            .WithName("ListRecordArrRedactions");
+
+        group.MapGet("/disposal-reviews", (RecordArrStore store) => Results.Ok(store.GetDisposalReviews()))
+            .WithName("ListRecordArrDisposalReviews");
+
+        group.MapGet("/retention-policies", (RecordArrStore store) => Results.Ok(store.GetRetentionPolicies()))
+            .WithName("ListRecordArrRetentionPolicies");
+
+        group.MapGet("/records/{recordId}/retention-status", (string recordId, RecordArrStore store) =>
+        {
+            var status = store.GetRetentionStatus(recordId);
+            return status is null ? Results.NotFound() : Results.Ok(status);
+        }).WithName("GetRecordArrRetentionStatus");
+
+        group.MapPost("/legal-holds", (CreateLegalHoldRequest request, RecordArrStore store) =>
+        {
+            var hold = store.CreateLegalHold(
+                request.Title,
+                request.Description,
+                request.HoldType,
+                request.SourceProduct,
+                request.SourceObjectType,
+                request.SourceObjectId,
+                request.CreatedByPersonId,
+                request.ScopeRules,
+                request.RecordRefs);
+            return Results.Created($"/api/v1/workspace/legal-holds/{hold.LegalHoldId}", hold);
+        }).WithName("CreateRecordArrLegalHold");
+
+        group.MapGet("/legal-holds", (RecordArrStore store) => Results.Ok(store.GetLegalHolds()))
+            .WithName("ListRecordArrLegalHolds");
+
+        group.MapPost("/legal-holds/{legalHoldId}/activate", (string legalHoldId, RecordArrStore store) =>
+        {
+            var hold = store.ActivateLegalHold(legalHoldId);
+            return Results.Ok(hold);
+        }).WithName("ActivateRecordArrLegalHold");
+
+        group.MapPost("/legal-holds/{legalHoldId}/release", (string legalHoldId, ReleaseLegalHoldRequest request, RecordArrStore store) =>
+        {
+            var hold = store.ReleaseLegalHold(legalHoldId, request.ReleasedByPersonId, request.ReleaseReason);
+            return Results.Ok(hold);
+        }).WithName("ReleaseRecordArrLegalHold");
+    }
+
+    public sealed record CreateRecordRequest(
+        string Title,
+        string Description,
+        string RecordType,
+        string DocumentType,
+        string SourceProduct,
+        string SourceObjectType,
+        string SourceObjectId,
+        string SourceObjectDisplayName,
+        string OwnerPersonId,
+        string UploadedByPersonId,
+        string CurrentFileName,
+        string CurrentMimeType);
+
+    public sealed record UpdateRecordRequest(
+        string Status,
+        string? Classification,
+        DateTimeOffset? EffectiveAt,
+        DateTimeOffset? ExpiresAt);
+
+    public sealed record CreateUploadSessionRequest(
+        string SourceProduct,
+        string SourceObjectType,
+        string SourceObjectId,
+        string UploadPurpose,
+        bool RequiresDocumentScan,
+        bool RequiresOcr,
+        bool RequiresManualReview);
+
+    public sealed record CompleteUploadSessionRequest(string RecordId);
+    public sealed record RevokeUploadSessionRequest(string Reason);
+    public sealed record CreateDocumentScanRequest(string RecordId, string OriginalFileName, string ScanPurpose);
+    public sealed record ManualCorrectionRequest(string EdgeCoordinates);
+
+    public sealed record CreateEvidenceMappingRequest(
+        string RecordId,
+        string SourceProduct,
+        string SourceObjectType,
+        string SourceObjectId,
+        string ComplianceRequirementRef,
+        string EvidenceTypeKey,
+        string MappingSource,
+        decimal ConfidenceScore);
+
+    public sealed record ConfirmEvidenceMappingRequest(string ConfirmedByPersonId, string? Notes);
+    public sealed record RejectEvidenceMappingRequest(string RejectedByPersonId, string RejectionReason, string? Notes);
+
+    public sealed record CreatePackageRequest(
+        string Title,
+        string PackageType,
+        string SourceProduct,
+        string SourceObjectRef,
+        string RecordRef);
+
+    public sealed record CreateLegalHoldRequest(
+        string Title,
+        string Description,
+        string HoldType,
+        string SourceProduct,
+        string SourceObjectType,
+        string SourceObjectId,
+        string CreatedByPersonId,
+        IReadOnlyList<string> ScopeRules,
+        IReadOnlyList<string> RecordRefs);
+
+    public sealed record ReleaseLegalHoldRequest(string ReleasedByPersonId, string ReleaseReason);
+}

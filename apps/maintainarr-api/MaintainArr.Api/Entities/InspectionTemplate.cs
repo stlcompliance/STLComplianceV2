@@ -75,15 +75,13 @@ public static class InspectionTemplateStatuses
 
 
 public static class InspectionChecklistItemTypes
-
 {
-
     public const string PassFail = "pass_fail";
-
+    public const string YesNo = "yes_no";
     public const string Numeric = "numeric";
-
     public const string Text = "text";
-
+    public const string Select = "select";
+    public const string MultiSelect = "multi_select";
 }
 
 

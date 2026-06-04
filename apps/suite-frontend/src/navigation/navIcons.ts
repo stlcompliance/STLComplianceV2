@@ -1,6 +1,7 @@
 import {
   Activity,
   AlertTriangle,
+  Archive,
   Bell,
   BookOpenCheck,
   Boxes,
@@ -39,6 +40,7 @@ export const navIcons = {
   maintainarr: Wrench,
   routarr: Route,
   supplyarr: PackageSearch,
+  recordarr: Archive,
   complianceCore: ClipboardCheck,
   settings: Settings,
   notifications: Bell,

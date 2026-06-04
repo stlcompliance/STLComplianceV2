@@ -1,0 +1,3540 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "RecordArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "RecordArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-grants": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessGrants/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-logs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessLogs/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessPolicies/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocuments/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocument/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateControlledDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationControlledDocument/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/acknowledgements": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentAcknowledgements/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/distributions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentDistributions/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/reviews": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDocumentReview/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentReviews/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/reviews/{reviewId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationDocumentReview/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/versions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentVersion/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateControlledDocumentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentVersions/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/disposal-reviews": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDisposalReviews/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/document-scans": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDocumentScan/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDocumentScans/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/document-scans/{scanProcessingId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationDocumentScan/api/integrations",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/document-scans/{scanProcessingId}/manual-correction": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ApplyRecordArrIntegrationManualCorrection/api/integrations",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/evidence-mappings": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationEvidenceMappings/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationEvidenceMapping/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/evidence-mappings/{mappingId}/confirm": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ConfirmRecordArrIntegrationEvidenceMapping/api/integrations",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/evidence-mappings/{mappingId}/reject": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RejectRecordArrIntegrationEvidenceMapping/api/integrations",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/external-shares": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationExternalShare/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationExternalShares/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/external-shares/{externalShareId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationExternalShare/api/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/legal-holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationLegalHold/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationLegalHolds/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/legal-holds/{legalHoldId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseRecordArrIntegrationLegalHold/api/integrations",
+        "parameters": [
+          {
+            "name": "legalHoldId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/record-packages": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationPackages/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationPackage/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/record-packages/{packageId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/record-packages/{packageId}/download": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DownloadRecordArrIntegrationPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/record-packages/{packageId}/lock": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "LockRecordArrIntegrationPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/records": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRecords/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRecord/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/records/{recordId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationRecord/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationRecord/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/records/{recordId}/retention-status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationRetentionStatus/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/redactions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRedaction/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRedactionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRedactions/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionPolicies/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/upload-sessions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationUploadSessions/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/upload-sessions/{uploadSessionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationUploadSession/api/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/upload-sessions/{uploadSessionId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationUploadSession/api/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/upload-sessions/{uploadSessionId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationUploadSession/api/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "RecordArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-grants": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessGrants/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-logs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessLogs/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessPolicies/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocuments/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocument/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateControlledDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationControlledDocument/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/acknowledgements": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentAcknowledgements/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/distributions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentDistributions/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/reviews": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDocumentReview/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentReviews/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/reviews/{reviewId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationDocumentReview/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/versions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationControlledDocumentVersion/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateControlledDocumentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationControlledDocumentVersions/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/disposal-reviews": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDisposalReviews/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/document-scans": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationDocumentScan/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDocumentScans/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/document-scans/{scanProcessingId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationDocumentScan/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/document-scans/{scanProcessingId}/manual-correction": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ApplyRecordArrIntegrationManualCorrection/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/evidence-mappings": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationEvidenceMappings/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationEvidenceMapping/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/evidence-mappings/{mappingId}/confirm": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ConfirmRecordArrIntegrationEvidenceMapping/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/evidence-mappings/{mappingId}/reject": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RejectRecordArrIntegrationEvidenceMapping/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/external-shares": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationExternalShare/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationExternalShares/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/external-shares/{externalShareId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationExternalShare/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/legal-holds": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationLegalHold/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationLegalHolds/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/legal-holds/{legalHoldId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseRecordArrIntegrationLegalHold/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "legalHoldId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/record-packages": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationPackages/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationPackage/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/record-packages/{packageId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/record-packages/{packageId}/download": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DownloadRecordArrIntegrationPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/record-packages/{packageId}/lock": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "LockRecordArrIntegrationPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/records": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRecords/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRecord/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/records/{recordId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationRecord/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateRecordArrIntegrationRecord/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/records/{recordId}/retention-status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationRetentionStatus/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/redactions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationRedaction/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRedactionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRedactions/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/retention-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionPolicies/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/upload-sessions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationUploadSessions/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/upload-sessions/{uploadSessionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationUploadSession/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/upload-sessions/{uploadSessionId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationUploadSession/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/upload-sessions/{uploadSessionId}/revoke": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RevokeRecordArrIntegrationUploadSession/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "RecordArrGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-grants": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrAccessGrants",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-policies": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrAccessPolicies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/acknowledgements": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrControlledDocumentAcknowledgements",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/distributions": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrControlledDocumentDistributions",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/reviews": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrControlledDocumentReviews",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/versions": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrControlledDocumentVersions",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/disposal-reviews": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrDisposalReviews",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/document-scans": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrDocumentScan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrDocumentScans",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/document-scans/{scanProcessingId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrDocumentScan",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/document-scans/{scanProcessingId}/manual-correction": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ApplyRecordArrManualCorrection",
+        "parameters": [
+          {
+            "name": "scanProcessingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/evidence-mappings": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrEvidenceMappings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrEvidenceMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/evidence-mappings/{mappingId}/confirm": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ConfirmRecordArrEvidenceMapping",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/evidence-mappings/{mappingId}/reject": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RejectRecordArrEvidenceMapping",
+        "parameters": [
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectEvidenceMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/external-shares": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrExternalShares",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/legal-holds": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrLegalHold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrLegalHolds",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/legal-holds/{legalHoldId}/activate": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ActivateRecordArrLegalHold",
+        "parameters": [
+          {
+            "name": "legalHoldId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/legal-holds/{legalHoldId}/release": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ReleaseRecordArrLegalHold",
+        "parameters": [
+          {
+            "name": "legalHoldId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLegalHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/record-packages": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/record-packages/{packageId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrPackage",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/record-packages/{packageId}/lock": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "LockRecordArrPackage",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/record-packages/{packageId}/manifest": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrPackageManifest",
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/records": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRecords",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrRecord",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/records/{recordId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrRecord",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "UpdateRecordArrRecord",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/records/{recordId}/retention-status": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrRetentionStatus",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/redactions": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRedactions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-policies": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRetentionPolicies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/summary": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrWorkspaceSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/upload-sessions": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrUploadSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrUploadSessions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/upload-sessions/{uploadSessionId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetRecordArrUploadSession",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/upload-sessions/{uploadSessionId}/complete": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CompleteRecordArrUploadSession",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/upload-sessions/{uploadSessionId}/revoke": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RevokeRecordArrUploadSession",
+        "parameters": [
+          {
+            "name": "uploadSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health/observability": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetObservabilityHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CompleteDocumentReviewRequest": {
+        "required": [
+          "status",
+          "decisionReason",
+          "comments"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "decisionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CompleteUploadSessionRequest": {
+        "required": [
+          "recordId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          }
+        }
+      },
+      "ConfirmEvidenceMappingRequest": {
+        "required": [
+          "confirmedByPersonId",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmedByPersonId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateControlledDocumentRequest": {
+        "required": [
+          "title",
+          "description",
+          "controlledDocumentType",
+          "ownerPersonId",
+          "departmentOrgUnitId",
+          "staffarrSiteId",
+          "acknowledgementRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "controlledDocumentType": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": "string"
+          },
+          "departmentOrgUnitId": {
+            "type": "string"
+          },
+          "staffarrSiteId": {
+            "type": "string"
+          },
+          "acknowledgementRequired": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateControlledDocumentVersionRequest": {
+        "required": [
+          "fileName",
+          "createdByPersonId",
+          "changeSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          },
+          "changeSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateDocumentReviewRequest": {
+        "required": [
+          "versionId",
+          "reviewType",
+          "requestedByPersonId",
+          "reviewerPersonId",
+          "dueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string"
+          },
+          "reviewType": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          },
+          "reviewerPersonId": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateDocumentScanRequest": {
+        "required": [
+          "recordId",
+          "originalFileName",
+          "scanPurpose"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "originalFileName": {
+            "type": "string"
+          },
+          "scanPurpose": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateEvidenceMappingRequest": {
+        "required": [
+          "recordId",
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "complianceRequirementRef",
+          "evidenceTypeKey",
+          "mappingSource",
+          "confidenceScore"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "complianceRequirementRef": {
+            "type": "string"
+          },
+          "evidenceTypeKey": {
+            "type": "string"
+          },
+          "mappingSource": {
+            "type": "string"
+          },
+          "confidenceScore": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "CreateExternalShareRequest": {
+        "required": [
+          "recordId",
+          "recipientName",
+          "recipientEmail",
+          "sharePurpose",
+          "allowedActions",
+          "createdByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string"
+          },
+          "recipientEmail": {
+            "type": "string"
+          },
+          "sharePurpose": {
+            "type": "string"
+          },
+          "allowedActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateLegalHoldRequest": {
+        "required": [
+          "title",
+          "description",
+          "holdType",
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "createdByPersonId",
+          "scopeRules",
+          "recordRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "holdType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "createdByPersonId": {
+            "type": "string"
+          },
+          "scopeRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreatePackageRequest": {
+        "required": [
+          "title",
+          "packageType",
+          "sourceProduct",
+          "sourceObjectRef",
+          "recordRef"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "packageType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": "string"
+          },
+          "recordRef": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRecordRequest": {
+        "required": [
+          "title",
+          "description",
+          "recordType",
+          "documentType",
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "sourceObjectDisplayName",
+          "ownerPersonId",
+          "uploadedByPersonId",
+          "currentFileName",
+          "currentMimeType"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "recordType": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "sourceObjectDisplayName": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": "string"
+          },
+          "uploadedByPersonId": {
+            "type": "string"
+          },
+          "currentFileName": {
+            "type": "string"
+          },
+          "currentMimeType": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRedactionRequest": {
+        "required": [
+          "sourceRecordId",
+          "redactedRecordId",
+          "redactionReason",
+          "redactedByPersonId",
+          "redactionRules"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceRecordId": {
+            "type": "string"
+          },
+          "redactedRecordId": {
+            "type": "string"
+          },
+          "redactionReason": {
+            "type": "string"
+          },
+          "redactedByPersonId": {
+            "type": "string"
+          },
+          "redactionRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateUploadSessionRequest": {
+        "required": [
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "uploadPurpose",
+          "requiresDocumentScan",
+          "requiresOcr",
+          "requiresManualReview"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "uploadPurpose": {
+            "type": "string"
+          },
+          "requiresDocumentScan": {
+            "type": "boolean"
+          },
+          "requiresOcr": {
+            "type": "boolean"
+          },
+          "requiresManualReview": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManualCorrectionRequest": {
+        "required": [
+          "edgeCoordinates"
+        ],
+        "type": "object",
+        "properties": {
+          "edgeCoordinates": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectEvidenceMappingRequest": {
+        "required": [
+          "rejectedByPersonId",
+          "rejectionReason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "rejectedByPersonId": {
+            "type": "string"
+          },
+          "rejectionReason": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReleaseLegalHoldRequest": {
+        "required": [
+          "releasedByPersonId",
+          "releaseReason"
+        ],
+        "type": "object",
+        "properties": {
+          "releasedByPersonId": {
+            "type": "string"
+          },
+          "releaseReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RevokeExternalShareRequest": {
+        "required": [
+          "revokedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "revokedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "RevokeUploadSessionRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRecordRequest": {
+        "required": [
+          "status",
+          "classification",
+          "effectiveAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "classification": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "RecordArr.Api"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "Workspace"
+    },
+    {
+      "name": "Integrations"
+    }
+  ]
+}

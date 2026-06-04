@@ -10,6 +10,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   routarr: 'http://localhost:5180',
   fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',
+  recordarr: 'http://localhost:5184',
 }
 
 function resolveSuiteHomeUrl(suiteHomeUrl: string): string {

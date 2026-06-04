@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/apps/" />
+  <Folder Name="/apps/">
+    <Project Path="apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/compliancecore-api/">
     <Project Path="apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj" />
   </Folder>
@@ -14,6 +16,9 @@
   </Folder>
   <Folder Name="/apps/routarr-api/">
     <Project Path="apps/routarr-api/RoutArr.Api/RoutArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/recordarr-api/">
+    <Project Path="apps/recordarr-api/RecordArr.Api/RecordArr.Api.csproj" />
   </Folder>
   <Folder Name="/apps/staffarr-api/">
     <Project Path="apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj" />
@@ -30,6 +35,7 @@
   </Folder>
   <Folder Name="/packages/shared-ui/" />
   <Folder Name="/tests/">
+    <Project Path="tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj" />
     <Project Path="tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />
     <Project Path="tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj" />

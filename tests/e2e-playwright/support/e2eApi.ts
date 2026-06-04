@@ -27,6 +27,10 @@ function loadarrApiUrl(): string {
   return process.env.E2E_LOADARR_API_URL ?? 'http://localhost:5108'
 }
 
+function recordarrApiUrl(): string {
+  return process.env.E2E_RECORDARR_API_URL ?? 'http://localhost:5110'
+}
+
 function supplyarrApiUrl(): string {
   return process.env.E2E_SUPPLYARR_API_URL ?? 'http://localhost:5106'
 }
@@ -123,6 +127,7 @@ const productApiUrls: Record<string, () => string> = {
   maintainarr: maintainarrApiUrl,
   routarr: routarrApiUrl,
   loadarr: loadarrApiUrl,
+  recordarr: recordarrApiUrl,
   supplyarr: supplyarrApiUrl,
   compliancecore: compliancecoreApiUrl,
 }

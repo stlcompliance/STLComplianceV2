@@ -136,6 +136,36 @@ services:
       postgres:
         condition: service_healthy
 
+  recordarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/recordarr-api/RecordArr.Api/RecordArr.Api.csproj
+        ASSEMBLY_NAME: RecordArr.Api
+    ports:
+      - "5110:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Cors__RecordArrFrontendOrigin: http://127.0.0.1:5184
+
+  assurarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj
+        ASSEMBLY_NAME: AssurArr.Api
+    ports:
+      - "5109:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=assurarr;Username=stl;Password=stl_dev_password
+      AssurArr__FrontendBaseUrl: http://127.0.0.1:5183
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   loadarr-api:
     build:
       context: .

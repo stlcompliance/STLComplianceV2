@@ -20,6 +20,7 @@ const PRODUCT_DESCRIPTIONS: Record<string, string> = {
   maintainarr: 'Assets and maintenance',
   routarr: 'Routes and dispatch',
   supplyarr: 'Procurement and inventory',
+  recordarr: 'Records, evidence, and retention',
   compliancecore: 'Rules, vocabulary, and references',
   fieldcompanion: 'Field inbox and mobile tasks',
 }

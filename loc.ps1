@@ -203,6 +203,8 @@ function ConvertTo-ProductName {
         'loadarr' { return 'LoadArr' }
         'maintainarr' { return 'MaintainArr' }
         'nexarr' { return 'NexArr' }
+        'recordarr' { return 'RecordArr' }
+        'assurarr' { return 'AssurArr' }
         'routarr' { return 'RoutArr' }
         'staffarr' { return 'StaffArr' }
         'supplyarr' { return 'SupplyArr' }

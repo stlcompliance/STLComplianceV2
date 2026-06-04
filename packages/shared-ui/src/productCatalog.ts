@@ -1,9 +1,11 @@
 import {
+  Archive,
   ClipboardCheck,
   GraduationCap,
   Inbox,
   PackageSearch,
   Route,
+  ShieldAlert,
   ShieldCheck,
   Users,
   Warehouse,
@@ -75,6 +77,20 @@ export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
     description: 'Warehouse load execution',
     icon: Warehouse,
     sortOrder: 65,
+  },
+  {
+    productKey: 'recordarr',
+    displayName: 'RecordArr',
+    description: 'Records, evidence, and retention',
+    icon: Archive,
+    sortOrder: 66,
+  },
+  {
+    productKey: 'assurarr',
+    displayName: 'AssurArr',
+    description: 'Quality assurance and CAPA',
+    icon: ShieldAlert,
+    sortOrder: 67,
   },
   {
     productKey: 'fieldcompanion',

@@ -1,0 +1,764 @@
+import { useMemo, useState, type ReactNode } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  AlertTriangle,
+  BarChart3,
+  BookCheck,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  FolderKanban,
+  Gauge,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  ListTodo,
+  History,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { ProductAppShell, type ProductNavItem } from '@stl/shared-ui'
+import {
+  assurarrApi,
+} from './api'
+
+const asNavIcon = (icon: LucideIcon): ProductNavItem['icon'] => icon as unknown as ProductNavItem['icon']
+
+const navItems: ProductNavItem[] = [
+  { label: 'Dashboard', to: '/', icon: asNavIcon(Gauge) },
+  { label: 'Nonconformances', to: '/nonconformances', icon: asNavIcon(AlertTriangle) },
+  { label: 'Holds', to: '/holds', icon: asNavIcon(ShieldCheck) },
+  { label: 'CAPA', to: '/capa', icon: asNavIcon(ListTodo) },
+  { label: 'Audits', to: '/audits', icon: asNavIcon(ClipboardList) },
+  { label: 'Findings', to: '/findings', icon: asNavIcon(Sparkles) },
+  { label: 'Status', to: '/status', icon: asNavIcon(BookCheck), sectionBreakBefore: true },
+  { label: 'Scorecards', to: '/scorecards', icon: asNavIcon(BarChart3) },
+  { label: 'History', to: '/history', icon: asNavIcon(History) },
+  { label: 'Settings', to: '/settings', icon: asNavIcon(FolderKanban), sectionBreakBefore: true },
+]
+
+const statusOptions: Record<string, readonly string[]> = {
+  nonconformance: ['open', 'containment', 'investigation', 'disposition_pending', 'corrective_action', 'verification', 'release_pending', 'closed', 'canceled'],
+  hold: ['draft', 'active', 'release_pending', 'released', 'rejected', 'canceled', 'expired'],
+  capa: ['draft', 'open', 'root_cause', 'action_plan', 'implementation', 'verification', 'effective', 'ineffective', 'closed', 'canceled'],
+  audit: ['draft', 'planned', 'in_progress', 'findings_review', 'corrective_action', 'verification', 'closed', 'canceled'],
+  finding: ['open', 'accepted', 'disputed', 'nonconformance_created', 'corrective_action', 'verified', 'closed', 'canceled'],
+}
+
+function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <ProductAppShell
+      productName="AssurArr"
+      productKey="assurarr"
+      workspaceSubtitle="Quality assurance, holds, and CAPA"
+      entitlements={['assurarr']}
+      navItems={navItems}
+    >
+      {children}
+    </ProductAppShell>
+  )
+}
+
+function useDashboard() {
+  return useQuery({
+    queryKey: ['assurarr', 'dashboard'],
+    queryFn: assurarrApi.getDashboard,
+    staleTime: 30_000,
+  })
+}
+
+function useRecords<T>(queryKey: readonly unknown[], queryFn: () => Promise<T>) {
+  return useQuery({
+    queryKey,
+    queryFn,
+    staleTime: 15_000,
+  })
+}
+
+function joinRefs(value: string): string[] {
+  return value
+    .split(/[,\n;]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function toneClass(tone: string): string {
+  switch (tone) {
+    case 'danger':
+      return 'text-rose-200'
+    case 'warning':
+      return 'text-amber-200'
+    case 'info':
+    case 'accent':
+      return 'text-cyan-200'
+    default:
+      return 'text-slate-200'
+  }
+}
+
+function PageHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description: string
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/75 p-5 shadow-xl shadow-slate-950/20 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">AssurArr</p>
+        <h1 className="text-2xl font-semibold text-slate-50">{title}</h1>
+        <p className="max-w-3xl text-sm text-slate-300">{description}</p>
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function DashboardPage() {
+  const query = useDashboard()
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Quality control center"
+        description="Track nonconformances, holds, CAPA, audits, and the current quality posture that other products consume."
+        action={<span className="assurarr-pill"><CalendarClock className="h-4 w-4" /> Updated {query.data ? new Date(query.data.generatedAt).toLocaleString() : 'recently'}</span>}
+      />
+      {query.isLoading ? <LoadingCard label="Loading dashboard" /> : null}
+      {query.data ? (
+        <>
+          <div className="assurarr-grid cols-3">
+            {query.data.cards.map((card) => (
+              <div key={card.key} className="assurarr-card">
+                <div className="assurarr-card-inner">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="assurarr-label">{card.title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{card.description}</p>
+                    </div>
+                    <span className={`text-3xl font-semibold ${toneClass(card.tone)}`}>{card.count}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="assurarr-grid cols-2">
+            <div className="assurarr-card">
+              <div className="assurarr-card-inner space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-cyan-300" />
+                  <h2 className="text-lg font-semibold text-slate-50">Recent events</h2>
+                </div>
+                <div className="space-y-3">
+                  {query.data.recentEvents.length === 0 ? <EmptyState title="No quality events yet" /> : null}
+                  {query.data.recentEvents.map((event) => (
+                    <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <strong className="text-sm text-slate-100">{event.eventType}</strong>
+                        <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-300">
+                        {event.subjectType} {event.subjectId}
+                        {event.details ? ` - ${event.details}` : ''}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="assurarr-card">
+              <div className="assurarr-card-inner space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                  <h2 className="text-lg font-semibold text-slate-50">Operational posture</h2>
+                </div>
+                <p className="text-sm text-slate-300">
+                  AssurArr is publishing current quality state for downstream products while keeping the underlying issue records editable here.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>Nonconformance holds can block release decisions.</li>
+                  <li>CAPA and audit findings are visible in the same workspace.</li>
+                  <li>Quality status snapshots are ready for product consumption.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+function LoadingCard({ label }: { label: string }) {
+  return (
+    <div className="assurarr-card">
+      <div className="assurarr-card-inner text-sm text-slate-300">{label}</div>
+    </div>
+  )
+}
+
+function EmptyState({ title }: { title: string }) {
+  return <div className="rounded-xl border border-dashed border-slate-700/80 p-4 text-sm text-slate-400">{title}</div>
+}
+
+function RecordForm({
+  title,
+  entityLabel,
+  onCreate,
+}: {
+  title: string
+  entityLabel: string
+  onCreate: (body: {
+    title: string
+    description: string
+    severity: string
+    sourceProduct: string
+    sourceObjectRef: string
+    affectedObjectRefs: string[]
+    ownerPersonId: string
+    extra?: Record<string, string>
+  }) => Promise<unknown>
+}) {
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    sourceProduct: 'loadarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    ownerPersonId: '',
+  })
+  const [extra, setExtra] = useState<Record<string, string>>({})
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      onCreate({
+        ...form,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        extra,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        sourceProduct: 'loadarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        ownerPersonId: '',
+      })
+      setExtra({})
+    },
+  })
+
+  return (
+    <div className="assurarr-card">
+      <div className="assurarr-card-inner space-y-4">
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4 text-cyan-300" />
+          <h3 className="text-base font-semibold text-slate-50">{title}</h3>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label={`${entityLabel} title`}>
+            <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder={`New ${entityLabel.toLowerCase()} title`} />
+          </Field>
+          <Field label="Severity">
+            <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+              <option value="low">Low</option>
+              <option value="moderate">Moderate</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+              <option value="none">None</option>
+            </select>
+          </Field>
+          <Field label="Source product">
+            <input className="assurarr-input" value={form.sourceProduct} onChange={(event) => setForm({ ...form, sourceProduct: event.target.value })} />
+          </Field>
+          <Field label="Source object ref">
+            <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="loadarr:receiving:RR-24018" />
+          </Field>
+          <Field label="Affected object refs" wide>
+            <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} placeholder="One reference per line or comma-separated" />
+          </Field>
+          <Field label="Description" wide>
+            <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Describe the issue, decision, or quality observation" />
+          </Field>
+          <Field label="Owner person id">
+            <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} placeholder="Optional UUID" />
+          </Field>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : `Create ${entityLabel}`}
+          </button>
+          {mutation.isError ? <span className="text-sm text-rose-300">{String(mutation.error)}</span> : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  children,
+  wide,
+}: {
+  label: string
+  children: ReactNode
+  wide?: boolean
+}) {
+  return (
+    <label className={wide ? 'md:col-span-2' : ''}>
+      <div className="assurarr-label mb-2">{label}</div>
+      {children}
+    </label>
+  )
+}
+
+function EntityTable<T extends { id: string; number: string; title: string; status: string; severity: string; sourceProduct: string | null; sourceObjectRef: string | null; affectedObjectRefs: string[]; createdAt: string; updatedAt: string }>(
+  {
+    items,
+    emptyLabel,
+    onStatusChange,
+    statusChoices,
+  }: {
+    items: T[]
+    emptyLabel: string
+    onStatusChange?: (id: string, status: string) => Promise<unknown>
+    statusChoices?: readonly string[]
+  },
+) {
+  const [selectedStatus, setSelectedStatus] = useState<Record<string, string>>({})
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      if (!onStatusChange) {
+        return null
+      }
+      return onStatusChange(id, status)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+
+  if (items.length === 0) {
+    return <EmptyState title={emptyLabel} />
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/75">
+      <table className="assurarr-table">
+        <thead>
+          <tr>
+            <th>Record</th>
+            <th>Status</th>
+            <th>Severity</th>
+            <th>Source</th>
+            <th>Refs</th>
+            <th>Updated</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td>
+                <div className="font-semibold text-slate-50">{item.number}</div>
+                <div className="text-sm text-slate-300">{item.title}</div>
+              </td>
+              <td>{item.status}</td>
+              <td>{item.severity}</td>
+              <td className="text-sm text-slate-300">
+                <div>{item.sourceProduct ?? 'manual'}</div>
+                <div className="text-xs text-slate-400">{item.sourceObjectRef ?? 'n/a'}</div>
+              </td>
+              <td className="text-sm text-slate-300">
+                {item.affectedObjectRefs.length > 0 ? item.affectedObjectRefs.join(', ') : 'none'}
+              </td>
+              <td className="text-sm text-slate-300">{new Date(item.updatedAt).toLocaleString()}</td>
+              <td>
+                {statusChoices && onStatusChange ? (
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="assurarr-select py-2 text-sm"
+                      value={selectedStatus[item.id] ?? item.status}
+                      onChange={(event) =>
+                        setSelectedStatus({
+                          ...selectedStatus,
+                          [item.id]: event.target.value,
+                        })
+                      }
+                    >
+                      {statusChoices.map((choice) => (
+                        <option key={choice} value={choice}>
+                          {choice}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="assurarr-button secondary whitespace-nowrap"
+                      type="button"
+                      onClick={() =>
+                        mutation.mutate({
+                          id: item.id,
+                          status: selectedStatus[item.id] ?? item.status,
+                        })
+                      }
+                      disabled={mutation.isPending}
+                    >
+                      Update
+                    </button>
+                  </div>
+                ) : (
+                  <span className="assurarr-pill">Read only</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function NonconformancePage() {
+  const query = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const createMutation = useMutation({
+    mutationFn: async (body: {
+      title: string
+      description: string
+      severity: string
+      sourceProduct: string
+      sourceObjectRef: string
+      affectedObjectRefs: string[]
+      ownerPersonId: string
+      extra?: Record<string, string>
+    }) =>
+      assurarrApi.createNonconformance({
+        title: body.title,
+        description: body.description,
+        severity: body.severity,
+        sourceProduct: body.sourceProduct,
+        sourceObjectRef: body.sourceObjectRef,
+        affectedObjectRefs: body.affectedObjectRefs,
+        ownerPersonId: body.ownerPersonId || undefined,
+        nonconformanceType: body.extra?.nonconformanceType ?? 'receiving',
+        category: body.extra?.category ?? 'failed_inspection',
+        recurrenceFlag: false,
+      }),
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Nonconformances"
+        description="Open, investigate, and close quality failures before they spread."
+        action={<span className="assurarr-pill"><Plus className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <RecordForm
+        title="Create nonconformance"
+        entityLabel="Nonconformance"
+        onCreate={async (body) => {
+          await createMutation.mutateAsync({
+            ...body,
+            extra: { nonconformanceType: 'receiving', category: 'failed_inspection' },
+          })
+        }}
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No nonconformances yet."
+          onStatusChange={(id, status) => assurarrApi.updateNonconformanceStatus(id, status)}
+          statusChoices={statusOptions.nonconformance}
+        />
+      ) : (
+        <LoadingCard label="Loading nonconformances" />
+      )}
+    </div>
+  )
+}
+
+function HoldPage() {
+  const query = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Quality holds" description="Place active restrictions on affected objects until release requirements are met." />
+      <RecordForm
+        title="Create quality hold"
+        entityLabel="Hold"
+        onCreate={async (body) =>
+          assurarrApi.createHold({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            holdType: 'inventory',
+            holdScope: 'full',
+            holdReason: 'Needs quality review',
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No quality holds yet."
+          onStatusChange={(id, status) => assurarrApi.updateHoldStatus(id, status)}
+          statusChoices={statusOptions.hold}
+        />
+      ) : (
+        <LoadingCard label="Loading holds" />
+      )}
+    </div>
+  )
+}
+
+function CapaPage() {
+  const query = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="CAPA" description="Track root cause, action plans, implementation, verification, and closeout." />
+      <RecordForm
+        title="Create CAPA"
+        entityLabel="CAPA"
+        onCreate={async (body) =>
+          assurarrApi.createCapa({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            capaType: 'corrective_and_preventive',
+            sourceType: 'manual',
+            rootCauseSummary: 'Awaiting analysis',
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No CAPA records yet."
+          onStatusChange={(id, status) => assurarrApi.updateCapaStatus(id, status)}
+          statusChoices={statusOptions.capa}
+        />
+      ) : (
+        <LoadingCard label="Loading CAPA" />
+      )}
+    </div>
+  )
+}
+
+function AuditPage() {
+  const query = useRecords(['assurarr', 'audits'], assurarrApi.listAudits)
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Audits" description="Plan, execute, and close internal or supplier audits with findings tied back to quality action." />
+      <RecordForm
+        title="Create audit"
+        entityLabel="Audit"
+        onCreate={async (body) =>
+          assurarrApi.createAudit({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            auditType: 'internal',
+            auditScope: 'Receiving process review',
+            auditorPersonIds: [],
+            checklistRefs: [],
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No audits yet."
+          onStatusChange={(id, status) => assurarrApi.updateAuditStatus(id, status)}
+          statusChoices={statusOptions.audit}
+        />
+      ) : (
+        <LoadingCard label="Loading audits" />
+      )}
+    </div>
+  )
+}
+
+function FindingsPage() {
+  const query = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Findings" description="Audit observations and nonconformances that may drive CAPA or release review." />
+      <RecordForm
+        title="Create finding"
+        entityLabel="Finding"
+        onCreate={async (body) =>
+          assurarrApi.createFinding({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            findingType: 'major_nonconformance',
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No findings yet."
+          onStatusChange={(id, status) => assurarrApi.updateFindingStatus(id, status)}
+          statusChoices={statusOptions.finding}
+        />
+      ) : (
+        <LoadingCard label="Loading findings" />
+      )}
+    </div>
+  )
+}
+
+function StatusPage() {
+  const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Quality status" description="Publish current quality posture to downstream products that need to block, warn, or permit work." />
+      <RecordForm
+        title="Create quality status snapshot"
+        entityLabel="Status"
+        onCreate={async (body) =>
+          assurarrApi.createSnapshot({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            targetProduct: body.sourceProduct || 'loadarr',
+            targetObjectRef: body.sourceObjectRef || 'loadarr:inventory:example',
+            qualityStatus: 'under_review',
+            activeHoldRefs: [],
+            openNonconformanceRefs: [],
+            openCapaRefs: [],
+            openFindingRefs: [],
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No status snapshots yet."
+        />
+      ) : (
+        <LoadingCard label="Loading quality status" />
+      )}
+    </div>
+  )
+}
+
+function ScorecardPage() {
+  const query = useRecords(['assurarr', 'scorecards'], assurarrApi.listScorecards)
+  const now = useMemo(() => new Date(), [])
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Scorecards" description="Trend quality by site, supplier, process, or customer target." />
+      <RecordForm
+        title="Create scorecard"
+        entityLabel="Scorecard"
+        onCreate={async (body) =>
+          assurarrApi.createScorecard({
+            ...body,
+            ownerPersonId: body.ownerPersonId || undefined,
+            targetType: 'site',
+            targetRef: body.sourceObjectRef || 'loadarr:site:north-yard',
+            periodStart: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            periodEnd: now.toISOString(),
+            qualityStatus: 'warning',
+            trend: 'worsening',
+          })
+        }
+      />
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No scorecards yet."
+        />
+      ) : (
+        <LoadingCard label="Loading scorecards" />
+      )}
+    </div>
+  )
+}
+
+function HistoryPage() {
+  const query = useDashboard()
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="History" description="History is recorded as part of the quality dashboard event stream." />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-3">
+          {query.data?.recentEvents.length ? (
+            query.data.recentEvents.map((event) => (
+              <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-sm text-slate-100">{event.eventType}</strong>
+                  <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">
+                  {event.subjectType} {event.subjectId}
+                  {event.details ? ` - ${event.details}` : ''}
+                </p>
+              </div>
+            ))
+          ) : (
+            <EmptyState title="No history yet." />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SettingsPage() {
+  return (
+    <div className="assurarr-page">
+      <PageHeader title="Settings" description="Frontend wiring for AssurArr is minimal in this slice; API and workflows are the focus." />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-2 text-sm text-slate-300">
+          <p>Frontend base URL: <span className="assurarr-kbd">{import.meta.env.VITE_ASSURARR_API_BASE ?? '/api proxy'}</span></p>
+          <p>Local preview port: <span className="assurarr-kbd">5183</span></p>
+          <p>API port: <span className="assurarr-kbd">5109</span></p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function App() {
+  const location = useLocation()
+
+  const title = useMemo(() => {
+    const path = location.pathname
+    if (path.startsWith('/nonconformances')) return 'Nonconformances'
+    if (path.startsWith('/holds')) return 'Holds'
+    if (path.startsWith('/capa')) return 'CAPA'
+    if (path.startsWith('/audits')) return 'Audits'
+    if (path.startsWith('/findings')) return 'Findings'
+    if (path.startsWith('/status')) return 'Status'
+    if (path.startsWith('/scorecards')) return 'Scorecards'
+    if (path.startsWith('/history')) return 'History'
+    return 'Dashboard'
+  }, [location.pathname])
+
+  return (
+    <AppShell>
+      <Routes>
+        <Route index element={<DashboardPage />} />
+        <Route path="/nonconformances" element={<NonconformancePage />} />
+        <Route path="/holds" element={<HoldPage />} />
+        <Route path="/capa" element={<CapaPage />} />
+        <Route path="/audits" element={<AuditPage />} />
+        <Route path="/findings" element={<FindingsPage />} />
+        <Route path="/status" element={<StatusPage />} />
+        <Route path="/scorecards" element={<ScorecardPage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <p className="mt-6 text-sm text-slate-400">Current view: {title}</p>
+    </AppShell>
+  )
+}

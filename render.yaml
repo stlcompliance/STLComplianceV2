@@ -52,6 +52,8 @@ envVarGroups:
         value: https://compliancecore-api-w7e5.onrender.com
       - key: LoadArr__BaseUrl
         value: https://loadarr-api.onrender.com
+      - key: RecordArr__BaseUrl
+        value: https://recordarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
   # These point at the stable app domain and product paths.
   - name: stl-public-frontend-urls
@@ -99,6 +101,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/compliancecore
       - key: VITE_LOADARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/loadarr
+      - key: VITE_RECORDARR_FRONTEND_BASE
+        value: https://app.stlcompliance.com/recordarr
       - key: VITE_COMPANION_FRONTEND_BASE
         value: https://companion-frontend-vf7o.onrender.com
 
@@ -202,6 +206,8 @@ services:
         value: https://app.stlcompliance.com/compliancecore
       - key: Launch__Products__loadarr__BaseUrl
         value: https://app.stlcompliance.com/loadarr
+      - key: Launch__Products__recordarr__BaseUrl
+        value: https://recordarr-api.onrender.com
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -215,6 +221,8 @@ services:
       - key: Launch__Products__compliancecore__LaunchPath
         value: /launch
       - key: Launch__Products__loadarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__recordarr__LaunchPath
         value: /launch
       - key: Launch__Products__companion__BaseUrl
         value: https://companion-frontend-vf7o.onrender.com
@@ -474,6 +482,22 @@ services:
         sync: false
       - key: StaffArr__ServiceToken
         sync: false
+
+  - type: web
+    name: recordarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/recordarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_SERVICE_NAME
+        value: recordarr-api
+      - key: Cors__RecordArrFrontendOrigin
+        value: https://app.stlcompliance.com
 
   # --- Cross-product scheduled jobs ---
   - type: worker

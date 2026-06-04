@@ -25,12 +25,13 @@ jobs:
 
       - name: Start docker-compose APIs
         run: |
-          docker compose up -d --build postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api
+          docker compose up -d --build postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api assurarr-api
           echo "Waiting for API health..."
           for i in $(seq 1 60); do
             if curl -sf http://localhost:5101/health >/dev/null \
               && curl -sf http://localhost:5102/health >/dev/null \
-              && curl -sf http://localhost:5107/health >/dev/null; then
+              && curl -sf http://localhost:5107/health >/dev/null \
+              && curl -sf http://localhost:5109/health >/dev/null; then
               echo "APIs healthy after ${i} attempts"
               exit 0
             fi
@@ -75,7 +76,7 @@ jobs:
 
       - name: Start docker-compose APIs
         run: |
-          docker compose up -d --build postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api
+          docker compose up -d --build postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api assurarr-api
           for i in $(seq 1 60); do
             if curl -sf http://localhost:5101/health >/dev/null \
               && curl -sf http://localhost:5102/health >/dev/null \
@@ -83,8 +84,9 @@ jobs:
               && curl -sf http://localhost:5104/health >/dev/null \
               && curl -sf http://localhost:5105/health >/dev/null \
               && curl -sf http://localhost:5106/health >/dev/null \
-              && curl -sf http://localhost:5107/health >/dev/null; then
-              echo "All seven APIs healthy after ${i} attempts"
+              && curl -sf http://localhost:5107/health >/dev/null \
+              && curl -sf http://localhost:5109/health >/dev/null; then
+              echo "All eight APIs healthy after ${i} attempts"
               exit 0
             fi
             sleep 5
@@ -121,6 +123,7 @@ jobs:
             apps/maintainarr-frontend/package-lock.json
             apps/supplyarr-frontend/package-lock.json
             apps/routarr-frontend/package-lock.json
+            apps/assurarr-frontend/package-lock.json
             apps/companion-frontend/package-lock.json
 
       - name: Start docker-compose APIs

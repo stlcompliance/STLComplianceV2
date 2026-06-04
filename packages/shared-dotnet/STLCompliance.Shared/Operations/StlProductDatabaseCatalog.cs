@@ -13,6 +13,7 @@ public static class StlProductDatabaseCatalog
     public const string SupplyArr = "supplyarr";
     public const string ComplianceCore = "compliancecore";
     public const string LoadArr = "loadarr";
+    public const string AssurArr = "assurarr";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -24,6 +25,7 @@ public static class StlProductDatabaseCatalog
         SupplyArr,
         ComplianceCore,
         LoadArr,
+        AssurArr,
     ];
 
     public static bool IsKnownProductDatabase(string databaseName) =>

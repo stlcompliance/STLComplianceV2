@@ -96,6 +96,15 @@ public static class StlCiFrontendCatalog
             RunsTest: true,
             IsProductFrontendGate: true);
 
+    public static readonly StlCiFrontendJob AssurArrFrontend =
+        new(
+            "assurarr-frontend",
+            "apps/assurarr-frontend",
+            "apps/assurarr-frontend/package-lock.json",
+            RunsBuild: true,
+            RunsTest: true,
+            IsProductFrontendGate: true);
+
     /// <summary>All npm frontend jobs in main CI (marketing site + suite + gated product frontends).</summary>
     public static readonly IReadOnlyList<StlCiFrontendJob> MainCiFrontendJobs =
     [
@@ -108,6 +117,7 @@ public static class StlCiFrontendCatalog
         SupplyArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
+        AssurArrFrontend,
     ];
 
     /// <summary>Arr product frontends that gate main CI via dedicated build/test jobs (W340+).</summary>
@@ -120,6 +130,7 @@ public static class StlCiFrontendCatalog
         SupplyArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
+        AssurArrFrontend,
     ];
 
     public static StlCiFrontendJob? TryGetByJobId(string jobId) =>

@@ -57,4 +57,20 @@ public sealed class StlOpenTelemetryOptionsTests
 
         Assert.Equal("stl-staffarr-api", options.ServiceName);
     }
+
+    [Fact]
+    public void FromConfiguration_honors_assurarr_service_name()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [StlOpenTelemetryOptions.EnabledKey] = "true",
+                [StlOpenTelemetryOptions.ServiceNameKey] = "stl-assurarr-api"
+            })
+            .Build();
+
+        var options = StlOpenTelemetryOptions.FromConfiguration(configuration, "assurarr");
+
+        Assert.Equal("stl-assurarr-api", options.ServiceName);
+    }
 }

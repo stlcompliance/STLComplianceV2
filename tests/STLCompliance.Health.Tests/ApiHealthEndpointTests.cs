@@ -18,6 +18,9 @@ public class TrainArrHealthTests(WebApplicationFactory<TrainArr.Api.Program> fac
 public class MaintainArrHealthTests(WebApplicationFactory<MaintainArr.Api.Program> factory)
     : ApiHealthEndpointTests<MaintainArr.Api.Program>(factory, "maintainarr");
 
+public class RecordArrHealthTests(WebApplicationFactory<RecordArr.Api.Program> factory)
+    : ApiHealthEndpointTests<RecordArr.Api.Program>(factory, "recordarr");
+
 public class RoutArrHealthTests(WebApplicationFactory<RoutArr.Api.Program> factory)
     : ApiHealthEndpointTests<RoutArr.Api.Program>(factory, "routarr");
 
@@ -26,6 +29,9 @@ public class SupplyArrHealthTests(WebApplicationFactory<SupplyArr.Api.Program> f
 
 public class ComplianceCoreHealthTests(WebApplicationFactory<ComplianceCore.Api.Program> factory)
     : ApiHealthEndpointTests<ComplianceCore.Api.Program>(factory, "compliancecore");
+
+public class AssurArrHealthTests(WebApplicationFactory<global::AssurArr.Api.Program> factory)
+    : ApiHealthEndpointTests<global::AssurArr.Api.Program>(factory, "assurarr");
 
 public abstract class ApiHealthEndpointTests<TProgram>(
     WebApplicationFactory<TProgram> factory,
