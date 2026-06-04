@@ -226,6 +226,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.CreateQualityMetricAsync(scorecardId, request, cancellationToken)))
             .WithName("CreateAssurArrQualityMetric");
 
+        group.MapPost("/scorecards/{id:guid}/review", async (Guid id, ReviewAssurArrQualityScorecardRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.ReviewScorecardAsync(id, request, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("ReviewAssurArrQualityScorecard");
+
         integrationGroup.MapGet("/risk-profiles", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityRiskProfilesAsync(cancellationToken)))
             .WithName("ListAssurArrQualityRiskProfiles");

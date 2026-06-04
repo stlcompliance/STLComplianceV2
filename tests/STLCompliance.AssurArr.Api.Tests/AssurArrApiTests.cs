@@ -1045,6 +1045,23 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var metrics = await metricListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
         Assert.NotNull(metrics);
         Assert.Contains(metrics!, item => item.MetricKey == metricKey);
+
+        var reviewByPersonId = Guid.NewGuid();
+        var reviewResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/scorecards/{scorecard.Id}/review",
+            new ReviewAssurArrQualityScorecardRequest(reviewByPersonId, DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, reviewResponse.StatusCode);
+        var reviewed = await reviewResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(reviewed);
+        Assert.Equal(reviewByPersonId, reviewed!.ReviewedByPersonId);
+        Assert.NotNull(reviewed.ReviewedAt);
+
+        var reviewedDetailResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}");
+        reviewedDetailResponse.EnsureSuccessStatusCode();
+        var reviewedDetail = await reviewedDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(reviewedDetail);
+        Assert.Equal(reviewByPersonId, reviewedDetail!.ReviewedByPersonId);
     }
 
     [Fact]

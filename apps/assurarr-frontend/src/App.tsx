@@ -4412,6 +4412,10 @@ function ScorecardDetailPage() {
     status: 'warning',
     sourceProductRefs: 'assurarr, loadarr',
   })
+  const [reviewForm, setReviewForm] = useState({
+    reviewedByPersonId: '',
+    reviewedAt: '',
+  })
   const createMetricMutation = useMutation({
     mutationFn: async () =>
       assurarrApi.createQualityMetric(id, {
@@ -4448,6 +4452,16 @@ function ScorecardDetailPage() {
       })
     },
   })
+  const reviewMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.reviewScorecard(id, {
+        reviewedByPersonId: reviewForm.reviewedByPersonId || undefined,
+        reviewedAt: reviewForm.reviewedAt || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
 
   if (scorecardQuery.isLoading || metricsQuery.isLoading) {
     return <LoadingCard label="Loading scorecard detail" />
@@ -4481,6 +4495,8 @@ function ScorecardDetailPage() {
               <div><span className="text-slate-500">Score:</span> {scorecard.overallScore ?? 'n/a'}</div>
               <div><span className="text-slate-500">Generated:</span> {new Date(scorecard.generatedAt).toLocaleString()}</div>
               <div><span className="text-slate-500">Metric refs:</span> {scorecard.metricRefs.length ? scorecard.metricRefs.join(', ') : 'none'}</div>
+              <div><span className="text-slate-500">Reviewed:</span> {scorecard.reviewedAt ? new Date(scorecard.reviewedAt).toLocaleString() : 'n/a'}</div>
+              <div><span className="text-slate-500">Reviewed by:</span> {scorecard.reviewedByPersonId ?? 'n/a'}</div>
             </div>
           </div>
         </div>
@@ -4523,6 +4539,22 @@ function ScorecardDetailPage() {
             </div>
             <button className="assurarr-button" type="button" onClick={() => createMetricMutation.mutate()} disabled={createMetricMutation.isPending}>
               {createMetricMutation.isPending ? 'Saving...' : 'Create metric'}
+            </button>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <p className="assurarr-label">Review</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Reviewed by person id">
+                <input className="assurarr-input" value={reviewForm.reviewedByPersonId} onChange={(event) => setReviewForm({ ...reviewForm, reviewedByPersonId: event.target.value })} placeholder="Optional UUID" />
+              </Field>
+              <Field label="Reviewed at">
+                <input className="assurarr-input" type="datetime-local" value={reviewForm.reviewedAt} onChange={(event) => setReviewForm({ ...reviewForm, reviewedAt: event.target.value })} />
+              </Field>
+            </div>
+            <button className="assurarr-button secondary" type="button" onClick={() => reviewMutation.mutate()} disabled={reviewMutation.isPending}>
+              {reviewMutation.isPending ? 'Saving...' : 'Mark reviewed'}
             </button>
           </div>
         </div>

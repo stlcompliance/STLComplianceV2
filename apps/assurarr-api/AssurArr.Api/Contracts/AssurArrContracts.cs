@@ -623,6 +623,10 @@ public sealed record CreateAssurArrQualityMetricRequest(
     string Status,
     string[] SourceProductRefs);
 
+public sealed record ReviewAssurArrQualityScorecardRequest(
+    Guid? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt);
+
 public sealed record AssurArrQualityRiskProfileResponse(
     Guid Id,
     string TargetType,

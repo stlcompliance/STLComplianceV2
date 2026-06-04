@@ -2225,6 +2225,40 @@
         }
       }
     },
+    "/api/v1/scorecards/{id}/review": {
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ReviewAssurArrQualityScorecard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewAssurArrQualityScorecardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/scorecards/{scorecardId}/metrics": {
       "get": {
         "tags": [
@@ -4539,6 +4573,29 @@
             "format": "uuid"
           },
           "plannedVerificationAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ReviewAssurArrQualityScorecardRequest": {
+        "required": [
+          "reviewedByPersonId",
+          "reviewedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "reviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewedAt": {
             "type": [
               "null",
               "string"

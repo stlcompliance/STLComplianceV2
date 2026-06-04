@@ -2584,6 +2584,23 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return ToScorecardResponse(entity);
     }
 
+    public async Task<AssurArrQualityScorecardResponse?> ReviewScorecardAsync(Guid id, ReviewAssurArrQualityScorecardRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityScorecards.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null)
+        {
+            return null;
+        }
+
+        var now = request.ReviewedAt ?? DateTimeOffset.UtcNow;
+        entity.ReviewedByPersonId = request.ReviewedByPersonId;
+        entity.ReviewedAt = now;
+        entity.UpdatedAt = now;
+        await AddTimelineAsync("scorecard", entity.Id, "assurarr.scorecard.reviewed", entity.TargetRef, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToScorecardResponse(entity);
+    }
+
     public async Task<List<AssurArrQualityRiskProfileResponse>> ListQualityRiskProfilesAsync(CancellationToken cancellationToken = default)
     {
         var entities = await db.QualityRiskProfiles

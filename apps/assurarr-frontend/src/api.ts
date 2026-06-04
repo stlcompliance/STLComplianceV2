@@ -766,6 +766,11 @@ export const assurarrApi = {
       periodEnd: new Date(body.periodEnd).toISOString(),
       metricRefs: body.metricRefs ?? [],
     }),
+  reviewScorecard: (id: string, body: { reviewedByPersonId?: string | null; reviewedAt?: string | null }) =>
+    sendJson<Scorecard>(`/api/v1/scorecards/${id}/review`, 'POST', {
+      reviewedByPersonId: body.reviewedByPersonId ?? null,
+      reviewedAt: body.reviewedAt ? new Date(body.reviewedAt).toISOString() : null,
+    }),
   listQualityMetrics: (scorecardId: string) => getJson<QualityMetric[]>(`/api/v1/scorecards/${scorecardId}/metrics`),
   createQualityMetric: (scorecardId: string, body: { metricKey: string; title: string; description: string; category: string; value?: number | null; numerator?: number | null; denominator?: number | null; unit?: string | null; targetValue?: number | null; warningThreshold?: number | null; criticalThreshold?: number | null; status: string; sourceProductRefs?: string[] }) =>
     sendJson<QualityMetric>(`/api/v1/scorecards/${scorecardId}/metrics`, 'POST', {
