@@ -1273,6 +1273,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.QualityHolds.Add(entity);
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.placed", entity.Title, cancellationToken);
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.created", entity.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToQualityHoldResponse(entity);
     }
@@ -1305,6 +1306,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             await AddTimelineAsync("hold", entity.Id, "assurarr.hold.canceled", entity.Title, cancellationToken);
         }
+        await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToQualityHoldResponse(entity);
     }
@@ -1353,6 +1355,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.QualityReleases.Add(release);
         await AddTimelineAsync("hold", hold.Id, "assurarr.hold.release_requested", hold.Title, cancellationToken);
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.requested", release.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToReleaseResponse(release);
     }
@@ -1387,6 +1390,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("hold", hold.Id, "assurarr.hold.released", hold.Title, cancellationToken);
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.approved", release.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToReleaseResponse(release);
     }
@@ -1421,9 +1425,49 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("hold", hold.Id, "assurarr.hold.rejected", hold.Title, cancellationToken);
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.rejected", release.Title, cancellationToken);
+        await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToReleaseResponse(release);
     }
+
+    private async Task PublishQualityStatusSnapshotAsync(AssurArrQualityHold entity, CancellationToken cancellationToken)
+    {
+        var targetProduct = NormalizeNullable(entity.SourceProduct) ?? "assurarr";
+        var targetObjectRef = NormalizeNullable(entity.SourceObjectRef) ?? $"assurarr:hold:{entity.Number}";
+        var qualityStatus = DetermineHoldQualityStatus(entity.Status);
+        string[] activeHoldRefs = string.Equals(entity.Status, "released", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "expired", StringComparison.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : [entity.Number];
+
+        await CreateStatusSnapshotAsync(
+            new CreateAssurArrQualityStatusSnapshotRequest(
+                targetProduct,
+                targetObjectRef,
+                qualityStatus,
+                entity.Severity,
+                entity.Title,
+                entity.Description,
+                entity.SourceProduct,
+                entity.SourceObjectRef,
+                entity.AffectedObjectRefs.ToArray(),
+                entity.OwnerPersonId,
+                activeHoldRefs,
+                [],
+                [],
+                [],
+                entity.ExpiresAt),
+            cancellationToken);
+    }
+
+    private static string DetermineHoldQualityStatus(string status) =>
+        string.Equals(status, "released", StringComparison.OrdinalIgnoreCase) ? "acceptable"
+        : string.Equals(status, "release_pending", StringComparison.OrdinalIgnoreCase) ? "conditional_release"
+        : string.Equals(status, "active", StringComparison.OrdinalIgnoreCase) ? "on_hold"
+        : string.Equals(status, "draft", StringComparison.OrdinalIgnoreCase) ? "under_review"
+        : "unknown";
 
     public async Task<List<AssurArrCapaResponse>> ListCapasAsync(CancellationToken cancellationToken = default)
     {

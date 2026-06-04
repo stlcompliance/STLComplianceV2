@@ -237,6 +237,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var approvalHold = await approvalHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(approvalHold);
 
+        var initialHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        initialHoldStatusResponse.EnsureSuccessStatusCode();
+        var initialHoldStatus = await initialHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(initialHoldStatus);
+        Assert.Equal("on_hold", initialHoldStatus!.QualityStatus);
+        Assert.Contains(initialHoldStatus.ActiveHoldRefs, item => item == approvalHold.Number);
+
         var approvalHoldDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         approvalHoldDashboardResponse.EnsureSuccessStatusCode();
         var approvalHoldDashboard = await approvalHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
@@ -289,6 +296,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("release_pending", requestedHold.Status);
         Assert.NotEmpty(requestedHold.ReleaseRequirements);
 
+        var pendingHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        pendingHoldStatusResponse.EnsureSuccessStatusCode();
+        var pendingHoldStatus = await pendingHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(pendingHoldStatus);
+        Assert.Equal("conditional_release", pendingHoldStatus!.QualityStatus);
+        Assert.Contains(pendingHoldStatus.ActiveHoldRefs, item => item == approvalHold.Number);
+
         var releaseApprovalResponse = await _client.PostAsJsonAsync(
             $"/api/v1/integrations/holds/{approvalHold.Id}/release",
             new UpdateAssurArrStatusRequest("executed", "Release approved."));
@@ -303,6 +317,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var holdsAfterRelease = await holdsAfterReleaseResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
         Assert.NotNull(holdsAfterRelease);
         Assert.Equal("released", holdsAfterRelease!.Single(item => item.Id == approvalHold.Id).Status);
+
+        var releasedHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        releasedHoldStatusResponse.EnsureSuccessStatusCode();
+        var releasedHoldStatus = await releasedHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(releasedHoldStatus);
+        Assert.Equal("acceptable", releasedHoldStatus!.QualityStatus);
+        Assert.DoesNotContain(releasedHoldStatus.ActiveHoldRefs, item => item == approvalHold.Number);
 
         var cancelHoldTitle = $"Test cancel hold {Guid.NewGuid():N}";
         var cancelHoldResponse = await _client.PostAsJsonAsync(
@@ -328,6 +349,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var cancelHold = await cancelHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(cancelHold);
 
+        var cancelInitialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        cancelInitialStatusResponse.EnsureSuccessStatusCode();
+        var cancelInitialStatus = await cancelInitialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(cancelInitialStatus);
+        Assert.Equal("on_hold", cancelInitialStatus!.QualityStatus);
+        Assert.Contains(cancelInitialStatus.ActiveHoldRefs, item => item == cancelHold.Number);
+
         var cancelHoldStatusResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/holds/{cancelHold!.Id}/status",
             new UpdateAssurArrStatusRequest("canceled", "Hold no longer needed."));
@@ -339,6 +367,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var cancelHoldDashboard = await cancelHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(cancelHoldDashboard);
         Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.canceled");
+
+        var canceledHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        canceledHoldStatusResponse.EnsureSuccessStatusCode();
+        var canceledHoldStatus = await canceledHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(canceledHoldStatus);
+        Assert.Equal("unknown", canceledHoldStatus!.QualityStatus);
+        Assert.DoesNotContain(canceledHoldStatus.ActiveHoldRefs, item => item == cancelHold.Number);
 
         var rejectHoldTitle = $"Test reject hold {Guid.NewGuid():N}";
         var rejectHoldResponse = await _client.PostAsJsonAsync(
@@ -363,6 +398,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(HttpStatusCode.OK, rejectHoldResponse.StatusCode);
         var rejectHold = await rejectHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(rejectHold);
+
+        var rejectInitialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        rejectInitialStatusResponse.EnsureSuccessStatusCode();
+        var rejectInitialStatus = await rejectInitialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(rejectInitialStatus);
+        Assert.Equal("on_hold", rejectInitialStatus!.QualityStatus);
+        Assert.Contains(rejectInitialStatus.ActiveHoldRefs, item => item == rejectHold.Number);
 
         var rejectReleaseResponse = await _client.PostAsJsonAsync(
             $"/api/v1/integrations/holds/{rejectHold!.Id}/release-requests",
@@ -393,6 +435,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var rejectedRelease = await rejectionResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
         Assert.NotNull(rejectedRelease);
         Assert.Equal("rejected", rejectedRelease!.Status);
+
+        var rejectedHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
+        rejectedHoldStatusResponse.EnsureSuccessStatusCode();
+        var rejectedHoldStatus = await rejectedHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(rejectedHoldStatus);
+        Assert.Equal("unknown", rejectedHoldStatus!.QualityStatus);
+        Assert.DoesNotContain(rejectedHoldStatus.ActiveHoldRefs, item => item == rejectHold.Number);
 
         var holdsAfterRejectResponse = await _client.GetAsync("/api/v1/holds");
         holdsAfterRejectResponse.EnsureSuccessStatusCode();
