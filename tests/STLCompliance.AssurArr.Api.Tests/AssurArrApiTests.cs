@@ -699,7 +699,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         var verificationTitle = $"Test verification plan {Guid.NewGuid():N}";
         var verificationResponse = await _client.PostAsJsonAsync(
-            $"/api/v1/capas/{capa.Id}/verification-plans",
+            $"/api/v1/integrations/capas/{capa.Id}/verification",
             new CreateAssurArrVerificationPlanRequest(
                 verificationTitle,
                 "Automated coverage for verification plans.",

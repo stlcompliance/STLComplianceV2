@@ -119,6 +119,9 @@ public static class AssurArrEndpoints
         group.MapPost("/capas/{capaId:guid}/verification-plans", async (Guid capaId, CreateAssurArrVerificationPlanRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateVerificationPlanAsync(capaId, request, cancellationToken)))
             .WithName("CreateAssurArrVerificationPlan");
+        integrationGroup.MapPost("/capas/{capaId:guid}/verification", async (Guid capaId, CreateAssurArrVerificationPlanRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateVerificationPlanAsync(capaId, request, cancellationToken)))
+            .WithName("CreateAssurArrCapaVerification");
 
         group.MapPatch("/capas/{capaId:guid}/verification-plans/{verificationPlanId:guid}/status", async (Guid capaId, Guid verificationPlanId, UpdateAssurArrVerificationPlanStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.UpdateVerificationPlanStatusAsync(capaId, verificationPlanId, request, cancellationToken)))

@@ -613,7 +613,7 @@ export const assurarrApi = {
     }),
   listVerificationPlans: (capaId: string) => getJson<VerificationPlan[]>(`/api/v1/capas/${capaId}/verification-plans`),
   createVerificationPlan: (capaId: string, body: { title: string; description: string; verificationType: string; successCriteria: string; sampleSize?: number; observationPeriodDays?: number; requiredEvidenceTypes?: string[]; responsiblePersonId?: string; plannedVerificationAt?: string }) =>
-    sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans`, 'POST', {
+    sendJson<VerificationPlan>(`/api/v1/integrations/capas/${capaId}/verification`, 'POST', {
       ...body,
       requiredEvidenceTypes: body.requiredEvidenceTypes ?? [],
       plannedVerificationAt: body.plannedVerificationAt ? new Date(body.plannedVerificationAt).toISOString() : null,
