@@ -1256,6 +1256,10 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
         }
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.status_changed", entity.Status, cancellationToken);
+        if (string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("hold", entity.Id, "assurarr.hold.canceled", entity.Title, cancellationToken);
+        }
         await db.SaveChangesAsync(cancellationToken);
         return ToQualityHoldResponse(entity);
     }

@@ -278,6 +278,42 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(holdsAfterRelease);
         Assert.Equal("released", holdsAfterRelease!.Single(item => item.Id == approvalHold.Id).Status);
 
+        var cancelHoldTitle = $"Test cancel hold {Guid.NewGuid():N}";
+        var cancelHoldResponse = await _client.PostAsJsonAsync(
+            "/api/v1/holds",
+            new CreateAssurArrQualityHoldRequest(
+                cancelHoldTitle,
+                "Created for hold cancellation coverage.",
+                "moderate",
+                "inventory",
+                "full",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                null,
+                "Needs release review",
+                null,
+                null,
+                null,
+                null,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, cancelHoldResponse.StatusCode);
+        var cancelHold = await cancelHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(cancelHold);
+
+        var cancelHoldStatusResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/holds/{cancelHold!.Id}/status",
+            new UpdateAssurArrStatusRequest("canceled", "Hold no longer needed."));
+
+        Assert.Equal(HttpStatusCode.OK, cancelHoldStatusResponse.StatusCode);
+
+        var cancelHoldDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        cancelHoldDashboardResponse.EnsureSuccessStatusCode();
+        var cancelHoldDashboard = await cancelHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(cancelHoldDashboard);
+        Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.canceled");
+
         var rejectHoldTitle = $"Test reject hold {Guid.NewGuid():N}";
         var rejectHoldResponse = await _client.PostAsJsonAsync(
             "/api/v1/holds",
