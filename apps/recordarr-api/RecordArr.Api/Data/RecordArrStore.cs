@@ -1696,6 +1696,7 @@ public sealed class RecordArrStore
                 DateTimeOffset.UtcNow,
                 0);
             _externalShares.Add(share);
+            AddAccessLog(recordId, "external_share.created", "allowed", createdByPersonId, null, share.ExternalShareId, null, null, "external-share-created");
             return share;
         }
     }
@@ -1718,6 +1719,7 @@ public sealed class RecordArrStore
                 RevokedByPersonId = revokedByPersonId
             };
             _externalShares[index] = updated;
+            AddAccessLog(current.RecordId, "external_share.revoked", "allowed", revokedByPersonId, null, current.ExternalShareId, null, null, "external-share-revoked");
             return updated;
         }
     }
@@ -1740,6 +1742,7 @@ public sealed class RecordArrStore
                 RevokedByPersonId = expiredByPersonId
             };
             _externalShares[index] = updated;
+            AddAccessLog(current.RecordId, "external_share.expired", "allowed", expiredByPersonId, null, current.ExternalShareId, null, null, "external-share-expired");
             return updated;
         }
     }
