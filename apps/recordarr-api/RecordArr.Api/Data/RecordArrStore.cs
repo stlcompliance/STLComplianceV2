@@ -1990,9 +1990,7 @@ public sealed class RecordArrStore
                 {
                     _controlledDocuments[documentIndex] = document with
                     {
-                        Status = "effective",
-                        EffectiveAt = document.EffectiveAt ?? completedAt,
-                        NextReviewAt = document.ReviewIntervalDays > 0 ? completedAt.AddDays(document.ReviewIntervalDays) : document.NextReviewAt
+                        Status = "approved"
                     };
                 }
                 else if (status.Trim().Equals("rejected", StringComparison.OrdinalIgnoreCase) ||

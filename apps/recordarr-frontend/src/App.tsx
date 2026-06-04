@@ -1471,7 +1471,11 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                 <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Document status</p>
                   <p className="mt-1 text-base font-semibold text-slate-50">{selectedDocument.status}</p>
-                  <p className="mt-1">Next review: {formatDate(selectedDocument.nextReviewAt)}</p>
+                  <p className="mt-1">
+                    {selectedDocument.status === 'approved'
+                      ? 'Approved and awaiting effective promotion.'
+                      : `Next review: ${formatDate(selectedDocument.nextReviewAt)}`}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Related records</p>
@@ -1578,7 +1582,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                             onClick={() => promoteVersionMutation.mutate(version.versionId)}
                             disabled={promoteVersionMutation.isPending || version.status === 'effective'}
                           >
-                            {promoteVersionMutation.isPending ? 'Promoting...' : 'Approve and make effective'}
+                            {promoteVersionMutation.isPending ? 'Promoting...' : 'Make effective'}
                           </button>
                         </div>
                       </div>
