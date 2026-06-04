@@ -659,6 +659,7 @@ export const assurarrApi = {
   updateDispositionStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Disposition>(`/api/v1/integrations/dispositions/${id}/status`, 'PATCH', { status, closureSummary }),
   listSupplierQualityIssues: () => getJson<SupplierQualityIssue[]>('/api/v1/integrations/supplier-quality-issues'),
+  getSupplierQualityIssue: (id: string) => getJson<SupplierQualityIssue>(`/api/v1/integrations/supplier-quality-issues/${id}`),
   createSupplierQualityIssue: (body: CreateBase & { issueType: string; affectedReceiptRefs?: string[]; affectedPurchaseOrderRefs?: string[]; affectedItemRefs?: string[]; supplierRef?: string; nonconformanceRef?: string; scarRef?: string; holdRefs?: string[]; recordRefs?: string[]; openedAt?: string }) =>
     sendJson<SupplierQualityIssue>('/api/v1/integrations/supplier-quality-issues', 'POST', {
       ...body,
@@ -685,6 +686,7 @@ export const assurarrApi = {
   updateScarStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<SupplierCorrectiveActionRequest>(`/api/v1/integrations/scars/${id}/status`, 'PATCH', { status, closureSummary }),
   listCustomerComplaintQualityCases: () => getJson<CustomerComplaintQualityCase[]>('/api/v1/integrations/customer-complaint-quality-cases'),
+  getCustomerComplaintQualityCase: (id: string) => getJson<CustomerComplaintQualityCase>(`/api/v1/integrations/customer-complaint-quality-cases/${id}`),
   createCustomerComplaintQualityCase: (body: CreateBase & { complaintType: string; affectedOrderRefs?: string[]; affectedShipmentRefs?: string[]; affectedItemRefs?: string[]; affectedAssetRefs?: string[]; customerRef?: string; customerContactSnapshot?: string; customerLocationRef?: string; nonconformanceRef?: string; holdRefs?: string[]; capaRefs?: string[]; customerResponseRecordRefs?: string[]; recordRefs?: string[]; receivedAt?: string; receivedByPersonId?: string; customerResponseDueAt?: string }) =>
     sendJson<CustomerComplaintQualityCase>('/api/v1/integrations/customer-complaint-quality-cases', 'POST', {
       ...body,

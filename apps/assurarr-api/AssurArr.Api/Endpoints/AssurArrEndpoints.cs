@@ -278,6 +278,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListSupplierQualityIssuesAsync(cancellationToken)))
             .WithName("ListAssurArrSupplierQualityIssues");
 
+        integrationGroup.MapGet("/supplier-quality-issues/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetSupplierQualityIssueAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrSupplierQualityIssue");
+
         integrationGroup.MapPost("/supplier-quality-issues", async (CreateAssurArrSupplierQualityIssueRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateSupplierQualityIssueAsync(request, cancellationToken)))
             .WithName("CreateAssurArrSupplierQualityIssue");
@@ -301,6 +307,12 @@ public static class AssurArrEndpoints
         integrationGroup.MapGet("/customer-complaint-quality-cases", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListCustomerComplaintQualityCasesAsync(cancellationToken)))
             .WithName("ListAssurArrCustomerComplaintQualityCases");
+
+        integrationGroup.MapGet("/customer-complaint-quality-cases/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetCustomerComplaintQualityCaseAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrCustomerComplaintQualityCase");
 
         integrationGroup.MapPost("/customer-complaint-quality-cases", async (CreateAssurArrCustomerComplaintQualityCaseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateCustomerComplaintQualityCaseAsync(request, cancellationToken)))

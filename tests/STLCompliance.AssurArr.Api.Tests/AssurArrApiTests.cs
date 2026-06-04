@@ -569,6 +569,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(supplierIssue);
         Assert.Equal(supplierTitle, supplierIssue!.Title);
 
+        var supplierDetailResponse = await _client.GetAsync($"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}");
+        Assert.Equal(HttpStatusCode.OK, supplierDetailResponse.StatusCode);
+        var supplierDetail = await supplierDetailResponse.Content.ReadFromJsonAsync<AssurArrSupplierQualityIssueResponse>();
+        Assert.NotNull(supplierDetail);
+        Assert.Equal(supplierIssue.Id, supplierDetail!.Id);
+        Assert.Equal(supplierIssue.Number, supplierDetail.Number);
+
         var complaintTitle = $"Test complaint case {Guid.NewGuid():N}";
         var complaintResponse = await _client.PostAsJsonAsync(
             "/api/v1/integrations/customer-complaint-quality-cases",
@@ -600,6 +607,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var complaint = await complaintResponse.Content.ReadFromJsonAsync<AssurArrCustomerComplaintQualityCaseResponse>();
         Assert.NotNull(complaint);
         Assert.Equal(complaintTitle, complaint!.Title);
+
+        var complaintDetailResponse = await _client.GetAsync($"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}");
+        Assert.Equal(HttpStatusCode.OK, complaintDetailResponse.StatusCode);
+        var complaintDetail = await complaintDetailResponse.Content.ReadFromJsonAsync<AssurArrCustomerComplaintQualityCaseResponse>();
+        Assert.NotNull(complaintDetail);
+        Assert.Equal(complaint.Id, complaintDetail!.Id);
+        Assert.Equal(complaint.Number, complaintDetail.Number);
 
         var supplierList = await _client.GetAsync("/api/v1/integrations/supplier-quality-issues");
         supplierList.EnsureSuccessStatusCode();

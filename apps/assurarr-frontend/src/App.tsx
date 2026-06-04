@@ -3006,10 +3006,147 @@ function SupplierQualityPage() {
           emptyLabel="No supplier quality issues yet."
           onStatusChange={(id, status) => assurarrApi.updateSupplierQualityIssueStatus(id, status)}
           statusChoices={statusOptions.supplierQuality}
+          detailBasePath="/supplier-quality"
         />
       ) : (
         <LoadingCard label="Loading supplier quality issues" />
       )}
+    </div>
+  )
+}
+
+function SupplierQualityDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'supplier-quality-issue', id],
+    queryFn: () => assurarrApi.getSupplierQualityIssue(id),
+    enabled: Boolean(id),
+  })
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const scars = useRecords(['assurarr', 'scars'], assurarrApi.listScars)
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading supplier quality detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Supplier quality detail" description="Could not load the requested supplier quality issue." />
+        <EmptyState title="Supplier quality issue not found." />
+      </div>
+    )
+  }
+
+  const issue = query.data
+  const relatedNonconformance = nonconformances.data?.find((item) => item.number === issue.nonconformanceRef) ?? null
+  const relatedScar = scars.data?.find((item) => item.number === issue.scarRef) ?? null
+  const relatedHolds = holds.data?.filter((hold) => issue.holdRefs.includes(hold.number) || issue.holdRefs.includes(hold.id)) ?? []
+  const timeline = dashboard.data?.recentEvents.filter(
+    (event) => event.subjectType === 'supplier_quality_issue' && event.subjectId === issue.id,
+  ) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${issue.number} · ${issue.title}`}
+        description="Supplier quality issue detail, linked records, and the activity trail for the supplier-facing workflow."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{issue.status}</span>
+                <span className="assurarr-pill">{issue.severity}</span>
+                <span className="assurarr-pill">{issue.issueType}</span>
+              </div>
+              <p className="text-sm text-slate-300">Supplier quality workflow record for supplier-facing issue tracking and closure.</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {issue.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {issue.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {issue.supplierRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Owner:</span> {issue.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Opened:</span> {issue.openedAt ? new Date(issue.openedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {issue.closedAt ? new Date(issue.closedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Closure summary:</span> {issue.closureSummary ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Closed by:</span> {issue.closedByPersonId ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Linked records</p>
+              <div className="space-y-2 text-sm text-slate-300">
+                <div>
+                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  {relatedNonconformance ? (
+                    <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
+                      {relatedNonconformance.number}
+                    </Link>
+                  ) : (
+                    issue.nonconformanceRef ?? 'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">SCAR:</span>{' '}
+                  {relatedScar ? (
+                    <Link to={`/scars/${relatedScar.id}`} className="text-cyan-300 hover:text-cyan-200">
+                      {relatedScar.number}
+                    </Link>
+                  ) : (
+                    issue.scarRef ?? 'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">Holds:</span>{' '}
+                  {relatedHolds.length > 0 ? (
+                    <span className="flex flex-wrap gap-2 pt-1">
+                      {relatedHolds.map((hold) => (
+                        <Link key={hold.id} to={`/holds/${hold.id}`} className="assurarr-pill">
+                          {hold.number}
+                        </Link>
+                      ))}
+                    </span>
+                  ) : (
+                    'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">Record refs:</span>{' '}
+                  {issue.recordRefs.length > 0 ? issue.recordRefs.join(', ') : 'none'}
+                </div>
+                <div>
+                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  {issue.affectedObjectRefs.length > 0 ? issue.affectedObjectRefs.join(', ') : 'none'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Timeline</p>
+            <div className="space-y-2">
+              {timeline.length === 0 ? <EmptyState title="No timeline yet." /> : null}
+              {timeline.map((event) => (
+                <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-100">{event.eventType}</strong>
+                    <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{event.details ?? event.subjectType}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -3372,10 +3509,160 @@ function CustomerComplaintPage() {
           emptyLabel="No customer complaint quality cases yet."
           onStatusChange={(id, status) => assurarrApi.updateCustomerComplaintQualityCaseStatus(id, status)}
           statusChoices={statusOptions.customerComplaint}
+          detailBasePath="/complaints"
         />
       ) : (
         <LoadingCard label="Loading complaint cases" />
       )}
+    </div>
+  )
+}
+
+function CustomerComplaintDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'customer-complaint', id],
+    queryFn: () => assurarrApi.getCustomerComplaintQualityCase(id),
+    enabled: Boolean(id),
+  })
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading complaint detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Customer complaint detail" description="Could not load the requested customer complaint quality case." />
+        <EmptyState title="Customer complaint quality case not found." />
+      </div>
+    )
+  }
+
+  const complaint = query.data
+  const relatedNonconformance = nonconformances.data?.find((item) => item.number === complaint.nonconformanceRef) ?? null
+  const relatedHolds = holds.data?.filter((hold) => complaint.holdRefs.includes(hold.number) || complaint.holdRefs.includes(hold.id)) ?? []
+  const relatedCapas = capas.data?.filter((capa) => complaint.capaRefs.includes(capa.number) || complaint.capaRefs.includes(capa.id)) ?? []
+  const timeline = dashboard.data?.recentEvents.filter(
+    (event) => event.subjectType === 'customer_complaint' && event.subjectId === complaint.id,
+  ) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${complaint.number} · ${complaint.title}`}
+        description="Complaint detail, linked quality records, and the activity trail for the customer-facing workflow."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{complaint.status}</span>
+                <span className="assurarr-pill">{complaint.severity}</span>
+                <span className="assurarr-pill">{complaint.complaintType}</span>
+              </div>
+              <p className="text-sm text-slate-300">Customer complaint workflow record for customer impact tracking and closure.</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {complaint.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {complaint.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Customer:</span> {complaint.customerRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Owner:</span> {complaint.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Received:</span> {complaint.receivedAt ? new Date(complaint.receivedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Response due:</span> {complaint.customerResponseDueAt ? new Date(complaint.customerResponseDueAt).toLocaleString() : 'n/a'}</div>
+              </div>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Received by:</span> {complaint.receivedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {complaint.closedAt ? new Date(complaint.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closure summary:</span> {complaint.closureSummary ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Linked records</p>
+              <div className="space-y-2 text-sm text-slate-300">
+                <div>
+                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  {relatedNonconformance ? (
+                    <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
+                      {relatedNonconformance.number}
+                    </Link>
+                  ) : (
+                    complaint.nonconformanceRef ?? 'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">Holds:</span>{' '}
+                  {relatedHolds.length > 0 ? (
+                    <span className="flex flex-wrap gap-2 pt-1">
+                      {relatedHolds.map((hold) => (
+                        <Link key={hold.id} to={`/holds/${hold.id}`} className="assurarr-pill">
+                          {hold.number}
+                        </Link>
+                      ))}
+                    </span>
+                  ) : (
+                    'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">CAPA refs:</span>{' '}
+                  {relatedCapas.length > 0 ? (
+                    <span className="flex flex-wrap gap-2 pt-1">
+                      {relatedCapas.map((capa) => (
+                        <Link key={capa.id} to={`/capa/${capa.id}`} className="assurarr-pill">
+                          {capa.number}
+                        </Link>
+                      ))}
+                    </span>
+                  ) : (
+                    'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">Customer response refs:</span>{' '}
+                  {complaint.customerResponseRecordRefs.length > 0 ? complaint.customerResponseRecordRefs.join(', ') : 'none'}
+                </div>
+                <div>
+                  <span className="text-slate-500">Record refs:</span>{' '}
+                  {complaint.recordRefs.length > 0 ? complaint.recordRefs.join(', ') : 'none'}
+                </div>
+                <div>
+                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  {complaint.affectedObjectRefs.length > 0 ? complaint.affectedObjectRefs.join(', ') : 'none'}
+                </div>
+              </div>
+              <div className="space-y-1 text-sm text-slate-300">
+                <div><span className="text-slate-500">Customer contact:</span> {complaint.customerContactSnapshot ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Customer location:</span> {complaint.customerLocationRef ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Timeline</p>
+            <div className="space-y-2">
+              {timeline.length === 0 ? <EmptyState title="No timeline yet." /> : null}
+              {timeline.map((event) => (
+                <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-100">{event.eventType}</strong>
+                    <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{event.details ?? event.subjectType}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -3575,8 +3862,10 @@ export function App() {
         <Route path="/containment" element={<ContainmentPage />} />
         <Route path="/dispositions" element={<DispositionPage />} />
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
+        <Route path="/supplier-quality/:id" element={<SupplierQualityDetailPage />} />
         <Route path="/scars" element={<ScarPage />} />
         <Route path="/complaints" element={<CustomerComplaintPage />} />
+        <Route path="/complaints/:id" element={<CustomerComplaintDetailPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/history" element={<HistoryPage />} />

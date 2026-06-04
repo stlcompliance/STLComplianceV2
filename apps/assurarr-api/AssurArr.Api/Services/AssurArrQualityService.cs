@@ -1923,6 +1923,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToSupplierQualityIssueResponse).ToList();
     }
 
+    public async Task<AssurArrSupplierQualityIssueResponse?> GetSupplierQualityIssueAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.SupplierQualityIssues
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        return entity is null ? null : ToSupplierQualityIssueResponse(entity);
+    }
+
     public async Task<AssurArrSupplierQualityIssueResponse> CreateSupplierQualityIssueAsync(CreateAssurArrSupplierQualityIssueRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -2090,6 +2099,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .ToListAsync(cancellationToken);
 
         return entities.Select(ToCustomerComplaintQualityCaseResponse).ToList();
+    }
+
+    public async Task<AssurArrCustomerComplaintQualityCaseResponse?> GetCustomerComplaintQualityCaseAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.CustomerComplaintQualityCases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        return entity is null ? null : ToCustomerComplaintQualityCaseResponse(entity);
     }
 
     public async Task<AssurArrCustomerComplaintQualityCaseResponse> CreateCustomerComplaintQualityCaseAsync(CreateAssurArrCustomerComplaintQualityCaseRequest request, CancellationToken cancellationToken = default)
