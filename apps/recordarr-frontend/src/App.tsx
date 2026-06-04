@@ -582,6 +582,31 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listAccessLogs(accessToken),
     enabled: Boolean(accessToken),
   })
+  const scansQuery = useQuery({
+    queryKey: ['recordarr', 'scans'],
+    queryFn: () => listScans(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const mappingsQuery = useQuery({
+    queryKey: ['recordarr', 'evidence-mappings'],
+    queryFn: () => listEvidenceMappings(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const packagesQuery = useQuery({
+    queryKey: ['recordarr', 'packages'],
+    queryFn: () => listPackages(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const uploadsQuery = useQuery({
+    queryKey: ['recordarr', 'upload-sessions'],
+    queryFn: () => listUploadSessions(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const documentsQuery = useQuery({
+    queryKey: ['recordarr', 'documents'],
+    queryFn: () => listControlledDocuments(accessToken),
+    enabled: Boolean(accessToken),
+  })
 
   const updateMutation = useMutation({
     mutationFn: () => updateRecord(accessToken, recordId, { status }),
@@ -592,6 +617,21 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
 
   const record = recordQuery.data
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
+  const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
+  const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
+  const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
+  const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
+  const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
+  const timeline = useMemo(() => {
+    if (!record) return []
+    return [
+      { key: 'uploaded', label: 'Uploaded', value: formatDate(record.uploadedAt) },
+      { key: 'effective', label: 'Effective', value: formatDate(record.effectiveAt) },
+      { key: 'expires', label: 'Expires', value: formatDate(record.expiresAt) },
+      { key: 'status', label: 'Current status', value: record.status },
+      { key: 'access', label: 'Access events', value: `${relevantLogs.length} logged` },
+    ]
+  }, [record, relevantLogs.length])
 
   return (
     <div className="recordarr-page">
@@ -613,6 +653,19 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
             <MetricCard title="Expires" value={formatDate(record.expiresAt)} hint="Retention clock" />
           </div>
           <div className="recordarr-grid cols-2">
+            <Card title="Record snapshot" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-3 text-sm text-slate-300">
+                <p><strong className="text-slate-100">Source:</strong> {record.sourceProduct} · {record.sourceObjectDisplayName}</p>
+                <p><strong className="text-slate-100">Object:</strong> {record.sourceObjectType} · {record.sourceObjectId}</p>
+                <p><strong className="text-slate-100">Owner:</strong> {record.ownerPersonId}</p>
+                <p><strong className="text-slate-100">Version:</strong> v{record.versionNumber}</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {record.tags.map((tag) => (
+                    <span key={tag} className="recordarr-pill text-[0.7rem]">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </Card>
             <Card title="Lifecycle control" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Status">
@@ -640,9 +693,96 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Retention status:</strong> {retentionQuery.data?.status ?? 'n/a'}</p>
                 <p><strong className="text-slate-100">Next review:</strong> {formatDate(retentionQuery.data?.nextReviewAt ?? null)}</p>
                 <p><strong className="text-slate-100">Last reviewed:</strong> {formatDate(retentionQuery.data?.lastReviewedAt ?? null)}</p>
+                <p><strong className="text-slate-100">Related uploads:</strong> {relatedUploads.length}</p>
+                <p><strong className="text-slate-100">Related packages:</strong> {relatedPackages.length}</p>
               </div>
             </Card>
           </div>
+          <div className="recordarr-grid cols-2">
+            <Card title="Evidence and packaging" icon={<PackageSearch className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Evidence mappings</h3>
+                  <div className="mt-2 space-y-2">
+                    {relatedMappings.length > 0 ? relatedMappings.map((mapping) => (
+                      <div key={mapping.evidenceMappingId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{mapping.complianceRequirementRef}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{mapping.status}</span>
+                        </div>
+                        <p className="mt-1">{mapping.evidenceTypeKey} · {mapping.mappingSource}</p>
+                      </div>
+                    )) : <EmptyState title="No evidence mappings for this record." />}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Packages</h3>
+                  <div className="mt-2 space-y-2">
+                    {relatedPackages.length > 0 ? relatedPackages.map((pkg) => (
+                      <div key={pkg.packageId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{pkg.packageNumber}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{pkg.status}</span>
+                        </div>
+                        <p className="mt-1">{pkg.title}</p>
+                      </div>
+                    )) : <EmptyState title="No packages include this record." />}
+                  </div>
+                </div>
+              </div>
+            </Card>
+            <Card title="Capture and processing" icon={<ScanSearch className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Scans</h3>
+                  <div className="mt-2 space-y-2">
+                    {relatedScans.length > 0 ? relatedScans.map((scan) => (
+                      <div key={scan.scanProcessingId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{scan.originalFileName}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{scan.status}</span>
+                        </div>
+                        <p className="mt-1">{scan.scanPurpose} · confidence {scan.confidenceScore.toFixed(2)}</p>
+                      </div>
+                    )) : <EmptyState title="No scans for this record." />}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Uploads and controlled docs</h3>
+                  <div className="mt-2 space-y-2">
+                    {relatedUploads.length > 0 ? relatedUploads.map((upload) => (
+                      <div key={upload.uploadSessionId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{upload.uploadSessionNumber}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{upload.status}</span>
+                        </div>
+                        <p className="mt-1">{upload.uploadPurpose}</p>
+                      </div>
+                    )) : <EmptyState title="No upload sessions for this record." />}
+                    {relatedDocuments.length > 0 ? relatedDocuments.map((document) => (
+                      <div key={document.controlledDocumentId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{document.documentNumber}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{document.status}</span>
+                        </div>
+                        <p className="mt-1">{document.title}</p>
+                      </div>
+                    )) : null}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+          <Card title="Timeline" icon={<History className="h-4 w-4 text-cyan-300" />}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {timeline.map((entry) => (
+                <div key={entry.key} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{entry.label}</p>
+                  <p className="mt-1 text-slate-100">{entry.value}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
           <Card title="Access trail" icon={<History className="h-4 w-4 text-cyan-300" />}>
             {relevantLogs.length === 0 ? <EmptyState title="No access logs for this record." /> : (
               <div className="space-y-3">
