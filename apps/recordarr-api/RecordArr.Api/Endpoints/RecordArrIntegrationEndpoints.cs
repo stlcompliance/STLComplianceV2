@@ -265,6 +265,12 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(document);
         }).WithName($"ObsoleteRecordArrIntegrationControlledDocument{routePrefix}");
 
+        group.MapPost("/controlled-documents/{controlledDocumentId}/supersede", (string controlledDocumentId, WorkspaceEndpoints.SupersedeControlledDocumentRequest request, RecordArrStore store) =>
+        {
+            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef);
+            return Results.Ok(document);
+        }).WithName($"SupersedeRecordArrIntegrationControlledDocument{routePrefix}");
+
         group.MapGet("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, RecordArrStore store) =>
             Results.Ok(store.GetDocumentReviews(controlledDocumentId)))
             .WithName($"ListRecordArrIntegrationControlledDocumentReviews{routePrefix}");

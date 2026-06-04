@@ -81,6 +81,7 @@ import {
   purgeRecord,
   promoteDocumentVersion,
   obsoleteControlledDocument,
+  supersedeControlledDocument,
   completeDocumentAcknowledgement,
   completeDocumentReview,
   completeDisposalReview,
@@ -1180,6 +1181,9 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     decisionReason: 'Review completed and approved for use.',
     comments: 'Approved in demo workspace.',
   })
+  const [supersedeForm, setSupersedeForm] = useState({
+    supersededByDocumentRef: '',
+  })
   const [distributionForm, setDistributionForm] = useState({
     versionId: '',
     distributionType: 'person',
@@ -1259,6 +1263,15 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   })
   const obsoleteDocumentMutation = useMutation({
     mutationFn: () => obsoleteControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const supersedeDocumentMutation = useMutation({
+    mutationFn: () =>
+      supersedeControlledDocument(accessToken, selectedDocumentId, {
+        supersededByDocumentRef: supersedeForm.supersededByDocumentRef,
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -1442,6 +1455,28 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                   {obsoleteDocumentMutation.isPending ? 'Updating...' : 'Mark obsolete'}
                 </button>
               </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Superseded by document id" wide>
+                  <input
+                    className="recordarr-input"
+                    value={supersedeForm.supersededByDocumentRef}
+                    onChange={(e) => setSupersedeForm({ ...supersedeForm, supersededByDocumentRef: e.target.value })}
+                    placeholder="doc-..."
+                  />
+                </Field>
+              </div>
+              <button
+                type="button"
+                className="recordarr-button secondary"
+                onClick={() => supersedeDocumentMutation.mutate()}
+                disabled={
+                  supersedeDocumentMutation.isPending ||
+                  !supersedeForm.supersededByDocumentRef ||
+                  supersedeForm.supersededByDocumentRef === selectedDocumentId
+                }
+              >
+                {supersedeDocumentMutation.isPending ? 'Superseding...' : 'Supersede with replacement document'}
+              </button>
 
               <div className="space-y-3">
                 <div>

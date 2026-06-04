@@ -1408,6 +1408,44 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrControlledDocumentResponse SupersedeControlledDocument(string controlledDocumentId, string supersededByDocumentRef)
+    {
+        lock (_gate)
+        {
+            var sourceIndex = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            if (sourceIndex < 0)
+            {
+                throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
+            }
+
+            var replacementIndex = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, supersededByDocumentRef, StringComparison.OrdinalIgnoreCase));
+            if (replacementIndex < 0)
+            {
+                throw new InvalidOperationException($"Replacement controlled document {supersededByDocumentRef} not found.");
+            }
+
+            var source = _controlledDocuments[sourceIndex];
+            var replacement = _controlledDocuments[replacementIndex];
+            var now = DateTimeOffset.UtcNow;
+
+            var updatedSource = source with
+            {
+                Status = "superseded",
+                SupersededByDocumentRef = replacement.ControlledDocumentId,
+                NextReviewAt = null
+            };
+            var updatedReplacement = replacement with
+            {
+                SupersedesDocumentRef = source.ControlledDocumentId,
+                EffectiveAt = replacement.EffectiveAt ?? now
+            };
+
+            _controlledDocuments[sourceIndex] = updatedSource;
+            _controlledDocuments[replacementIndex] = updatedReplacement;
+            return updatedSource;
+        }
+    }
+
     public RecordArrDocumentReviewResponse RequestDocumentReview(string controlledDocumentId, string versionId, string reviewType, string requestedByPersonId, string reviewerPersonId, DateTimeOffset? dueAt)
     {
         lock (_gate)

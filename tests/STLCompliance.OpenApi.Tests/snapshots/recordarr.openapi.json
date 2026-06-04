@@ -481,6 +481,39 @@
         }
       }
     },
+    "/api/integrations/controlled-documents/{controlledDocumentId}/supersede": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupersedeRecordArrIntegrationControlledDocument/api/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupersedeControlledDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/controlled-documents/{controlledDocumentId}/versions": {
       "post": {
         "tags": [
@@ -2028,6 +2061,39 @@
         }
       }
     },
+    "/api/v1/integrations/controlled-documents/{controlledDocumentId}/supersede": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupersedeRecordArrIntegrationControlledDocument/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupersedeControlledDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/controlled-documents/{controlledDocumentId}/versions": {
       "post": {
         "tags": [
@@ -3420,6 +3486,39 @@
         }
       }
     },
+    "/api/v1/workspace/controlled-documents/{controlledDocumentId}/supersede": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "SupersedeRecordArrControlledDocument",
+        "parameters": [
+          {
+            "name": "controlledDocumentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupersedeControlledDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/controlled-documents/{controlledDocumentId}/versions": {
       "get": {
         "tags": [
@@ -4757,7 +4856,7 @@
             "type": "string"
           },
           "confidenceScore": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
             "type": [
               "number",
               "string"
@@ -5132,6 +5231,17 @@
         "type": "object",
         "properties": {
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "SupersedeControlledDocumentRequest": {
+        "required": [
+          "supersededByDocumentRef"
+        ],
+        "type": "object",
+        "properties": {
+          "supersededByDocumentRef": {
             "type": "string"
           }
         }

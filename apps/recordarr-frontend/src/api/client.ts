@@ -809,6 +809,19 @@ export async function obsoleteControlledDocument(
   )
 }
 
+export async function supersedeControlledDocument(
+  accessToken: string,
+  controlledDocumentId: string,
+  body: { supersededByDocumentRef: string },
+): Promise<RecordArrControlledDocument> {
+  return sendJson<RecordArrControlledDocument>(
+    `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/supersede`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function promoteDocumentVersion(
   accessToken: string,
   controlledDocumentId: string,
