@@ -183,6 +183,46 @@ export type QualityRelease = ListItem & {
   notes: string | null
 }
 
+export type SupplierQualityIssue = ListItem & {
+  issueType: string
+  affectedObjectRefs: string[]
+  affectedReceiptRefs: string[]
+  affectedPurchaseOrderRefs: string[]
+  affectedItemRefs: string[]
+  supplierRef: string | null
+  nonconformanceRef: string | null
+  scarRef: string | null
+  holdRefs: string[]
+  recordRefs: string[]
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+  openedAt: string | null
+}
+
+export type CustomerComplaintQualityCase = ListItem & {
+  complaintType: string
+  affectedObjectRefs: string[]
+  affectedOrderRefs: string[]
+  affectedShipmentRefs: string[]
+  affectedItemRefs: string[]
+  affectedAssetRefs: string[]
+  customerRef: string | null
+  customerContactSnapshot: string | null
+  customerLocationRef: string | null
+  nonconformanceRef: string | null
+  holdRefs: string[]
+  capaRefs: string[]
+  customerResponseRecordRefs: string[]
+  recordRefs: string[]
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+  receivedAt: string | null
+  receivedByPersonId: string | null
+  customerResponseDueAt: string | null
+}
+
 type CreateBase = {
   title: string
   description: string
@@ -306,4 +346,34 @@ export const assurarrApi = {
     }),
   updateQualityReleaseStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<QualityRelease>(`/api/v1/integrations/quality-releases/${id}/status`, 'PATCH', { status, closureSummary }),
+  listSupplierQualityIssues: () => getJson<SupplierQualityIssue[]>('/api/v1/integrations/supplier-quality-issues'),
+  createSupplierQualityIssue: (body: CreateBase & { issueType: string; affectedReceiptRefs?: string[]; affectedPurchaseOrderRefs?: string[]; affectedItemRefs?: string[]; supplierRef?: string; nonconformanceRef?: string; scarRef?: string; holdRefs?: string[]; recordRefs?: string[]; openedAt?: string }) =>
+    sendJson<SupplierQualityIssue>('/api/v1/integrations/supplier-quality-issues', 'POST', {
+      ...body,
+      affectedReceiptRefs: body.affectedReceiptRefs ?? [],
+      affectedPurchaseOrderRefs: body.affectedPurchaseOrderRefs ?? [],
+      affectedItemRefs: body.affectedItemRefs ?? [],
+      holdRefs: body.holdRefs ?? [],
+      recordRefs: body.recordRefs ?? [],
+      openedAt: body.openedAt ? new Date(body.openedAt).toISOString() : null,
+    }),
+  updateSupplierQualityIssueStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<SupplierQualityIssue>(`/api/v1/integrations/supplier-quality-issues/${id}/status`, 'PATCH', { status, closureSummary }),
+  listCustomerComplaintQualityCases: () => getJson<CustomerComplaintQualityCase[]>('/api/v1/integrations/customer-complaint-quality-cases'),
+  createCustomerComplaintQualityCase: (body: CreateBase & { complaintType: string; affectedOrderRefs?: string[]; affectedShipmentRefs?: string[]; affectedItemRefs?: string[]; affectedAssetRefs?: string[]; customerRef?: string; customerContactSnapshot?: string; customerLocationRef?: string; nonconformanceRef?: string; holdRefs?: string[]; capaRefs?: string[]; customerResponseRecordRefs?: string[]; recordRefs?: string[]; receivedAt?: string; receivedByPersonId?: string; customerResponseDueAt?: string }) =>
+    sendJson<CustomerComplaintQualityCase>('/api/v1/integrations/customer-complaint-quality-cases', 'POST', {
+      ...body,
+      affectedOrderRefs: body.affectedOrderRefs ?? [],
+      affectedShipmentRefs: body.affectedShipmentRefs ?? [],
+      affectedItemRefs: body.affectedItemRefs ?? [],
+      affectedAssetRefs: body.affectedAssetRefs ?? [],
+      holdRefs: body.holdRefs ?? [],
+      capaRefs: body.capaRefs ?? [],
+      customerResponseRecordRefs: body.customerResponseRecordRefs ?? [],
+      recordRefs: body.recordRefs ?? [],
+      receivedAt: body.receivedAt ? new Date(body.receivedAt).toISOString() : null,
+      customerResponseDueAt: body.customerResponseDueAt ? new Date(body.customerResponseDueAt).toISOString() : null,
+    }),
+  updateCustomerComplaintQualityCaseStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<CustomerComplaintQualityCase>(`/api/v1/integrations/customer-complaint-quality-cases/${id}/status`, 'PATCH', { status, closureSummary }),
 }

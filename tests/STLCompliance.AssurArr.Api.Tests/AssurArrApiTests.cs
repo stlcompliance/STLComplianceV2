@@ -130,4 +130,78 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(reviews);
         Assert.Contains(reviews!, item => item.Title == reviewTitle);
     }
+
+    [Fact]
+    public async Task Can_create_supplier_quality_issue_and_customer_complaint_records()
+    {
+        var supplierTitle = $"Test supplier quality issue {Guid.NewGuid():N}";
+        var supplierResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/supplier-quality-issues",
+            new CreateAssurArrSupplierQualityIssueRequest(
+                supplierTitle,
+                "Automated coverage for supplier quality issues.",
+                "high",
+                "damaged_received",
+                "loadarr",
+                "loadarr:receipt:test",
+                ["loadarr:receipt:test"],
+                ["supplyarr:po:test"],
+                ["supplyarr:item:test"],
+                "supplyarr:supplier:test",
+                "NCR-000001",
+                "SCAR-000001",
+                ["HOLD-000001"],
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, supplierResponse.StatusCode);
+        var supplierIssue = await supplierResponse.Content.ReadFromJsonAsync<AssurArrSupplierQualityIssueResponse>();
+        Assert.NotNull(supplierIssue);
+        Assert.Equal(supplierTitle, supplierIssue!.Title);
+
+        var complaintTitle = $"Test complaint case {Guid.NewGuid():N}";
+        var complaintResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/customer-complaint-quality-cases",
+            new CreateAssurArrCustomerComplaintQualityCaseRequest(
+                complaintTitle,
+                "Automated coverage for customer complaint quality cases.",
+                "high",
+                "delivery_quality",
+                "routarr",
+                "routarr:shipment:test",
+                ["ordarr:order:test"],
+                ["routarr:shipment:test"],
+                ["loadarr:item:test"],
+                ["maintainarr:asset:test"],
+                "customarr:customer:test",
+                "Jordan Lee, logistics manager",
+                "customarr:location:test",
+                "NCR-000001",
+                ["HOLD-000001"],
+                ["CAPA-000001"],
+                ["recordarr:doc:response-test"],
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow,
+                null,
+                DateTimeOffset.UtcNow.AddDays(4)));
+
+        Assert.Equal(HttpStatusCode.OK, complaintResponse.StatusCode);
+        var complaint = await complaintResponse.Content.ReadFromJsonAsync<AssurArrCustomerComplaintQualityCaseResponse>();
+        Assert.NotNull(complaint);
+        Assert.Equal(complaintTitle, complaint!.Title);
+
+        var supplierList = await _client.GetAsync("/api/v1/integrations/supplier-quality-issues");
+        supplierList.EnsureSuccessStatusCode();
+        var supplierIssues = await supplierList.Content.ReadFromJsonAsync<List<AssurArrSupplierQualityIssueResponse>>();
+        Assert.NotNull(supplierIssues);
+        Assert.Contains(supplierIssues!, item => item.Title == supplierTitle);
+
+        var complaintList = await _client.GetAsync("/api/v1/integrations/customer-complaint-quality-cases");
+        complaintList.EnsureSuccessStatusCode();
+        var complaintCases = await complaintList.Content.ReadFromJsonAsync<List<AssurArrCustomerComplaintQualityCaseResponse>>();
+        Assert.NotNull(complaintCases);
+        Assert.Contains(complaintCases!, item => item.Title == complaintTitle);
+    }
 }

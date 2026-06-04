@@ -123,5 +123,29 @@ public static class AssurArrEndpoints
         integrationGroup.MapPatch("/quality-releases/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.UpdateQualityReleaseStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrQualityReleaseStatus");
+
+        integrationGroup.MapGet("/supplier-quality-issues", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListSupplierQualityIssuesAsync(cancellationToken)))
+            .WithName("ListAssurArrSupplierQualityIssues");
+
+        integrationGroup.MapPost("/supplier-quality-issues", async (CreateAssurArrSupplierQualityIssueRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateSupplierQualityIssueAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrSupplierQualityIssue");
+
+        integrationGroup.MapPatch("/supplier-quality-issues/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateSupplierQualityIssueStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrSupplierQualityIssueStatus");
+
+        integrationGroup.MapGet("/customer-complaint-quality-cases", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListCustomerComplaintQualityCasesAsync(cancellationToken)))
+            .WithName("ListAssurArrCustomerComplaintQualityCases");
+
+        integrationGroup.MapPost("/customer-complaint-quality-cases", async (CreateAssurArrCustomerComplaintQualityCaseRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateCustomerComplaintQualityCaseAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrCustomerComplaintQualityCase");
+
+        integrationGroup.MapPatch("/customer-complaint-quality-cases/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateCustomerComplaintQualityCaseStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrCustomerComplaintQualityCaseStatus");
     }
 }

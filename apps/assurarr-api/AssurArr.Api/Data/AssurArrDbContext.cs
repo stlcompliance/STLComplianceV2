@@ -15,6 +15,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
     public DbSet<AssurArrQualityReview> QualityReviews => Set<AssurArrQualityReview>();
     public DbSet<AssurArrQualityRelease> QualityReleases => Set<AssurArrQualityRelease>();
+    public DbSet<AssurArrSupplierQualityIssue> SupplierQualityIssues => Set<AssurArrSupplierQualityIssue>();
+    public DbSet<AssurArrCustomerComplaintQualityCase> CustomerComplaintQualityCases => Set<AssurArrCustomerComplaintQualityCase>();
     public DbSet<AssurArrTimelineEvent> TimelineEvents => Set<AssurArrTimelineEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,6 +32,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
         ConfigureReview(modelBuilder);
         ConfigureRelease(modelBuilder);
+        ConfigureSupplierQualityIssue(modelBuilder);
+        ConfigureCustomerComplaintQualityCase(modelBuilder);
 
         modelBuilder.Entity<AssurArrTimelineEvent>(entity =>
         {
@@ -140,6 +144,84 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.HoldRef });
+        });
+    }
+
+    private static void ConfigureSupplierQualityIssue(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrSupplierQualityIssue>(entity =>
+        {
+            entity.ToTable("assurarr_supplier_quality_issues");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedReceiptRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedPurchaseOrderRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedItemRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.SupplierRef).HasMaxLength(256);
+            entity.Property(x => x.NonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.ScarRef).HasMaxLength(256);
+            entity.Property(x => x.HoldRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.IssueType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OpenedAt);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.SupplierRef });
+        });
+    }
+
+    private static void ConfigureCustomerComplaintQualityCase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrCustomerComplaintQualityCase>(entity =>
+        {
+            entity.ToTable("assurarr_customer_complaint_quality_cases");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedOrderRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedShipmentRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedItemRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedAssetRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CustomerRef).HasMaxLength(256);
+            entity.Property(x => x.CustomerContactSnapshot).HasMaxLength(4000);
+            entity.Property(x => x.CustomerLocationRef).HasMaxLength(256);
+            entity.Property(x => x.NonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.HoldRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CapaRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CustomerResponseRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.ComplaintType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReceivedAt);
+            entity.Property(x => x.ReceivedByPersonId);
+            entity.Property(x => x.CustomerResponseDueAt);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.CustomerRef });
         });
     }
 }

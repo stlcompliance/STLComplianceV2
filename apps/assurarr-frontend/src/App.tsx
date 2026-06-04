@@ -34,6 +34,8 @@ const navItems: ProductNavItem[] = [
   { label: 'Findings', to: '/findings', icon: asNavIcon(Sparkles) },
   { label: 'Reviews', to: '/reviews', icon: asNavIcon(BookCheck) },
   { label: 'Releases', to: '/releases', icon: asNavIcon(CheckCircle2) },
+  { label: 'Supplier quality', to: '/supplier-quality', icon: asNavIcon(ShieldAlert) },
+  { label: 'Complaints', to: '/complaints', icon: asNavIcon(ClipboardList) },
   { label: 'Status', to: '/status', icon: asNavIcon(BookCheck), sectionBreakBefore: true },
   { label: 'Scorecards', to: '/scorecards', icon: asNavIcon(BarChart3) },
   { label: 'History', to: '/history', icon: asNavIcon(History) },
@@ -48,6 +50,8 @@ const statusOptions: Record<string, readonly string[]> = {
   finding: ['open', 'accepted', 'disputed', 'nonconformance_created', 'corrective_action', 'verified', 'closed', 'canceled'],
   review: ['pending', 'in_review', 'approved', 'rejected', 'changes_requested', 'canceled'],
   release: ['requested', 'pending_review', 'approved', 'rejected', 'executed', 'canceled'],
+  supplierQuality: ['open', 'supplier_notified', 'response_pending', 'under_review', 'corrective_action', 'resolved', 'closed', 'canceled'],
+  customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
 
 function AppShell({ children }: { children: ReactNode }) {
@@ -917,6 +921,364 @@ function ReleasePage() {
   )
 }
 
+function SupplierQualityPage() {
+  const query = useRecords(['assurarr', 'supplier-quality'], assurarrApi.listSupplierQualityIssues)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    issueType: 'damaged_received',
+    sourceProduct: 'loadarr',
+    sourceObjectRef: '',
+    affectedReceiptRefs: '',
+    affectedPurchaseOrderRefs: '',
+    affectedItemRefs: '',
+    supplierRef: '',
+    nonconformanceRef: '',
+    scarRef: '',
+    holdRefs: '',
+    recordRefs: '',
+    ownerPersonId: '',
+    openedAt: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createSupplierQualityIssue({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        issueType: form.issueType,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedReceiptRefs)
+          .concat(joinRefs(form.affectedPurchaseOrderRefs), joinRefs(form.affectedItemRefs)),
+        affectedReceiptRefs: joinRefs(form.affectedReceiptRefs),
+        affectedPurchaseOrderRefs: joinRefs(form.affectedPurchaseOrderRefs),
+        affectedItemRefs: joinRefs(form.affectedItemRefs),
+        supplierRef: form.supplierRef || undefined,
+        nonconformanceRef: form.nonconformanceRef || undefined,
+        scarRef: form.scarRef || undefined,
+        holdRefs: joinRefs(form.holdRefs),
+        recordRefs: joinRefs(form.recordRefs),
+        ownerPersonId: form.ownerPersonId || undefined,
+        openedAt: form.openedAt || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        issueType: 'damaged_received',
+        sourceProduct: 'loadarr',
+        sourceObjectRef: '',
+        affectedReceiptRefs: '',
+        affectedPurchaseOrderRefs: '',
+        affectedItemRefs: '',
+        supplierRef: '',
+        nonconformanceRef: '',
+        scarRef: '',
+        holdRefs: '',
+        recordRefs: '',
+        ownerPersonId: '',
+        openedAt: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Supplier quality"
+        description="Track supplier-responsible quality issues, SCARs, and held receipts."
+        action={<span className="assurarr-pill"><ShieldAlert className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create supplier quality issue</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Issue type">
+              <select className="assurarr-select" value={form.issueType} onChange={(event) => setForm({ ...form, issueType: event.target.value })}>
+                <option value="damaged_received">Damaged received</option>
+                <option value="wrong_item">Wrong item</option>
+                <option value="late_with_quality_impact">Late with quality impact</option>
+                <option value="missing_document">Missing document</option>
+                <option value="invalid_document">Invalid document</option>
+                <option value="failed_specification">Failed specification</option>
+                <option value="recurring_defect">Recurring defect</option>
+                <option value="packaging_failure">Packaging failure</option>
+                <option value="labeling_failure">Labeling failure</option>
+                <option value="other">Other</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Supplier ref">
+              <input className="assurarr-input" value={form.supplierRef} onChange={(event) => setForm({ ...form, supplierRef: event.target.value })} placeholder="supplyarr:supplier:acme" />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+            </Field>
+            <Field label="Affected receipt refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedReceiptRefs} onChange={(event) => setForm({ ...form, affectedReceiptRefs: event.target.value })} />
+            </Field>
+            <Field label="Affected PO refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedPurchaseOrderRefs} onChange={(event) => setForm({ ...form, affectedPurchaseOrderRefs: event.target.value })} />
+            </Field>
+            <Field label="Affected item refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedItemRefs} onChange={(event) => setForm({ ...form, affectedItemRefs: event.target.value })} />
+            </Field>
+            <Field label="Hold refs" wide>
+              <textarea className="assurarr-textarea" value={form.holdRefs} onChange={(event) => setForm({ ...form, holdRefs: event.target.value })} />
+            </Field>
+            <Field label="Record refs" wide>
+              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Nonconformance ref">
+              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+            </Field>
+            <Field label="SCAR ref">
+              <input className="assurarr-input" value={form.scarRef} onChange={(event) => setForm({ ...form, scarRef: event.target.value })} />
+            </Field>
+            <Field label="Owner person id">
+              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            </Field>
+            <Field label="Opened at">
+              <input className="assurarr-input" type="datetime-local" value={form.openedAt} onChange={(event) => setForm({ ...form, openedAt: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create supplier quality issue'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No supplier quality issues yet."
+          onStatusChange={(id, status) => assurarrApi.updateSupplierQualityIssueStatus(id, status)}
+          statusChoices={statusOptions.supplierQuality}
+        />
+      ) : (
+        <LoadingCard label="Loading supplier quality issues" />
+      )}
+    </div>
+  )
+}
+
+function CustomerComplaintPage() {
+  const query = useRecords(['assurarr', 'complaints'], assurarrApi.listCustomerComplaintQualityCases)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    complaintType: 'product_quality',
+    sourceProduct: 'routarr',
+    sourceObjectRef: '',
+    affectedOrderRefs: '',
+    affectedShipmentRefs: '',
+    affectedItemRefs: '',
+    affectedAssetRefs: '',
+    customerRef: '',
+    customerContactSnapshot: '',
+    customerLocationRef: '',
+    nonconformanceRef: '',
+    holdRefs: '',
+    capaRefs: '',
+    customerResponseRecordRefs: '',
+    recordRefs: '',
+    ownerPersonId: '',
+    receivedAt: '',
+    receivedByPersonId: '',
+    customerResponseDueAt: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createCustomerComplaintQualityCase({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        complaintType: form.complaintType,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedOrderRefs)
+          .concat(joinRefs(form.affectedShipmentRefs), joinRefs(form.affectedItemRefs), joinRefs(form.affectedAssetRefs)),
+        affectedOrderRefs: joinRefs(form.affectedOrderRefs),
+        affectedShipmentRefs: joinRefs(form.affectedShipmentRefs),
+        affectedItemRefs: joinRefs(form.affectedItemRefs),
+        affectedAssetRefs: joinRefs(form.affectedAssetRefs),
+        customerRef: form.customerRef || undefined,
+        customerContactSnapshot: form.customerContactSnapshot || undefined,
+        customerLocationRef: form.customerLocationRef || undefined,
+        nonconformanceRef: form.nonconformanceRef || undefined,
+        holdRefs: joinRefs(form.holdRefs),
+        capaRefs: joinRefs(form.capaRefs),
+        customerResponseRecordRefs: joinRefs(form.customerResponseRecordRefs),
+        recordRefs: joinRefs(form.recordRefs),
+        ownerPersonId: form.ownerPersonId || undefined,
+        receivedAt: form.receivedAt || undefined,
+        receivedByPersonId: form.receivedByPersonId || undefined,
+        customerResponseDueAt: form.customerResponseDueAt || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        complaintType: 'product_quality',
+        sourceProduct: 'routarr',
+        sourceObjectRef: '',
+        affectedOrderRefs: '',
+        affectedShipmentRefs: '',
+        affectedItemRefs: '',
+        affectedAssetRefs: '',
+        customerRef: '',
+        customerContactSnapshot: '',
+        customerLocationRef: '',
+        nonconformanceRef: '',
+        holdRefs: '',
+        capaRefs: '',
+        customerResponseRecordRefs: '',
+        recordRefs: '',
+        ownerPersonId: '',
+        receivedAt: '',
+        receivedByPersonId: '',
+        customerResponseDueAt: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Customer complaints"
+        description="Track complaint quality cases, customer impact, and the evidence needed for closure."
+        action={<span className="assurarr-pill"><ClipboardList className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create complaint quality case</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Complaint type">
+              <select className="assurarr-select" value={form.complaintType} onChange={(event) => setForm({ ...form, complaintType: event.target.value })}>
+                <option value="product_quality">Product quality</option>
+                <option value="service_quality">Service quality</option>
+                <option value="delivery_quality">Delivery quality</option>
+                <option value="documentation">Documentation</option>
+                <option value="damaged_goods">Damaged goods</option>
+                <option value="wrong_item">Wrong item</option>
+                <option value="late_delivery_quality_impact">Late delivery quality impact</option>
+                <option value="failed_requirement">Failed requirement</option>
+                <option value="repeat_issue">Repeat issue</option>
+                <option value="other">Other</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Customer ref">
+              <input className="assurarr-input" value={form.customerRef} onChange={(event) => setForm({ ...form, customerRef: event.target.value })} placeholder="customarr:customer:contoso" />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+            </Field>
+            <Field label="Affected order refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedOrderRefs} onChange={(event) => setForm({ ...form, affectedOrderRefs: event.target.value })} />
+            </Field>
+            <Field label="Affected shipment refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedShipmentRefs} onChange={(event) => setForm({ ...form, affectedShipmentRefs: event.target.value })} />
+            </Field>
+            <Field label="Affected item refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedItemRefs} onChange={(event) => setForm({ ...form, affectedItemRefs: event.target.value })} />
+            </Field>
+            <Field label="Affected asset refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedAssetRefs} onChange={(event) => setForm({ ...form, affectedAssetRefs: event.target.value })} />
+            </Field>
+            <Field label="Hold refs" wide>
+              <textarea className="assurarr-textarea" value={form.holdRefs} onChange={(event) => setForm({ ...form, holdRefs: event.target.value })} />
+            </Field>
+            <Field label="CAPA refs" wide>
+              <textarea className="assurarr-textarea" value={form.capaRefs} onChange={(event) => setForm({ ...form, capaRefs: event.target.value })} />
+            </Field>
+            <Field label="Customer response refs" wide>
+              <textarea className="assurarr-textarea" value={form.customerResponseRecordRefs} onChange={(event) => setForm({ ...form, customerResponseRecordRefs: event.target.value })} />
+            </Field>
+            <Field label="Record refs" wide>
+              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Customer contact snapshot" wide>
+              <input className="assurarr-input" value={form.customerContactSnapshot} onChange={(event) => setForm({ ...form, customerContactSnapshot: event.target.value })} />
+            </Field>
+            <Field label="Customer location ref">
+              <input className="assurarr-input" value={form.customerLocationRef} onChange={(event) => setForm({ ...form, customerLocationRef: event.target.value })} />
+            </Field>
+            <Field label="Nonconformance ref">
+              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+            </Field>
+            <Field label="Owner person id">
+              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            </Field>
+            <Field label="Received at">
+              <input className="assurarr-input" type="datetime-local" value={form.receivedAt} onChange={(event) => setForm({ ...form, receivedAt: event.target.value })} />
+            </Field>
+            <Field label="Received by person id">
+              <input className="assurarr-input" value={form.receivedByPersonId} onChange={(event) => setForm({ ...form, receivedByPersonId: event.target.value })} />
+            </Field>
+            <Field label="Customer response due at">
+              <input className="assurarr-input" type="datetime-local" value={form.customerResponseDueAt} onChange={(event) => setForm({ ...form, customerResponseDueAt: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create complaint case'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No customer complaint quality cases yet."
+          onStatusChange={(id, status) => assurarrApi.updateCustomerComplaintQualityCaseStatus(id, status)}
+          statusChoices={statusOptions.customerComplaint}
+        />
+      ) : (
+        <LoadingCard label="Loading complaint cases" />
+      )}
+    </div>
+  )
+}
+
 function StatusPage() {
   const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
   return (
@@ -1042,6 +1404,8 @@ export function App() {
     if (path.startsWith('/findings')) return 'Findings'
     if (path.startsWith('/reviews')) return 'Reviews'
     if (path.startsWith('/releases')) return 'Releases'
+    if (path.startsWith('/supplier-quality')) return 'Supplier quality'
+    if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
@@ -1059,6 +1423,8 @@ export function App() {
         <Route path="/findings" element={<FindingsPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/releases" element={<ReleasePage />} />
+        <Route path="/supplier-quality" element={<SupplierQualityPage />} />
+        <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/history" element={<HistoryPage />} />

@@ -97,6 +97,33 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> SupplierQualityTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["open"] = ["supplier_notified", "canceled"],
+        ["supplier_notified"] = ["response_pending", "under_review", "canceled"],
+        ["response_pending"] = ["under_review", "corrective_action", "resolved", "canceled"],
+        ["under_review"] = ["corrective_action", "resolved", "canceled"],
+        ["corrective_action"] = ["resolved", "closed", "canceled"],
+        ["resolved"] = ["closed"],
+        ["closed"] = [],
+        ["canceled"] = [],
+    };
+
+    private static readonly IReadOnlyDictionary<string, string[]> CustomerComplaintTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["received"] = ["triage", "canceled"],
+        ["triage"] = ["investigating", "containment", "response_pending", "canceled"],
+        ["investigating"] = ["containment", "response_pending", "corrective_action", "resolved", "canceled"],
+        ["containment"] = ["response_pending", "corrective_action", "resolved", "canceled"],
+        ["response_pending"] = ["corrective_action", "resolved", "closed", "canceled"],
+        ["corrective_action"] = ["resolved", "closed", "canceled"],
+        ["resolved"] = ["closed"],
+        ["closed"] = [],
+        ["canceled"] = [],
+    };
+
     public async Task EnsureDemoDataAsync(CancellationToken cancellationToken = default)
     {
         if (await db.Nonconformances.AnyAsync(cancellationToken))
@@ -335,6 +362,60 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Notes = "Waiting on release approval.",
         });
 
+        db.SupplierQualityIssues.Add(new AssurArrSupplierQualityIssue
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "SQA-000001",
+            Title = "Damaged supplier cartons",
+            Description = "Multiple cartons arrived damaged and need supplier review plus containment.",
+            Severity = "high",
+            Status = "supplier_notified",
+            SourceProduct = "loadarr",
+            SourceObjectRef = "RECEIPT-RR-24018",
+            AffectedReceiptRefs = ["loadarr:receipt:RR-24018"],
+            AffectedPurchaseOrderRefs = ["supplyarr:po:PO-1144"],
+            AffectedItemRefs = ["supplyarr:item:BOX-12"],
+            SupplierRef = "supplyarr:supplier:acme-packaging",
+            NonconformanceRef = "NCR-000001",
+            ScarRef = "SCAR-000001",
+            HoldRefs = ["HOLD-000001"],
+            RecordRefs = ["recordarr:doc:inspection-photo-1"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            OpenedAt = now.AddHours(-4),
+        });
+
+        db.CustomerComplaintQualityCases.Add(new AssurArrCustomerComplaintQualityCase
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "COMP-000001",
+            Title = "Customer reported damaged delivery",
+            Description = "Customer reported that delivered goods arrived damaged and requested a quality response.",
+            Severity = "high",
+            Status = "triage",
+            SourceProduct = "routarr",
+            SourceObjectRef = "route:RT-4481",
+            AffectedOrderRefs = ["ordarr:order:SO-22011"],
+            AffectedShipmentRefs = ["routarr:shipment:SH-4481"],
+            AffectedItemRefs = ["loadarr:item:BOX-12"],
+            AffectedAssetRefs = [],
+            CustomerRef = "customarr:customer:contoso-industries",
+            CustomerContactSnapshot = "Jordan Lee, logistics manager",
+            CustomerLocationRef = "customarr:location:contoso-dock",
+            NonconformanceRef = "NCR-000001",
+            HoldRefs = ["HOLD-000001"],
+            CapaRefs = ["CAPA-000001"],
+            CustomerResponseRecordRefs = ["recordarr:doc:customer-response-draft"],
+            RecordRefs = ["recordarr:doc:complaint-photo-1"],
+            CreatedAt = now,
+            UpdatedAt = now,
+            ReceivedAt = now.AddHours(-2),
+            ReceivedByPersonId = null,
+            CustomerResponseDueAt = now.AddDays(3),
+        });
+
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -348,6 +429,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var openFindingCount = await db.AuditFindings.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var pendingReviewCount = await db.QualityReviews.CountAsync(x => x.Status == "pending" || x.Status == "in_review", cancellationToken);
         var pendingReleaseCount = await db.QualityReleases.CountAsync(x => x.Status == "requested" || x.Status == "pending_review", cancellationToken);
+        var openSupplierIssueCount = await db.SupplierQualityIssues.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var openComplaintCount = await db.CustomerComplaintQualityCases.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
         var openStatusSnapshots = await db.QualityStatusSnapshots.CountAsync(x => x.Status != "unknown", cancellationToken);
 
@@ -360,6 +443,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("findings", "Open findings", "Issues or opportunities captured during audits.", openFindingCount, "soft"),
             new AssurArrDashboardCardResponse("reviews", "Quality reviews", "Evidence reviews and decision gates in progress.", pendingReviewCount, "info"),
             new AssurArrDashboardCardResponse("releases", "Quality releases", "Release requests waiting on approval or execution.", pendingReleaseCount, "warning"),
+            new AssurArrDashboardCardResponse("supplier-quality", "Supplier quality issues", "Supplier-responsible quality problems under review.", openSupplierIssueCount, "danger"),
+            new AssurArrDashboardCardResponse("customer-complaints", "Customer complaint cases", "Customer-facing complaint quality workflows in progress.", openComplaintCount, "warning"),
             new AssurArrDashboardCardResponse("status", "Status snapshots", "Current quality state published to other products.", openStatusSnapshots, "neutral"),
             new AssurArrDashboardCardResponse("scorecards", "Scorecards", "Active quality scorecards and trend summaries.", openScorecards, "accent"),
         };
@@ -843,6 +928,140 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return ToReleaseResponse(entity);
     }
 
+    public async Task<List<AssurArrSupplierQualityIssueResponse>> ListSupplierQualityIssuesAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.SupplierQualityIssues
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToSupplierQualityIssueResponse).ToList();
+    }
+
+    public async Task<AssurArrSupplierQualityIssueResponse> CreateSupplierQualityIssueAsync(CreateAssurArrSupplierQualityIssueRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrSupplierQualityIssue
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("SQA", db.SupplierQualityIssues, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "moderate"),
+            Status = "open",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedReceiptRefs = request.AffectedReceiptRefs ?? [],
+            AffectedPurchaseOrderRefs = request.AffectedPurchaseOrderRefs ?? [],
+            AffectedItemRefs = request.AffectedItemRefs ?? [],
+            SupplierRef = NormalizeNullable(request.SupplierRef),
+            NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
+            ScarRef = NormalizeNullable(request.ScarRef),
+            HoldRefs = request.HoldRefs ?? [],
+            RecordRefs = request.RecordRefs ?? [],
+            CreatedAt = now,
+            UpdatedAt = now,
+            IssueType = Normalize(request.IssueType, "other"),
+            OwnerPersonId = request.OwnerPersonId,
+            OpenedAt = request.OpenedAt ?? now,
+        };
+
+        db.SupplierQualityIssues.Add(entity);
+        await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.created", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToSupplierQualityIssueResponse(entity);
+    }
+
+    public async Task<AssurArrSupplierQualityIssueResponse> UpdateSupplierQualityIssueStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.SupplierQualityIssues.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Supplier quality issue '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, SupplierQualityTransitions, "supplier quality issue");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+
+        await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.status_changed", entity.Status, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToSupplierQualityIssueResponse(entity);
+    }
+
+    public async Task<List<AssurArrCustomerComplaintQualityCaseResponse>> ListCustomerComplaintQualityCasesAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.CustomerComplaintQualityCases
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToCustomerComplaintQualityCaseResponse).ToList();
+    }
+
+    public async Task<AssurArrCustomerComplaintQualityCaseResponse> CreateCustomerComplaintQualityCaseAsync(CreateAssurArrCustomerComplaintQualityCaseRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrCustomerComplaintQualityCase
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("COMP", db.CustomerComplaintQualityCases, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "moderate"),
+            Status = "received",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedOrderRefs = request.AffectedOrderRefs ?? [],
+            AffectedShipmentRefs = request.AffectedShipmentRefs ?? [],
+            AffectedItemRefs = request.AffectedItemRefs ?? [],
+            AffectedAssetRefs = request.AffectedAssetRefs ?? [],
+            CustomerRef = NormalizeNullable(request.CustomerRef),
+            CustomerContactSnapshot = NormalizeNullable(request.CustomerContactSnapshot),
+            CustomerLocationRef = NormalizeNullable(request.CustomerLocationRef),
+            NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
+            HoldRefs = request.HoldRefs ?? [],
+            CapaRefs = request.CapaRefs ?? [],
+            CustomerResponseRecordRefs = request.CustomerResponseRecordRefs ?? [],
+            RecordRefs = request.RecordRefs ?? [],
+            CreatedAt = now,
+            UpdatedAt = now,
+            ComplaintType = Normalize(request.ComplaintType, "other"),
+            OwnerPersonId = request.OwnerPersonId,
+            ReceivedAt = request.ReceivedAt ?? now,
+            ReceivedByPersonId = request.ReceivedByPersonId,
+            CustomerResponseDueAt = request.CustomerResponseDueAt,
+        };
+
+        db.CustomerComplaintQualityCases.Add(entity);
+        await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.created", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCustomerComplaintQualityCaseResponse(entity);
+    }
+
+    public async Task<AssurArrCustomerComplaintQualityCaseResponse> UpdateCustomerComplaintQualityCaseStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.CustomerComplaintQualityCases.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Customer complaint quality case '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, CustomerComplaintTransitions, "customer complaint quality case");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+
+        await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.status_changed", entity.Status, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCustomerComplaintQualityCaseResponse(entity);
+    }
+
     public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListStatusSnapshotsAsync(CancellationToken cancellationToken = default)
     {
         var entities = await db.QualityStatusSnapshots
@@ -1219,6 +1438,77 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ExpirationAt,
             entity.EvidenceRecordRefs,
             entity.Notes);
+
+    private static AssurArrSupplierQualityIssueResponse ToSupplierQualityIssueResponse(AssurArrSupplierQualityIssue entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.IssueType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            [
+                .. entity.AffectedReceiptRefs,
+                .. entity.AffectedPurchaseOrderRefs,
+                .. entity.AffectedItemRefs,
+            ],
+            entity.AffectedReceiptRefs,
+            entity.AffectedPurchaseOrderRefs,
+            entity.AffectedItemRefs,
+            entity.SupplierRef,
+            entity.NonconformanceRef,
+            entity.ScarRef,
+            entity.HoldRefs,
+            entity.RecordRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary,
+            entity.OwnerPersonId,
+            entity.OpenedAt);
+
+    private static AssurArrCustomerComplaintQualityCaseResponse ToCustomerComplaintQualityCaseResponse(AssurArrCustomerComplaintQualityCase entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.ComplaintType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            [
+                .. entity.AffectedOrderRefs,
+                .. entity.AffectedShipmentRefs,
+                .. entity.AffectedItemRefs,
+                .. entity.AffectedAssetRefs,
+            ],
+            entity.AffectedOrderRefs,
+            entity.AffectedShipmentRefs,
+            entity.AffectedItemRefs,
+            entity.AffectedAssetRefs,
+            entity.CustomerRef,
+            entity.CustomerContactSnapshot,
+            entity.CustomerLocationRef,
+            entity.NonconformanceRef,
+            entity.HoldRefs,
+            entity.CapaRefs,
+            entity.CustomerResponseRecordRefs,
+            entity.RecordRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary,
+            entity.OwnerPersonId,
+            entity.ReceivedAt,
+            entity.ReceivedByPersonId,
+            entity.CustomerResponseDueAt);
 
     private static AssurArrQualityScorecardResponse ToScorecardResponse(AssurArrQualityScorecard entity) =>
         new(

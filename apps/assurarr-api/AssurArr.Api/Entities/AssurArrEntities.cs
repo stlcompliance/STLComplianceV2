@@ -282,6 +282,70 @@ public sealed class AssurArrQualityRelease
     public string? Notes { get; set; }
 }
 
+public sealed class AssurArrSupplierQualityIssue
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "open";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedReceiptRefs { get; set; } = [];
+    public string[] AffectedPurchaseOrderRefs { get; set; } = [];
+    public string[] AffectedItemRefs { get; set; } = [];
+    public string? SupplierRef { get; set; }
+    public string? NonconformanceRef { get; set; }
+    public string? ScarRef { get; set; }
+    public string[] HoldRefs { get; set; } = [];
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+    public string IssueType { get; set; } = "other";
+    public Guid? OwnerPersonId { get; set; }
+    public DateTimeOffset? OpenedAt { get; set; }
+}
+
+public sealed class AssurArrCustomerComplaintQualityCase
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "received";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedOrderRefs { get; set; } = [];
+    public string[] AffectedShipmentRefs { get; set; } = [];
+    public string[] AffectedItemRefs { get; set; } = [];
+    public string[] AffectedAssetRefs { get; set; } = [];
+    public string? CustomerRef { get; set; }
+    public string? CustomerContactSnapshot { get; set; }
+    public string? CustomerLocationRef { get; set; }
+    public string? NonconformanceRef { get; set; }
+    public string[] HoldRefs { get; set; } = [];
+    public string[] CapaRefs { get; set; } = [];
+    public string[] CustomerResponseRecordRefs { get; set; } = [];
+    public string[] RecordRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+    public string ComplaintType { get; set; } = "other";
+    public Guid? OwnerPersonId { get; set; }
+    public DateTimeOffset? ReceivedAt { get; set; }
+    public Guid? ReceivedByPersonId { get; set; }
+    public DateTimeOffset? CustomerResponseDueAt { get; set; }
+}
+
 public sealed class AssurArrTimelineEvent
 {
     public Guid Id { get; set; }
