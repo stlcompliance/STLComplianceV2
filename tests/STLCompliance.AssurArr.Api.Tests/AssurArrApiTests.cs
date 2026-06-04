@@ -463,6 +463,37 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         Assert.Equal(HttpStatusCode.OK, resolveBlockerResponse.StatusCode);
 
+        var completeActionResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/actions/{action.Id}/status",
+            new UpdateAssurArrCapaActionStatusRequest(
+                "completed",
+                null,
+                DateTimeOffset.UtcNow,
+                null,
+                null,
+                "Action completed and ready for verification."));
+
+        Assert.Equal(HttpStatusCode.OK, completeActionResponse.StatusCode);
+
+        var verifyActionResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/actions/{action.Id}/status",
+            new UpdateAssurArrCapaActionStatusRequest(
+                "verified",
+                null,
+                null,
+                null,
+                DateTimeOffset.UtcNow,
+                "Action verified by quality reviewer."));
+
+        Assert.Equal(HttpStatusCode.OK, verifyActionResponse.StatusCode);
+
+        var dashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = await dashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(dashboard);
+        Assert.Contains(dashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.action_completed");
+        Assert.Contains(dashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.action_verified");
+
         var capaRootCauseResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/capas/{capa.Id}/status",
             new UpdateAssurArrStatusRequest("root_cause", "Root cause analysis in progress."));

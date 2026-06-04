@@ -1497,11 +1497,13 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             entity.CompletedAt = request.CompletedAt ?? entity.UpdatedAt;
             entity.CompletedByPersonId = request.CompletedByPersonId ?? entity.CompletedByPersonId;
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.action_completed", entity.Title, cancellationToken);
         }
         if (string.Equals(entity.Status, "verified", StringComparison.OrdinalIgnoreCase))
         {
             entity.VerifiedAt = request.VerifiedAt ?? entity.UpdatedAt;
             entity.VerifiedByPersonId = request.VerifiedByPersonId ?? entity.VerifiedByPersonId;
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.action_verified", entity.Title, cancellationToken);
         }
         await AddTimelineAsync("capa_action", entity.Id, $"assurarr.capa.action.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
