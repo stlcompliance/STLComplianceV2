@@ -10,6 +10,7 @@ public sealed class PmDueScanService(
     MaintainArrDbContext db,
     WorkOrderService workOrders,
     InspectionRunService inspectionRuns,
+    PmOccurrenceService pmOccurrences,
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
     MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
@@ -312,6 +313,12 @@ public sealed class PmDueScanService(
             overdueGraceDays);
         var previousDueStatus = entity.DueStatus;
 
+        if (string.Equals(targetDueStatus, PmDueStatuses.Due, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(targetDueStatus, PmDueStatuses.Overdue, StringComparison.OrdinalIgnoreCase))
+        {
+            await pmOccurrences.EnsureDueOccurrenceAsync(entity, targetDueStatus, asOfUtc, cancellationToken);
+        }
+
         if (string.Equals(targetDueStatus, entity.DueStatus, StringComparison.OrdinalIgnoreCase))
         {
             return null;
@@ -407,6 +414,8 @@ public sealed class PmDueScanService(
         {
             return;
         }
+
+        await pmOccurrences.EnsureDueOccurrenceAsync(schedule, targetDueStatus, occurredAt, cancellationToken);
 
         if (string.Equals(previousDueStatus, PmDueStatuses.Scheduled, StringComparison.OrdinalIgnoreCase)
             && (string.Equals(targetDueStatus, PmDueStatuses.Due, StringComparison.OrdinalIgnoreCase)

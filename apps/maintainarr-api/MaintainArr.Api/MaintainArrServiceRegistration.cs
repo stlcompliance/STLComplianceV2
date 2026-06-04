@@ -36,6 +36,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<StaffArrReferenceAdapter>());
         builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<SupplyArrReferenceAdapter>());
         builder.Services.AddScoped<PmScheduleService>();
+        builder.Services.AddScoped<PmOccurrenceService>();
         builder.Services.AddScoped<PmProgramService>();
         builder.Services.AddScoped<PmDueScanService>();
         builder.Services.AddScoped<PmDueScanSettingsService>();

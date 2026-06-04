@@ -9,6 +9,7 @@ namespace MaintainArr.Api.Services;
 public sealed class PmScheduleService(
     MaintainArrDbContext db,
     AssetService assetService,
+    PmOccurrenceService pmOccurrences,
     IMaintainArrAuditService audit,
     MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
@@ -281,6 +282,7 @@ public sealed class PmScheduleService(
         entity.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
+        await pmOccurrences.MarkSkippedAsync(entity, actorUserId, now, entity.SkippedReason, cancellationToken);
         await audit.WriteAsync(
             "pm_schedule.skip",
             tenantId,

@@ -12,6 +12,7 @@ public sealed class WorkOrderService(
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
     TechnicianRefService technicianRefService,
+    PmOccurrenceService pmOccurrences,
     AssetDowntimeService assetDowntimeService,
     WorkOrderDiscussionService discussionService,
     TrainArrQualificationCheckClient trainArrQualificationCheckClient,
@@ -330,6 +331,11 @@ public sealed class WorkOrderService(
 
         if (existing is not null)
         {
+            await pmOccurrences.MarkWorkOrderGeneratedAsync(
+                schedule,
+                existing.Id.ToString("D"),
+                DateTimeOffset.UtcNow,
+                cancellationToken);
             return new PmWorkOrderGenerationResult(existing.Id, existing.WorkOrderNumber, LinkedExisting: true);
         }
 
@@ -392,6 +398,12 @@ public sealed class WorkOrderService(
             actorUserId,
             schedule.Id,
             entity,
+            now,
+            cancellationToken);
+
+        await pmOccurrences.MarkWorkOrderGeneratedAsync(
+            schedule,
+            entity.Id.ToString("D"),
             now,
             cancellationToken);
 
@@ -1035,6 +1047,12 @@ public sealed class WorkOrderService(
             return;
         }
 
+        await pmOccurrences.MarkWorkOrderGeneratedAsync(
+            schedule,
+            workOrder.Id.ToString("D"),
+            occurredAt,
+            cancellationToken);
+
         await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
             tenantId,
             MaintenancePlatformOutboxEventKinds.PmOccurrenceWorkOrderGenerated,
@@ -1068,6 +1086,12 @@ public sealed class WorkOrderService(
         schedule.DueStatus = PmDueStatuses.Completed;
         schedule.UpdatedAt = occurredAt;
         await db.SaveChangesAsync(cancellationToken);
+
+        await pmOccurrences.MarkCompletedAsync(
+            schedule,
+            workOrder.Id.ToString("D"),
+            occurredAt,
+            cancellationToken);
 
         var asset = await db.Assets
             .AsNoTracking()

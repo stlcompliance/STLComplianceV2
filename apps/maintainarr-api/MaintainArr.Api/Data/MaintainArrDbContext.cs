@@ -16,6 +16,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<PmSchedule> PmSchedules => Set<PmSchedule>();
 
+    public DbSet<PmOccurrence> PmOccurrences => Set<PmOccurrence>();
+
     public DbSet<PmProgram> PmPrograms => Set<PmProgram>();
 
     public DbSet<PmProgramSchedule> PmProgramSchedules => Set<PmProgramSchedule>();
@@ -287,6 +289,31 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany()
                 .HasForeignKey(x => x.AssetMeterId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PmOccurrence>(entity =>
+        {
+            entity.ToTable("maintainarr_pm_occurrences");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DueMeterType).HasMaxLength(64);
+            entity.Property(x => x.DueMeterValue).HasPrecision(18, 4);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.GeneratedWorkOrderRef).HasMaxLength(128);
+            entity.Property(x => x.GeneratedInspectionRef).HasMaxLength(128);
+            entity.Property(x => x.CompletedByWorkOrderRef).HasMaxLength(128);
+            entity.Property(x => x.SkippedReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PmScheduleId, x.DueAt }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.PmScheduleId, x.OccurrenceNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.DueAt });
+            entity.HasOne(x => x.PmSchedule)
+                .WithMany()
+                .HasForeignKey(x => x.PmScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Asset)
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<AssetMeter>(entity =>

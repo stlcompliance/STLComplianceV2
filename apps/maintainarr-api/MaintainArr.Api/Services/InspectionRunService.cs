@@ -11,6 +11,7 @@ public sealed class InspectionRunService(
     MaintainArrDbContext db,
     AssetService assetService,
     DefectService defectService,
+    PmOccurrenceService pmOccurrences,
     IMaintainArrAuditService audit,
     MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
@@ -175,6 +176,12 @@ public sealed class InspectionRunService(
             {
                 return await MapDetailAsync(tenantId, entity, cancellationToken);
             }
+
+            await pmOccurrences.MarkInspectionGeneratedAsync(
+                schedule,
+                entity.Id.ToString("D"),
+                now,
+                cancellationToken);
 
             await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
                 tenantId,

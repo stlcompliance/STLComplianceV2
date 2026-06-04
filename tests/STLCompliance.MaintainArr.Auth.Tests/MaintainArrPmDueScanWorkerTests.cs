@@ -13,6 +13,7 @@ using MaintainArr.Api.Services;
 using STLCompliance.Shared.Contracts;
 using static MaintainArr.Api.Entities.MaintenancePlatformEventRelatedEntityTypes;
 using static MaintainArr.Api.Entities.MaintenancePlatformOutboxEventKinds;
+using static MaintainArr.Api.Entities.PmOccurrenceStatuses;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
@@ -155,12 +156,19 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.NotNull(skipped.SkippedByPersonId);
         Assert.Equal("Deferred by supervisor", skipped.SkippedReason);
 
+        var occurrence = await db.PmOccurrences.SingleAsync(x => x.PmScheduleId == schedule.Id);
+        Assert.Equal(PmOccurrenceStatuses.Skipped, occurrence.Status);
+        Assert.Equal(schedule.NextDueAt, occurrence.DueAt);
+        Assert.NotNull(occurrence.SkippedAt);
+        Assert.NotNull(occurrence.SkippedByPersonId);
+        Assert.Equal("Deferred by supervisor", occurrence.SkippedReason);
+
         var outbox = await db.MaintenancePlatformOutboxEvents
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.RelatedEntityId == schedule.Id)
             .ToListAsync();
         Assert.Contains(outbox, x =>
             x.EventKind == PmOccurrenceSkipped
-            && x.RelatedEntityType == PmOccurrence);
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmOccurrence);
     }
 
     [Fact]
@@ -205,7 +213,7 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
             && x.RelatedEntityId == inspectionRun.Id);
         Assert.Contains(outbox, x =>
             x.EventKind == PmOccurrenceInspectionGenerated
-            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmOccurrence
             && x.RelatedEntityId == schedule.Id
             && x.PayloadJson.Contains(inspectionRun.Id.ToString("D"), StringComparison.OrdinalIgnoreCase));
 
@@ -304,6 +312,12 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.Equal(PmDueStatuses.Due, stored.DueStatus);
         Assert.NotNull(stored.LastDueScanAt);
 
+        var occurrence = await db.PmOccurrences.SingleAsync(x => x.PmScheduleId == schedule.Id);
+        Assert.Equal(PmOccurrenceStatuses.Generated, occurrence.Status);
+        Assert.Equal(schedule.NextDueAt, occurrence.DueAt);
+        Assert.Equal(1, occurrence.OccurrenceNumber);
+        Assert.NotNull(occurrence.GeneratedWorkOrderRef);
+
         var workOrder = await db.WorkOrders.SingleAsync(x => x.PmScheduleId == schedule.Id);
         Assert.Equal(WorkOrderSources.PmSchedule, workOrder.Source);
         Assert.Equal(WorkOrderStatuses.Open, workOrder.Status);
@@ -314,7 +328,7 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
             .ToListAsync();
         Assert.Contains(outbox, x =>
             x.EventKind == PmOccurrenceCreated
-            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmOccurrence
             && x.RelatedEntityId == schedule.Id);
         Assert.Contains(outbox, x =>
             x.EventKind == PmDue
@@ -327,7 +341,7 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
             && x.RelatedEntityId == workOrder.Id);
         Assert.Contains(outbox, x =>
             x.EventKind == PmOccurrenceWorkOrderGenerated
-            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmOccurrence
             && x.RelatedEntityId == schedule.Id);
     }
 
@@ -353,16 +367,23 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
 
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-        var outbox = await db.MaintenancePlatformOutboxEvents
+        var occurrenceOutbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmOccurrence
+                && x.RelatedEntityId == schedule.Id)
+            .ToListAsync();
+
+        var scheduleOutbox = await db.MaintenancePlatformOutboxEvents
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
                 && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmSchedule
                 && x.RelatedEntityId == schedule.Id)
             .ToListAsync();
 
-        Assert.Contains(outbox, x => x.EventKind == PmOccurrenceCreated);
-        Assert.Contains(outbox, x => x.EventKind == PmOverdue);
-        Assert.Contains(outbox, x => x.EventKind == PmOccurrenceOverdue);
-        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+        Assert.Contains(occurrenceOutbox, x => x.EventKind == PmOccurrenceCreated);
+        Assert.Contains(occurrenceOutbox, x => x.EventKind == PmOccurrenceOverdue);
+        Assert.Contains(occurrenceOutbox, x => x.EventKind == PmOccurrenceWorkOrderGenerated);
+        Assert.Contains(scheduleOutbox, x => x.EventKind == PmOverdue);
+        Assert.All(occurrenceOutbox.Concat(scheduleOutbox), x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
     }
 
     [Fact]
@@ -407,6 +428,11 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.Equal(1, await db.WorkOrders.CountAsync(x => x.PmScheduleId == schedule.Id));
 
         var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var startRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.Id}/status", managerToken);
+        startRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+
         var completeRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.Id}/status", managerToken);
         completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
         var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
@@ -415,6 +441,11 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         var completedSchedule = await db.PmSchedules.SingleAsync(x => x.Id == schedule.Id);
         Assert.Equal(PmDueStatuses.Completed, completedSchedule.DueStatus);
         Assert.NotNull(completedSchedule.LastCompletedAt);
+
+        var occurrence = await db.PmOccurrences.SingleAsync(x => x.PmScheduleId == schedule.Id);
+        Assert.Equal(PmOccurrenceStatuses.Completed, occurrence.Status);
+        Assert.NotNull(occurrence.CompletedAt);
+        Assert.Equal(workOrder.Id.ToString("D"), occurrence.CompletedByWorkOrderRef);
 
         var completedOutbox = await db.MaintenancePlatformOutboxEvents
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.RelatedEntityId == schedule.Id)
