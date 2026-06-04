@@ -130,10 +130,10 @@ describe('WorkOrderLifecyclePanel', () => {
             qualityReviewedByPersonId: 'person-quality-001',
             qualityReviewedAt: '2026-05-27T14:20:00Z',
             evidenceAccepted: true,
-            unresolvedDefectRefs: null,
-            followUpWorkOrderRefs: null,
-            customerImpactSummary: null,
-            downtimeSummary: null,
+            unresolvedDefectRefs: 'defect-1, defect-2',
+            followUpWorkOrderRefs: 'wo-200, wo-201',
+            customerImpactSummary: 'Limited production impact',
+            downtimeSummary: '2.5 hours downtime',
             finalAssetReadinessStatus: 'ready',
             finalStatus: 'closed',
             evidenceRecordRefs: ['ev-1'],
@@ -166,8 +166,17 @@ describe('WorkOrderLifecyclePanel', () => {
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('wear')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Replaced seal')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('inspect-123')
-    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Required')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('person-tech-001')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('person-supervisor-001')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('person-compliance-001')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('person-quality-001')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Limited production impact')
+    expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('2.5 hours downtime')
     expect(screen.getByTestId('work-order-closeout-summary')).toHaveTextContent('Yes')
+    expect(screen.getByTestId('work-order-closeout-unresolved-defects')).toHaveTextContent('defect-1')
+    expect(screen.getByTestId('work-order-closeout-unresolved-defects')).toHaveTextContent('defect-2')
+    expect(screen.getByTestId('work-order-closeout-followups')).toHaveTextContent('wo-200')
+    expect(screen.getByTestId('work-order-closeout-followups')).toHaveTextContent('wo-201')
     expect(screen.getByTestId('work-order-closeout-evidence')).toHaveTextContent('after.jpg')
     expect(screen.getByTestId('work-order-closeout-evidence')).not.toHaveTextContent('ev-1')
   })

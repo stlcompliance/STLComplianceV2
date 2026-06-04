@@ -50,6 +50,17 @@ function formatEvidenceLabel(
   return `${item.fileName} (${item.evidenceTypeKey.replaceAll('_', ' ')})`
 }
 
+function splitReferenceList(value: string | null): string[] {
+  if (!value) {
+    return []
+  }
+
+  return value
+    .split(/[\n,;]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+}
+
 export function WorkOrderLifecyclePanel({
   workOrder,
   tasks,
@@ -79,6 +90,8 @@ export function WorkOrderLifecyclePanel({
   const acceptedEvidenceLabels = closeout?.evidenceRecordRefs?.map((evidenceId) =>
     formatEvidenceLabel(evidenceId, evidence),
   ) ?? []
+  const unresolvedDefectRefs = splitReferenceList(closeout?.unresolvedDefectRefs ?? null)
+  const followUpWorkOrderRefs = splitReferenceList(closeout?.followUpWorkOrderRefs ?? null)
 
   return (
     <section
@@ -231,17 +244,77 @@ export function WorkOrderLifecyclePanel({
                 </div>
                 <div>
                   <dt className="text-slate-500">Supervisor review</dt>
-                  <dd className="text-slate-200">{closeout.supervisorReviewRequired ? 'Required' : 'Not required'}</dd>
+                  <dd className="text-slate-200">
+                    {closeout.supervisorReviewRequired
+                      ? `${closeout.supervisorReviewedByPersonId ?? 'Required'}${closeout.supervisorReviewedAt ? ` on ${formatTimestamp(closeout.supervisorReviewedAt)}` : ''}`
+                      : 'Not required'}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Compliance review</dt>
-                  <dd className="text-slate-200">{closeout.complianceReviewRequired ? 'Required' : 'Not required'}</dd>
+                  <dd className="text-slate-200">
+                    {closeout.complianceReviewRequired
+                      ? `${closeout.complianceReviewedByPersonId ?? 'Required'}${closeout.complianceReviewedAt ? ` on ${formatTimestamp(closeout.complianceReviewedAt)}` : ''}`
+                      : 'Not required'}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Quality review</dt>
-                  <dd className="text-slate-200">{closeout.qualityReviewRequired ? 'Required' : 'Not required'}</dd>
+                  <dd className="text-slate-200">
+                    {closeout.qualityReviewRequired
+                      ? `${closeout.qualityReviewedByPersonId ?? 'Required'}${closeout.qualityReviewedAt ? ` on ${formatTimestamp(closeout.qualityReviewedAt)}` : ''}`
+                      : 'Not required'}
+                  </dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-slate-500">Customer impact</dt>
+                  <dd className="text-slate-200">{closeout.customerImpactSummary ?? '—'}</dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-slate-500">Downtime summary</dt>
+                  <dd className="text-slate-200">{closeout.downtimeSummary ?? '—'}</dd>
                 </div>
               </dl>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <section data-testid="work-order-closeout-unresolved-defects">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Unresolved defects
+                  </h5>
+                  {unresolvedDefectRefs.length > 0 ? (
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {unresolvedDefectRefs.map((ref) => (
+                        <li
+                          key={`${closeout.closeoutId}-defect-${ref}`}
+                          className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200"
+                        >
+                          {ref}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-500">None</p>
+                  )}
+                </section>
+                <section data-testid="work-order-closeout-followups">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Follow-up work orders
+                  </h5>
+                  {followUpWorkOrderRefs.length > 0 ? (
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {followUpWorkOrderRefs.map((ref) => (
+                        <li
+                          key={`${closeout.closeoutId}-followup-${ref}`}
+                          className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200"
+                        >
+                          {ref}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-500">None</p>
+                  )}
+                </section>
+              </div>
               <div className="mt-3" data-testid="work-order-closeout-evidence">
                 <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Accepted evidence
