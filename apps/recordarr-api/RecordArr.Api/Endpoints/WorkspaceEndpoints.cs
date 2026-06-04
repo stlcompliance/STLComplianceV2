@@ -401,6 +401,11 @@ public static class WorkspaceEndpoints
             return status is null ? Results.NotFound() : Results.Ok(status);
         }).WithName("GetRecordArrRetentionStatus");
 
+        group.MapPost("/retention-statuses/recalculate", (RecordArrStore store) =>
+        {
+            return Results.Ok(store.RecalculateRetentionStatuses());
+        }).WithName("RecalculateRecordArrRetentionStatuses");
+
         group.MapPost("/legal-holds", (CreateLegalHoldRequest request, RecordArrStore store) =>
         {
             var hold = store.CreateLegalHold(

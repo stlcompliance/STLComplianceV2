@@ -711,6 +711,10 @@ export async function getRetentionStatus(
   )
 }
 
+export async function recalculateRetentionStatuses(accessToken: string): Promise<RecordArrRetentionStatus[]> {
+  return sendJson<RecordArrRetentionStatus[]>('/api/v1/workspace/retention-statuses/recalculate', accessToken, 'POST', {})
+}
+
 export async function listLegalHolds(accessToken: string): Promise<RecordArrLegalHold[]> {
   return getJson<RecordArrLegalHold[]>('/api/v1/workspace/legal-holds', accessToken)
 }

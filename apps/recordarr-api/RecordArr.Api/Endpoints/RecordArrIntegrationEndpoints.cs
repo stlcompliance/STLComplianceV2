@@ -192,6 +192,11 @@ public static class RecordArrIntegrationEndpoints
             return status is null ? Results.NotFound() : Results.Ok(status);
         }).WithName($"GetRecordArrIntegrationRetentionStatus{routePrefix}");
 
+        group.MapPost("/retention-statuses/recalculate", (RecordArrStore store) =>
+        {
+            return Results.Ok(store.RecalculateRetentionStatuses());
+        }).WithName($"RecalculateRecordArrIntegrationRetentionStatuses{routePrefix}");
+
         group.MapPost("/legal-holds", (WorkspaceEndpoints.CreateLegalHoldRequest request, RecordArrStore store) =>
         {
             var hold = store.CreateLegalHold(

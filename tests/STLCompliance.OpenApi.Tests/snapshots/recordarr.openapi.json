@@ -1640,6 +1640,19 @@
         }
       }
     },
+    "/api/integrations/retention-statuses/recalculate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RecalculateRecordArrIntegrationRetentionStatuses/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/upload-sessions": {
       "get": {
         "tags": [
@@ -3445,6 +3458,19 @@
         }
       }
     },
+    "/api/v1/integrations/retention-statuses/recalculate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RecalculateRecordArrIntegrationRetentionStatuses/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/upload-sessions": {
       "get": {
         "tags": [
@@ -5017,6 +5043,19 @@
           "Workspace"
         ],
         "operationId": "ListRecordArrRetentionPolicies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-statuses/recalculate": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RecalculateRecordArrRetentionStatuses",
         "responses": {
           "200": {
             "description": "OK"

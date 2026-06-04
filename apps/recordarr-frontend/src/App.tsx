@@ -84,6 +84,7 @@ import {
   purgeRecord,
   promoteDocumentVersion,
   obsoleteControlledDocument,
+  recalculateRetentionStatuses,
   expireDocumentDistribution,
   expireExternalShare,
   supersedeControlledDocument,
@@ -2033,6 +2034,12 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const recalculateRetentionMutation = useMutation({
+    mutationFn: () => recalculateRetentionStatuses(accessToken),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   return (
     <div className="recordarr-page">
@@ -2075,6 +2082,14 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
               <EmptyState title="Enter a record id to inspect its retention status." />
             )}
           </div>
+          <button
+            type="button"
+            className="recordarr-button secondary mt-3"
+            onClick={() => recalculateRetentionMutation.mutate()}
+            disabled={recalculateRetentionMutation.isPending}
+          >
+            {recalculateRetentionMutation.isPending ? 'Recalculating...' : 'Refresh retention scheduler'}
+          </button>
         </Card>
       </div>
       <div className="recordarr-card mt-6">

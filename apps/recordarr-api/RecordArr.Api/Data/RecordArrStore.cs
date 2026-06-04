@@ -978,6 +978,15 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrRetentionStatusResponse> RecalculateRetentionStatuses()
+    {
+        lock (_gate)
+        {
+            RefreshRetentionStatusesForActiveLegalHolds();
+            return _retentionStatuses.ToArray();
+        }
+    }
+
     public RecordArrLegalHoldResponse CreateLegalHold(string title, string description, string holdType, string sourceProduct, string sourceObjectType, string sourceObjectId, string createdByPersonId, IEnumerable<string> scopeRules, IEnumerable<string> recordRefs)
     {
         lock (_gate)
@@ -1063,11 +1072,12 @@ public sealed class RecordArrStore
         for (var i = 0; i < _retentionStatuses.Count; i++)
         {
             var current = _retentionStatuses[i];
+            var policy = _retentionPolicies.FirstOrDefault(candidate =>
+                string.Equals(candidate.RetentionPolicyId, current.RetentionPolicyRef, StringComparison.OrdinalIgnoreCase));
+
             var nextStatus = activeHoldRecordRefs.Contains(current.RecordId)
                 ? "blocked_by_legal_hold"
-                : current.Status == "blocked_by_legal_hold"
-                    ? "active"
-                    : current.Status;
+                : GetRetentionLifecycleStatus(current, policy);
 
             if (string.Equals(current.Status, nextStatus, StringComparison.OrdinalIgnoreCase))
             {
@@ -1079,6 +1089,44 @@ public sealed class RecordArrStore
                 Status = nextStatus
             };
         }
+    }
+
+    private static string GetRetentionLifecycleStatus(RecordArrRetentionStatusResponse retentionStatus, RecordArrRetentionPolicyResponse? policy)
+    {
+        if (policy is null)
+        {
+            return retentionStatus.Status == "blocked_by_legal_hold" ? "active" : retentionStatus.Status;
+        }
+
+        if (string.Equals(policy.RetentionUnit, "indefinite", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(retentionStatus.Status, "indefinite", StringComparison.OrdinalIgnoreCase))
+        {
+            return "indefinite";
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (retentionStatus.RetentionExpiresAt is not null && retentionStatus.RetentionExpiresAt <= now)
+        {
+            return policy.DisposalAction.Trim().ToLowerInvariant() switch
+            {
+                "archive" => "eligible_for_archive",
+                "purge" => "eligible_for_purge",
+                "anonymize" => "eligible_for_purge",
+                _ => "eligible_for_archive"
+            };
+        }
+
+        if (retentionStatus.NextReviewAt is not null && retentionStatus.NextReviewAt <= now)
+        {
+            return "due_for_review";
+        }
+
+        if (retentionStatus.Status is "blocked_by_legal_hold")
+        {
+            return "active";
+        }
+
+        return "active";
     }
 
     private RecordArrRecordResponse RequireRecord(string recordId)
