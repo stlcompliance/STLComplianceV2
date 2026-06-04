@@ -4776,6 +4776,40 @@
         }
       }
     },
+    "/api/preventive-maintenance/schedules/{pmScheduleId}/skip": {
+      "patch": {
+        "tags": [
+          "PreventiveMaintenance"
+        ],
+        "operationId": "SkipPmSchedule",
+        "parameters": [
+          {
+            "name": "pmScheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipPmScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/preventive-maintenance/schedules/{pmScheduleId}/status": {
       "patch": {
         "tags": [
@@ -9984,6 +10018,40 @@
         }
       }
     },
+    "/api/v1/preventive-maintenance/schedules/{pmScheduleId}/skip": {
+      "patch": {
+        "tags": [
+          "PreventiveMaintenance"
+        ],
+        "operationId": "SkipPmScheduleV1",
+        "parameters": [
+          {
+            "name": "pmScheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipPmScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/preventive-maintenance/schedules/{pmScheduleId}/status": {
       "patch": {
         "tags": [
@@ -14321,6 +14389,20 @@
             ]
           },
           "routeStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SkipPmScheduleRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
             "type": [
               "null",
               "string"

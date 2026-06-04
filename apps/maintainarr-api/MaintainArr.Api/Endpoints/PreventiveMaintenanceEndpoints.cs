@@ -98,6 +98,22 @@ public static class PreventiveMaintenanceEndpoints
             return Results.Ok(updated);
         })
         .WithName($"UpdatePmScheduleStatus{nameSuffix}");
+
+        group.MapPatch("/schedules/{pmScheduleId:guid}/skip", async (
+            Guid pmScheduleId,
+            SkipPmScheduleRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            PmScheduleService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePmSkip(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var skipped = await service.SkipAsync(tenantId, actorUserId, pmScheduleId, request, cancellationToken);
+            return Results.Ok(skipped);
+        })
+        .WithName($"SkipPmSchedule{nameSuffix}");
     }
 
     private static void MapPmEventRoutes(RouteGroupBuilder group, string nameSuffix)

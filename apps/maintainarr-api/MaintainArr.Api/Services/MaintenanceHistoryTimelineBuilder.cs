@@ -348,6 +348,23 @@ public static class MaintenanceHistoryTimelineBuilder
                     null));
             }
 
+            if (schedule.SkippedAt is DateTimeOffset skippedAt
+                && string.Equals(schedule.DueStatus, PmDueStatuses.Skipped, StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new MaintenanceHistoryEntryResponse(
+                    $"pm:{schedule.Id}:skipped",
+                    schedule.AssetId,
+                    "pm",
+                    "pm_skipped",
+                    $"PM skipped: {schedule.Name}",
+                    schedule.SkippedReason ?? schedule.ScheduleKey,
+                    skippedAt,
+                    null,
+                    "pm_schedule",
+                    schedule.Id.ToString(),
+                    null));
+            }
+
             if (schedule.LastDueScanAt is DateTimeOffset lastDueScanAt
                 && string.Equals(schedule.DueStatus, PmDueStatuses.Due, StringComparison.OrdinalIgnoreCase))
             {

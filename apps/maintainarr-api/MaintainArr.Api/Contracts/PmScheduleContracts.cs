@@ -18,6 +18,9 @@ public sealed record PmScheduleResponse(
     int IntervalDays,
     DateTimeOffset NextDueAt,
     DateTimeOffset? LastCompletedAt,
+    DateTimeOffset? SkippedAt,
+    Guid? SkippedByPersonId,
+    string? SkippedReason,
     string DueStatus,
     string Status,
     DateTimeOffset? LastDueScanAt,
@@ -50,6 +53,8 @@ public sealed record UpdatePmScheduleRequest(
     decimal? NextDueAtUsage = null);
 
 public sealed record UpdatePmScheduleStatusRequest(string Status);
+
+public sealed record SkipPmScheduleRequest(string? Reason);
 
 public sealed record PendingPmDueItem(
     Guid PmScheduleId,

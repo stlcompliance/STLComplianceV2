@@ -32,6 +32,12 @@ public sealed class PmSchedule : IHasTenant
 
     public DateTimeOffset? LastCompletedAt { get; set; }
 
+    public DateTimeOffset? SkippedAt { get; set; }
+
+    public Guid? SkippedByPersonId { get; set; }
+
+    public string? SkippedReason { get; set; }
+
     public string DueStatus { get; set; } = PmDueStatuses.Scheduled;
 
     public string Status { get; set; } = "active";
@@ -59,4 +65,5 @@ public static class PmDueStatuses
     public const string Due = "due";
     public const string Overdue = "overdue";
     public const string Completed = "completed";
+    public const string Skipped = "skipped";
 }

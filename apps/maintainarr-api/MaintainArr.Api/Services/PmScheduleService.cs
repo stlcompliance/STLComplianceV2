@@ -241,6 +241,68 @@ public sealed class PmScheduleService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
+    public async Task<PmScheduleResponse> SkipAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid pmScheduleId,
+        SkipPmScheduleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.PmSchedules.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == pmScheduleId,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("pm_schedule.not_found", "PM schedule was not found.", 404);
+        }
+
+        if (!PmDueScanRules.IsScannableScheduleStatus(entity.Status))
+        {
+            throw new StlApiException(
+                "pm_schedule.not_skippable",
+                "Only active PM schedules can be skipped.",
+                409);
+        }
+
+        if (string.Equals(entity.DueStatus, PmDueStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.DueStatus, PmDueStatuses.Skipped, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "pm_schedule.not_skippable",
+                "Completed or already skipped PM schedules cannot be skipped.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        entity.DueStatus = PmDueStatuses.Skipped;
+        entity.SkippedAt = now;
+        entity.SkippedByPersonId = actorUserId;
+        entity.SkippedReason = NormalizeDescription(request.Reason ?? string.Empty);
+        entity.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "pm_schedule.skip",
+            tenantId,
+            actorUserId,
+            "pm_schedule",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await EnqueueOccurrenceLifecycleEventAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            MaintenancePlatformOutboxEventKinds.PmOccurrenceSkipped,
+            $"PM occurrence {entity.ScheduleKey} skipped for asset {entity.AssetId:D}.",
+            "skipped",
+            now,
+            cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
     private IQueryable<PmScheduleResponse> BuildScheduleQuery(Guid tenantId, bool dueOnly)
     {
         var schedules = db.PmSchedules.AsNoTracking().Where(x => x.TenantId == tenantId);
@@ -275,6 +337,9 @@ public sealed class PmScheduleService(
                     schedule.IntervalDays,
                     schedule.NextDueAt,
                     schedule.LastCompletedAt,
+                    schedule.SkippedAt,
+                    schedule.SkippedByPersonId,
+                    schedule.SkippedReason,
                     schedule.DueStatus,
                     schedule.Status,
                     schedule.LastDueScanAt,
@@ -311,6 +376,9 @@ public sealed class PmScheduleService(
                 schedule.IntervalDays,
                 schedule.NextDueAt,
                 schedule.LastCompletedAt,
+                schedule.SkippedAt,
+                schedule.SkippedByPersonId,
+                schedule.SkippedReason,
                 schedule.DueStatus,
                 schedule.Status,
                 schedule.LastDueScanAt,
@@ -460,6 +528,36 @@ public sealed class PmScheduleService(
         }
 
         await platformOutboxEnqueue.TryEnqueuePmScheduleEventAsync(
+            tenantId,
+            eventKind,
+            schedule,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult,
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task EnqueueOccurrenceLifecycleEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        PmSchedule schedule,
+        string eventKind,
+        string summary,
+        string eventResult,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
             tenantId,
             eventKind,
             schedule,

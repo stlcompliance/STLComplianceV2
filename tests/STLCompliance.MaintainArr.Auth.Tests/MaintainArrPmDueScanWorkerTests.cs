@@ -132,6 +132,37 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Pm_schedule_skip_sets_skipped_status_and_enqueues_occurrence_event()
+    {
+        var schedule = await SeedPastDuePmScheduleAsync(daysPastDue: -5);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+
+        var skipRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/preventive-maintenance/schedules/{schedule.Id}/skip",
+            token);
+        skipRequest.Content = JsonContent.Create(new SkipPmScheduleRequest("Deferred by supervisor"));
+        var skipResponse = await _maintainarrClient.SendAsync(skipRequest);
+        skipResponse.EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+
+        var skipped = await db.PmSchedules.SingleAsync(x => x.Id == schedule.Id);
+        Assert.Equal(PmDueStatuses.Skipped, skipped.DueStatus);
+        Assert.NotNull(skipped.SkippedAt);
+        Assert.NotNull(skipped.SkippedByPersonId);
+        Assert.Equal("Deferred by supervisor", skipped.SkippedReason);
+
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.RelatedEntityId == schedule.Id)
+            .ToListAsync();
+        Assert.Contains(outbox, x =>
+            x.EventKind == PmOccurrenceSkipped
+            && x.RelatedEntityType == PmOccurrence);
+    }
+
+    [Fact]
     public async Task Settings_put_requires_admin()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");

@@ -119,6 +119,29 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequirePmSkip(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Preventive maintenance skip requires maintainarr.pm.skip scope.",
+            403);
+    }
+
     public void RequireInspectionsRead(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);
