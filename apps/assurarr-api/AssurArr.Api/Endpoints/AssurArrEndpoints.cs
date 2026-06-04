@@ -296,6 +296,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListScarsAsync(cancellationToken)))
             .WithName("ListAssurArrSupplierCorrectiveActionRequests");
 
+        integrationGroup.MapGet("/scars/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetScarAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrSupplierCorrectiveActionRequest");
+
         integrationGroup.MapPost("/scars", async (CreateAssurArrSupplierCorrectiveActionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateScarAsync(request, cancellationToken)))
             .WithName("CreateAssurArrSupplierCorrectiveActionRequest");

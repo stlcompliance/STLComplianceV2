@@ -673,6 +673,7 @@ export const assurarrApi = {
   updateSupplierQualityIssueStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<SupplierQualityIssue>(`/api/v1/integrations/supplier-quality-issues/${id}/status`, 'PATCH', { status, closureSummary }),
   listScars: () => getJson<SupplierCorrectiveActionRequest[]>('/api/v1/integrations/scars'),
+  getScar: (id: string) => getJson<SupplierCorrectiveActionRequest>(`/api/v1/integrations/scars/${id}`),
   createScar: (body: CreateBase & { supplierRef?: string; sourceNonconformanceRef?: string; sourceCapaRef?: string; requestedByPersonId?: string; requestedAt?: string; supplierDueAt?: string; supplierResponseRecordRefs?: string[]; reviewPersonId?: string; reviewedAt?: string; reviewDecision?: string; followUpCapaRef?: string; recordRefs?: string[] }) =>
     sendJson<SupplierCorrectiveActionRequest>('/api/v1/integrations/scars', 'POST', {
       ...body,

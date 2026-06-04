@@ -2001,6 +2001,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToScarResponse).ToList();
     }
 
+    public async Task<AssurArrSupplierCorrectiveActionRequestResponse?> GetScarAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.SupplierCorrectiveActionRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        return entity is null ? null : ToScarResponse(entity);
+    }
+
     public async Task<AssurArrSupplierCorrectiveActionRequestResponse> CreateScarAsync(CreateAssurArrSupplierCorrectiveActionRequest request, CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(request.FollowUpCapaRef))

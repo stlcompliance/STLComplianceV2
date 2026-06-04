@@ -3312,10 +3312,139 @@ function ScarPage() {
           emptyLabel="No SCARs yet."
           onStatusChange={(id, status) => assurarrApi.updateScarStatus(id, status)}
           statusChoices={statusOptions.scar}
+          detailBasePath="/scars"
         />
       ) : (
         <LoadingCard label="Loading SCARs" />
       )}
+    </div>
+  )
+}
+
+function ScarDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'scar', id],
+    queryFn: () => assurarrApi.getScar(id),
+    enabled: Boolean(id),
+  })
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading SCAR detail" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="SCAR detail" description="Could not load the requested supplier corrective action request." />
+        <EmptyState title="SCAR not found." />
+      </div>
+    )
+  }
+
+  const scar = query.data
+  const relatedNonconformance = nonconformances.data?.find((item) => item.number === scar.sourceNonconformanceRef) ?? null
+  const relatedCapa = capas.data?.find((item) => item.number === scar.sourceCapaRef || item.number === scar.followUpCapaRef) ?? null
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'scar' && event.subjectId === scar.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${scar.number} · ${scar.title}`}
+        description="Supplier corrective action request detail, response evidence, and the closure trail for the supplier workflow."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{scar.status}</span>
+                <span className="assurarr-pill">{scar.severity}</span>
+              </div>
+              <p className="text-sm text-slate-300">Supplier corrective action request for supplier response and follow-up closure.</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {scar.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {scar.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {scar.supplierRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Owner:</span> {scar.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Requested:</span> {scar.requestedAt ? new Date(scar.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Supplier due:</span> {scar.supplierDueAt ? new Date(scar.supplierDueAt).toLocaleString() : 'n/a'}</div>
+              </div>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Review decision:</span> {scar.reviewDecision ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewed:</span> {scar.reviewedAt ? new Date(scar.reviewedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {scar.closedAt ? new Date(scar.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closure summary:</span> {scar.closureSummary ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Linked records</p>
+              <div className="space-y-2 text-sm text-slate-300">
+                <div>
+                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  {relatedNonconformance ? (
+                    <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
+                      {relatedNonconformance.number}
+                    </Link>
+                  ) : (
+                    scar.sourceNonconformanceRef ?? 'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">CAPA:</span>{' '}
+                  {relatedCapa ? (
+                    <Link to={`/capa/${relatedCapa.id}`} className="text-cyan-300 hover:text-cyan-200">
+                      {relatedCapa.number}
+                    </Link>
+                  ) : (
+                    scar.sourceCapaRef ?? scar.followUpCapaRef ?? 'none'
+                  )}
+                </div>
+                <div>
+                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  {scar.affectedObjectRefs.length > 0 ? scar.affectedObjectRefs.join(', ') : 'none'}
+                </div>
+                <div>
+                  <span className="text-slate-500">Response records:</span>{' '}
+                  {scar.supplierResponseRecordRefs.length > 0 ? scar.supplierResponseRecordRefs.join(', ') : 'none'}
+                </div>
+                <div>
+                  <span className="text-slate-500">Record refs:</span>{' '}
+                  {scar.recordRefs.length > 0 ? scar.recordRefs.join(', ') : 'none'}
+                </div>
+              </div>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Requested by:</span> {scar.requestedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Approved follow-up:</span> {scar.followUpCapaRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewed by:</span> {scar.reviewPersonId ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Timeline</p>
+            <div className="space-y-2">
+              {timeline.length === 0 ? <EmptyState title="No timeline yet." /> : null}
+              {timeline.map((event) => (
+                <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-100">{event.eventType}</strong>
+                    <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{event.details ?? event.subjectType}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -3864,6 +3993,7 @@ export function App() {
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
         <Route path="/supplier-quality/:id" element={<SupplierQualityDetailPage />} />
         <Route path="/scars" element={<ScarPage />} />
+        <Route path="/scars/:id" element={<ScarDetailPage />} />
         <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/complaints/:id" element={<CustomerComplaintDetailPage />} />
         <Route path="/status" element={<StatusPage />} />

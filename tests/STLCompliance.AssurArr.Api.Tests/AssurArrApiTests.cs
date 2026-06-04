@@ -629,6 +629,52 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
+    public async Task Can_create_and_read_scar_records()
+    {
+        var title = $"Test SCAR {Guid.NewGuid():N}";
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/scars",
+            new CreateAssurArrSupplierCorrectiveActionRequest(
+                title,
+                "Automated coverage for SCAR detail reads.",
+                "high",
+                "assurarr",
+                "SQA-000001",
+                ["loadarr:receipt:test", "supplyarr:po:test"],
+                "supplyarr:supplier:test",
+                "NCR-000001",
+                "CAPA-000001",
+                null,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(7),
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow,
+                "accepted",
+                "CAPA-000001",
+                ["recordarr:doc:test"],
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+        var scar = await createResponse.Content.ReadFromJsonAsync<AssurArrSupplierCorrectiveActionRequestResponse>();
+        Assert.NotNull(scar);
+        Assert.Equal(title, scar!.Title);
+
+        var detailResponse = await _client.GetAsync($"/api/v1/integrations/scars/{scar.Id}");
+        Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
+        var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrSupplierCorrectiveActionRequestResponse>();
+        Assert.NotNull(detail);
+        Assert.Equal(scar.Id, detail!.Id);
+        Assert.Equal(scar.Number, detail.Number);
+
+        var listResponse = await _client.GetAsync("/api/v1/integrations/scars");
+        listResponse.EnsureSuccessStatusCode();
+        var scars = await listResponse.Content.ReadFromJsonAsync<List<AssurArrSupplierCorrectiveActionRequestResponse>>();
+        Assert.NotNull(scars);
+        Assert.Contains(scars!, item => item.Title == title);
+    }
+
+    [Fact]
     public async Task Can_create_and_update_scar_records()
     {
         var title = $"Test SCAR {Guid.NewGuid():N}";
