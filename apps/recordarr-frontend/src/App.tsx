@@ -2341,9 +2341,9 @@ function AccessPage({ accessToken }: { accessToken: string }) {
                   type="button"
                   className="recordarr-button secondary"
                   onClick={() => accessShareMutation.mutate(share.externalShareId)}
-                  disabled={accessShareMutation.isPending || share.status !== 'active'}
+                  disabled={accessShareMutation.isPending || share.status === 'revoked' || share.status === 'expired'}
                 >
-                  Log access
+                  {share.status === 'created' ? 'Activate / log access' : 'Log access'}
                 </button>
                 <button
                   type="button"

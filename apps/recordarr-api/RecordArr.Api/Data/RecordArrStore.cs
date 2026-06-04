@@ -1684,7 +1684,7 @@ public sealed class RecordArrStore
                 $"SHARE-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 recordId,
                 sharePurpose,
-                "active",
+                "created",
                 recipientName,
                 recipientEmail,
                 allowedActions.ToArray(),
@@ -1763,10 +1763,12 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"External share {shareId} is not active.");
             }
 
+            var nextStatus = current.Status == "created" ? "active" : current.Status;
+
             var now = DateTimeOffset.UtcNow;
             var updated = current with
             {
-                Status = "active",
+                Status = nextStatus,
                 LastAccessedAt = now,
                 AccessCount = current.AccessCount + 1
             };
