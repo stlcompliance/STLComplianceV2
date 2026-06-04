@@ -1219,6 +1219,7 @@ public sealed class RecordArrStore
                 SignatureRecordRef = signatureRecordRef ?? current.SignatureRecordRef
             };
             _documentAcknowledgements[index] = updated;
+            MarkRelatedDocumentDistributionsAcknowledged(updated);
             AppendControlledDocumentAuditTrail(
                 current.ControlledDocumentId,
                 CreateControlledDocumentAuditTrailEntry(
@@ -1226,6 +1227,42 @@ public sealed class RecordArrStore
                     "system",
                     $"Acknowledgement {acknowledgementId} completed."));
             return updated;
+        }
+    }
+
+    private void MarkRelatedDocumentDistributionsAcknowledged(RecordArrDocumentAcknowledgementResponse acknowledgement)
+    {
+        var now = acknowledgement.AcknowledgedAt ?? DateTimeOffset.UtcNow;
+        for (var i = 0; i < _documentDistributions.Count; i++)
+        {
+            var distribution = _documentDistributions[i];
+            if (!string.Equals(distribution.ControlledDocumentId, acknowledgement.ControlledDocumentId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!string.Equals(distribution.VersionId, acknowledgement.VersionId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!string.Equals(distribution.TargetRef, acknowledgement.PersonId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            _documentDistributions[i] = distribution with
+            {
+                Status = "acknowledged",
+                AcknowledgedAt = now,
+                AcknowledgementRef = acknowledgement.AcknowledgementId
+            };
+            AppendControlledDocumentAuditTrail(
+                acknowledgement.ControlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "distribution_acknowledged",
+                    acknowledgement.PersonId,
+                    $"Distribution {distribution.DistributionId} acknowledged."));
         }
     }
 
