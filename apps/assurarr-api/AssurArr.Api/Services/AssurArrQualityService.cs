@@ -1209,6 +1209,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         };
 
         db.QualityHolds.Add(entity);
+        await AddTimelineAsync("hold", entity.Id, "assurarr.hold.placed", entity.Title, cancellationToken);
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.created", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToQualityHoldResponse(entity);

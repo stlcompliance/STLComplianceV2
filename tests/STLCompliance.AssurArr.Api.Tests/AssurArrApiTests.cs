@@ -185,6 +185,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var approvalHold = await approvalHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(approvalHold);
 
+        var approvalHoldDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        approvalHoldDashboardResponse.EnsureSuccessStatusCode();
+        var approvalHoldDashboard = await approvalHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(approvalHoldDashboard);
+        Assert.Contains(approvalHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.placed");
+
         var approvalHoldDetailResponse = await _client.GetAsync($"/api/v1/holds/{approvalHold!.Id}");
         Assert.Equal(HttpStatusCode.OK, approvalHoldDetailResponse.StatusCode);
         var approvalHoldDetail = await approvalHoldDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
