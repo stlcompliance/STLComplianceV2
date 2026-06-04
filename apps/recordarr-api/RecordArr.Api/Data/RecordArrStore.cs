@@ -1520,7 +1520,60 @@ public sealed class RecordArrStore
                 CompletedAt = status is "approved" or "rejected" or "completed" ? DateTimeOffset.UtcNow : current.CompletedAt
             };
             _disposalReviews[index] = updated;
+            ApplyDisposalReviewOutcome(updated);
             return updated;
+        }
+    }
+
+    private void ApplyDisposalReviewOutcome(RecordArrDisposalReviewResponse review)
+    {
+        var retentionIndex = _retentionStatuses.FindIndex(status => string.Equals(status.RetentionStatusId, review.RetentionStatusRef, StringComparison.OrdinalIgnoreCase));
+        if (retentionIndex < 0)
+        {
+            return;
+        }
+
+        var activeHold = _legalHolds.FirstOrDefault(hold =>
+            string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+            hold.RecordRefs.Any(recordRef => string.Equals(recordRef, review.RecordId, StringComparison.OrdinalIgnoreCase)));
+
+        if (activeHold is not null)
+        {
+            _retentionStatuses[retentionIndex] = _retentionStatuses[retentionIndex] with
+            {
+                Status = "blocked_by_legal_hold"
+            };
+            return;
+        }
+
+        if (!string.Equals(review.Status, "approved", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(review.Status, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var actorPersonId = review.ReviewedByPersonId ?? review.RequestedByPersonId;
+        var targetRetentionStatus = review.ProposedAction.Trim().ToLowerInvariant() switch
+        {
+            "archive" => "archived",
+            "purge" => "purged",
+            "retain" => "indefinite",
+            "anonymize" => "indefinite",
+            _ => _retentionStatuses[retentionIndex].Status
+        };
+
+        _retentionStatuses[retentionIndex] = _retentionStatuses[retentionIndex] with
+        {
+            Status = targetRetentionStatus
+        };
+
+        if (review.ProposedAction.Trim().Equals("archive", StringComparison.OrdinalIgnoreCase))
+        {
+            ArchiveRecord(review.RecordId, actorPersonId);
+        }
+        else if (review.ProposedAction.Trim().Equals("purge", StringComparison.OrdinalIgnoreCase))
+        {
+            PurgeRecord(review.RecordId, actorPersonId);
         }
     }
 
