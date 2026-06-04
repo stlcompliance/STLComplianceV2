@@ -677,6 +677,7 @@ public sealed class WorkOrderService(
                     && x.SourceProduct == sourceProduct
                     && x.SourceObjectRef == sourceObjectRef,
                 cancellationToken);
+        var previousStatus = existing?.Status;
 
         var now = DateTimeOffset.UtcNow;
         if (existing is null)
@@ -740,6 +741,16 @@ public sealed class WorkOrderService(
             sourceObjectRef,
             null,
             SerializeBlockerSnapshot(existing),
+            cancellationToken);
+
+        await EnqueueWorkOrderBlockerEventAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            existing,
+            previousStatus,
+            status,
+            now,
             cancellationToken);
 
         return MapBlockerResponse(existing);
@@ -1464,6 +1475,53 @@ public sealed class WorkOrderService(
             WorkOrderStatuses.Cancelled => "maintainarr.work_order.canceled",
             _ => "maintainarr.work_order.updated",
         };
+
+    private async Task EnqueueWorkOrderBlockerEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        WorkOrder workOrder,
+        WorkOrderBlocker blocker,
+        string? previousStatus,
+        string currentStatus,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var previousIsActive = string.Equals(previousStatus, "active", StringComparison.OrdinalIgnoreCase);
+        var currentIsActive = string.Equals(currentStatus, "active", StringComparison.OrdinalIgnoreCase);
+
+        if (previousIsActive == currentIsActive)
+        {
+            return;
+        }
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        var eventKind = currentIsActive
+            ? MaintenancePlatformOutboxEventKinds.WorkOrderBlocked
+            : MaintenancePlatformOutboxEventKinds.WorkOrderUnblocked;
+
+        var summary = currentIsActive
+            ? $"Work order {workOrder.WorkOrderNumber} blocked by {blocker.Title}."
+            : $"Work order {workOrder.WorkOrderNumber} unblocked by {blocker.Title}.";
+
+        await platformOutboxEnqueue.TryEnqueueWorkOrderEventAsync(
+            tenantId,
+            eventKind,
+            workOrder,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult: currentStatus,
+            idempotencyDiscriminator: $"{blocker.Id:D}:{currentStatus.ToLowerInvariant()}",
+            cancellationToken: cancellationToken);
+    }
 
     private async Task SyncLinkedDefectStatusAsync(
         Guid tenantId,

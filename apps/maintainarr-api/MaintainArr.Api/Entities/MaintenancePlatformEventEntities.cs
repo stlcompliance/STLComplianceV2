@@ -112,6 +112,10 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string WorkOrderCompleted = "work_order.completed";
 
+    public const string WorkOrderBlocked = "work_order.blocked";
+
+    public const string WorkOrderUnblocked = "work_order.unblocked";
+
     public const string PmDue = "pm.due";
 
     public const string PmOverdue = "pm.overdue";

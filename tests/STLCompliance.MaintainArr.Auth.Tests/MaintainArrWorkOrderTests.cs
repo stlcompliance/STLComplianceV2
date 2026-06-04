@@ -564,6 +564,51 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         Assert.Equal(created.WorkOrderId, blocker.WorkOrderId);
         Assert.Equal("active", blocker.Status);
 
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var outbox = await db.MaintenancePlatformOutboxEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.WorkOrder
+                    && x.RelatedEntityId == created.WorkOrderId)
+                .ToListAsync();
+
+            Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderBlocked);
+        }
+
+        var releaseRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/integrations/work-orders/{created.WorkOrderId}/blockers",
+            _maintainarrIntegrationToken);
+        releaseRequest.Content = JsonContent.Create(new CreateWorkOrderBlockerRequest(
+            "quality_hold",
+            "assurarr",
+            "quality-hold-123",
+            "Quality hold released",
+            "Asset can return to service.",
+            "high",
+            null,
+            Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc").ToString(),
+            "resolved"));
+        var releaseResponse = await _maintainarrClient.SendAsync(releaseRequest);
+        releaseResponse.EnsureSuccessStatusCode();
+        var released = (await releaseResponse.Content.ReadFromJsonAsync<WorkOrderBlockerResponse>())!;
+        Assert.Equal("resolved", released.Status);
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var outbox = await db.MaintenancePlatformOutboxEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.WorkOrder
+                    && x.RelatedEntityId == created.WorkOrderId)
+                .ToListAsync();
+
+            Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderUnblocked);
+        }
+
         var startRequest = Authorized(HttpMethod.Post, $"/api/v1/integrations/work-orders/{created.WorkOrderId}/status-updates", _maintainarrIntegrationToken);
         startRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
         var startResponse = await _maintainarrClient.SendAsync(startRequest);
