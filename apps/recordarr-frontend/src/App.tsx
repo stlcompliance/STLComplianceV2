@@ -82,6 +82,7 @@ import {
   promoteDocumentVersion,
   obsoleteControlledDocument,
   expireDocumentDistribution,
+  expireExternalShare,
   supersedeControlledDocument,
   completeDocumentAcknowledgement,
   completeDocumentReview,
@@ -2181,6 +2182,13 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const expireShareMutation = useMutation({
+    mutationFn: (externalShareId: string) =>
+      expireExternalShare(accessToken, externalShareId, { expiredByPersonId: 'person-doc-controller' }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const grantMutation = useMutation({
     mutationFn: () =>
       createAccessGrant(accessToken, {
@@ -2315,6 +2323,14 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: 'person-doc-controller' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Revoke
+                </button>
+                <button
+                  type="button"
+                  className="recordarr-button secondary"
+                  onClick={() => expireShareMutation.mutate(share.externalShareId)}
+                  disabled={expireShareMutation.isPending || share.status === 'expired'}
+                >
+                  Expire
                 </button>
               </div>
             </div>

@@ -1052,6 +1052,19 @@ export async function revokeExternalShare(
   )
 }
 
+export async function expireExternalShare(
+  accessToken: string,
+  externalShareId: string,
+  body: { expiredByPersonId: string },
+): Promise<RecordArrExternalShare> {
+  return sendJson<RecordArrExternalShare>(
+    `/api/v1/workspace/external-shares/${encodeURIComponent(externalShareId)}/expire`,
+    accessToken,
+    'POST',
+    body,
+  )
+}
+
 export async function listRedactions(accessToken: string): Promise<RecordArrRedaction[]> {
   return getJson<RecordArrRedaction[]>('/api/v1/workspace/redactions', accessToken)
 }

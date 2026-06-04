@@ -1722,6 +1722,28 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrExternalShareResponse ExpireExternalShare(string shareId, string expiredByPersonId)
+    {
+        lock (_gate)
+        {
+            var index = _externalShares.FindIndex(share => string.Equals(share.ExternalShareId, shareId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"External share {shareId} not found.");
+            }
+
+            var current = _externalShares[index];
+            var updated = current with
+            {
+                Status = "expired",
+                RevokedAt = DateTimeOffset.UtcNow,
+                RevokedByPersonId = expiredByPersonId
+            };
+            _externalShares[index] = updated;
+            return updated;
+        }
+    }
+
     public RecordArrRedactionResponse CreateRedaction(string sourceRecordId, string redactedRecordId, string redactionReason, string redactedByPersonId, IEnumerable<string> redactionRules)
     {
         lock (_gate)

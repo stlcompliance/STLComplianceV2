@@ -982,6 +982,39 @@
         }
       }
     },
+    "/api/integrations/external-shares/{externalShareId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationExternalShare/api/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/external-shares/{externalShareId}/revoke": {
       "post": {
         "tags": [
@@ -2644,6 +2677,39 @@
         }
       }
     },
+    "/api/v1/integrations/external-shares/{externalShareId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationExternalShare/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/external-shares/{externalShareId}/revoke": {
       "post": {
         "tags": [
@@ -4099,6 +4165,39 @@
         }
       }
     },
+    "/api/v1/workspace/external-shares/{externalShareId}/expire": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ExpireRecordArrExternalShare",
+        "parameters": [
+          {
+            "name": "externalShareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpireExternalShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -5367,6 +5466,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ExpireExternalShareRequest": {
+        "required": [
+          "expiredByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "expiredByPersonId": {
+            "type": "string"
           }
         }
       },

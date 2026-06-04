@@ -325,6 +325,12 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(share);
         }).WithName($"RevokeRecordArrIntegrationExternalShare{routePrefix}");
 
+        group.MapPost("/external-shares/{externalShareId}/expire", (string externalShareId, WorkspaceEndpoints.ExpireExternalShareRequest request, RecordArrStore store) =>
+        {
+            var share = store.ExpireExternalShare(externalShareId, request.ExpiredByPersonId);
+            return Results.Ok(share);
+        }).WithName($"ExpireRecordArrIntegrationExternalShare{routePrefix}");
+
         group.MapPost("/redactions", (CreateRedactionRequest request, RecordArrStore store) =>
         {
             var redaction = store.CreateRedaction(request.SourceRecordId, request.RedactedRecordId, request.RedactionReason, request.RedactedByPersonId, request.RedactionRules);
