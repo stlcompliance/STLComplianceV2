@@ -80,7 +80,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Contains(initialStatus.OpenNonconformanceRefs, item => item == created.Number);
 
         var containmentResponse = await _client.PatchAsJsonAsync(
-            $"/api/v1/nonconformances/{created.Id}/status",
+            $"/api/v1/integrations/nonconformances/{created.Id}/status-updates",
             new UpdateAssurArrStatusRequest("containment", "Containment underway."));
 
         Assert.Equal(HttpStatusCode.OK, containmentResponse.StatusCode);
@@ -92,14 +92,14 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("on_hold", containmentStatus!.QualityStatus);
         Assert.Contains(containmentStatus.OpenNonconformanceRefs, item => item == created.Number);
 
-        var detailResponse = await _client.GetAsync($"/api/v1/nonconformances/{created.Id}");
+        var detailResponse = await _client.GetAsync($"/api/v1/integrations/nonconformances/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
         var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
         Assert.NotNull(detail);
         Assert.Equal(created.Id, detail!.Id);
         Assert.Equal(title, detail.Title);
 
-        var listResponse = await _client.GetAsync("/api/v1/nonconformances");
+        var listResponse = await _client.GetAsync("/api/v1/integrations/nonconformances");
         listResponse.EnsureSuccessStatusCode();
 
         var list = await listResponse.Content.ReadFromJsonAsync<List<AssurArrNonconformanceResponse>>();
@@ -113,7 +113,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     {
         var nonconformanceTitle = $"Test nonconformance for root cause {Guid.NewGuid():N}";
         var nonconformanceResponse = await _client.PostAsJsonAsync(
-            "/api/v1/nonconformances",
+            "/api/v1/integrations/nonconformances",
             new CreateAssurArrNonconformanceRequest(
                 nonconformanceTitle,
                 "Created for automated root cause coverage.",
@@ -171,7 +171,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(rootCauses);
         Assert.Contains(rootCauses!, item => item.Id == rootCause.Id);
 
-        var nonconformanceDetailResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}");
+        var nonconformanceDetailResponse = await _client.GetAsync($"/api/v1/integrations/nonconformances/{nonconformance.Id}");
         Assert.Equal(HttpStatusCode.OK, nonconformanceDetailResponse.StatusCode);
         var nonconformanceDetail = await nonconformanceDetailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
         Assert.NotNull(nonconformanceDetail);
@@ -179,25 +179,25 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("investigation", nonconformanceDetail.Status);
 
         var dispositionPendingResponse = await _client.PatchAsJsonAsync(
-            $"/api/v1/nonconformances/{nonconformance.Id}/status",
+            $"/api/v1/integrations/nonconformances/{nonconformance.Id}/status-updates",
             new UpdateAssurArrStatusRequest("disposition_pending", "Ready for disposition review."));
 
         Assert.Equal(HttpStatusCode.OK, dispositionPendingResponse.StatusCode);
 
         var correctiveActionResponse = await _client.PatchAsJsonAsync(
-            $"/api/v1/nonconformances/{nonconformance.Id}/status",
+            $"/api/v1/integrations/nonconformances/{nonconformance.Id}/status-updates",
             new UpdateAssurArrStatusRequest("corrective_action", "Corrective action underway."));
 
         Assert.Equal(HttpStatusCode.OK, correctiveActionResponse.StatusCode);
 
         var verificationResponse = await _client.PatchAsJsonAsync(
-            $"/api/v1/nonconformances/{nonconformance.Id}/status",
+            $"/api/v1/integrations/nonconformances/{nonconformance.Id}/status-updates",
             new UpdateAssurArrStatusRequest("verification", "Verification complete."));
 
         Assert.Equal(HttpStatusCode.OK, verificationResponse.StatusCode);
 
         var closedResponse = await _client.PatchAsJsonAsync(
-            $"/api/v1/nonconformances/{nonconformance.Id}/status",
+            $"/api/v1/integrations/nonconformances/{nonconformance.Id}/status-updates",
             new UpdateAssurArrStatusRequest("closed", "Nonconformance closed for test coverage."));
 
         Assert.Equal(HttpStatusCode.OK, closedResponse.StatusCode);

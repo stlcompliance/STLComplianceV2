@@ -36,6 +36,24 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListRootCauseAnalysesAsync(nonconformanceId, cancellationToken)))
             .WithName("ListAssurArrRootCauseAnalyses");
 
+        integrationGroup.MapGet("/nonconformances", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListNonconformancesAsync(cancellationToken)))
+            .WithName("ListAssurArrNonconformancesIntegration");
+
+        integrationGroup.MapGet("/nonconformances/{nonconformanceId:guid}", async (Guid nonconformanceId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetNonconformanceAsync(nonconformanceId, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrNonconformanceIntegration");
+
+        integrationGroup.MapPost("/nonconformances", async (CreateAssurArrNonconformanceRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateNonconformanceAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrNonconformanceIntegration");
+
+        integrationGroup.MapPatch("/nonconformances/{nonconformanceId:guid}/status-updates", async (Guid nonconformanceId, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateNonconformanceStatusAsync(nonconformanceId, request, cancellationToken)))
+            .WithName("UpdateAssurArrNonconformanceStatusIntegration");
+
         group.MapGet("/holds", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListQualityHoldsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityHolds");
