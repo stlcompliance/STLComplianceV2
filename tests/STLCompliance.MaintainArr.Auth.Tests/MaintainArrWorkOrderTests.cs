@@ -1148,6 +1148,63 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_component_detail_endpoint_returns_the_component()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
+            ComponentNumber: "ENG-DETAIL",
+            ParentComponentId: null,
+            Name: "Detail engine",
+            Description: "Lookup target",
+            ComponentType: "engine",
+            Status: "installed",
+            Make: "Cummins",
+            Model: "QSB",
+            SerialNumber: "SER-DETAIL",
+            PartNumberSnapshot: "PN-DETAIL",
+            InstalledPartUsageRef: "usage-detail",
+            InstallDate: DateTimeOffset.UtcNow.AddDays(-1),
+            InstalledByPersonId: "person-detail",
+            InstalledMeterReading: 2468,
+            RemovedDate: null,
+            RemovedByPersonId: null,
+            RemovedMeterReading: null,
+            RemovalReason: null,
+            WarrantyStartDate: DateTimeOffset.UtcNow.AddYears(-1),
+            WarrantyEndDate: DateTimeOffset.UtcNow.AddYears(1),
+            ExpectedLifeHours: 6000,
+            ExpectedLifeMiles: 250000,
+            ExpectedLifeCycles: 1200,
+            Condition: "good",
+            ReplacementPartRefs: new[] { "part-detail" },
+            DocumentRefs: new[] { "doc-detail" },
+            DefectRefs: new[] { "def-detail" },
+            WorkOrderRefs: new[] { "wo-detail" }));
+
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+
+        var detailResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/assets/{assetId}/components/{created.ComponentId}", managerToken));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<AssetInstalledComponentResponse>())!;
+
+        Assert.Equal(created.ComponentId, detail.ComponentId);
+        Assert.Equal(created.ComponentNumber, detail.ComponentNumber);
+        Assert.Equal(created.Name, detail.Name);
+        Assert.Equal(created.ComponentType, detail.ComponentType);
+        Assert.Equal(created.Status, detail.Status);
+        Assert.Equal(created.Condition, detail.Condition);
+        Assert.Equal(created.ReplacementPartRefs, detail.ReplacementPartRefs);
+        Assert.Equal(created.DocumentRefs, detail.DocumentRefs);
+        Assert.Equal(created.DefectRefs, detail.DefectRefs);
+        Assert.Equal(created.WorkOrderRefs, detail.WorkOrderRefs);
+    }
+
+    [Fact]
     public async Task Asset_components_can_be_created_and_are_visible_in_history()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();

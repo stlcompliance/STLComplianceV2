@@ -79,6 +79,26 @@ public sealed class AssetInstalledComponentService(
         return components.Select(MapResponse).ToList();
     }
 
+    public async Task<AssetInstalledComponentResponse> GetAsync(
+        Guid tenantId,
+        Guid assetId,
+        Guid componentId,
+        CancellationToken cancellationToken = default)
+    {
+        var component = await db.AssetInstalledComponents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.ParentAssetId == assetId && x.Id == componentId,
+                cancellationToken);
+
+        if (component is null)
+        {
+            throw new StlApiException("asset_components.not_found", "Asset component was not found.", 404);
+        }
+
+        return MapResponse(component);
+    }
+
     public async Task<AssetInstalledComponentResponse> CreateAsync(
         Guid tenantId,
         Guid? actorUserId,

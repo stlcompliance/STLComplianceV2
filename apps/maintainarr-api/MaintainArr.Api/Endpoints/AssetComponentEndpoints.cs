@@ -52,6 +52,23 @@ public static class AssetComponentEndpoints
         })
         .WithName($"CreateAssetComponent{nameSuffix}");
 
+        group.MapGet("/components/{componentId:guid}", async (
+            Guid assetId,
+            Guid componentId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            AssetService assetService,
+            AssetInstalledComponentService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var asset = await assetService.GetAsync(tenantId, assetId, cancellationToken);
+            var component = await service.GetAsync(tenantId, asset.AssetId, componentId, cancellationToken);
+            return Results.Ok(component);
+        })
+        .WithName($"GetAssetComponent{nameSuffix}");
+
         group.MapPatch("/components/{componentId:guid}", async (
             Guid assetId,
             Guid componentId,

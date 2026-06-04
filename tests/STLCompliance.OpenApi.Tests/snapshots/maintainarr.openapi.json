@@ -641,6 +641,37 @@
       }
     },
     "/api/assets/{assetId}/components/{componentId}": {
+      "get": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "GetAssetComponent",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "componentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "patch": {
         "tags": [
           "AssetComponents"
@@ -5792,6 +5823,37 @@
       }
     },
     "/api/v1/assets/{assetId}/components/{componentId}": {
+      "get": {
+        "tags": [
+          "AssetComponents"
+        ],
+        "operationId": "GetAssetComponentV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "componentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "patch": {
         "tags": [
           "AssetComponents"
@@ -12752,6 +12814,27 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "autoGenerateWorkOrder": {
+            "type": "boolean",
+            "default": true
+          },
+          "defaultWorkOrderTemplateRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "autoGenerateInspection": {
+            "type": "boolean",
+            "default": false
+          },
+          "inspectionTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -13042,6 +13125,16 @@
               "null",
               "string"
             ]
+          },
+          "evidenceRecordRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -14910,6 +15003,27 @@
           },
           "status": {
             "type": "string"
+          },
+          "autoGenerateWorkOrder": {
+            "type": "boolean",
+            "default": true
+          },
+          "defaultWorkOrderTemplateRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "autoGenerateInspection": {
+            "type": "boolean",
+            "default": false
+          },
+          "inspectionTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
