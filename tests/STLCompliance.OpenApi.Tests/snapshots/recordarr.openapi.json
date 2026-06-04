@@ -88,6 +88,19 @@
         }
       }
     },
+    "/api/integrations/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/access-logs": {
       "get": {
         "tags": [
@@ -1919,6 +1932,19 @@
         }
       }
     },
+    "/api/v1/integrations/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/access-logs": {
       "get": {
         "tags": [
@@ -3730,6 +3756,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrAccessGrants",
         "responses": {
           "200": {
             "description": "OK"

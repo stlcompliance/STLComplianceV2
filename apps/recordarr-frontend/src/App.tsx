@@ -86,6 +86,7 @@ import {
   obsoleteControlledDocument,
   recalculateRetentionStatuses,
   refreshControlledDocumentWorkflows,
+  refreshAccessGrants,
   expireDocumentDistribution,
   expireExternalShare,
   supersedeControlledDocument,
@@ -2451,6 +2452,12 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const refreshGrantsMutation = useMutation({
+    mutationFn: () => refreshAccessGrants(accessToken),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const redactionMutation = useMutation({
     mutationFn: () =>
       createRedaction(accessToken, {
@@ -2470,7 +2477,19 @@ function AccessPage({ accessToken }: { accessToken: string }) {
         eyebrow="Access"
         title="Access controls and trail"
         description="Inspect access policies, grants, shares, redactions, and usage history for record governance."
-        action={<span className="recordarr-pill"><LockKeyhole className="h-4 w-4" /> Access governed</span>}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="recordarr-button secondary"
+              onClick={() => refreshGrantsMutation.mutate()}
+              disabled={refreshGrantsMutation.isPending}
+            >
+              {refreshGrantsMutation.isPending ? 'Refreshing...' : 'Refresh grants'}
+            </button>
+            <span className="recordarr-pill"><LockKeyhole className="h-4 w-4" /> Access governed</span>
+          </div>
+        }
       />
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
@@ -2572,12 +2591,13 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               </div>
               <p className="mt-1">{grant.recordId}</p>
               <p className="mt-1 text-xs text-slate-400">{grant.granteeType} · {grant.status}</p>
+              <p className="mt-1 text-xs text-slate-400">Expires {formatDate(grant.expiresAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   className="recordarr-button secondary"
                   onClick={() => revokeAccessGrant(accessToken, grant.accessGrantId, { revokedByPersonId: 'person-doc-controller', revokeReason: 'Access no longer required.' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}
-                  disabled={grant.status === 'revoked'}
+                  disabled={grant.status === 'revoked' || grant.status === 'expired'}
                 >
                   Revoke
                 </button>

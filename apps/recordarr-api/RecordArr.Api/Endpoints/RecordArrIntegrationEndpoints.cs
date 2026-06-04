@@ -397,6 +397,10 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName($"ListRecordArrIntegrationAccessGrants{routePrefix}");
 
+        group.MapPost("/access-grants/refresh-statuses", (RecordArrStore store) =>
+            Results.Ok(store.RefreshAccessGrants()))
+            .WithName($"RefreshRecordArrIntegrationAccessGrants{routePrefix}");
+
         group.MapPost("/access-grants", (WorkspaceEndpoints.CreateAccessGrantRequest request, RecordArrStore store) =>
         {
             var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, request.GrantedByPersonId, request.ExpiresAt);

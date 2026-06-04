@@ -1058,6 +1058,15 @@ export async function listAccessGrants(accessToken: string): Promise<RecordArrAc
   return getJson<RecordArrAccessGrant[]>('/api/v1/workspace/access-grants', accessToken)
 }
 
+export async function refreshAccessGrants(accessToken: string): Promise<RecordArrAccessGrant[]> {
+  return sendJson<RecordArrAccessGrant[]>(
+    '/api/v1/workspace/access-grants/refresh-statuses',
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
 export async function createAccessGrant(
   accessToken: string,
   body: {

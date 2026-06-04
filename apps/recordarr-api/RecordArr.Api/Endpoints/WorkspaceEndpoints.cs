@@ -351,6 +351,10 @@ public static class WorkspaceEndpoints
         group.MapGet("/access-grants", (RecordArrStore store) => Results.Ok(store.GetAccessGrants()))
             .WithName("ListRecordArrAccessGrants");
 
+        group.MapPost("/access-grants/refresh-statuses", (RecordArrStore store) =>
+            Results.Ok(store.RefreshAccessGrants()))
+            .WithName("RefreshRecordArrAccessGrants");
+
         group.MapPost("/access-grants", (CreateAccessGrantRequest request, RecordArrStore store) =>
         {
             var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, request.GrantedByPersonId, request.ExpiresAt);

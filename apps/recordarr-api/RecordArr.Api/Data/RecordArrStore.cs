@@ -1481,6 +1481,34 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrAccessGrantResponse> RefreshAccessGrants()
+    {
+        lock (_gate)
+        {
+            var now = DateTimeOffset.UtcNow;
+            for (var i = 0; i < _accessGrants.Count; i++)
+            {
+                var current = _accessGrants[i];
+                if (!string.Equals(current.Status, "active", StringComparison.OrdinalIgnoreCase) ||
+                    !current.ExpiresAt.HasValue ||
+                    current.ExpiresAt > now)
+                {
+                    continue;
+                }
+
+                _accessGrants[i] = current with
+                {
+                    Status = "expired",
+                    RevokedAt = current.ExpiresAt,
+                    RevokeReason = $"Expired at {current.ExpiresAt:O}"
+                };
+                AddAccessLog(current.RecordId, "access_grant.expired", "allowed", current.GrantedByPersonId, null, null, null, null, "grant-expired");
+            }
+
+            return _accessGrants.ToArray();
+        }
+    }
+
     public RecordArrAccessGrantResponse CreateAccessGrant(string recordId, string granteeType, string granteeRef, string permission, string grantedByPersonId, DateTimeOffset? expiresAt)
     {
         lock (_gate)
