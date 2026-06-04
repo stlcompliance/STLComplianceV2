@@ -640,7 +640,6 @@ Warranty
   - unknown
 ```
 
-
 ---
 
 
@@ -2083,7 +2082,6 @@ ReturnToService
 7. MaintainArr records completion and evidence.
 8. WorkOrder proceeds to review/closeout.
 ```
-
 
 ---
 

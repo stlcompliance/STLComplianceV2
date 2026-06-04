@@ -87,11 +87,7 @@ export function ComparePage() {
       </section>
 
       <section id="suite-checklist" className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-xl font-bold text-white">Biased checklist comparison</h2>
-        <p className="mt-2 max-w-4xl text-sm text-slate-400">
-          This table is intentionally STL-biased: it compares market categories against the
-          cross-functional features STL is built to unify.
-        </p>
+        <h2 className="text-xl font-bold text-white">Compare STL Compliance to Other Solutions</h2>
         <div className="mt-6">
           <FeatureChecklistTable />
         </div>
