@@ -183,6 +183,44 @@ export type QualityRelease = ListItem & {
   notes: string | null
 }
 
+export type ContainmentAction = ListItem & {
+  actionType: string
+  nonconformanceRef: string | null
+  assignedPersonId: string | null
+  assignedTeamRef: string | null
+  sourceProductActionRef: string | null
+  dueAt: string | null
+  startedAt: string | null
+  completedAt: string | null
+  completedByPersonId: string | null
+  verificationRequired: boolean
+  verifiedByPersonId: string | null
+  verifiedAt: string | null
+  evidenceRecordRefs: string[]
+  notes: string | null
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+}
+
+export type Disposition = ListItem & {
+  dispositionType: string
+  nonconformanceRef: string | null
+  decisionByPersonId: string | null
+  decisionAt: string | null
+  approvedByPersonId: string | null
+  approvedAt: string | null
+  rationale: string | null
+  requiredActions: string[]
+  executionProduct: string | null
+  executionObjectRef: string | null
+  evidenceRecordRefs: string[]
+  notes: string | null
+  closedAt: string | null
+  closedByPersonId: string | null
+  closureSummary: string | null
+}
+
 export type SupplierQualityIssue = ListItem & {
   issueType: string
   affectedObjectRefs: string[]
@@ -346,6 +384,27 @@ export const assurarrApi = {
     }),
   updateQualityReleaseStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<QualityRelease>(`/api/v1/integrations/quality-releases/${id}/status`, 'PATCH', { status, closureSummary }),
+  listContainmentActions: () => getJson<ContainmentAction[]>('/api/v1/integrations/containment-actions'),
+  createContainmentAction: (body: CreateBase & { actionType: string; nonconformanceRef?: string; assignedPersonId?: string; assignedTeamRef?: string; sourceProductActionRef?: string; dueAt?: string; verificationRequired?: boolean; evidenceRecordRefs?: string[]; notes?: string }) =>
+    sendJson<ContainmentAction>('/api/v1/integrations/containment-actions', 'POST', {
+      ...body,
+      verificationRequired: body.verificationRequired ?? true,
+      dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+    }),
+  updateContainmentActionStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<ContainmentAction>(`/api/v1/integrations/containment-actions/${id}/status`, 'PATCH', { status, closureSummary }),
+  listDispositions: () => getJson<Disposition[]>('/api/v1/integrations/dispositions'),
+  createDisposition: (body: CreateBase & { dispositionType: string; nonconformanceRef?: string; decisionByPersonId?: string; decisionAt?: string; approvedByPersonId?: string; approvedAt?: string; rationale?: string; requiredActions?: string[]; executionProduct?: string; executionObjectRef?: string; evidenceRecordRefs?: string[]; notes?: string }) =>
+    sendJson<Disposition>('/api/v1/integrations/dispositions', 'POST', {
+      ...body,
+      decisionAt: body.decisionAt ? new Date(body.decisionAt).toISOString() : null,
+      approvedAt: body.approvedAt ? new Date(body.approvedAt).toISOString() : null,
+      requiredActions: body.requiredActions ?? [],
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
+    }),
+  updateDispositionStatus: (id: string, status: string, closureSummary?: string) =>
+    sendJson<Disposition>(`/api/v1/integrations/dispositions/${id}/status`, 'PATCH', { status, closureSummary }),
   listSupplierQualityIssues: () => getJson<SupplierQualityIssue[]>('/api/v1/integrations/supplier-quality-issues'),
   createSupplierQualityIssue: (body: CreateBase & { issueType: string; affectedReceiptRefs?: string[]; affectedPurchaseOrderRefs?: string[]; affectedItemRefs?: string[]; supplierRef?: string; nonconformanceRef?: string; scarRef?: string; holdRefs?: string[]; recordRefs?: string[]; openedAt?: string }) =>
     sendJson<SupplierQualityIssue>('/api/v1/integrations/supplier-quality-issues', 'POST', {

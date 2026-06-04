@@ -124,6 +124,30 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateQualityReleaseStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrQualityReleaseStatus");
 
+        integrationGroup.MapGet("/containment-actions", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListContainmentActionsAsync(cancellationToken)))
+            .WithName("ListAssurArrContainmentActions");
+
+        integrationGroup.MapPost("/containment-actions", async (CreateAssurArrContainmentActionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateContainmentActionAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrContainmentAction");
+
+        integrationGroup.MapPatch("/containment-actions/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateContainmentActionStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrContainmentActionStatus");
+
+        integrationGroup.MapGet("/dispositions", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListDispositionsAsync(cancellationToken)))
+            .WithName("ListAssurArrDispositions");
+
+        integrationGroup.MapPost("/dispositions", async (CreateAssurArrDispositionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateDispositionAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrDisposition");
+
+        integrationGroup.MapPatch("/dispositions/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateDispositionStatusAsync(id, request, cancellationToken)))
+            .WithName("UpdateAssurArrDispositionStatus");
+
         integrationGroup.MapGet("/supplier-quality-issues", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListSupplierQualityIssuesAsync(cancellationToken)))
             .WithName("ListAssurArrSupplierQualityIssues");

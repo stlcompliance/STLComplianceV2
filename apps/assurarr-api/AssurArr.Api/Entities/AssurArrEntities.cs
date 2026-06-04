@@ -282,6 +282,70 @@ public sealed class AssurArrQualityRelease
     public string? Notes { get; set; }
 }
 
+public sealed class AssurArrContainmentAction
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "open";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public string? NonconformanceRef { get; set; }
+    public string ActionType { get; set; } = "hold_inventory";
+    public Guid? AssignedPersonId { get; set; }
+    public string? AssignedTeamRef { get; set; }
+    public string? SourceProductActionRef { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public Guid? CompletedByPersonId { get; set; }
+    public bool VerificationRequired { get; set; }
+    public Guid? VerifiedByPersonId { get; set; }
+    public DateTimeOffset? VerifiedAt { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public string? Notes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+}
+
+public sealed class AssurArrDisposition
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Severity { get; set; } = "moderate";
+    public string Status { get; set; } = "proposed";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string[] AffectedObjectRefs { get; set; } = [];
+    public string? NonconformanceRef { get; set; }
+    public string DispositionType { get; set; } = "use_as_is";
+    public Guid? DecisionByPersonId { get; set; }
+    public DateTimeOffset? DecisionAt { get; set; }
+    public Guid? ApprovedByPersonId { get; set; }
+    public DateTimeOffset? ApprovedAt { get; set; }
+    public string? Rationale { get; set; }
+    public string[] RequiredActions { get; set; } = [];
+    public string? ExecutionProduct { get; set; }
+    public string? ExecutionObjectRef { get; set; }
+    public string[] EvidenceRecordRefs { get; set; } = [];
+    public string? Notes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public Guid? ClosedByPersonId { get; set; }
+    public string? ClosureSummary { get; set; }
+}
+
 public sealed class AssurArrSupplierQualityIssue
 {
     public Guid Id { get; set; }

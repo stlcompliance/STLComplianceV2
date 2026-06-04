@@ -15,6 +15,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
     public DbSet<AssurArrQualityReview> QualityReviews => Set<AssurArrQualityReview>();
     public DbSet<AssurArrQualityRelease> QualityReleases => Set<AssurArrQualityRelease>();
+    public DbSet<AssurArrContainmentAction> ContainmentActions => Set<AssurArrContainmentAction>();
+    public DbSet<AssurArrDisposition> Dispositions => Set<AssurArrDisposition>();
     public DbSet<AssurArrSupplierQualityIssue> SupplierQualityIssues => Set<AssurArrSupplierQualityIssue>();
     public DbSet<AssurArrCustomerComplaintQualityCase> CustomerComplaintQualityCases => Set<AssurArrCustomerComplaintQualityCase>();
     public DbSet<AssurArrTimelineEvent> TimelineEvents => Set<AssurArrTimelineEvent>();
@@ -32,6 +34,8 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
         ConfigureReview(modelBuilder);
         ConfigureRelease(modelBuilder);
+        ConfigureContainmentAction(modelBuilder);
+        ConfigureDisposition(modelBuilder);
         ConfigureSupplierQualityIssue(modelBuilder);
         ConfigureCustomerComplaintQualityCase(modelBuilder);
 
@@ -144,6 +148,84 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.HoldRef });
+        });
+    }
+
+    private static void ConfigureContainmentAction(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrContainmentAction>(entity =>
+        {
+            entity.ToTable("assurarr_containment_actions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.NonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.ActionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AssignedTeamRef).HasMaxLength(256);
+            entity.Property(x => x.SourceProductActionRef).HasMaxLength(256);
+            entity.Property(x => x.DueAt);
+            entity.Property(x => x.StartedAt);
+            entity.Property(x => x.CompletedAt);
+            entity.Property(x => x.CompletedByPersonId);
+            entity.Property(x => x.VerificationRequired).IsRequired();
+            entity.Property(x => x.VerifiedByPersonId);
+            entity.Property(x => x.VerifiedAt);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(4000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.NonconformanceRef });
+        });
+    }
+
+    private static void ConfigureDisposition(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrDisposition>(entity =>
+        {
+            entity.ToTable("assurarr_dispositions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.NonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.DispositionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DecisionAt);
+            entity.Property(x => x.ApprovedByPersonId);
+            entity.Property(x => x.ApprovedAt);
+            entity.Property(x => x.Rationale).HasMaxLength(4000);
+            entity.Property(x => x.RequiredActions).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ExecutionProduct).HasMaxLength(64);
+            entity.Property(x => x.ExecutionObjectRef).HasMaxLength(256);
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(4000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.NonconformanceRef });
         });
     }
 

@@ -34,6 +34,8 @@ const navItems: ProductNavItem[] = [
   { label: 'Findings', to: '/findings', icon: asNavIcon(Sparkles) },
   { label: 'Reviews', to: '/reviews', icon: asNavIcon(BookCheck) },
   { label: 'Releases', to: '/releases', icon: asNavIcon(CheckCircle2) },
+  { label: 'Containment', to: '/containment', icon: asNavIcon(ShieldCheck) },
+  { label: 'Dispositions', to: '/dispositions', icon: asNavIcon(ClipboardList) },
   { label: 'Supplier quality', to: '/supplier-quality', icon: asNavIcon(ShieldAlert) },
   { label: 'Complaints', to: '/complaints', icon: asNavIcon(ClipboardList) },
   { label: 'Status', to: '/status', icon: asNavIcon(BookCheck), sectionBreakBefore: true },
@@ -50,6 +52,8 @@ const statusOptions: Record<string, readonly string[]> = {
   finding: ['open', 'accepted', 'disputed', 'nonconformance_created', 'corrective_action', 'verified', 'closed', 'canceled'],
   review: ['pending', 'in_review', 'approved', 'rejected', 'changes_requested', 'canceled'],
   release: ['requested', 'pending_review', 'approved', 'rejected', 'executed', 'canceled'],
+  containment: ['open', 'assigned', 'in_progress', 'completed', 'verified', 'canceled'],
+  disposition: ['proposed', 'pending_approval', 'approved', 'executed', 'rejected', 'canceled'],
   supplierQuality: ['open', 'supplier_notified', 'response_pending', 'under_review', 'corrective_action', 'resolved', 'closed', 'canceled'],
   customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
@@ -921,6 +925,332 @@ function ReleasePage() {
   )
 }
 
+function ContainmentPage() {
+  const query = useRecords(['assurarr', 'containment'], assurarrApi.listContainmentActions)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    actionType: 'quarantine',
+    sourceProduct: 'loadarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    nonconformanceRef: '',
+    assignedPersonId: '',
+    assignedTeamRef: '',
+    sourceProductActionRef: '',
+    dueAt: '',
+    evidenceRecordRefs: '',
+    notes: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createContainmentAction({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        actionType: form.actionType,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        nonconformanceRef: form.nonconformanceRef || undefined,
+        assignedPersonId: form.assignedPersonId || undefined,
+        assignedTeamRef: form.assignedTeamRef || undefined,
+        sourceProductActionRef: form.sourceProductActionRef || undefined,
+        dueAt: form.dueAt || undefined,
+        evidenceRecordRefs: joinRefs(form.evidenceRecordRefs),
+        notes: form.notes || undefined,
+        verificationRequired: true,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        actionType: 'quarantine',
+        sourceProduct: 'loadarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        nonconformanceRef: '',
+        assignedPersonId: '',
+        assignedTeamRef: '',
+        sourceProductActionRef: '',
+        dueAt: '',
+        evidenceRecordRefs: '',
+        notes: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Containment actions"
+        description="Immediate actions that stop spread, isolate issues, and protect downstream work."
+        action={<span className="assurarr-pill"><ShieldCheck className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create containment action</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Action type">
+              <select className="assurarr-select" value={form.actionType} onChange={(event) => setForm({ ...form, actionType: event.target.value })}>
+                <option value="isolate">Isolate</option>
+                <option value="quarantine">Quarantine</option>
+                <option value="stop_ship">Stop ship</option>
+                <option value="stop_use">Stop use</option>
+                <option value="notify_customer">Notify customer</option>
+                <option value="notify_supplier">Notify supplier</option>
+                <option value="inspect_all">Inspect all</option>
+                <option value="sort">Sort</option>
+                <option value="retrain">Retrain</option>
+                <option value="repair">Repair</option>
+                <option value="rework">Rework</option>
+                <option value="block_order">Block order</option>
+                <option value="block_supplier">Block supplier</option>
+                <option value="block_asset">Block asset</option>
+                <option value="hold_inventory">Hold inventory</option>
+                <option value="other">Other</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Nonconformance ref">
+              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+            </Field>
+            <Field label="Affected object refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+            </Field>
+            <Field label="Evidence record refs" wide>
+              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Assigned team ref">
+              <input className="assurarr-input" value={form.assignedTeamRef} onChange={(event) => setForm({ ...form, assignedTeamRef: event.target.value })} />
+            </Field>
+            <Field label="Assigned person id">
+              <input className="assurarr-input" value={form.assignedPersonId} onChange={(event) => setForm({ ...form, assignedPersonId: event.target.value })} />
+            </Field>
+            <Field label="Source action ref">
+              <input className="assurarr-input" value={form.sourceProductActionRef} onChange={(event) => setForm({ ...form, sourceProductActionRef: event.target.value })} />
+            </Field>
+            <Field label="Due at">
+              <input className="assurarr-input" type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
+            </Field>
+            <Field label="Notes" wide>
+              <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create containment action'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No containment actions yet."
+          onStatusChange={(id, status) => assurarrApi.updateContainmentActionStatus(id, status)}
+          statusChoices={statusOptions.containment}
+        />
+      ) : (
+        <LoadingCard label="Loading containment actions" />
+      )}
+    </div>
+  )
+}
+
+function DispositionPage() {
+  const query = useRecords(['assurarr', 'dispositions'], assurarrApi.listDispositions)
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    severity: 'moderate',
+    dispositionType: 'conditional_release',
+    sourceProduct: 'assurarr',
+    sourceObjectRef: '',
+    affectedObjectRefs: '',
+    nonconformanceRef: '',
+    decisionByPersonId: '',
+    decisionAt: '',
+    approvedByPersonId: '',
+    approvedAt: '',
+    rationale: '',
+    requiredActions: '',
+    executionProduct: '',
+    executionObjectRef: '',
+    evidenceRecordRefs: '',
+    notes: '',
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createDisposition({
+        title: form.title,
+        description: form.description,
+        severity: form.severity,
+        dispositionType: form.dispositionType,
+        sourceProduct: form.sourceProduct,
+        sourceObjectRef: form.sourceObjectRef,
+        affectedObjectRefs: joinRefs(form.affectedObjectRefs),
+        nonconformanceRef: form.nonconformanceRef || undefined,
+        decisionByPersonId: form.decisionByPersonId || undefined,
+        decisionAt: form.decisionAt || undefined,
+        approvedByPersonId: form.approvedByPersonId || undefined,
+        approvedAt: form.approvedAt || undefined,
+        rationale: form.rationale || undefined,
+        requiredActions: joinRefs(form.requiredActions),
+        executionProduct: form.executionProduct || undefined,
+        executionObjectRef: form.executionObjectRef || undefined,
+        evidenceRecordRefs: joinRefs(form.evidenceRecordRefs),
+        notes: form.notes || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setForm({
+        title: '',
+        description: '',
+        severity: 'moderate',
+        dispositionType: 'conditional_release',
+        sourceProduct: 'assurarr',
+        sourceObjectRef: '',
+        affectedObjectRefs: '',
+        nonconformanceRef: '',
+        decisionByPersonId: '',
+        decisionAt: '',
+        approvedByPersonId: '',
+        approvedAt: '',
+        rationale: '',
+        requiredActions: '',
+        executionProduct: '',
+        executionObjectRef: '',
+        evidenceRecordRefs: '',
+        notes: '',
+      })
+    },
+  })
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title="Dispositions"
+        description="Decisions for what happens to the affected object after investigation and review."
+        action={<span className="assurarr-pill"><ClipboardList className="h-4 w-4" /> {query.data?.length ?? 0} records</span>}
+      />
+      <div className="assurarr-card">
+        <div className="assurarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-base font-semibold text-slate-50">Create disposition</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Title">
+              <input className="assurarr-input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            </Field>
+            <Field label="Disposition type">
+              <select className="assurarr-select" value={form.dispositionType} onChange={(event) => setForm({ ...form, dispositionType: event.target.value })}>
+                <option value="use_as_is">Use as is</option>
+                <option value="rework">Rework</option>
+                <option value="repair">Repair</option>
+                <option value="return_to_supplier">Return to supplier</option>
+                <option value="scrap">Scrap</option>
+                <option value="sort">Sort</option>
+                <option value="regrade">Regrade</option>
+                <option value="reject">Reject</option>
+                <option value="replace">Replace</option>
+                <option value="conditional_release">Conditional release</option>
+                <option value="release_no_action">Release no action</option>
+              </select>
+            </Field>
+            <Field label="Severity">
+              <select className="assurarr-select" value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Nonconformance ref">
+              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+            </Field>
+            <Field label="Source object ref">
+              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+            </Field>
+            <Field label="Affected object refs" wide>
+              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+            </Field>
+            <Field label="Required actions" wide>
+              <textarea className="assurarr-textarea" value={form.requiredActions} onChange={(event) => setForm({ ...form, requiredActions: event.target.value })} />
+            </Field>
+            <Field label="Evidence record refs" wide>
+              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+            </Field>
+            <Field label="Description" wide>
+              <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            </Field>
+            <Field label="Rationale" wide>
+              <textarea className="assurarr-textarea" value={form.rationale} onChange={(event) => setForm({ ...form, rationale: event.target.value })} />
+            </Field>
+            <Field label="Execution product">
+              <input className="assurarr-input" value={form.executionProduct} onChange={(event) => setForm({ ...form, executionProduct: event.target.value })} />
+            </Field>
+            <Field label="Execution object ref">
+              <input className="assurarr-input" value={form.executionObjectRef} onChange={(event) => setForm({ ...form, executionObjectRef: event.target.value })} />
+            </Field>
+            <Field label="Decision by person id">
+              <input className="assurarr-input" value={form.decisionByPersonId} onChange={(event) => setForm({ ...form, decisionByPersonId: event.target.value })} />
+            </Field>
+            <Field label="Decision at">
+              <input className="assurarr-input" type="datetime-local" value={form.decisionAt} onChange={(event) => setForm({ ...form, decisionAt: event.target.value })} />
+            </Field>
+            <Field label="Approved by person id">
+              <input className="assurarr-input" value={form.approvedByPersonId} onChange={(event) => setForm({ ...form, approvedByPersonId: event.target.value })} />
+            </Field>
+            <Field label="Approved at">
+              <input className="assurarr-input" type="datetime-local" value={form.approvedAt} onChange={(event) => setForm({ ...form, approvedAt: event.target.value })} />
+            </Field>
+            <Field label="Notes" wide>
+              <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </Field>
+          </div>
+          <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Create disposition'}
+          </button>
+        </div>
+      </div>
+      {query.data ? (
+        <EntityTable
+          items={query.data}
+          emptyLabel="No dispositions yet."
+          onStatusChange={(id, status) => assurarrApi.updateDispositionStatus(id, status)}
+          statusChoices={statusOptions.disposition}
+        />
+      ) : (
+        <LoadingCard label="Loading dispositions" />
+      )}
+    </div>
+  )
+}
+
 function SupplierQualityPage() {
   const query = useRecords(['assurarr', 'supplier-quality'], assurarrApi.listSupplierQualityIssues)
   const [form, setForm] = useState({
@@ -1404,6 +1734,8 @@ export function App() {
     if (path.startsWith('/findings')) return 'Findings'
     if (path.startsWith('/reviews')) return 'Reviews'
     if (path.startsWith('/releases')) return 'Releases'
+    if (path.startsWith('/containment')) return 'Containment'
+    if (path.startsWith('/dispositions')) return 'Dispositions'
     if (path.startsWith('/supplier-quality')) return 'Supplier quality'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
@@ -1423,6 +1755,8 @@ export function App() {
         <Route path="/findings" element={<FindingsPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/releases" element={<ReleasePage />} />
+        <Route path="/containment" element={<ContainmentPage />} />
+        <Route path="/dispositions" element={<DispositionPage />} />
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
         <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/status" element={<StatusPage />} />

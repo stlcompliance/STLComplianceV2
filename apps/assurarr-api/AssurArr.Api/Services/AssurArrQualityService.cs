@@ -97,6 +97,28 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> ContainmentTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["open"] = ["assigned", "in_progress", "canceled"],
+        ["assigned"] = ["in_progress", "completed", "canceled"],
+        ["in_progress"] = ["completed", "verified", "canceled"],
+        ["completed"] = ["verified", "canceled"],
+        ["verified"] = [],
+        ["canceled"] = [],
+    };
+
+    private static readonly IReadOnlyDictionary<string, string[]> DispositionTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["proposed"] = ["pending_approval", "approved", "rejected", "canceled"],
+        ["pending_approval"] = ["approved", "rejected", "canceled"],
+        ["approved"] = ["executed", "rejected", "canceled"],
+        ["executed"] = [],
+        ["rejected"] = [],
+        ["canceled"] = [],
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> SupplierQualityTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -362,6 +384,64 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Notes = "Waiting on release approval.",
         });
 
+        db.ContainmentActions.Add(new AssurArrContainmentAction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "CONT-000001",
+            Title = "Quarantine receiving lot",
+            Description = "Isolate the receiving lot and block further use until inspection evidence is complete.",
+            Severity = "high",
+            Status = "assigned",
+            SourceProduct = "loadarr",
+            SourceObjectRef = "RECEIPT-RR-24018",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-991"],
+            NonconformanceRef = "NCR-000001",
+            ActionType = "quarantine",
+            AssignedPersonId = null,
+            AssignedTeamRef = "loadarr:receiving",
+            SourceProductActionRef = "loadarr:action:quarantine-1",
+            DueAt = now.AddDays(1),
+            StartedAt = now,
+            CompletedAt = null,
+            CompletedByPersonId = null,
+            VerificationRequired = true,
+            VerifiedByPersonId = null,
+            VerifiedAt = null,
+            EvidenceRecordRefs = ["recordarr:doc:inspection-photo-1"],
+            Notes = "Awaiting inspection review.",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.Dispositions.Add(new AssurArrDisposition
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "DISP-000001",
+            Title = "Disposition receiving lot after inspection",
+            Description = "Use as is after evidence review or rework if discrepancies remain.",
+            Severity = "moderate",
+            Status = "pending_approval",
+            SourceProduct = "assurarr",
+            SourceObjectRef = "NCR-000001",
+            AffectedObjectRefs = ["loadarr:inventory:LOT-991"],
+            NonconformanceRef = "NCR-000001",
+            DispositionType = "conditional_release",
+            DecisionByPersonId = null,
+            DecisionAt = now.AddHours(-1),
+            ApprovedByPersonId = null,
+            ApprovedAt = null,
+            Rationale = "Inspection evidence is incomplete.",
+            RequiredActions = ["Complete inspection and verify lot release criteria."],
+            ExecutionProduct = "loadarr",
+            ExecutionObjectRef = "loadarr:inventory:LOT-991",
+            EvidenceRecordRefs = ["recordarr:doc:inspection-photo-1"],
+            Notes = "Pending approval from quality manager.",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         db.SupplierQualityIssues.Add(new AssurArrSupplierQualityIssue
         {
             Id = Guid.NewGuid(),
@@ -429,6 +509,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var openFindingCount = await db.AuditFindings.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var pendingReviewCount = await db.QualityReviews.CountAsync(x => x.Status == "pending" || x.Status == "in_review", cancellationToken);
         var pendingReleaseCount = await db.QualityReleases.CountAsync(x => x.Status == "requested" || x.Status == "pending_review", cancellationToken);
+        var openContainmentCount = await db.ContainmentActions.CountAsync(x => x.Status != "verified" && x.Status != "canceled", cancellationToken);
+        var openDispositionCount = await db.Dispositions.CountAsync(x => x.Status != "executed" && x.Status != "rejected" && x.Status != "canceled", cancellationToken);
         var openSupplierIssueCount = await db.SupplierQualityIssues.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openComplaintCount = await db.CustomerComplaintQualityCases.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
@@ -443,6 +525,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("findings", "Open findings", "Issues or opportunities captured during audits.", openFindingCount, "soft"),
             new AssurArrDashboardCardResponse("reviews", "Quality reviews", "Evidence reviews and decision gates in progress.", pendingReviewCount, "info"),
             new AssurArrDashboardCardResponse("releases", "Quality releases", "Release requests waiting on approval or execution.", pendingReleaseCount, "warning"),
+            new AssurArrDashboardCardResponse("containment", "Containment actions", "Immediate quality actions in flight or pending verification.", openContainmentCount, "accent"),
+            new AssurArrDashboardCardResponse("dispositions", "Dispositions", "Pending or active disposition decisions.", openDispositionCount, "warning"),
             new AssurArrDashboardCardResponse("supplier-quality", "Supplier quality issues", "Supplier-responsible quality problems under review.", openSupplierIssueCount, "danger"),
             new AssurArrDashboardCardResponse("customer-complaints", "Customer complaint cases", "Customer-facing complaint quality workflows in progress.", openComplaintCount, "warning"),
             new AssurArrDashboardCardResponse("status", "Status snapshots", "Current quality state published to other products.", openStatusSnapshots, "neutral"),
@@ -926,6 +1010,155 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("release", entity.Id, $"assurarr.quality_release.{entity.Status}", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToReleaseResponse(entity);
+    }
+
+    public async Task<List<AssurArrContainmentActionResponse>> ListContainmentActionsAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.ContainmentActions
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToContainmentActionResponse).ToList();
+    }
+
+    public async Task<AssurArrContainmentActionResponse> CreateContainmentActionAsync(CreateAssurArrContainmentActionRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrContainmentAction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("CONT", db.ContainmentActions, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "moderate"),
+            Status = "open",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
+            ActionType = Normalize(request.ActionType, "hold_inventory"),
+            AssignedPersonId = request.AssignedPersonId,
+            AssignedTeamRef = NormalizeNullable(request.AssignedTeamRef),
+            SourceProductActionRef = NormalizeNullable(request.SourceProductActionRef),
+            DueAt = request.DueAt,
+            VerificationRequired = request.VerificationRequired,
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+            CreatedAt = now,
+            UpdatedAt = now,
+            StartedAt = now,
+        };
+
+        db.ContainmentActions.Add(entity);
+        await AddTimelineAsync("containment", entity.Id, "assurarr.containment.created", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToContainmentActionResponse(entity);
+    }
+
+    public async Task<AssurArrContainmentActionResponse> UpdateContainmentActionStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ContainmentActions.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Containment action '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, ContainmentTransitions, "containment action");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.CompletedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        else if (string.Equals(entity.Status, "verified", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.VerifiedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        else if (string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+
+        await AddTimelineAsync("containment", entity.Id, $"assurarr.containment.{entity.Status}", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToContainmentActionResponse(entity);
+    }
+
+    public async Task<List<AssurArrDispositionResponse>> ListDispositionsAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await db.Dispositions
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToDispositionResponse).ToList();
+    }
+
+    public async Task<AssurArrDispositionResponse> CreateDispositionAsync(CreateAssurArrDispositionRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrDisposition
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("DISP", db.Dispositions, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Severity = Normalize(request.Severity, "moderate"),
+            Status = "proposed",
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            AffectedObjectRefs = request.AffectedObjectRefs ?? [],
+            NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
+            DispositionType = Normalize(request.DispositionType, "use_as_is"),
+            DecisionByPersonId = request.DecisionByPersonId,
+            DecisionAt = request.DecisionAt ?? now,
+            ApprovedByPersonId = request.ApprovedByPersonId,
+            ApprovedAt = request.ApprovedAt,
+            Rationale = NormalizeNullable(request.Rationale),
+            RequiredActions = request.RequiredActions ?? [],
+            ExecutionProduct = NormalizeNullable(request.ExecutionProduct),
+            ExecutionObjectRef = NormalizeNullable(request.ExecutionObjectRef),
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
+            Notes = NormalizeNullable(request.Notes),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.Dispositions.Add(entity);
+        await AddTimelineAsync("disposition", entity.Id, "assurarr.disposition.proposed", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToDispositionResponse(entity);
+    }
+
+    public async Task<AssurArrDispositionResponse> UpdateDispositionStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.Dispositions.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Disposition '{id}' was not found.");
+        EnsureTransition(entity.Status, request.Status, DispositionTransitions, "disposition");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "approved", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ApprovedAt ??= entity.UpdatedAt;
+        }
+        else if (string.Equals(entity.Status, "executed", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ApprovedAt ??= entity.UpdatedAt;
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+        else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.ClosedAt = entity.UpdatedAt;
+            entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+        }
+
+        await AddTimelineAsync("disposition", entity.Id, $"assurarr.disposition.{entity.Status}", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToDispositionResponse(entity);
     }
 
     public async Task<List<AssurArrSupplierQualityIssueResponse>> ListSupplierQualityIssuesAsync(CancellationToken cancellationToken = default)
@@ -1438,6 +1671,66 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ExpirationAt,
             entity.EvidenceRecordRefs,
             entity.Notes);
+
+    private static AssurArrContainmentActionResponse ToContainmentActionResponse(AssurArrContainmentAction entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.ActionType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.AffectedObjectRefs,
+            entity.NonconformanceRef,
+            entity.AssignedPersonId,
+            entity.AssignedTeamRef,
+            entity.SourceProductActionRef,
+            entity.DueAt,
+            entity.StartedAt,
+            entity.CompletedAt,
+            entity.CompletedByPersonId,
+            entity.VerificationRequired,
+            entity.VerifiedByPersonId,
+            entity.VerifiedAt,
+            entity.EvidenceRecordRefs,
+            entity.Notes,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary);
+
+    private static AssurArrDispositionResponse ToDispositionResponse(AssurArrDisposition entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.Severity,
+            entity.DispositionType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.AffectedObjectRefs,
+            entity.NonconformanceRef,
+            entity.DecisionByPersonId,
+            entity.DecisionAt,
+            entity.ApprovedByPersonId,
+            entity.ApprovedAt,
+            entity.Rationale,
+            entity.RequiredActions,
+            entity.ExecutionProduct,
+            entity.ExecutionObjectRef,
+            entity.EvidenceRecordRefs,
+            entity.Notes,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.ClosedAt,
+            entity.ClosedByPersonId,
+            entity.ClosureSummary);
 
     private static AssurArrSupplierQualityIssueResponse ToSupplierQualityIssueResponse(AssurArrSupplierQualityIssue entity) =>
         new(

@@ -204,4 +204,73 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(complaintCases);
         Assert.Contains(complaintCases!, item => item.Title == complaintTitle);
     }
+
+    [Fact]
+    public async Task Can_create_containment_action_and_disposition_records()
+    {
+        var containmentTitle = $"Test containment action {Guid.NewGuid():N}";
+        var containmentResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/containment-actions",
+            new CreateAssurArrContainmentActionRequest(
+                containmentTitle,
+                "Automated coverage for containment actions.",
+                "high",
+                "quarantine",
+                "loadarr",
+                "loadarr:inventory:test",
+                ["loadarr:inventory:test"],
+                "NCR-000001",
+                null,
+                null,
+                "loadarr:receiving:action:test",
+                DateTimeOffset.UtcNow.AddDays(1),
+                true,
+                ["recordarr:doc:test"],
+                "Containment notes"));
+
+        Assert.Equal(HttpStatusCode.OK, containmentResponse.StatusCode);
+        var containment = await containmentResponse.Content.ReadFromJsonAsync<AssurArrContainmentActionResponse>();
+        Assert.NotNull(containment);
+        Assert.Equal(containmentTitle, containment!.Title);
+
+        var dispositionTitle = $"Test disposition {Guid.NewGuid():N}";
+        var dispositionResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/dispositions",
+            new CreateAssurArrDispositionRequest(
+                dispositionTitle,
+                "Automated coverage for disposition records.",
+                "moderate",
+                "conditional_release",
+                "assurarr",
+                "NCR-000001",
+                ["loadarr:inventory:test"],
+                "NCR-000001",
+                null,
+                DateTimeOffset.UtcNow,
+                null,
+                null,
+                "Inspection evidence pending.",
+                ["Complete inspection"],
+                "loadarr",
+                "loadarr:inventory:test",
+                ["recordarr:doc:test"],
+                "Disposition notes"));
+
+        Assert.Equal(HttpStatusCode.OK, dispositionResponse.StatusCode);
+        var disposition = await dispositionResponse.Content.ReadFromJsonAsync<AssurArrDispositionResponse>();
+        Assert.NotNull(disposition);
+        Assert.Equal(dispositionTitle, disposition!.Title);
+
+        var containmentList = await _client.GetAsync("/api/v1/integrations/containment-actions");
+        containmentList.EnsureSuccessStatusCode();
+        var containmentActions = await containmentList.Content.ReadFromJsonAsync<List<AssurArrContainmentActionResponse>>();
+        Assert.NotNull(containmentActions);
+        Assert.Contains(containmentActions!, item => item.Title == containmentTitle);
+
+        var dispositionList = await _client.GetAsync("/api/v1/integrations/dispositions");
+        dispositionList.EnsureSuccessStatusCode();
+        var dispositions = await dispositionList.Content.ReadFromJsonAsync<List<AssurArrDispositionResponse>>();
+        Assert.NotNull(dispositions);
+        Assert.Contains(dispositions!, item => item.Title == dispositionTitle);
+    }
 }
