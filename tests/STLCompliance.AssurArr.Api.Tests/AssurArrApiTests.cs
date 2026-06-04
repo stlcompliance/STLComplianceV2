@@ -53,6 +53,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 null,
                 false,
                 null,
+                [],
                 DateTimeOffset.UtcNow.AddDays(2)));
 
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
@@ -180,6 +181,34 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var action = await actionResponse.Content.ReadFromJsonAsync<AssurArrCapaActionResponse>();
         Assert.NotNull(action);
         Assert.Equal(actionTitle, action!.Title);
+
+        var blockerTitle = $"Test CAPA blocker {Guid.NewGuid():N}";
+        var blockerResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/capas/{capa!.Id}/actions/{action.Id}/blockers",
+            new CreateAssurArrCapaActionBlockerRequest(
+                "waiting_supplier",
+                "supplyarr",
+                "supplyarr:supplier:test",
+                blockerTitle,
+                "Automated coverage for CAPA action blockers."));
+
+        Assert.Equal(HttpStatusCode.OK, blockerResponse.StatusCode);
+        var blocker = await blockerResponse.Content.ReadFromJsonAsync<AssurArrCapaActionBlockerResponse>();
+        Assert.NotNull(blocker);
+        Assert.Equal(blockerTitle, blocker!.Title);
+        Assert.Equal("active", blocker.Status);
+
+        var blockerListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions/{action.Id}/blockers");
+        blockerListResponse.EnsureSuccessStatusCode();
+        var blockers = await blockerListResponse.Content.ReadFromJsonAsync<List<AssurArrCapaActionBlockerResponse>>();
+        Assert.NotNull(blockers);
+        Assert.Contains(blockers!, item => item.Title == blockerTitle);
+
+        var resolveBlockerResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/capas/{capa.Id}/actions/{action.Id}/blockers/{blocker.Id}/status",
+            new UpdateAssurArrCapaActionBlockerStatusRequest("resolved", null, DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, resolveBlockerResponse.StatusCode);
 
         var verificationTitle = $"Test verification plan {Guid.NewGuid():N}";
         var verificationResponse = await _client.PostAsJsonAsync(

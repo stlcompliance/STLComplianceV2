@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
@@ -539,6 +539,14 @@ function CapaPage() {
   const queryClient = useQueryClient()
   const [selectedCapaId, setSelectedCapaId] = useState('')
   const activeCapaId = selectedCapaId || query.data?.[0]?.id || ''
+  const [selectedActionId, setSelectedActionId] = useState('')
+  const [blockerForm, setBlockerForm] = useState({
+    blockerType: 'waiting_supplier',
+    sourceProduct: 'supplyarr',
+    sourceObjectRef: '',
+    title: '',
+    description: '',
+  })
   const [actionForm, setActionForm] = useState({
     title: '',
     description: '',
@@ -569,6 +577,16 @@ function CapaPage() {
     queryKey: ['assurarr', 'capa-actions', activeCapaId],
     queryFn: () => assurarrApi.listCapaActions(activeCapaId),
     enabled: Boolean(activeCapaId),
+    staleTime: 15_000,
+  })
+  const activeActionId = selectedActionId || actionQuery.data?.[0]?.id || ''
+  useEffect(() => {
+    setSelectedActionId('')
+  }, [activeCapaId])
+  const blockerQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action-blockers', activeCapaId, activeActionId],
+    queryFn: () => assurarrApi.listCapaActionBlockers(activeCapaId, activeActionId),
+    enabled: Boolean(activeCapaId && activeActionId),
     staleTime: 15_000,
   })
   const verificationQuery = useQuery({
@@ -611,6 +629,33 @@ function CapaPage() {
         blockerRefs: '',
         notes: '',
       })
+    },
+  })
+  const createBlockerMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createCapaActionBlocker(activeCapaId, activeActionId, {
+        blockerType: blockerForm.blockerType,
+        sourceProduct: blockerForm.sourceProduct,
+        sourceObjectRef: blockerForm.sourceObjectRef || undefined,
+        title: blockerForm.title,
+        description: blockerForm.description,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setBlockerForm({
+        blockerType: 'waiting_supplier',
+        sourceProduct: 'supplyarr',
+        sourceObjectRef: '',
+        title: '',
+        description: '',
+      })
+    },
+  })
+  const resolveBlockerMutation = useMutation({
+    mutationFn: async ({ blockerId, status }: { blockerId: string; status: string }) =>
+      assurarrApi.updateCapaActionBlockerStatus(activeCapaId, activeActionId, blockerId, status, undefined, new Date().toISOString()),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
     },
   })
   const createVerificationMutation = useMutation({
@@ -737,22 +782,104 @@ function CapaPage() {
             <button className="assurarr-button" type="button" onClick={() => createActionMutation.mutate()} disabled={createActionMutation.isPending || !activeCapaId}>
               {createActionMutation.isPending ? 'Saving...' : 'Create CAPA action'}
             </button>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Active action">
+                <select className="assurarr-select" value={activeActionId} onChange={(event) => setSelectedActionId(event.target.value)} disabled={!actionQuery.data?.length}>
+                  {actionQuery.data?.map((action) => (
+                    <option key={action.id} value={action.id}>
+                      {action.number} - {action.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
             {actionQuery.data?.length ? (
               <div className="space-y-3">
                 {actionQuery.data.map((action) => (
-                  <div key={action.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                  <button
+                    key={action.id}
+                    type="button"
+                    className={`w-full rounded-xl border p-3 text-left transition ${action.id === activeActionId ? 'border-cyan-500/70 bg-slate-900/90' : 'border-slate-700/70 bg-slate-900/80'}`}
+                    onClick={() => setSelectedActionId(action.id)}
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <strong className="text-sm text-slate-50">{action.number}</strong>
                       <span className="assurarr-pill">{action.status}</span>
                     </div>
                     <p className="mt-1 text-sm text-slate-300">{action.title}</p>
                     <p className="mt-1 text-xs text-slate-400">{action.actionType} - {action.targetProduct}</p>
-                  </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Blockers: {action.blockerRefs.length > 0 ? action.blockerRefs.join(', ') : 'none'}
+                    </p>
+                  </button>
                 ))}
               </div>
             ) : (
               <EmptyState title={activeCapaId ? 'No CAPA actions yet.' : 'Select a CAPA first.'} />
             )}
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-cyan-300" />
+                <h4 className="text-sm font-semibold text-slate-50">Blockers for selected action</h4>
+              </div>
+            <div className="mt-3 space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Blocker type">
+                    <select className="assurarr-select" value={blockerForm.blockerType} onChange={(event) => setBlockerForm({ ...blockerForm, blockerType: event.target.value })}>
+                      <option value="missing_approval">Missing approval</option>
+                      <option value="missing_evidence">Missing evidence</option>
+                      <option value="waiting_training">Waiting training</option>
+                      <option value="waiting_maintenance">Waiting maintenance</option>
+                      <option value="waiting_supplier">Waiting supplier</option>
+                      <option value="waiting_customer">Waiting customer</option>
+                      <option value="waiting_inventory">Waiting inventory</option>
+                      <option value="waiting_document">Waiting document</option>
+                      <option value="system">System</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </Field>
+                  <Field label="Source object ref">
+                    <input className="assurarr-input" value={blockerForm.sourceObjectRef} onChange={(event) => setBlockerForm({ ...blockerForm, sourceObjectRef: event.target.value })} />
+                  </Field>
+                  <Field label="Source product">
+                    <input className="assurarr-input" value={blockerForm.sourceProduct} onChange={(event) => setBlockerForm({ ...blockerForm, sourceProduct: event.target.value })} />
+                  </Field>
+                  <Field label="Title" wide>
+                    <input className="assurarr-input" value={blockerForm.title} onChange={(event) => setBlockerForm({ ...blockerForm, title: event.target.value })} />
+                  </Field>
+                  <Field label="Description" wide>
+                    <textarea className="assurarr-textarea" value={blockerForm.description} onChange={(event) => setBlockerForm({ ...blockerForm, description: event.target.value })} />
+                  </Field>
+                </div>
+                <button className="assurarr-button" type="button" onClick={() => createBlockerMutation.mutate()} disabled={createBlockerMutation.isPending || !activeActionId}>
+                  {createBlockerMutation.isPending ? 'Saving...' : 'Add blocker'}
+                </button>
+                {blockerQuery.data?.length ? (
+                  <div className="space-y-2">
+                    {blockerQuery.data.map((blocker) => (
+                      <div key={blocker.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-sm text-slate-50">{blocker.number}</strong>
+                          <span className="assurarr-pill">{blocker.status}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-300">{blocker.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">{blocker.blockerType}{blocker.sourceProduct ? ` - ${blocker.sourceProduct}` : ''}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button className="assurarr-button secondary" type="button" onClick={() => resolveBlockerMutation.mutate({ blockerId: blocker.id, status: 'resolved' })} disabled={resolveBlockerMutation.isPending || blocker.status !== 'active'}>
+                            Mark resolved
+                          </button>
+                          <button className="assurarr-button secondary" type="button" onClick={() => resolveBlockerMutation.mutate({ blockerId: blocker.id, status: 'overridden' })} disabled={resolveBlockerMutation.isPending || blocker.status !== 'active'}>
+                            Override
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title={activeActionId ? 'No blockers for the selected action.' : 'Select an action first.'} />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

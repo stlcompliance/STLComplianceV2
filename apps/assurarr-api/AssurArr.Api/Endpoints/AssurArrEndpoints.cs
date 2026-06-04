@@ -68,6 +68,18 @@ public static class AssurArrEndpoints
             Results.Ok(await service.UpdateCapaActionStatusAsync(capaId, actionId, request, cancellationToken)))
             .WithName("UpdateAssurArrCapaActionStatus");
 
+        group.MapGet("/capas/{capaId:guid}/actions/{actionId:guid}/blockers", async (Guid capaId, Guid actionId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListCapaActionBlockersAsync(capaId, actionId, cancellationToken)))
+            .WithName("ListAssurArrCapaActionBlockers");
+
+        group.MapPost("/capas/{capaId:guid}/actions/{actionId:guid}/blockers", async (Guid capaId, Guid actionId, CreateAssurArrCapaActionBlockerRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateCapaActionBlockerAsync(capaId, actionId, request, cancellationToken)))
+            .WithName("CreateAssurArrCapaActionBlocker");
+
+        group.MapPatch("/capas/{capaId:guid}/actions/{actionId:guid}/blockers/{blockerId:guid}/status", async (Guid capaId, Guid actionId, Guid blockerId, UpdateAssurArrCapaActionBlockerStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateCapaActionBlockerStatusAsync(capaId, actionId, blockerId, request, cancellationToken)))
+            .WithName("UpdateAssurArrCapaActionBlockerStatus");
+
         group.MapGet("/capas/{capaId:guid}/verification-plans", async (Guid capaId, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListVerificationPlansAsync(capaId, cancellationToken)))
             .WithName("ListAssurArrVerificationPlans");

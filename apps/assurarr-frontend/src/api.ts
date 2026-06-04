@@ -117,6 +117,21 @@ export type CapaAction = {
   updatedAt: string
 }
 
+export type CapaActionBlocker = {
+  id: string
+  number: string
+  capaActionId: string
+  blockerType: string
+  sourceProduct: string | null
+  sourceObjectRef: string | null
+  title: string
+  description: string
+  status: string
+  createdAt: string
+  resolvedAt: string | null
+  resolvedByPersonId: string | null
+}
+
 export type VerificationPlan = {
   id: string
   number: string
@@ -442,6 +457,15 @@ export const assurarrApi = {
       ...body,
       completedAt: body.completedAt ? new Date(body.completedAt).toISOString() : null,
       verifiedAt: body.verifiedAt ? new Date(body.verifiedAt).toISOString() : null,
+    }),
+  listCapaActionBlockers: (capaId: string, actionId: string) => getJson<CapaActionBlocker[]>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers`),
+  createCapaActionBlocker: (capaId: string, actionId: string, body: { blockerType: string; sourceProduct?: string; sourceObjectRef?: string; title: string; description: string }) =>
+    sendJson<CapaActionBlocker>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers`, 'POST', body),
+  updateCapaActionBlockerStatus: (capaId: string, actionId: string, blockerId: string, status: string, resolvedByPersonId?: string, resolvedAt?: string) =>
+    sendJson<CapaActionBlocker>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers/${blockerId}/status`, 'PATCH', {
+      status,
+      resolvedByPersonId: resolvedByPersonId ?? null,
+      resolvedAt: resolvedAt ? new Date(resolvedAt).toISOString() : null,
     }),
   listVerificationPlans: (capaId: string) => getJson<VerificationPlan[]>(`/api/v1/capas/${capaId}/verification-plans`),
   createVerificationPlan: (capaId: string, body: { title: string; description: string; verificationType: string; successCriteria: string; sampleSize?: number; observationPeriodDays?: number; requiredEvidenceTypes?: string[]; responsiblePersonId?: string; plannedVerificationAt?: string }) =>

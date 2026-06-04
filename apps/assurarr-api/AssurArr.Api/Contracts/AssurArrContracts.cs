@@ -58,6 +58,7 @@ public sealed record AssurArrNonconformanceResponse(
     string? ComplianceImpact,
     bool RecurrenceFlag,
     string? RepeatOfNonconformanceRef,
+    string[] BlockerRefs,
     DateTimeOffset? DueAt);
 
 public sealed record CreateAssurArrNonconformanceRequest(
@@ -76,6 +77,7 @@ public sealed record CreateAssurArrNonconformanceRequest(
     string? ComplianceImpact,
     bool RecurrenceFlag,
     string? RepeatOfNonconformanceRef,
+    string[] BlockerRefs,
     DateTimeOffset? DueAt);
 
 public sealed record AssurArrQualityHoldResponse(
@@ -194,6 +196,32 @@ public sealed record AssurArrCapaActionResponse(
     string? Notes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
+
+public sealed record AssurArrCapaActionBlockerResponse(
+    Guid Id,
+    string Number,
+    Guid CapaActionId,
+    string BlockerType,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string Title,
+    string Description,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ResolvedAt,
+    Guid? ResolvedByPersonId);
+
+public sealed record CreateAssurArrCapaActionBlockerRequest(
+    string BlockerType,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string Title,
+    string Description);
+
+public sealed record UpdateAssurArrCapaActionBlockerStatusRequest(
+    string Status,
+    Guid? ResolvedByPersonId,
+    DateTimeOffset? ResolvedAt);
 
 public sealed record CreateAssurArrCapaActionRequest(
     string Title,

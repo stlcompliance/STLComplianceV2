@@ -62,6 +62,14 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         ["canceled"] = [],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> CapaActionBlockerTransitions = new Dictionary<string, string[]>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        ["active"] = ["resolved", "overridden"],
+        ["resolved"] = [],
+        ["overridden"] = [],
+    };
+
     private static readonly IReadOnlyDictionary<string, string[]> VerificationPlanTransitions = new Dictionary<string, string[]>(
         StringComparer.OrdinalIgnoreCase)
     {
@@ -200,6 +208,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         if (await db.Nonconformances.AnyAsync(cancellationToken))
         {
+            var existingSeededAction = await db.CapaActions.FirstOrDefaultAsync(x => x.Number == "ACT-000001", cancellationToken);
             if (!await db.SupplierCorrectiveActionRequests.AnyAsync(cancellationToken))
             {
                 db.SupplierCorrectiveActionRequests.Add(new AssurArrSupplierCorrectiveActionRequest
@@ -231,6 +240,31 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
                     OwnerPersonId = null,
                 });
 
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            if (existingSeededAction is not null && !await db.CapaActionBlockers.AnyAsync(cancellationToken))
+            {
+                db.CapaActionBlockers.Add(new AssurArrCapaActionBlocker
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Number = "BLK-000001",
+                    CapaActionId = existingSeededAction.Id,
+                    BlockerType = "waiting_supplier",
+                    SourceProduct = "supplyarr",
+                    SourceObjectRef = "supplyarr:supplier:acme-packaging",
+                    Title = "Await supplier response before closing CAPA action",
+                    Description = "The CAPA action remains blocked until the supplier corrective action response is received and reviewed.",
+                    Status = "active",
+                    CreatedAt = now,
+                    ResolvedAt = null,
+                    ResolvedByPersonId = null,
+                });
+
+                existingSeededAction.Status = "blocked";
+                existingSeededAction.BlockerRefs = ["BLK-000001"];
+                existingSeededAction.UpdatedAt = now;
                 await db.SaveChangesAsync(cancellationToken);
             }
 
@@ -310,7 +344,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         };
         db.Capas.Add(capa);
 
-        db.CapaActions.Add(new AssurArrCapaAction
+        var seededAction = new AssurArrCapaAction
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -318,7 +352,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             CapaId = capa.Id,
             Title = "Update incoming inspection release work instruction",
             Description = "Add a visible release checklist to the receiving workflow.",
-            Status = "assigned",
+            Status = "blocked",
             ActionType = "update_work_instruction",
             AssignedPersonId = null,
             AssignedTeamRef = "loadarr:receiving",
@@ -333,10 +367,28 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             VerifiedAt = null,
             VerifiedByPersonId = null,
             EvidenceRecordRefs = ["recordarr:doc:capa-plan-1"],
-            BlockerRefs = [],
+            BlockerRefs = ["BLK-000001"],
             Notes = "Waiting on workflow update.",
             CreatedAt = now,
             UpdatedAt = now,
+        };
+        db.CapaActions.Add(seededAction);
+
+        db.CapaActionBlockers.Add(new AssurArrCapaActionBlocker
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Number = "BLK-000001",
+            CapaActionId = seededAction.Id,
+            BlockerType = "waiting_supplier",
+            SourceProduct = "supplyarr",
+            SourceObjectRef = "supplyarr:supplier:acme-packaging",
+            Title = "Await supplier response before closing CAPA action",
+            Description = "The CAPA action remains blocked until the supplier corrective action response is received and reviewed.",
+            Status = "active",
+            CreatedAt = now,
+            ResolvedAt = null,
+            ResolvedByPersonId = null,
         });
 
         db.VerificationPlans.Add(new AssurArrVerificationPlan
@@ -771,7 +823,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
             Severity = Normalize(request.Severity, "moderate"),
-            Status = "open",
+            Status = (request.BlockerRefs?.Length ?? 0) > 0 ? "blocked" : "open",
             SourceProduct = NormalizeNullable(request.SourceProduct),
             SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
@@ -996,6 +1048,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         };
 
         db.CapaActions.Add(entity);
+        if (string.Equals(entity.Status, "blocked", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa_action", entity.Id, "assurarr.capa.action.blocked", entity.Title, cancellationToken);
+        }
+        await AddTimelineAsync("capa_action", entity.Id, "assurarr.capa.action.created", entity.Title, cancellationToken);
         capa.UpdatedAt = now;
         await AddTimelineAsync("capa", capa.Id, "assurarr.capa.action_assigned", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
@@ -1026,6 +1083,78 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("capa_action", entity.Id, $"assurarr.capa.action.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCapaActionResponse(entity);
+    }
+
+    private async Task<AssurArrCapaAction> EnsureCapaActionExistsAsync(Guid capaId, Guid actionId, CancellationToken cancellationToken) =>
+        await db.CapaActions.FirstOrDefaultAsync(x => x.Id == actionId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA action '{actionId}' was not found.");
+
+    public async Task<List<AssurArrCapaActionBlockerResponse>> ListCapaActionBlockersAsync(Guid capaId, Guid actionId, CancellationToken cancellationToken = default)
+    {
+        await EnsureCapaActionExistsAsync(capaId, actionId, cancellationToken);
+        var entities = await db.CapaActionBlockers
+            .AsNoTracking()
+            .Where(x => x.CapaActionId == actionId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToCapaActionBlockerResponse).ToList();
+    }
+
+    public async Task<AssurArrCapaActionBlockerResponse> CreateCapaActionBlockerAsync(Guid capaId, Guid actionId, CreateAssurArrCapaActionBlockerRequest request, CancellationToken cancellationToken = default)
+    {
+        var action = await EnsureCapaActionExistsAsync(capaId, actionId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrCapaActionBlocker
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            Number = await GenerateNumberAsync("BLK", db.CapaActionBlockers, cancellationToken),
+            CapaActionId = action.Id,
+            BlockerType = Normalize(request.BlockerType, "other"),
+            SourceProduct = NormalizeNullable(request.SourceProduct),
+            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Status = "active",
+            CreatedAt = now,
+        };
+
+        db.CapaActionBlockers.Add(entity);
+        if (!action.BlockerRefs.Contains(entity.Number, StringComparer.OrdinalIgnoreCase))
+        {
+            action.BlockerRefs = [.. action.BlockerRefs, entity.Number];
+        }
+
+        if (!string.Equals(action.Status, "blocked", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(action.Status, "completed", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(action.Status, "verified", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(action.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            action.Status = "blocked";
+            action.UpdatedAt = now;
+            await AddTimelineAsync("capa_action", action.Id, "assurarr.capa.action.blocked", action.Title, cancellationToken);
+        }
+
+        await AddTimelineAsync("capa_action_blocker", entity.Id, "assurarr.capa.action_blocker.created", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCapaActionBlockerResponse(entity);
+    }
+
+    public async Task<AssurArrCapaActionBlockerResponse> UpdateCapaActionBlockerStatusAsync(Guid capaId, Guid actionId, Guid blockerId, UpdateAssurArrCapaActionBlockerStatusRequest request, CancellationToken cancellationToken = default)
+    {
+        await EnsureCapaActionExistsAsync(capaId, actionId, cancellationToken);
+        var entity = await db.CapaActionBlockers.FirstOrDefaultAsync(x => x.Id == blockerId && x.CapaActionId == actionId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA action blocker '{blockerId}' was not found.");
+        EnsureTransition(entity.Status, request.Status, CapaActionBlockerTransitions, "CAPA action blocker");
+        entity.Status = Normalize(request.Status, entity.Status);
+        entity.ResolvedAt = string.Equals(entity.Status, "active", StringComparison.OrdinalIgnoreCase)
+            ? entity.ResolvedAt
+            : request.ResolvedAt ?? DateTimeOffset.UtcNow;
+        entity.ResolvedByPersonId = request.ResolvedByPersonId ?? entity.ResolvedByPersonId;
+        await AddTimelineAsync("capa_action_blocker", entity.Id, $"assurarr.capa.action_blocker.{entity.Status}", entity.Title, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToCapaActionBlockerResponse(entity);
     }
 
     public async Task<List<AssurArrVerificationPlanResponse>> ListVerificationPlansAsync(Guid capaId, CancellationToken cancellationToken = default)
@@ -2094,6 +2223,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ComplianceImpact,
             entity.RecurrenceFlag,
             entity.RepeatOfNonconformanceRef,
+            entity.BlockerRefs,
             entity.DueAt);
 
     private static AssurArrQualityHoldResponse ToQualityHoldResponse(AssurArrQualityHold entity) =>
@@ -2182,6 +2312,21 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Notes,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static AssurArrCapaActionBlockerResponse ToCapaActionBlockerResponse(AssurArrCapaActionBlocker entity) =>
+        new(
+            entity.Id,
+            entity.Number,
+            entity.CapaActionId,
+            entity.BlockerType,
+            entity.SourceProduct,
+            entity.SourceObjectRef,
+            entity.Title,
+            entity.Description,
+            entity.Status,
+            entity.CreatedAt,
+            entity.ResolvedAt,
+            entity.ResolvedByPersonId);
 
     private static AssurArrVerificationPlanResponse ToVerificationPlanResponse(AssurArrVerificationPlan entity) =>
         new(

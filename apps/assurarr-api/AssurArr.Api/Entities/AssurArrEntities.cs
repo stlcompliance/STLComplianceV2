@@ -27,6 +27,7 @@ public sealed class AssurArrNonconformance
     public string? ComplianceImpact { get; set; }
     public bool RecurrenceFlag { get; set; }
     public string? RepeatOfNonconformanceRef { get; set; }
+    public string[] BlockerRefs { get; set; } = [];
     public DateTimeOffset? DueAt { get; set; }
 }
 
@@ -121,6 +122,23 @@ public sealed class AssurArrCapaAction
     public string? Notes { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed class AssurArrCapaActionBlocker
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public Guid CapaActionId { get; set; }
+    public string BlockerType { get; set; } = "other";
+    public string? SourceProduct { get; set; }
+    public string? SourceObjectRef { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = "active";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? ResolvedAt { get; set; }
+    public Guid? ResolvedByPersonId { get; set; }
 }
 
 public sealed class AssurArrVerificationPlan
