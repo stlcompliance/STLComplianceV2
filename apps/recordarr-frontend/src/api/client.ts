@@ -269,6 +269,14 @@ export type RecordArrLegalHold = {
   releaseReason: string | null
 }
 
+export type RecordArrAuditTrailEntry = {
+  auditTrailEntryId: string
+  action: string
+  actorPersonId: string
+  occurredAt: string
+  details: string
+}
+
 export type RecordArrControlledDocument = {
   controlledDocumentId: string
   documentNumber: string
@@ -289,6 +297,7 @@ export type RecordArrControlledDocument = {
   supersededByDocumentRef: string | null
   acknowledgementRequired: boolean
   relatedRecordRefs: string[]
+  auditTrail: RecordArrAuditTrailEntry[]
 }
 
 export type RecordArrControlledDocumentVersion = {
@@ -812,7 +821,7 @@ export async function obsoleteControlledDocument(
 export async function supersedeControlledDocument(
   accessToken: string,
   controlledDocumentId: string,
-  body: { supersededByDocumentRef: string },
+  body: { supersededByDocumentRef: string; supersededByPersonId: string },
 ): Promise<RecordArrControlledDocument> {
   return sendJson<RecordArrControlledDocument>(
     `/api/v1/workspace/controlled-documents/${encodeURIComponent(controlledDocumentId)}/supersede`,

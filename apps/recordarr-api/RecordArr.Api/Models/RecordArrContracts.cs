@@ -258,7 +258,15 @@ public sealed record RecordArrControlledDocumentResponse(
     string? SupersedesDocumentRef,
     string? SupersededByDocumentRef,
     bool AcknowledgementRequired,
-    IReadOnlyList<string> RelatedRecordRefs);
+    IReadOnlyList<string> RelatedRecordRefs,
+    IReadOnlyList<RecordArrAuditTrailEntryResponse> AuditTrail);
+
+public sealed record RecordArrAuditTrailEntryResponse(
+    string AuditTrailEntryId,
+    string Action,
+    string ActorPersonId,
+    DateTimeOffset OccurredAt,
+    string Details);
 
 public sealed record RecordArrControlledDocumentVersionResponse(
     string VersionId,

@@ -255,19 +255,19 @@ public static class RecordArrIntegrationEndpoints
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived");
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived", request.UpdatedByPersonId);
             return Results.Ok(document);
         }).WithName($"ArchiveRecordArrIntegrationControlledDocument{routePrefix}");
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete");
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete", request.UpdatedByPersonId);
             return Results.Ok(document);
         }).WithName($"ObsoleteRecordArrIntegrationControlledDocument{routePrefix}");
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/supersede", (string controlledDocumentId, WorkspaceEndpoints.SupersedeControlledDocumentRequest request, RecordArrStore store) =>
         {
-            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef);
+            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef, request.SupersededByPersonId);
             return Results.Ok(document);
         }).WithName($"SupersedeRecordArrIntegrationControlledDocument{routePrefix}");
 

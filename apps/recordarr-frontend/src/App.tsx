@@ -1271,6 +1271,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     mutationFn: () =>
       supersedeControlledDocument(accessToken, selectedDocumentId, {
         supersededByDocumentRef: supersedeForm.supersededByDocumentRef,
+        supersededByPersonId: 'person-doc-controller',
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -1619,6 +1620,22 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
                       </div>
                     ))}
                     {!acknowledgementsQuery.data?.length ? <EmptyState title="No acknowledgements yet." /> : null}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Audit trail</h3>
+                  <div className="mt-2 space-y-2">
+                    {(selectedDocument.auditTrail ?? []).slice().reverse().map((entry) => (
+                      <div key={entry.auditTrailEntryId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{entry.action}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{formatDate(entry.occurredAt)}</span>
+                        </div>
+                        <p className="mt-1">{entry.details}</p>
+                        <p className="mt-1 text-xs text-slate-400">Actor: {entry.actorPersonId}</p>
+                      </div>
+                    ))}
+                    {!selectedDocument.auditTrail?.length ? <EmptyState title="No audit entries yet." /> : null}
                   </div>
                 </div>
               </div>

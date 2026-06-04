@@ -244,19 +244,19 @@ public static class WorkspaceEndpoints
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (string controlledDocumentId, UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived");
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived", request.UpdatedByPersonId);
             return Results.Ok(document);
         }).WithName("ArchiveRecordArrControlledDocument");
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (string controlledDocumentId, UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete");
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete", request.UpdatedByPersonId);
             return Results.Ok(document);
         }).WithName("ObsoleteRecordArrControlledDocument");
 
         group.MapPost("/controlled-documents/{controlledDocumentId}/supersede", (string controlledDocumentId, SupersedeControlledDocumentRequest request, RecordArrStore store) =>
         {
-            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef);
+            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef, request.SupersededByPersonId);
             return Results.Ok(document);
         }).WithName("SupersedeRecordArrControlledDocument");
 
@@ -410,7 +410,7 @@ public static class WorkspaceEndpoints
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
     public sealed record UpdateControlledDocumentStatusRequest(string UpdatedByPersonId);
-    public sealed record SupersedeControlledDocumentRequest(string SupersededByDocumentRef);
+    public sealed record SupersedeControlledDocumentRequest(string SupersededByDocumentRef, string SupersededByPersonId);
     public sealed record CreateAccessGrantRequest(string RecordId, string GranteeType, string GranteeRef, string Permission, string GrantedByPersonId, DateTimeOffset? ExpiresAt);
     public sealed record RevokeAccessGrantRequest(string RevokedByPersonId, string? RevokeReason);
     public sealed record CreateDisposalReviewRequest(string RecordId, string RetentionStatusRef, string ProposedAction, string RequestedByPersonId);

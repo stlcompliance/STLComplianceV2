@@ -296,7 +296,27 @@ public sealed class RecordArrStore
                 null,
                 null,
                 true,
-                ["rec-sop-001", "rec-bol-001"]),
+                ["rec-sop-001", "rec-bol-001"],
+                [
+                    new RecordArrAuditTrailEntryResponse(
+                        "aud-001",
+                        "created",
+                        "person-doc-controller",
+                        now.AddDays(-14),
+                        "Controlled document created."),
+                    new RecordArrAuditTrailEntryResponse(
+                        "aud-002",
+                        "version_created",
+                        "person-doc-controller",
+                        now.AddDays(-14),
+                        "Initial version was created."),
+                    new RecordArrAuditTrailEntryResponse(
+                        "aud-003",
+                        "submitted_for_review",
+                        "person-doc-controller",
+                        now.AddDays(-2),
+                        "Review workflow started for the current version.")
+                ]),
         ];
 
         _documentVersions =
@@ -1023,6 +1043,21 @@ public sealed class RecordArrStore
         return updated;
     }
 
+    private void AppendControlledDocumentAuditTrail(string controlledDocumentId, RecordArrAuditTrailEntryResponse entry)
+    {
+        var index = _controlledDocuments.FindIndex(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return;
+        }
+
+        var current = _controlledDocuments[index];
+        _controlledDocuments[index] = current with { AuditTrail = current.AuditTrail.Append(entry).ToArray() };
+    }
+
+    private static RecordArrAuditTrailEntryResponse CreateControlledDocumentAuditTrailEntry(string action, string actorPersonId, string details)
+        => new($"aud-{Guid.NewGuid():N}"[..12], action, actorPersonId, DateTimeOffset.UtcNow, details);
+
     private void EnsureRecordCanBeDisposed(string recordId)
     {
         var activeHold = _legalHolds.FirstOrDefault(hold =>
@@ -1115,6 +1150,12 @@ public sealed class RecordArrStore
                 null,
                 null);
             _documentDistributions.Add(distribution);
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "distributed",
+                    "system",
+                    $"Distributed version {versionId} to {distributionType}:{targetRef}."));
             return distribution;
         }
     }
@@ -1134,6 +1175,12 @@ public sealed class RecordArrStore
                 attestationText,
                 dueAt);
             _documentAcknowledgements.Add(acknowledgement);
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "acknowledgement_requested",
+                    personId,
+                    $"Acknowledgement requested for version {versionId}."));
             return acknowledgement;
         }
     }
@@ -1156,6 +1203,12 @@ public sealed class RecordArrStore
                 SignatureRecordRef = signatureRecordRef ?? current.SignatureRecordRef
             };
             _documentAcknowledgements[index] = updated;
+            AppendControlledDocumentAuditTrail(
+                current.ControlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "acknowledged",
+                    "system",
+                    $"Acknowledgement {acknowledgementId} completed."));
             return updated;
         }
     }
@@ -1298,7 +1351,15 @@ public sealed class RecordArrStore
                 null,
                 null,
                 acknowledgementRequired,
-                Array.Empty<string>());
+                Array.Empty<string>(),
+                [
+                    new RecordArrAuditTrailEntryResponse(
+                        $"aud-{Guid.NewGuid():N}"[..12],
+                        "created",
+                        ownerPersonId,
+                        DateTimeOffset.UtcNow,
+                        "Controlled document created.")
+                ]);
             _controlledDocuments.Add(document);
             return document;
         }
@@ -1326,6 +1387,14 @@ public sealed class RecordArrStore
                 _documentVersions.LastOrDefault()?.VersionId,
                 null);
             _documentVersions.Add(version);
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                new RecordArrAuditTrailEntryResponse(
+                    $"aud-{Guid.NewGuid():N}"[..12],
+                    "version_created",
+                    createdByPersonId,
+                    DateTimeOffset.UtcNow,
+                    $"Created version {version.VersionLabel}."));
             return version;
         }
     }
@@ -1384,11 +1453,20 @@ public sealed class RecordArrStore
                 }
             }
 
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                new RecordArrAuditTrailEntryResponse(
+                    $"aud-{Guid.NewGuid():N}"[..12],
+                    "version_promoted",
+                    approvedByPersonId,
+                    now,
+                    $"Promoted version {promoted.VersionLabel} to effective."));
+
             return promoted;
         }
     }
 
-    public RecordArrControlledDocumentResponse UpdateControlledDocumentStatus(string controlledDocumentId, string status)
+    public RecordArrControlledDocumentResponse UpdateControlledDocumentStatus(string controlledDocumentId, string status, string updatedByPersonId)
     {
         lock (_gate)
         {
@@ -1404,11 +1482,17 @@ public sealed class RecordArrStore
                 NextReviewAt = status is "archived" or "obsolete" ? null : _controlledDocuments[index].NextReviewAt
             };
             _controlledDocuments[index] = updated;
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    status,
+                    updatedByPersonId,
+                    $"Controlled document marked as {status}."));
             return updated;
         }
     }
 
-    public RecordArrControlledDocumentResponse SupersedeControlledDocument(string controlledDocumentId, string supersededByDocumentRef)
+    public RecordArrControlledDocumentResponse SupersedeControlledDocument(string controlledDocumentId, string supersededByDocumentRef, string supersededByPersonId)
     {
         lock (_gate)
         {
@@ -1442,6 +1526,18 @@ public sealed class RecordArrStore
 
             _controlledDocuments[sourceIndex] = updatedSource;
             _controlledDocuments[replacementIndex] = updatedReplacement;
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "superseded",
+                    supersededByPersonId,
+                    $"Superseded by {replacement.ControlledDocumentId}."));
+            AppendControlledDocumentAuditTrail(
+                replacement.ControlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "supersedes",
+                    supersededByPersonId,
+                    $"Supersedes {source.ControlledDocumentId}."));
             return updatedSource;
         }
     }
@@ -1464,6 +1560,12 @@ public sealed class RecordArrStore
                 null,
                 null);
             _documentReviews.Add(review);
+            AppendControlledDocumentAuditTrail(
+                controlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    "review_requested",
+                    requestedByPersonId,
+                    $"Requested {reviewType} review for version {versionId}."));
             return review;
         }
     }
@@ -1487,6 +1589,12 @@ public sealed class RecordArrStore
                 Comments = comments
             };
             _documentReviews[index] = updated;
+            AppendControlledDocumentAuditTrail(
+                current.ControlledDocumentId,
+                CreateControlledDocumentAuditTrailEntry(
+                    status,
+                    current.ReviewerPersonId,
+                    $"Review {reviewId} completed with status {status}."));
             return updated;
         }
     }

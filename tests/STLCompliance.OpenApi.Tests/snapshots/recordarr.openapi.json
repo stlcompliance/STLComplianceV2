@@ -5237,11 +5237,15 @@
       },
       "SupersedeControlledDocumentRequest": {
         "required": [
-          "supersededByDocumentRef"
+          "supersededByDocumentRef",
+          "supersededByPersonId"
         ],
         "type": "object",
         "properties": {
           "supersededByDocumentRef": {
+            "type": "string"
+          },
+          "supersededByPersonId": {
             "type": "string"
           }
         }
