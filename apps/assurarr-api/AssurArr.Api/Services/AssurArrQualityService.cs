@@ -1083,6 +1083,19 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(entity.Status, request.Status, NonconformanceTransitions, "nonconformance");
         entity.Status = Normalize(request.Status, entity.Status);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "action_plan", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.root_cause_completed", entity.Title, cancellationToken);
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.action_plan_created", entity.Title, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "verification", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.verification_started", entity.Title, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.closed", entity.Title, cancellationToken);
+        }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
@@ -1419,6 +1432,19 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(entity.Status, request.Status, CapaTransitions, "CAPA");
         entity.Status = Normalize(request.Status, entity.Status);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(entity.Status, "action_plan", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.root_cause_completed", entity.Title, cancellationToken);
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.action_plan_created", entity.Title, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "verification", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.verification_started", entity.Title, cancellationToken);
+        }
+        else if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            await AddTimelineAsync("capa", entity.Id, "assurarr.capa.closed", entity.Title, cancellationToken);
+        }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
@@ -1722,6 +1748,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             capa.ClosedAt = entity.UpdatedAt;
             capa.ClosureSummary = entity.ResultSummary ?? capa.ClosureSummary;
             await AddTimelineAsync("capa", capaId, "assurarr.capa.verified_effective", entity.ResultSummary ?? entity.Number, cancellationToken);
+            await AddTimelineAsync("capa", capaId, "assurarr.capa.closed", entity.ResultSummary ?? entity.Number, cancellationToken);
         }
         else if (string.Equals(entity.Status, "ineffective", StringComparison.OrdinalIgnoreCase))
         {

@@ -630,6 +630,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         Assert.Equal(HttpStatusCode.OK, capaActionPlanResponse.StatusCode);
 
+        var capaActionPlanDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        capaActionPlanDashboardResponse.EnsureSuccessStatusCode();
+        var capaActionPlanDashboard = await capaActionPlanDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(capaActionPlanDashboard);
+        Assert.Contains(capaActionPlanDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.root_cause_completed");
+        Assert.Contains(capaActionPlanDashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.action_plan_created");
+
         var capaImplementationResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/capas/{capa.Id}/status",
             new UpdateAssurArrStatusRequest("implementation", "Actions in progress."));
@@ -660,6 +667,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var verification = await verificationResponse.Content.ReadFromJsonAsync<AssurArrVerificationPlanResponse>();
         Assert.NotNull(verification);
         Assert.Equal(verificationTitle, verification!.Title);
+
+        var capaVerificationDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        capaVerificationDashboardResponse.EnsureSuccessStatusCode();
+        var capaVerificationDashboard = await capaVerificationDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(capaVerificationDashboard);
+        Assert.Contains(capaVerificationDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.verification_started");
 
         var actionListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions");
         actionListResponse.EnsureSuccessStatusCode();
@@ -719,6 +732,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(capaAfterEffectiveness);
         Assert.Equal("closed", capaAfterEffectiveness!.Status);
         Assert.Contains(capaAfterEffectiveness.EffectivenessVerificationRefs, reference => reference == effectiveness.Number);
+
+        var capaClosedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        capaClosedDashboardResponse.EnsureSuccessStatusCode();
+        var capaClosedDashboard = await capaClosedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(capaClosedDashboard);
+        Assert.Contains(capaClosedDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.verified_effective");
+        Assert.Contains(capaClosedDashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.closed");
     }
 
     [Fact]
