@@ -978,4 +978,70 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(statuses);
         Assert.Contains(statuses!, item => item.TargetProduct == targetProduct);
     }
+
+    [Fact]
+    public async Task Can_create_scorecard_metrics_and_read_scorecard_detail()
+    {
+        var targetRef = $"loadarr:site:{Guid.NewGuid():N}";
+        var scorecardTitle = $"Test scorecard {Guid.NewGuid():N}";
+
+        var scorecardResponse = await _client.PostAsJsonAsync(
+            "/api/v1/scorecards",
+            new CreateAssurArrQualityScorecardRequest(
+                "site",
+                targetRef,
+                DateTimeOffset.UtcNow.AddDays(-7),
+                DateTimeOffset.UtcNow,
+                92,
+                "acceptable",
+                "stable",
+                scorecardTitle,
+                "Automated coverage for quality scorecards.",
+                "low",
+                "assurarr",
+                targetRef,
+                [$"{targetRef}"],
+                null,
+                []));
+
+        Assert.Equal(HttpStatusCode.OK, scorecardResponse.StatusCode);
+        var scorecard = await scorecardResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(scorecard);
+        Assert.Equal(scorecardTitle, scorecard!.Title);
+
+        var metricKey = $"metric-{Guid.NewGuid():N}";
+        var metricResponse = await _client.PostAsJsonAsync(
+            $"/api/v1/scorecards/{scorecard.Id}/metrics",
+            new CreateAssurArrQualityMetricRequest(
+                metricKey,
+                "Open nonconformance count",
+                "Count of nonconformances that are not closed or canceled.",
+                "nonconformance",
+                3,
+                3,
+                0,
+                "count",
+                0,
+                2,
+                5,
+                "warning",
+                ["assurarr", "loadarr"]));
+
+        Assert.Equal(HttpStatusCode.OK, metricResponse.StatusCode);
+        var metric = await metricResponse.Content.ReadFromJsonAsync<AssurArrQualityMetricResponse>();
+        Assert.NotNull(metric);
+        Assert.Equal(metricKey, metric!.MetricKey);
+
+        var detailResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}");
+        Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
+        var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(detail);
+        Assert.Contains(metricKey, detail!.MetricRefs);
+
+        var metricListResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}/metrics");
+        metricListResponse.EnsureSuccessStatusCode();
+        var metrics = await metricListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
+        Assert.NotNull(metrics);
+        Assert.Contains(metrics!, item => item.MetricKey == metricKey);
+    }
 }

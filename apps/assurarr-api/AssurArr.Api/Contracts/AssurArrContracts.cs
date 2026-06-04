@@ -589,6 +589,40 @@ public sealed record AssurArrQualityScorecardResponse(
     DateTimeOffset? ReviewedAt,
     IReadOnlyList<string> MetricRefs);
 
+public sealed record AssurArrQualityMetricResponse(
+    Guid Id,
+    Guid ScorecardId,
+    string MetricKey,
+    string Title,
+    string Description,
+    string Category,
+    decimal? Value,
+    decimal? Numerator,
+    decimal? Denominator,
+    string? Unit,
+    decimal? TargetValue,
+    decimal? WarningThreshold,
+    decimal? CriticalThreshold,
+    string Status,
+    IReadOnlyList<string> SourceProductRefs,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAssurArrQualityMetricRequest(
+    string MetricKey,
+    string Title,
+    string Description,
+    string Category,
+    decimal? Value,
+    decimal? Numerator,
+    decimal? Denominator,
+    string? Unit,
+    decimal? TargetValue,
+    decimal? WarningThreshold,
+    decimal? CriticalThreshold,
+    string Status,
+    string[] SourceProductRefs);
+
 public sealed record AssurArrQualityReviewResponse(
     Guid Id,
     string Number,

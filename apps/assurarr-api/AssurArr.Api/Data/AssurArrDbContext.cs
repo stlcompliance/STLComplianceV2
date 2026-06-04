@@ -20,6 +20,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrRootCauseAnalysis> RootCauseAnalyses => Set<AssurArrRootCauseAnalysis>();
     public DbSet<AssurArrQualityStatusSnapshot> QualityStatusSnapshots => Set<AssurArrQualityStatusSnapshot>();
     public DbSet<AssurArrQualityScorecard> QualityScorecards => Set<AssurArrQualityScorecard>();
+    public DbSet<AssurArrQualityMetric> QualityMetrics => Set<AssurArrQualityMetric>();
     public DbSet<AssurArrQualityReview> QualityReviews => Set<AssurArrQualityReview>();
     public DbSet<AssurArrQualityRelease> QualityReleases => Set<AssurArrQualityRelease>();
     public DbSet<AssurArrContainmentAction> ContainmentActions => Set<AssurArrContainmentAction>();
@@ -47,6 +48,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureRootCauseAnalysis(modelBuilder);
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
+        ConfigureMetric(modelBuilder);
         ConfigureReview(modelBuilder);
         ConfigureRelease(modelBuilder);
         ConfigureContainmentAction(modelBuilder);
@@ -216,6 +218,34 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureMetric(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityMetric>(entity =>
+        {
+            entity.ToTable("assurarr_quality_metrics");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.ScorecardId).IsRequired();
+            entity.Property(x => x.MetricKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Value).HasPrecision(18, 4);
+            entity.Property(x => x.Numerator).HasPrecision(18, 4);
+            entity.Property(x => x.Denominator).HasPrecision(18, 4);
+            entity.Property(x => x.Unit).HasMaxLength(64);
+            entity.Property(x => x.TargetValue).HasPrecision(18, 4);
+            entity.Property(x => x.WarningThreshold).HasPrecision(18, 4);
+            entity.Property(x => x.CriticalThreshold).HasPrecision(18, 4);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProductRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ScorecardId });
+            entity.HasIndex(x => new { x.TenantId, x.MetricKey });
         });
     }
 

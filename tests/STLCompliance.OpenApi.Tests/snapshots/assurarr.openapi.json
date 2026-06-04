@@ -2143,6 +2143,86 @@
         }
       }
     },
+    "/api/v1/scorecards/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrQualityScorecard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorecards/{scorecardId}/metrics": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "ListAssurArrQualityMetrics",
+        "parameters": [
+          {
+            "name": "scorecardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "CreateAssurArrQualityMetric",
+        "parameters": [
+          {
+            "name": "scorecardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityMetricRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/status-snapshots": {
       "get": {
         "tags": [
@@ -3405,6 +3485,107 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateAssurArrQualityMetricRequest": {
+        "required": [
+          "metricKey",
+          "title",
+          "description",
+          "category",
+          "value",
+          "numerator",
+          "denominator",
+          "unit",
+          "targetValue",
+          "warningThreshold",
+          "criticalThreshold",
+          "status",
+          "sourceProductRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "metricKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "numerator": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "denominator": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "warningThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "criticalThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sourceProductRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

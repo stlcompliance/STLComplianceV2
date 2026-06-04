@@ -377,6 +377,28 @@ public sealed class AssurArrQualityScorecard
     public string[] MetricRefs { get; set; } = [];
 }
 
+public sealed class AssurArrQualityMetric
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid ScorecardId { get; set; }
+    public string MetricKey { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Category { get; set; } = "other";
+    public decimal? Value { get; set; }
+    public decimal? Numerator { get; set; }
+    public decimal? Denominator { get; set; }
+    public string? Unit { get; set; }
+    public decimal? TargetValue { get; set; }
+    public decimal? WarningThreshold { get; set; }
+    public decimal? CriticalThreshold { get; set; }
+    public string Status { get; set; } = "unknown";
+    public string[] SourceProductRefs { get; set; } = [];
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
 public sealed class AssurArrQualityReview
 {
     public Guid Id { get; set; }

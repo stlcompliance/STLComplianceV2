@@ -302,6 +302,26 @@ export type Scorecard = ListItem & {
   metricRefs: string[]
 }
 
+export type QualityMetric = {
+  id: string
+  scorecardId: string
+  metricKey: string
+  title: string
+  description: string
+  category: string
+  value: number | null
+  numerator: number | null
+  denominator: number | null
+  unit: string | null
+  targetValue: number | null
+  warningThreshold: number | null
+  criticalThreshold: number | null
+  status: string
+  sourceProductRefs: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export type QualityReview = ListItem & {
   reviewType: string
   sourceReviewRef: string | null
@@ -721,12 +741,19 @@ export const assurarrApi = {
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
     }),
   listScorecards: () => getJson<Scorecard[]>('/api/v1/scorecards'),
+  getScorecard: (id: string) => getJson<Scorecard>(`/api/v1/scorecards/${id}`),
   createScorecard: (body: CreateBase & { targetType: string; targetRef: string; periodStart: string; periodEnd: string; overallScore?: number; qualityStatus: string; trend: string; metricRefs?: string[] }) =>
     sendJson<Scorecard>('/api/v1/scorecards', 'POST', {
       ...body,
       periodStart: new Date(body.periodStart).toISOString(),
       periodEnd: new Date(body.periodEnd).toISOString(),
       metricRefs: body.metricRefs ?? [],
+    }),
+  listQualityMetrics: (scorecardId: string) => getJson<QualityMetric[]>(`/api/v1/scorecards/${scorecardId}/metrics`),
+  createQualityMetric: (scorecardId: string, body: { metricKey: string; title: string; description: string; category: string; value?: number | null; numerator?: number | null; denominator?: number | null; unit?: string | null; targetValue?: number | null; warningThreshold?: number | null; criticalThreshold?: number | null; status: string; sourceProductRefs?: string[] }) =>
+    sendJson<QualityMetric>(`/api/v1/scorecards/${scorecardId}/metrics`, 'POST', {
+      ...body,
+      sourceProductRefs: body.sourceProductRefs ?? [],
     }),
   listQualityReviews: () => getJson<QualityReview[]>('/api/v1/integrations/quality-reviews'),
   getQualityReview: (id: string) => getJson<QualityReview>(`/api/v1/integrations/quality-reviews/${id}`),

@@ -4188,10 +4188,182 @@ function ScorecardPage() {
         <EntityTable
           items={query.data}
           emptyLabel="No scorecards yet."
+          detailBasePath="/scorecards"
         />
       ) : (
         <LoadingCard label="Loading scorecards" />
       )}
+    </div>
+  )
+}
+
+function ScorecardDetailPage() {
+  const { id = '' } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
+  const scorecardQuery = useRecords(['assurarr', 'scorecard', id], () => assurarrApi.getScorecard(id))
+  const metricsQuery = useRecords(['assurarr', 'scorecard-metrics', id], () => assurarrApi.listQualityMetrics(id))
+  const [metricForm, setMetricForm] = useState({
+    metricKey: 'open-nonconformance-count',
+    title: 'Open nonconformance count',
+    description: 'Count of open quality issues that are not closed or canceled.',
+    category: 'nonconformance',
+    value: '0',
+    numerator: '0',
+    denominator: '0',
+    unit: 'count',
+    targetValue: '0',
+    warningThreshold: '2',
+    criticalThreshold: '5',
+    status: 'warning',
+    sourceProductRefs: 'assurarr, loadarr',
+  })
+  const createMetricMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.createQualityMetric(id, {
+        title: metricForm.title,
+        description: metricForm.description,
+        metricKey: metricForm.metricKey,
+        category: metricForm.category,
+        value: metricForm.value ? Number(metricForm.value) : null,
+        numerator: metricForm.numerator ? Number(metricForm.numerator) : null,
+        denominator: metricForm.denominator ? Number(metricForm.denominator) : null,
+        unit: metricForm.unit,
+        targetValue: metricForm.targetValue ? Number(metricForm.targetValue) : null,
+        warningThreshold: metricForm.warningThreshold ? Number(metricForm.warningThreshold) : null,
+        criticalThreshold: metricForm.criticalThreshold ? Number(metricForm.criticalThreshold) : null,
+        status: metricForm.status,
+        sourceProductRefs: joinRefs(metricForm.sourceProductRefs),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setMetricForm({
+        metricKey: '',
+        title: '',
+        description: '',
+        category: 'nonconformance',
+        value: '',
+        numerator: '',
+        denominator: '',
+        unit: '',
+        targetValue: '',
+        warningThreshold: '',
+        criticalThreshold: '',
+        status: 'unknown',
+        sourceProductRefs: '',
+      })
+    },
+  })
+
+  if (scorecardQuery.isLoading || metricsQuery.isLoading) {
+    return <LoadingCard label="Loading scorecard detail" />
+  }
+
+  if (!scorecardQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Scorecard detail" description="Could not load the requested scorecard." />
+      </div>
+    )
+  }
+
+  const scorecard = scorecardQuery.data
+  const metrics = metricsQuery.data ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={scorecard.number}
+        description={scorecard.title}
+        action={<span className="assurarr-pill">{scorecard.qualityStatus} · {scorecard.trend}</span>}
+      />
+      <div className="assurarr-grid cols-2">
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Overview</p>
+            <div className="space-y-2 text-sm text-slate-300">
+              <div><span className="text-slate-500">Target:</span> {scorecard.targetType} · {scorecard.targetRef}</div>
+              <div><span className="text-slate-500">Period:</span> {new Date(scorecard.periodStart).toLocaleDateString()} to {new Date(scorecard.periodEnd).toLocaleDateString()}</div>
+              <div><span className="text-slate-500">Score:</span> {scorecard.overallScore ?? 'n/a'}</div>
+              <div><span className="text-slate-500">Generated:</span> {new Date(scorecard.generatedAt).toLocaleString()}</div>
+              <div><span className="text-slate-500">Metric refs:</span> {scorecard.metricRefs.length ? scorecard.metricRefs.join(', ') : 'none'}</div>
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="assurarr-label">Create metric</p>
+              <span className="assurarr-pill">{metrics.length} metrics</span>
+            </div>
+            <div className="assurarr-grid cols-2">
+              <input className="assurarr-input" value={metricForm.metricKey} onChange={(event) => setMetricForm({ ...metricForm, metricKey: event.target.value })} placeholder="open-nonconformance-count" />
+              <input className="assurarr-input" value={metricForm.title} onChange={(event) => setMetricForm({ ...metricForm, title: event.target.value })} placeholder="Open nonconformance count" />
+              <textarea className="assurarr-textarea" value={metricForm.description} onChange={(event) => setMetricForm({ ...metricForm, description: event.target.value })} placeholder="Explain the metric and what it measures." />
+              <select className="assurarr-select" value={metricForm.category} onChange={(event) => setMetricForm({ ...metricForm, category: event.target.value })}>
+                <option value="nonconformance">Nonconformance</option>
+                <option value="hold">Hold</option>
+                <option value="capa">CAPA</option>
+                <option value="audit">Audit</option>
+                <option value="supplier">Supplier</option>
+                <option value="customer">Customer</option>
+                <option value="delivery">Delivery</option>
+                <option value="inventory">Inventory</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="documentation">Documentation</option>
+              </select>
+              <input className="assurarr-input" value={metricForm.value} onChange={(event) => setMetricForm({ ...metricForm, value: event.target.value })} placeholder="0" />
+              <input className="assurarr-input" value={metricForm.unit} onChange={(event) => setMetricForm({ ...metricForm, unit: event.target.value })} placeholder="count" />
+              <input className="assurarr-input" value={metricForm.numerator} onChange={(event) => setMetricForm({ ...metricForm, numerator: event.target.value })} placeholder="0" />
+              <input className="assurarr-input" value={metricForm.denominator} onChange={(event) => setMetricForm({ ...metricForm, denominator: event.target.value })} placeholder="0" />
+              <input className="assurarr-input" value={metricForm.targetValue} onChange={(event) => setMetricForm({ ...metricForm, targetValue: event.target.value })} placeholder="0" />
+              <input className="assurarr-input" value={metricForm.warningThreshold} onChange={(event) => setMetricForm({ ...metricForm, warningThreshold: event.target.value })} placeholder="2" />
+              <input className="assurarr-input" value={metricForm.criticalThreshold} onChange={(event) => setMetricForm({ ...metricForm, criticalThreshold: event.target.value })} placeholder="5" />
+              <select className="assurarr-select" value={metricForm.status} onChange={(event) => setMetricForm({ ...metricForm, status: event.target.value })}>
+                <option value="good">Good</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+                <option value="unknown">Unknown</option>
+              </select>
+              <textarea className="assurarr-textarea" value={metricForm.sourceProductRefs} onChange={(event) => setMetricForm({ ...metricForm, sourceProductRefs: event.target.value })} placeholder="One product ref per line or comma-separated" />
+            </div>
+            <button className="assurarr-button" type="button" onClick={() => createMetricMutation.mutate()} disabled={createMetricMutation.isPending}>
+              {createMetricMutation.isPending ? 'Saving...' : 'Create metric'}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="assurarr-card mt-6">
+        <div className="assurarr-card-inner space-y-3">
+          <p className="assurarr-label">Metrics</p>
+          {metrics.length ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {metrics.map((metric) => (
+                <div key={metric.id} className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-50">{metric.metricKey}</strong>
+                    <span className="assurarr-pill">{metric.status}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">{metric.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">{metric.description}</p>
+                  <div className="mt-3 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
+                    <div>Category: {metric.category}</div>
+                    <div>Value: {metric.value ?? 'n/a'} {metric.unit ?? ''}</div>
+                    <div>Numerator: {metric.numerator ?? 'n/a'}</div>
+                    <div>Denominator: {metric.denominator ?? 'n/a'}</div>
+                    <div>Target: {metric.targetValue ?? 'n/a'}</div>
+                    <div>Thresholds: {metric.warningThreshold ?? 'n/a'} / {metric.criticalThreshold ?? 'n/a'}</div>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-400">
+                    Source refs: {metric.sourceProductRefs.length ? metric.sourceProductRefs.join(', ') : 'none'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No metrics yet." />
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -4292,6 +4464,7 @@ export function App() {
         <Route path="/complaints/:id" element={<CustomerComplaintDetailPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
+        <Route path="/scorecards/:id" element={<ScorecardDetailPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

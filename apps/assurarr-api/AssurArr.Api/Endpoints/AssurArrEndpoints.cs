@@ -208,9 +208,23 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListScorecardsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityScorecards");
 
+        group.MapGet("/scorecards/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetScorecardAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityScorecard");
+
         group.MapPost("/scorecards", async (CreateAssurArrQualityScorecardRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateScorecardAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityScorecard");
+
+        group.MapGet("/scorecards/{scorecardId:guid}/metrics", async (Guid scorecardId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListQualityMetricsAsync(scorecardId, cancellationToken)))
+            .WithName("ListAssurArrQualityMetrics");
+
+        group.MapPost("/scorecards/{scorecardId:guid}/metrics", async (Guid scorecardId, CreateAssurArrQualityMetricRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateQualityMetricAsync(scorecardId, request, cancellationToken)))
+            .WithName("CreateAssurArrQualityMetric");
 
         group.MapGet("/history", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))

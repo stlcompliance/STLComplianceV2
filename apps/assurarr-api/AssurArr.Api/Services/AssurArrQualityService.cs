@@ -581,8 +581,55 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             GeneratedBy = "system",
             ReviewedByPersonId = null,
             ReviewedAt = null,
-            MetricRefs = ["metric:open-nc-count", "metric:hold-aging"],
+            MetricRefs = ["MET-000001", "MET-000002"],
         });
+
+        db.QualityMetrics.AddRange(
+            new AssurArrQualityMetric
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                ScorecardId = db.QualityScorecards.Local.Single(x => x.Number == "SCORE-000001").Id,
+                MetricKey = "open-nonconformance-count",
+                Title = "Open nonconformance count",
+                Description = "Count of nonconformances that are not closed or canceled.",
+                Category = "nonconformance",
+                Value = 4,
+                Numerator = 4,
+                Denominator = 0,
+                Unit = "count",
+                TargetValue = 0,
+                WarningThreshold = 2,
+                CriticalThreshold = 5,
+                Status = "warning",
+                SourceProductRefs = ["assurarr", "loadarr"],
+                CreatedAt = now,
+                UpdatedAt = now,
+            },
+            new AssurArrQualityMetric
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                ScorecardId = db.QualityScorecards.Local.Single(x => x.Number == "SCORE-000001").Id,
+                MetricKey = "hold-aging-hours",
+                Title = "Hold aging",
+                Description = "Average time active holds remain open before release.",
+                Category = "hold",
+                Value = 18.5m,
+                Numerator = 37,
+                Denominator = 2,
+                Unit = "hours",
+                TargetValue = 8,
+                WarningThreshold = 12,
+                CriticalThreshold = 24,
+                Status = "critical",
+                SourceProductRefs = ["assurarr", "loadarr"],
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+        var seededScorecard = db.QualityScorecards.Local.Single(x => x.Number == "SCORE-000001");
+        seededScorecard.MetricRefs = ["MET-000001", "MET-000002"];
 
         db.QualityReviews.Add(new AssurArrQualityReview
         {
@@ -2449,6 +2496,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToScorecardResponse).ToList();
     }
 
+    public async Task<AssurArrQualityScorecardResponse?> GetScorecardAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityScorecards.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToScorecardResponse(entity)
+            : null;
+
     public async Task<AssurArrQualityScorecardResponse> CreateScorecardAsync(CreateAssurArrQualityScorecardRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -2484,6 +2536,60 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("scorecard", entity.Id, "assurarr.scorecard.generated", entity.TargetRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToScorecardResponse(entity);
+    }
+
+    public async Task<List<AssurArrQualityMetricResponse>> ListQualityMetricsAsync(Guid scorecardId, CancellationToken cancellationToken = default)
+    {
+        var entities = await db.QualityMetrics
+            .AsNoTracking()
+            .Where(x => x.ScorecardId == scorecardId)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(ToMetricResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityMetricResponse> CreateQualityMetricAsync(Guid scorecardId, CreateAssurArrQualityMetricRequest request, CancellationToken cancellationToken = default)
+    {
+        var scorecard = await db.QualityScorecards.FirstOrDefaultAsync(x => x.Id == scorecardId, cancellationToken);
+        if (scorecard is null)
+        {
+            throw new InvalidOperationException($"Scorecard '{scorecardId}' was not found.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new AssurArrQualityMetric
+        {
+            Id = Guid.NewGuid(),
+            TenantId = DefaultTenantId,
+            ScorecardId = scorecardId,
+            MetricKey = request.MetricKey.Trim(),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Category = Normalize(request.Category, "other"),
+            Value = request.Value,
+            Numerator = request.Numerator,
+            Denominator = request.Denominator,
+            Unit = NormalizeNullable(request.Unit),
+            TargetValue = request.TargetValue,
+            WarningThreshold = request.WarningThreshold,
+            CriticalThreshold = request.CriticalThreshold,
+            Status = Normalize(request.Status, "unknown"),
+            SourceProductRefs = request.SourceProductRefs ?? [],
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.QualityMetrics.Add(entity);
+        if (!scorecard.MetricRefs.Contains(request.MetricKey.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            scorecard.MetricRefs = scorecard.MetricRefs.Append(request.MetricKey.Trim()).ToArray();
+            scorecard.UpdatedAt = now;
+        }
+
+        await AddTimelineAsync("scorecard", scorecardId, "assurarr.metric.calculated", entity.MetricKey, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToMetricResponse(entity);
     }
 
     public async Task AddTimelineAsync(string subjectType, Guid subjectId, string eventType, string? details, CancellationToken cancellationToken = default)
@@ -3135,4 +3241,24 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReviewedByPersonId,
             entity.ReviewedAt,
             entity.MetricRefs);
+
+    private static AssurArrQualityMetricResponse ToMetricResponse(AssurArrQualityMetric entity) =>
+        new(
+            entity.Id,
+            entity.ScorecardId,
+            entity.MetricKey,
+            entity.Title,
+            entity.Description,
+            entity.Category,
+            entity.Value,
+            entity.Numerator,
+            entity.Denominator,
+            entity.Unit,
+            entity.TargetValue,
+            entity.WarningThreshold,
+            entity.CriticalThreshold,
+            entity.Status,
+            entity.SourceProductRefs,
+            entity.CreatedAt,
+            entity.UpdatedAt);
 }
