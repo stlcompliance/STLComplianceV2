@@ -124,6 +124,20 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string PmPlanActivated = "pm_plan.activated";
 
+    public const string PmOccurrenceCreated = "pm_occurrence.created";
+
+    public const string PmOccurrenceDue = "pm_occurrence.due";
+
+    public const string PmOccurrenceOverdue = "pm_occurrence.overdue";
+
+    public const string PmOccurrenceWorkOrderGenerated = "pm_occurrence.work_order_generated";
+
+    public const string PmOccurrenceInspectionGenerated = "pm_occurrence.inspection_generated";
+
+    public const string PmOccurrenceCompleted = "pm_occurrence.completed";
+
+    public const string PmOccurrenceSkipped = "pm_occurrence.skipped";
+
     public const string MeterReadingRecorded = "meter_reading.recorded";
 
     public const string MeterReadingRejected = "meter_reading.rejected";
@@ -140,6 +154,8 @@ public static class MaintenancePlatformEventRelatedEntityTypes
     public const string WorkOrder = "work_order";
 
     public const string PmSchedule = "pm_schedule";
+
+    public const string PmOccurrence = "pm_occurrence";
 
     public const string MeterReading = "meter_reading";
 }

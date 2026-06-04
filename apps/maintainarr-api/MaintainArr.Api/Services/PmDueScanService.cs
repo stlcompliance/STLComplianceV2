@@ -307,6 +307,7 @@ public sealed class PmDueScanService(
             entity.NextDueAt,
             asOfUtc,
             overdueGraceDays);
+        var previousDueStatus = entity.DueStatus;
 
         if (string.Equals(targetDueStatus, entity.DueStatus, StringComparison.OrdinalIgnoreCase))
         {
@@ -341,6 +342,12 @@ public sealed class PmDueScanService(
         }
 
         await EnqueuePmDuePlatformEventAsync(entity, targetDueStatus, asOfUtc, cancellationToken);
+        await EnqueuePmOccurrenceEventsAsync(
+            entity,
+            previousDueStatus,
+            targetDueStatus,
+            asOfUtc,
+            cancellationToken);
 
         return targetDueStatus;
     }
@@ -379,6 +386,61 @@ public sealed class PmDueScanService(
             WorkerActorUserId,
             occurredAt,
             $"PM schedule {schedule.ScheduleKey} changed to {targetDueStatus} for asset {asset.AssetTag}.",
+            eventResult: targetDueStatus,
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task EnqueuePmOccurrenceEventsAsync(
+        PmSchedule schedule,
+        string previousDueStatus,
+        string targetDueStatus,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == schedule.TenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        if (string.Equals(previousDueStatus, PmDueStatuses.Scheduled, StringComparison.OrdinalIgnoreCase)
+            && (string.Equals(targetDueStatus, PmDueStatuses.Due, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(targetDueStatus, PmDueStatuses.Overdue, StringComparison.OrdinalIgnoreCase)))
+        {
+            await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
+                schedule.TenantId,
+                MaintenancePlatformOutboxEventKinds.PmOccurrenceCreated,
+                schedule,
+                asset,
+                WorkerActorUserId,
+                occurredAt,
+                $"PM occurrence created for schedule {schedule.ScheduleKey} on asset {asset.AssetTag}.",
+                eventResult: targetDueStatus,
+                cancellationToken: cancellationToken);
+        }
+
+        var occurrenceEventKind = targetDueStatus switch
+        {
+            PmDueStatuses.Due => MaintenancePlatformOutboxEventKinds.PmOccurrenceDue,
+            PmDueStatuses.Overdue => MaintenancePlatformOutboxEventKinds.PmOccurrenceOverdue,
+            _ => null,
+        };
+
+        if (occurrenceEventKind is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
+            schedule.TenantId,
+            occurrenceEventKind,
+            schedule,
+            asset,
+            WorkerActorUserId,
+            occurredAt,
+            $"PM occurrence {schedule.ScheduleKey} changed to {targetDueStatus} for asset {asset.AssetTag}.",
             eventResult: targetDueStatus,
             cancellationToken: cancellationToken);
     }

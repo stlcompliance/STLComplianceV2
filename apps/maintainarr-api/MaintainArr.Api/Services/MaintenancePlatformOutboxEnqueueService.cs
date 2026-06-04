@@ -297,6 +297,57 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
             cancellationToken);
     }
 
+    public async Task<Guid?> TryEnqueuePmOccurrenceEventAsync(
+        Guid tenantId,
+        string eventKind,
+        PmSchedule schedule,
+        Asset asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        string? idempotencyDiscriminator = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var payload = BuildEntityPayload(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.PmOccurrence,
+            schedule.Id,
+            eventResult,
+            actorUserId);
+
+        var idempotencyKey = string.IsNullOrWhiteSpace(idempotencyDiscriminator)
+            ? MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.PmOccurrence,
+                schedule.Id)
+            : MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.PmOccurrence,
+                schedule.Id,
+                idempotencyDiscriminator);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.PmOccurrence,
+            schedule.Id,
+            idempotencyKey,
+            payload,
+            cancellationToken);
+    }
+
     public async Task<Guid?> TryEnqueueMeterReadingEventAsync(
         Guid tenantId,
         string eventKind,

@@ -372,6 +372,14 @@ public sealed class WorkOrderService(
             emitAssigned: false,
             cancellationToken);
 
+        await EnqueuePmOccurrenceGeneratedEventAsync(
+            schedule.TenantId,
+            actorUserId,
+            schedule.Id,
+            entity,
+            now,
+            cancellationToken);
+
         await discussionService.RecordTimelineEventAsync(
             schedule.TenantId,
             entity.Id,
@@ -619,6 +627,18 @@ public sealed class WorkOrderService(
             normalized,
             now,
             cancellationToken);
+
+        if (string.Equals(normalized, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+            && workOrder.PmScheduleId.HasValue)
+        {
+            await EnqueuePmOccurrenceCompletedEventAsync(
+                tenantId,
+                actorUserId,
+                workOrder.PmScheduleId.Value,
+                workOrder,
+                now,
+                cancellationToken);
+        }
 
         await discussionService.RecordTimelineEventAsync(
             tenantId,
@@ -964,6 +984,110 @@ public sealed class WorkOrderService(
             $"Work order {workOrder.WorkOrderNumber} changed to {status} for asset {asset.AssetTag}.",
             eventResult: status,
             cancellationToken: cancellationToken);
+    }
+
+    private async Task EnqueuePmOccurrenceGeneratedEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid pmScheduleId,
+        WorkOrder workOrder,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var schedule = await db.PmSchedules
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == pmScheduleId, cancellationToken);
+        if (schedule is null)
+        {
+            return;
+        }
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.PmOccurrenceWorkOrderGenerated,
+            schedule,
+            asset,
+            actorUserId,
+            occurredAt,
+            $"PM occurrence {schedule.ScheduleKey} generated work order {workOrder.WorkOrderNumber} for asset {asset.AssetTag}.",
+            eventResult: workOrder.Id.ToString("D"),
+            idempotencyDiscriminator: workOrder.Id.ToString("D"),
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task EnqueuePmOccurrenceCompletedEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid pmScheduleId,
+        WorkOrder workOrder,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var schedule = await db.PmSchedules
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == pmScheduleId, cancellationToken);
+        if (schedule is null)
+        {
+            return;
+        }
+
+        var previousDueStatus = schedule.DueStatus;
+        schedule.LastCompletedAt = occurredAt;
+        schedule.DueStatus = PmDueStatuses.Completed;
+        schedule.UpdatedAt = occurredAt;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmOccurrenceEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.PmOccurrenceCompleted,
+            schedule,
+            asset,
+            actorUserId,
+            occurredAt,
+            $"PM occurrence {schedule.ScheduleKey} completed via work order {workOrder.WorkOrderNumber} for asset {asset.AssetTag}.",
+            eventResult: workOrder.Status,
+            idempotencyDiscriminator: workOrder.Id.ToString("D"),
+            cancellationToken: cancellationToken);
+
+        if (!string.Equals(previousDueStatus, PmDueStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            await discussionService.RecordTimelineEventAsync(
+                tenantId,
+                workOrder.Id,
+                "maintainarr.pm_occurrence.completed",
+                occurredAt,
+                null,
+                null,
+                $"PM occurrence {schedule.ScheduleKey} completed.",
+                "maintainarr",
+                schedule.Id.ToString("D"),
+                null,
+                JsonSerializer.Serialize(new
+                {
+                    schedule.Id,
+                    schedule.ScheduleKey,
+                    schedule.Name,
+                    schedule.AssetId,
+                    schedule.DueStatus,
+                    schedule.LastCompletedAt,
+                }),
+                cancellationToken);
+        }
     }
 
     private async Task EnsureComplianceCoreAllowsStatusTransitionAsync(

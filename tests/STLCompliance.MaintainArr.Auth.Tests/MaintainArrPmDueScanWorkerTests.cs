@@ -10,6 +10,8 @@ using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
+using static MaintainArr.Api.Entities.MaintenancePlatformEventRelatedEntityTypes;
+using static MaintainArr.Api.Entities.MaintenancePlatformOutboxEventKinds;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
@@ -222,14 +224,22 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
             .ToListAsync();
         Assert.Contains(outbox, x =>
-            x.EventKind == MaintenancePlatformOutboxEventKinds.PmDue
+            x.EventKind == PmOccurrenceCreated
+            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityId == schedule.Id);
+        Assert.Contains(outbox, x =>
+            x.EventKind == PmDue
             && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmSchedule
             && x.RelatedEntityId == schedule.Id
             && x.ProcessingStatus == MaintenancePlatformEventStatuses.Processed);
         Assert.Contains(outbox, x =>
-            x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderCreated
+            x.EventKind == WorkOrderCreated
             && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.WorkOrder
             && x.RelatedEntityId == workOrder.Id);
+        Assert.Contains(outbox, x =>
+            x.EventKind == PmOccurrenceWorkOrderGenerated
+            && x.RelatedEntityType == PmOccurrence
+            && x.RelatedEntityId == schedule.Id);
     }
 
     [Fact]
@@ -260,7 +270,9 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
                 && x.RelatedEntityId == schedule.Id)
             .ToListAsync();
 
-        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.PmOverdue);
+        Assert.Contains(outbox, x => x.EventKind == PmOccurrenceCreated);
+        Assert.Contains(outbox, x => x.EventKind == PmOverdue);
+        Assert.Contains(outbox, x => x.EventKind == PmOccurrenceOverdue);
         Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
     }
 
@@ -302,7 +314,24 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
 
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var workOrder = await db.WorkOrders.SingleAsync(x => x.PmScheduleId == schedule.Id);
         Assert.Equal(1, await db.WorkOrders.CountAsync(x => x.PmScheduleId == schedule.Id));
+
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var completeRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{workOrder.Id}/status", managerToken);
+        completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+
+        var completedSchedule = await db.PmSchedules.SingleAsync(x => x.Id == schedule.Id);
+        Assert.Equal(PmDueStatuses.Completed, completedSchedule.DueStatus);
+        Assert.NotNull(completedSchedule.LastCompletedAt);
+
+        var completedOutbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.RelatedEntityId == schedule.Id)
+            .ToListAsync();
+        Assert.Contains(completedOutbox, x => x.EventKind == PmOccurrenceWorkOrderGenerated);
+        Assert.Contains(completedOutbox, x => x.EventKind == PmOccurrenceCompleted);
     }
 
     [Fact]
