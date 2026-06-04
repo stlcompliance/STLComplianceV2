@@ -41,6 +41,7 @@ import {
   createDisposalReview,
   createEvidenceMapping,
   createExternalShare,
+  createRedaction,
   createLegalHold,
   createPackage,
   createRecord,
@@ -1938,6 +1939,13 @@ function AccessPage({ accessToken }: { accessToken: string }) {
     grantedByPersonId: 'person-doc-controller',
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   })
+  const [redactionForm, setRedactionForm] = useState({
+    sourceRecordId: 'rec-bol-001',
+    redactedRecordId: 'rec-bol-001-redacted',
+    redactionReason: 'privacy',
+    redactedByPersonId: 'person-doc-controller',
+    redactionRules: 'mask:signature\nmask:phone',
+  })
 
   const policiesQuery = useQuery({ queryKey: ['recordarr', 'access-policies'], queryFn: () => listAccessPolicies(accessToken), enabled: Boolean(accessToken) })
   const grantsQuery = useQuery({ queryKey: ['recordarr', 'access-grants'], queryFn: () => listAccessGrants(accessToken), enabled: Boolean(accessToken) })
@@ -1961,6 +1969,16 @@ function AccessPage({ accessToken }: { accessToken: string }) {
       createAccessGrant(accessToken, {
         ...grantForm,
         expiresAt: grantForm.expiresAt || null,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const redactionMutation = useMutation({
+    mutationFn: () =>
+      createRedaction(accessToken, {
+        ...redactionForm,
+        redactionRules: redactionForm.redactionRules.split('\n').map((item) => item.trim()).filter(Boolean),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -2047,6 +2065,25 @@ function AccessPage({ accessToken }: { accessToken: string }) {
           ))}
           {!grantsQuery.data?.length && !grantsQuery.isLoading ? <EmptyState title="No access grants." /> : null}
         </Card>
+      </div>
+
+      <div className="recordarr-card mt-6">
+        <div className="recordarr-card-inner space-y-4">
+          <div className="flex items-center gap-2">
+            <Archive className="h-4 w-4 text-cyan-300" />
+            <h2 className="text-lg font-semibold text-slate-50">Redaction management</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Source record id"><input className="recordarr-input" value={redactionForm.sourceRecordId} onChange={(e) => setRedactionForm({ ...redactionForm, sourceRecordId: e.target.value })} /></Field>
+            <Field label="Redacted record id"><input className="recordarr-input" value={redactionForm.redactedRecordId} onChange={(e) => setRedactionForm({ ...redactionForm, redactedRecordId: e.target.value })} /></Field>
+            <Field label="Reason"><input className="recordarr-input" value={redactionForm.redactionReason} onChange={(e) => setRedactionForm({ ...redactionForm, redactionReason: e.target.value })} /></Field>
+            <Field label="Redacted by"><input className="recordarr-input" value={redactionForm.redactedByPersonId} onChange={(e) => setRedactionForm({ ...redactionForm, redactedByPersonId: e.target.value })} /></Field>
+            <Field label="Redaction rules" wide><textarea className="recordarr-textarea" value={redactionForm.redactionRules} onChange={(e) => setRedactionForm({ ...redactionForm, redactionRules: e.target.value })} /></Field>
+          </div>
+          <button type="button" className="recordarr-button" onClick={() => redactionMutation.mutate()} disabled={redactionMutation.isPending}>
+            {redactionMutation.isPending ? 'Creating...' : 'Create redacted copy'}
+          </button>
+        </div>
       </div>
 
       <div className="recordarr-grid cols-2">

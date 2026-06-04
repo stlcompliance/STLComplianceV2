@@ -980,6 +980,19 @@ export async function listRedactions(accessToken: string): Promise<RecordArrReda
   return getJson<RecordArrRedaction[]>('/api/v1/workspace/redactions', accessToken)
 }
 
+export async function createRedaction(
+  accessToken: string,
+  body: {
+    sourceRecordId: string
+    redactedRecordId: string
+    redactionReason: string
+    redactedByPersonId: string
+    redactionRules: string[]
+  },
+): Promise<RecordArrRedaction> {
+  return sendJson<RecordArrRedaction>('/api/v1/workspace/redactions', accessToken, 'POST', body)
+}
+
 export async function listDisposalReviews(accessToken: string): Promise<RecordArrDisposalReview[]> {
   return getJson<RecordArrDisposalReview[]>('/api/v1/workspace/disposal-reviews', accessToken)
 }
