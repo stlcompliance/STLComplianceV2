@@ -886,6 +886,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var openSupplierIssueCount = await db.SupplierQualityIssues.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openScarCount = await db.SupplierCorrectiveActionRequests.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
         var openComplaintCount = await db.CustomerComplaintQualityCases.CountAsync(x => x.Status != "closed" && x.Status != "canceled", cancellationToken);
+        var effectiveCapaCount = await db.Capas.CountAsync(x => x.Status == "effective", cancellationToken);
+        var recentlyReleasedHoldCount = await db.QualityHolds.CountAsync(x => x.Status == "released" && x.ReleasedAt != null && x.ReleasedAt >= now.AddDays(-30), cancellationToken);
         var openScorecards = await db.QualityScorecards.CountAsync(x => x.Status == "active", cancellationToken);
         var highRiskProfileCount = await db.QualityRiskProfiles.CountAsync(x => x.RiskLevel == "high" || x.RiskLevel == "critical", cancellationToken);
         var openStatusSnapshots = await db.QualityStatusSnapshots.CountAsync(x => x.Status != "unknown", cancellationToken);
@@ -906,6 +908,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             new AssurArrDashboardCardResponse("customer-complaints", "Customer complaint cases", "Customer-facing complaint quality workflows in progress.", openComplaintCount, "warning"),
             new AssurArrDashboardCardResponse("status", "Status snapshots", "Current quality state published to other products.", openStatusSnapshots, "neutral"),
             new AssurArrDashboardCardResponse("scorecards", "Scorecards", "Active quality scorecards and trend summaries.", openScorecards, "accent"),
+            new AssurArrDashboardCardResponse("capa-effectiveness", "CAPA effectiveness", "CAPAs that have been verified effective.", effectiveCapaCount, "success"),
+            new AssurArrDashboardCardResponse("recently-released-holds", "Recently released holds", "Holds released in the last 30 days.", recentlyReleasedHoldCount, "info"),
             new AssurArrDashboardCardResponse("risk-profiles", "Quality risk profiles", "Sites, suppliers, customers, and processes with elevated quality risk.", highRiskProfileCount, "warning"),
         };
 

@@ -29,6 +29,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Contains(dashboard!.Cards, card => card.Key == "nonconformances" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "holds" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "scars" && card.Count >= 1);
+        Assert.Contains(dashboard.Cards, card => card.Key == "capa-effectiveness");
+        Assert.Contains(dashboard.Cards, card => card.Key == "recently-released-holds");
     }
 
     [Fact]
