@@ -1832,6 +1832,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var reviewedDetail = await reviewedDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(reviewedDetail);
         Assert.Equal(reviewByPersonId, reviewedDetail!.ReviewedByPersonId);
+
+        var reviewedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        reviewedDashboardResponse.EnsureSuccessStatusCode();
+        var reviewedDashboard = await reviewedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(reviewedDashboard);
+        Assert.Contains(reviewedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scorecard.reviewed" && entry.SubjectId == scorecard.Id);
     }
 
     [Fact]

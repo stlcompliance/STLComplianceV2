@@ -5358,6 +5358,7 @@ function ScorecardPage() {
 function ScorecardDetailPage() {
   const { id = '' } = useParams<{ id: string }>()
   const queryClient = useQueryClient()
+  const dashboard = useDashboard()
   const scorecardQuery = useRecords(['assurarr', 'scorecard', id], () => assurarrApi.getScorecard(id))
   const metricsQuery = useRecords(['assurarr', 'scorecard-metrics', id], () => assurarrApi.listQualityMetrics(id))
   const [metricForm, setMetricForm] = useState({
@@ -5440,6 +5441,7 @@ function ScorecardDetailPage() {
 
   const scorecard = scorecardQuery.data
   const metrics = metricsQuery.data ?? []
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'scorecard' && event.subjectId === scorecard.id) ?? []
 
   return (
     <div className="assurarr-page">
@@ -5554,6 +5556,11 @@ function ScorecardDetailPage() {
           )}
         </div>
       </div>
+      <SectionCard
+        title="Timeline"
+        items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+        emptyLabel="No scorecard timeline events recorded yet."
+      />
     </div>
   )
 }
