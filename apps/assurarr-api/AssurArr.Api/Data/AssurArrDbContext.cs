@@ -48,6 +48,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureAuditFinding(modelBuilder);
         ConfigureRootCauseAnalysis(modelBuilder);
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
+        modelBuilder.Entity<AssurArrQualityStatusSnapshot>(entity => entity.Property(x => x.Notes).HasMaxLength(4000));
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
         ConfigureMetric(modelBuilder);
         ConfigureRiskProfile(modelBuilder);

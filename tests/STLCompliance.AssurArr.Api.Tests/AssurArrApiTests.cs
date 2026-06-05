@@ -2177,12 +2177,14 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 ["NCR-000001"],
                 ["CAPA-000001"],
                 ["FIND-000001"],
-                DateTimeOffset.UtcNow.AddDays(2)));
+                DateTimeOffset.UtcNow.AddDays(2),
+                Notes: "Snapshot created for downstream quality visibility."));
 
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
         Assert.NotNull(created);
         Assert.Equal(targetProduct, created!.TargetProduct);
+        Assert.Equal("Snapshot created for downstream quality visibility.", created.Notes);
         Assert.Contains(created.EventLog, eventType => eventType == "assurarr.quality_status.changed");
         Assert.Contains(created.EventLog, eventType => eventType == "assurarr.quality_status.published");
 

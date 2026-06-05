@@ -5074,6 +5074,7 @@ function StatusPage() {
             openNonconformanceRefs: [],
             openCapaRefs: [],
             openFindingRefs: [],
+            notes: 'Published from the UI for downstream quality checks.',
           })
         }
       />
@@ -5351,14 +5352,15 @@ function QualityStatusSnapshotDetailPage() {
         <div className="assurarr-card">
           <div className="assurarr-card-inner space-y-3">
             <p className="assurarr-label">Reference metadata</p>
-            <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-              <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
-              <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
-              <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
-              <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
+                <div className="md:col-span-2"><span className="text-slate-500">Notes:</span> {snapshot.notes ?? 'n/a'}</div>
+              </div>
             </div>
           </div>
-        </div>
 
         <SectionCard
           title="Timeline"
