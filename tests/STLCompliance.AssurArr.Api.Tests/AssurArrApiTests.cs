@@ -165,6 +165,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(rootCauseTitle, rootCause!.Title);
         Assert.Equal(nonconformance.Id, rootCause.NonconformanceId);
 
+        var rootCauseStartedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        rootCauseStartedDashboardResponse.EnsureSuccessStatusCode();
+        var rootCauseStartedDashboard = await rootCauseStartedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(rootCauseStartedDashboard);
+        Assert.Contains(rootCauseStartedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.root_cause.started" && entry.SubjectId == rootCause.Id);
+
         var rootCauseDetailResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}/root-cause-analyses/{rootCause.Id}");
         Assert.Equal(HttpStatusCode.OK, rootCauseDetailResponse.StatusCode);
         var rootCauseDetail = await rootCauseDetailResponse.Content.ReadFromJsonAsync<AssurArrRootCauseAnalysisResponse>();
@@ -177,6 +183,38 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var rootCauses = await rootCauseListResponse.Content.ReadFromJsonAsync<List<AssurArrRootCauseAnalysisResponse>>();
         Assert.NotNull(rootCauses);
         Assert.Contains(rootCauses!, item => item.Id == rootCause.Id);
+
+        var completedRootCauseTitle = $"Test completed root cause {Guid.NewGuid():N}";
+        var completedRootCauseResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/root-cause-analyses",
+            new CreateAssurArrRootCauseAnalysisRequest(
+                completedRootCauseTitle,
+                "Automated coverage for completed root cause analysis creation.",
+                nonconformance!.Id,
+                "completed",
+                "fishbone",
+                "process",
+                "assurarr",
+                nonconformance.SourceObjectRef,
+                nonconformance.AffectedObjectRefs.ToArray(),
+                null,
+                ["recordarr:doc:completed-root-cause-test"],
+                "Completed review of process checklist.",
+                ["missing checklist", "insufficient review"],
+                null,
+                DateTimeOffset.UtcNow,
+                ["recordarr:doc:completed-root-cause-evidence"]));
+
+        Assert.Equal(HttpStatusCode.OK, completedRootCauseResponse.StatusCode);
+        var completedRootCause = await completedRootCauseResponse.Content.ReadFromJsonAsync<AssurArrRootCauseAnalysisResponse>();
+        Assert.NotNull(completedRootCause);
+        Assert.Equal(completedRootCauseTitle, completedRootCause!.Title);
+
+        var rootCauseCompletedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        rootCauseCompletedDashboardResponse.EnsureSuccessStatusCode();
+        var rootCauseCompletedDashboard = await rootCauseCompletedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(rootCauseCompletedDashboard);
+        Assert.Contains(rootCauseCompletedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.root_cause.completed" && entry.SubjectId == completedRootCause.Id);
 
         var nonconformanceDetailResponse = await _client.GetAsync($"/api/v1/integrations/nonconformances/{nonconformance.Id}");
         Assert.Equal(HttpStatusCode.OK, nonconformanceDetailResponse.StatusCode);
