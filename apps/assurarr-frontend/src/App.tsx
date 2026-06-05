@@ -5770,49 +5770,39 @@ function SettingsPage() {
 
   const controlledCatalogGroups = [
     {
-      name: 'Issue classification',
-      description: 'Doc-defined quality classifications AssurArr uses to categorize the root issue.',
+      name: 'Nonconformance & hold classification',
+      description: 'Core controlled vocabularies used to classify quality issues and hold decisions.',
       values: [
-        'nonconformanceType',
-        'category',
-        'severity',
-        'holdType',
-        'holdScope',
-        'auditType',
-        'findingType',
-        'complaintType',
-        'issueType',
+        'nonconformanceType: receiving, supplier, customer_complaint, internal_process, maintenance, delivery, inventory, document, training, audit_finding, regulatory, safety_quality, product_service, other',
+        'category: defect, damage, shortage, overage, wrong_item, expired, contamination, missing_document, invalid_document, process_failure, failed_inspection, failed_verification, customer_rejection, supplier_failure, repeat_issue, other',
+        'severity: low, moderate, high, critical',
+        'holdType: inventory, supplier, customer_order, asset, shipment, route, document, training, person_process, location, work_order, purchase_order, other',
+        'holdScope: full, partial, conditional, informational',
       ],
     },
     {
       name: 'Workflow vocabulary',
-      description: 'Local workflow enums that gate status transitions and dashboard summaries.',
+      description: 'Status vocabularies that gate transitions, reviews, and release decisions.',
       values: [
-        'nonconformance.status',
-        'hold.status',
-        'capa.status',
-        'audit.status',
-        'finding.status',
-        'qualityReview.status',
-        'qualityRelease.status',
-        'containment.status',
-        'disposition.status',
-        'supplierQuality.status',
-        'scar.status',
-        'customerComplaint.status',
+        'auditType: internal, supplier, process, product, service, customer, compliance, document, location, system',
+        'findingType: observation, opportunity_for_improvement, minor_nonconformance, major_nonconformance, critical_nonconformance, positive_practice',
+        'complaintType: product_quality, service_quality, delivery_quality, documentation, damaged_goods, wrong_item, late_delivery_quality_impact, failed_requirement, repeat_issue, other',
+        'issueType: damaged_received, wrong_item, late_with_quality_impact, missing_document, invalid_document, failed_specification, recurring_defect, packaging_failure, labeling_failure, other',
+        'qualityReview.status: pending, in_review, approved, rejected, changes_requested, canceled',
+        'qualityRelease.status: requested, pending_review, approved, rejected, executed, canceled',
+        'capa.status: draft, open, root_cause, action_plan, implementation, verification, effective, ineffective, closed, canceled',
       ],
     },
     {
       name: 'Analytics vocabulary',
       description: 'Reference values used by quality status snapshots, scorecards, and risk profiles.',
       values: [
-        'qualityStatus',
-        'severity',
-        'scorecard.targetType',
-        'metric.category',
-        'metric.status',
-        'riskProfile.targetType',
-        'riskProfile.riskLevel',
+        'qualityStatus: acceptable, warning, on_hold, rejected, conditional_release, under_review, unknown',
+        'scorecard.targetType: supplier, customer, site, department, process, asset_class, inventory_item, product_service, route_lane, other',
+        'metric.category: nonconformance, hold, capa, audit, supplier, customer, delivery, inventory, maintenance, documentation',
+        'metric.status: good, warning, critical, unknown',
+        'riskProfile.targetType: supplier, customer, process, site, asset, inventory_item, order, route',
+        'riskProfile.riskLevel: low, moderate, high, critical, unknown',
       ],
     },
   ]
@@ -5912,6 +5902,7 @@ function SettingsPage() {
             <p className="text-sm text-slate-400">Ownership reminders pulled from the constitution and product docs.</p>
           </div>
           <div className="assurarr-card-inner space-y-3 text-sm text-slate-300">
+            <p>RecordArr owns controlled templates, document retention, and stored evidence files.</p>
             {integrationBoundaries.map((item) => (
               <p key={item}>{item}</p>
             ))}
