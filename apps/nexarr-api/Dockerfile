@@ -3,12 +3,12 @@ WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_SUITE_URL=${VITE_APP_PUBLIC_BASE_URL} \
-    VITE_STAFFARR_API_BASE=https://staffarr-api-oyrj.onrender.com \
-    VITE_TRAINARR_API_BASE=https://trainarr-api-nsiw.onrender.com \
-    VITE_MAINTAINARR_API_BASE=https://maintainarr-api-z39r.onrender.com \
-    VITE_ROUTARR_API_BASE=https://routarr-api-l9uj.onrender.com \
-    VITE_SUPPLYARR_API_BASE=https://supplyarr-api-dn8u.onrender.com \
-    VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-w7e5.onrender.com \
+    VITE_STAFFARR_API_BASE=https://staffarr-api-r1kz.onrender.com \
+    VITE_TRAINARR_API_BASE=https://trainarr-api-hq62.onrender.com \
+    VITE_MAINTAINARR_API_BASE=https://maintainarr-api-uzph.onrender.com \
+    VITE_ROUTARR_API_BASE=https://routarr-api-8oc7.onrender.com \
+    VITE_SUPPLYARR_API_BASE=https://supplyarr-api-te1h.onrender.com \
+    VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-b6fs.onrender.com \
     VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com
 COPY . .
 RUN npm ci --prefix packages/shared-ui
