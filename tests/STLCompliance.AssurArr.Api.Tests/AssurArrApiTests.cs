@@ -165,6 +165,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(rootCauseTitle, rootCause!.Title);
         Assert.Equal(nonconformance.Id, rootCause.NonconformanceId);
 
+        var rootCauseDetailResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}/root-cause-analyses/{rootCause.Id}");
+        Assert.Equal(HttpStatusCode.OK, rootCauseDetailResponse.StatusCode);
+        var rootCauseDetail = await rootCauseDetailResponse.Content.ReadFromJsonAsync<AssurArrRootCauseAnalysisResponse>();
+        Assert.NotNull(rootCauseDetail);
+        Assert.Equal(rootCause.Id, rootCauseDetail!.Id);
+        Assert.Equal(rootCause.Number, rootCauseDetail.Number);
+
         var rootCauseListResponse = await _client.GetAsync($"/api/v1/nonconformances/{nonconformance.Id}/root-cause-analyses");
         Assert.Equal(HttpStatusCode.OK, rootCauseListResponse.StatusCode);
         var rootCauses = await rootCauseListResponse.Content.ReadFromJsonAsync<List<AssurArrRootCauseAnalysisResponse>>();

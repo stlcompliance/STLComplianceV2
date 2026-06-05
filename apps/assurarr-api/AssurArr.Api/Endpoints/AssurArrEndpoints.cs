@@ -36,6 +36,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListRootCauseAnalysesAsync(nonconformanceId, cancellationToken)))
             .WithName("ListAssurArrRootCauseAnalyses");
 
+        group.MapGet("/nonconformances/{nonconformanceId:guid}/root-cause-analyses/{rootCauseId:guid}", async (Guid nonconformanceId, Guid rootCauseId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetRootCauseAnalysisAsync(nonconformanceId, rootCauseId, cancellationToken)))
+            .WithName("GetAssurArrRootCauseAnalysis");
+
         integrationGroup.MapGet("/nonconformances", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListNonconformancesAsync(cancellationToken)))
             .WithName("ListAssurArrNonconformancesIntegration");

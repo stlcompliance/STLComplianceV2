@@ -734,7 +734,8 @@ function NonconformanceDetailPage() {
               {relatedRootCauses.length > 0 ? (
                 <ul className="space-y-2 text-sm text-slate-300">
                   {relatedRootCauses.map((rootCause) => (
-                    <li key={rootCause.id} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2">
+                    <li key={rootCause.id}>
+                      <Link to={`/nonconformances/${nonconformance.id}/root-causes/${rootCause.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2 transition hover:border-cyan-500/50 hover:text-cyan-200">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="assurarr-pill">{rootCause.number}</span>
                         <span className="assurarr-pill">{rootCause.status}</span>
@@ -743,6 +744,7 @@ function NonconformanceDetailPage() {
                       </div>
                       <p className="mt-2 text-slate-200">{rootCause.title}</p>
                       <p className="text-slate-400">{rootCause.rootCauseSummary ?? rootCause.description}</p>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -2416,6 +2418,81 @@ function AuditChecklistItemDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Evidence</p>
               <SectionCard title="Evidence records" items={item.evidenceRecordRefs} emptyLabel="No evidence records recorded." />
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
+      </div>
+    </div>
+  )
+}
+
+function RootCauseAnalysisDetailPage() {
+  const { nonconformanceId = '', rootCauseId = '' } = useParams()
+  const nonconformanceQuery = useQuery({
+    queryKey: ['assurarr', 'nonconformance', nonconformanceId],
+    queryFn: () => assurarrApi.getNonconformance(nonconformanceId),
+    enabled: Boolean(nonconformanceId),
+  })
+  const rootCauseQuery = useQuery({
+    queryKey: ['assurarr', 'root-cause-analysis', nonconformanceId, rootCauseId],
+    queryFn: () => assurarrApi.getRootCauseAnalysis(nonconformanceId, rootCauseId),
+    enabled: Boolean(nonconformanceId && rootCauseId),
+  })
+  const dashboard = useDashboard()
+
+  if (nonconformanceQuery.isLoading || rootCauseQuery.isLoading) {
+    return <LoadingCard label="Loading root cause detail" />
+  }
+
+  if (!nonconformanceQuery.data || !rootCauseQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Root cause detail" description="Could not load the requested root cause analysis." />
+        <EmptyState title="Root cause analysis not found." />
+      </div>
+    )
+  }
+
+  const nonconformance = nonconformanceQuery.data
+  const rootCause = rootCauseQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'root_cause' && event.subjectId === rootCause.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${rootCause.number} · ${rootCause.title}`} description="Root cause method, cause category, evidence, and completion history." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{rootCause.status}</span>
+                <span className="assurarr-pill">{rootCause.method}</span>
+                <span className="assurarr-pill">{rootCause.primaryCauseCategory}</span>
+              </div>
+              <p className="text-sm text-slate-300">{rootCause.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Nonconformance:</span> {nonconformance.number} · {nonconformance.title}</div>
+                <div><span className="text-slate-500">Source product:</span> {rootCause.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {rootCause.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Owner:</span> {rootCause.ownerPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Analyzed by:</span> {rootCause.analyzedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Completed:</span> {rootCause.completedAt ? new Date(rootCause.completedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Investigation</p>
+              <p className="text-sm text-slate-300">{rootCause.rootCauseSummary ?? 'No root cause summary recorded.'}</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Contributing factors:</span> {rootCause.contributingFactors.length ? rootCause.contributingFactors.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Evidence refs:</span> {rootCause.evidenceRecordRefs.length ? rootCause.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Record refs:</span> {rootCause.recordRefs.length ? rootCause.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Affected objects:</span> {rootCause.affectedObjectRefs.length ? rootCause.affectedObjectRefs.join(', ') : 'none'}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -5106,6 +5183,7 @@ export function App() {
     if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
+    if (path.startsWith('/nonconformances/') && path.includes('/root-causes/')) return 'Root cause analysis'
     if (path.startsWith('/risk-profiles')) return 'Risk profiles'
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
@@ -5118,6 +5196,7 @@ export function App() {
         <Route index element={<DashboardPage />} />
         <Route path="/nonconformances" element={<NonconformancePage />} />
         <Route path="/nonconformances/:id" element={<NonconformanceDetailPage />} />
+        <Route path="/nonconformances/:nonconformanceId/root-causes/:rootCauseId" element={<RootCauseAnalysisDetailPage />} />
         <Route path="/holds" element={<HoldPage />} />
         <Route path="/holds/:id" element={<HoldDetailPage />} />
         <Route path="/capa" element={<CapaPage />} />

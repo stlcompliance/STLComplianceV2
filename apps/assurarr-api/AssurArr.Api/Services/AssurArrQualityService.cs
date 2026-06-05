@@ -1170,6 +1170,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToRootCauseAnalysisResponse).ToList();
     }
 
+    public async Task<AssurArrRootCauseAnalysisResponse> GetRootCauseAnalysisAsync(Guid nonconformanceId, Guid rootCauseId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.RootCauseAnalyses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == rootCauseId && x.NonconformanceId == nonconformanceId, cancellationToken)
+            ?? throw new InvalidOperationException($"Root cause analysis '{rootCauseId}' was not found.");
+
+        return ToRootCauseAnalysisResponse(entity);
+    }
+
     public async Task<AssurArrRootCauseAnalysisResponse> CreateRootCauseAnalysisAsync(Guid nonconformanceId, CreateAssurArrRootCauseAnalysisRequest request, CancellationToken cancellationToken = default)
     {
         var nonconformance = await db.Nonconformances.FirstOrDefaultAsync(x => x.Id == nonconformanceId, cancellationToken)

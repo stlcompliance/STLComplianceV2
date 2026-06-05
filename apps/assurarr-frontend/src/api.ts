@@ -521,6 +521,8 @@ export const assurarrApi = {
     sendJson<Nonconformance>(`/api/v1/nonconformances/${id}/status`, 'PATCH', { status, closureSummary }),
   listRootCauseAnalyses: (nonconformanceId: string) =>
     getJson<RootCauseAnalysis[]>(`/api/v1/nonconformances/${nonconformanceId}/root-cause-analyses`),
+  getRootCauseAnalysis: (nonconformanceId: string, rootCauseId: string) =>
+    getJson<RootCauseAnalysis>(`/api/v1/nonconformances/${nonconformanceId}/root-cause-analyses/${rootCauseId}`),
   createRootCauseAnalysis: (
     body: {
       title: string
