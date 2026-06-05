@@ -2967,6 +2967,7 @@ function ContainmentPage() {
           emptyLabel="No containment actions yet."
           onStatusChange={(id, status) => assurarrApi.updateContainmentActionStatus(id, status)}
           statusChoices={statusOptions.containment}
+          detailBasePath="/containment"
         />
       ) : (
         <LoadingCard label="Loading containment actions" />
@@ -3139,10 +3140,143 @@ function DispositionPage() {
           emptyLabel="No dispositions yet."
           onStatusChange={(id, status) => assurarrApi.updateDispositionStatus(id, status)}
           statusChoices={statusOptions.disposition}
+          detailBasePath="/dispositions"
         />
       ) : (
         <LoadingCard label="Loading dispositions" />
       )}
+    </div>
+  )
+}
+
+function ContainmentDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'containment-action', id],
+    queryFn: () => assurarrApi.getContainmentAction(id),
+    enabled: Boolean(id),
+  })
+  const dashboard = useDashboard()
+
+  if (!query.data) {
+    return <LoadingCard label="Loading containment detail" />
+  }
+
+  const action = query.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'containment' && event.subjectId === action.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${action.number} · ${action.title}`}
+        description="Containment decisions, affected objects, and the execution trail for the action."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{action.status}</span>
+                <span className="assurarr-pill">{action.severity}</span>
+                <span className="assurarr-pill">{action.actionType}</span>
+                {action.verificationRequired ? <span className="assurarr-pill">verification required</span> : null}
+              </div>
+              <p className="text-sm text-slate-300">{action.notes ?? action.closureSummary ?? 'No notes recorded.'}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {action.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {action.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Nonconformance ref:</span> {action.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Execution</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Verified:</span> {action.verificationRequired ? (action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'pending') : 'not required'}</div>
+                <div><span className="text-slate-500">Closed:</span> {action.closedAt ? new Date(action.closedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+              <p className="text-sm text-slate-300">{action.notes ?? 'No execution notes recorded.'}</p>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Affected objects" items={action.affectedObjectRefs} emptyLabel="No affected objects recorded." />
+        <SectionCard title="Evidence" items={action.evidenceRecordRefs} emptyLabel="No evidence records recorded." />
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
+      </div>
+    </div>
+  )
+}
+
+function DispositionDetailPage() {
+  const { id = '' } = useParams()
+  const query = useQuery({
+    queryKey: ['assurarr', 'disposition', id],
+    queryFn: () => assurarrApi.getDisposition(id),
+    enabled: Boolean(id),
+  })
+  const dashboard = useDashboard()
+
+  if (!query.data) {
+    return <LoadingCard label="Loading disposition detail" />
+  }
+
+  const disposition = query.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'disposition' && event.subjectId === disposition.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${disposition.number} · ${disposition.title}`}
+        description="Disposition decision, execution context, evidence, and timeline."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{disposition.status}</span>
+                <span className="assurarr-pill">{disposition.severity}</span>
+                <span className="assurarr-pill">{disposition.dispositionType}</span>
+                {disposition.executionProduct ? <span className="assurarr-pill">{disposition.executionProduct}</span> : null}
+              </div>
+              <p className="text-sm text-slate-300">{disposition.rationale ?? disposition.notes ?? 'No rationale recorded.'}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Source product:</span> {disposition.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source object:</span> {disposition.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Nonconformance ref:</span> {disposition.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Decision by:</span> {disposition.decisionByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Decision at:</span> {disposition.decisionAt ? new Date(disposition.decisionAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Approved at:</span> {disposition.approvedAt ? new Date(disposition.approvedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Execution</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Execution object:</span> {disposition.executionObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Closed:</span> {disposition.closedAt ? new Date(disposition.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Closed by:</span> {disposition.closedByPersonId ?? 'n/a'}</div>
+              </div>
+              <p className="text-sm text-slate-300">{disposition.closureSummary ?? 'No closure summary recorded.'}</p>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Affected objects" items={disposition.affectedObjectRefs} emptyLabel="No affected objects recorded." />
+        <SectionCard title="Required actions" items={disposition.requiredActions} emptyLabel="No required actions recorded." />
+        <SectionCard title="Evidence" items={disposition.evidenceRecordRefs} emptyLabel="No evidence records recorded." />
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
+      </div>
     </div>
   )
 }
@@ -4798,7 +4932,9 @@ export function App() {
         <Route path="/releases" element={<ReleasePage />} />
         <Route path="/releases/:id" element={<ReleaseDetailPage />} />
         <Route path="/containment" element={<ContainmentPage />} />
+        <Route path="/containment/:id" element={<ContainmentDetailPage />} />
         <Route path="/dispositions" element={<DispositionPage />} />
+        <Route path="/dispositions/:id" element={<DispositionDetailPage />} />
         <Route path="/supplier-quality" element={<SupplierQualityPage />} />
         <Route path="/supplier-quality/:id" element={<SupplierQualityDetailPage />} />
         <Route path="/scars" element={<ScarPage />} />

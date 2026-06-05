@@ -2321,6 +2321,14 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToContainmentActionResponse).ToList();
     }
 
+    public async Task<AssurArrContainmentActionResponse> GetContainmentActionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ContainmentActions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Containment action '{id}' was not found.");
+
+        return ToContainmentActionResponse(entity);
+    }
+
     public async Task<AssurArrContainmentActionResponse> CreateContainmentActionAsync(CreateAssurArrContainmentActionRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -2400,6 +2408,14 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .ToListAsync(cancellationToken);
 
         return entities.Select(ToDispositionResponse).ToList();
+    }
+
+    public async Task<AssurArrDispositionResponse> GetDispositionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.Dispositions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new InvalidOperationException($"Disposition '{id}' was not found.");
+
+        return ToDispositionResponse(entity);
     }
 
     public async Task<AssurArrDispositionResponse> CreateDispositionAsync(CreateAssurArrDispositionRequest request, CancellationToken cancellationToken = default)

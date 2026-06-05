@@ -1459,6 +1459,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(containment);
         Assert.Equal(containmentTitle, containment!.Title);
 
+        var containmentDetailResponse = await _client.GetAsync($"/api/v1/integrations/containment-actions/{containment.Id}");
+        Assert.Equal(HttpStatusCode.OK, containmentDetailResponse.StatusCode);
+        var containmentDetail = await containmentDetailResponse.Content.ReadFromJsonAsync<AssurArrContainmentActionResponse>();
+        Assert.NotNull(containmentDetail);
+        Assert.Equal(containment.Id, containmentDetail!.Id);
+        Assert.Equal(containment.Number, containmentDetail.Number);
+
         var containmentAssignedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/containment-actions/{containment.Id}/status",
             new UpdateAssurArrStatusRequest("assigned", "Containment assigned."));
@@ -1528,6 +1535,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var disposition = await dispositionResponse.Content.ReadFromJsonAsync<AssurArrDispositionResponse>();
         Assert.NotNull(disposition);
         Assert.Equal(dispositionTitle, disposition!.Title);
+
+        var dispositionDetailResponse = await _client.GetAsync($"/api/v1/integrations/dispositions/{disposition.Id}");
+        Assert.Equal(HttpStatusCode.OK, dispositionDetailResponse.StatusCode);
+        var dispositionDetail = await dispositionDetailResponse.Content.ReadFromJsonAsync<AssurArrDispositionResponse>();
+        Assert.NotNull(dispositionDetail);
+        Assert.Equal(disposition.Id, dispositionDetail!.Id);
+        Assert.Equal(disposition.Number, dispositionDetail.Number);
 
         var dispositionApprovedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/dispositions/{disposition.Id}/status",

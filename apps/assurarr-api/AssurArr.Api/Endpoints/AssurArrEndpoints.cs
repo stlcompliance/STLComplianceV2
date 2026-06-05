@@ -361,6 +361,12 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListContainmentActionsAsync(cancellationToken)))
             .WithName("ListAssurArrContainmentActions");
 
+        integrationGroup.MapGet("/containment-actions/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetContainmentActionAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrContainmentAction");
+
         integrationGroup.MapPost("/containment-actions", async (CreateAssurArrContainmentActionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateContainmentActionAsync(request, cancellationToken)))
             .WithName("CreateAssurArrContainmentAction");
@@ -372,6 +378,12 @@ public static class AssurArrEndpoints
         integrationGroup.MapGet("/dispositions", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListDispositionsAsync(cancellationToken)))
             .WithName("ListAssurArrDispositions");
+
+        integrationGroup.MapGet("/dispositions/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetDispositionAsync(id, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrDisposition");
 
         integrationGroup.MapPost("/dispositions", async (CreateAssurArrDispositionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateDispositionAsync(request, cancellationToken)))

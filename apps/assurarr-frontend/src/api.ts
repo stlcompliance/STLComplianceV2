@@ -820,6 +820,7 @@ export const assurarrApi = {
     }),
   updateContainmentActionStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<ContainmentAction>(`/api/v1/integrations/containment-actions/${id}/status`, 'PATCH', { status, closureSummary }),
+  getContainmentAction: (id: string) => getJson<ContainmentAction>(`/api/v1/integrations/containment-actions/${id}`),
   listDispositions: () => getJson<Disposition[]>('/api/v1/integrations/dispositions'),
   createDisposition: (body: CreateBase & { dispositionType: string; nonconformanceRef?: string; decisionByPersonId?: string; decisionAt?: string; approvedByPersonId?: string; approvedAt?: string; rationale?: string; requiredActions?: string[]; executionProduct?: string; executionObjectRef?: string; evidenceRecordRefs?: string[]; notes?: string }) =>
     sendJson<Disposition>('/api/v1/integrations/dispositions', 'POST', {
@@ -831,6 +832,7 @@ export const assurarrApi = {
     }),
   updateDispositionStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Disposition>(`/api/v1/integrations/dispositions/${id}/status`, 'PATCH', { status, closureSummary }),
+  getDisposition: (id: string) => getJson<Disposition>(`/api/v1/integrations/dispositions/${id}`),
   listSupplierQualityIssues: () => getJson<SupplierQualityIssue[]>('/api/v1/integrations/supplier-quality-issues'),
   getSupplierQualityIssue: (id: string) => getJson<SupplierQualityIssue>(`/api/v1/integrations/supplier-quality-issues/${id}`),
   createSupplierQualityIssue: (body: CreateBase & { issueType: string; affectedReceiptRefs?: string[]; affectedPurchaseOrderRefs?: string[]; affectedItemRefs?: string[]; supplierRef?: string; nonconformanceRef?: string; scarRef?: string; holdRefs?: string[]; recordRefs?: string[]; openedAt?: string }) =>
