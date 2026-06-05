@@ -1944,6 +1944,14 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToChecklistResponse).ToList();
     }
 
+    public async Task<AssurArrQualityAuditChecklistResponse> GetAuditChecklistAsync(Guid auditId, Guid checklistId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityAuditChecklists.AsNoTracking().FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+
+        return ToChecklistResponse(entity);
+    }
+
     public async Task<AssurArrQualityAuditChecklistResponse> CreateAuditChecklistAsync(Guid auditId, CreateAssurArrQualityAuditChecklistRequest request, CancellationToken cancellationToken = default)
     {
         var audit = await db.QualityAudits.FirstOrDefaultAsync(x => x.Id == auditId, cancellationToken)
@@ -2001,6 +2009,17 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .ToListAsync(cancellationToken);
 
         return entities.Select(ToChecklistItemResponse).ToList();
+    }
+
+    public async Task<AssurArrQualityAuditChecklistItemResponse> GetAuditChecklistItemAsync(Guid auditId, Guid checklistId, Guid itemId, CancellationToken cancellationToken = default)
+    {
+        var checklist = await db.QualityAuditChecklists.AsNoTracking().FirstOrDefaultAsync(x => x.Id == checklistId && x.AuditId == auditId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist '{checklistId}' was not found.");
+
+        var entity = await db.QualityAuditChecklistItems.AsNoTracking().FirstOrDefaultAsync(x => x.Id == itemId && x.ChecklistId == checklist.Id, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality audit checklist item '{itemId}' was not found.");
+
+        return ToChecklistItemResponse(entity);
     }
 
     public async Task<AssurArrQualityAuditChecklistItemResponse> CreateAuditChecklistItemAsync(Guid auditId, Guid checklistId, CreateAssurArrQualityAuditChecklistItemRequest request, CancellationToken cancellationToken = default)

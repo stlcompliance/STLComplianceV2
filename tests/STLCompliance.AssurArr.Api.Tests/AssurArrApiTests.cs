@@ -1039,6 +1039,20 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(item);
         Assert.Equal(itemPrompt, item!.Prompt);
 
+        var checklistDetailResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}");
+        Assert.Equal(HttpStatusCode.OK, checklistDetailResponse.StatusCode);
+        var checklistDetail = await checklistDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistResponse>();
+        Assert.NotNull(checklistDetail);
+        Assert.Equal(checklist.Id, checklistDetail!.Id);
+        Assert.Equal(checklist.Number, checklistDetail.Number);
+
+        var itemDetailResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists/{checklist.Id}/items/{item.Id}");
+        Assert.Equal(HttpStatusCode.OK, itemDetailResponse.StatusCode);
+        var itemDetail = await itemDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditChecklistItemResponse>();
+        Assert.NotNull(itemDetail);
+        Assert.Equal(item.Id, itemDetail!.Id);
+        Assert.Equal(item.Number, itemDetail.Number);
+
         var itemCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         itemCreatedDashboardResponse.EnsureSuccessStatusCode();
         var itemCreatedDashboard = await itemCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();

@@ -207,6 +207,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListAuditChecklistsAsync(auditId, cancellationToken)))
             .WithName("ListAssurArrAuditChecklists");
 
+        group.MapGet("/audits/{auditId:guid}/checklists/{checklistId:guid}", async (Guid auditId, Guid checklistId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetAuditChecklistAsync(auditId, checklistId, cancellationToken)))
+            .WithName("GetAssurArrAuditChecklist");
+
         group.MapPost("/audits/{auditId:guid}/checklists", async (Guid auditId, CreateAssurArrQualityAuditChecklistRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateAuditChecklistAsync(auditId, request, cancellationToken)))
             .WithName("CreateAssurArrAuditChecklist");
@@ -218,6 +222,10 @@ public static class AssurArrEndpoints
         group.MapGet("/audits/{auditId:guid}/checklists/{checklistId:guid}/items", async (Guid auditId, Guid checklistId, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListAuditChecklistItemsAsync(auditId, checklistId, cancellationToken)))
             .WithName("ListAssurArrAuditChecklistItems");
+
+        group.MapGet("/audits/{auditId:guid}/checklists/{checklistId:guid}/items/{itemId:guid}", async (Guid auditId, Guid checklistId, Guid itemId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetAuditChecklistItemAsync(auditId, checklistId, itemId, cancellationToken)))
+            .WithName("GetAssurArrAuditChecklistItem");
 
         group.MapPost("/audits/{auditId:guid}/checklists/{checklistId:guid}/items", async (Guid auditId, Guid checklistId, CreateAssurArrQualityAuditChecklistItemRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateAuditChecklistItemAsync(auditId, checklistId, request, cancellationToken)))

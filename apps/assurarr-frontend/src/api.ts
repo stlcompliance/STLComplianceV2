@@ -673,6 +673,7 @@ export const assurarrApi = {
   updateAuditStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Audit>(`/api/v1/audits/${id}/status`, 'PATCH', { status, closureSummary }),
   listAuditChecklists: (auditId: string) => getJson<AuditChecklist[]>(`/api/v1/audits/${auditId}/checklists`),
+  getAuditChecklist: (auditId: string, checklistId: string) => getJson<AuditChecklist>(`/api/v1/audits/${auditId}/checklists/${checklistId}`),
   createAuditChecklist: (auditId: string, body: { title: string; description: string; status?: string }) =>
     sendJson<AuditChecklist>(`/api/v1/audits/${auditId}/checklists`, 'POST', {
       ...body,
@@ -682,6 +683,8 @@ export const assurarrApi = {
     sendJson<AuditChecklist>(`/api/v1/audits/${auditId}/checklists/${checklistId}/status`, 'PATCH', { status, closureSummary }),
   listAuditChecklistItems: (auditId: string, checklistId: string) =>
     getJson<AuditChecklistItem[]>(`/api/v1/audits/${auditId}/checklists/${checklistId}/items`),
+  getAuditChecklistItem: (auditId: string, checklistId: string, itemId: string) =>
+    getJson<AuditChecklistItem>(`/api/v1/audits/${auditId}/checklists/${checklistId}/items/${itemId}`),
   createAuditChecklistItem: (
     auditId: string,
     checklistId: string,

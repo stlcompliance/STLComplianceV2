@@ -2202,10 +2202,10 @@ function AuditDetailPage() {
               {checklistQuery.data?.length ? (
                 <div className="space-y-2">
                   {checklistQuery.data.map((checklist) => (
-                    <button
+                    <Link
                       key={checklist.id}
-                      type="button"
-                      className={`w-full rounded-xl border px-4 py-3 text-left transition ${checklist.id === activeChecklistId ? 'border-cyan-400/70 bg-cyan-400/10' : 'border-slate-700/70 bg-slate-900/80'}`}
+                      to={`/audits/${audit.id}/checklists/${checklist.id}`}
+                      className={`block w-full rounded-xl border px-4 py-3 text-left transition ${checklist.id === activeChecklistId ? 'border-cyan-400/70 bg-cyan-400/10' : 'border-slate-700/70 bg-slate-900/80'}`}
                       onClick={() => setSelectedChecklistId(checklist.id)}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -2214,7 +2214,7 @@ function AuditDetailPage() {
                       </div>
                       <p className="mt-1 text-sm text-slate-300">{checklist.title}</p>
                       <p className="mt-1 text-xs text-slate-400">{checklist.itemRefs.length} item refs</p>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -2238,7 +2238,7 @@ function AuditDetailPage() {
               {itemQuery.data?.length ? (
                 <div className="space-y-3">
                   {itemQuery.data.map((item) => (
-                    <div key={item.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                    <Link key={item.id} to={`/audits/${audit.id}/checklists/${selectedChecklist?.id ?? activeChecklistId}/items/${item.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-900/80 p-3 transition hover:border-cyan-500/50 hover:text-cyan-200">
                       <div className="flex items-center justify-between gap-3">
                         <strong className="text-sm text-slate-50">{item.sequence}. {item.prompt}</strong>
                         <span className="assurarr-pill">{item.result ?? item.responseValue ?? 'unanswered'}</span>
@@ -2246,7 +2246,7 @@ function AuditDetailPage() {
                       <p className="mt-1 text-xs text-slate-400">{item.responseType} {item.required ? 'required' : 'optional'}</p>
                       {item.helpText ? <p className="mt-2 text-sm text-slate-300">{item.helpText}</p> : null}
                       {item.evidenceRecordRefs.length ? <p className="mt-2 text-xs text-slate-400">{item.evidenceRecordRefs.join(', ')}</p> : null}
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -2266,6 +2266,161 @@ function AuditDetailPage() {
           items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
           emptyLabel="No timeline events recorded yet."
         />
+      </div>
+    </div>
+  )
+}
+
+function AuditChecklistDetailPage() {
+  const { auditId = '', checklistId = '' } = useParams()
+  const auditQuery = useQuery({
+    queryKey: ['assurarr', 'audit', auditId],
+    queryFn: () => assurarrApi.getAudit(auditId),
+    enabled: Boolean(auditId),
+  })
+  const checklistQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist', auditId, checklistId],
+    queryFn: () => assurarrApi.getAuditChecklist(auditId, checklistId),
+    enabled: Boolean(auditId && checklistId),
+  })
+  const itemsQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist-items', auditId, checklistId],
+    queryFn: () => assurarrApi.listAuditChecklistItems(auditId, checklistId),
+    enabled: Boolean(auditId && checklistId),
+  })
+  const dashboard = useDashboard()
+
+  if (auditQuery.isLoading || checklistQuery.isLoading) {
+    return <LoadingCard label="Loading checklist detail" />
+  }
+
+  if (!auditQuery.data || !checklistQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Checklist detail" description="Could not load the requested checklist." />
+        <EmptyState title="Checklist not found." />
+      </div>
+    )
+  }
+
+  const audit = auditQuery.data
+  const checklist = checklistQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'audit_checklist' && event.subjectId === checklist.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${checklist.number} · ${checklist.title}`} description="Checklist status, linked audit, item refs, and the item response trail." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Checklist</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{checklist.status}</span>
+                <span className="assurarr-pill">{audit.number}</span>
+                <span className="assurarr-pill">{checklist.itemRefs.length} items</span>
+              </div>
+              <p className="text-sm text-slate-300">{checklist.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Audit:</span> {audit.number} · {audit.title}</div>
+                <div><span className="text-slate-500">Created:</span> {new Date(checklist.createdAt).toLocaleString()}</div>
+                <div><span className="text-slate-500">Updated:</span> {new Date(checklist.updatedAt).toLocaleString()}</div>
+                <div><span className="text-slate-500">Closed:</span> {checklist.closedAt ? new Date(checklist.closedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Items</p>
+              <div className="space-y-2">
+                {(itemsQuery.data ?? []).map((item) => (
+                  <Link key={item.id} to={`/audits/${auditId}/checklists/${checklistId}/items/${item.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-cyan-300 hover:border-cyan-500/50 hover:text-cyan-200">
+                    {item.sequence}. {item.prompt} · {item.result ?? item.responseValue ?? 'unanswered'}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Item refs" items={checklist.itemRefs} emptyLabel="No item refs recorded." />
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
+      </div>
+    </div>
+  )
+}
+
+function AuditChecklistItemDetailPage() {
+  const { auditId = '', checklistId = '', itemId = '' } = useParams()
+  const auditQuery = useQuery({
+    queryKey: ['assurarr', 'audit', auditId],
+    queryFn: () => assurarrApi.getAudit(auditId),
+    enabled: Boolean(auditId),
+  })
+  const checklistQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist', auditId, checklistId],
+    queryFn: () => assurarrApi.getAuditChecklist(auditId, checklistId),
+    enabled: Boolean(auditId && checklistId),
+  })
+  const itemQuery = useQuery({
+    queryKey: ['assurarr', 'audit-checklist-item', auditId, checklistId, itemId],
+    queryFn: () => assurarrApi.getAuditChecklistItem(auditId, checklistId, itemId),
+    enabled: Boolean(auditId && checklistId && itemId),
+  })
+  const dashboard = useDashboard()
+
+  if (auditQuery.isLoading || checklistQuery.isLoading || itemQuery.isLoading) {
+    return <LoadingCard label="Loading checklist item detail" />
+  }
+
+  if (!auditQuery.data || !checklistQuery.data || !itemQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Checklist item detail" description="Could not load the requested checklist item." />
+        <EmptyState title="Checklist item not found." />
+      </div>
+    )
+  }
+
+  const audit = auditQuery.data
+  const checklist = checklistQuery.data
+  const item = itemQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'audit_checklist_item' && event.subjectId === item.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${item.sequence}. ${item.prompt}`} description="Checklist item response, evidence, and answer history." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Item</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{item.result ?? item.responseValue ?? 'unanswered'}</span>
+                <span className="assurarr-pill">{item.responseType}</span>
+                <span className="assurarr-pill">{item.required ? 'required' : 'optional'}</span>
+                {item.findingCreated ? <span className="assurarr-pill">finding created</span> : null}
+              </div>
+              <p className="text-sm text-slate-300">{item.helpText ?? 'No help text recorded.'}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Audit:</span> {audit.number} · {audit.title}</div>
+                <div><span className="text-slate-500">Checklist:</span> {checklist.number} · {checklist.title}</div>
+                <div><span className="text-slate-500">Requirement ref:</span> {item.requirementRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Answered at:</span> {item.answeredAt ? new Date(item.answeredAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Answered by:</span> {item.answeredByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Finding ref:</span> {item.findingRef ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Evidence</p>
+              <SectionCard title="Evidence records" items={item.evidenceRecordRefs} emptyLabel="No evidence records recorded." />
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
       </div>
     </div>
   )
@@ -4941,6 +5096,7 @@ export function App() {
     if (path.startsWith('/holds')) return 'Holds'
     if (path.startsWith('/capa')) return 'CAPA'
     if (path.startsWith('/audits')) return 'Audits'
+    if (path.startsWith('/audits/')) return 'Audits'
     if (path.startsWith('/findings')) return 'Findings'
     if (path.startsWith('/reviews')) return 'Reviews'
     if (path.startsWith('/releases')) return 'Releases'
@@ -4968,6 +5124,8 @@ export function App() {
         <Route path="/capa/:id" element={<CapaDetailPage />} />
         <Route path="/audits" element={<AuditPage />} />
         <Route path="/audits/:id" element={<AuditDetailPage />} />
+        <Route path="/audits/:auditId/checklists/:checklistId" element={<AuditChecklistDetailPage />} />
+        <Route path="/audits/:auditId/checklists/:checklistId/items/:itemId" element={<AuditChecklistItemDetailPage />} />
         <Route path="/findings" element={<FindingsPage />} />
         <Route path="/findings/:id" element={<FindingDetailPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
