@@ -758,6 +758,7 @@ export const assurarrApi = {
       openFindingRefs: body.openFindingRefs ?? [],
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
     }),
+  getSnapshot: (id: string) => getJson<StatusSnapshot>(`/api/v1/status-snapshots/${id}`),
   listQualityStatus: () => getJson<QualityStatus[]>('/api/v1/integrations/quality-status'),
   getQualityStatus: (targetProduct: string, targetObjectId: string) => getJson<QualityStatus>(`/api/v1/integrations/quality-status/${targetProduct}/${targetObjectId}`),
   createQualityStatusCheck: (body: CreateBase & { targetProduct: string; targetObjectRef: string; qualityStatus: string; activeHoldRefs?: string[]; openNonconformanceRefs?: string[]; openCapaRefs?: string[]; openFindingRefs?: string[]; expiresAt?: string }) =>

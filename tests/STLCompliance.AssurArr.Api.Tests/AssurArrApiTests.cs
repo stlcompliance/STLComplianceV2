@@ -1699,6 +1699,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(targetProduct, created!.TargetProduct);
 
+        var createdDetailResponse = await _client.GetAsync($"/api/v1/status-snapshots/{created.Id}");
+        Assert.Equal(HttpStatusCode.OK, createdDetailResponse.StatusCode);
+        var createdDetail = await createdDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(createdDetail);
+        Assert.Equal(created.Id, createdDetail!.Id);
+        Assert.Equal(created.Number, createdDetail.Number);
+
         var lookupResponse = await _client.GetAsync($"/api/v1/integrations/quality-status/{targetProduct}/{targetObjectId}");
         Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
 

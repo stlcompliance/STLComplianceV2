@@ -5000,6 +5000,7 @@ function StatusPage() {
         <EntityTable
           items={query.data}
           emptyLabel="No status snapshots yet."
+          detailBasePath="/status-snapshots"
         />
       ) : (
         <LoadingCard label="Loading quality status" />
@@ -5193,6 +5194,85 @@ function RiskProfileDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function QualityStatusSnapshotDetailPage() {
+  const { id = '' } = useParams<{ id: string }>()
+  const query = useQuery({
+    queryKey: ['assurarr', 'status-snapshot', id],
+    queryFn: () => assurarrApi.getSnapshot(id),
+    enabled: Boolean(id),
+  })
+  const dashboard = useDashboard()
+
+  if (query.isLoading) {
+    return <LoadingCard label="Loading quality status snapshot" />
+  }
+
+  if (query.isError || !query.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Quality status snapshot detail" description="Could not load the requested quality status snapshot." />
+        <EmptyState title="Quality status snapshot not found." />
+      </div>
+    )
+  }
+
+  const snapshot = query.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'status' && event.subjectId === snapshot.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${snapshot.number} · ${snapshot.title}`}
+        description="Published quality status, active blockers, and reference context for downstream products."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{snapshot.status}</span>
+                <span className="assurarr-pill">{snapshot.severity}</span>
+                <span className="assurarr-pill">{snapshot.qualityStatus}</span>
+              </div>
+              <p className="text-sm text-slate-300">{snapshot.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Target product:</span> {snapshot.targetProduct}</div>
+                <div><span className="text-slate-500">Target object:</span> {snapshot.targetObjectRef}</div>
+                <div><span className="text-slate-500">Source product:</span> {snapshot.sourceProduct ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Source object:</span> {snapshot.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewed at:</span> {snapshot.lastReviewedAt ? new Date(snapshot.lastReviewedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Expires:</span> {snapshot.expiresAt ? new Date(snapshot.expiresAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">References</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Active holds:</span> {snapshot.activeHoldRefs.length ? snapshot.activeHoldRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Open nonconformances:</span> {snapshot.openNonconformanceRefs.length ? snapshot.openNonconformanceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Open CAPAs:</span> {snapshot.openCapaRefs.length ? snapshot.openCapaRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Open findings:</span> {snapshot.openFindingRefs.length ? snapshot.openFindingRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
       </div>
     </div>
   )
@@ -5694,6 +5774,7 @@ export function App() {
     if (path.startsWith('/supplier-quality')) return 'Supplier quality'
     if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
+    if (path.startsWith('/status-snapshots/')) return 'Quality status snapshot detail'
     if (path.startsWith('/status')) return 'Status'
     if (path.startsWith('/capa/') && path.includes('/actions/') && path.includes('/blockers/')) return 'CAPA blocker detail'
     if (path.startsWith('/capa/') && path.includes('/actions/')) return 'CAPA action detail'
@@ -5744,6 +5825,7 @@ export function App() {
         <Route path="/complaints" element={<CustomerComplaintPage />} />
         <Route path="/complaints/:id" element={<CustomerComplaintDetailPage />} />
         <Route path="/status" element={<StatusPage />} />
+        <Route path="/status-snapshots/:id" element={<QualityStatusSnapshotDetailPage />} />
         <Route path="/risk-profiles/:id" element={<RiskProfileDetailPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/scorecards/:id" element={<ScorecardDetailPage />} />

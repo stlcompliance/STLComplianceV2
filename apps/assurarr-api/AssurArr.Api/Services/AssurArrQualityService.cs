@@ -2951,6 +2951,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToStatusSnapshotResponse).ToList();
     }
 
+    public async Task<AssurArrQualityStatusSnapshotResponse> GetStatusSnapshotAsync(Guid id, CancellationToken cancellationToken = default) =>
+        (await db.QualityStatusSnapshots.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
+            ? ToStatusSnapshotResponse(entity)
+            : throw new InvalidOperationException($"Quality status snapshot '{id}' was not found.");
+
     public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListQualityStatusAsync(CancellationToken cancellationToken = default) =>
         await ListStatusSnapshotsAsync(cancellationToken);
 

@@ -285,6 +285,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListStatusSnapshotsAsync(cancellationToken)))
             .WithName("ListAssurArrQualityStatusSnapshots");
 
+        group.MapGet("/status-snapshots/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetStatusSnapshotAsync(id, cancellationToken)))
+            .WithName("GetAssurArrQualityStatusSnapshot");
+
         group.MapPost("/status-snapshots", async (CreateAssurArrQualityStatusSnapshotRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateStatusSnapshotAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityStatusSnapshot");
