@@ -356,6 +356,7 @@ export type QualityReview = ListItem & {
   requiredEvidenceRefs: string[]
   submittedEvidenceRefs: string[]
   notes: string | null
+  eventLog: string[]
 }
 
 export type QualityRelease = ListItem & {
@@ -370,6 +371,7 @@ export type QualityRelease = ListItem & {
   expirationAt: string | null
   evidenceRecordRefs: string[]
   notes: string | null
+  eventLog: string[]
 }
 
 export type ContainmentAction = ListItem & {

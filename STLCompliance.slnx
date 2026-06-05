@@ -20,6 +20,9 @@
   <Folder Name="/apps/recordarr-api/">
     <Project Path="apps/recordarr-api/RecordArr.Api/RecordArr.Api.csproj" />
   </Folder>
+  <Folder Name="/apps/reportarr-api/">
+    <Project Path="apps/reportarr-api/ReportArr.Api/ReportArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/staffarr-api/">
     <Project Path="apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj" />
   </Folder>

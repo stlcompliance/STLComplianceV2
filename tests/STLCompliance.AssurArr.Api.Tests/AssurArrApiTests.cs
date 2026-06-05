@@ -576,6 +576,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var review = await reviewResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
         Assert.NotNull(review);
         Assert.Equal(reviewTitle, review!.Title);
+        Assert.Contains(review.EventLog, eventType => eventType == "assurarr.quality_review.requested");
 
         var reviewRequestedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         reviewRequestedDashboardResponse.EnsureSuccessStatusCode();
@@ -589,6 +590,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(reviewDetail);
         Assert.Equal(review.Id, reviewDetail!.Id);
         Assert.Equal(review.Number, reviewDetail.Number);
+        Assert.Contains(reviewDetail.EventLog, eventType => eventType == "assurarr.quality_review.requested");
 
         var reviewInProgressResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/quality-reviews/{review.Id}/status",
@@ -601,6 +603,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             new UpdateAssurArrStatusRequest("approved", "Review approved."));
 
         Assert.Equal(HttpStatusCode.OK, approvedReviewResponse.StatusCode);
+        var approvedReview = await approvedReviewResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
+        Assert.NotNull(approvedReview);
+        Assert.Contains(approvedReview!.EventLog, eventType => eventType == "assurarr.quality_review.approved");
 
         var approvedReviewDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         approvedReviewDashboardResponse.EnsureSuccessStatusCode();
@@ -632,6 +637,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(HttpStatusCode.OK, rejectedReviewResponse.StatusCode);
         var rejectedReview = await rejectedReviewResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
         Assert.NotNull(rejectedReview);
+        Assert.Contains(rejectedReview!.EventLog, eventType => eventType == "assurarr.quality_review.requested");
 
         var rejectedReviewInProgressResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/quality-reviews/{rejectedReview!.Id}/status",
@@ -644,6 +650,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             new UpdateAssurArrStatusRequest("rejected", "Review rejected."));
 
         Assert.Equal(HttpStatusCode.OK, rejectedReviewStatusResponse.StatusCode);
+        var rejectedReviewDetail = await rejectedReviewStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
+        Assert.NotNull(rejectedReviewDetail);
+        Assert.Contains(rejectedReviewDetail!.EventLog, eventType => eventType == "assurarr.quality_review.rejected");
 
         var rejectedReviewDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         rejectedReviewDashboardResponse.EnsureSuccessStatusCode();
@@ -677,6 +686,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var release = await releaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
         Assert.NotNull(release);
         Assert.Equal(releaseTitle, release!.Title);
+        Assert.Contains(release.EventLog, eventType => eventType == "assurarr.quality_release.requested");
 
         var releaseRequestedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         releaseRequestedDashboardResponse.EnsureSuccessStatusCode();
@@ -690,6 +700,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(releaseDetail);
         Assert.Equal(release.Id, releaseDetail!.Id);
         Assert.Equal(release.Number, releaseDetail.Number);
+        Assert.Contains(releaseDetail.EventLog, eventType => eventType == "assurarr.quality_release.requested");
 
         var releasePendingResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/quality-releases/{release.Id}/status",
@@ -702,12 +713,18 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             new UpdateAssurArrStatusRequest("approved", "Release approved."));
 
         Assert.Equal(HttpStatusCode.OK, releaseApprovedResponse.StatusCode);
+        var releaseApproved = await releaseApprovedResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(releaseApproved);
+        Assert.Contains(releaseApproved!.EventLog, eventType => eventType == "assurarr.quality_release.approved");
 
         var releaseExecutedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/quality-releases/{release.Id}/status",
             new UpdateAssurArrStatusRequest("executed", "Release executed."));
 
         Assert.Equal(HttpStatusCode.OK, releaseExecutedResponse.StatusCode);
+        var releaseExecuted = await releaseExecutedResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(releaseExecuted);
+        Assert.Contains(releaseExecuted!.EventLog, eventType => eventType == "assurarr.quality_release.executed");
 
         var releaseDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         releaseDashboardResponse.EnsureSuccessStatusCode();
@@ -739,6 +756,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(HttpStatusCode.OK, rejectedReleaseResponse.StatusCode);
         var rejectedRelease = await rejectedReleaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
         Assert.NotNull(rejectedRelease);
+        Assert.Contains(rejectedRelease!.EventLog, eventType => eventType == "assurarr.quality_release.requested");
 
         var rejectedReleasePendingResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/quality-releases/{rejectedRelease!.Id}/status",
@@ -751,6 +769,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             new UpdateAssurArrStatusRequest("rejected", "Release rejected."));
 
         Assert.Equal(HttpStatusCode.OK, rejectedReleaseStatusResponse.StatusCode);
+        var rejectedReleaseDetail = await rejectedReleaseStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(rejectedReleaseDetail);
+        Assert.Contains(rejectedReleaseDetail!.EventLog, eventType => eventType == "assurarr.quality_release.rejected");
 
         var rejectedReleaseDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         rejectedReleaseDashboardResponse.EnsureSuccessStatusCode();

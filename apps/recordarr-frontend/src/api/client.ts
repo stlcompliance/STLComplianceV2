@@ -41,6 +41,21 @@ export type RecordArrDashboardResponse = {
   legalHolds: RecordArrLegalHold[]
 }
 
+export type RecordArrReminder = {
+  reminderId: string
+  reminderType: string
+  status: string
+  title: string
+  description: string
+  recordId: string | null
+  controlledDocumentId: string | null
+  versionId: string | null
+  personId: string | null
+  dueAt: string | null
+  createdAt: string
+  sourceRef: string
+}
+
 export type RecordArrRecord = {
   recordId: string
   recordNumber: string
@@ -59,10 +74,68 @@ export type RecordArrRecord = {
   uploadedAt: string
   effectiveAt: string | null
   expiresAt: string | null
+  archivedAt: string | null
+  purgedAt: string | null
   currentFileName: string
   currentMimeType: string
   versionNumber: number
   tags: string[]
+  currentFileRef: string
+  fileRefs: string[]
+  currentVersionRef: string
+  sourceObjectRefs: string[]
+  metadataRefs: string[]
+  versionRefs: string[]
+  ocrResultRefs: string[]
+  extractionResultRefs: string[]
+  evidenceMappingRefs: string[]
+  packageRefs: string[]
+  retentionPolicyRef: string | null
+  retentionStatusRef: string | null
+  legalHoldRefs: string[]
+  accessPolicyRef: string | null
+  complianceRefs: string[]
+  auditTrail: RecordArrAuditTrailEntry[]
+}
+
+export type RecordArrFileRendition = {
+  renditionId: string
+  fileId: string
+  recordId: string
+  renditionType: string
+  storageKey: string
+  mimeType: string
+  sizeBytes: number
+  pageCount: number | null
+  status: string
+  generatedAt: string
+}
+
+export type RecordArrFile = {
+  fileId: string
+  tenantId: string
+  recordId: string
+  fileNumber: string
+  storageProvider: string
+  storageKey: string
+  originalFilename: string
+  normalizedFilename: string
+  extension: string
+  mimeType: string
+  sizeBytes: number
+  checksumSha256: string
+  pageCount: number | null
+  imageWidth: number | null
+  imageHeight: number | null
+  durationSeconds: number | null
+  uploadedAt: string
+  uploadedByPersonId: string
+  virusScanStatus: string
+  processingStatus: string
+  encryptionStatus: string
+  deletedAt: string | null
+  deleteReason: string | null
+  renditions: RecordArrFileRendition[]
 }
 
 export type RecordArrUploadSession = {
@@ -87,6 +160,47 @@ export type RecordArrUploadSession = {
   uploadedRecordRefs: string[]
 }
 
+export type RecordArrCaptureRequest = {
+  captureRequestId: string
+  tenantId: string
+  sourceProduct: string
+  sourceObjectRef: string
+  captureType: string
+  title: string
+  instructions: string
+  required: boolean
+  status: string
+  uploadSessionRef: string | null
+  evidenceRequirementRef: string | null
+  createdAt: string
+  completedAt: string | null
+}
+
+export type RecordArrEdgeDetectionResult = {
+  edgeDetectionResultId: string
+  scanProcessingId: string
+  status: string
+  confidenceScore: number
+  pageIndex: number
+  corners: string | null
+  detectedAt: string
+  requiresManualCorrection: boolean
+}
+
+export type RecordArrImageEnhancementSettings = {
+  settingsId: string
+  scanProcessingId: string
+  cropApplied: boolean
+  perspectiveCorrectionApplied: boolean
+  contrastAdjusted: boolean
+  brightnessAdjusted: boolean
+  grayscaleApplied: boolean
+  noiseReductionApplied: boolean
+  sharpenApplied: boolean
+  backgroundCleaned: boolean
+  outputFormat: string
+}
+
 export type RecordArrScanProcessing = {
   scanProcessingId: string
   recordId: string
@@ -94,12 +208,30 @@ export type RecordArrScanProcessing = {
   status: string
   scanPurpose: string
   edgeCoordinates: string | null
+  manualEdgeCoordinates: string | null
+  correctedByPersonId: string | null
+  correctedAt: string | null
+  originalFileRef: string | null
+  generatedPdfFileRef: string | null
   generatedPdfRecordRef: string | null
   ocrResultId: string | null
   extractionResultId: string | null
+  edgeDetectionResult: RecordArrEdgeDetectionResult | null
+  enhancementSettings: RecordArrImageEnhancementSettings | null
   confidenceScore: number
   processedAt: string | null
   failureReason: string | null
+}
+
+export type RecordArrOcrPageResult = {
+  pageResultId: string
+  ocrResultId: string
+  pageNumber: number
+  text: string
+  confidenceScore: number
+  width: number
+  height: number
+  blocks: string[]
 }
 
 export type RecordArrOcrResult = {
@@ -111,6 +243,8 @@ export type RecordArrOcrResult = {
   language: string
   confidenceScore: number
   fullText: string
+  pageResults: RecordArrOcrPageResult[]
+  blockResults: string[]
   extractedAt: string
   failureReason: string | null
 }
@@ -123,6 +257,8 @@ export type RecordArrExtractedField = {
   value: string
   valueType: string
   confidenceScore: number
+  pageNumber: number | null
+  boundingBox: string | null
   reviewStatus: string
   correctedValue: string | null
   correctedByPersonId: string | null
@@ -331,6 +467,39 @@ export type RecordArrControlledDocumentVersion = {
   changeSummary: string | null
   previousVersionRef: string | null
   nextVersionRef: string | null
+  fileRef: string | null
+}
+
+export type RecordArrSignatureRecord = {
+  signatureRecordId: string
+  tenantId: string
+  recordId: string
+  signaturePurpose: string
+  signerPersonId: string | null
+  signerExternalName: string | null
+  signerTitle: string | null
+  attestationText: string
+  signatureFileRef: string
+  signedAt: string
+  capturedByPersonId: string
+  sourceProduct: string
+  sourceObjectRef: string
+  geoCoordinates: string | null
+  deviceSnapshot: string | null
+}
+
+export type RecordArrPhotoEvidence = {
+  photoEvidenceId: string
+  tenantId: string
+  recordId: string
+  photoPurpose: string
+  sourceProduct: string
+  sourceObjectRef: string
+  capturedAt: string
+  capturedByPersonId: string
+  geoCoordinates: string | null
+  deviceSnapshot: string | null
+  notes: string | null
 }
 
 export type RecordArrDocumentReview = {
@@ -501,6 +670,10 @@ export async function getDashboard(accessToken: string): Promise<RecordArrDashbo
   return getJson<RecordArrDashboardResponse>('/api/v1/workspace/summary', accessToken)
 }
 
+export async function listReminders(accessToken: string): Promise<RecordArrReminder[]> {
+  return getJson<RecordArrReminder[]>('/api/v1/workspace/reminders', accessToken)
+}
+
 export async function listRecords(accessToken: string, search?: string): Promise<RecordArrRecord[]> {
   const path = search && search.trim().length > 0
     ? `/api/v1/workspace/records?search=${encodeURIComponent(search.trim())}`
@@ -510,6 +683,28 @@ export async function listRecords(accessToken: string, search?: string): Promise
 
 export async function getRecord(accessToken: string, recordId: string): Promise<RecordArrRecord> {
   return getJson<RecordArrRecord>(`/api/v1/workspace/records/${encodeURIComponent(recordId)}`, accessToken)
+}
+
+export async function listFiles(accessToken: string, recordId?: string): Promise<RecordArrFile[]> {
+  const path = recordId && recordId.trim().length > 0
+    ? `/api/v1/integrations/files?recordId=${encodeURIComponent(recordId.trim())}`
+    : '/api/v1/integrations/files'
+  return getJson<RecordArrFile[]>(path, accessToken)
+}
+
+export async function getFile(accessToken: string, fileId: string): Promise<RecordArrFile> {
+  return getJson<RecordArrFile>(`/api/v1/integrations/files/${encodeURIComponent(fileId)}`, accessToken)
+}
+
+export async function downloadFile(accessToken: string, fileId: string): Promise<string> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/files/${encodeURIComponent(fileId)}/download`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(body || `Failed to download /api/v1/integrations/files/${encodeURIComponent(fileId)}/download`)
+  }
+  return response.text()
 }
 
 export type RecordArrRecordMetadata = {
@@ -648,8 +843,27 @@ export async function createRecord(
     currentFileName: string
     currentMimeType: string
   },
-): Promise<RecordArrRecord> {
+  ): Promise<RecordArrRecord> {
   return sendJson<RecordArrRecord>('/api/v1/workspace/records', accessToken, 'POST', body)
+}
+
+export async function createFile(
+  accessToken: string,
+  body: {
+    recordId: string
+    originalFilename: string
+    mimeType: string
+    uploadedByPersonId: string
+    storageProvider?: string | null
+    storageKey?: string | null
+    sizeBytes?: number | null
+    pageCount?: number | null
+    imageWidth?: number | null
+    imageHeight?: number | null
+    durationSeconds?: number | null
+  },
+): Promise<RecordArrFile> {
+  return sendJson<RecordArrFile>('/api/v1/integrations/files', accessToken, 'POST', body)
 }
 
 export async function updateRecord(
@@ -662,6 +876,62 @@ export async function updateRecord(
 
 export async function listUploadSessions(accessToken: string): Promise<RecordArrUploadSession[]> {
   return getJson<RecordArrUploadSession[]>('/api/v1/workspace/upload-sessions', accessToken)
+}
+
+export async function listCaptureRequests(accessToken: string): Promise<RecordArrCaptureRequest[]> {
+  return getJson<RecordArrCaptureRequest[]>('/api/v1/workspace/capture-requests', accessToken)
+}
+
+export async function createCaptureRequest(
+  accessToken: string,
+  body: {
+    sourceProduct: string
+    sourceObjectRef: string
+    captureType: string
+    title: string
+    instructions: string
+    required: boolean
+    uploadSessionRef?: string | null
+    evidenceRequirementRef?: string | null
+  },
+): Promise<RecordArrCaptureRequest> {
+  return sendJson<RecordArrCaptureRequest>('/api/v1/workspace/capture-requests', accessToken, 'POST', body)
+}
+
+export async function completeCaptureRequest(accessToken: string, captureRequestId: string): Promise<RecordArrCaptureRequest> {
+  return sendJson<RecordArrCaptureRequest>(
+    `/api/v1/workspace/capture-requests/${encodeURIComponent(captureRequestId)}/complete`,
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
+export async function skipCaptureRequest(accessToken: string, captureRequestId: string): Promise<RecordArrCaptureRequest> {
+  return sendJson<RecordArrCaptureRequest>(
+    `/api/v1/workspace/capture-requests/${encodeURIComponent(captureRequestId)}/skip`,
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
+export async function cancelCaptureRequest(accessToken: string, captureRequestId: string): Promise<RecordArrCaptureRequest> {
+  return sendJson<RecordArrCaptureRequest>(
+    `/api/v1/workspace/capture-requests/${encodeURIComponent(captureRequestId)}/cancel`,
+    accessToken,
+    'POST',
+    {},
+  )
+}
+
+export async function expireCaptureRequest(accessToken: string, captureRequestId: string): Promise<RecordArrCaptureRequest> {
+  return sendJson<RecordArrCaptureRequest>(
+    `/api/v1/workspace/capture-requests/${encodeURIComponent(captureRequestId)}/expire`,
+    accessToken,
+    'POST',
+    {},
+  )
 }
 
 export async function createUploadSession(
@@ -690,10 +960,45 @@ export async function createScan(
   return sendJson<RecordArrScanProcessing>('/api/v1/workspace/document-scans', accessToken, 'POST', body)
 }
 
+export async function createSignatureRecord(
+  accessToken: string,
+  body: {
+    recordId: string
+    signaturePurpose: string
+    signerPersonId?: string | null
+    signerExternalName?: string | null
+    signerTitle?: string | null
+    attestationText: string
+    capturedByPersonId: string
+    sourceProduct: string
+    sourceObjectRef: string
+    geoCoordinates?: string | null
+    deviceSnapshot?: string | null
+  },
+): Promise<RecordArrSignatureRecord> {
+  return sendJson<RecordArrSignatureRecord>('/api/v1/integrations/signatures', accessToken, 'POST', body)
+}
+
+export async function createPhotoEvidence(
+  accessToken: string,
+  body: {
+    recordId: string
+    photoPurpose: string
+    capturedByPersonId: string
+    sourceProduct: string
+    sourceObjectRef: string
+    geoCoordinates?: string | null
+    deviceSnapshot?: string | null
+    notes?: string | null
+  },
+): Promise<RecordArrPhotoEvidence> {
+  return sendJson<RecordArrPhotoEvidence>('/api/v1/integrations/photo-evidence', accessToken, 'POST', body)
+}
+
 export async function applyManualCorrection(
   accessToken: string,
   scanProcessingId: string,
-  body: { edgeCoordinates: string },
+  body: { edgeCoordinates: string; correctedByPersonId: string },
 ): Promise<RecordArrScanProcessing> {
   return sendJson<RecordArrScanProcessing>(
     `/api/v1/workspace/document-scans/${encodeURIComponent(scanProcessingId)}/manual-correction`,
@@ -1339,6 +1644,9 @@ export async function completeDisposalReview(
   )
 }
 
-export async function listAccessLogs(accessToken: string): Promise<RecordArrAccessLog[]> {
-  return getJson<RecordArrAccessLog[]>('/api/v1/workspace/access-logs', accessToken)
+export async function listAccessLogs(accessToken: string, recordId?: string): Promise<RecordArrAccessLog[]> {
+  const path = recordId && recordId.trim().length > 0
+    ? `/api/v1/workspace/access-logs?recordId=${encodeURIComponent(recordId.trim())}`
+    : '/api/v1/workspace/access-logs'
+  return getJson<RecordArrAccessLog[]>(path, accessToken)
 }

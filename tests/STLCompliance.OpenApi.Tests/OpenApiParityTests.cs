@@ -49,6 +49,8 @@ public sealed class MaintainArrOpenApiParityTests() : OpenApiParityTestsBase<glo
 
 public sealed class RecordArrOpenApiParityTests() : OpenApiParityTestsBase<global::RecordArr.Api.Program>("recordarr");
 
+public sealed class ReportArrOpenApiParityTests() : OpenApiParityTestsBase<global::ReportArr.Api.Program>("reportarr");
+
 public sealed class RoutArrOpenApiParityTests() : OpenApiParityTestsBase<global::RoutArr.Api.Program>("routarr");
 
 public sealed class SupplyArrOpenApiParityTests() : OpenApiParityTestsBase<global::SupplyArr.Api.Program>("supplyarr");

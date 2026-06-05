@@ -46,7 +46,63 @@ public sealed record RecordArrRecordResponse(
     string CurrentFileName,
     string CurrentMimeType,
     int VersionNumber,
-    IReadOnlyList<string> Tags);
+    IReadOnlyList<string> Tags,
+    string CurrentFileRef,
+    IReadOnlyList<string> FileRefs,
+    string CurrentVersionRef,
+    IReadOnlyList<string> SourceObjectRefs,
+    IReadOnlyList<string> MetadataRefs,
+    IReadOnlyList<string> VersionRefs,
+    IReadOnlyList<string> OcrResultRefs,
+    IReadOnlyList<string> ExtractionResultRefs,
+    IReadOnlyList<string> EvidenceMappingRefs,
+    IReadOnlyList<string> PackageRefs,
+    string? RetentionPolicyRef,
+    string? RetentionStatusRef,
+    IReadOnlyList<string> LegalHoldRefs,
+    string? AccessPolicyRef,
+    IReadOnlyList<string> ComplianceRefs,
+    IReadOnlyList<RecordArrAuditTrailEntryResponse> AuditTrail,
+    DateTimeOffset? ArchivedAt = null,
+    DateTimeOffset? PurgedAt = null);
+
+public sealed record RecordArrFileRenditionResponse(
+    string RenditionId,
+    string FileId,
+    string RecordId,
+    string RenditionType,
+    string StorageKey,
+    string MimeType,
+    long SizeBytes,
+    int? PageCount,
+    string Status,
+    DateTimeOffset GeneratedAt);
+
+public sealed record RecordArrFileResponse(
+    string FileId,
+    string TenantId,
+    string RecordId,
+    string FileNumber,
+    string StorageProvider,
+    string StorageKey,
+    string OriginalFilename,
+    string NormalizedFilename,
+    string Extension,
+    string MimeType,
+    long SizeBytes,
+    string ChecksumSha256,
+    int? PageCount,
+    int? ImageWidth,
+    int? ImageHeight,
+    int? DurationSeconds,
+    DateTimeOffset UploadedAt,
+    string UploadedByPersonId,
+    string VirusScanStatus,
+    string ProcessingStatus,
+    string EncryptionStatus,
+    DateTimeOffset? DeletedAt,
+    string? DeleteReason,
+    IReadOnlyList<RecordArrFileRenditionResponse> Renditions);
 
 public sealed record RecordArrUploadSessionResponse(
     string UploadSessionId,
@@ -69,6 +125,44 @@ public sealed record RecordArrUploadSessionResponse(
     long MaxFileSizeBytes,
     IReadOnlyList<string> UploadedRecordRefs);
 
+public sealed record RecordArrCaptureRequestResponse(
+    string CaptureRequestId,
+    string TenantId,
+    string SourceProduct,
+    string SourceObjectRef,
+    string CaptureType,
+    string Title,
+    string Instructions,
+    bool Required,
+    string Status,
+    string? UploadSessionRef,
+    string? EvidenceRequirementRef,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? CompletedAt);
+
+public sealed record RecordArrEdgeDetectionResultResponse(
+    string EdgeDetectionResultId,
+    string ScanProcessingId,
+    string Status,
+    decimal ConfidenceScore,
+    int PageIndex,
+    string? Corners,
+    DateTimeOffset DetectedAt,
+    bool RequiresManualCorrection);
+
+public sealed record RecordArrImageEnhancementSettingsResponse(
+    string SettingsId,
+    string ScanProcessingId,
+    bool CropApplied,
+    bool PerspectiveCorrectionApplied,
+    bool ContrastAdjusted,
+    bool BrightnessAdjusted,
+    bool GrayscaleApplied,
+    bool NoiseReductionApplied,
+    bool SharpenApplied,
+    bool BackgroundCleaned,
+    string OutputFormat);
+
 public sealed record RecordArrScanProcessingResponse(
     string ScanProcessingId,
     string RecordId,
@@ -76,12 +170,29 @@ public sealed record RecordArrScanProcessingResponse(
     string Status,
     string ScanPurpose,
     string? EdgeCoordinates,
+    string? ManualEdgeCoordinates,
+    string? CorrectedByPersonId,
+    DateTimeOffset? CorrectedAt,
+    string? OriginalFileRef,
+    string? GeneratedPdfFileRef,
     string? GeneratedPdfRecordRef,
     string? OcrResultId,
     string? ExtractionResultId,
+    RecordArrEdgeDetectionResultResponse? EdgeDetectionResult,
+    RecordArrImageEnhancementSettingsResponse? EnhancementSettings,
     decimal ConfidenceScore,
     DateTimeOffset? ProcessedAt,
     string? FailureReason);
+
+public sealed record RecordArrOcrPageResultResponse(
+    string PageResultId,
+    string OcrResultId,
+    int PageNumber,
+    string Text,
+    decimal ConfidenceScore,
+    int Width,
+    int Height,
+    IReadOnlyList<string> Blocks);
 
 public sealed record RecordArrOcrResultResponse(
     string OcrResultId,
@@ -92,6 +203,8 @@ public sealed record RecordArrOcrResultResponse(
     string Language,
     decimal ConfidenceScore,
     string FullText,
+    IReadOnlyList<RecordArrOcrPageResultResponse> PageResults,
+    IReadOnlyList<string> BlockResults,
     DateTimeOffset ExtractedAt,
     string? FailureReason);
 
@@ -103,6 +216,8 @@ public sealed record RecordArrExtractedFieldResponse(
     string Value,
     string ValueType,
     decimal ConfidenceScore,
+    int? PageNumber,
+    string? BoundingBox,
     string ReviewStatus,
     string? CorrectedValue,
     string? CorrectedByPersonId,
@@ -328,7 +443,8 @@ public sealed record RecordArrControlledDocumentVersionResponse(
     DateTimeOffset? SupersededAt,
     string? ChangeSummary,
     string? PreviousVersionRef,
-    string? NextVersionRef);
+    string? NextVersionRef,
+    string? FileRef);
 
 public sealed record RecordArrDocumentReviewResponse(
     string DocumentReviewId,
@@ -365,6 +481,20 @@ public sealed record RecordArrDocumentAcknowledgementResponse(
     string? SignatureRecordRef,
     string? AttestationText,
     DateTimeOffset? DueAt);
+
+public sealed record RecordArrReminderResponse(
+    string ReminderId,
+    string ReminderType,
+    string Status,
+    string Title,
+    string Description,
+    string? RecordId,
+    string? ControlledDocumentId,
+    string? VersionId,
+    string? PersonId,
+    DateTimeOffset? DueAt,
+    DateTimeOffset CreatedAt,
+    string SourceRef);
 
 public sealed record RecordArrAccessPolicyResponse(
     string AccessPolicyId,
@@ -407,6 +537,36 @@ public sealed record RecordArrExternalShareResponse(
     string? RevokedByPersonId,
     DateTimeOffset? LastAccessedAt,
     int AccessCount);
+
+public sealed record RecordArrSignatureRecordResponse(
+    string SignatureRecordId,
+    string TenantId,
+    string RecordId,
+    string SignaturePurpose,
+    string? SignerPersonId,
+    string? SignerExternalName,
+    string? SignerTitle,
+    string AttestationText,
+    string SignatureFileRef,
+    DateTimeOffset SignedAt,
+    string CapturedByPersonId,
+    string SourceProduct,
+    string SourceObjectRef,
+    string? GeoCoordinates,
+    string? DeviceSnapshot);
+
+public sealed record RecordArrPhotoEvidenceResponse(
+    string PhotoEvidenceId,
+    string TenantId,
+    string RecordId,
+    string PhotoPurpose,
+    string SourceProduct,
+    string SourceObjectRef,
+    DateTimeOffset CapturedAt,
+    string CapturedByPersonId,
+    string? GeoCoordinates,
+    string? DeviceSnapshot,
+    string? Notes);
 
 public sealed record RecordArrRedactionResponse(
     string RedactionId,

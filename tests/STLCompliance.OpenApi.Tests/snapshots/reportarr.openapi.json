@@ -1,0 +1,3401 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ReportArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "ReportArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "ReportArrRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/alerts": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAlerts/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/alerts/{alertId}/acknowledge": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AcknowledgeReportArrIntegrationAlert/api/integrations",
+        "parameters": [
+          {
+            "name": "alertId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/alerts/{alertId}/resolve": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ResolveReportArrIntegrationAlert/api/integrations",
+        "parameters": [
+          {
+            "name": "alertId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/analytics-snapshots": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAnalyticsSnapshots/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-packages": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationAuditPackage/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-packages/{auditReportPackageId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationAuditPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "auditReportPackageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-packages/{auditReportPackageId}/lock": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "LockReportArrIntegrationAuditPackage/api/integrations",
+        "parameters": [
+          {
+            "name": "auditReportPackageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockAuditPackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-scopes": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAuditScopes/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dashboard-access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboardAccessPolicies/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dashboard-filters": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboardFilters/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dashboards": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboards/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationDashboard/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDashboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dashboards/{dashboardId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationDashboard/api/integrations",
+        "parameters": [
+          {
+            "name": "dashboardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationDashboard/api/integrations",
+        "parameters": [
+          {
+            "name": "dashboardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDashboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dataset-fields": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasetFields/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dataset-lineage": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasetLineage/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/datasets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasets/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationDataset/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/datasets/{datasetId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationDataset/api/integrations",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/datasets/{datasetId}/refresh": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshReportArrIntegrationDataset/api/integrations",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/drilldowns": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDrilldowns/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReceiveReportArrIntegrationEvent/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/events/batch": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReceiveReportArrIntegrationEvents/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceEventBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exception-queries": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExceptionQueries/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exception-results": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExceptionResults/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exports": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationExport/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExports/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exports/{exportJobId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationExport/api/integrations",
+        "parameters": [
+          {
+            "name": "exportJobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/ingestion-cursors": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationIngestionCursors/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/kpi-values": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationKpiValues/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/kpis": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationKpis/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/kpis/{kpiId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationKpi/api/integrations",
+        "parameters": [
+          {
+            "name": "kpiId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/kpis/{kpiId}/calculate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CalculateReportArrIntegrationKpi/api/integrations",
+        "parameters": [
+          {
+            "name": "kpiId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateKpiRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/metric-values": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationMetricValues/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/metrics": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationMetrics/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/read-model-records": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReadModelRecords/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/read-models": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReadModels/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/read-models/{readModelId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReadModel/api/integrations",
+        "parameters": [
+          {
+            "name": "readModelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/read-models/{readModelId}/rebuild": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RebuildReportArrIntegrationReadModel/api/integrations",
+        "parameters": [
+          {
+            "name": "readModelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RebuildReadModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportAccessPolicies/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-definitions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportDefinitions/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportDefinition/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-definitions/{reportDefinitionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReportDefinition/api/integrations",
+        "parameters": [
+          {
+            "name": "reportDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationReportDefinition/api/integrations",
+        "parameters": [
+          {
+            "name": "reportDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-parameters": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportParameters/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-recipients": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportRecipients/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportRun/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportRuns/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-runs/{reportRunId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReportRun/api/integrations",
+        "parameters": [
+          {
+            "name": "reportRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-runs/{reportRunId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelReportArrIntegrationReportRun/api/integrations",
+        "parameters": [
+          {
+            "name": "reportRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReportRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-schedules": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportSchedules/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportSchedule/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-schedules/{scheduleId}": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationReportSchedule/api/integrations",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/report-sections": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportSections/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/source-events": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationSourceEvents/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trend-analyses": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationTrendAnalyses/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/widget-visualizations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationWidgetVisualizations/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/widgets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationWidgets/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/widgets/{widgetId}/render": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RenderReportArrIntegrationWidget/api/integrations",
+        "parameters": [
+          {
+            "name": "widgetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "ReportArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "ReportArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "ReportArrRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/alerts": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAlerts/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/alerts/{alertId}/acknowledge": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AcknowledgeReportArrIntegrationAlert/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "alertId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/alerts/{alertId}/resolve": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ResolveReportArrIntegrationAlert/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "alertId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/analytics-snapshots": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAnalyticsSnapshots/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-packages": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationAuditPackage/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-packages/{auditReportPackageId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationAuditPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "auditReportPackageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-packages/{auditReportPackageId}/lock": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "LockReportArrIntegrationAuditPackage/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "auditReportPackageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockAuditPackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-scopes": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationAuditScopes/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dashboard-access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboardAccessPolicies/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dashboard-filters": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboardFilters/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dashboards": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDashboards/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationDashboard/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDashboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dashboards/{dashboardId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationDashboard/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "dashboardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationDashboard/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "dashboardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDashboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dataset-fields": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasetFields/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dataset-lineage": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasetLineage/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/datasets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDatasets/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationDataset/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/datasets/{datasetId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationDataset/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/datasets/{datasetId}/refresh": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshReportArrIntegrationDataset/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/drilldowns": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationDrilldowns/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReceiveReportArrIntegrationEvent/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/events/batch": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReceiveReportArrIntegrationEvents/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceEventBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exception-queries": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExceptionQueries/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exception-results": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExceptionResults/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exports": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationExport/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationExports/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exports/{exportJobId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationExport/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "exportJobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/ingestion-cursors": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationIngestionCursors/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/kpi-values": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationKpiValues/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/kpis": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationKpis/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/kpis/{kpiId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationKpi/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "kpiId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/kpis/{kpiId}/calculate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CalculateReportArrIntegrationKpi/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "kpiId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateKpiRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/metric-values": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationMetricValues/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/metrics": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationMetrics/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/read-model-records": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReadModelRecords/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/read-models": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReadModels/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/read-models/{readModelId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReadModel/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "readModelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/read-models/{readModelId}/rebuild": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RebuildReportArrIntegrationReadModel/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "readModelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RebuildReadModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-access-policies": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportAccessPolicies/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-definitions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportDefinitions/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportDefinition/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-definitions/{reportDefinitionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReportDefinition/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "reportDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationReportDefinition/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "reportDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-parameters": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportParameters/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-recipients": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportRecipients/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportRun/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportRuns/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-runs/{reportRunId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetReportArrIntegrationReportRun/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "reportRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-runs/{reportRunId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelReportArrIntegrationReportRun/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "reportRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReportRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-schedules": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportSchedules/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateReportArrIntegrationReportSchedule/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-schedules/{scheduleId}": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateReportArrIntegrationReportSchedule/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/report-sections": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationReportSections/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/source-events": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationSourceEvents/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trend-analyses": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationTrendAnalyses/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/widget-visualizations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationWidgetVisualizations/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/widgets": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListReportArrIntegrationWidgets/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/widgets/{widgetId}/render": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RenderReportArrIntegrationWidget/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "widgetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "ReportArrGetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "ReportArrGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/alerts": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceAlerts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/analytics-snapshots": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceAnalyticsSnapshots",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-packages": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceAuditPackages",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-scopes": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceAuditScopes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/dashboard-access-policies": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDashboardAccessPolicies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/dashboard-filters": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDashboardFilters",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/dashboards": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDashboards",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/dataset-fields": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDatasetFields",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/dataset-lineage": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDatasetLineage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/datasets": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDatasets",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/drilldowns": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceDrilldowns",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/exception-queries": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceExceptionQueries",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/exception-results": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceExceptionResults",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/ingestion-cursors": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceIngestionCursors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/kpi-values": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceKpiValues",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/kpis": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceKpis",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/metric-values": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceMetricValues",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/read-model-records": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReadModelRecords",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/read-models": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReadModels",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/refresh-jobs": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceRefreshJobs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/report-access-policies": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReportAccessPolicies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/report-parameters": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReportParameters",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/report-recipients": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReportRecipients",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/report-sections": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReportSections",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/reports": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceReports",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/source-connectors": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceSourceConnectors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/summary": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetReportArrWorkspaceSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/trend-analyses": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListReportArrWorkspaceTrendAnalyses",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health/observability": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetObservabilityHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcknowledgeAlertRequest": {
+        "required": [
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CalculateKpiRequest": {
+        "required": [
+          "periodStart",
+          "periodEnd",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelReportRunRequest": {
+        "required": [
+          "requestedByPersonId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAuditPackageRequest": {
+        "required": [
+          "auditScopeId",
+          "title",
+          "description",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "auditScopeId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateDashboardRequest": {
+        "required": [
+          "dashboardKey",
+          "title",
+          "description",
+          "dashboardType",
+          "defaultDateRange",
+          "ownerPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "dashboardKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dashboardType": {
+            "type": "string"
+          },
+          "defaultDateRange": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateDatasetRequest": {
+        "required": [
+          "datasetKey",
+          "title",
+          "description",
+          "datasetType",
+          "sourceProducts",
+          "ownerPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "datasetKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "datasetType": {
+            "type": "string"
+          },
+          "sourceProducts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateExportRequest": {
+        "required": [
+          "reportRunId",
+          "exportType",
+          "sourceRef",
+          "exportFormat",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "reportRunId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exportType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exportFormat": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateReportDefinitionRequest": {
+        "required": [
+          "reportKey",
+          "title",
+          "description",
+          "reportType",
+          "layoutDefinition",
+          "exportFormats",
+          "ownerPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "reportKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reportType": {
+            "type": "string"
+          },
+          "layoutDefinition": {
+            "type": "string"
+          },
+          "exportFormats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateReportRunRequest": {
+        "required": [
+          "reportDefinitionId",
+          "requestedByPersonId",
+          "exportFormat",
+          "parametersUsed",
+          "filtersUsed"
+        ],
+        "type": "object",
+        "properties": {
+          "reportDefinitionId": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          },
+          "exportFormat": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parametersUsed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filtersUsed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateReportScheduleRequest": {
+        "required": [
+          "reportDefinitionId",
+          "title",
+          "cadence",
+          "timezone",
+          "cronExpression",
+          "deliveryMethod",
+          "recipients",
+          "parameters",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "reportDefinitionId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "cadence": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "cronExpression": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryMethod": {
+            "type": "string"
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "LockAuditPackageRequest": {
+        "required": [
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "RebuildReadModelRequest": {
+        "required": [
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "RedeemHandoffRequest": {
+        "required": [
+          "handoffCode"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "RefreshDatasetRequest": {
+        "required": [
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "ResolveAlertRequest": {
+        "required": [
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "SourceEventBatchRequest": {
+        "required": [
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceEventRequest"
+            }
+          }
+        }
+      },
+      "SourceEventRequest": {
+        "required": [
+          "sourceProduct",
+          "sourceEventId",
+          "eventType",
+          "sourceObjectRef",
+          "correlationId"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceEventId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correlationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateDashboardRequest": {
+        "required": [
+          "title",
+          "description",
+          "status",
+          "defaultDateRange"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "defaultDateRange": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateReportDefinitionRequest": {
+        "required": [
+          "status",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateReportScheduleRequest": {
+        "required": [
+          "status",
+          "cadence",
+          "nextRunAt",
+          "requestedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "cadence": {
+            "type": "string"
+          },
+          "nextRunAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedByPersonId": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "ReportArr.Api"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Me"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "Workspace"
+    },
+    {
+      "name": "Integrations"
+    }
+  ]
+}

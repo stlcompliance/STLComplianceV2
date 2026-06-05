@@ -1379,7 +1379,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.requested", release.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReleaseResponse(release);
+        return await ToReleaseResponseAsync(release, cancellationToken);
     }
 
     public async Task<AssurArrQualityReleaseResponse> ApproveHoldReleaseAsync(Guid holdId, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -1414,7 +1414,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.approved", release.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReleaseResponse(release);
+        return await ToReleaseResponseAsync(release, cancellationToken);
     }
 
     public async Task<AssurArrQualityReleaseResponse> RejectHoldReleaseAsync(Guid holdId, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -1449,7 +1449,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("release", release.Id, "assurarr.quality_release.rejected", release.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(hold, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReleaseResponse(release);
+        return await ToReleaseResponseAsync(release, cancellationToken);
     }
 
     private async Task PublishQualityStatusSnapshotAsync(AssurArrQualityHold entity, CancellationToken cancellationToken)
@@ -2240,12 +2240,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToReviewResponse).ToList();
+        var responses = new List<AssurArrQualityReviewResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToReviewResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityReviewResponse?> GetQualityReviewAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityReviews.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToReviewResponse(entity)
+            ? await ToReviewResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrQualityReviewResponse> CreateQualityReviewAsync(CreateAssurArrQualityReviewRequest request, CancellationToken cancellationToken = default)
@@ -2281,7 +2287,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.QualityReviews.Add(entity);
         await AddTimelineAsync("review", entity.Id, "assurarr.quality_review.requested", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReviewResponse(entity);
+        return await ToReviewResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityReviewResponse> UpdateQualityReviewStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -2310,7 +2316,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
         await AddTimelineAsync("review", entity.Id, $"assurarr.quality_review.{entity.Status}", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReviewResponse(entity);
+        return await ToReviewResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrQualityReleaseResponse>> ListQualityReleasesAsync(CancellationToken cancellationToken = default)
@@ -2320,12 +2326,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToReleaseResponse).ToList();
+        var responses = new List<AssurArrQualityReleaseResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToReleaseResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityReleaseResponse?> GetQualityReleaseAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityReleases.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToReleaseResponse(entity)
+            ? await ToReleaseResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrQualityReleaseResponse> CreateQualityReleaseAsync(CreateAssurArrQualityReleaseRequest request, CancellationToken cancellationToken = default)
@@ -2360,7 +2372,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.QualityReleases.Add(entity);
         await AddTimelineAsync("release", entity.Id, "assurarr.quality_release.requested", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReleaseResponse(entity);
+        return await ToReleaseResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityReleaseResponse> UpdateQualityReleaseStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -2396,7 +2408,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("release", entity.Id, $"assurarr.quality_release.{entity.Status}", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToReleaseResponse(entity);
+        return await ToReleaseResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrContainmentActionResponse>> ListContainmentActionsAsync(CancellationToken cancellationToken = default)
@@ -3785,7 +3797,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReviewedByPersonId,
             entity.ExpiresAt);
 
-    private static AssurArrQualityReviewResponse ToReviewResponse(AssurArrQualityReview entity) =>
+    private static AssurArrQualityReviewResponse ToReviewResponse(AssurArrQualityReview entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3804,6 +3816,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
+            eventLog,
             entity.SourceReviewRef,
             entity.ReviewerPersonId,
             entity.RequestedAt,
@@ -3814,7 +3827,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.SubmittedEvidenceRefs,
             entity.Notes);
 
-    private static AssurArrQualityReleaseResponse ToReleaseResponse(AssurArrQualityRelease entity) =>
+    private static AssurArrQualityReleaseResponse ToReleaseResponse(AssurArrQualityRelease entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3832,6 +3845,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
+            eventLog,
             entity.HoldRef,
             entity.ReleaseType,
             entity.RequestedByPersonId,
@@ -3843,6 +3857,12 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ExpirationAt,
             entity.EvidenceRecordRefs,
             entity.Notes);
+
+    private async Task<AssurArrQualityReviewResponse> ToReviewResponseAsync(AssurArrQualityReview entity, CancellationToken cancellationToken = default) =>
+        ToReviewResponse(entity, await GetEventLogAsync("review", entity.Id, cancellationToken));
+
+    private async Task<AssurArrQualityReleaseResponse> ToReleaseResponseAsync(AssurArrQualityRelease entity, CancellationToken cancellationToken = default) =>
+        ToReleaseResponse(entity, await GetEventLogAsync("release", entity.Id, cancellationToken));
 
     private static AssurArrContainmentActionResponse ToContainmentActionResponse(AssurArrContainmentAction entity) =>
         new(

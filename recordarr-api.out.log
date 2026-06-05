@@ -1,0 +1,17 @@
+Using launch settings from apps\recordarr-api\RecordArr.Api\Properties\launchSettings.json...
+Building...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+[06:51:56 WRN] Skipping EF migrations for RecordArrDbContext: no database connection configured.
+[06:51:56 INF] Starting RecordArr API (recordarr) on http://localhost:5110
+[06:51:56 INF] Now listening on: http://127.0.0.1:5110
+[06:51:56 INF] Application started. Press Ctrl+C to shut down.
+[06:51:56 INF] Hosting environment: Development
+[06:51:56 INF] Content root path: F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api
+[06:52:11 INF] Request starting HTTP/1.1 GET http://127.0.0.1:5110/openapi/v1.json - null null
+[06:52:11 INF] Executing endpoint 'HTTP: GET /openapi/{documentName}.json'
+[06:52:12 INF] No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+[06:52:12 INF] Executed endpoint 'HTTP: GET /openapi/{documentName}.json'
+[06:52:12 INF] Request finished HTTP/1.1 GET http://127.0.0.1:5110/openapi/v1.json - 200 null application/json;charset=utf-8 379.7334ms

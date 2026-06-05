@@ -55,6 +55,19 @@
         }
       }
     },
+    "/api/integrations/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/access-grants/{accessGrantId}/revoke": {
       "post": {
         "tags": [
@@ -88,25 +101,21 @@
         }
       }
     },
-    "/api/integrations/access-grants/refresh-statuses": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/integrations/access-logs": {
       "get": {
         "tags": [
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationAccessLogs/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -181,6 +190,132 @@
         }
       }
     },
+    "/api/integrations/capture-requests": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationCaptureRequests/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationCaptureRequest/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaptureRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/capture-requests/{captureRequestId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelRecordArrIntegrationCaptureRequest/api/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/capture-requests/{captureRequestId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationCaptureRequest/api/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/capture-requests/{captureRequestId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationCaptureRequest/api/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/capture-requests/{captureRequestId}/skip": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SkipRecordArrIntegrationCaptureRequest/api/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/controlled-documents": {
       "get": {
         "tags": [
@@ -208,6 +343,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/integrations",
         "responses": {
           "200": {
             "description": "OK"
@@ -758,19 +906,6 @@
         }
       }
     },
-    "/api/integrations/controlled-documents/refresh-workflows": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -1075,6 +1210,19 @@
         }
       }
     },
+    "/api/integrations/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationExternalShares/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/external-shares/{externalShareId}/access": {
       "post": {
         "tags": [
@@ -1174,19 +1322,6 @@
         }
       }
     },
-    "/api/integrations/external-shares/refresh-statuses": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationExternalShares/api/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/integrations/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -1236,6 +1371,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/files": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFile/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFiles/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/files/{fileId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationFile/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/files/{fileId}/download": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DownloadRecordArrIntegrationFile/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1326,6 +1550,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/photo-evidence": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationPhotoEvidence/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePhotoEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1882,6 +2129,19 @@
         }
       }
     },
+    "/api/integrations/reminders": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationReminders/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/retention-policies": {
       "get": {
         "tags": [
@@ -1901,6 +2161,29 @@
           "Integrations"
         ],
         "operationId": "RecalculateRecordArrIntegrationRetentionStatuses/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/signatures": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationSignature/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSignatureRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2128,6 +2411,19 @@
         }
       }
     },
+    "/api/v1/integrations/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/access-grants/{accessGrantId}/revoke": {
       "post": {
         "tags": [
@@ -2161,25 +2457,21 @@
         }
       }
     },
-    "/api/v1/integrations/access-grants/refresh-statuses": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationAccessGrants/api/v1/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/integrations/access-logs": {
       "get": {
         "tags": [
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationAccessLogs/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2254,6 +2546,132 @@
         }
       }
     },
+    "/api/v1/integrations/capture-requests": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationCaptureRequests/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationCaptureRequest/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaptureRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capture-requests/{captureRequestId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelRecordArrIntegrationCaptureRequest/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capture-requests/{captureRequestId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteRecordArrIntegrationCaptureRequest/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capture-requests/{captureRequestId}/expire": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ExpireRecordArrIntegrationCaptureRequest/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capture-requests/{captureRequestId}/skip": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SkipRecordArrIntegrationCaptureRequest/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/controlled-documents": {
       "get": {
         "tags": [
@@ -2281,6 +2699,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/v1/integrations",
         "responses": {
           "200": {
             "description": "OK"
@@ -2831,19 +3262,6 @@
         }
       }
     },
-    "/api/v1/integrations/controlled-documents/refresh-workflows": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationControlledDocumentWorkflows/api/v1/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -3148,6 +3566,19 @@
         }
       }
     },
+    "/api/v1/integrations/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RefreshRecordArrIntegrationExternalShares/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/external-shares/{externalShareId}/access": {
       "post": {
         "tags": [
@@ -3247,19 +3678,6 @@
         }
       }
     },
-    "/api/v1/integrations/external-shares/refresh-statuses": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "RefreshRecordArrIntegrationExternalShares/api/v1/integrations",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/integrations/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -3309,6 +3727,95 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/files": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFile/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFiles/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/files/{fileId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrIntegrationFile/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/files/{fileId}/download": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DownloadRecordArrIntegrationFile/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3399,6 +3906,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/photo-evidence": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationPhotoEvidence/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePhotoEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3955,6 +4485,19 @@
         }
       }
     },
+    "/api/v1/integrations/reminders": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationReminders/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/retention-policies": {
       "get": {
         "tags": [
@@ -3974,6 +4517,29 @@
           "Integrations"
         ],
         "operationId": "RecalculateRecordArrIntegrationRetentionStatuses/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/signatures": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationSignature/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSignatureRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4188,6 +4754,19 @@
         }
       }
     },
+    "/api/v1/workspace/access-grants/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrAccessGrants",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/access-grants/{accessGrantId}/revoke": {
       "post": {
         "tags": [
@@ -4221,12 +4800,21 @@
         }
       }
     },
-    "/api/v1/workspace/access-grants/refresh-statuses": {
-      "post": {
+    "/api/v1/workspace/access-logs": {
+      "get": {
         "tags": [
           "Workspace"
         ],
-        "operationId": "RefreshRecordArrAccessGrants",
+        "operationId": "ListRecordArrAccessLogs",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4294,6 +4882,145 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/capture-requests": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrCaptureRequests",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrCaptureRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaptureRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/capture-requests/{captureRequestId}/cancel": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CancelRecordArrCaptureRequest",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/capture-requests/{captureRequestId}/complete": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CompleteRecordArrCaptureRequest",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/capture-requests/{captureRequestId}/expire": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ExpireRecordArrCaptureRequest",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/capture-requests/{captureRequestId}/skip": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "SkipRecordArrCaptureRequest",
+        "parameters": [
+          {
+            "name": "captureRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/controlled-documents/refresh-workflows": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrControlledDocumentWorkflows",
         "responses": {
           "200": {
             "description": "OK"
@@ -4718,19 +5445,6 @@
         }
       }
     },
-    "/api/v1/workspace/controlled-documents/refresh-workflows": {
-      "post": {
-        "tags": [
-          "Workspace"
-        ],
-        "operationId": "RefreshRecordArrControlledDocumentWorkflows",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/workspace/disposal-reviews": {
       "get": {
         "tags": [
@@ -5014,6 +5728,19 @@
         }
       }
     },
+    "/api/v1/workspace/external-shares/refresh-statuses": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RefreshRecordArrExternalShares",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/external-shares/{externalShareId}/access": {
       "post": {
         "tags": [
@@ -5080,19 +5807,6 @@
         }
       }
     },
-    "/api/v1/workspace/external-shares/refresh-statuses": {
-      "post": {
-        "tags": [
-          "Workspace"
-        ],
-        "operationId": "RefreshRecordArrExternalShares",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/workspace/extraction-results/{extractionResultId}": {
       "get": {
         "tags": [
@@ -5137,6 +5851,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ReviewExtractionResultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/files": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrFile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileRequest"
               }
             }
           },
@@ -5802,6 +6539,19 @@
         }
       }
     },
+    "/api/v1/workspace/reminders": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrReminders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/retention-policies": {
       "get": {
         "tags": [
@@ -6186,6 +6936,51 @@
           }
         }
       },
+      "CreateCaptureRequestRequest": {
+        "required": [
+          "sourceProduct",
+          "sourceObjectRef",
+          "captureType",
+          "title",
+          "instructions",
+          "required",
+          "uploadSessionRef",
+          "evidenceRequirementRef"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": "string"
+          },
+          "captureType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "uploadSessionRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRequirementRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateControlledDocumentRequest": {
         "required": [
           "title",
@@ -6400,7 +7195,7 @@
             "type": "string"
           },
           "confidenceScore": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
             "type": [
               "number",
               "string"
@@ -6440,6 +7235,93 @@
           },
           "createdByPersonId": {
             "type": "string"
+          }
+        }
+      },
+      "CreateFileRequest": {
+        "required": [
+          "recordId",
+          "originalFilename",
+          "mimeType",
+          "uploadedByPersonId",
+          "storageProvider",
+          "storageKey",
+          "sizeBytes",
+          "pageCount",
+          "imageWidth",
+          "imageHeight",
+          "durationSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "uploadedByPersonId": {
+            "type": "string"
+          },
+          "storageProvider": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "pageCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "imageWidth": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "imageHeight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -6519,6 +7401,54 @@
           }
         }
       },
+      "CreatePhotoEvidenceRequest": {
+        "required": [
+          "recordId",
+          "photoPurpose",
+          "capturedByPersonId",
+          "sourceProduct",
+          "sourceObjectRef",
+          "geoCoordinates",
+          "deviceSnapshot",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "photoPurpose": {
+            "type": "string"
+          },
+          "capturedByPersonId": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": "string"
+          },
+          "geoCoordinates": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deviceSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateRecordCommentRequest": {
         "required": [
           "body",
@@ -6591,7 +7521,7 @@
             "type": "string"
           },
           "confidenceScore": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
             "type": [
               "number",
               "string"
@@ -6692,6 +7622,72 @@
           }
         }
       },
+      "CreateSignatureRecordRequest": {
+        "required": [
+          "recordId",
+          "signaturePurpose",
+          "signerPersonId",
+          "signerExternalName",
+          "signerTitle",
+          "attestationText",
+          "capturedByPersonId",
+          "sourceProduct",
+          "sourceObjectRef",
+          "geoCoordinates",
+          "deviceSnapshot"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "signaturePurpose": {
+            "type": "string"
+          },
+          "signerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "signerExternalName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "signerTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attestationText": {
+            "type": "string"
+          },
+          "capturedByPersonId": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectRef": {
+            "type": "string"
+          },
+          "geoCoordinates": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deviceSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateUploadSessionRequest": {
         "required": [
           "sourceProduct",
@@ -6769,11 +7765,15 @@
       },
       "ManualCorrectionRequest": {
         "required": [
-          "edgeCoordinates"
+          "edgeCoordinates",
+          "correctedByPersonId"
         ],
         "type": "object",
         "properties": {
           "edgeCoordinates": {
+            "type": "string"
+          },
+          "correctedByPersonId": {
             "type": "string"
           }
         }

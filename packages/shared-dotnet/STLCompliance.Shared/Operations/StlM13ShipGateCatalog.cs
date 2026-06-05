@@ -20,6 +20,7 @@ public static class StlM13ShipGateCatalog
         "supplyarr",
         "compliancecore",
         "loadarr",
+        "reportarr",
         "assurarr",
     ];
 

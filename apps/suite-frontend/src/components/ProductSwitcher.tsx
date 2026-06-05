@@ -21,6 +21,7 @@ const PRODUCT_DESCRIPTIONS: Record<string, string> = {
   routarr: 'Routes and dispatch',
   supplyarr: 'Procurement and inventory',
   recordarr: 'Records, evidence, and retention',
+  reportarr: 'Reporting, dashboards, and analytics',
   compliancecore: 'Rules, vocabulary, and references',
   fieldcompanion: 'Field inbox and mobile tasks',
 }

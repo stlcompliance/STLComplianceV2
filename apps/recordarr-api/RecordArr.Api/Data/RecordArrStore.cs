@@ -1,4 +1,8 @@
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using RecordArr.Api.Models;
+using STLCompliance.Shared.Auth;
 
 namespace RecordArr.Api.Data;
 
@@ -7,6 +11,8 @@ public sealed class RecordArrStore
     private readonly object _gate = new();
     private readonly List<RecordArrRecordResponse> _records;
     private readonly List<RecordArrUploadSessionResponse> _uploadSessions;
+    private readonly List<RecordArrCaptureRequestResponse> _captureRequests;
+    private readonly List<RecordArrFileResponse> _files;
     private readonly List<RecordArrScanProcessingResponse> _scans;
     private readonly List<RecordArrOcrResultResponse> _ocrResults;
     private readonly List<RecordArrExtractionResultResponse> _extractionResults;
@@ -30,11 +36,17 @@ public sealed class RecordArrStore
     private readonly List<RecordArrAccessGrantResponse> _accessGrants;
     private readonly List<RecordArrExternalShareResponse> _externalShares;
     private readonly List<RecordArrRedactionResponse> _redactions;
+    private readonly List<RecordArrSignatureRecordResponse> _signatureRecords;
+    private readonly List<RecordArrPhotoEvidenceResponse> _photoEvidence;
     private readonly List<RecordArrAccessLogResponse> _accessLogs;
 
     public RecordArrStore()
     {
         var now = DateTimeOffset.UtcNow;
+        var bolFileId = "file-bol-001";
+        var sopFileId = "file-sop-001";
+        var bolRenditionId = "rend-bol-001";
+        var sopRenditionId = "rend-sop-001";
 
         _records =
         [
@@ -59,7 +71,25 @@ public sealed class RecordArrStore
                 "bol-7781.pdf",
                 "application/pdf",
                 2,
-                ["route", "evidence", "delivery"]),
+                ["route", "evidence", "delivery"],
+                bolFileId,
+                [bolFileId],
+                bolFileId,
+                ["routarr:trip:trip-7781"],
+                [],
+                [bolFileId],
+                [],
+                [],
+                [],
+                [],
+                null,
+                null,
+                [],
+                null,
+                ["evidence", "delivery", "route"],
+                [],
+                null,
+                null),
             new RecordArrRecordResponse(
                 "rec-sop-001",
                 "REC-260604-002",
@@ -81,7 +111,103 @@ public sealed class RecordArrStore
                 "hazmat-receiving-v3.pdf",
                 "application/pdf",
                 3,
-                ["controlled", "procedure", "review"]),
+                ["controlled", "procedure", "review"],
+                sopFileId,
+                [sopFileId],
+                sopFileId,
+                ["recordarr:template:sop-hazmat-01"],
+                [],
+                [sopFileId],
+                [],
+                [],
+                [],
+                [],
+                null,
+                null,
+                [],
+                null,
+                ["controlled", "procedure", "review"],
+                [],
+                null,
+                null),
+        ];
+
+        _files =
+        [
+            new RecordArrFileResponse(
+                bolFileId,
+                "tenant-demo",
+                "rec-bol-001",
+                "FILE-260604-001",
+                "local",
+                $"recordarr/files/{bolFileId}",
+                "bol-7781.pdf",
+                "bol-7781.pdf",
+                "pdf",
+                "application/pdf",
+                28192,
+                "sha256-file-bol-001",
+                1,
+                null,
+                null,
+                null,
+                now.AddDays(-3),
+                "person-route-lead",
+                "clean",
+                "completed",
+                "encrypted",
+                null,
+                null,
+                [
+                    new RecordArrFileRenditionResponse(
+                        bolRenditionId,
+                        bolFileId,
+                        "rec-bol-001",
+                        "preview",
+                        $"recordarr/renditions/{bolRenditionId}",
+                        "application/pdf",
+                        8192,
+                        1,
+                        "generated",
+                        now.AddDays(-3))
+                ]),
+            new RecordArrFileResponse(
+                sopFileId,
+                "tenant-demo",
+                "rec-sop-001",
+                "FILE-260604-002",
+                "local",
+                $"recordarr/files/{sopFileId}",
+                "hazmat-receiving-v3.pdf",
+                "hazmat-receiving-v3.pdf",
+                "pdf",
+                "application/pdf",
+                35648,
+                "sha256-file-sop-001",
+                2,
+                null,
+                null,
+                null,
+                now.AddDays(-14),
+                "person-doc-controller",
+                "clean",
+                "completed",
+                "encrypted",
+                null,
+                null,
+                [
+                    new RecordArrFileRenditionResponse(
+                        sopRenditionId,
+                        sopFileId,
+                        "rec-sop-001",
+                        "preview",
+                        $"recordarr/renditions/{sopRenditionId}",
+                        "application/pdf",
+                        11264,
+                        2,
+                        "generated",
+                        now.AddDays(-14))
+                ]),
         ];
 
         _uploadSessions =
@@ -106,6 +232,38 @@ public sealed class RecordArrStore
                 5,
                 25_000_000,
                 ["rec-bol-001"]),
+        ];
+
+        _captureRequests =
+        [
+            new RecordArrCaptureRequestResponse(
+                "cap-001",
+                "tenant-demo",
+                "routarr",
+                "routarr:trip:trip-7781",
+                "photo",
+                "Dock arrival photo",
+                "Capture a dock-side arrival photo before unloading begins.",
+                true,
+                "open",
+                null,
+                "evidence_requirement.trip.pod",
+                now.AddHours(-2),
+                null),
+            new RecordArrCaptureRequestResponse(
+                "cap-002",
+                "tenant-demo",
+                "routarr",
+                "routarr:trip:trip-7781",
+                "signature",
+                "Delivery signature",
+                "Collect the signature from the receiver after delivery.",
+                true,
+                "completed",
+                "upl-001",
+                "evidence_requirement.trip.pod",
+                now.AddHours(-5),
+                now.AddHours(-4)),
         ];
 
         _recordMetadata =
@@ -185,18 +343,45 @@ public sealed class RecordArrStore
                 "completed",
                 "bol",
                 "edge:manual",
+                null,
+                null,
+                null,
+                bolFileId,
+                null,
                 "rec-bol-001",
                 "ocr-001",
                 "ext-001",
+                new RecordArrEdgeDetectionResultResponse(
+                    "edge-001",
+                    "scan-001",
+                    "detected",
+                    0.96m,
+                    0,
+                    "10,10,540,20,540,720,10,720",
+                    now.AddHours(-2),
+                    false),
+                new RecordArrImageEnhancementSettingsResponse(
+                    "enh-001",
+                    "scan-001",
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    true,
+                    false,
+                    "pdf"),
                 0.94m,
                 now.AddHours(-2),
                 null),
         ];
 
+        string seedOcrResultId = "ocr-001";
         _ocrResults =
         [
             new RecordArrOcrResultResponse(
-                "ocr-001",
+                seedOcrResultId,
                 "rec-bol-001",
                 "file-bol-001",
                 "azure_document_intelligence",
@@ -204,6 +389,18 @@ public sealed class RecordArrStore
                 "en",
                 0.93m,
                 "Bill of lading number RT-7781 with delivery signature and pickup confirmation.",
+                [
+                    new RecordArrOcrPageResultResponse(
+                        "ocrpage-001",
+                        seedOcrResultId,
+                        1,
+                        "Bill of lading number RT-7781 with delivery signature and pickup confirmation.",
+                        0.93m,
+                        1920,
+                        1080,
+                        ["Bill of lading number RT-7781", "Delivery signature"]),
+                ],
+                ["Bill of lading number RT-7781", "Delivery signature"],
                 now.AddHours(-2),
                 null),
         ];
@@ -216,8 +413,8 @@ public sealed class RecordArrStore
                 "bol",
                 "manual_review_required",
                 [
-                    new RecordArrExtractedFieldResponse("fld-001", "ext-001", "bol_number", "BOL Number", "RT-7781", "string", 0.98m, "unreviewed", null, null, null),
-                    new RecordArrExtractedFieldResponse("fld-002", "ext-001", "delivery_signature", "Delivery Signature", "Avery Auditor", "string", 0.77m, "unreviewed", null, null, null),
+                    new RecordArrExtractedFieldResponse("fld-001", "ext-001", "bol_number", "BOL Number", "RT-7781", "string", 0.98m, 1, "10,10,120,24", "unreviewed", null, null, null),
+                    new RecordArrExtractedFieldResponse("fld-002", "ext-001", "delivery_signature", "Delivery Signature", "Avery Auditor", "string", 0.77m, 1, "220,640,420,720", "unreviewed", null, null, null),
                 ],
                 0.88m,
                 now.AddHours(-2),
@@ -336,7 +533,7 @@ public sealed class RecordArrStore
                 "Holds controlled documents while audit evidence is reviewed.",
                 "active",
                 "audit",
-                ["record_type:document", "document_type:procedure"],
+                ["record:rec-sop-001", "document_type:procedure"],
                 ["rec-sop-001"],
                 "compliancecore",
                 "audit",
@@ -411,7 +608,8 @@ public sealed class RecordArrStore
                 now.AddDays(-7),
                 "Initial release",
                 null,
-                "ver-002"),
+                "ver-002",
+                "file-sop-001"),
             new RecordArrControlledDocumentVersionResponse(
                 "ver-002",
                 "doc-001",
@@ -428,7 +626,8 @@ public sealed class RecordArrStore
                 null,
                 "Added evidence capture and review steps",
                 "ver-001",
-                null),
+                null,
+                "file-sop-001"),
         ];
 
         _documentReviews =
@@ -540,6 +739,9 @@ public sealed class RecordArrStore
                 ["mask:signature", "mask:phone"]),
         ];
 
+        _signatureRecords = [];
+        _photoEvidence = [];
+
         _accessLogs =
         [
             new RecordArrAccessLogResponse(
@@ -560,27 +762,28 @@ public sealed class RecordArrStore
     public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> entitlements) =>
         new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "recordarr", true, entitlements.ToArray());
 
-    public RecordArrDashboardResponse GetDashboard()
+    public RecordArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
         lock (_gate)
         {
+            var accessibleRecords = _records.Where(record => CanReadRecord(principal, record)).ToArray();
             return new RecordArrDashboardResponse(
                 DateTimeOffset.UtcNow,
-                _records.Count,
-                _records.Count(record => record.Status is "active" or "effective" or "approved"),
-                _records.Count(record => record.Status is "review" or "processing"),
+                accessibleRecords.Length,
+                accessibleRecords.Count(record => record.Status is "active" or "effective" or "approved"),
+                accessibleRecords.Count(record => record.Status is "review" or "processing"),
                 _uploadSessions.Count,
                 _packages.Count,
                 _controlledDocuments.Count,
                 _legalHolds.Count,
-                _records.OrderByDescending(record => record.UploadedAt).Take(5).ToArray(),
+                accessibleRecords.OrderByDescending(record => record.UploadedAt).Take(5).Select(ProjectRecord).ToArray(),
                 _packages.Where(pkg => pkg.Status is not "archived").Take(5).ToArray(),
                 _controlledDocuments.Take(5).ToArray(),
                 _legalHolds.Take(5).ToArray());
         }
     }
 
-    public IReadOnlyList<RecordArrRecordResponse> GetRecords(string? search = null)
+    public IReadOnlyList<RecordArrRecordResponse> GetRecords(ClaimsPrincipal principal, string? search = null)
     {
         lock (_gate)
         {
@@ -602,15 +805,20 @@ public sealed class RecordArrStore
                     record.Tags.Any(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return records.OrderByDescending(record => record.UploadedAt).ToArray();
+            return records
+                .Where(record => CanReadRecord(principal, record))
+                .OrderByDescending(record => record.UploadedAt)
+                .Select(ProjectRecord)
+                .ToArray();
         }
     }
 
-    public RecordArrRecordResponse? GetRecord(string recordId)
+    public RecordArrRecordResponse? GetRecord(ClaimsPrincipal principal, string recordId)
     {
         lock (_gate)
         {
-            return _records.FirstOrDefault(record => string.Equals(record.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            var record = _records.FirstOrDefault(candidate => string.Equals(candidate.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            return record is null || !CanReadRecord(principal, record) ? null : ProjectRecord(record);
         }
     }
 
@@ -618,14 +826,67 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedRecordType = NormalizeRecordArrEnum(
+                recordType,
+                nameof(recordType),
+                "document",
+                "photo",
+                "signature",
+                "video",
+                "audio",
+                "form_submission",
+                "generated_pdf",
+                "certificate",
+                "inspection_record",
+                "training_record",
+                "maintenance_record",
+                "receiving_record",
+                "delivery_record",
+                "quality_record",
+                "audit_evidence",
+                "evidence_package",
+                "report_output",
+                "other");
+            var normalizedDocumentType = NormalizeRecordArrEnum(
+                documentType,
+                nameof(documentType),
+                "bol",
+                "pod",
+                "packing_slip",
+                "invoice_reference",
+                "certificate",
+                "policy",
+                "procedure",
+                "work_instruction",
+                "form",
+                "safety_data_sheet",
+                "inspection_form",
+                "maintenance_evidence",
+                "training_evidence",
+                "quality_evidence",
+                "customer_document",
+                "supplier_document",
+                "contract",
+                "permit",
+                "photo_evidence",
+                "signature_evidence",
+                "other");
             var normalizedClassification = NormalizeClassification(classification);
+            var recordId = $"rec-{Guid.NewGuid():N}"[..12];
+            var file = CreateFileObject(
+                recordId,
+                currentFileName,
+                currentMimeType,
+                uploadedByPersonId,
+                attachToRecord: false,
+                setAsCurrentFile: false);
             var record = new RecordArrRecordResponse(
-                $"rec-{Guid.NewGuid():N}"[..12],
+                recordId,
                 $"REC-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 title,
                 description,
-                recordType,
-                documentType,
+                normalizedRecordType,
+                normalizedDocumentType,
                 "processing",
                 normalizedClassification,
                 sourceProduct,
@@ -640,7 +901,25 @@ public sealed class RecordArrStore
                 currentFileName,
                 currentMimeType,
                 1,
-                [sourceProduct, recordType, documentType]);
+                [sourceProduct, normalizedRecordType, normalizedDocumentType],
+                file.FileId,
+                [file.FileId],
+                file.FileId,
+                [$"{sourceProduct}:{sourceObjectType}:{sourceObjectId}"],
+                [],
+                [file.FileId],
+                [],
+                [],
+                [],
+                [],
+                null,
+                null,
+                [],
+                null,
+                [sourceProduct, normalizedRecordType, normalizedDocumentType],
+                [],
+                null,
+                null);
             _records.Add(record);
             _recordLinks.Add(new RecordArrRecordLinkResponse(
                 $"rlk-{Guid.NewGuid():N}"[..12],
@@ -651,7 +930,232 @@ public sealed class RecordArrStore
                 DateTimeOffset.UtcNow,
                 uploadedByPersonId));
             _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], record.RecordId, "upload", "allowed", uploadedByPersonId, null, null, DateTimeOffset.UtcNow, null, null, "api-upload"));
-            return record;
+            return ProjectRecord(record);
+        }
+    }
+
+    public IReadOnlyList<RecordArrFileResponse> GetFiles(ClaimsPrincipal principal, string? recordId = null)
+    {
+        lock (_gate)
+        {
+            var query = _files.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(recordId))
+            {
+                query = query.Where(file => string.Equals(file.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query
+                .Where(file => CanReadRecord(principal, RequireRecord(file.RecordId)))
+                .OrderByDescending(file => file.UploadedAt)
+                .ToArray();
+        }
+    }
+
+    public RecordArrFileResponse? GetFile(ClaimsPrincipal principal, string fileId)
+    {
+        lock (_gate)
+        {
+            var file = FindFile(fileId);
+            if (file is not null && CanReadRecord(principal, RequireRecord(file.RecordId)))
+            {
+                _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "view", "allowed", null, null, null, DateTimeOffset.UtcNow, null, null, "file_lookup"));
+                return file;
+            }
+
+            if (file is not null)
+            {
+                _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "view", "denied", null, null, null, DateTimeOffset.UtcNow, null, null, "access_policy_denied"));
+            }
+
+            return null;
+        }
+    }
+
+    public string DownloadFile(ClaimsPrincipal principal, string fileId)
+    {
+        lock (_gate)
+        {
+            var file = FindFile(fileId);
+            if (file is null)
+            {
+                throw new InvalidOperationException($"File {fileId} not found.");
+            }
+
+            if (!CanDownloadRecord(principal, RequireRecord(file.RecordId)))
+            {
+                _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "download", "denied", null, null, null, DateTimeOffset.UtcNow, null, null, "access_policy_denied"));
+                throw new InvalidOperationException($"File {fileId} is not available for download.");
+            }
+
+            if (file.DeletedAt.HasValue)
+            {
+                throw new InvalidOperationException($"File {fileId} is not available for download.");
+            }
+
+            _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "download", "allowed", null, null, null, DateTimeOffset.UtcNow, null, null, "file_download"));
+
+            return string.Join(
+                Environment.NewLine,
+                [
+                    "RecordArr file download",
+                    $"File: {file.FileNumber}",
+                    $"Original filename: {file.OriginalFilename}",
+                    $"Mime type: {file.MimeType}",
+                    $"Record: {file.RecordId}",
+                    $"Uploaded at: {file.UploadedAt:O}",
+                    $"Storage key: {file.StorageKey}",
+                    $"Checksum: {file.ChecksumSha256}",
+                ]);
+        }
+    }
+
+    public RecordArrFileResponse CreateFile(
+        string recordId,
+        string originalFilename,
+        string mimeType,
+        string uploadedByPersonId,
+        string? storageProvider = null,
+        string? storageKey = null,
+        long? sizeBytes = null,
+        int? pageCount = null,
+        int? imageWidth = null,
+        int? imageHeight = null,
+        int? durationSeconds = null)
+    {
+        lock (_gate)
+        {
+            RequireRecord(recordId);
+            return CreateFileObject(
+                recordId,
+                originalFilename,
+                mimeType,
+                uploadedByPersonId,
+                storageProvider,
+                storageKey,
+                sizeBytes,
+                pageCount,
+                imageWidth,
+                imageHeight,
+                durationSeconds,
+                attachToRecord: true,
+                setAsCurrentFile: true);
+        }
+    }
+
+    public IReadOnlyList<RecordArrSignatureRecordResponse> GetSignatureRecords(string? recordId = null)
+    {
+        lock (_gate)
+        {
+            var query = _signatureRecords.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(recordId))
+            {
+                query = query.Where(signature => string.Equals(signature.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query.OrderByDescending(signature => signature.SignedAt).ToArray();
+        }
+    }
+
+    public RecordArrSignatureRecordResponse CreateSignatureRecord(
+        string recordId,
+        string signaturePurpose,
+        string? signerPersonId,
+        string? signerExternalName,
+        string? signerTitle,
+        string attestationText,
+        string capturedByPersonId,
+        string sourceProduct,
+        string sourceObjectRef,
+        string? geoCoordinates = null,
+        string? deviceSnapshot = null)
+    {
+        lock (_gate)
+        {
+            RequireRecord(recordId);
+            var file = CreateFileObject(
+                recordId,
+                $"signature-{signaturePurpose}.png",
+                "image/png",
+                capturedByPersonId,
+                sizeBytes: 128_000,
+                imageWidth: 1600,
+                imageHeight: 900,
+                attachToRecord: true,
+                setAsCurrentFile: false);
+
+            var signature = new RecordArrSignatureRecordResponse(
+                $"sig-{Guid.NewGuid():N}"[..12],
+                "tenant-demo",
+                recordId,
+                signaturePurpose,
+                signerPersonId,
+                signerExternalName,
+                signerTitle,
+                attestationText,
+                file.FileId,
+                DateTimeOffset.UtcNow,
+                capturedByPersonId,
+                sourceProduct,
+                sourceObjectRef,
+                geoCoordinates,
+                deviceSnapshot);
+            _signatureRecords.Add(signature);
+            return signature;
+        }
+    }
+
+    public IReadOnlyList<RecordArrPhotoEvidenceResponse> GetPhotoEvidence(string? recordId = null)
+    {
+        lock (_gate)
+        {
+            var query = _photoEvidence.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(recordId))
+            {
+                query = query.Where(photo => string.Equals(photo.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query.OrderByDescending(photo => photo.CapturedAt).ToArray();
+        }
+    }
+
+    public RecordArrPhotoEvidenceResponse CreatePhotoEvidence(
+        string recordId,
+        string photoPurpose,
+        string capturedByPersonId,
+        string sourceProduct,
+        string sourceObjectRef,
+        string? geoCoordinates = null,
+        string? deviceSnapshot = null,
+        string? notes = null)
+    {
+        lock (_gate)
+        {
+            RequireRecord(recordId);
+            CreateFileObject(
+                recordId,
+                $"photo-{photoPurpose}.jpg",
+                "image/jpeg",
+                capturedByPersonId,
+                sizeBytes: 256_000,
+                imageWidth: 1920,
+                imageHeight: 1080,
+                attachToRecord: true,
+                setAsCurrentFile: false);
+
+            var photo = new RecordArrPhotoEvidenceResponse(
+                $"pho-{Guid.NewGuid():N}"[..12],
+                "tenant-demo",
+                recordId,
+                photoPurpose,
+                sourceProduct,
+                sourceObjectRef,
+                DateTimeOffset.UtcNow,
+                capturedByPersonId,
+                geoCoordinates,
+                deviceSnapshot,
+                notes);
+            _photoEvidence.Add(photo);
+            return photo;
         }
     }
 
@@ -665,15 +1169,16 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Record {recordId} not found.");
             }
 
+            var normalizedStatus = NormalizeRecordStatus(status);
             var updated = _records[index] with
             {
-                Status = status,
+                Status = normalizedStatus,
                 Classification = classification is null ? _records[index].Classification : NormalizeClassification(classification),
                 EffectiveAt = effectiveAt ?? _records[index].EffectiveAt,
                 ExpiresAt = expiresAt ?? _records[index].ExpiresAt
             };
             _records[index] = updated;
-            return updated;
+            return ProjectRecord(updated);
         }
     }
 
@@ -876,6 +1381,23 @@ public sealed class RecordArrStore
         };
     }
 
+    private static string NormalizeRecordStatus(string status)
+    {
+        return NormalizeRecordArrEnum(
+            status,
+            nameof(status),
+            "draft",
+            "processing",
+            "active",
+            "review",
+            "approved",
+            "rejected",
+            "superseded",
+            "expired",
+            "archived",
+            "purged");
+    }
+
     private static string NormalizeRecordMetadataValueType(string valueType)
     {
         if (string.IsNullOrWhiteSpace(valueType))
@@ -956,6 +1478,22 @@ public sealed class RecordArrStore
         };
     }
 
+    private static string NormalizeRecordArrEnum(string value, string parameterName, params string[] allowedValues)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException($"'{parameterName}' is required.");
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (allowedValues.Any(allowed => string.Equals(allowed, normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            return normalized;
+        }
+
+        throw new InvalidOperationException($"Unsupported {parameterName} '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");
+    }
+
     private void AppendRecordLinkAuditTrail(RecordArrRecordResponse record, string action, string actorPersonId, string details)
     {
         AddAccessLog(record.RecordId, action, "allowed", actorPersonId, null, null, null, null, details);
@@ -1006,6 +1544,84 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrCaptureRequestResponse> GetCaptureRequests()
+    {
+        lock (_gate)
+        {
+            return _captureRequests.OrderByDescending(request => request.CreatedAt).ToArray();
+        }
+    }
+
+    public RecordArrCaptureRequestResponse CreateCaptureRequest(
+        string sourceProduct,
+        string sourceObjectRef,
+        string captureType,
+        string title,
+        string instructions,
+        bool required,
+        string? uploadSessionRef,
+        string? evidenceRequirementRef)
+    {
+        lock (_gate)
+        {
+            if (string.IsNullOrWhiteSpace(sourceProduct))
+            {
+                throw new InvalidOperationException("Capture request sourceProduct is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(sourceObjectRef))
+            {
+                throw new InvalidOperationException("Capture request sourceObjectRef is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                throw new InvalidOperationException("Capture request title is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new InvalidOperationException("Capture request instructions are required.");
+            }
+
+            var normalizedCaptureType = NormalizeRecordArrEnum(
+                captureType,
+                nameof(captureType),
+                "photo",
+                "document_scan",
+                "signature",
+                "video",
+                "audio",
+                "file_upload",
+                "generated_pdf");
+
+            var request = new RecordArrCaptureRequestResponse(
+                $"cap-{Guid.NewGuid():N}"[..12],
+                "tenant-demo",
+                sourceProduct.Trim(),
+                sourceObjectRef.Trim(),
+                normalizedCaptureType,
+                title.Trim(),
+                instructions.Trim(),
+                required,
+                "open",
+                string.IsNullOrWhiteSpace(uploadSessionRef) ? null : uploadSessionRef.Trim(),
+                string.IsNullOrWhiteSpace(evidenceRequirementRef) ? null : evidenceRequirementRef.Trim(),
+                DateTimeOffset.UtcNow,
+                null);
+            _captureRequests.Add(request);
+            return request;
+        }
+    }
+
+    public RecordArrCaptureRequestResponse CompleteCaptureRequest(string captureRequestId) => UpdateCaptureRequestStatus(captureRequestId, "completed");
+
+    public RecordArrCaptureRequestResponse SkipCaptureRequest(string captureRequestId) => UpdateCaptureRequestStatus(captureRequestId, "skipped");
+
+    public RecordArrCaptureRequestResponse CancelCaptureRequest(string captureRequestId) => UpdateCaptureRequestStatus(captureRequestId, "canceled");
+
+    public RecordArrCaptureRequestResponse ExpireCaptureRequest(string captureRequestId) => UpdateCaptureRequestStatus(captureRequestId, "expired");
+
     public RecordArrUploadSessionResponse CompleteUploadSession(string uploadSessionId, string recordId)
     {
         lock (_gate)
@@ -1024,6 +1640,7 @@ public sealed class RecordArrStore
                 UploadedRecordRefs = current.UploadedRecordRefs.Concat([recordId]).ToArray()
             };
             _uploadSessions[index] = updated;
+            MarkCaptureRequestsCompleted(uploadSessionId, recordId);
             return updated;
         }
     }
@@ -1050,22 +1667,188 @@ public sealed class RecordArrStore
         }
     }
 
+    private RecordArrCaptureRequestResponse UpdateCaptureRequestStatus(string captureRequestId, string status)
+    {
+        lock (_gate)
+        {
+            var index = _captureRequests.FindIndex(request => string.Equals(request.CaptureRequestId, captureRequestId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"Capture request {captureRequestId} not found.");
+            }
+
+            var current = _captureRequests[index];
+            if (string.Equals(current.Status, status, StringComparison.OrdinalIgnoreCase))
+            {
+                return current;
+            }
+
+            if (current.Status is "completed" or "skipped" or "expired" or "canceled")
+            {
+                throw new InvalidOperationException($"Capture request {captureRequestId} is already {current.Status}.");
+            }
+
+            if (status is not ("completed" or "skipped" or "expired" or "canceled"))
+            {
+                throw new InvalidOperationException($"Unsupported capture request status '{status}'.");
+            }
+
+            var updated = current with
+            {
+                Status = status,
+                CompletedAt = status == "completed" ? DateTimeOffset.UtcNow : current.CompletedAt
+            };
+            _captureRequests[index] = updated;
+            return updated;
+        }
+    }
+
+    private void MarkCaptureRequestsCompleted(string uploadSessionId, string recordId)
+    {
+        for (var i = 0; i < _captureRequests.Count; i++)
+        {
+            var current = _captureRequests[i];
+            if (!string.Equals(current.UploadSessionRef, uploadSessionId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (current.Status is "completed" or "skipped" or "expired" or "canceled")
+            {
+                continue;
+            }
+
+            _captureRequests[i] = current with
+            {
+                Status = "completed",
+                CompletedAt = DateTimeOffset.UtcNow
+            };
+            _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], recordId, "capture_request", "allowed", null, null, null, DateTimeOffset.UtcNow, null, null, $"Capture request {current.CaptureType} completed from upload session {uploadSessionId}."));
+        }
+    }
+
     public RecordArrScanProcessingResponse CreateScanProcessing(string recordId, string originalFileName, string scanPurpose)
     {
         lock (_gate)
         {
+            RequireRecord(recordId);
+            var now = DateTimeOffset.UtcNow;
+            var scanId = $"scan-{Guid.NewGuid():N}"[..12];
+            var edgeDetectionId = $"edge-{Guid.NewGuid():N}"[..12];
+            var enhancementSettingsId = $"enh-{Guid.NewGuid():N}"[..12];
+            var originalFile = CreateFileObject(
+                recordId,
+                originalFileName,
+                "image/jpeg",
+                "system",
+                sizeBytes: 384_000,
+                imageWidth: 1920,
+                imageHeight: 1080,
+                attachToRecord: true,
+                setAsCurrentFile: false);
+            var generatedPdfFile = CreateFileObject(
+                recordId,
+                $"{Path.GetFileNameWithoutExtension(originalFileName)}.pdf",
+                "application/pdf",
+                "system",
+                storageProvider: "generated",
+                storageKey: $"recordarr/renditions/{recordId}/{originalFile.FileId}-pdf",
+                sizeBytes: 128_000,
+                pageCount: 1,
+                attachToRecord: true,
+                setAsCurrentFile: true);
+            var ocrResultId = $"ocr-{Guid.NewGuid():N}"[..12];
+            var ocrPageResultId = $"ocrpage-{Guid.NewGuid():N}"[..12];
+            var ocrResult = new RecordArrOcrResultResponse(
+                ocrResultId,
+                recordId,
+                generatedPdfFile.FileId,
+                "azure_document_intelligence",
+                "completed",
+                "en",
+                0.93m,
+                $"OCR text extracted from {originalFileName}.",
+                [
+                    new RecordArrOcrPageResultResponse(
+                        ocrPageResultId,
+                        ocrResultId,
+                        1,
+                        $"OCR text extracted from {originalFileName}.",
+                        0.93m,
+                        1920,
+                        1080,
+                        [$"OCR text extracted from {originalFileName}."]),
+                ],
+                [$"OCR text extracted from {originalFileName}."],
+                now,
+                null);
+            _ocrResults.Add(ocrResult);
+            var extractionResultId = $"ext-{Guid.NewGuid():N}"[..12];
+            var extractionResult = new RecordArrExtractionResultResponse(
+                extractionResultId,
+                recordId,
+                scanPurpose,
+                "manual_review_required",
+                [
+                    new RecordArrExtractedFieldResponse(
+                        $"fld-{Guid.NewGuid():N}"[..12],
+                        extractionResultId,
+                        "detected_value",
+                        "Detected Value",
+                        originalFileName,
+                        "string",
+                        0.81m,
+                        1,
+                        "20,20,480,60",
+                        "unreviewed",
+                        null,
+                        null,
+                        null),
+                ],
+                0.84m,
+                now,
+                null,
+                null,
+                "Auto extraction queued for review.");
+            _extractionResults.Add(extractionResult);
             var scan = new RecordArrScanProcessingResponse(
                 $"scan-{Guid.NewGuid():N}"[..12],
                 recordId,
                 originalFileName,
-                "uploaded",
+                "completed",
                 scanPurpose,
+                "edge:detected",
                 null,
                 null,
                 null,
-                null,
-                0.42m,
-                null,
+                originalFile.FileId,
+                generatedPdfFile.FileId,
+                recordId,
+                ocrResult.OcrResultId,
+                extractionResult.ExtractionResultId,
+                new RecordArrEdgeDetectionResultResponse(
+                    edgeDetectionId,
+                    scanId,
+                    "detected",
+                    0.95m,
+                    0,
+                    "10,10,540,20,540,720,10,720",
+                    now,
+                    false),
+                new RecordArrImageEnhancementSettingsResponse(
+                    enhancementSettingsId,
+                    scanId,
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    true,
+                    false,
+                    "pdf"),
+                0.94m,
+                now,
                 null);
             _scans.Add(scan);
             return scan;
@@ -1088,7 +1871,7 @@ public sealed class RecordArrStore
         }
     }
 
-    public RecordArrScanProcessingResponse ApplyManualCorrection(string scanProcessingId, string edgeCoordinates)
+    public RecordArrScanProcessingResponse ApplyManualCorrection(string scanProcessingId, string edgeCoordinates, string correctedByPersonId)
     {
         lock (_gate)
         {
@@ -1101,10 +1884,23 @@ public sealed class RecordArrStore
             var current = _scans[index];
             var updated = current with
             {
-                Status = "completed",
+                Status = "manually_corrected",
                 EdgeCoordinates = edgeCoordinates,
+                ManualEdgeCoordinates = edgeCoordinates,
+                CorrectedByPersonId = correctedByPersonId,
+                CorrectedAt = DateTimeOffset.UtcNow,
                 ProcessedAt = DateTimeOffset.UtcNow,
-                ConfidenceScore = 0.91m
+                ConfidenceScore = 0.91m,
+                EdgeDetectionResult = current.EdgeDetectionResult is null
+                    ? null
+                    : current.EdgeDetectionResult with
+                    {
+                        Status = "detected",
+                        ConfidenceScore = 0.98m,
+                        Corners = edgeCoordinates,
+                        DetectedAt = DateTimeOffset.UtcNow,
+                        RequiresManualCorrection = false
+                    }
             };
             _scans[index] = updated;
             return updated;
@@ -1182,6 +1978,14 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedMappingSource = NormalizeRecordArrEnum(
+                mappingSource,
+                nameof(mappingSource),
+                "compliancecore_suggestion",
+                "user_confirmed",
+                "product_asserted",
+                "import",
+                "system");
             var mapping = new RecordArrEvidenceMappingResponse(
                 $"map-{Guid.NewGuid():N}"[..12],
                 recordId,
@@ -1191,7 +1995,7 @@ public sealed class RecordArrStore
                 complianceRequirementRef,
                 evidenceTypeKey,
                 "suggested",
-                mappingSource,
+                normalizedMappingSource,
                 confidenceScore,
                 null,
                 null,
@@ -1216,15 +2020,23 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Evidence mapping {mappingId} not found.");
             }
 
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "suggested",
+                "confirmed",
+                "rejected",
+                "superseded",
+                "expired");
             var current = _evidenceMappings[index];
             var updated = current with
             {
-                Status = status,
-                ConfirmedByPersonId = status == "confirmed" ? personId : current.ConfirmedByPersonId,
-                ConfirmedAt = status == "confirmed" ? DateTimeOffset.UtcNow : current.ConfirmedAt,
-                RejectedByPersonId = status == "rejected" ? personId : current.RejectedByPersonId,
-                RejectedAt = status == "rejected" ? DateTimeOffset.UtcNow : current.RejectedAt,
-                RejectionReason = status == "rejected" ? reason : current.RejectionReason,
+                Status = normalizedStatus,
+                ConfirmedByPersonId = normalizedStatus == "confirmed" ? personId : current.ConfirmedByPersonId,
+                ConfirmedAt = normalizedStatus == "confirmed" ? DateTimeOffset.UtcNow : current.ConfirmedAt,
+                RejectedByPersonId = normalizedStatus == "rejected" ? personId : current.RejectedByPersonId,
+                RejectedAt = normalizedStatus == "rejected" ? DateTimeOffset.UtcNow : current.RejectedAt,
+                RejectionReason = normalizedStatus == "rejected" ? reason : current.RejectionReason,
                 Notes = notes ?? current.Notes
             };
             _evidenceMappings[index] = updated;
@@ -1250,28 +2062,88 @@ public sealed class RecordArrStore
         }
     }
 
-    public RecordArrPackageResponse CreatePackage(string title, string packageType, string sourceProduct, string sourceObjectRef, string recordRef)
+    public RecordArrPackageResponse CreatePackage(string title, string packageType, string sourceProduct, string sourceObjectRef, string recordRef, string requestedByPersonId)
     {
         lock (_gate)
         {
-            var package = new RecordArrPackageResponse(
-                $"pkg-{Guid.NewGuid():N}"[..12],
-                $"PKG-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                title,
+            RequireRecord(recordRef);
+            var normalizedPackageType = NormalizeRecordArrEnum(
                 packageType,
-                "assembling",
+                nameof(packageType),
+                "audit",
+                "work_order_closeout",
+                "training_completion",
+                "receiving",
+                "delivery",
+                "quality",
+                "capa",
+                "customer",
+                "supplier",
+                "compliance",
+                "incident",
+                "person_audit",
+                "report_output",
+                "custom");
+            var now = DateTimeOffset.UtcNow;
+            var packageRecordRefs = BuildPackageRecordRefs(recordRef, sourceObjectRef);
+            var sourceObjectRefs = BuildPackageSourceObjectRefs(sourceObjectRef, recordRef, packageRecordRefs);
+            var recordEntries = BuildPackageRecordEntries(packageRecordRefs);
+            var sourceObjectEntries = BuildPackageSourceObjectEntries(sourceProduct, sourceObjectRefs);
+            var requirementEntries = BuildPackageRequirementEntries(sourceProduct, sourceObjectRef, packageRecordRefs);
+            var manifestChecksum = ComputePackageManifestChecksum(recordEntries, sourceObjectEntries, requirementEntries);
+            var packageId = $"pkg-{Guid.NewGuid():N}"[..12];
+            var generatedPdfFile = CreateFileObject(
+                recordRef,
+                $"{title}.pdf",
+                "application/pdf",
+                requestedByPersonId,
+                storageProvider: "generated",
+                storageKey: $"recordarr/packages/{packageId}/manifest.pdf",
+                sizeBytes: Math.Max(32_768, title.Length * 2048L),
+                pageCount: Math.Max(1, recordEntries.Count + sourceObjectEntries.Count + requirementEntries.Count),
+                attachToRecord: true,
+                setAsCurrentFile: false);
+            var generatedZipFile = CreateFileObject(
+                recordRef,
+                $"{title}.zip",
+                "application/zip",
+                requestedByPersonId,
+                storageProvider: "generated",
+                storageKey: $"recordarr/packages/{packageId}/package.zip",
+                sizeBytes: Math.Max(65_536, title.Length * 4096L),
+                attachToRecord: true,
+                setAsCurrentFile: false);
+            var manifest = new RecordArrPackageManifestResponse(
+                $"manifest-{Guid.NewGuid():N}"[..12],
+                packageId,
+                1,
+                now,
+                recordEntries,
+                sourceObjectEntries,
+                requirementEntries,
+                manifestChecksum,
+                requestedByPersonId);
+
+            var package = new RecordArrPackageResponse(
+                packageId,
+                $"PKG-{now:yyMMdd-HHmmss}",
+                title,
+                normalizedPackageType,
+                "complete",
                 sourceProduct,
-                [sourceObjectRef],
-                [recordRef],
-                null,
-                null,
-                null,
-                DateTimeOffset.UtcNow,
-                null,
+                sourceObjectRefs,
+                packageRecordRefs,
+                manifestChecksum,
+                generatedPdfFile.FileId,
+                generatedZipFile.FileId,
+                now,
+                now,
                 null,
                 null,
                 null);
+            _manifests.Add(manifest);
             _packages.Add(package);
+            AddAccessLog(recordRef, "package.created", "allowed", requestedByPersonId, null, null, null, null, "package-created");
             return package;
         }
     }
@@ -1293,6 +2165,7 @@ public sealed class RecordArrStore
                 LockedAt = DateTimeOffset.UtcNow
             };
             _packages[index] = updated;
+            AddAccessLog(current.RecordRefs.FirstOrDefault() ?? current.SourceObjectRefs.FirstOrDefault() ?? packageId, "package.locked", "allowed", "system", null, null, null, null, "package-locked");
             return updated;
         }
     }
@@ -1319,6 +2192,7 @@ public sealed class RecordArrStore
                 ArchivedAt = DateTimeOffset.UtcNow
             };
             _packages[index] = updated;
+            AddAccessLog(current.RecordRefs.FirstOrDefault() ?? current.SourceObjectRefs.FirstOrDefault() ?? packageId, "package.archived", "allowed", "system", null, null, null, null, "package-archived");
             return updated;
         }
     }
@@ -1352,15 +2226,27 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedHoldType = NormalizeRecordArrEnum(
+                holdType,
+                nameof(holdType),
+                "legal",
+                "regulatory",
+                "audit",
+                "investigation",
+                "customer_dispute",
+                "supplier_dispute",
+                "internal_review");
+            var normalizedScopeRules = scopeRules.Select(ParseLegalHoldScopeRule).ToArray();
+            var normalizedRecordRefs = ResolveLegalHoldRecordRefs(normalizedScopeRules, recordRefs).ToArray();
             var hold = new RecordArrLegalHoldResponse(
                 $"hold-{Guid.NewGuid():N}"[..12],
                 $"HOLD-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 title,
                 description,
                 "draft",
-                holdType,
-                scopeRules.ToArray(),
-                recordRefs.ToArray(),
+                normalizedHoldType,
+                normalizedScopeRules,
+                normalizedRecordRefs,
                 sourceProduct,
                 sourceObjectType,
                 sourceObjectId,
@@ -1428,6 +2314,11 @@ public sealed class RecordArrStore
             .SelectMany(hold => hold.RecordRefs)
             .Select(recordRef => recordRef.Trim())
             .Where(recordRef => !string.IsNullOrWhiteSpace(recordRef))
+            .Concat(_legalHolds
+                .Where(hold => string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(hold => hold.ScopeRules.Select(scopeRule => ParseLegalHoldScopeRule(scopeRule)))
+                .SelectMany(scopeRule => _records.Where(record => IsRecordMatchedByLegalHoldScopeRule(record, scopeRule)))
+                .Select(record => record.RecordId))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < _retentionStatuses.Count; i++)
@@ -1490,24 +2381,424 @@ public sealed class RecordArrStore
         return "active";
     }
 
+    private static string ParseLegalHoldScopeRule(string scopeRule)
+    {
+        if (string.IsNullOrWhiteSpace(scopeRule))
+        {
+            throw new InvalidOperationException("Legal hold scope rules cannot be empty.");
+        }
+
+        var parts = scopeRule.Split([':', '='], 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2)
+        {
+            throw new InvalidOperationException($"Unsupported legal hold scope rule '{scopeRule}'. Expected '<scopeType>:<value>'.");
+        }
+
+        var scopeType = NormalizeRecordArrEnum(
+            parts[0],
+            "scopeType",
+            "record",
+            "record_type",
+            "document_type",
+            "source_product",
+            "source_object",
+            "person",
+            "asset",
+            "customer",
+            "supplier",
+            "date_range",
+            "search_query");
+        return $"{scopeType}:{parts[1]}";
+    }
+
+    private IReadOnlyList<string> ResolveLegalHoldRecordRefs(IEnumerable<string> scopeRules, IEnumerable<string> recordRefs)
+    {
+        var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var recordRef in recordRefs)
+        {
+            if (!string.IsNullOrWhiteSpace(recordRef))
+            {
+                refs.Add(recordRef.Trim());
+            }
+        }
+
+        foreach (var scopeRule in scopeRules.Select(ParseLegalHoldScopeRule))
+        {
+            foreach (var record in _records.Where(record => IsRecordMatchedByLegalHoldScopeRule(record, scopeRule)))
+            {
+                refs.Add(record.RecordId);
+            }
+        }
+
+        return refs.ToArray();
+    }
+
+    private static bool IsRecordMatchedByLegalHoldScopeRule(RecordArrRecordResponse record, string scopeRule)
+    {
+        var parts = scopeRule.Split(':', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+        {
+            return false;
+        }
+
+        var scopeType = parts[0];
+        var value = parts[1];
+        return scopeType switch
+        {
+            "record" => string.Equals(record.RecordId, value, StringComparison.OrdinalIgnoreCase),
+            "record_type" => string.Equals(record.RecordType, value, StringComparison.OrdinalIgnoreCase),
+            "document_type" => string.Equals(record.DocumentType, value, StringComparison.OrdinalIgnoreCase),
+            "source_product" => string.Equals(record.SourceProduct, value, StringComparison.OrdinalIgnoreCase),
+            "source_object" => string.Equals($"{record.SourceProduct}:{record.SourceObjectType}:{record.SourceObjectId}", value, StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(record.SourceObjectId, value, StringComparison.OrdinalIgnoreCase),
+            "person" => string.Equals(record.OwnerPersonId, value, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(record.UploadedByPersonId, value, StringComparison.OrdinalIgnoreCase),
+            "date_range" => IsRecordWithinDateRange(record, value),
+            "search_query" => MatchesSearchQuery(record, value),
+            "asset" or "customer" or "supplier" => string.Equals(record.SourceObjectType, scopeType, StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    }
+
+    private static bool IsRecordWithinDateRange(RecordArrRecordResponse record, string value)
+    {
+        var parts = value.Split("..", 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 ||
+            !DateTimeOffset.TryParse(parts[0], out var start) ||
+            !DateTimeOffset.TryParse(parts[1], out var end))
+        {
+            return false;
+        }
+
+        return record.UploadedAt >= start && record.UploadedAt <= end;
+    }
+
+    private static bool MatchesSearchQuery(RecordArrRecordResponse record, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return record.Title.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+               record.Description.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+               record.Tags.Any(tag => tag.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+
     private RecordArrRecordResponse RequireRecord(string recordId)
     {
         var record = _records.FirstOrDefault(candidate => string.Equals(candidate.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
         return record ?? throw new InvalidOperationException($"Record {recordId} not found.");
     }
 
+    private RecordArrRecordResponse ProjectRecord(RecordArrRecordResponse record)
+    {
+        var recordId = record.RecordId;
+        var sourceObjectRef = $"{record.SourceProduct}:{record.SourceObjectType}:{record.SourceObjectId}";
+        var sourceObjectRefs = _recordLinks
+            .Where(link =>
+                string.Equals(link.RecordId, recordId, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(link.LinkedRecordId, recordId, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(link.SourceObjectRef, sourceObjectRef, StringComparison.OrdinalIgnoreCase))
+            .Select(link => link.SourceObjectRef)
+            .Concat(new[] { sourceObjectRef })
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var metadataRefs = _recordMetadata
+            .Where(metadata => string.Equals(metadata.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .Select(metadata => metadata.MetadataId)
+            .ToArray();
+
+        var versionRefs = record.FileRefs.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var ocrResultRefs = _ocrResults
+            .Where(result => string.Equals(result.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .Select(result => result.OcrResultId)
+            .ToArray();
+        var extractionResultRefs = _extractionResults
+            .Where(result => string.Equals(result.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .Select(result => result.ExtractionResultId)
+            .ToArray();
+        var evidenceMappingRefs = _evidenceMappings
+            .Where(mapping => string.Equals(mapping.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .Select(mapping => mapping.EvidenceMappingId)
+            .ToArray();
+        var packageRefs = _packages
+            .Where(package => package.RecordRefs.Contains(recordId, StringComparer.OrdinalIgnoreCase))
+            .Select(package => package.PackageId)
+            .ToArray();
+        var retentionStatus = _retentionStatuses.FirstOrDefault(status => string.Equals(status.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+        var legalHoldRefs = _legalHolds
+            .Where(hold => hold.RecordRefs.Contains(recordId, StringComparer.OrdinalIgnoreCase))
+            .Select(hold => hold.LegalHoldId)
+            .ToArray();
+        var accessPolicyRef = _accessPolicies
+            .FirstOrDefault(policy => string.Equals(policy.RecordId, recordId, StringComparison.OrdinalIgnoreCase))?.AccessPolicyId;
+        var complianceRefs = _evidenceMappings
+            .Where(mapping => string.Equals(mapping.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .Select(mapping => mapping.ComplianceRequirementRef)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var auditTrail = _accessLogs
+            .Where(log => string.Equals(log.RecordId, recordId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(log => log.OccurredAt)
+            .Select(log => new RecordArrAuditTrailEntryResponse(
+                log.AccessLogId,
+                log.Action,
+                log.ActorPersonId ?? log.ActorServiceClientId ?? "system",
+                log.OccurredAt,
+                log.ReasonCode ?? log.Result))
+            .ToArray();
+
+        return record with
+        {
+            CurrentVersionRef = record.CurrentFileRef,
+            SourceObjectRefs = sourceObjectRefs,
+            MetadataRefs = metadataRefs,
+            VersionRefs = versionRefs,
+            OcrResultRefs = ocrResultRefs,
+            ExtractionResultRefs = extractionResultRefs,
+            EvidenceMappingRefs = evidenceMappingRefs,
+            PackageRefs = packageRefs,
+            RetentionPolicyRef = retentionStatus?.RetentionPolicyRef,
+            RetentionStatusRef = retentionStatus?.RetentionStatusId,
+            LegalHoldRefs = legalHoldRefs,
+            AccessPolicyRef = accessPolicyRef,
+            ComplianceRefs = complianceRefs,
+            AuditTrail = auditTrail
+        };
+    }
+
+    private RecordArrFileResponse? FindFile(string fileId)
+        => _files.FirstOrDefault(candidate => string.Equals(candidate.FileId, fileId, StringComparison.OrdinalIgnoreCase));
+
+    private bool CanReadRecord(ClaimsPrincipal principal, RecordArrRecordResponse record)
+        => CanAccessRecord(principal, record, "recordarr.records.read");
+
+    private bool CanDownloadRecord(ClaimsPrincipal principal, RecordArrRecordResponse record)
+        => CanAccessRecord(principal, record, "recordarr.files.download");
+
+    private bool CanAccessRecord(ClaimsPrincipal principal, RecordArrRecordResponse record, string permission)
+    {
+        if (principal.IsPlatformAdmin())
+        {
+            return true;
+        }
+
+        if (record.Status is "purged")
+        {
+            return false;
+        }
+
+        var personId = principal.GetPersonId().ToString();
+        if (string.Equals(record.OwnerPersonId, personId, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var activePolicy = _accessPolicies
+            .FirstOrDefault(policy => string.Equals(policy.RecordId, record.RecordId, StringComparison.OrdinalIgnoreCase) &&
+                                      string.Equals(policy.Status, "active", StringComparison.OrdinalIgnoreCase));
+
+        if (activePolicy is null)
+        {
+            return true;
+        }
+
+        if (IsPolicyPermissionAllowed(activePolicy, permission))
+        {
+            return true;
+        }
+
+        return _accessGrants.Any(grant =>
+            string.Equals(grant.RecordId, record.RecordId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(grant.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+            (!grant.ExpiresAt.HasValue || grant.ExpiresAt > DateTimeOffset.UtcNow) &&
+            IsGrantMatchedByPrincipal(principal, grant) &&
+            PermissionMatches(grant.Permission, permission));
+    }
+
+    private static bool IsPolicyPermissionAllowed(RecordArrAccessPolicyResponse policy, string permission)
+    {
+        var rules = permission switch
+        {
+            "recordarr.records.read" => policy.ReadRules,
+            "recordarr.files.download" => policy.DownloadRules,
+            "recordarr.records.update" => policy.WriteRules,
+            "recordarr.external_shares.create" => policy.ShareRules,
+            "recordarr.packages.export" => policy.ExportRules,
+            "recordarr.records.purge" => policy.PurgeRules,
+            _ => Array.Empty<string>()
+        };
+
+        return rules.Any(rule =>
+            string.Equals(rule, "allow_all", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, permission, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "recordarr.records.read", StringComparison.OrdinalIgnoreCase) && permission is "recordarr.records.read" or "recordarr.files.download" ||
+            string.Equals(rule, "recordarr.files.download", StringComparison.OrdinalIgnoreCase) && permission is "recordarr.records.read" or "recordarr.files.download");
+    }
+
+    private static bool IsGrantMatchedByPrincipal(ClaimsPrincipal principal, RecordArrAccessGrantResponse grant)
+    {
+        return grant.GranteeType switch
+        {
+            "person" => string.Equals(principal.GetPersonId().ToString(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
+            "role" => string.Equals(principal.GetTenantRoleKey(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
+            "product" => principal.HasProductEntitlement(grant.GranteeRef),
+            "service_client" => string.Equals(principal.GetUserId().ToString(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    }
+
+    private static bool PermissionMatches(string grantPermission, string permission)
+        => string.Equals(grantPermission, permission, StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(grantPermission, "read", StringComparison.OrdinalIgnoreCase) && permission is "recordarr.records.read" or "recordarr.files.download" ||
+           string.Equals(grantPermission, "download", StringComparison.OrdinalIgnoreCase) && permission is "recordarr.files.download";
+
     private RecordArrRecordResponse UpdateRecordLifecycle(RecordArrRecordResponse record, string status, string actorPersonId, string reasonCode)
     {
         var index = _records.FindIndex(candidate => string.Equals(candidate.RecordId, record.RecordId, StringComparison.OrdinalIgnoreCase));
+        if (status is "purged")
+        {
+            MarkRecordFilesDeleted(record.RecordId, reasonCode);
+        }
+
         var updated = record with
         {
             Status = status,
-            ExpiresAt = status is "purged" ? null : record.ExpiresAt
+            ExpiresAt = status is "purged" ? null : record.ExpiresAt,
+            ArchivedAt = status is "archived" ? DateTimeOffset.UtcNow : record.ArchivedAt,
+            PurgedAt = status is "purged" ? DateTimeOffset.UtcNow : record.PurgedAt
         };
 
         _records[index] = updated;
         _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], record.RecordId, status, "allowed", actorPersonId, null, null, DateTimeOffset.UtcNow, null, null, reasonCode));
-        return updated;
+        return ProjectRecord(updated);
+    }
+
+    private RecordArrFileResponse CreateFileObject(
+        string recordId,
+        string originalFilename,
+        string mimeType,
+        string uploadedByPersonId,
+        string? storageProvider = null,
+        string? storageKey = null,
+        long? sizeBytes = null,
+        int? pageCount = null,
+        int? imageWidth = null,
+        int? imageHeight = null,
+        int? durationSeconds = null,
+        bool attachToRecord = true,
+        bool setAsCurrentFile = true)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var fileId = $"file-{Guid.NewGuid():N}"[..12];
+        var normalizedFilename = originalFilename.Trim().Replace(' ', '_');
+        var extension = Path.GetExtension(normalizedFilename).TrimStart('.').ToLowerInvariant();
+        var file = new RecordArrFileResponse(
+            fileId,
+            "tenant-demo",
+            recordId,
+            $"FILE-{now:yyMMdd-HHmmss}-{_files.Count + 1:000}",
+            storageProvider ?? "local",
+            storageKey ?? $"recordarr/files/{fileId}",
+            originalFilename,
+            normalizedFilename,
+            string.IsNullOrWhiteSpace(extension) ? "bin" : extension,
+            mimeType,
+            sizeBytes ?? Math.Max(4_096, originalFilename.Length * 1_024L),
+            $"sha256-{fileId}",
+            pageCount,
+            imageWidth,
+            imageHeight,
+            durationSeconds,
+            now,
+            uploadedByPersonId,
+            "clean",
+            "completed",
+            "encrypted",
+            null,
+            null,
+            BuildRenditions(fileId, recordId, mimeType, sizeBytes, pageCount, now));
+
+        _files.Add(file);
+
+        if (!attachToRecord)
+        {
+            return file;
+        }
+
+        var recordIndex = _records.FindIndex(candidate => string.Equals(candidate.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+        if (recordIndex >= 0)
+        {
+            var record = _records[recordIndex];
+            var fileRefs = record.FileRefs.Append(fileId).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            _records[recordIndex] = setAsCurrentFile
+                ? record with
+                {
+                    CurrentFileName = originalFilename,
+                    CurrentMimeType = mimeType,
+                    CurrentFileRef = fileId,
+                    FileRefs = fileRefs,
+                    VersionNumber = record.VersionNumber + 1
+                }
+                : record with
+                {
+                    FileRefs = fileRefs
+                };
+        }
+
+        return file;
+    }
+
+    private static IReadOnlyList<RecordArrFileRenditionResponse> BuildRenditions(
+        string fileId,
+        string recordId,
+        string mimeType,
+        long? sizeBytes,
+        int? pageCount,
+        DateTimeOffset now)
+    {
+        if (!mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(mimeType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        return
+        [
+            new RecordArrFileRenditionResponse(
+                $"rend-{Guid.NewGuid():N}"[..12],
+                fileId,
+                recordId,
+                string.Equals(mimeType, "application/pdf", StringComparison.OrdinalIgnoreCase) ? "preview" : "thumbnail",
+                $"recordarr/renditions/{fileId}/preview",
+                mimeType,
+                sizeBytes is null ? 16_384 : Math.Max(8_192, sizeBytes.Value / 4),
+                pageCount,
+                "generated",
+                now)
+        ];
+    }
+
+    private void MarkRecordFilesDeleted(string recordId, string deleteReason)
+    {
+        for (var i = 0; i < _files.Count; i++)
+        {
+            var file = _files[i];
+            if (!string.Equals(file.RecordId, recordId, StringComparison.OrdinalIgnoreCase) || file.DeletedAt.HasValue)
+            {
+                continue;
+            }
+
+            _files[i] = file with
+            {
+                DeletedAt = DateTimeOffset.UtcNow,
+                DeleteReason = deleteReason
+            };
+        }
     }
 
     private void AppendControlledDocumentAuditTrail(string controlledDocumentId, RecordArrAuditTrailEntryResponse entry)
@@ -1602,15 +2893,153 @@ public sealed class RecordArrStore
         }
     }
 
+    public IReadOnlyList<RecordArrReminderResponse> GetReminders(ClaimsPrincipal principal)
+    {
+        lock (_gate)
+        {
+            RefreshControlledDocumentWorkflows();
+
+            var now = DateTimeOffset.UtcNow;
+            var reminderWindow = now.AddDays(14);
+            var reminders = new List<RecordArrReminderResponse>();
+
+            foreach (var document in _controlledDocuments
+                         .Where(document => string.Equals(document.Status, "effective", StringComparison.OrdinalIgnoreCase) ||
+                                            string.Equals(document.Status, "review", StringComparison.OrdinalIgnoreCase))
+                         .Where(document => document.NextReviewAt.HasValue && document.NextReviewAt <= reminderWindow)
+                         .OrderBy(document => document.NextReviewAt))
+            {
+                if (GetRecord(principal, document.RecordId) is null)
+                {
+                    continue;
+                }
+
+                reminders.Add(new RecordArrReminderResponse(
+                    $"rem-{Guid.NewGuid():N}"[..12],
+                    "controlled_document_review",
+                    document.NextReviewAt <= now ? "due_for_review" : "due_for_review",
+                    $"{document.DocumentNumber} review due",
+                    $"{document.Title} is scheduled for periodic review.",
+                    document.RecordId,
+                    document.ControlledDocumentId,
+                    document.CurrentVersionId,
+                    document.OwnerPersonId,
+                    document.NextReviewAt,
+                    now,
+                    $"controlled-document:{document.ControlledDocumentId}"));
+            }
+
+            foreach (var acknowledgement in _documentAcknowledgements
+                         .Where(acknowledgement => (string.Equals(acknowledgement.Status, "pending", StringComparison.OrdinalIgnoreCase) ||
+                                                    string.Equals(acknowledgement.Status, "overdue", StringComparison.OrdinalIgnoreCase)) &&
+                                                   acknowledgement.DueAt.HasValue &&
+                                                   acknowledgement.DueAt <= reminderWindow)
+                         .OrderBy(acknowledgement => acknowledgement.DueAt))
+            {
+                var document = _controlledDocuments.FirstOrDefault(candidate =>
+                    string.Equals(candidate.ControlledDocumentId, acknowledgement.ControlledDocumentId, StringComparison.OrdinalIgnoreCase));
+                if (document is null || GetRecord(principal, document.RecordId) is null)
+                {
+                    continue;
+                }
+
+                reminders.Add(new RecordArrReminderResponse(
+                    $"rem-{Guid.NewGuid():N}"[..12],
+                    "document_acknowledgement",
+                    acknowledgement.DueAt <= now ? "overdue" : "due_for_review",
+                    $"{document.DocumentNumber} acknowledgement due",
+                    $"{acknowledgement.PersonId} still needs to acknowledge {document.Title}.",
+                    document.RecordId,
+                    document.ControlledDocumentId,
+                    acknowledgement.VersionId,
+                    acknowledgement.PersonId,
+                    acknowledgement.DueAt,
+                    now,
+                    $"document-acknowledgement:{acknowledgement.AcknowledgementId}"));
+            }
+
+            foreach (var retentionStatus in _retentionStatuses
+                         .Where(status => string.Equals(status.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+                                          status.NextReviewAt.HasValue &&
+                                          status.NextReviewAt <= reminderWindow)
+                         .OrderBy(status => status.NextReviewAt))
+            {
+                if (GetRecord(principal, retentionStatus.RecordId) is null)
+                {
+                    continue;
+                }
+
+                reminders.Add(new RecordArrReminderResponse(
+                    $"rem-{Guid.NewGuid():N}"[..12],
+                    "retention_review",
+                    retentionStatus.NextReviewAt <= now ? "due_for_review" : "due_for_review",
+                    $"{retentionStatus.RecordId} retention review due",
+                    "The retention schedule for this record is due for review.",
+                    retentionStatus.RecordId,
+                    null,
+                    null,
+                    null,
+                    retentionStatus.NextReviewAt,
+                    now,
+                    $"retention-status:{retentionStatus.RetentionStatusId}"));
+            }
+
+            foreach (var record in _records
+                         .Where(record => record.ExpiresAt.HasValue &&
+                                          record.ExpiresAt <= reminderWindow &&
+                                          !string.Equals(record.Status, "purged", StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(record => record.ExpiresAt))
+            {
+                if (GetRecord(principal, record.RecordId) is null)
+                {
+                    continue;
+                }
+
+                reminders.Add(new RecordArrReminderResponse(
+                    $"rem-{Guid.NewGuid():N}"[..12],
+                    "record_expiration",
+                    record.ExpiresAt <= now ? "overdue" : "due_for_action",
+                    $"{record.RecordNumber} expires soon",
+                    $"{record.Title} expires on {record.ExpiresAt:O}.",
+                    record.RecordId,
+                    null,
+                    null,
+                    record.OwnerPersonId,
+                    record.ExpiresAt,
+                    now,
+                    $"record-expiration:{record.RecordId}"));
+            }
+
+            return reminders
+                .OrderBy(reminder => reminder.DueAt ?? DateTimeOffset.MaxValue)
+                .ThenBy(reminder => reminder.ReminderType, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+    }
+
     public RecordArrDocumentDistributionResponse CreateDocumentDistribution(string controlledDocumentId, string versionId, string distributionType, string targetRef)
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(targetRef))
+            {
+                throw new InvalidOperationException("Document distribution targetRef is required.");
+            }
+            var normalizedDistributionType = NormalizeRecordArrEnum(
+                distributionType,
+                nameof(distributionType),
+                "person",
+                "role",
+                "department",
+                "site",
+                "team",
+                "product",
+                "external_link");
             var distribution = new RecordArrDocumentDistributionResponse(
                 $"dist-{Guid.NewGuid():N}"[..12],
                 controlledDocumentId,
                 versionId,
-                distributionType,
+                normalizedDistributionType,
                 targetRef,
                 "distributed",
                 DateTimeOffset.UtcNow,
@@ -1647,6 +3076,14 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(personId))
+            {
+                throw new InvalidOperationException("Acknowledgement personId is required.");
+            }
+            if (dueAt.HasValue && dueAt <= DateTimeOffset.UtcNow)
+            {
+                throw new InvalidOperationException("Acknowledgement dueAt must be in the future when provided.");
+            }
             var acknowledgement = new RecordArrDocumentAcknowledgementResponse(
                 $"dack-{Guid.NewGuid():N}"[..12],
                 controlledDocumentId,
@@ -1679,6 +3116,14 @@ public sealed class RecordArrStore
             }
 
             var current = _documentAcknowledgements[index];
+            if (string.Equals(current.Status, "waived", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Document acknowledgement {acknowledgementId} is waived and cannot be completed.");
+            }
+            if (!string.IsNullOrWhiteSpace(signatureRecordRef) && string.IsNullOrWhiteSpace(signatureRecordRef.Trim()))
+            {
+                throw new InvalidOperationException("Document acknowledgement signatureRecordRef cannot be blank.");
+            }
             var updated = current with
             {
                 Status = "acknowledged",
@@ -1741,16 +3186,35 @@ public sealed class RecordArrStore
             throw new InvalidOperationException($"Document distribution {distributionId} not found.");
         }
 
+        var normalizedStatus = NormalizeRecordArrEnum(
+            status,
+            nameof(status),
+            "pending",
+            "distributed",
+            "acknowledged",
+            "expired",
+            "revoked");
         var current = _documentDistributions[index];
+        if (string.Equals(current.Status, "revoked", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(current.Status, "expired", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Document distribution {distributionId} is already {current.Status}.");
+        }
+        if (string.Equals(normalizedStatus, "acknowledged", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(current.Status, "distributed", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(current.Status, "acknowledged", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Document distribution {distributionId} cannot be acknowledged from {current.Status}.");
+        }
         var updated = current with
         {
-            Status = status
+            Status = normalizedStatus
         };
         _documentDistributions[index] = updated;
         AppendControlledDocumentAuditTrail(
             current.ControlledDocumentId,
             CreateControlledDocumentAuditTrailEntry(
-                status,
+                normalizedStatus,
                 actorPersonId,
                 $"Distribution {distributionId} {reason}."));
         return updated;
@@ -1778,12 +3242,26 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
-            var now = DateTimeOffset.UtcNow;
+            var normalizedPolicyType = NormalizeRecordArrEnum(
+                policyType,
+                nameof(policyType),
+                "default",
+                "restricted",
+                "legal_hold",
+                "product_scoped",
+                "public_link",
+                "external_share");
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "active",
+                "inactive",
+                "superseded");
             var policy = new RecordArrAccessPolicyResponse(
                 $"acc-{Guid.NewGuid():N}"[..12],
                 recordId,
-                policyType,
-                status,
+                normalizedPolicyType,
+                normalizedStatus,
                 readRules.ToArray(),
                 writeRules.ToArray(),
                 downloadRules.ToArray(),
@@ -1791,7 +3269,7 @@ public sealed class RecordArrStore
                 exportRules.ToArray(),
                 purgeRules.ToArray());
             _accessPolicies.Add(policy);
-            AddAccessLog(recordId, "access_policy.created", "allowed", createdByPersonId, null, null, null, null, $"{policyType}:{status}");
+            AddAccessLog(recordId, "access_policy.created", "allowed", createdByPersonId, null, null, null, null, $"{normalizedPolicyType}:{normalizedStatus}");
             return policy;
         }
     }
@@ -1817,11 +3295,26 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Access policy {accessPolicyId} not found.");
             }
 
+            var normalizedPolicyType = NormalizeRecordArrEnum(
+                policyType,
+                nameof(policyType),
+                "default",
+                "restricted",
+                "legal_hold",
+                "product_scoped",
+                "public_link",
+                "external_share");
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "active",
+                "inactive",
+                "superseded");
             var updated = new RecordArrAccessPolicyResponse(
                 accessPolicyId,
                 recordId,
-                policyType,
-                status,
+                normalizedPolicyType,
+                normalizedStatus,
                 readRules.ToArray(),
                 writeRules.ToArray(),
                 downloadRules.ToArray(),
@@ -1829,7 +3322,7 @@ public sealed class RecordArrStore
                 exportRules.ToArray(),
                 purgeRules.ToArray());
             _accessPolicies[index] = updated;
-            AddAccessLog(recordId, "access_policy.updated", "allowed", updatedByPersonId, null, null, null, null, $"{policyType}:{status}");
+            AddAccessLog(recordId, "access_policy.updated", "allowed", updatedByPersonId, null, null, null, null, $"{normalizedPolicyType}:{normalizedStatus}");
             return updated;
         }
     }
@@ -1874,12 +3367,33 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedGranteeType = NormalizeRecordArrEnum(
+                granteeType,
+                nameof(granteeType),
+                "person",
+                "role",
+                "product",
+                "service_client",
+                "external_link");
+            var normalizedPermission = NormalizeRecordArrEnum(
+                permission,
+                nameof(permission),
+                "read",
+                "download",
+                "upload_new_version",
+                "approve",
+                "classify",
+                "map_evidence",
+                "export",
+                "share",
+                "archive",
+                "purge");
             var grant = new RecordArrAccessGrantResponse(
                 $"grant-{Guid.NewGuid():N}"[..12],
                 recordId,
-                granteeType,
+                normalizedGranteeType,
                 granteeRef,
-                permission,
+                normalizedPermission,
                 "active",
                 grantedByPersonId,
                 DateTimeOffset.UtcNow,
@@ -1974,14 +3488,22 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Disposal review {disposalReviewId} not found.");
             }
 
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "pending",
+                "approved",
+                "rejected",
+                "completed",
+                "canceled");
             var current = _disposalReviews[index];
             var updated = current with
             {
-                Status = status,
+                Status = normalizedStatus,
                 ReviewedByPersonId = reviewedByPersonId ?? current.ReviewedByPersonId,
                 ReviewedAt = DateTimeOffset.UtcNow,
                 DecisionReason = decisionReason ?? current.DecisionReason,
-                CompletedAt = status is "approved" or "rejected" or "completed" ? DateTimeOffset.UtcNow : current.CompletedAt
+                CompletedAt = normalizedStatus is "approved" or "rejected" or "completed" ? DateTimeOffset.UtcNow : current.CompletedAt
             };
             _disposalReviews[index] = updated;
             ApplyDisposalReviewOutcome(updated);
@@ -2053,13 +3575,28 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedControlledDocumentType = NormalizeRecordArrEnum(
+                controlledDocumentType,
+                nameof(controlledDocumentType),
+                "policy",
+                "procedure",
+                "work_instruction",
+                "form",
+                "safety_data_sheet",
+                "training_material",
+                "specification",
+                "contract",
+                "permit",
+                "certificate",
+                "manual",
+                "other");
             var document = new RecordArrControlledDocumentResponse(
                 $"doc-{Guid.NewGuid():N}"[..12],
                 $"DOC-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 _records[0].RecordId,
                 title,
                 description,
-                controlledDocumentType,
+                normalizedControlledDocumentType,
                 "draft",
                 ownerPersonId,
                 departmentOrgUnitId,
@@ -2090,6 +3627,28 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new InvalidOperationException("Document version fileName is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(createdByPersonId))
+            {
+                throw new InvalidOperationException("Document version createdByPersonId is required.");
+            }
+
+            var controlledDocument = _controlledDocuments.First(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+            var file = CreateFileObject(
+                controlledDocument.RecordId,
+                fileName,
+                "application/pdf",
+                createdByPersonId,
+                storageProvider: "generated",
+                storageKey: $"recordarr/controlled-documents/{controlledDocumentId}/{fileName}",
+                sizeBytes: 256_000,
+                pageCount: 1,
+                attachToRecord: true,
+                setAsCurrentFile: true);
             var version = new RecordArrControlledDocumentVersionResponse(
                 $"ver-{Guid.NewGuid():N}"[..8],
                 controlledDocumentId,
@@ -2106,7 +3665,8 @@ public sealed class RecordArrStore
                 null,
                 changeSummary,
                 _documentVersions.LastOrDefault()?.VersionId,
-                null);
+                null,
+                file.FileId);
             _documentVersions.Add(version);
             AppendControlledDocumentAuditTrail(
                 controlledDocumentId,
@@ -2124,6 +3684,11 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(approvedByPersonId))
+            {
+                throw new InvalidOperationException("Document version approvedByPersonId is required.");
+            }
+
             var versionIndex = _documentVersions.FindIndex(version =>
                 string.Equals(version.VersionId, versionId, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(version.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
@@ -2247,19 +3812,56 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
             }
 
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "draft",
+                "review",
+                "approved",
+                "effective",
+                "superseded",
+                "obsolete",
+                "archived");
             var updated = _controlledDocuments[index] with
             {
-                Status = status,
-                NextReviewAt = status is "archived" or "obsolete" ? null : _controlledDocuments[index].NextReviewAt
+                Status = normalizedStatus,
+                NextReviewAt = normalizedStatus is "archived" or "obsolete" ? null : _controlledDocuments[index].NextReviewAt
             };
             _controlledDocuments[index] = updated;
+            if (normalizedStatus is "archived" or "obsolete")
+            {
+                ArchiveControlledDocumentVersions(controlledDocumentId);
+            }
             AppendControlledDocumentAuditTrail(
                 controlledDocumentId,
                 CreateControlledDocumentAuditTrailEntry(
-                    status,
+                    normalizedStatus,
                     updatedByPersonId,
-                    $"Controlled document marked as {status}."));
+                    $"Controlled document marked as {normalizedStatus}."));
             return updated;
+        }
+    }
+
+    private void ArchiveControlledDocumentVersions(string controlledDocumentId)
+    {
+        for (var i = 0; i < _documentVersions.Count; i++)
+        {
+            var current = _documentVersions[i];
+            if (!string.Equals(current.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.Equals(current.Status, "superseded", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(current.Status, "rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            _documentVersions[i] = current with
+            {
+                Status = "archived"
+            };
         }
     }
 
@@ -2323,11 +3925,20 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Controlled document {controlledDocumentId} not found.");
             }
 
+            var normalizedReviewType = NormalizeRecordArrEnum(
+                reviewType,
+                nameof(reviewType),
+                "approval",
+                "periodic_review",
+                "change_review",
+                "compliance_review",
+                "quality_review",
+                "legal_review");
             var review = new RecordArrDocumentReviewResponse(
                 $"drev-{Guid.NewGuid():N}"[..12],
                 controlledDocumentId,
                 versionId,
-                reviewType,
+                normalizedReviewType,
                 "pending",
                 requestedByPersonId,
                 reviewerPersonId,
@@ -2337,6 +3948,7 @@ public sealed class RecordArrStore
                 null,
                 null);
             _documentReviews.Add(review);
+            UpdateDocumentVersionStatus(controlledDocumentId, versionId, "review");
             _controlledDocuments[documentIndex] = _controlledDocuments[documentIndex] with { Status = "review" };
             AppendControlledDocumentAuditTrail(
                 controlledDocumentId,
@@ -2358,10 +3970,19 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException($"Document review {reviewId} not found.");
             }
 
+            var normalizedStatus = NormalizeRecordArrEnum(
+                status,
+                nameof(status),
+                "pending",
+                "in_review",
+                "approved",
+                "rejected",
+                "changes_requested",
+                "canceled");
             var current = _documentReviews[index];
             var updated = current with
             {
-                Status = status,
+                Status = normalizedStatus,
                 ReviewedAt = DateTimeOffset.UtcNow,
                 DecisionReason = decisionReason,
                 Comments = comments
@@ -2373,22 +3994,22 @@ public sealed class RecordArrStore
             {
                 var document = _controlledDocuments[documentIndex];
                 var completedAt = updated.ReviewedAt ?? DateTimeOffset.UtcNow;
-                if (status.Trim().Equals("approved", StringComparison.OrdinalIgnoreCase) ||
-                    status.Trim().Equals("completed", StringComparison.OrdinalIgnoreCase))
+                if (normalizedStatus == "approved")
                 {
+                    UpdateDocumentVersionStatus(current.ControlledDocumentId, current.VersionId, "approved");
                     _controlledDocuments[documentIndex] = document with
                     {
                         Status = "approved"
                     };
                 }
-                else if (status.Trim().Equals("rejected", StringComparison.OrdinalIgnoreCase) ||
-                         status.Trim().Equals("changes_requested", StringComparison.OrdinalIgnoreCase))
+                else if (normalizedStatus is "rejected" or "changes_requested")
                 {
+                    UpdateDocumentVersionStatus(current.ControlledDocumentId, current.VersionId, normalizedStatus == "rejected" ? "rejected" : "review");
                     _controlledDocuments[documentIndex] = document with { Status = "review" };
                 }
             }
 
-            var auditAction = status.Trim().ToLowerInvariant() switch
+            var auditAction = normalizedStatus switch
             {
                 "approved" => "review_approved",
                 "rejected" => "review_rejected",
@@ -2405,19 +4026,68 @@ public sealed class RecordArrStore
         }
     }
 
+    private void UpdateDocumentVersionStatus(string controlledDocumentId, string versionId, string status)
+    {
+        var versionIndex = _documentVersions.FindIndex(version =>
+            string.Equals(version.VersionId, versionId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(version.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
+
+        if (versionIndex < 0)
+        {
+            return;
+        }
+
+        var normalizedStatus = NormalizeRecordArrEnum(
+            status,
+            nameof(status),
+            "draft",
+            "review",
+            "approved",
+            "effective",
+            "superseded",
+            "rejected",
+            "archived");
+
+        _documentVersions[versionIndex] = _documentVersions[versionIndex] with
+        {
+            Status = normalizedStatus,
+            SubmittedForReviewAt = normalizedStatus == "review" && _documentVersions[versionIndex].SubmittedForReviewAt is null
+                ? DateTimeOffset.UtcNow
+                : _documentVersions[versionIndex].SubmittedForReviewAt,
+            ApprovedAt = normalizedStatus == "approved" ? DateTimeOffset.UtcNow : _documentVersions[versionIndex].ApprovedAt,
+            SupersededAt = normalizedStatus == "superseded" ? DateTimeOffset.UtcNow : _documentVersions[versionIndex].SupersededAt
+        };
+    }
+
     public RecordArrExternalShareResponse CreateExternalShare(string recordId, string recipientName, string recipientEmail, string sharePurpose, IEnumerable<string> allowedActions, string createdByPersonId)
     {
         lock (_gate)
         {
+            var normalizedSharePurpose = NormalizeRecordArrEnum(
+                sharePurpose,
+                nameof(sharePurpose),
+                "customer_view",
+                "supplier_response",
+                "auditor_access",
+                "legal_review",
+                "public_download",
+                "temporary_upload");
+            var normalizedAllowedActions = allowedActions.Select(action => NormalizeRecordArrEnum(
+                action,
+                nameof(allowedActions),
+                "view",
+                "download",
+                "upload",
+                "sign")).ToArray();
             var share = new RecordArrExternalShareResponse(
                 $"share-{Guid.NewGuid():N}"[..12],
                 $"SHARE-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 recordId,
-                sharePurpose,
+                normalizedSharePurpose,
                 "created",
                 recipientName,
                 recipientEmail,
-                allowedActions.ToArray(),
+                normalizedAllowedActions,
                 DateTimeOffset.UtcNow,
                 createdByPersonId,
                 DateTimeOffset.UtcNow.AddDays(2),
@@ -2548,6 +4218,136 @@ public sealed class RecordArrStore
         };
     }
 
+    private IReadOnlyList<string> BuildPackageRecordRefs(string recordRef, string? sourceObjectRef)
+    {
+        var refs = new List<string> { recordRef };
+        var linkedRefs = _recordLinks
+            .Where(link =>
+                string.Equals(link.RecordId, recordRef, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(link.LinkedRecordId, recordRef, StringComparison.OrdinalIgnoreCase))
+            .SelectMany(link => new[] { link.RecordId, link.LinkedRecordId })
+            .Where(record => !string.IsNullOrWhiteSpace(record));
+
+        refs.AddRange(linkedRefs!);
+        return refs.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    private IReadOnlyList<string> BuildPackageSourceObjectRefs(string sourceObjectRef, string recordRef, IReadOnlyList<string> packageRecordRefs)
+    {
+        var refs = new List<string>();
+        if (!string.IsNullOrWhiteSpace(sourceObjectRef))
+        {
+            refs.Add(sourceObjectRef.Trim());
+        }
+
+        refs.AddRange(_recordLinks
+            .Where(link =>
+                packageRecordRefs.Contains(link.RecordId, StringComparer.OrdinalIgnoreCase) ||
+                (link.LinkedRecordId is not null && packageRecordRefs.Contains(link.LinkedRecordId, StringComparer.OrdinalIgnoreCase)))
+            .Where(link => !string.IsNullOrWhiteSpace(link.SourceObjectRef))
+            .Select(link => link.SourceObjectRef!.Trim()));
+
+        refs.AddRange(_recordLinks
+            .Where(link => string.Equals(link.RecordId, recordRef, StringComparison.OrdinalIgnoreCase))
+            .Where(link => !string.IsNullOrWhiteSpace(link.SourceObjectRef))
+            .Select(link => link.SourceObjectRef!.Trim()));
+
+        return refs.Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    private IReadOnlyList<RecordArrPackageManifestEntryResponse> BuildPackageRecordEntries(IReadOnlyList<string> recordRefs)
+    {
+        return recordRefs
+            .Select(recordRef =>
+            {
+                var record = RequireRecord(recordRef);
+                return new RecordArrPackageManifestEntryResponse(
+                    $"mrec-{Guid.NewGuid():N}"[..12],
+                    "record",
+                    record.Title,
+                    record.SourceProduct,
+                    $"{record.SourceProduct}:{record.SourceObjectType}:{record.SourceObjectId}",
+                    record.RecordId,
+                    null,
+                    record.Status,
+                    ComputeChecksum($"{record.RecordId}|{record.Status}|{record.CurrentFileRef}|{record.VersionNumber}"));
+            })
+            .ToArray();
+    }
+
+    private IReadOnlyList<RecordArrPackageManifestEntryResponse> BuildPackageSourceObjectEntries(string sourceProduct, IReadOnlyList<string> sourceObjectRefs)
+    {
+        return sourceObjectRefs
+            .Select(sourceObjectRef =>
+            {
+                var record = _records.FirstOrDefault(candidate => string.Equals($"{candidate.SourceProduct}:{candidate.SourceObjectType}:{candidate.SourceObjectId}", sourceObjectRef, StringComparison.OrdinalIgnoreCase));
+                var displayName = record?.SourceObjectDisplayName ?? sourceObjectRef;
+                var statusSnapshot = record?.Status ?? "active";
+                return new RecordArrPackageManifestEntryResponse(
+                    $"mobj-{Guid.NewGuid():N}"[..12],
+                    "source_object",
+                    displayName,
+                    sourceProduct,
+                    sourceObjectRef,
+                    record?.RecordId,
+                    null,
+                    statusSnapshot,
+                    ComputeChecksum($"{sourceObjectRef}|{displayName}|{statusSnapshot}"));
+            })
+            .ToArray();
+    }
+
+    private IReadOnlyList<RecordArrPackageManifestEntryResponse> BuildPackageRequirementEntries(string sourceProduct, string sourceObjectRef, IReadOnlyList<string> recordRefs)
+    {
+        var requirements = _evidenceMappings
+            .Where(mapping =>
+                string.Equals(mapping.SourceProduct, sourceProduct, StringComparison.OrdinalIgnoreCase) &&
+                (string.Equals($"{mapping.SourceProduct}:{mapping.SourceObjectType}:{mapping.SourceObjectId}", sourceObjectRef, StringComparison.OrdinalIgnoreCase) ||
+                 recordRefs.Contains(mapping.RecordId, StringComparer.OrdinalIgnoreCase)))
+            .GroupBy(mapping => mapping.ComplianceRequirementRef, StringComparer.OrdinalIgnoreCase);
+
+        var entries = new List<RecordArrPackageManifestEntryResponse>();
+        foreach (var group in requirements)
+        {
+            var representative = group.First();
+            var statusSnapshot = group.Any(mapping => string.Equals(mapping.Status, "confirmed", StringComparison.OrdinalIgnoreCase))
+                ? "satisfied"
+                : group.Any(mapping => string.Equals(mapping.Status, "rejected", StringComparison.OrdinalIgnoreCase))
+                    ? "invalid"
+                    : "warning";
+            entries.Add(new RecordArrPackageManifestEntryResponse(
+                $"mreq-{Guid.NewGuid():N}"[..12],
+                "requirement",
+                representative.ComplianceRequirementRef,
+                representative.SourceProduct,
+                $"{representative.SourceProduct}:{representative.SourceObjectType}:{representative.SourceObjectId}",
+                representative.RecordId,
+                representative.ComplianceRequirementRef,
+                statusSnapshot,
+                ComputeChecksum($"{representative.ComplianceRequirementRef}|{statusSnapshot}|{string.Join(",", group.Select(mapping => mapping.RecordId).Distinct(StringComparer.OrdinalIgnoreCase))}")));
+        }
+
+        return entries.ToArray();
+    }
+
+    private static string ComputePackageManifestChecksum(
+        IReadOnlyList<RecordArrPackageManifestEntryResponse> recordEntries,
+        IReadOnlyList<RecordArrPackageManifestEntryResponse> sourceObjectEntries,
+        IReadOnlyList<RecordArrPackageManifestEntryResponse> requirementEntries)
+    {
+        var payload = string.Join(
+            "|",
+            recordEntries.Concat(sourceObjectEntries).Concat(requirementEntries).Select(entry => entry.Checksum));
+        return ComputeChecksum(payload);
+    }
+
+    private static string ComputeChecksum(string payload)
+    {
+        var bytes = Encoding.UTF8.GetBytes(payload);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
     private List<RecordArrEvidenceCoverageResponse> BuildEvidenceCoverage()
     {
         var coverage = new List<RecordArrEvidenceCoverageResponse>();
@@ -2595,11 +4395,36 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(sourceRecordId))
+            {
+                throw new InvalidOperationException("Source record id is required.");
+            }
+            if (string.IsNullOrWhiteSpace(redactedRecordId))
+            {
+                throw new InvalidOperationException("Redacted record id is required.");
+            }
+            if (_records.Any(record => string.Equals(record.RecordId, redactedRecordId, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Redacted record {redactedRecordId} already exists.");
+            }
+
+            var sourceRecord = RequireRecord(sourceRecordId);
+            var normalizedRedactionReason = NormalizeRecordArrEnum(
+                redactionReason,
+                nameof(redactionReason),
+                "privacy",
+                "legal",
+                "customer",
+                "supplier",
+                "internal",
+                "security");
+
+            CreateRedactedRecordCopy(sourceRecord, redactedRecordId, normalizedRedactionReason, redactedByPersonId);
             var redaction = new RecordArrRedactionResponse(
                 $"red-{Guid.NewGuid():N}"[..12],
-                sourceRecordId,
+                sourceRecord.RecordId,
                 redactedRecordId,
-                redactionReason,
+                normalizedRedactionReason,
                 "completed",
                 redactedByPersonId,
                 DateTimeOffset.UtcNow,
@@ -2609,11 +4434,110 @@ public sealed class RecordArrStore
         }
     }
 
-    public IReadOnlyList<RecordArrAccessLogResponse> GetAccessLogs()
+    private RecordArrRecordResponse CreateRedactedRecordCopy(
+        RecordArrRecordResponse sourceRecord,
+        string redactedRecordId,
+        string redactionReason,
+        string redactedByPersonId)
+    {
+        var sourceFile = FindFile(sourceRecord.CurrentFileRef);
+        var redactedFileName = BuildRedactedFileName(sourceRecord.CurrentFileName);
+        var redactedMimeType = sourceFile?.MimeType ?? sourceRecord.CurrentMimeType;
+        var redactedFile = CreateFileObject(
+            redactedRecordId,
+            redactedFileName,
+            redactedMimeType,
+            redactedByPersonId,
+            storageProvider: "generated",
+            storageKey: $"recordarr/redactions/{redactedRecordId}/{redactedFileName}",
+            sizeBytes: sourceFile?.SizeBytes,
+            pageCount: sourceFile?.PageCount,
+            imageWidth: sourceFile?.ImageWidth,
+            imageHeight: sourceFile?.ImageHeight,
+            durationSeconds: sourceFile?.DurationSeconds,
+            attachToRecord: false,
+            setAsCurrentFile: false);
+
+        var now = DateTimeOffset.UtcNow;
+        var redactedRecord = new RecordArrRecordResponse(
+            redactedRecordId,
+            $"REC-{now:yyMMdd-HHmmss}",
+            $"{sourceRecord.Title} (Redacted)",
+            $"{sourceRecord.Description} Redacted copy created for {redactionReason}.",
+            sourceRecord.RecordType,
+            sourceRecord.DocumentType,
+            "active",
+            sourceRecord.Classification,
+            sourceRecord.SourceProduct,
+            sourceRecord.SourceObjectType,
+            sourceRecord.SourceObjectId,
+            sourceRecord.SourceObjectDisplayName,
+            sourceRecord.OwnerPersonId,
+            redactedByPersonId,
+            now,
+            now,
+            sourceRecord.ExpiresAt,
+            redactedFile.OriginalFilename,
+            redactedFile.MimeType,
+            1,
+            [..sourceRecord.Tags, "redacted"],
+            redactedFile.FileId,
+            [redactedFile.FileId],
+            redactedFile.FileId,
+            [$"{sourceRecord.SourceProduct}:{sourceRecord.SourceObjectType}:{sourceRecord.SourceObjectId}", sourceRecord.RecordId],
+            sourceRecord.MetadataRefs,
+            [redactedFile.FileId],
+            [],
+            [],
+            [],
+            [],
+            null,
+            null,
+            [],
+            null,
+            [],
+            [],
+            null,
+            null);
+
+        _records.Add(redactedRecord);
+        _recordLinks.Add(new RecordArrRecordLinkResponse(
+            $"rlk-{Guid.NewGuid():N}"[..12],
+            redactedRecordId,
+            sourceRecord.RecordId,
+            null,
+            "redacted_from",
+            now,
+            redactedByPersonId));
+
+        return redactedRecord;
+    }
+
+    private static string BuildRedactedFileName(string sourceFileName)
+    {
+        var trimmed = string.IsNullOrWhiteSpace(sourceFileName) ? "redacted-record.pdf" : sourceFileName.Trim();
+        var extension = Path.GetExtension(trimmed);
+        var baseName = Path.GetFileNameWithoutExtension(trimmed);
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            baseName = "redacted-record";
+        }
+
+        var suffix = string.IsNullOrWhiteSpace(extension)
+            ? ".pdf"
+            : extension;
+
+        return $"{baseName}-redacted{suffix}";
+    }
+
+    public IReadOnlyList<RecordArrAccessLogResponse> GetAccessLogs(string? recordId = null)
     {
         lock (_gate)
         {
-            return _accessLogs.OrderByDescending(log => log.OccurredAt).ToArray();
+            var logs = string.IsNullOrWhiteSpace(recordId)
+                ? _accessLogs
+                : _accessLogs.Where(log => string.Equals(log.RecordId, recordId, StringComparison.OrdinalIgnoreCase));
+            return logs.OrderByDescending(log => log.OccurredAt).ToArray();
         }
     }
 
@@ -2650,11 +4574,18 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            var normalizedProposedAction = NormalizeRecordArrEnum(
+                proposedAction,
+                nameof(proposedAction),
+                "archive",
+                "purge",
+                "anonymize",
+                "retain");
             var review = new RecordArrDisposalReviewResponse(
                 $"disp-{Guid.NewGuid():N}"[..12],
                 recordId,
                 retentionStatusRef,
-                proposedAction,
+                normalizedProposedAction,
                 "pending",
                 DateTimeOffset.UtcNow,
                 requestedByPersonId,

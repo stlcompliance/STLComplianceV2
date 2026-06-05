@@ -42,7 +42,9 @@ import {
   archiveControlledDocument,
   createDisposalReview,
   createEvidenceMapping,
+  createPhotoEvidence,
   listEvidenceCoverage,
+  listFiles,
   createExternalShare,
   createRedaction,
   createLegalHold,
@@ -51,7 +53,9 @@ import {
   archivePackage,
   createRecord,
   createScan,
+  createSignatureRecord,
   createUploadSession,
+  downloadFile,
   downloadPackage,
   getDashboard,
   getExtractionResult,
@@ -75,6 +79,7 @@ import {
   listExternalShares,
   listLegalHolds,
   listPackages,
+  listReminders,
   listRecords,
   listRetentionPolicies,
   listScans,
@@ -98,6 +103,7 @@ import {
   completeDocumentAcknowledgement,
   completeDocumentReview,
   completeDisposalReview,
+  completeCaptureRequest,
   updateAccessPolicy,
   revokeAccessGrant,
   revokeDocumentDistribution,
@@ -106,13 +112,20 @@ import {
   createRecordMetadata,
   createRecordLink,
   createRecordComment,
+  createCaptureRequest,
+  cancelCaptureRequest,
+  expireCaptureRequest,
   type RecordArrAccessPolicy,
+  type RecordArrFile,
   type RecordArrControlledDocument,
   type RecordArrLegalHold,
   type RecordArrPackage,
+  type RecordArrReminder,
   type RecordArrRecord,
   listRecordComments,
+  listCaptureRequests,
   updateRecordComment,
+  skipCaptureRequest,
 } from './api/client'
 import { clearSession, loadSession, type StoredRecordArrSession } from './auth/sessionStorage'
 
@@ -279,6 +292,12 @@ function useRecordArrWorkspace() {
 }
 
 function DashboardPage({ accessToken }: { accessToken: string }) {
+  const remindersQuery = useQuery({
+    queryKey: ['recordarr', 'reminders'],
+    queryFn: () => listReminders(accessToken),
+    enabled: Boolean(accessToken),
+    staleTime: 15_000,
+  })
   const dashboardQuery = useQuery({
     queryKey: ['recordarr', 'dashboard'],
     queryFn: () => getDashboard(accessToken),
@@ -307,6 +326,12 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
           message={getErrorMessage(dashboardQuery.error, 'Failed to load RecordArr dashboard.')}
         />
       ) : null}
+      {remindersQuery.isError ? (
+        <ApiErrorCallout
+          title="Unable to load reminders"
+          message={getErrorMessage(remindersQuery.error, 'Failed to load RecordArr reminders.')}
+        />
+      ) : null}
       {dashboardQuery.isLoading ? <LoadingCard label="Loading dashboard" /> : null}
       {dashboard ? (
         <>
@@ -322,6 +347,9 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
           <div className="recordarr-grid cols-2">
             <Card title="Recent records" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
               <SimpleRecordList records={dashboard.recentRecords} emptyLabel="No records yet." />
+            </Card>
+            <Card title="Reminders" icon={<Clock3 className="h-4 w-4 text-cyan-300" />}>
+              <SimpleReminderList reminders={remindersQuery.data ?? []} emptyLabel="No reminders due right now." />
             </Card>
             <Card title="Open packages" icon={<PackageSearch className="h-4 w-4 text-cyan-300" />}>
               <SimplePackageList packages={dashboard.openPackages} emptyLabel="No packages yet." />
@@ -407,6 +435,29 @@ function SimpleDocumentList({ documents, emptyLabel }: { documents: RecordArrCon
           </div>
           <p className="mt-1 text-sm text-slate-300">{document.title}</p>
           <p className="mt-2 text-xs text-slate-400">Version {document.currentVersionId} · review due {formatDate(document.nextReviewAt)}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SimpleReminderList({ reminders, emptyLabel }: { reminders: RecordArrReminder[]; emptyLabel: string }) {
+  if (reminders.length === 0) {
+    return <EmptyState title={emptyLabel} />
+  }
+
+  return (
+    <div className="space-y-3">
+      {reminders.slice(0, 5).map((reminder) => (
+        <div key={reminder.reminderId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <strong className="text-sm text-slate-100">{reminder.title}</strong>
+            <span className="recordarr-pill text-[0.7rem]">{reminder.status}</span>
+          </div>
+          <p className="mt-1 text-sm text-slate-300">{reminder.description}</p>
+          <p className="mt-2 text-xs text-slate-400">
+            Due {formatDate(reminder.dueAt)} · {reminder.reminderType.replaceAll('_', ' ')}
+          </p>
         </div>
       ))}
     </div>
@@ -509,8 +560,8 @@ function RecordsPage({ accessToken }: { accessToken: string }) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
-            <Field label="Record type"><input className="recordarr-input" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })} /></Field>
-            <Field label="Document type"><input className="recordarr-input" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })} /></Field>
+            <Field label="Record type"><select className="recordarr-select" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })}><option value="document">document</option><option value="photo">photo</option><option value="signature">signature</option><option value="video">video</option><option value="audio">audio</option><option value="form_submission">form_submission</option><option value="generated_pdf">generated_pdf</option><option value="certificate">certificate</option><option value="inspection_record">inspection_record</option><option value="training_record">training_record</option><option value="maintenance_record">maintenance_record</option><option value="receiving_record">receiving_record</option><option value="delivery_record">delivery_record</option><option value="quality_record">quality_record</option><option value="audit_evidence">audit_evidence</option><option value="evidence_package">evidence_package</option><option value="report_output">report_output</option><option value="other">other</option></select></Field>
+            <Field label="Document type"><select className="recordarr-select" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}><option value="bol">bol</option><option value="pod">pod</option><option value="packing_slip">packing_slip</option><option value="invoice_reference">invoice_reference</option><option value="certificate">certificate</option><option value="policy">policy</option><option value="procedure">procedure</option><option value="work_instruction">work_instruction</option><option value="form">form</option><option value="safety_data_sheet">safety_data_sheet</option><option value="inspection_form">inspection_form</option><option value="maintenance_evidence">maintenance_evidence</option><option value="training_evidence">training_evidence</option><option value="quality_evidence">quality_evidence</option><option value="customer_document">customer_document</option><option value="supplier_document">supplier_document</option><option value="contract">contract</option><option value="permit">permit</option><option value="photo_evidence">photo_evidence</option><option value="signature_evidence">signature_evidence</option><option value="other">other</option></select></Field>
             <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><option value="public">public</option><option value="internal">internal</option><option value="confidential">confidential</option><option value="restricted">restricted</option><option value="legal_hold">legal_hold</option></select></Field>
             <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
             <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
@@ -622,6 +673,28 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
     actorPersonId: 'person-doc-controller',
   })
   const [editingCommentId, setEditingCommentId] = useState('')
+  const [selectedFileDownload, setSelectedFileDownload] = useState('')
+  const [signatureForm, setSignatureForm] = useState({
+    signaturePurpose: 'proof_of_delivery',
+    signerPersonId: 'person-route-lead',
+    signerExternalName: '',
+    signerTitle: '',
+    attestationText: 'I attest that this evidence accurately reflects the captured handoff.',
+    capturedByPersonId: 'person-route-lead',
+    sourceProduct: 'routarr',
+    sourceObjectRef: 'trip-7781',
+    geoCoordinates: '',
+    deviceSnapshot: '',
+  })
+  const [photoForm, setPhotoForm] = useState({
+    photoPurpose: 'delivery',
+    capturedByPersonId: 'person-route-lead',
+    sourceProduct: 'routarr',
+    sourceObjectRef: 'trip-7781',
+    geoCoordinates: '',
+    deviceSnapshot: '',
+    notes: 'Captured during delivery closeout.',
+  })
 
   const recordQuery = useQuery({
     queryKey: ['recordarr', 'records', recordId],
@@ -643,14 +716,19 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listRecordComments(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
   })
+  const filesQuery = useQuery({
+    queryKey: ['recordarr', 'files', recordId],
+    queryFn: () => listFiles(accessToken, recordId),
+    enabled: Boolean(accessToken && recordId),
+  })
   const retentionQuery = useQuery({
     queryKey: ['recordarr', 'retention-status', recordId],
     queryFn: () => getRetentionStatus(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
   })
   const logsQuery = useQuery({
-    queryKey: ['recordarr', 'access-logs'],
-    queryFn: () => listAccessLogs(accessToken),
+    queryKey: ['recordarr', 'access-logs', recordId],
+    queryFn: () => listAccessLogs(accessToken, recordId),
     enabled: Boolean(accessToken),
   })
   const scansQuery = useQuery({
@@ -743,6 +821,41 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const createSignatureMutation = useMutation({
+    mutationFn: () =>
+      createSignatureRecord(accessToken, {
+        recordId,
+        signaturePurpose: signatureForm.signaturePurpose,
+        signerPersonId: signatureForm.signerPersonId || null,
+        signerExternalName: signatureForm.signerExternalName || null,
+        signerTitle: signatureForm.signerTitle || null,
+        attestationText: signatureForm.attestationText,
+        capturedByPersonId: signatureForm.capturedByPersonId,
+        sourceProduct: signatureForm.sourceProduct,
+        sourceObjectRef: signatureForm.sourceObjectRef,
+        geoCoordinates: signatureForm.geoCoordinates || null,
+        deviceSnapshot: signatureForm.deviceSnapshot || null,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const createPhotoMutation = useMutation({
+    mutationFn: () =>
+      createPhotoEvidence(accessToken, {
+        recordId,
+        photoPurpose: photoForm.photoPurpose,
+        capturedByPersonId: photoForm.capturedByPersonId,
+        sourceProduct: photoForm.sourceProduct,
+        sourceObjectRef: photoForm.sourceObjectRef,
+        geoCoordinates: photoForm.geoCoordinates || null,
+        deviceSnapshot: photoForm.deviceSnapshot || null,
+        notes: photoForm.notes || null,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   const record = recordQuery.data
   useEffect(() => {
@@ -772,14 +885,16 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       })
     }
   }, [commentsQuery.data, editingCommentId])
-  const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
+  const relevantLogs = logsQuery.data ?? []
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
   const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
   const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
   const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
   const recordComments = commentsQuery.data ?? []
+  const recordFiles: RecordArrFile[] = filesQuery.data ?? []
   const selectedComment = recordComments.find((comment) => comment.commentId === editingCommentId) ?? null
+  const currentFile = record ? recordFiles.find((file) => file.fileId === record.currentFileRef) ?? null : null
   const activeHold = (holdsQuery.data ?? []).find((hold) => hold.status === 'active' && hold.recordRefs.includes(recordId)) ?? null
   const timeline = useMemo(() => {
     if (!record) return []
@@ -787,6 +902,8 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
       { key: 'uploaded', label: 'Uploaded', value: formatDate(record.uploadedAt) },
       { key: 'effective', label: 'Effective', value: formatDate(record.effectiveAt) },
       { key: 'expires', label: 'Expires', value: formatDate(record.expiresAt) },
+      { key: 'archived', label: 'Archived', value: formatDate(record.archivedAt) },
+      { key: 'purged', label: 'Purged', value: formatDate(record.purgedAt) },
       { key: 'status', label: 'Current status', value: record.status },
       { key: 'access', label: 'Access events', value: `${relevantLogs.length} logged` },
     ]
@@ -818,10 +935,34 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Object:</strong> {record.sourceObjectType} · {record.sourceObjectId}</p>
                 <p><strong className="text-slate-100">Owner:</strong> {record.ownerPersonId}</p>
                 <p><strong className="text-slate-100">Version:</strong> v{record.versionNumber}</p>
+                <p><strong className="text-slate-100">Current ref:</strong> {record.currentVersionRef}</p>
+                <p><strong className="text-slate-100">Audit trail:</strong> {record.auditTrail.length} entries</p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {record.tags.map((tag) => (
                     <span key={tag} className="recordarr-pill text-[0.7rem]">{tag}</span>
                   ))}
+                </div>
+                <div className="grid gap-3 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 text-xs text-slate-300 md:grid-cols-2">
+                  <div>
+                    <p className="font-semibold text-slate-100">Record refs</p>
+                    <p className="mt-1">Sources: {record.sourceObjectRefs.length} · Files: {record.fileRefs.length} · Versions: {record.versionRefs.length}</p>
+                    <p className="mt-1">OCR: {record.ocrResultRefs.length} · Extraction: {record.extractionResultRefs.length} · Evidence: {record.evidenceMappingRefs.length}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {[...record.sourceObjectRefs, ...record.fileRefs, ...record.versionRefs].slice(0, 6).map((ref) => (
+                        <span key={ref} className="recordarr-pill text-[0.65rem]">{ref}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-100">Governance refs</p>
+                    <p className="mt-1">Packages: {record.packageRefs.length} · Legal holds: {record.legalHoldRefs.length} · Compliance: {record.complianceRefs.length}</p>
+                    <p className="mt-1">Retention policy: {record.retentionPolicyRef ?? 'n/a'} · Access policy: {record.accessPolicyRef ?? 'n/a'}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {[...record.packageRefs, ...record.legalHoldRefs, ...record.complianceRefs].slice(0, 6).map((ref) => (
+                        <span key={ref} className="recordarr-pill text-[0.65rem]">{ref}</span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -829,12 +970,16 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Status">
                   <select className="recordarr-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="draft">draft</option>
                     <option value="processing">processing</option>
                     <option value="review">review</option>
                     <option value="active">active</option>
                     <option value="approved">approved</option>
+                    <option value="rejected">rejected</option>
+                    <option value="superseded">superseded</option>
                     <option value="archived">archived</option>
                     <option value="expired">expired</option>
+                    <option value="purged">purged</option>
                   </select>
                 </Field>
                 <Field label="Classification">
@@ -872,6 +1017,76 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Last reviewed:</strong> {formatDate(retentionQuery.data?.lastReviewedAt ?? null)}</p>
                 <p><strong className="text-slate-100">Related uploads:</strong> {relatedUploads.length}</p>
                 <p><strong className="text-slate-100">Related packages:</strong> {relatedPackages.length}</p>
+              </div>
+            </Card>
+          </div>
+          <div className="recordarr-grid cols-2">
+            <Card title="Files and evidence capture" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-4 text-sm text-slate-300">
+                <div className="space-y-2">
+                  <p><strong className="text-slate-100">Current file ref:</strong> {record.currentFileRef}</p>
+                  <p><strong className="text-slate-100">All file refs:</strong> {record.fileRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-slate-100">Current file:</strong> {currentFile ? `${currentFile.originalFilename} (${currentFile.mimeType})` : record.currentFileName}</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-slate-100">Files</h3>
+                    <span className="recordarr-pill text-[0.7rem]">{recordFiles.length} file(s)</span>
+                  </div>
+                  <div className="space-y-2">
+                    {recordFiles.length > 0 ? recordFiles.map((file) => (
+                      <div key={file.fileId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <strong className="text-sm text-slate-100">{file.originalFilename}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{file.processingStatus}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">{file.fileNumber} · {file.mimeType} · {file.storageProvider}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="recordarr-button secondary"
+                            onClick={async () => setSelectedFileDownload(await downloadFile(accessToken, file.fileId))}
+                          >
+                            Inspect download text
+                          </button>
+                        </div>
+                      </div>
+                    )) : <EmptyState title="No files attached yet." />}
+                  </div>
+                </div>
+                {selectedFileDownload ? (
+                  <pre className="max-h-48 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/80 p-3 text-xs text-slate-300 whitespace-pre-wrap">
+                    {selectedFileDownload}
+                  </pre>
+                ) : null}
+              </div>
+            </Card>
+            <Card title="Capture evidence" icon={<ScanSearch className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-100">Signature</h3>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="Purpose"><select className="recordarr-select" value={signatureForm.signaturePurpose} onChange={(e) => setSignatureForm({ ...signatureForm, signaturePurpose: e.target.value })}><option value="proof_of_delivery">proof_of_delivery</option><option value="proof_of_pickup">proof_of_pickup</option><option value="training_acknowledgement">training_acknowledgement</option><option value="work_order_closeout">work_order_closeout</option><option value="inspection_attestation">inspection_attestation</option><option value="quality_release">quality_release</option><option value="customer_acceptance">customer_acceptance</option><option value="policy_acknowledgement">policy_acknowledgement</option><option value="other">other</option></select></Field>
+                    <Field label="Signer person"><input className="recordarr-input" value={signatureForm.signerPersonId} onChange={(e) => setSignatureForm({ ...signatureForm, signerPersonId: e.target.value })} /></Field>
+                    <Field label="Signer name"><input className="recordarr-input" value={signatureForm.signerExternalName} onChange={(e) => setSignatureForm({ ...signatureForm, signerExternalName: e.target.value })} placeholder="Optional" /></Field>
+                    <Field label="Signer title"><input className="recordarr-input" value={signatureForm.signerTitle} onChange={(e) => setSignatureForm({ ...signatureForm, signerTitle: e.target.value })} placeholder="Optional" /></Field>
+                    <Field label="Attestation" wide><textarea className="recordarr-textarea" value={signatureForm.attestationText} onChange={(e) => setSignatureForm({ ...signatureForm, attestationText: e.target.value })} rows={3} /></Field>
+                  </div>
+                  <button type="button" className="recordarr-button secondary" onClick={() => createSignatureMutation.mutate()} disabled={createSignatureMutation.isPending}>
+                    {createSignatureMutation.isPending ? 'Capturing...' : 'Capture signature'}
+                  </button>
+                </div>
+                <div className="space-y-3 border-t border-slate-800 pt-4">
+                  <h3 className="text-sm font-semibold text-slate-100">Photo evidence</h3>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="Purpose"><select className="recordarr-select" value={photoForm.photoPurpose} onChange={(e) => setPhotoForm({ ...photoForm, photoPurpose: e.target.value })}><option value="defect">defect</option><option value="damage">damage</option><option value="completion">completion</option><option value="before">before</option><option value="after">after</option><option value="receipt">receipt</option><option value="delivery">delivery</option><option value="quality">quality</option><option value="incident">incident</option><option value="audit">audit</option><option value="training">training</option><option value="other">other</option></select></Field>
+                    <Field label="Captured by"><input className="recordarr-input" value={photoForm.capturedByPersonId} onChange={(e) => setPhotoForm({ ...photoForm, capturedByPersonId: e.target.value })} /></Field>
+                    <Field label="Notes" wide><textarea className="recordarr-textarea" value={photoForm.notes} onChange={(e) => setPhotoForm({ ...photoForm, notes: e.target.value })} rows={3} /></Field>
+                  </div>
+                  <button type="button" className="recordarr-button secondary" onClick={() => createPhotoMutation.mutate()} disabled={createPhotoMutation.isPending}>
+                    {createPhotoMutation.isPending ? 'Capturing...' : 'Capture photo evidence'}
+                  </button>
+                </div>
               </div>
             </Card>
           </div>
@@ -1044,6 +1259,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                           <span className="recordarr-pill text-[0.7rem]">{scan.status}</span>
                         </div>
                         <p className="mt-1">{scan.scanPurpose} · confidence {scan.confidenceScore.toFixed(2)}</p>
+                        <p className="mt-1 text-xs text-slate-400">Edge {scan.edgeDetectionResult?.status ?? 'pending'} · enhancement {scan.enhancementSettings?.outputFormat ?? 'pending'}</p>
                       </div>
                     )) : <EmptyState title="No scans for this record." />}
                   </div>
@@ -1117,12 +1333,23 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     requiresOcr: true,
     requiresManualReview: true,
   })
+  const [captureRequest, setCaptureRequest] = useState({
+    sourceProduct: 'routarr',
+    sourceObjectRef: 'routarr:trip:trip-7781',
+    captureType: 'photo',
+    title: 'Dock arrival photo',
+    instructions: 'Capture a dock-side arrival photo before unloading begins.',
+    required: true,
+    uploadSessionRef: 'upl-001',
+    evidenceRequirementRef: 'evidence_requirement.trip.pod',
+  })
   const [selectedScanId, setSelectedScanId] = useState('')
   const [scan, setScan] = useState({
     recordId: 'rec-bol-001',
     originalFileName: 'bol-7781.jpg',
     scanPurpose: 'bol',
     edgeCoordinates: '10,10,540,20,540,720,10,720',
+    correctedByPersonId: 'person-route-lead',
   })
   const [mapping, setMapping] = useState({
     recordId: 'rec-bol-001',
@@ -1143,6 +1370,11 @@ function CapturePage({ accessToken }: { accessToken: string }) {
   const uploadSessionsQuery = useQuery({
     queryKey: ['recordarr', 'upload-sessions'],
     queryFn: () => listUploadSessions(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const captureRequestsQuery = useQuery({
+    queryKey: ['recordarr', 'capture-requests'],
+    queryFn: () => listCaptureRequests(accessToken),
     enabled: Boolean(accessToken),
   })
   const scansQuery = useQuery({
@@ -1173,6 +1405,36 @@ function CapturePage({ accessToken }: { accessToken: string }) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const captureRequestMutation = useMutation({
+    mutationFn: () => createCaptureRequest(accessToken, captureRequest),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const completeCaptureRequestMutation = useMutation({
+    mutationFn: (captureRequestId: string) => completeCaptureRequest(accessToken, captureRequestId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const skipCaptureRequestMutation = useMutation({
+    mutationFn: (captureRequestId: string) => skipCaptureRequest(accessToken, captureRequestId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const cancelCaptureRequestMutation = useMutation({
+    mutationFn: (captureRequestId: string) => cancelCaptureRequest(accessToken, captureRequestId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const expireCaptureRequestMutation = useMutation({
+    mutationFn: (captureRequestId: string) => expireCaptureRequest(accessToken, captureRequestId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
   const scanMutation = useMutation({
     mutationFn: () => createScan(accessToken, scan),
     onSuccess: async () => {
@@ -1180,7 +1442,11 @@ function CapturePage({ accessToken }: { accessToken: string }) {
     },
   })
   const correctionMutation = useMutation({
-    mutationFn: () => applyManualCorrection(accessToken, selectedScan?.scanProcessingId ?? '', { edgeCoordinates: scan.edgeCoordinates }),
+    mutationFn: () =>
+      applyManualCorrection(accessToken, selectedScan?.scanProcessingId ?? '', {
+        edgeCoordinates: scan.edgeCoordinates,
+        correctedByPersonId: scan.correctedByPersonId,
+      }),
   })
   const selectedScan = scansQuery.data?.find((entry) => entry.scanProcessingId === selectedScanId) ?? null
   const ocrQuery = useQuery({
@@ -1219,6 +1485,62 @@ function CapturePage({ accessToken }: { accessToken: string }) {
         description="Create capture sessions, track OCR and scan processing, and map records back to compliance requirements."
         action={<span className="recordarr-pill"><Upload className="h-4 w-4" /> {uploadSessionsQuery.data?.length ?? 0} sessions</span>}
       />
+      <Card title="Capture requests" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Source product"><input className="recordarr-input" value={captureRequest.sourceProduct} onChange={(e) => setCaptureRequest({ ...captureRequest, sourceProduct: e.target.value })} /></Field>
+          <Field label="Source object ref"><input className="recordarr-input" value={captureRequest.sourceObjectRef} onChange={(e) => setCaptureRequest({ ...captureRequest, sourceObjectRef: e.target.value })} /></Field>
+          <Field label="Capture type">
+            <select className="recordarr-select" value={captureRequest.captureType} onChange={(e) => setCaptureRequest({ ...captureRequest, captureType: e.target.value })}>
+              <option value="photo">photo</option>
+              <option value="document_scan">document_scan</option>
+              <option value="signature">signature</option>
+              <option value="video">video</option>
+              <option value="audio">audio</option>
+              <option value="file_upload">file_upload</option>
+              <option value="generated_pdf">generated_pdf</option>
+            </select>
+          </Field>
+          <Field label="Required"><select className="recordarr-select" value={String(captureRequest.required)} onChange={(e) => setCaptureRequest({ ...captureRequest, required: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
+          <Field label="Title"><input className="recordarr-input" value={captureRequest.title} onChange={(e) => setCaptureRequest({ ...captureRequest, title: e.target.value })} /></Field>
+          <Field label="Upload session ref"><input className="recordarr-input" value={captureRequest.uploadSessionRef} onChange={(e) => setCaptureRequest({ ...captureRequest, uploadSessionRef: e.target.value })} /></Field>
+          <Field label="Evidence requirement ref"><input className="recordarr-input" value={captureRequest.evidenceRequirementRef} onChange={(e) => setCaptureRequest({ ...captureRequest, evidenceRequirementRef: e.target.value })} /></Field>
+          <Field label="Instructions" wide><textarea className="recordarr-textarea" value={captureRequest.instructions} onChange={(e) => setCaptureRequest({ ...captureRequest, instructions: e.target.value })} /></Field>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button type="button" className="recordarr-button" onClick={() => captureRequestMutation.mutate()} disabled={captureRequestMutation.isPending}>
+            {captureRequestMutation.isPending ? 'Creating...' : 'Create request'}
+          </button>
+          {captureRequestMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(captureRequestMutation.error, 'Create failed')}</span> : null}
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {captureRequestsQuery.data?.map((request) => (
+            <div key={request.captureRequestId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+              <div className="flex items-center justify-between gap-3">
+                <strong className="text-slate-100">{request.title}</strong>
+                <span className="recordarr-pill text-[0.7rem]">{request.status}</span>
+              </div>
+              <p className="mt-1">{request.captureType} · {request.sourceObjectRef}</p>
+              <p className="mt-1 text-xs text-slate-400">Required: {request.required ? 'yes' : 'no'} · Session: {request.uploadSessionRef ?? 'none'}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">{request.instructions}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className="recordarr-button secondary" onClick={() => completeCaptureRequestMutation.mutate(request.captureRequestId)} disabled={completeCaptureRequestMutation.isPending || request.status !== 'open'}>
+                  Complete
+                </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => skipCaptureRequestMutation.mutate(request.captureRequestId)} disabled={skipCaptureRequestMutation.isPending || request.status !== 'open'}>
+                  Skip
+                </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => cancelCaptureRequestMutation.mutate(request.captureRequestId)} disabled={cancelCaptureRequestMutation.isPending || request.status !== 'open'}>
+                  Cancel
+                </button>
+                <button type="button" className="recordarr-button secondary" onClick={() => expireCaptureRequestMutation.mutate(request.captureRequestId)} disabled={expireCaptureRequestMutation.isPending || request.status !== 'open'}>
+                  Expire
+                </button>
+              </div>
+            </div>
+          ))}
+          {!captureRequestsQuery.data?.length && !captureRequestsQuery.isLoading ? <EmptyState title="No capture requests yet." /> : null}
+        </div>
+      </Card>
       <div className="recordarr-grid cols-2">
         <Card title="Upload session" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
           <div className="grid gap-3 md:grid-cols-2">
@@ -1256,6 +1578,7 @@ function CapturePage({ accessToken }: { accessToken: string }) {
             <Field label="Original file"><input className="recordarr-input" value={scan.originalFileName} onChange={(e) => setScan({ ...scan, originalFileName: e.target.value })} /></Field>
             <Field label="Scan purpose"><input className="recordarr-input" value={scan.scanPurpose} onChange={(e) => setScan({ ...scan, scanPurpose: e.target.value })} /></Field>
             <Field label="Edge coordinates" wide><input className="recordarr-input" value={scan.edgeCoordinates} onChange={(e) => setScan({ ...scan, edgeCoordinates: e.target.value })} /></Field>
+            <Field label="Corrected by"><input className="recordarr-input" value={scan.correctedByPersonId} onChange={(e) => setScan({ ...scan, correctedByPersonId: e.target.value })} /></Field>
             <Field label="Selected scan">
               <select className="recordarr-select" value={selectedScanId} onChange={(e) => setSelectedScanId(e.target.value)}>
                 {scansQuery.data?.map((entry) => (
@@ -1292,7 +1615,9 @@ function CapturePage({ accessToken }: { accessToken: string }) {
                   <span className="recordarr-pill text-[0.7rem]">{entry.status}</span>
                 </div>
                 <p className="mt-1">{entry.scanPurpose} · confidence {entry.confidenceScore.toFixed(2)}</p>
-                <p className="mt-1 text-xs text-slate-400">OCR {entry.ocrResultId ?? 'pending'} · extraction {entry.extractionResultId ?? 'pending'}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  OCR {entry.ocrResultId ?? 'pending'} · extraction {entry.extractionResultId ?? 'pending'} · edge {entry.edgeDetectionResult?.status ?? 'pending'}
+                </p>
               </button>
             ))}
             {!scansQuery.data?.length && !scansQuery.isLoading ? <EmptyState title="No scan processing yet." /> : null}
@@ -1309,6 +1634,9 @@ function CapturePage({ accessToken }: { accessToken: string }) {
                   <span className="recordarr-pill text-[0.7rem]">{selectedScan.status}</span>
                 </div>
                 <p className="mt-1">OCR result {selectedScan.ocrResultId ?? 'pending'} · extraction result {selectedScan.extractionResultId ?? 'pending'}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Manual correction: {selectedScan.manualEdgeCoordinates ? `${selectedScan.manualEdgeCoordinates} · ${selectedScan.correctedByPersonId ?? 'unknown'} · ${formatDate(selectedScan.correctedAt)}` : 'not yet corrected'}
+                </p>
               </div>
               <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
                 <div className="flex items-center justify-between gap-3">
@@ -1322,9 +1650,39 @@ function CapturePage({ accessToken }: { accessToken: string }) {
                     <p><strong className="text-slate-100">Language:</strong> {ocrQuery.data.language}</p>
                     <p><strong className="text-slate-100">Extracted:</strong> {formatDate(ocrQuery.data.extractedAt)}</p>
                     <p className="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3 text-xs leading-6 text-slate-300">{ocrQuery.data.fullText}</p>
+                    <div className="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3 text-xs leading-6 text-slate-300">
+                      <p className="font-medium text-slate-100">Page results</p>
+                      <div className="mt-2 space-y-2">
+                        {ocrQuery.data.pageResults.map((page) => (
+                          <div key={page.pageResultId} className="rounded-md border border-slate-700/50 bg-slate-900/60 p-2">
+                            <p className="text-slate-100">Page {page.pageNumber} · confidence {page.confidenceScore.toFixed(2)}</p>
+                            <p className="mt-1">{page.text}</p>
+                            <p className="mt-1 text-[0.7rem] text-slate-400">Blocks: {page.blocks.join(' | ') || 'none'}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-3 font-medium text-slate-100">Block results</p>
+                      <p className="mt-1">{ocrQuery.data.blockResults.join(' | ') || 'none'}</p>
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-3"><EmptyState title="Select a scan with an OCR result." /></div>
+                )}
+              </div>
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-100">Edge detection and enhancement</strong>
+                  <span className="recordarr-pill text-[0.7rem]">{selectedScan.edgeDetectionResult?.status ?? 'unloaded'}</span>
+                </div>
+                {selectedScan.edgeDetectionResult && selectedScan.enhancementSettings ? (
+                  <div className="mt-3 space-y-2">
+                    <p><strong className="text-slate-100">Confidence:</strong> {selectedScan.edgeDetectionResult.confidenceScore.toFixed(2)}</p>
+                    <p><strong className="text-slate-100">Corners:</strong> {selectedScan.edgeDetectionResult.corners ?? 'n/a'}</p>
+                    <p><strong className="text-slate-100">Manual correction:</strong> {selectedScan.edgeDetectionResult.requiresManualCorrection ? 'required' : 'not required'}</p>
+                    <p><strong className="text-slate-100">Enhancement:</strong> {selectedScan.enhancementSettings.outputFormat} · crop {selectedScan.enhancementSettings.cropApplied ? 'yes' : 'no'} · perspective {selectedScan.enhancementSettings.perspectiveCorrectionApplied ? 'yes' : 'no'}</p>
+                  </div>
+                ) : (
+                  <div className="mt-3"><EmptyState title="Select a scan with edge detection metadata." /></div>
                 )}
               </div>
               <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
@@ -1355,7 +1713,7 @@ function CapturePage({ accessToken }: { accessToken: string }) {
                       <p><strong className="text-slate-100">Reviewed by:</strong> {extractionQuery.data.reviewedByPersonId ?? 'n/a'}</p>
                       <div className="flex flex-wrap gap-2">
                         {extractionQuery.data.extractedFields.map((field) => (
-                          <span key={field.extractedFieldId} className="recordarr-pill text-[0.7rem]">
+                          <span key={field.extractedFieldId} className="recordarr-pill text-[0.7rem]" title={`Page ${field.pageNumber ?? 'n/a'} · ${field.boundingBox ?? 'no bounding box'}`}>
                             {field.label}: {field.value}
                           </span>
                         ))}
@@ -1667,8 +2025,8 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     () => versionsQuery.data?.find((version) => version.versionId === selectedDocument?.currentVersionId) ?? null,
     [selectedDocument?.currentVersionId, versionsQuery.data],
   )
-  const draftVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'draft' || version.status === 'submitted_for_review')
-  const reviewVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'under_review' || version.status === 'changes_requested')
+  const draftVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'draft')
+  const reviewVersions = (versionsQuery.data ?? []).filter((version) => version.status === 'review')
 
   return (
     <div className="recordarr-page">

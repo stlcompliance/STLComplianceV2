@@ -96,6 +96,15 @@ public static class StlCiFrontendCatalog
             RunsTest: true,
             IsProductFrontendGate: true);
 
+    public static readonly StlCiFrontendJob ReportArrFrontend =
+        new(
+            "reportarr-frontend",
+            "apps/reportarr-frontend",
+            "apps/reportarr-frontend/package-lock.json",
+            RunsBuild: true,
+            RunsTest: true,
+            IsProductFrontendGate: true);
+
     public static readonly StlCiFrontendJob AssurArrFrontend =
         new(
             "assurarr-frontend",
@@ -117,6 +126,7 @@ public static class StlCiFrontendCatalog
         SupplyArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
+        ReportArrFrontend,
         AssurArrFrontend,
     ];
 
@@ -130,6 +140,7 @@ public static class StlCiFrontendCatalog
         SupplyArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
+        ReportArrFrontend,
         AssurArrFrontend,
     ];
 

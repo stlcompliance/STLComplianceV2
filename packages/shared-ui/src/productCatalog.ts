@@ -1,5 +1,6 @@
 import {
   Archive,
+  BarChart3,
   ClipboardCheck,
   GraduationCap,
   Inbox,
@@ -84,6 +85,13 @@ export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
     description: 'Records, evidence, and retention',
     icon: Archive,
     sortOrder: 66,
+  },
+  {
+    productKey: 'reportarr',
+    displayName: 'ReportArr',
+    description: 'Reporting, dashboards, and analytics',
+    icon: BarChart3,
+    sortOrder: 66.5,
   },
   {
     productKey: 'assurarr',

@@ -1,4 +1,5 @@
 using RecordArr.Api.Data;
+using STLCompliance.Shared.Auth;
 
 namespace RecordArr.Api.Endpoints;
 
@@ -14,18 +15,23 @@ public static class RecordArrIntegrationEndpoints
     {
         group.WithTags("Integrations").RequireAuthorization();
 
-        group.MapGet("/records", (string? search, RecordArrStore store) => Results.Ok(store.GetRecords(search)))
+        group.MapGet("/records", (HttpContext context, string? search, RecordArrStore store) => Results.Ok(store.GetRecords(context.User, search)))
             .WithName($"ListRecordArrIntegrationRecords{routePrefix}");
 
-        group.MapGet("/records/{recordId}", (string recordId, RecordArrStore store) =>
+        group.MapGet("/reminders", (HttpContext context, RecordArrStore store) => Results.Ok(store.GetReminders(context.User)))
+            .WithName($"ListRecordArrIntegrationReminders{routePrefix}");
+
+        group.MapGet("/records/{recordId}", (HttpContext context, string recordId, RecordArrStore store) =>
         {
-            var record = store.GetRecord(recordId);
+            var record = store.GetRecord(context.User, recordId);
             return record is null ? Results.NotFound() : Results.Ok(record);
         }).WithName($"GetRecordArrIntegrationRecord{routePrefix}");
 
-        group.MapGet("/records/{recordId}/metadata", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordMetadata(recordId)))
-            .WithName($"ListRecordArrIntegrationRecordMetadata{routePrefix}");
+        group.MapGet("/records/{recordId}/metadata", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordMetadata(recordId));
+        }).WithName($"ListRecordArrIntegrationRecordMetadata{routePrefix}");
 
         group.MapPost("/records/{recordId}/metadata", (string recordId, WorkspaceEndpoints.CreateRecordMetadataRequest request, RecordArrStore store) =>
         {
@@ -33,9 +39,11 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/records/{recordId}/metadata/{metadata.MetadataId}", metadata);
         }).WithName($"CreateRecordArrIntegrationRecordMetadata{routePrefix}");
 
-        group.MapGet("/records/{recordId}/links", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordLinks(recordId)))
-            .WithName($"ListRecordArrIntegrationRecordLinks{routePrefix}");
+        group.MapGet("/records/{recordId}/links", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordLinks(recordId));
+        }).WithName($"ListRecordArrIntegrationRecordLinks{routePrefix}");
 
         group.MapPost("/records/{recordId}/links", (string recordId, WorkspaceEndpoints.CreateRecordLinkRequest request, RecordArrStore store) =>
         {
@@ -43,9 +51,11 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/records/{recordId}/links/{link.RecordLinkId}", link);
         }).WithName($"CreateRecordArrIntegrationRecordLink{routePrefix}");
 
-        group.MapGet("/records/{recordId}/comments", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordComments(recordId)))
-            .WithName($"ListRecordArrIntegrationRecordComments{routePrefix}");
+        group.MapGet("/records/{recordId}/comments", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordComments(recordId));
+        }).WithName($"ListRecordArrIntegrationRecordComments{routePrefix}");
 
         group.MapPost("/records/{recordId}/comments", (string recordId, WorkspaceEndpoints.CreateRecordCommentRequest request, RecordArrStore store) =>
         {
@@ -96,6 +106,85 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(updated);
         }).WithName($"PurgeRecordArrIntegrationRecord{routePrefix}");
 
+        group.MapPost("/files", (WorkspaceEndpoints.CreateFileRequest request, RecordArrStore store) =>
+        {
+            var file = store.CreateFile(
+                request.RecordId,
+                request.OriginalFilename,
+                request.MimeType,
+                request.UploadedByPersonId,
+                request.StorageProvider,
+                request.StorageKey,
+                request.SizeBytes,
+                request.PageCount,
+                request.ImageWidth,
+                request.ImageHeight,
+                request.DurationSeconds);
+            return Results.Created($"{routePrefix}/files/{file.FileId}", file);
+        }).WithName($"CreateRecordArrIntegrationFile{routePrefix}");
+
+        group.MapGet("/files", (HttpContext context, string? recordId, RecordArrStore store) => Results.Ok(store.GetFiles(context.User, recordId)))
+            .WithName($"ListRecordArrIntegrationFiles{routePrefix}");
+
+        group.MapGet("/files/{fileId}", (HttpContext context, string fileId, RecordArrStore store) =>
+        {
+            var file = store.GetFile(context.User, fileId);
+            return file is null ? Results.NotFound() : Results.Ok(file);
+        }).WithName($"GetRecordArrIntegrationFile{routePrefix}");
+
+        group.MapGet("/files/{fileId}/download", (HttpContext context, string fileId, RecordArrStore store) =>
+        {
+            try
+            {
+                return Results.Text(store.DownloadFile(context.User, fileId), "text/plain");
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.NotFound();
+            }
+        }).WithName($"DownloadRecordArrIntegrationFile{routePrefix}");
+
+        group.MapGet("/capture-requests", (RecordArrStore store) => Results.Ok(store.GetCaptureRequests()))
+            .WithName($"ListRecordArrIntegrationCaptureRequests{routePrefix}");
+
+        group.MapPost("/capture-requests", (WorkspaceEndpoints.CreateCaptureRequestRequest request, RecordArrStore store) =>
+        {
+            var captureRequest = store.CreateCaptureRequest(
+                request.SourceProduct,
+                request.SourceObjectRef,
+                request.CaptureType,
+                request.Title,
+                request.Instructions,
+                request.Required,
+                request.UploadSessionRef,
+                request.EvidenceRequirementRef);
+            return Results.Created($"{routePrefix}/capture-requests/{captureRequest.CaptureRequestId}", captureRequest);
+        }).WithName($"CreateRecordArrIntegrationCaptureRequest{routePrefix}");
+
+        group.MapPost("/capture-requests/{captureRequestId}/complete", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.CompleteCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName($"CompleteRecordArrIntegrationCaptureRequest{routePrefix}");
+
+        group.MapPost("/capture-requests/{captureRequestId}/skip", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.SkipCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName($"SkipRecordArrIntegrationCaptureRequest{routePrefix}");
+
+        group.MapPost("/capture-requests/{captureRequestId}/cancel", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.CancelCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName($"CancelRecordArrIntegrationCaptureRequest{routePrefix}");
+
+        group.MapPost("/capture-requests/{captureRequestId}/expire", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.ExpireCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName($"ExpireRecordArrIntegrationCaptureRequest{routePrefix}");
+
         group.MapGet("/upload-sessions/{uploadSessionId}", (string uploadSessionId, RecordArrStore store) =>
         {
             var session = store.GetUploadSession(uploadSessionId);
@@ -123,20 +212,51 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/document-scans/{scan.ScanProcessingId}", scan);
         }).WithName($"CreateRecordArrIntegrationDocumentScan{routePrefix}");
 
-        group.MapGet("/document-scans", (RecordArrStore store) => Results.Ok(store.GetScanProcessing()))
+        group.MapGet("/document-scans", (HttpContext context, RecordArrStore store) => Results.Ok(store.GetScanProcessing().Where(scan => store.GetRecord(context.User, scan.RecordId) is not null)))
             .WithName($"ListRecordArrIntegrationDocumentScans{routePrefix}");
 
-        group.MapGet("/document-scans/{scanProcessingId}", (string scanProcessingId, RecordArrStore store) =>
+        group.MapGet("/document-scans/{scanProcessingId}", (HttpContext context, string scanProcessingId, RecordArrStore store) =>
         {
             var scan = store.GetScanProcessing(scanProcessingId);
-            return scan is null ? Results.NotFound() : Results.Ok(scan);
+            return scan is null || store.GetRecord(context.User, scan.RecordId) is null ? Results.NotFound() : Results.Ok(scan);
         }).WithName($"GetRecordArrIntegrationDocumentScan{routePrefix}");
 
         group.MapPost("/document-scans/{scanProcessingId}/manual-correction", (string scanProcessingId, WorkspaceEndpoints.ManualCorrectionRequest request, RecordArrStore store) =>
         {
-            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates);
+            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates, request.CorrectedByPersonId);
             return Results.Ok(scan);
         }).WithName($"ApplyRecordArrIntegrationManualCorrection{routePrefix}");
+
+        group.MapPost("/signatures", (WorkspaceEndpoints.CreateSignatureRecordRequest request, RecordArrStore store) =>
+        {
+            var signature = store.CreateSignatureRecord(
+                request.RecordId,
+                request.SignaturePurpose,
+                request.SignerPersonId,
+                request.SignerExternalName,
+                request.SignerTitle,
+                request.AttestationText,
+                request.CapturedByPersonId,
+                request.SourceProduct,
+                request.SourceObjectRef,
+                request.GeoCoordinates,
+                request.DeviceSnapshot);
+            return Results.Created($"{routePrefix}/signatures/{signature.SignatureRecordId}", signature);
+        }).WithName($"CreateRecordArrIntegrationSignature{routePrefix}");
+
+        group.MapPost("/photo-evidence", (WorkspaceEndpoints.CreatePhotoEvidenceRequest request, RecordArrStore store) =>
+        {
+            var photo = store.CreatePhotoEvidence(
+                request.RecordId,
+                request.PhotoPurpose,
+                request.CapturedByPersonId,
+                request.SourceProduct,
+                request.SourceObjectRef,
+                request.GeoCoordinates,
+                request.DeviceSnapshot,
+                request.Notes);
+            return Results.Created($"{routePrefix}/photo-evidence/{photo.PhotoEvidenceId}", photo);
+        }).WithName($"CreateRecordArrIntegrationPhotoEvidence{routePrefix}");
 
         group.MapGet("/ocr-results/{ocrResultId}", (string ocrResultId, RecordArrStore store) =>
         {
@@ -197,9 +317,9 @@ public static class RecordArrIntegrationEndpoints
             return package is null ? Results.NotFound() : Results.Ok(package);
         }).WithName($"GetRecordArrIntegrationPackage{routePrefix}");
 
-        group.MapPost("/record-packages", (WorkspaceEndpoints.CreatePackageRequest request, RecordArrStore store) =>
+        group.MapPost("/record-packages", (HttpContext context, WorkspaceEndpoints.CreatePackageRequest request, RecordArrStore store) =>
         {
-            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef);
+            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef, context.User.GetPersonId().ToString());
             return Results.Created($"{routePrefix}/record-packages/{package.PackageId}", package);
         }).WithName($"CreateRecordArrIntegrationPackage{routePrefix}");
 
@@ -220,7 +340,7 @@ public static class RecordArrIntegrationEndpoints
             var package = store.GetPackage(packageId);
             return package is null
                 ? Results.NotFound()
-                : Results.Ok(new { package.PackageId, package.PackageNumber, package.Title, package.Status, package.RecordRefs, package.SourceObjectRefs });
+                : Results.Ok(new { package.PackageId, package.PackageNumber, package.Title, package.Status, package.RecordRefs, package.SourceObjectRefs, package.ManifestChecksum, package.GeneratedPdfRecordRef, package.GeneratedZipFileRef });
         }).WithName($"DownloadRecordArrIntegrationPackage{routePrefix}");
 
         group.MapGet("/retention-policies", (RecordArrStore store) => Results.Ok(store.GetRetentionPolicies()))
@@ -478,7 +598,7 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(review);
         }).WithName($"CompleteRecordArrIntegrationDisposalReview{routePrefix}");
 
-        group.MapGet("/access-logs", (RecordArrStore store) => Results.Ok(store.GetAccessLogs()))
+        group.MapGet("/access-logs", (string? recordId, RecordArrStore store) => Results.Ok(store.GetAccessLogs(recordId)))
             .WithName($"ListRecordArrIntegrationAccessLogs{routePrefix}");
     }
 

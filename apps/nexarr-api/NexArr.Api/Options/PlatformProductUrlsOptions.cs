@@ -20,5 +20,7 @@ public sealed class PlatformProductUrlsOptions
 
     public string LoadArrBaseUrl { get; set; } = "http://localhost:5108";
 
+    public string ReportArrBaseUrl { get; set; } = "http://localhost:5111";
+
     public string RecordArrBaseUrl { get; set; } = "http://localhost:5110";
 }

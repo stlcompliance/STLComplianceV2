@@ -1,4 +1,5 @@
 using RecordArr.Api.Data;
+using STLCompliance.Shared.Auth;
 
 namespace RecordArr.Api.Endpoints;
 
@@ -8,20 +9,26 @@ public static class WorkspaceEndpoints
     {
         var group = app.MapGroup("/api/v1/workspace").WithTags("Workspace").RequireAuthorization();
 
-        group.MapGet("/summary", (RecordArrStore store) => Results.Ok(store.GetDashboard()))
+        group.MapGet("/summary", (HttpContext context, RecordArrStore store) => Results.Ok(store.GetDashboard(context.User)))
             .WithName("GetRecordArrWorkspaceSummary");
 
-        group.MapGet("/records", (string? search, RecordArrStore store) => Results.Ok(store.GetRecords(search)))
+        group.MapGet("/reminders", (HttpContext context, RecordArrStore store) => Results.Ok(store.GetReminders(context.User)))
+            .WithName("ListRecordArrReminders");
+
+        group.MapGet("/records", (HttpContext context, string? search, RecordArrStore store) => Results.Ok(store.GetRecords(context.User, search)))
             .WithName("ListRecordArrRecords");
 
-        group.MapGet("/records/{recordId}", (string recordId, RecordArrStore store) =>
+        group.MapGet("/records/{recordId}", (HttpContext context, string recordId, RecordArrStore store) =>
         {
-            var record = store.GetRecord(recordId);
+            var record = store.GetRecord(context.User, recordId);
             return record is null ? Results.NotFound() : Results.Ok(record);
         }).WithName("GetRecordArrRecord");
 
-        group.MapGet("/records/{recordId}/metadata", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordMetadata(recordId)))
+        group.MapGet("/records/{recordId}/metadata", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordMetadata(recordId));
+        })
             .WithName("ListRecordArrRecordMetadata");
 
         group.MapPost("/records/{recordId}/metadata", (string recordId, CreateRecordMetadataRequest request, RecordArrStore store) =>
@@ -30,9 +37,11 @@ public static class WorkspaceEndpoints
             return Results.Created($"/api/v1/workspace/records/{recordId}/metadata/{metadata.MetadataId}", metadata);
         }).WithName("CreateRecordArrRecordMetadata");
 
-        group.MapGet("/records/{recordId}/links", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordLinks(recordId)))
-            .WithName("ListRecordArrRecordLinks");
+        group.MapGet("/records/{recordId}/links", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordLinks(recordId));
+        }).WithName("ListRecordArrRecordLinks");
 
         group.MapPost("/records/{recordId}/links", (string recordId, CreateRecordLinkRequest request, RecordArrStore store) =>
         {
@@ -40,9 +49,11 @@ public static class WorkspaceEndpoints
             return Results.Created($"/api/v1/workspace/records/{recordId}/links/{link.RecordLinkId}", link);
         }).WithName("CreateRecordArrRecordLink");
 
-        group.MapGet("/records/{recordId}/comments", (string recordId, RecordArrStore store) =>
-            Results.Ok(store.GetRecordComments(recordId)))
-            .WithName("ListRecordArrRecordComments");
+        group.MapGet("/records/{recordId}/comments", (HttpContext context, string recordId, RecordArrStore store) =>
+        {
+            var record = store.GetRecord(context.User, recordId);
+            return record is null ? Results.NotFound() : Results.Ok(store.GetRecordComments(recordId));
+        }).WithName("ListRecordArrRecordComments");
 
         group.MapPost("/records/{recordId}/comments", (string recordId, CreateRecordCommentRequest request, RecordArrStore store) =>
         {
@@ -98,6 +109,67 @@ public static class WorkspaceEndpoints
             return Results.Ok(updated);
         }).WithName("PurgeRecordArrRecord");
 
+        group.MapGet("/access-logs", (string? recordId, RecordArrStore store) => Results.Ok(store.GetAccessLogs(recordId)))
+            .WithName("ListRecordArrAccessLogs");
+
+        group.MapGet("/capture-requests", (RecordArrStore store) => Results.Ok(store.GetCaptureRequests()))
+            .WithName("ListRecordArrCaptureRequests");
+
+        group.MapPost("/capture-requests", (CreateCaptureRequestRequest request, RecordArrStore store) =>
+        {
+            var captureRequest = store.CreateCaptureRequest(
+                request.SourceProduct,
+                request.SourceObjectRef,
+                request.CaptureType,
+                request.Title,
+                request.Instructions,
+                request.Required,
+                request.UploadSessionRef,
+                request.EvidenceRequirementRef);
+            return Results.Created($"/api/v1/workspace/capture-requests/{captureRequest.CaptureRequestId}", captureRequest);
+        }).WithName("CreateRecordArrCaptureRequest");
+
+        group.MapPost("/capture-requests/{captureRequestId}/complete", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.CompleteCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName("CompleteRecordArrCaptureRequest");
+
+        group.MapPost("/capture-requests/{captureRequestId}/skip", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.SkipCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName("SkipRecordArrCaptureRequest");
+
+        group.MapPost("/capture-requests/{captureRequestId}/cancel", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.CancelCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName("CancelRecordArrCaptureRequest");
+
+        group.MapPost("/capture-requests/{captureRequestId}/expire", (string captureRequestId, RecordArrStore store) =>
+        {
+            var captureRequest = store.ExpireCaptureRequest(captureRequestId);
+            return Results.Ok(captureRequest);
+        }).WithName("ExpireRecordArrCaptureRequest");
+
+        group.MapPost("/files", (CreateFileRequest request, RecordArrStore store) =>
+        {
+            var file = store.CreateFile(
+                request.RecordId,
+                request.OriginalFilename,
+                request.MimeType,
+                request.UploadedByPersonId,
+                request.StorageProvider,
+                request.StorageKey,
+                request.SizeBytes,
+                request.PageCount,
+                request.ImageWidth,
+                request.ImageHeight,
+                request.DurationSeconds);
+            return Results.Created($"/api/v1/workspace/files/{file.FileId}", file);
+        }).WithName("CreateRecordArrFile");
+
         group.MapPost("/upload-sessions", (CreateUploadSessionRequest request, RecordArrStore store) =>
         {
             var session = store.CreateUploadSession(
@@ -138,18 +210,18 @@ public static class WorkspaceEndpoints
             return Results.Created($"/api/v1/workspace/document-scans/{scan.ScanProcessingId}", scan);
         }).WithName("CreateRecordArrDocumentScan");
 
-        group.MapGet("/document-scans", (RecordArrStore store) => Results.Ok(store.GetScanProcessing()))
+        group.MapGet("/document-scans", (HttpContext context, RecordArrStore store) => Results.Ok(store.GetScanProcessing().Where(scan => store.GetRecord(context.User, scan.RecordId) is not null)))
             .WithName("ListRecordArrDocumentScans");
 
-        group.MapGet("/document-scans/{scanProcessingId}", (string scanProcessingId, RecordArrStore store) =>
+        group.MapGet("/document-scans/{scanProcessingId}", (HttpContext context, string scanProcessingId, RecordArrStore store) =>
         {
             var scan = store.GetScanProcessing(scanProcessingId);
-            return scan is null ? Results.NotFound() : Results.Ok(scan);
+            return scan is null || store.GetRecord(context.User, scan.RecordId) is null ? Results.NotFound() : Results.Ok(scan);
         }).WithName("GetRecordArrDocumentScan");
 
         group.MapPost("/document-scans/{scanProcessingId}/manual-correction", (string scanProcessingId, ManualCorrectionRequest request, RecordArrStore store) =>
         {
-            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates);
+            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates, request.CorrectedByPersonId);
             return Results.Ok(scan);
         }).WithName("ApplyRecordArrManualCorrection");
 
@@ -203,9 +275,9 @@ public static class WorkspaceEndpoints
         group.MapGet("/evidence-coverage", (RecordArrStore store) => Results.Ok(store.GetEvidenceCoverage()))
             .WithName("ListRecordArrEvidenceCoverage");
 
-        group.MapPost("/record-packages", (CreatePackageRequest request, RecordArrStore store) =>
+        group.MapPost("/record-packages", (HttpContext context, CreatePackageRequest request, RecordArrStore store) =>
         {
-            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef);
+            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef, context.User.GetPersonId().ToString());
             return Results.Created($"/api/v1/workspace/record-packages/{package.PackageId}", package);
         }).WithName("CreateRecordArrPackage");
 
@@ -251,6 +323,9 @@ public static class WorkspaceEndpoints
                 $"Source product: {package.SourceProduct}",
                 $"Source objects: {string.Join(", ", package.SourceObjectRefs)}",
                 $"Record refs: {string.Join(", ", package.RecordRefs)}",
+                $"Manifest checksum: {package.ManifestChecksum ?? "n/a"}",
+                $"Generated PDF ref: {package.GeneratedPdfRecordRef ?? "n/a"}",
+                $"Generated ZIP ref: {package.GeneratedZipFileRef ?? "n/a"}",
                 $"Created at: {package.CreatedAt:O}",
                 $"Completed at: {package.CompletedAt:O}",
                 $"Locked at: {package.LockedAt:O}",
@@ -512,6 +587,29 @@ public static class WorkspaceEndpoints
 
     public sealed record DisposeRecordRequest(string ActorPersonId);
 
+    public sealed record CreateFileRequest(
+        string RecordId,
+        string OriginalFilename,
+        string MimeType,
+        string UploadedByPersonId,
+        string? StorageProvider,
+        string? StorageKey,
+        long? SizeBytes,
+        int? PageCount,
+        int? ImageWidth,
+        int? ImageHeight,
+        int? DurationSeconds);
+
+    public sealed record CreateCaptureRequestRequest(
+        string SourceProduct,
+        string SourceObjectRef,
+        string CaptureType,
+        string Title,
+        string Instructions,
+        bool Required,
+        string? UploadSessionRef,
+        string? EvidenceRequirementRef);
+
     public sealed record CreateUploadSessionRequest(
         string SourceProduct,
         string SourceObjectType,
@@ -528,13 +626,34 @@ public static class WorkspaceEndpoints
     public sealed record CreateRecordLinkRequest(string? LinkedRecordId, string? SourceObjectRef, string LinkType, string CreatedByPersonId);
     public sealed record CreateRecordCommentRequest(string Body, string Visibility, string CreatedByPersonId);
     public sealed record UpdateRecordCommentRequest(string Body, string Visibility, string EditedByPersonId);
-    public sealed record ManualCorrectionRequest(string EdgeCoordinates);
+    public sealed record ManualCorrectionRequest(string EdgeCoordinates, string CorrectedByPersonId);
     public sealed record ReviewExtractionResultRequest(string ReviewedByPersonId, string Status, string? FailureReason);
     public sealed record CreateDocumentDistributionRequest(string VersionId, string DistributionType, string TargetRef);
     public sealed record RevokeDocumentDistributionRequest(string RevokedByPersonId, string? RevokeReason);
     public sealed record ExpireDocumentDistributionRequest(string ExpiredByPersonId, string? ExpireReason);
     public sealed record CreateDocumentAcknowledgementRequest(string VersionId, string PersonId, string? AttestationText, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentAcknowledgementRequest(string? SignatureRecordRef);
+    public sealed record CreateSignatureRecordRequest(
+        string RecordId,
+        string SignaturePurpose,
+        string? SignerPersonId,
+        string? SignerExternalName,
+        string? SignerTitle,
+        string AttestationText,
+        string CapturedByPersonId,
+        string SourceProduct,
+        string SourceObjectRef,
+        string? GeoCoordinates,
+        string? DeviceSnapshot);
+    public sealed record CreatePhotoEvidenceRequest(
+        string RecordId,
+        string PhotoPurpose,
+        string CapturedByPersonId,
+        string SourceProduct,
+        string SourceObjectRef,
+        string? GeoCoordinates,
+        string? DeviceSnapshot,
+        string? Notes);
     public sealed record PromoteControlledDocumentVersionRequest(string ApprovedByPersonId, DateTimeOffset? EffectiveAt);
     public sealed record UpdateControlledDocumentStatusRequest(string UpdatedByPersonId);
     public sealed record SupersedeControlledDocumentRequest(string SupersededByDocumentRef, string SupersededByPersonId);
