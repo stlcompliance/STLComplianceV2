@@ -1134,6 +1134,29 @@
         }
       }
     },
+    "/api/v1/integrations/audits": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrAuditIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrQualityAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/capas/{capaId}/verification": {
       "post": {
         "tags": [
@@ -1396,6 +1419,29 @@
         }
       }
     },
+    "/api/v1/integrations/findings": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrFindingIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrAuditFindingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/holds/{holdId}/reject": {
       "post": {
         "tags": [
@@ -1486,6 +1532,98 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateAssurArrQualityReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/nonconformances": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrNonconformancesIntegration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrNonconformanceIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrNonconformanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/nonconformances/{nonconformanceId}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrNonconformanceIntegration",
+        "parameters": [
+          {
+            "name": "nonconformanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/nonconformances/{nonconformanceId}/status-updates": {
+      "patch": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "UpdateAssurArrNonconformanceStatusIntegration",
+        "parameters": [
+          {
+            "name": "nonconformanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssurArrStatusRequest"
               }
             }
           },
@@ -1928,6 +2066,40 @@
           "AssurArr Integrations"
         ],
         "operationId": "ListAssurArrQualityScorecardsIntegration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/scorecards/{id}/review": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ReviewAssurArrQualityScorecardIntegration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewAssurArrQualityScorecardRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
