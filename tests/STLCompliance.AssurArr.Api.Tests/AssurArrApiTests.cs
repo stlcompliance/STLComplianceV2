@@ -98,6 +98,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("on_hold", containmentStatus!.QualityStatus);
         Assert.Contains(containmentStatus.OpenNonconformanceRefs, item => item == created.Number);
 
+        var containmentDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        containmentDashboardResponse.EnsureSuccessStatusCode();
+        var containmentDashboard = await containmentDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(containmentDashboard);
+        Assert.Contains(containmentDashboard!.RecentEvents, entry => entry.EventType == "assurarr.nonconformance.status_changed" && entry.SubjectId == created.Id);
+
         var detailResponse = await _client.GetAsync($"/api/v1/integrations/nonconformances/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
         var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
@@ -423,6 +429,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         cancelHoldDashboardResponse.EnsureSuccessStatusCode();
         var cancelHoldDashboard = await cancelHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(cancelHoldDashboard);
+        Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.status_changed" && entry.SubjectId == cancelHold.Id);
         Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.canceled" && entry.SubjectId == cancelHold.Id);
         Assert.Contains(cancelHoldDashboard.RecentEvents, entry => entry.EventType == "assurarr.hold.status_changed" && entry.SubjectId == cancelHold.Id);
 
@@ -1154,8 +1161,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         startedDashboardResponse.EnsureSuccessStatusCode();
         var startedDashboard = await startedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(startedDashboard);
+        Assert.Contains(startedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.status_changed" && entry.SubjectId == audit.Id);
         Assert.Contains(startedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.started" && entry.SubjectId == audit.Id);
-        Assert.Contains(startedDashboard.RecentEvents, entry => entry.EventType == "assurarr.audit.status_changed" && entry.SubjectId == audit.Id);
 
         var checklistTitle = $"Test checklist {Guid.NewGuid():N}";
         var checklistResponse = await _client.PostAsJsonAsync(
@@ -1270,6 +1277,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         findingStatusDashboardResponse.EnsureSuccessStatusCode();
         var findingStatusDashboard = await findingStatusDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(findingStatusDashboard);
+        Assert.Contains(findingStatusDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.status_changed" && entry.SubjectId == finding.Id);
         Assert.Contains(findingStatusDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.accepted" && entry.SubjectId == finding.Id);
         Assert.Contains(findingStatusDashboard.RecentEvents, entry => entry.EventType == "assurarr.finding.nonconformance_created" && entry.SubjectId == finding.Id);
 
@@ -1509,8 +1517,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         complaintDashboardResponse.EnsureSuccessStatusCode();
         var complaintDashboard = await complaintDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(complaintDashboard);
+        Assert.Contains(complaintDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.status_changed" && entry.SubjectId == complaint.Id);
         Assert.Contains(complaintDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.response_sent" && entry.SubjectId == complaint.Id);
-        Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.status_changed" && entry.SubjectId == complaint.Id);
         Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.closed" && entry.SubjectId == complaint.Id);
 
         var supplierList = await _client.GetAsync("/api/v1/integrations/supplier-quality-issues");
