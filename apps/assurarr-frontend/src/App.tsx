@@ -816,6 +816,17 @@ function LinkedSectionCard({
   )
 }
 
+function linkedRecordItems<T extends { id: string; number: string }>(
+  refs: string[],
+  records: T[] | undefined,
+  toPath: (record: T) => string,
+) {
+  return refs.map((ref) => {
+    const record = records?.find((item) => item.number === ref || item.id === ref)
+    return record ? { label: record.number, to: toPath(record) } : { label: ref }
+  })
+}
+
 function HoldPage() {
   const query = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
   const queryClient = useQueryClient()
@@ -5218,6 +5229,10 @@ function QualityStatusSnapshotDetailPage() {
     queryFn: () => assurarrApi.getSnapshot(id),
     enabled: Boolean(id),
   })
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const findings = useRecords(['assurarr', 'findings'], assurarrApi.listFindings)
   const dashboard = useDashboard()
 
   if (query.isLoading) {
@@ -5235,6 +5250,10 @@ function QualityStatusSnapshotDetailPage() {
 
   const snapshot = query.data
   const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'status' && event.subjectId === snapshot.id) ?? []
+  const linkedHolds = linkedRecordItems(snapshot.activeHoldRefs, holds.data, (hold) => `/holds/${hold.id}`)
+  const linkedNonconformances = linkedRecordItems(snapshot.openNonconformanceRefs, nonconformances.data, (item) => `/nonconformances/${item.id}`)
+  const linkedCapas = linkedRecordItems(snapshot.openCapaRefs, capas.data, (item) => `/capa/${item.id}`)
+  const linkedFindings = linkedRecordItems(snapshot.openFindingRefs, findings.data, (item) => `/findings/${item.id}`)
 
   return (
     <div className="assurarr-page">
@@ -5263,19 +5282,21 @@ function QualityStatusSnapshotDetailPage() {
               </div>
             </div>
           </div>
-          <div className="assurarr-card">
-            <div className="assurarr-card-inner space-y-3">
-              <p className="assurarr-label">References</p>
-              <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Active holds:</span> {snapshot.activeHoldRefs.length ? snapshot.activeHoldRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Open nonconformances:</span> {snapshot.openNonconformanceRefs.length ? snapshot.openNonconformanceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Open CAPAs:</span> {snapshot.openCapaRefs.length ? snapshot.openCapaRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Open findings:</span> {snapshot.openFindingRefs.length ? snapshot.openFindingRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
-              </div>
+          <div className="space-y-4">
+            <LinkedSectionCard title="Active holds" items={linkedHolds} emptyLabel="No active holds recorded yet." />
+            <LinkedSectionCard title="Open nonconformances" items={linkedNonconformances} emptyLabel="No open nonconformances recorded yet." />
+            <LinkedSectionCard title="Open CAPAs" items={linkedCapas} emptyLabel="No open CAPAs recorded yet." />
+            <LinkedSectionCard title="Open findings" items={linkedFindings} emptyLabel="No open findings recorded yet." />
+          </div>
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <p className="assurarr-label">Reference metadata</p>
+            <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+              <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
+              <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
+              <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
+              <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
             </div>
           </div>
         </div>
