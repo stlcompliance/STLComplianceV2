@@ -9,7 +9,6 @@ export const WORKSPACE_SECTIONS = [
   'inspection-templates',
   'history',
   'downtime',
-  'reports',
   'settings',
 ] as const
 
@@ -68,10 +67,6 @@ export const workspaceSectionHeaders: Record<
   downtime: {
     title: 'Downtime',
     subtitle: 'Availability metrics and downtime events',
-  },
-  reports: {
-    title: 'Maintenance reports',
-    subtitle: 'Fleet rollups, report CSV, and entity exports',
   },
   settings: {
     title: 'Workspace settings',

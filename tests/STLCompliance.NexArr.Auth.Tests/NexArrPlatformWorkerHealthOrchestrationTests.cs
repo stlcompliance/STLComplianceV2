@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Operations;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -60,6 +61,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
     {
         await SeedDatabaseAsync();
         var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
 
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/platform-admin/worker-health-orchestration", platformAdminToken));
@@ -68,7 +70,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
         var status = (await response.Content.ReadFromJsonAsync<PlatformWorkerHealthOrchestrationStatusResponse>())!;
         Assert.NotEqual(default, status.GeneratedAt);
         Assert.False(string.IsNullOrWhiteSpace(status.PlatformHealthStatus));
-        Assert.Equal(7, status.ProductHealth.Count);
+        Assert.Equal(expectedProductCount, status.ProductHealth.Count);
         Assert.True(status.ServiceTokens.ActiveCount >= 0);
         Assert.Equal(4, status.Workers.Count);
         Assert.Contains(status.Workers, x => x.WorkerKey == "service_token_cleanup");

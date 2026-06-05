@@ -238,11 +238,11 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
   }, [filters.itemId, filters.locationId, filters.query, filters.sinceUtc, filters.state, filters.untilUtc, summary.unexplainedInventory])
 
   return (
-    <section className="reports-layout" aria-label="Reports">
+    <section className="reports-layout" aria-label="History and operations">
       <article className="workflow-panel">
         <div className="section-heading">
           <BarChart3 aria-hidden="true" />
-          <h2>Reports</h2>
+          <h2>History and operations</h2>
         </div>
 
         <div className="form-grid">
@@ -276,7 +276,7 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
           <FormField label="Search" className={fieldClassName} labelClassName={fieldLabelClassName}>
             <label className="search-field compact">
               <Search aria-hidden="true" />
-              <span className="sr-only">Search reports</span>
+              <span className="sr-only">Search history and operations</span>
               <input
                 className={fieldControlClassName}
                 value={filters.query}
@@ -305,7 +305,7 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
           </FormField>
         </div>
 
-        <section className="metrics" aria-label="Report summary">
+        <section className="metrics" aria-label="Operations summary">
           <Metric icon={Package} label="Inventory rows" value={summary.inventory.length} />
           <Metric icon={MapPin} label="Locations" value={inventoryByLocation.length} />
           <Metric icon={DatabaseZap} label="Items" value={inventoryByItem.length} />
@@ -447,7 +447,7 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
 
           <ReportSection
             icon={ShieldCheck}
-            title="Holds report"
+            title="Holds and release activity"
             subtitle="Open and review holds with the selected filters."
             rows={filteredHolds.map((hold) => (
               <article className="panel" key={hold.id}>
@@ -498,7 +498,7 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
 
           <ReportSection
             icon={CalendarRange}
-            title="Count variance report"
+            title="Count variance history"
             subtitle="Counts with non-zero variance and their downstream adjustments."
             rows={countVariance.map((row) => (
               <article className="panel" key={row.id}>

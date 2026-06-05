@@ -539,7 +539,7 @@ type ViewKey =
   | 'kits'
   | 'locations'
   | 'counts'
-  | 'reports'
+  | 'history'
   | 'tasks'
   | 'holds'
   | 'unexplained'
@@ -563,7 +563,7 @@ const loadarrRoutes: LoadArrRoute[] = [
   { key: 'truckstock', label: 'Truck Stock', path: '/truck-stock', icon: Truck as NavIcon },
   { key: 'locations', label: 'Locations', path: '/locations', icon: MapPin as NavIcon },
   { key: 'counts', label: 'Counts', path: '/counts', icon: Activity as NavIcon },
-  { key: 'reports', label: 'Reports', path: '/reports', icon: BarChart3 as NavIcon },
+  { key: 'history', label: 'History', path: '/history', icon: BarChart3 as NavIcon },
   {
     key: 'tasks',
     label: 'Tasks',
@@ -3733,7 +3733,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'reports' && (
+        {activeView === 'history' && (
           <ReportsPanel summary={summary} counts={counts} adjustments={adjustments} />
         )}
 

@@ -45,10 +45,6 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrAuditPackageEndpoints();
         app.MapStaffArrEventAndAuditEndpoints();
         app.MapStaffArrV1FeatureAliasEndpoints();
-        app.MapStaffArrPersonnelReportEndpoints();
-        app.MapStaffArrReadinessReportEndpoints();
-        app.MapStaffArrCertificationReportEndpoints();
-        app.MapStaffArrIncidentReportEndpoints();
         app.MapStaffArrEntityExportEndpoints();
         await Task.CompletedTask;
     });

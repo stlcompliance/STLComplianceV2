@@ -13,6 +13,18 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
+import {
+  getProductOwnershipManifestEntry,
+  getProductRouteSlug,
+  IMPLEMENTED_PRODUCT_OWNERSHIP,
+  normalizeProductKey,
+  toLegacyProductKey,
+} from './productOwnershipManifest'
+export {
+  getProductRouteSlug,
+  normalizeProductKey,
+  toLegacyProductKey,
+} from './productOwnershipManifest'
 
 export type SuiteProductCatalogEntry = {
   productKey: string
@@ -22,108 +34,42 @@ export type SuiteProductCatalogEntry = {
   sortOrder: number
 }
 
-export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
-  {
-    productKey: 'nexarr',
-    displayName: 'NexArr',
-    description: 'Suite dashboard and control plane',
-    icon: ShieldCheck,
-    sortOrder: 0,
-  },
-  {
-    productKey: 'staffarr',
-    displayName: 'StaffArr',
-    description: 'People, org, and readiness',
-    icon: Users,
-    sortOrder: 10,
-  },
-  {
-    productKey: 'trainarr',
-    displayName: 'TrainArr',
-    description: 'Training and qualifications',
-    icon: GraduationCap,
-    sortOrder: 20,
-  },
-  {
-    productKey: 'maintainarr',
-    displayName: 'MaintainArr',
-    description: 'Assets and maintenance',
-    icon: Wrench,
-    sortOrder: 30,
-  },
-  {
-    productKey: 'routarr',
-    displayName: 'RoutArr',
-    description: 'Routes and dispatch',
-    icon: Route,
-    sortOrder: 40,
-  },
-  {
-    productKey: 'supplyarr',
-    displayName: 'SupplyArr',
-    description: 'Procurement and inventory',
-    icon: PackageSearch,
-    sortOrder: 50,
-  },
-  {
-    productKey: 'compliancecore',
-    displayName: 'Compliance Core',
-    description: 'Rules, vocabulary, and references',
-    icon: ClipboardCheck,
-    sortOrder: 60,
-  },
-  {
-    productKey: 'loadarr',
-    displayName: 'LoadArr',
-    description: 'Warehouse load execution',
-    icon: Warehouse,
-    sortOrder: 65,
-  },
-  {
-    productKey: 'recordarr',
-    displayName: 'RecordArr',
-    description: 'Records, evidence, and retention',
-    icon: Archive,
-    sortOrder: 66,
-  },
-  {
-    productKey: 'reportarr',
-    displayName: 'ReportArr',
-    description: 'Reporting, dashboards, and analytics',
-    icon: BarChart3,
-    sortOrder: 66.5,
-  },
-  {
-    productKey: 'assurarr',
-    displayName: 'AssurArr',
-    description: 'Quality assurance and CAPA',
-    icon: ShieldAlert,
-    sortOrder: 67,
-  },
-  {
-    productKey: 'fieldcompanion',
-    displayName: 'Field Companion',
-    description: 'Field inbox and mobile tasks',
-    icon: Inbox,
-    sortOrder: 70,
-  },
-]
-
-export function normalizeProductKey(productKey: string): string {
-  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
-  return normalized === 'companion' ? 'fieldcompanion' : normalized
+const productIcons: Record<string, LucideIcon> = {
+  nexarr: ShieldCheck,
+  staffarr: Users,
+  trainarr: GraduationCap,
+  maintainarr: Wrench,
+  routarr: Route,
+  supplyarr: PackageSearch,
+  compliancecore: ClipboardCheck,
+  loadarr: Warehouse,
+  recordarr: Archive,
+  reportarr: BarChart3,
+  assurarr: ShieldAlert,
+  fieldcompanion: Inbox,
 }
 
-export function getProductRouteSlug(productKey: string): string {
-  const normalized = normalizeProductKey(productKey)
-  return normalized === 'fieldcompanion' ? 'field-companion' : normalized
-}
+export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = IMPLEMENTED_PRODUCT_OWNERSHIP.map(
+  (entry) => ({
+    productKey: entry.productKey,
+    displayName: entry.displayName,
+    description: entry.catalogDescription,
+    icon: productIcons[entry.productKey] ?? ShieldCheck,
+    sortOrder: entry.sortOrder,
+  }),
+)
 
 export function getSuiteProductIcon(productKey: string): LucideIcon {
+  return getProductOwnershipManifestEntry(productKey)
+    ? productIcons[normalizeProductKey(productKey)] ?? ShieldCheck
+    : ShieldCheck
+}
+
+export function getSuiteProductCatalogEntry(
+  productKey: string,
+): SuiteProductCatalogEntry | undefined {
   const normalized = normalizeProductKey(productKey)
-  return (
-    SUITE_PRODUCT_CATALOG.find((entry) => entry.productKey === normalized)?.icon ?? ShieldCheck
-  )
+  return SUITE_PRODUCT_CATALOG.find((entry) => entry.productKey === normalized)
 }
 
 export function hasProductEntitlement(

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using NexArr.Api.Options;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Health;
+using STLCompliance.Shared.Operations;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -14,11 +15,12 @@ public class PlatformHealthServiceTests
     public async Task Aggregate_is_healthy_when_all_configured_products_report_healthy()
     {
         var service = CreateService(new AggregateHealthStubHandler(_ => HealthyResponse("staffarr")));
+        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
 
         var report = await service.GetAggregateHealthAsync();
 
         Assert.Equal("Healthy", report.Status);
-        Assert.Equal(7, report.Products.Count);
+        Assert.Equal(expectedProductCount, report.Products.Count);
         Assert.All(report.Products, probe => Assert.Equal("Healthy", probe.Status));
     }
 
@@ -88,6 +90,9 @@ public class PlatformHealthServiceTests
             RoutArrBaseUrl = "http://stub.routarr",
             SupplyArrBaseUrl = "http://stub.supplyarr",
             ComplianceCoreBaseUrl = "http://stub.compliancecore",
+            LoadArrBaseUrl = "http://stub.loadarr",
+            AssurArrBaseUrl = "http://stub.assurarr",
+            ReportArrBaseUrl = "http://stub.reportarr",
             RecordArrBaseUrl = "http://stub.recordarr",
         }));
         services.AddSingleton<IHttpClientFactory>(new StubHttpClientFactory(handler));

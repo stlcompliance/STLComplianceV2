@@ -8,7 +8,7 @@ namespace STLCompliance.E2E.Catalog;
 public sealed class StlCiFrontendCatalogTests
 {
     [Fact]
-    public void Main_ci_frontend_jobs_include_suite_routarr_staffarr_trainarr_maintainarr_supplyarr_compliancecore_loadarr_and_assurarr()
+    public void Main_ci_frontend_jobs_include_suite_and_implemented_product_frontends()
     {
         var jobIds = StlCiFrontendCatalog.MainCiFrontendJobs
             .Select(job => job.JobId)
@@ -23,13 +23,14 @@ public sealed class StlCiFrontendCatalogTests
         Assert.Contains("supplyarr-frontend", jobIds);
         Assert.Contains("compliancecore-frontend", jobIds);
         Assert.Contains("loadarr-frontend", jobIds);
+        Assert.Contains("reportarr-frontend", jobIds);
         Assert.Contains("assurarr-frontend", jobIds);
     }
 
     [Fact]
-    public void Gated_product_frontend_jobs_start_with_routarr_staffarr_trainarr_maintainarr_supplyarr_compliancecore_loadarr_then_assurarr()
+    public void Gated_product_frontend_jobs_start_with_implemented_product_frontends()
     {
-        Assert.Equal(8, StlCiFrontendCatalog.GatedProductFrontendJobs.Count);
+        Assert.Equal(9, StlCiFrontendCatalog.GatedProductFrontendJobs.Count);
         Assert.Equal(
             StlCiFrontendCatalog.RoutArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[0]);
@@ -52,8 +53,11 @@ public sealed class StlCiFrontendCatalogTests
             StlCiFrontendCatalog.LoadArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[6]);
         Assert.Equal(
-            StlCiFrontendCatalog.AssurArrFrontend,
+            StlCiFrontendCatalog.ReportArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[7]);
+        Assert.Equal(
+            StlCiFrontendCatalog.AssurArrFrontend,
+            StlCiFrontendCatalog.GatedProductFrontendJobs[8]);
     }
 
     [Fact]

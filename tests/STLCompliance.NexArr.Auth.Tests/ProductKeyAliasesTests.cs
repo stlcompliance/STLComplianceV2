@@ -14,6 +14,8 @@ public class ProductKeyAliasesTests
 
         Assert.True(principal.HasProductEntitlement("fieldcompanion"));
         Assert.True(principal.HasProductEntitlement("companion"));
+        Assert.True(principal.HasProductEntitlement("field-companion"));
+        Assert.True(principal.HasProductEntitlement("field_companion"));
     }
 
     [Fact]

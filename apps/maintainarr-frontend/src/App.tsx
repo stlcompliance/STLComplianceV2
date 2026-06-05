@@ -12,7 +12,6 @@ import { DefectsPage } from './pages/defects/DefectsPage'
 
 import { HistoryPage } from './pages/history/HistoryPage'
 import { DowntimePage } from './pages/downtime/DowntimePage'
-import { ReportsPage } from './pages/reports/ReportsPage'
 
 import { InspectionTemplatesPage } from './pages/inspection-templates/InspectionTemplatesPage'
 
@@ -114,12 +113,6 @@ export default function App() {
             <Route path="/history" element={<HistoryPage />} />
 
             <Route path="/downtime" element={<DowntimePage />} />
-
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/reports/compliance" element={<ReportsPage />} />
-            <Route path="/reports/executive" element={<ReportsPage />} />
-            <Route path="/reports/maintenance" element={<ReportsPage />} />
-            <Route path="/reports/exports" element={<ReportsPage />} />
 
             <Route path="/settings" element={<SettingsPage />} />
 

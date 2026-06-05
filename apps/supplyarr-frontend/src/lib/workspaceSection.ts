@@ -1,13 +1,10 @@
 export const WORKSPACE_SECTIONS = [
   'parties',
   'catalog',
-  'inventory',
   'purchasing',
-  'receiving',
   'pricing',
   'planning',
   'readiness',
-  'reports',
   'settings',
 ] as const
 
@@ -29,9 +26,7 @@ export const workspaceSectionHeaders: Record<
 > = {
   parties: { title: 'Parties', subtitle: 'Vendors, dealers, and suppliers' },
   catalog: { title: 'Part catalog', subtitle: 'Parts, alternates, and catalog maintenance' },
-  inventory: { title: 'Inventory', subtitle: 'Stock positions and adjustments' },
   purchasing: { title: 'Purchasing', subtitle: 'Purchase requests and orders' },
-  receiving: { title: 'Receiving', subtitle: 'Receiving, returns, and backorders' },
   pricing: { title: 'Pricing', subtitle: 'Pricing snapshots and lead times' },
   planning: {
     title: 'Planning',
@@ -40,10 +35,6 @@ export const workspaceSectionHeaders: Record<
   readiness: {
     title: 'Supply readiness',
     subtitle: 'Stock, procurement, demand, and compliance attention',
-  },
-  reports: {
-    title: 'Reports',
-    subtitle: 'Vendor, inventory, procurement reporting, and audit history',
   },
   settings: { title: 'Settings', subtitle: 'Notification preferences' },
 }

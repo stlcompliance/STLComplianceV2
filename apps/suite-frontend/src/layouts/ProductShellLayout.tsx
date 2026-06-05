@@ -28,13 +28,13 @@ export function ProductShellLayout() {
     return <Navigate to="/app" replace />
   }
 
+  const productDisplayName = getProductDisplayName(normalized, product?.displayName)
+
   return (
-    <div className="flex min-h-0 gap-6">
-      <aside className="w-56 shrink-0">
+    <div className="flex min-h-0 flex-col gap-4 lg:flex-row lg:gap-6">
+      <aside className="hidden w-56 shrink-0 lg:block">
         <div className="rounded-lg border border-slate-700/70 bg-[#0a101c] p-3">
-          <p className="px-3 text-sm font-semibold text-white">
-            {getProductDisplayName(normalized, product?.displayName)}
-          </p>
+          <p className="px-3 text-sm font-semibold text-white">{productDisplayName}</p>
           {navigationQuery.isLoading && (
             <p className="px-3 pt-2 text-xs text-slate-500">Loading navigation…</p>
           )}
@@ -42,6 +42,12 @@ export function ProductShellLayout() {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
+        {product ? (
+          <div className="border-b border-slate-700/70 pb-3 lg:hidden">
+            <p className="text-sm font-semibold text-white">{productDisplayName}</p>
+            <ProductSurfaceNav productKey={normalized} surfaces={product.surfaces} variant="mobile" />
+          </div>
+        ) : null}
         <Outlet />
       </div>
     </div>

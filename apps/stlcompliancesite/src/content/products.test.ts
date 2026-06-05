@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getMarketingProduct, MARKETING_PRODUCTS, productPagePath } from './products'
+import { MARKETING_PRODUCT_KEYS } from '../lib/publicRoutes'
 
 const removedPublicProductKey = 'nex' + 'arr'
 
@@ -9,6 +10,12 @@ describe('MARKETING_PRODUCTS', () => {
     expect(new Set(keys).size).toBe(keys.length)
     expect(keys).not.toContain(removedPublicProductKey)
     expect(keys).toContain('compliancecore')
+  })
+
+  it('keeps public marketing routes aligned to marketed products', () => {
+    expect([...MARKETING_PRODUCT_KEYS].sort()).toEqual(
+      [...MARKETING_PRODUCTS.map((product) => product.productKey)].sort(),
+    )
   })
 
   it('resolves product by key case-insensitively', () => {

@@ -33,7 +33,11 @@ public sealed class IntegrationTokenBootstrapService(
         ("routarr", "RoutArr", 50),
         ("supplyarr", "SupplyArr", 60),
         ("compliancecore", "Compliance Core", 70),
-        ("companion", "Companion App", 80),
+        ("loadarr", "LoadArr", 75),
+        ("recordarr", "RecordArr", 76),
+        ("assurarr", "AssurArr", 77),
+        ("reportarr", "ReportArr", 78),
+        ("companion", "Field Companion", 80),
     ];
 
     public async Task EnsureProvisionedAsync(CancellationToken cancellationToken = default)

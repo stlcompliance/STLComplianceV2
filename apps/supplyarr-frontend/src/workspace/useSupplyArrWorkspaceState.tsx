@@ -134,6 +134,8 @@ import {
 } from '../auth/sessionStorage'
 
 export function useSupplyArrWorkspaceState() {
+  const enableSupplyArrInventoryExecution = false
+  const enableSupplyArrReceivingExecution = false
   const [searchParams] = useSearchParams()
   const handoff = searchParams.get('handoff')
   const handoffRedirect = handoff
@@ -459,7 +461,7 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () => getInventoryLocations(session!.accessToken),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -471,7 +473,11 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () => getInventoryBins(session!.accessToken, selectedInvLocationId),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && Boolean(selectedInvLocationId),
+    enabled:
+      enableSupplyArrInventoryExecution &&
+      Boolean(session?.accessToken) &&
+      meQuery.isSuccess &&
+      Boolean(selectedInvLocationId),
 
   })
 
@@ -481,7 +487,7 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () => getInventoryBins(session!.accessToken),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -517,7 +523,7 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () => getReceivingReceipts(session!.accessToken),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrReceivingExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -631,7 +637,7 @@ export function useSupplyArrWorkspaceState() {
 
       }),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -652,7 +658,7 @@ export function useSupplyArrWorkspaceState() {
         partId: selectedStockPartId || undefined,
       }),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -672,7 +678,7 @@ export function useSupplyArrWorkspaceState() {
         status: reservationStatusFilter || undefined,
       }),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 

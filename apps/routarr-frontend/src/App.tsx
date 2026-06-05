@@ -8,7 +8,6 @@ import { CustomerPortalPage } from './pages/customer-portal/CustomerPortalPage'
 import { DriverPortalPage } from './pages/driver-portal/DriverPortalPage'
 import { RoutesPage } from './pages/routes/RoutesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
-import { ReportsPage } from './pages/reports/ReportsPage'
 import { TripsPage } from './pages/trips/TripsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { TripWorkspacePage } from './pages/TripWorkspacePage'
@@ -45,7 +44,6 @@ export default function App() {
             <Route path="/routes/create" element={<RoutesPage />} />
             <Route path="/availability" element={<AvailabilityPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

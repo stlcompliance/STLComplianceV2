@@ -13,6 +13,11 @@ describe('hasProductEntitlement', () => {
     expect(hasProductEntitlement(['StaffArr', 'nexarr'], 'staffarr')).toBe(true)
     expect(hasProductEntitlement(['staffarr'], 'trainarr')).toBe(false)
   })
+
+  it('matches Field Companion through canonical and legacy keys', () => {
+    expect(hasProductEntitlement(['companion'], 'fieldcompanion')).toBe(true)
+    expect(hasProductEntitlement(['field-companion'], 'companion')).toBe(true)
+  })
 })
 
 describe('canAccessProductRoute', () => {
@@ -46,6 +51,8 @@ describe('isPlatformAdmin', () => {
 describe('isInSuiteProduct', () => {
   it('only treats nexarr as in-suite', () => {
     expect(isInSuiteProduct('nexarr')).toBe(true)
+    expect(isInSuiteProduct('NexArr')).toBe(true)
+    expect(isInSuiteProduct('nex-arr')).toBe(true)
     expect(isInSuiteProduct('staffarr')).toBe(false)
   })
 })

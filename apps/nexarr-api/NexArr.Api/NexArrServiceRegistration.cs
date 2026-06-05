@@ -103,6 +103,10 @@ public static class NexArrServiceRegistration
             options.RoutArrBaseUrl = ResolveProductBaseUrl(configuration, "RoutArr", options.RoutArrBaseUrl);
             options.SupplyArrBaseUrl = ResolveProductBaseUrl(configuration, "SupplyArr", options.SupplyArrBaseUrl);
             options.ComplianceCoreBaseUrl = ResolveProductBaseUrl(configuration, "ComplianceCore", options.ComplianceCoreBaseUrl);
+            options.LoadArrBaseUrl = ResolveProductBaseUrl(configuration, "LoadArr", options.LoadArrBaseUrl);
+            options.AssurArrBaseUrl = ResolveProductBaseUrl(configuration, "AssurArr", options.AssurArrBaseUrl);
+            options.ReportArrBaseUrl = ResolveProductBaseUrl(configuration, "ReportArr", options.ReportArrBaseUrl);
+            options.RecordArrBaseUrl = ResolveProductBaseUrl(configuration, "RecordArr", options.RecordArrBaseUrl);
         });
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
 

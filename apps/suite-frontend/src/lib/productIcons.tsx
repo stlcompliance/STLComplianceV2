@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
-import { getProductNavIcon } from '../navigation/navIcons'
+import { getSuiteProductIcon } from '@stl/shared-ui'
 
 export function getProductIcon(productKey: string): LucideIcon {
-  return getProductNavIcon(productKey)
+  return getSuiteProductIcon(productKey)
 }

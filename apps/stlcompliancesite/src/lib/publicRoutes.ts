@@ -1,27 +1,14 @@
 /** Public marketing routes included in sitemap generation (no auth or API routes). */
-function routeSlug(productKey: string): string {
-  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
-  return normalized === 'companion' ? 'fieldcompanion' : normalized === 'fieldcompanion'
-    ? 'field-companion'
-    : normalized
-}
+import { getProductRouteSlug, IMPLEMENTED_PRODUCT_KEYS } from '@stl/shared-ui'
 
-export const MARKETING_PRODUCT_KEYS = [
-  'nexarr',
-  'staffarr',
-  'trainarr',
-  'maintainarr',
-  'routarr',
-  'supplyarr',
-  'compliancecore',
-  'recordarr',
-  'reportarr',
-  'assurarr',
-  'fieldcompanion',
-] as const
+const nonMarketingProductKeys = new Set(['nexarr'])
+
+export const MARKETING_PRODUCT_KEYS = IMPLEMENTED_PRODUCT_KEYS.filter(
+  (productKey) => !nonMarketingProductKeys.has(productKey),
+)
 
 export function productPath(productKey: string): string {
-  return `/products/${routeSlug(productKey)}`
+  return `/products/${getProductRouteSlug(productKey)}`
 }
 
 export function buildStaticPublicPaths(): string[] {

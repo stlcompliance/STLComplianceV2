@@ -1,16 +1,18 @@
 import type { NavigationItem, NavigationSurfaceItem } from '../api/types'
-import { getProductRouteSlug } from '@stl/shared-ui'
+import {
+  getProductRouteSlug,
+  getSuiteProductCatalogEntry,
+  normalizeProductKey,
+} from '@stl/shared-ui'
 
-export function normalizeProductKey(productKey: string): string {
-  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
-  return normalized === 'companion' ? 'fieldcompanion' : normalized
-}
+export { normalizeProductKey } from '@stl/shared-ui'
 
 export function getProductDisplayName(productKey: string, fallback?: string): string {
-  const normalized = normalizeProductKey(productKey)
-  if (normalized === 'fieldcompanion') {
-    return 'Field Companion'
+  const entry = getSuiteProductCatalogEntry(productKey)
+  if (entry) {
+    return entry.displayName
   }
+  const normalized = normalizeProductKey(productKey)
   return fallback?.trim() || normalized
 }
 

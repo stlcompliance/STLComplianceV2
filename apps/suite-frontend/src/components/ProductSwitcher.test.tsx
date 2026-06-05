@@ -15,7 +15,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: ['staffarr'],
+      entitlements: ['staffarr', 'companion', 'recordarr', 'reportarr', 'assurarr'],
     },
   }),
 }))
@@ -59,6 +59,38 @@ describe('ProductSwitcher', () => {
           isCurrent: true,
           surfaces: [],
         },
+        {
+          productKey: 'companion',
+          displayName: 'Field Companion',
+          routePath: '/app/field-companion',
+          sortOrder: 2,
+          isCurrent: false,
+          surfaces: [],
+        },
+        {
+          productKey: 'recordarr',
+          displayName: 'RecordArr',
+          routePath: '/app/recordarr',
+          sortOrder: 3,
+          isCurrent: false,
+          surfaces: [],
+        },
+        {
+          productKey: 'reportarr',
+          displayName: 'ReportArr',
+          routePath: '/app/reportarr',
+          sortOrder: 4,
+          isCurrent: false,
+          surfaces: [],
+        },
+        {
+          productKey: 'assurarr',
+          displayName: 'AssurArr',
+          routePath: '/app/assurarr',
+          sortOrder: 5,
+          isCurrent: false,
+          surfaces: [],
+        },
       ],
     })
 
@@ -70,6 +102,10 @@ describe('ProductSwitcher', () => {
       'aria-current',
       'true',
     )
+    expect(screen.getByRole('menuitem', { name: /Field Companion/ })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: /RecordArr/ })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: /ReportArr/ })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: /AssurArr/ })).toBeTruthy()
     expect(await screen.findByText('launch failed')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })

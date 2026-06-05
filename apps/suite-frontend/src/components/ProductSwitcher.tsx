@@ -1,7 +1,11 @@
 import { ChevronDown } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  getErrorMessage,
+  getSuiteProductCatalogEntry,
+} from '@stl/shared-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
@@ -12,23 +16,6 @@ import {
   isInSuiteProduct,
 } from '../lib/permissions'
 import { getProductDisplayName, normalizeProductKey } from '../navigation/suiteNavigation'
-
-const PRODUCT_DESCRIPTIONS: Record<string, string> = {
-  nexarr: 'Suite dashboard and control plane',
-  staffarr: 'People, org, and readiness',
-  trainarr: 'Training and qualifications',
-  maintainarr: 'Assets and maintenance',
-  routarr: 'Routes and dispatch',
-  supplyarr: 'Procurement and inventory',
-  recordarr: 'Records, evidence, and retention',
-  reportarr: 'Reporting, dashboards, and analytics',
-  compliancecore: 'Rules, vocabulary, and references',
-  fieldcompanion: 'Field inbox and mobile tasks',
-}
-
-function resolveProductDescription(productKey: string): string | undefined {
-  return PRODUCT_DESCRIPTIONS[normalizeProductKey(productKey)]
-}
 
 function resolveCurrentProductKey(pathname: string): string {
   if (pathname.startsWith('/app/platform-admin')) {
@@ -118,6 +105,8 @@ export function ProductSwitcher() {
     return <span className="text-xs text-slate-500">No entitled products</span>
   }
 
+  const currentEntry = getSuiteProductCatalogEntry(currentProductKey)
+
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -131,9 +120,10 @@ export function ProductSwitcher() {
       >
         <CurrentIcon className="h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
         <span className="min-w-0 truncate font-medium">
-          {currentProductKey === 'nexarr'
-            ? 'Suite'
-            : getProductDisplayName(currentProductKey, currentProduct?.displayName ?? 'Suite')}
+          {currentEntry?.displayName ??
+            (currentProductKey === 'nexarr'
+              ? 'Suite'
+              : getProductDisplayName(currentProductKey, currentProduct?.displayName ?? 'Suite'))}
         </span>
         <ChevronDown
           className={['h-4 w-4 shrink-0 text-slate-300 transition-transform', open ? 'rotate-180' : ''].join(
@@ -151,9 +141,11 @@ export function ProductSwitcher() {
           className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-md border border-slate-600 bg-[#0a101c] py-1 shadow-xl"
         >
           {entitledProducts.map((product) => {
-            const Icon = getProductIcon(product.productKey)
+            const productKey = normalizeProductKey(product.productKey)
+            const Icon = getProductIcon(productKey)
+            const catalogEntry = getSuiteProductCatalogEntry(productKey)
             const isCurrent =
-              Boolean(product.isCurrent) || normalizeProductKey(product.productKey) === currentProductKey
+              Boolean(product.isCurrent) || productKey === currentProductKey
 
             return (
               <li key={product.productKey} role="none">
@@ -162,7 +154,7 @@ export function ProductSwitcher() {
                   role="menuitem"
                   aria-current={isCurrent ? 'true' : undefined}
                   disabled={launch.isPending}
-                  onClick={() => handleSelect(product.productKey)}
+                  onClick={() => handleSelect(productKey)}
                   className={[
                     'flex w-full items-start gap-3 px-3 py-2 text-left text-sm transition-colors disabled:opacity-50',
                     isCurrent
@@ -173,11 +165,11 @@ export function ProductSwitcher() {
                   <Icon className="mt-0.5 h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
                   <span className="min-w-0">
                     <span className="block font-medium">
-                      {getProductDisplayName(product.productKey, product.displayName)}
+                      {catalogEntry?.displayName ?? getProductDisplayName(productKey, product.displayName)}
                     </span>
-                    {resolveProductDescription(product.productKey) ? (
+                    {catalogEntry?.description ? (
                       <span className="mt-0.5 block text-xs text-slate-400">
-                        {resolveProductDescription(product.productKey)}
+                        {catalogEntry.description}
                       </span>
                     ) : null}
                   </span>

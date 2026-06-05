@@ -11,7 +11,9 @@ import {
   Users,
   DatabaseZap,
   Wrench,
+  Warehouse,
 } from 'lucide-react'
+import { normalizeProductKey } from '@stl/shared-ui'
 
 import { productPath } from '../lib/publicRoutes'
 import { PRODUCT_OWNERSHIP } from './ownershipBoundaries'
@@ -122,12 +124,9 @@ function reasons(entries: Partial<Record<CapabilityKey, string>>): Partial<Recor
   return entries
 }
 
-function normalizeProductKey(productKey: string): string {
-  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
-  return normalized === 'companion' ? 'fieldcompanion' : normalized
-}
+const nonMarketingProductKeys = new Set(['nexarr'])
 
-export const MARKETING_PRODUCTS: MarketingProduct[] = [
+const allMarketingProducts: MarketingProduct[] = [
   {
     productKey: 'nexarr',
     displayName: 'NexArr',
@@ -181,22 +180,21 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     productKey: 'staffarr',
     displayName: 'StaffArr',
-    tagline: 'People, sites, roles, permissions, incidents, and readiness in one place.',
+    tagline: 'People, sites, roles, permissions, incidents, and readiness context in one place.',
     overview:
-      'StaffArr is the workforce system of record for frontline operations. It keeps people, sites, departments, roles, certifications, readiness signals, incidents, and personnel history connected to the operational work those people are allowed to perform.',
+      'StaffArr is the workforce system of record for frontline operations. It keeps people, sites, departments, roles, permissions, readiness signals, incidents, and personnel history connected to the operational work those people are allowed to perform.',
     owns: PRODUCT_OWNERSHIP.staffarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.staffarr.doesNotOwn,
     primaryWorkflows: [
       'Maintain employee profiles, site assignments, departments, roles, and permissions.',
-      'Track certifications, readiness status, personnel history, and workforce incidents.',
-      'Use training proof, incident context, and operational requirements to help supervisors understand who is eligible for work.',
+      'Track readiness status, personnel history, and workforce incidents.',
+      'Use TrainArr qualification publication, incident context, and operational requirements to help supervisors understand who is eligible for work.',
     ],
     recordsManaged: [
       'People',
       'Sites',
       'Departments',
       'Roles and permissions',
-      'Certifications',
       'Incidents',
       'Readiness history',
     ],
@@ -207,7 +205,6 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     ],
     evidenceOutputs: [
       'Personnel history',
-      'Certification records',
       'Incident records',
       'Readiness snapshots',
       'People export and audit package inputs',
@@ -353,7 +350,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     displayName: 'RoutArr',
     tagline: 'Routes, dispatch, drivers, vehicles, trip status, and exceptions.',
     overview:
-      'RoutArr manages route and dispatch execution. It keeps trips, drivers, vehicles, stops, status changes, inspections, exceptions, and dispatch history tied to workforce and asset readiness so teams can see whether a trip should proceed.',
+      'RoutArr manages route and dispatch execution. It keeps trips, drivers, vehicles, stops, status changes, proof capture, inspection status snapshots, exceptions, and dispatch history tied to workforce and asset readiness so teams can see whether a trip should proceed.',
     owns: PRODUCT_OWNERSHIP.routarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.routarr.doesNotOwn,
     primaryWorkflows: [
@@ -380,7 +377,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     evidenceOutputs: [
       'Trip history',
       'Dispatch status timeline',
-      'Inspection proof',
+      'Inspection status snapshots',
       'Delivery or route evidence',
       'Exception history',
       'Dispatch notification records',
@@ -414,24 +411,23 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     productKey: 'supplyarr',
     displayName: 'SupplyArr',
-    tagline: 'Vendors, customers, parts, purchasing, approvals, and supply records.',
+    tagline: 'Vendors, suppliers, items, purchasing, approvals, and procurement records.',
     overview:
-      'SupplyArr manages vendors, customers, parts, purchasing, approvals, receiving, pricing snapshots, lead times, vendor restrictions, procurement exceptions, and supply readiness. It makes purchasing and supplier evidence visible to the work that depends on it.',
+      'SupplyArr manages vendors, suppliers, parts, purchasing, approvals, pricing snapshots, lead times, vendor restrictions, procurement exceptions, and procurement readiness. It makes purchasing and supplier evidence visible to the work that depends on it while LoadArr owns warehouse receiving and stock execution.',
     owns: PRODUCT_OWNERSHIP.supplyarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.supplyarr.doesNotOwn,
     primaryWorkflows: [
-      'Maintain vendors, customers, parts, supply contracts, purchase requests, purchase orders, receiving, and approvals.',
+      'Maintain vendors, suppliers, parts, supply contracts, purchase requests, purchase orders, and approvals.',
       'Track price snapshots, lead times, supplier incidents, restrictions, warranty claims, and procurement exceptions.',
-      'Coordinate demand from maintenance, routes, training, staff, or warehouse operations.',
+      'Coordinate demand from maintenance, routes, training, staff, or warehouse operations and hand warehouse execution to LoadArr.',
     ],
     recordsManaged: [
       'Vendors',
-      'Customers',
+      'Suppliers',
       'Parts',
       'Purchase requests',
       'Purchase orders',
       'Approvals',
-      'Receiving records',
       'Contracts',
       'Supplier incidents',
       'Warranty claims',
@@ -440,11 +436,10 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     readinessChecks: [
       'Checks whether parts, vendors, approvals, or purchasing exceptions affect operational readiness.',
       'Tracks restricted vendors and supplier incidents before procurement decisions.',
-      'Connects receiving and availability records to downstream work.',
+      'Publishes commercial and procurement context so LoadArr can execute receiving and stock movement.',
     ],
     evidenceOutputs: [
       'Approval history',
-      'Receiving history',
       'Vendor and supplier records',
       'Pricing and lead-time snapshots',
       'Procurement exception history',
@@ -452,7 +447,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     ],
     handoffs: [
       'Receives demand from MaintainArr, RoutArr, TrainArr, StaffArr, and LoadArr.',
-      'Provides supply availability and procurement evidence back to operational workflows.',
+      'Provides vendor, item, availability snapshot, and procurement evidence back to operational workflows.',
+      'Hands physical receiving, stock movement, reservations, and warehouse execution to LoadArr.',
       'Feeds vendor, purchasing, and receiving evidence into Compliance Core.',
     ],
     checklist: checklist(
@@ -526,7 +522,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
       maintenance: 'parts stock',
       complianceRules: 'inventory proof',
     }),
-    icon: PackageSearch,
+    icon: Warehouse,
     sortOrder: 60,
     category: 'operations',
     brandImageSrc: '/brand/loadarr-fullcolor.png',
@@ -788,6 +784,10 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     brandAccentClass: 'from-amber-500/20 to-orange-400/10',
   },
 ]
+
+export const MARKETING_PRODUCTS: MarketingProduct[] = allMarketingProducts.filter(
+  (product) => !nonMarketingProductKeys.has(product.productKey),
+)
 
 export function getMarketingProduct(productKey: string): MarketingProduct | undefined {
   const normalized = normalizeProductKey(productKey)

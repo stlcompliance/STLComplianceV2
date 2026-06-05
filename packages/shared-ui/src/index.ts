@@ -6,6 +6,7 @@ export type { ProductAppShellProps, ProductNavItem } from './ProductAppShell'
 export { ProductSwitcher } from './ProductSwitcher'
 export type { ProductSwitcherProps } from './ProductSwitcher'
 export {
+  getSuiteProductCatalogEntry,
   getSuiteProductIcon,
   hasProductEntitlement,
   listEntitledSuiteProducts,
@@ -14,6 +15,13 @@ export {
   SUITE_PRODUCT_CATALOG,
 } from './productCatalog'
 export type { SuiteProductCatalogEntry } from './productCatalog'
+export {
+  getProductOwnershipManifestEntry,
+  IMPLEMENTED_PRODUCT_KEYS,
+  IMPLEMENTED_PRODUCT_OWNERSHIP,
+  toLegacyProductKey,
+} from './productOwnershipManifest'
+export type { ProductOwnershipManifestEntry } from './productOwnershipManifest'
 export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 export type { ProductWorkspaceFrameProps, ProductWorkspaceSession } from './ProductWorkspaceFrame'
 export { DetailBadge, DetailEmptyState, ProfileDetailsLayout } from './ProfileDetailsLayout'

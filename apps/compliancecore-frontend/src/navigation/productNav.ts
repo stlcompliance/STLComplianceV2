@@ -1,4 +1,4 @@
-import { Library, GitBranch, Search, Play, Database, Terminal, BarChart3, Settings, ListCollapse, StickyNote } from 'lucide-react'
+import { Library, GitBranch, Search, Play, Database, Terminal, Settings, ListCollapse, StickyNote } from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -28,8 +28,6 @@ export const complianceCoreNavItems: ProductNavItem[] = [
   { label: 'Fact sources', to: '/fact-sources', icon: Database as NavIcon },
 
   { label: 'Operator', to: '/operator', icon: Terminal as NavIcon },
-
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
 
   { label: 'Admin', to: '/admin', icon: Settings as NavIcon, sectionBreakBefore: true },
 

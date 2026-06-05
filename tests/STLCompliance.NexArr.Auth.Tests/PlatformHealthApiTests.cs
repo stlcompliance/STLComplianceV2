@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
 using NexArr.Api.Options;
+using STLCompliance.Shared.Operations;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -28,6 +29,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
     public async Task Platform_health_is_anonymous_and_returns_product_probes()
     {
         var response = await _client.GetAsync("/api/platform/health");
+        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
 
         Assert.True(
             response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
@@ -36,7 +38,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
         var payload = await response.Content.ReadFromJsonAsync<PlatformHealthResponse>();
         Assert.NotNull(payload);
         Assert.Contains(payload.Status, new[] { "Healthy", "Degraded", "Unhealthy" });
-        Assert.Equal(7, payload.Products.Count);
+        Assert.Equal(expectedProductCount, payload.Products.Count);
         Assert.Contains(payload.Products, p => p.ProductKey == "staffarr");
         Assert.Contains(payload.Products, p => p.ProductKey == "compliancecore");
     }
@@ -45,6 +47,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
     public async Task System_status_v1_alias_returns_platform_health_payload()
     {
         var response = await _client.GetAsync("/api/v1/system/status");
+        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
 
         Assert.True(
             response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
@@ -52,7 +55,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
 
         var payload = await response.Content.ReadFromJsonAsync<PlatformHealthResponse>();
         Assert.NotNull(payload);
-        Assert.Equal(7, payload.Products.Count);
+        Assert.Equal(expectedProductCount, payload.Products.Count);
     }
 
     [Fact]

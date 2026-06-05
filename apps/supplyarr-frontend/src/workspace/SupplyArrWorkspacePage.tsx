@@ -3,13 +3,10 @@ import { useSupplyArrWorkspaceState } from './useSupplyArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
 import { PartiesSection } from './sections/PartiesSection'
 import { CatalogSection } from './sections/CatalogSection'
-import { InventorySection } from './sections/InventorySection'
 import { PurchasingSection } from './sections/PurchasingSection'
-import { ReceivingSection } from './sections/ReceivingSection'
 import { PricingSection } from './sections/PricingSection'
 import { PlanningSection } from './sections/PlanningSection'
 import { ReadinessSection } from './sections/ReadinessSection'
-import { ReportsSection } from './sections/ReportsSection'
 import { SettingsSection } from './sections/SettingsSection'
 
 export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection }) {
@@ -27,13 +24,10 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
     >
       {section === 'parties' ? <PartiesSection state={state} /> : null}
       {section === 'catalog' ? <CatalogSection state={state} /> : null}
-      {section === 'inventory' ? <InventorySection state={state} /> : null}
       {section === 'purchasing' ? <PurchasingSection state={state} /> : null}
-      {section === 'receiving' ? <ReceivingSection state={state} /> : null}
       {section === 'pricing' ? <PricingSection state={state} /> : null}
       {section === 'planning' ? <PlanningSection state={state} /> : null}
       {section === 'readiness' ? <ReadinessSection state={state} /> : null}
-      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'settings' ? <SettingsSection state={state} /> : null}
     </WorkspaceShell>
   )

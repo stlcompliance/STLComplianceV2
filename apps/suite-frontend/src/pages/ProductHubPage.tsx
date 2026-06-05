@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, getErrorMessage, normalizeProductKey } from '@stl/shared-ui'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { PermissionGate } from '../components/PermissionGate'
@@ -10,12 +10,17 @@ import {
   canAccessProductRoute,
   isInSuiteProduct,
 } from '../lib/permissions'
+import { getProductDisplayName } from '../navigation/suiteNavigation'
 
 export function ProductHubPage() {
   const { productKey = '' } = useParams<{ productKey: string }>()
   const { me } = useAuth()
   const launch = useProductLaunch()
-  const normalized = productKey.trim().toLowerCase()
+  const normalized = normalizeProductKey(productKey)
+  const productDisplayName = getProductDisplayName(
+    normalized,
+    normalized.charAt(0).toUpperCase() + normalized.slice(1),
+  )
   const canAccess = canAccessProductRoute(me?.entitlements ?? [], normalized)
   const launchAllowedQuery = useLaunchContextGate(normalized)
 
@@ -27,7 +32,7 @@ export function ProductHubPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h3 className="text-xl font-semibold capitalize text-stl-navy">{normalized}</h3>
+      <h3 className="text-xl font-semibold text-stl-navy">{productDisplayName}</h3>
 
       <PermissionGate
         allowed={canAccess}
@@ -37,7 +42,7 @@ export function ProductHubPage() {
       >
         {isInSuiteProduct(normalized) ? (
           <p className="text-sm text-slate-700">
-            NexArr platform surfaces will live here. Identity and launch APIs are wired.
+            {productDisplayName} platform surfaces will live here. Identity and launch APIs are wired.
           </p>
         ) : (
           <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">

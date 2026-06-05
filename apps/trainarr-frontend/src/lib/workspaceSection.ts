@@ -5,7 +5,6 @@ export const WORKSPACE_SECTIONS = [
   'citations',
   'rule-packs',
   'qualifications',
-  'reports',
   'settings',
 ] as const
 
@@ -37,6 +36,5 @@ export const workspaceSectionHeaders: Record<
     title: 'Qualifications',
     subtitle: 'Batch qualification checks and publishing',
   },
-  reports: { title: 'Reports', subtitle: 'Assignment, qualification, and compliance rollups' },
   settings: { title: 'Settings', subtitle: 'Notification preferences' },
 }

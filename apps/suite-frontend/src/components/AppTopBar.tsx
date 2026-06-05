@@ -1,8 +1,8 @@
 import { LayoutDashboard } from 'lucide-react'
+import { getSuiteProductCatalogEntry, getSuiteProductIcon } from '@stl/shared-ui'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
-import { getProductNavIcon } from '../navigation/navIcons'
 import { normalizeProductKey } from '../navigation/suiteNavigation'
 
 function resolveTitle(pathname: string): { title: string; subtitle: string } {
@@ -20,8 +20,9 @@ function resolveTitle(pathname: string): { title: string; subtitle: string } {
   }
 
   const productKey = normalizeProductKey(match[1])
+  const product = getSuiteProductCatalogEntry(productKey)
   return {
-    title: productKey.charAt(0).toUpperCase() + productKey.slice(1),
+    title: product?.displayName ?? productKey.charAt(0).toUpperCase() + productKey.slice(1),
     subtitle: 'Product workspace',
   }
 }
@@ -31,7 +32,7 @@ export function AppTopBar() {
   const location = useLocation()
   const { title, subtitle } = resolveTitle(location.pathname)
   const productMatch = /^\/app\/([^/]+)/.exec(location.pathname)
-  const ProductIcon = productMatch ? getProductNavIcon(productMatch[1]) : LayoutDashboard
+  const ProductIcon = productMatch ? getSuiteProductIcon(productMatch[1]) : LayoutDashboard
 
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-slate-700/40 bg-stl-navy px-6 py-4 text-white">

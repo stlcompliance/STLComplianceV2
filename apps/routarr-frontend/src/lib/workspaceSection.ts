@@ -5,7 +5,6 @@ export const WORKSPACE_SECTIONS = [
   'routes',
   'availability',
   'calendar',
-  'reports',
   'settings',
 ] as const
 
@@ -40,9 +39,5 @@ export const workspaceSectionHeaders: Record<
     subtitle: 'Driver and equipment availability',
   },
   calendar: { title: 'Route calendar', subtitle: 'Scheduled routes and capacity' },
-  reports: {
-    title: 'Dispatch reports',
-    subtitle: 'Trip, exception, and delay rollups with CSV export',
-  },
   settings: { title: 'Settings', subtitle: 'Notifications, integration events, and capture policy' },
 }

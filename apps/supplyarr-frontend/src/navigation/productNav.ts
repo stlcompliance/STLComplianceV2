@@ -1,13 +1,10 @@
 import {
   Building2,
   PackageSearch,
-  Warehouse,
   ShoppingCart,
-  Truck,
   Tags,
   LineChart,
   Gauge,
-  BarChart3,
   Settings,
   ListCollapse,
   StickyNote,
@@ -27,7 +24,6 @@ export const supplyarrNavItems: ProductNavItem[] = [
     ],
   },
   { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },
-  { label: 'Inventory', to: '/inventory', icon: Warehouse as NavIcon },
   {
     label: 'Purchasing',
     to: '/purchasing',
@@ -38,10 +34,8 @@ export const supplyarrNavItems: ProductNavItem[] = [
       { label: 'Exceptions', to: '/purchasing/exceptions' },
     ],
   },
-  { label: 'Receiving', to: '/receiving', icon: Truck as NavIcon },
   { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },
   { label: 'Planning', to: '/planning', icon: LineChart as NavIcon },
   { label: 'Readiness', to: '/readiness', icon: Gauge as NavIcon },
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
   { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 ]

@@ -18,7 +18,7 @@ public sealed class StlRenderBlueprintCatalogTests
     {
         Assert.Equal(8, StlRenderBlueprintCatalog.ApiServices.Count);
         Assert.Equal(8, StlRenderBlueprintCatalog.WorkerServices.Count);
-        Assert.Equal(10, StlRenderBlueprintCatalog.StaticSites.Count);
+        Assert.Equal(1, StlRenderBlueprintCatalog.StaticSites.Count);
         Assert.Equal(8, StlRenderBlueprintCatalog.Databases.Count);
         Assert.Equal(6, StlRenderBlueprintCatalog.EnvGroupNames.Count);
         Assert.Equal(2, StlRenderBlueprintCatalog.EvidenceDisks.Count);

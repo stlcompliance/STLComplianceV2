@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { normalizeProductKey } from '@stl/shared-ui'
 import * as nexarr from '../api/nexarrClient'
 import { formatLaunchFailureError } from '../lib/launchFailure'
 import { buildProductCallbackUrl, isInSuiteProduct } from '../lib/permissions'
@@ -10,7 +11,7 @@ export function useProductLaunch() {
 
   return useMutation({
     mutationFn: async (productKey: string) => {
-      const normalized = productKey.trim().toLowerCase()
+      const normalized = normalizeProductKey(productKey)
       if (isInSuiteProduct(normalized)) {
         navigate(`/app/${normalized}`)
         return { mode: 'in-suite' as const, productKey: normalized }

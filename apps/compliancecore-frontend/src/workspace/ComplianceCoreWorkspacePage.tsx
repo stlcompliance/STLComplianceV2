@@ -7,7 +7,6 @@ import { FindingsSection } from './sections/FindingsSection'
 import { EvaluationSection } from './sections/EvaluationSection'
 import { FactSourcesSection } from './sections/FactSourcesSection'
 import { OperatorSection } from './sections/OperatorSection'
-import { ReportsSection } from './sections/ReportsSection'
 import { AdminSection } from './sections/AdminSection'
 
 export function ComplianceCoreWorkspacePage({ section }: { section: WorkspaceSection }) {
@@ -23,7 +22,6 @@ export function ComplianceCoreWorkspacePage({ section }: { section: WorkspaceSec
       {section === 'evaluation' ? <EvaluationSection state={state} /> : null}
       {section === 'fact-sources' ? <FactSourcesSection state={state} /> : null}
       {section === 'operator' ? <OperatorSection state={state} /> : null}
-      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'admin' ? <AdminSection state={state} /> : null}
     </WorkspaceShell>
   )

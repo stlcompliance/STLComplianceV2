@@ -58,7 +58,7 @@ public static class StlRenderStagingDrillSupport
     {
         var selected = productDatabases is { Count: > 0 }
             ? productDatabases
-            : StlProductDatabaseCatalog.All;
+            : StlRenderStagingDrillCatalog.All.Select(entry => entry.ProductDatabase).ToList();
 
         var targets = new List<StlRenderStagingDatabaseTarget>();
         var missing = new List<string>();

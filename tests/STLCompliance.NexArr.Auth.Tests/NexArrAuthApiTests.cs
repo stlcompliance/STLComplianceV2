@@ -378,7 +378,7 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var navigation = await response.Content.ReadFromJsonAsync<NavigationResponse>();
         Assert.NotNull(navigation);
-        Assert.True(navigation.Products.Count >= 7);
+        Assert.True(navigation.Products.Count >= 10);
         var staffarr = navigation.Products.First(p => p.ProductKey.Equals("staffarr", StringComparison.OrdinalIgnoreCase));
         Assert.Equal("workforce", staffarr.ProductCategory);
         Assert.Equal("available", staffarr.ProductStatus);
@@ -386,6 +386,15 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.True(staffarr.IsCurrent);
         Assert.NotEmpty(staffarr.Surfaces);
         Assert.Contains(staffarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
+        Assert.Contains(navigation.Products, p => p.ProductKey.Equals("loadarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(navigation.Products, p => p.ProductKey.Equals("reportarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(navigation.Products, p => p.ProductKey.Equals("assurarr", StringComparison.OrdinalIgnoreCase));
+
+        var companion = navigation.Products.First(p =>
+            p.ProductKey.Equals("companion", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("/app/field-companion", companion.RoutePath);
+        Assert.Equal("/app/field-companion/launch", companion.LaunchUrl);
+        Assert.Contains(companion.Surfaces, s => s.SurfaceKey == "inbox" && s.IsEnabled);
 
         var sharedWorker = navigation.Products.First(p =>
             p.ProductKey.Equals("shared-worker", StringComparison.OrdinalIgnoreCase));

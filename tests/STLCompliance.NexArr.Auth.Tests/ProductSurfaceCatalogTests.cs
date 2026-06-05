@@ -19,6 +19,51 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
+    public void BuildSurfaces_for_assurarr_and_loadarr_include_live_navigation_surfaces()
+    {
+        var assurarrSurfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "assurarr",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+        var loadarrSurfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "loadarr",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.Contains(assurarrSurfaces, s => s.SurfaceKey == "cases" && s.IsEnabled);
+        Assert.Contains(assurarrSurfaces, s => s.SurfaceKey == "capa" && s.IsEnabled);
+        Assert.Contains(assurarrSurfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
+
+        Assert.Contains(loadarrSurfaces, s => s.SurfaceKey == "inventory" && s.IsEnabled);
+        Assert.Contains(loadarrSurfaces, s => s.SurfaceKey == "receiving" && s.IsEnabled);
+        Assert.Contains(loadarrSurfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
+    }
+
+    [Fact]
+    public void BuildSurfaces_treats_companion_aliases_as_field_companion_navigation()
+    {
+        var canonical = ProductSurfaceCatalog.BuildSurfaces(
+            "field-companion",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+        var legacy = ProductSurfaceCatalog.BuildSurfaces(
+            "companion",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.Equal(
+            canonical.Select(surface => surface.SurfaceKey),
+            legacy.Select(surface => surface.SurfaceKey));
+        Assert.Contains(canonical, s => s.SurfaceKey == "inbox" && s.IsEnabled);
+        Assert.Contains(canonical, s => s.SurfaceKey == "capture" && s.IsEnabled);
+        Assert.Contains(canonical, s => s.SurfaceKey == "launch" && s.Label.Contains("Field Companion", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void BuildSurfaces_platform_admin_gate_on_nexarr_tenants()
     {
         var withoutAdmin = ProductSurfaceCatalog.BuildSurfaces("nexarr", "available", true, isPlatformAdmin: false);

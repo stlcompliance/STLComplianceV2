@@ -8,7 +8,6 @@ import {
   AlertCircle,
   ClipboardCheck,
   Award,
-  BarChart3,
   Settings,
   ListCollapse,
   StickyNote,
@@ -43,6 +42,5 @@ export const staffarrNavItems: ProductNavItem[] = [
   },
   { label: 'Training acks', to: '/training-acknowledgements', icon: ClipboardCheck },
   { label: 'Certifications', to: '/certifications' , icon: Award },
-  { label: 'Reports', to: '/reports', icon: BarChart3, sectionBreakBefore: true },
   { label: 'Admin', to: '/admin', icon: Settings, sectionBreakBefore: true },
 ]

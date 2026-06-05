@@ -408,7 +408,9 @@ public sealed class AuthService(
         var tenantId = principal.GetTenantId();
         var entitlements = principal.GetEntitlements();
         var isPlatformAdmin = principal.IsPlatformAdmin();
-        var normalizedCurrentProductKey = currentProductKey?.Trim().ToLowerInvariant();
+        var normalizedCurrentProductKey = string.IsNullOrWhiteSpace(currentProductKey)
+            ? null
+            : ProductKeyAliases.Normalize(currentProductKey);
 
         var catalogProducts = await db.Entitlements
             .AsNoTracking()
@@ -426,14 +428,15 @@ public sealed class AuthService(
                     p.ProductStatus,
                     entitled,
                     isPlatformAdmin);
+                var routePath = BuildNavigationRoutePath(p.ProductKey);
                 return new NavigationItem(
                     p.ProductKey,
                     p.DisplayName,
                     p.ProductCategory,
                     p.ProductStatus,
-                    $"/app/{p.ProductKey}",
-                    $"/app/{p.ProductKey}/launch",
-                    string.Equals(p.ProductKey, normalizedCurrentProductKey, StringComparison.OrdinalIgnoreCase),
+                    routePath,
+                    $"{routePath}/launch",
+                    string.Equals(ProductKeyAliases.Normalize(p.ProductKey), normalizedCurrentProductKey, StringComparison.OrdinalIgnoreCase),
                     p.SortOrder,
                     surfaces);
             })
@@ -589,6 +592,15 @@ public sealed class AuthService(
 
     private static string NormalizeSuspicionValue(string? value) =>
         value?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    private static string BuildNavigationRoutePath(string productKey)
+    {
+        var normalized = ProductKeyAliases.Normalize(productKey);
+        var routeSegment = normalized.Equals(ProductKeyAliases.Companion, StringComparison.OrdinalIgnoreCase)
+            ? "field-companion"
+            : normalized;
+        return $"/app/{routeSegment}";
+    }
 
     private async Task EnqueueUserLifecycleEventAsync(
         string eventType,

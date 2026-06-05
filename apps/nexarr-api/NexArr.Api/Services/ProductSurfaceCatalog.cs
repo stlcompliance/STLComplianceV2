@@ -1,4 +1,5 @@
 using NexArr.Api.Contracts;
+using STLCompliance.Shared.Auth;
 
 namespace NexArr.Api.Services;
 
@@ -18,7 +19,7 @@ public static class ProductSurfaceCatalog
         bool hasProductEntitlement,
         bool isPlatformAdmin)
     {
-        var normalized = productKey.Trim().ToLowerInvariant();
+        var normalized = ProductKeyAliases.Normalize(productKey);
         var isLaunchable = !string.Equals(productStatus.Trim(), "worker", StringComparison.OrdinalIgnoreCase);
         var definitions = GetDefinitions(normalized, isLaunchable);
         var surfaces = new List<NavigationSurfaceItem>(definitions.Count);
@@ -105,6 +106,13 @@ public static class ProductSurfaceCatalog
                 new("procurement", "Procurement", "procurement", "warehouse", 20),
                 new("launch", "Open SupplyArr app", "launch", "supplyarr", 90, LaunchExternal: true),
             ],
+            "loadarr" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("inventory", "Inventory", "inventory", "warehouse", 10),
+                new("receiving", "Receiving", "receiving", "warehouse", 20),
+                new("launch", "Open LoadArr app", "launch", "loadarr", 90, LaunchExternal: true),
+            ],
             "recordarr" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),
@@ -116,6 +124,29 @@ public static class ProductSurfaceCatalog
                 new("holds", "Holds", "holds", "shield", 60),
                 new("access", "Access", "access", "auth", 70),
                 new("launch", "Open RecordArr app", "launch", "settings", 90, LaunchExternal: true),
+            ],
+            "reportarr" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("dashboards", "Dashboards", "dashboards", "reportarr", 10),
+                new("reports", "Reports", "reports", "reportarr", 20),
+                new("alerts", "Alerts", "alerts", "warning", 30),
+                new("launch", "Open ReportArr app", "launch", "reportarr", 90, LaunchExternal: true),
+            ],
+            "assurarr" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("cases", "Cases", "cases", "assurarr", 10),
+                new("capa", "CAPA", "capa", "shield", 20),
+                new("launch", "Open AssurArr app", "launch", "assurarr", 90, LaunchExternal: true),
+            ],
+            "fieldcompanion" or "companion" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("inbox", "Inbox", "inbox", "inbox", 10),
+                new("tasks", "Tasks", "tasks", "activity", 20),
+                new("capture", "Capture", "capture", "camera", 30),
+                new("launch", "Open Field Companion app", "launch", "fieldcompanion", 90, LaunchExternal: true),
             ],
             "compliancecore" =>
             [

@@ -1,8 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProductSwitcher } from './ProductSwitcher'
 
 describe('ProductSwitcher', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('invokes onSelectProduct for handoff navigation', () => {
     const onSelectProduct = vi.fn()
 
@@ -47,5 +51,31 @@ describe('ProductSwitcher', () => {
       'href',
       'http://localhost:5176/launch',
     )
+  })
+
+  it('accepts legacy companion entitlements while exposing Field Companion as canonical UI', () => {
+    const onSelectProduct = vi.fn()
+
+    render(
+      <ProductSwitcher
+        currentProductKey="companion"
+        entitlements={['companion', 'recordarr', 'reportarr', 'assurarr']}
+        suiteHomeUrl="http://localhost:5174"
+        onSelectProduct={onSelectProduct}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Field Companion/i }))
+
+    expect(screen.getByRole('menuitem', { name: /Field Companion/i })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    expect(screen.getByRole('menuitem', { name: /RecordArr/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /ReportArr/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /AssurArr/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: /AssurArr/i }))
+    expect(onSelectProduct).toHaveBeenCalledWith('assurarr')
   })
 })

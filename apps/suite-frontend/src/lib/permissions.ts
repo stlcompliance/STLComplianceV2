@@ -1,16 +1,15 @@
 import type { LaunchContextResponse, MeResponse } from '../api/types'
-import { getProductRouteSlug } from '@stl/shared-ui'
+import {
+  getProductRouteSlug,
+  hasProductEntitlement as sharedHasProductEntitlement,
+  normalizeProductKey,
+} from '@stl/shared-ui'
 
 export function hasProductEntitlement(
   entitlements: readonly string[],
   productKey: string,
 ): boolean {
-  const normalized = productKey.trim().toLowerCase()
-  const canonical = normalized === 'companion' ? 'fieldcompanion' : normalized
-  return entitlements.some((e) => {
-    const entitlement = e.trim().toLowerCase()
-    return (entitlement === 'companion' ? 'fieldcompanion' : entitlement) === canonical
-  })
+  return sharedHasProductEntitlement(entitlements, productKey)
 }
 
 export function canAccessProductRoute(
@@ -30,7 +29,7 @@ export function isPlatformAdmin(me: MeResponse | undefined): boolean {
 
 /** In-suite products stay on client routes; others use NexArr handoff to product base URL. */
 export function isInSuiteProduct(productKey: string): boolean {
-  return productKey.trim().toLowerCase() === 'nexarr'
+  return normalizeProductKey(productKey) === 'nexarr'
 }
 
 export function buildProductCallbackUrl(productKey: string): string {

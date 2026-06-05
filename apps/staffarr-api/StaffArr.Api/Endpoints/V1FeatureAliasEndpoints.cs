@@ -14,7 +14,6 @@ public static class V1FeatureAliasEndpoints
         MapOverrideAlias(app);
         MapOnboardingAlias(app);
         MapDocumentAlias(app);
-        MapReportsIndexAlias(app);
         MapIntegrationsIndexAlias(app);
     }
 
@@ -329,27 +328,6 @@ public static class V1FeatureAliasEndpoints
         .WithTags("Personnel Documents")
         .RequireAuthorization()
         .WithName("DownloadDocumentContentV1Alias");
-    }
-
-    private static void MapReportsIndexAlias(WebApplication app)
-    {
-        app.MapGet("/api/v1/reports", (
-            StaffArrAuthorizationService authorization,
-            HttpContext context) =>
-        {
-            authorization.RequirePersonnelReportRead(context.User);
-            var items = new[]
-            {
-                new { key = "personnel", path = "/api/v1/reports/personnel", description = "Personnel summaries and exports." },
-                new { key = "readiness", path = "/api/v1/reports/readiness", description = "Readiness summaries and exports." },
-                new { key = "certifications", path = "/api/v1/reports/certifications", description = "Certification readiness, missing, and expiring report exports." },
-                new { key = "incidents", path = "/api/v1/reports/incidents", description = "Incident summaries and exports." }
-            };
-            return Results.Ok(new { items });
-        })
-        .WithTags("Reports")
-        .RequireAuthorization()
-        .WithName("GetReportsIndexV1");
     }
 
     private static void MapIntegrationsIndexAlias(WebApplication app)

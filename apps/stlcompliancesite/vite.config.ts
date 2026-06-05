@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { writeFileSync } from 'node:fs'
 
@@ -7,9 +8,41 @@ import { defineConfig, type Plugin } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 import tailwindcss from '@tailwindcss/vite'
+import {
+  getProductRouteSlug,
+  IMPLEMENTED_PRODUCT_KEYS,
+} from '../../packages/shared-ui/src/productOwnershipManifest'
 
-import { buildStaticPublicPaths } from './src/lib/publicRoutes'
+const appRoot = path.dirname(fileURLToPath(import.meta.url))
+const nonMarketingProductKeys = new Set(['nexarr'])
+const marketingProductKeys = IMPLEMENTED_PRODUCT_KEYS.filter(
+  (productKey) => !nonMarketingProductKeys.has(productKey),
+)
 
+function buildStaticPublicPaths(): string[] {
+  return [
+    '/',
+    '/platform-overview',
+    '/products',
+    '/industries',
+    '/use-cases',
+    '/compliance',
+    '/why-stl-compliance',
+    '/about-founder',
+    '/pricing',
+    '/request-access',
+    '/contact',
+    '/faq',
+    '/resources',
+    '/compare',
+    '/security',
+    '/data-ownership',
+    '/demo',
+    '/privacy',
+    '/terms',
+    ...marketingProductKeys.map((productKey) => `/products/${getProductRouteSlug(productKey)}`),
+  ]
+}
 
 
 function marketingSiteArtifactsPlugin(): Plugin {
@@ -81,10 +114,19 @@ function marketingSiteArtifactsPlugin(): Plugin {
 export default defineConfig({
 
   plugins: [react(), tailwindcss(), marketingSiteArtifactsPlugin()],
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+    alias: {
+      '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
+    },
+  },
 
   server: {
 
     port: 5173,
+    fs: {
+      allow: [path.resolve(appRoot, '../..')],
+    },
 
   },
 

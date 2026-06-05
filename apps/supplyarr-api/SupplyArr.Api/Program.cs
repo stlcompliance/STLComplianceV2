@@ -22,9 +22,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrVendorEmailInboxEndpoints();
         app.MapSupplyArrPartAliasEndpoints();
         app.MapSupplyArrExternalReferenceEndpoints();
-        app.MapSupplyArrInventoryEndpoints();
-        app.MapSupplyArrStockReservationEndpoints();
-        app.MapSupplyArrWmsMovementEndpoints();
         app.MapSupplyArrRfqEndpoints();
         app.MapSupplyArrVendorPortalEndpoints();
         app.MapSupplyArrQuoteAliasEndpoints();
@@ -36,7 +33,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrEmergencyPurchaseEndpoints();
         app.MapSupplyArrPurchaseRequestEndpoints();
         app.MapSupplyArrPurchaseOrderEndpoints();
-        app.MapSupplyArrReceivingEndpoints();
         app.MapSupplyArrBackorderEndpoints();
         app.MapSupplyArrVendorReturnEndpoints();
         app.MapSupplyArrWarrantyClaimEndpoints();
@@ -74,11 +70,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrDemandProcessingEndpoints();
         app.MapSupplyArrIntegrationEventSettingsEndpoints();
         app.MapSupplyArrInternalIntegrationEventEndpoints();
-        app.MapSupplyArrVendorReportEndpoints();
-        app.MapSupplyArrPartsInventoryReportEndpoints();
-        app.MapSupplyArrPurchasingReportEndpoints();
-        app.MapSupplyArrComplianceReportEndpoints();
-        app.MapSupplyArrReportIndexEndpoints();
         app.MapSupplyArrForgivingSearchEndpoints();
         app.MapSupplyArrAuditHistoryEndpoints();
         app.MapSupplyArrEventAndAuditEndpoints();

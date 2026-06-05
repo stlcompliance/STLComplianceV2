@@ -1,4 +1,9 @@
-import { getProductRouteSlug, normalizeProductKey, SUITE_PRODUCT_CATALOG } from './productCatalog'
+import {
+  getProductRouteSlug,
+  normalizeProductKey,
+  SUITE_PRODUCT_CATALOG,
+  toLegacyProductKey,
+} from './productCatalog'
 
 /** Local Vite preview bases aligned with StlE2eFrontendCatalog (+ Field Companion). */
 const LOCAL_FRONTEND_BASES: Record<string, string> = {
@@ -10,6 +15,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   routarr: 'http://localhost:5180',
   fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',
+  assurarr: 'http://localhost:5183',
   recordarr: 'http://localhost:5184',
   reportarr: 'http://localhost:5185',
 }
@@ -26,12 +32,18 @@ function readFrontendBase(
   env: Record<string, string | undefined>,
   productKey: string,
 ): string | undefined {
-  const upper = productKey.toUpperCase()
+  const normalized = normalizeProductKey(productKey)
+  const legacy = toLegacyProductKey(normalized)
+  const upper = normalized.toUpperCase()
+  const legacyUpper = legacy.toUpperCase()
   const candidates = [
     env[`VITE_${upper}_FRONTEND_BASE`],
     env[`VITE_${upper}_FRONTEND_URL`],
   ]
-  if (productKey === 'fieldcompanion') {
+  if (legacy !== normalized) {
+    candidates.push(env[`VITE_${legacyUpper}_FRONTEND_BASE`], env[`VITE_${legacyUpper}_FRONTEND_URL`])
+  }
+  if (normalized === 'fieldcompanion') {
     candidates.push(env.VITE_COMPANION_FRONTEND_BASE, env.VITE_COMPANION_FRONTEND_URL)
   }
   for (const value of candidates) {
@@ -40,7 +52,7 @@ function readFrontendBase(
       return trimmed.replace(/\/$/, '')
     }
   }
-  return LOCAL_FRONTEND_BASES[productKey]
+  return LOCAL_FRONTEND_BASES[normalized]
 }
 
 function readAppPublicBaseUrl(env: Record<string, string | undefined>): string | undefined {
@@ -60,11 +72,19 @@ export function buildProductLaunchUrlMap(
     }
     if (appBase) {
       map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}/launch`
+      const legacy = toLegacyProductKey(entry.productKey)
+      if (legacy !== entry.productKey) {
+        map[legacy] = map[entry.productKey]
+      }
       continue
     }
     const base = readFrontendBase(env, entry.productKey)
     if (base) {
       map[entry.productKey] = `${base}/launch`
+      const legacy = toLegacyProductKey(entry.productKey)
+      if (legacy !== entry.productKey) {
+        map[legacy] = map[entry.productKey]
+      }
     }
   }
   return map
@@ -81,7 +101,7 @@ export function resolveProductLaunchUrl(
     return resolveSuiteHomeUrl(suiteHomeUrl)
   }
 
-  const direct = productLaunchUrls[normalized]
+  const direct = productLaunchUrls[normalized] ?? productLaunchUrls[toLegacyProductKey(normalized)]
   if (direct) {
     return direct
   }

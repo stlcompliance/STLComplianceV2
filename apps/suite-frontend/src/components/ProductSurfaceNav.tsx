@@ -6,9 +6,14 @@ import { buildProductSurfacePath, isLaunchSurface } from '../navigation/suiteNav
 type ProductSurfaceNavProps = {
   productKey: string
   surfaces: readonly NavigationSurfaceItem[]
+  variant?: 'sidebar' | 'mobile'
 }
 
-export function ProductSurfaceNav({ productKey, surfaces }: ProductSurfaceNavProps) {
+export function ProductSurfaceNav({
+  productKey,
+  surfaces,
+  variant = 'sidebar',
+}: ProductSurfaceNavProps) {
   const enabledSurfaces = surfaces.filter((surface) => surface.isEnabled)
 
   if (enabledSurfaces.length === 0) {
@@ -16,6 +21,41 @@ export function ProductSurfaceNav({ productKey, surfaces }: ProductSurfaceNavPro
       <p className="px-3 text-xs text-slate-500" role="status">
         No enabled surfaces for this product.
       </p>
+    )
+  }
+
+  if (variant === 'mobile') {
+    return (
+      <nav aria-label="Product surfaces" className="mt-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {enabledSurfaces.map((surface) => {
+            const Icon = getNavIcon(surface.iconKey)
+            const to = buildProductSurfacePath(productKey, surface)
+            const launch = isLaunchSurface(surface)
+
+            return (
+              <NavLink
+                key={surface.surfaceKey}
+                to={to}
+                end={!surface.relativePath}
+                title={surface.permissionHint ?? undefined}
+                className={({ isActive }) =>
+                  [
+                    'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
+                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+                    launch ? 'border border-dashed border-teal-500/40' : '',
+                  ].join(' ')
+                }
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <span>{surface.label}</span>
+              </NavLink>
+            )
+          })}
+        </div>
+      </nav>
     )
   }
 

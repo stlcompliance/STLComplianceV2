@@ -7,7 +7,7 @@ public static class ProductKeyAliases
 
     public static string Normalize(string productKey)
     {
-        var normalized = productKey.Trim().ToLowerInvariant();
+        var normalized = productKey.Trim().ToLowerInvariant().Replace("-", "").Replace("_", "");
         return normalized switch
         {
             FieldCompanion => Companion,

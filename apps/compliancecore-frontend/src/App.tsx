@@ -7,7 +7,6 @@ import { FindingsPage } from './pages/findings/FindingsPage'
 import { EvaluationPage } from './pages/evaluation/EvaluationPage'
 import { FactSourcesPage } from './pages/fact-sources/FactSourcesPage'
 import { OperatorPage } from './pages/operator/OperatorPage'
-import { ReportsPage } from './pages/reports/ReportsPage'
 import { AdminPage } from './pages/admin/AdminPage'
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -38,7 +37,6 @@ export default function App() {
             <Route path="/evaluation" element={<EvaluationPage />} />
             <Route path="/fact-sources" element={<FactSourcesPage />} />
             <Route path="/operator" element={<OperatorPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

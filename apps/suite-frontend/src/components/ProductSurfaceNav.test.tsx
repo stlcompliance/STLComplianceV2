@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ProductSurfaceNav } from './ProductSurfaceNav'
 import type { NavigationSurfaceItem } from '../api/types'
@@ -35,6 +35,10 @@ const surfaces: NavigationSurfaceItem[] = [
 ]
 
 describe('ProductSurfaceNav', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders only enabled surfaces', () => {
     render(
       <MemoryRouter>
@@ -44,6 +48,21 @@ describe('ProductSurfaceNav', () => {
 
     expect(screen.getByRole('link', { name: /overview/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /dispatch/i })).toHaveAttribute('href', '/app/routarr/dispatch')
+    expect(screen.queryByRole('link', { name: /open routarr app/i })).not.toBeInTheDocument()
+  })
+
+  it('renders mobile navigation chips for enabled surfaces', () => {
+    render(
+      <MemoryRouter>
+        <ProductSurfaceNav productKey="routarr" surfaces={surfaces} variant="mobile" />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: /overview/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /dispatch/i })).toHaveAttribute(
+      'href',
+      '/app/routarr/dispatch',
+    )
     expect(screen.queryByRole('link', { name: /open routarr app/i })).not.toBeInTheDocument()
   })
 })

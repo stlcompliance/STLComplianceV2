@@ -1,4 +1,4 @@
-import { GraduationCap, ListChecks, RefreshCw, BookOpen, Package, BadgeCheck, BarChart3, Settings, ListCollapse, StickyNote } from 'lucide-react'
+import { GraduationCap, ListChecks, RefreshCw, BookOpen, Package, BadgeCheck, Settings, ListCollapse, StickyNote } from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -45,8 +45,6 @@ export const trainarrNavItems: ProductNavItem[] = [
   },
 
   { label: 'Qualifications', to: '/qualifications', icon: BadgeCheck as NavIcon },
-
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
 
   { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 

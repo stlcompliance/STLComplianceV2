@@ -12,7 +12,6 @@ public static class V1FeatureAliasEndpoints
         MapCoreEntityAliases(app);
         MapOperationsAliases(app);
         MapComplianceAndAvailabilityAliases(app);
-        MapReportAndIntegrationAliases(app);
     }
 
     private static void MapHealthAndDashboardAliases(WebApplication app)
@@ -534,25 +533,4 @@ public static class V1FeatureAliasEndpoints
         .WithName("GetAvailabilityV1Alias");
     }
 
-    private static void MapReportAndIntegrationAliases(WebApplication app)
-    {
-        app.MapGet("/api/v1/reports", (
-            RoutArrAuthorizationService authorization,
-            HttpContext context) =>
-        {
-            authorization.RequireDispatchReportRead(context.User);
-            var items = new[]
-            {
-                new { key = "dispatch", path = "/api/v1/reports/dispatch" },
-                new { key = "time-summary", path = "/api/v1/reports/dispatch/time-summary" },
-                new { key = "routes", path = "/api/v1/reports/routes" },
-                new { key = "proof-dvir", path = "/api/v1/reports/proof-dvir" },
-                new { key = "dispatch-overrides", path = "/api/v1/reports/dispatch-overrides" }
-            };
-            return Results.Ok(new { items });
-        })
-        .WithTags("Reports")
-        .RequireAuthorization()
-        .WithName("GetReportsIndexV1Alias");
-    }
 }
