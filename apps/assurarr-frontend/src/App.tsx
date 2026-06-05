@@ -640,8 +640,22 @@ function NonconformanceDetailPage() {
 
         <SectionCard title="Related holds" items={relatedHolds?.map((hold) => `${hold.number} · ${hold.title} · ${hold.status}`) ?? []} emptyLabel="No holds linked to this nonconformance." />
         <SectionCard title="Related CAPA" items={relatedCapas?.map((capa) => `${capa.number} · ${capa.title} · ${capa.status}`) ?? []} emptyLabel="No CAPA linked to this nonconformance." />
-        <SectionCard title="Containment actions" items={relatedContainments?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No containment actions linked to this nonconformance." />
-        <SectionCard title="Dispositions" items={relatedDispositions?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No dispositions linked to this nonconformance." />
+        <LinkedSectionCard
+          title="Containment actions"
+          items={relatedContainments?.map((item) => ({
+            label: `${item.number} · ${item.title} · ${item.status}`,
+            to: `/containment/${item.id}`,
+          })) ?? []}
+          emptyLabel="No containment actions linked to this nonconformance."
+        />
+        <LinkedSectionCard
+          title="Dispositions"
+          items={relatedDispositions?.map((item) => ({
+            label: `${item.number} · ${item.title} · ${item.status}`,
+            to: `/dispositions/${item.id}`,
+          })) ?? []}
+          emptyLabel="No dispositions linked to this nonconformance."
+        />
         <SectionCard title="Findings" items={relatedFindings?.map((item) => `${item.number} · ${item.title} · ${item.status}`) ?? []} emptyLabel="No findings linked to this nonconformance." />
         <div className="assurarr-card">
           <div className="assurarr-card-inner space-y-4">
@@ -757,6 +771,35 @@ function SectionCard({ title, items, emptyLabel }: { title: string; items: strin
               </li>
             ))}
           </ul>
+        ) : (
+          <EmptyState title={emptyLabel} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LinkedSectionCard({
+  title,
+  items,
+  emptyLabel,
+}: {
+  title: string
+  items: Array<{ label: string; to: string }>
+  emptyLabel: string
+}) {
+  return (
+    <div className="assurarr-card">
+      <div className="assurarr-card-inner space-y-3">
+        <p className="assurarr-label">{title}</p>
+        {items.length ? (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <Link key={item.to} to={item.to} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-cyan-300 hover:border-cyan-500/50 hover:text-cyan-200">
+                {item.label}
+              </Link>
+            ))}
+          </div>
         ) : (
           <EmptyState title={emptyLabel} />
         )}
