@@ -250,7 +250,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(approvalHoldDashboard);
         Assert.Contains(approvalHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.placed");
 
-        var approvalHoldDetailResponse = await _client.GetAsync($"/api/v1/holds/{approvalHold!.Id}");
+        var approvalHoldDetailResponse = await _client.GetAsync($"/api/v1/integrations/holds/{approvalHold!.Id}");
         Assert.Equal(HttpStatusCode.OK, approvalHoldDetailResponse.StatusCode);
         var approvalHoldDetail = await approvalHoldDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(approvalHoldDetail);
@@ -288,7 +288,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(releaseRequestedDashboard);
         Assert.Contains(releaseRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.release_requested");
 
-        var holdsAfterRequestResponse = await _client.GetAsync("/api/v1/holds");
+        var holdsAfterRequestResponse = await _client.GetAsync("/api/v1/integrations/holds");
         holdsAfterRequestResponse.EnsureSuccessStatusCode();
         var holdsAfterRequest = await holdsAfterRequestResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
         Assert.NotNull(holdsAfterRequest);
@@ -312,7 +312,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(approvedRelease);
         Assert.Equal("approved", approvedRelease!.Status);
 
-        var holdsAfterReleaseResponse = await _client.GetAsync("/api/v1/holds");
+        var holdsAfterReleaseResponse = await _client.GetAsync("/api/v1/integrations/holds");
         holdsAfterReleaseResponse.EnsureSuccessStatusCode();
         var holdsAfterRelease = await holdsAfterReleaseResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
         Assert.NotNull(holdsAfterRelease);
@@ -443,7 +443,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal("unknown", rejectedHoldStatus!.QualityStatus);
         Assert.DoesNotContain(rejectedHoldStatus.ActiveHoldRefs, item => item == rejectHold.Number);
 
-        var holdsAfterRejectResponse = await _client.GetAsync("/api/v1/holds");
+        var holdsAfterRejectResponse = await _client.GetAsync("/api/v1/integrations/holds");
         holdsAfterRejectResponse.EnsureSuccessStatusCode();
         var holdsAfterReject = await holdsAfterRejectResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
         Assert.NotNull(holdsAfterReject);

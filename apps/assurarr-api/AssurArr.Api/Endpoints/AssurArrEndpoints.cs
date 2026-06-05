@@ -64,6 +64,16 @@ public static class AssurArrEndpoints
                 : Results.NotFound())
             .WithName("GetAssurArrQualityHold");
 
+        integrationGroup.MapGet("/holds", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListQualityHoldsAsync(cancellationToken)))
+            .WithName("ListAssurArrQualityHoldsIntegration");
+
+        integrationGroup.MapGet("/holds/{holdId:guid}", async (Guid holdId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetQualityHoldAsync(holdId, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrQualityHoldIntegration");
+
         group.MapPost("/holds", async (CreateAssurArrQualityHoldRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityHoldAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityHold");

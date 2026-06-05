@@ -549,8 +549,8 @@ export const assurarrApi = {
       evidenceRecordRefs: body.evidenceRecordRefs ?? [],
       completedAt: body.completedAt ? new Date(body.completedAt).toISOString() : null,
     }),
-  listHolds: () => getJson<QualityHold[]>('/api/v1/holds'),
-  getHold: (id: string) => getJson<QualityHold>(`/api/v1/holds/${id}`),
+  listHolds: () => getJson<QualityHold[]>('/api/v1/integrations/holds'),
+  getHold: (id: string) => getJson<QualityHold>(`/api/v1/integrations/holds/${id}`),
   createHold: (body: CreateBase & { holdType: string; holdScope: string; holdReason?: string; quantityHeld?: number; unitOfMeasure?: string; lotNumber?: string; serialNumber?: string; expiresAt?: string }) =>
     sendJson<QualityHold>('/api/v1/holds', 'POST', {
       ...body,
