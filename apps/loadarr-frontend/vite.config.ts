@@ -11,7 +11,7 @@ export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },
