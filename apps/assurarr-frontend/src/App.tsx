@@ -5405,13 +5405,13 @@ function ScorecardDetailPage() {
           <p className="assurarr-label">Metrics</p>
           {metrics.length ? (
             <div className="grid gap-3 md:grid-cols-2">
-              {metrics.map((metric) => (
-                <div key={metric.id} className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <strong className="text-sm text-slate-50">{metric.metricKey}</strong>
-                    <span className="assurarr-pill">{metric.status}</span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-300">{metric.title}</p>
+                {metrics.map((metric) => (
+                  <Link key={metric.id} to={`/scorecards/${id}/metrics/${metric.id}`} className="block rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 text-cyan-300 transition hover:border-cyan-500/50 hover:text-cyan-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-50">{metric.metricKey}</strong>
+                      <span className="assurarr-pill">{metric.status}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-300">{metric.title}</p>
                   <p className="mt-1 text-xs text-slate-400">{metric.description}</p>
                   <div className="mt-3 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
                     <div>Category: {metric.category}</div>
@@ -5424,13 +5424,94 @@ function ScorecardDetailPage() {
                   <p className="mt-3 text-xs text-slate-400">
                     Source refs: {metric.sourceProductRefs.length ? metric.sourceProductRefs.join(', ') : 'none'}
                   </p>
-                </div>
+                  </Link>
               ))}
             </div>
           ) : (
             <EmptyState title="No metrics yet." />
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function QualityMetricDetailPage() {
+  const { scorecardId = '', metricId = '' } = useParams<{ scorecardId: string; metricId: string }>()
+  const scorecardQuery = useQuery({
+    queryKey: ['assurarr', 'scorecard', scorecardId],
+    queryFn: () => assurarrApi.getScorecard(scorecardId),
+    enabled: Boolean(scorecardId),
+  })
+  const metricQuery = useQuery({
+    queryKey: ['assurarr', 'quality-metric', scorecardId, metricId],
+    queryFn: () => assurarrApi.getQualityMetric(scorecardId, metricId),
+    enabled: Boolean(scorecardId && metricId),
+  })
+  const dashboard = useDashboard()
+
+  if (scorecardQuery.isLoading || metricQuery.isLoading) {
+    return <LoadingCard label="Loading quality metric detail" />
+  }
+
+  if (!scorecardQuery.data || !metricQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Quality metric detail" description="Could not load the requested quality metric." />
+        <EmptyState title="Quality metric not found." />
+      </div>
+    )
+  }
+
+  const scorecard = scorecardQuery.data
+  const metric = metricQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.eventType === 'assurarr.metric.calculated' && event.details === metric.metricKey) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader
+        title={`${metric.metricKey} · ${metric.title}`}
+        description="Metric thresholds, source refs, and the scorecard context."
+      />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{metric.status}</span>
+                <span className="assurarr-pill">{metric.category}</span>
+              </div>
+              <p className="text-sm text-slate-300">{metric.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">Scorecard:</span> {scorecard.number} · {scorecard.title}</div>
+                <div><span className="text-slate-500">Value:</span> {metric.value ?? 'n/a'} {metric.unit ?? ''}</div>
+                <div><span className="text-slate-500">Numerator:</span> {metric.numerator ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Denominator:</span> {metric.denominator ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Target:</span> {metric.targetValue ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Thresholds:</span> {metric.warningThreshold ?? 'n/a'} / {metric.criticalThreshold ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Source refs</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Unit:</span> {metric.unit ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Created:</span> {new Date(metric.createdAt).toLocaleString()}</div>
+                <div><span className="text-slate-500">Updated:</span> {new Date(metric.updatedAt).toLocaleString()}</div>
+                <div><span className="text-slate-500">Source product refs:</span> {metric.sourceProductRefs.length ? metric.sourceProductRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Metric key:</span> {metric.metricKey}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No metric timeline events recorded yet."
+        />
       </div>
     </div>
   )
@@ -5621,6 +5702,7 @@ export function App() {
     if (path.startsWith('/capa')) return 'CAPA'
     if (path.startsWith('/nonconformances/') && path.includes('/root-causes/')) return 'Root cause analysis'
     if (path.startsWith('/risk-profiles')) return 'Risk profiles'
+    if (path.startsWith('/scorecards/') && path.includes('/metrics/')) return 'Quality metric detail'
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
     return 'Dashboard'
@@ -5665,6 +5747,7 @@ export function App() {
         <Route path="/risk-profiles/:id" element={<RiskProfileDetailPage />} />
         <Route path="/scorecards" element={<ScorecardPage />} />
         <Route path="/scorecards/:id" element={<ScorecardDetailPage />} />
+        <Route path="/scorecards/:scorecardId/metrics/:metricId" element={<QualityMetricDetailPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

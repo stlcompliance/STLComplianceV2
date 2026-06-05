@@ -303,6 +303,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListQualityMetricsAsync(scorecardId, cancellationToken)))
             .WithName("ListAssurArrQualityMetrics");
 
+        group.MapGet("/scorecards/{scorecardId:guid}/metrics/{metricId:guid}", async (Guid scorecardId, Guid metricId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetQualityMetricAsync(scorecardId, metricId, cancellationToken)))
+            .WithName("GetAssurArrQualityMetric");
+
         group.MapPost("/scorecards/{scorecardId:guid}/metrics", async (Guid scorecardId, CreateAssurArrQualityMetricRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityMetricAsync(scorecardId, request, cancellationToken)))
             .WithName("CreateAssurArrQualityMetric");

@@ -3150,6 +3150,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToMetricResponse).ToList();
     }
 
+    public async Task<AssurArrQualityMetricResponse> GetQualityMetricAsync(Guid scorecardId, Guid metricId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.QualityMetrics
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == metricId && x.ScorecardId == scorecardId, cancellationToken)
+            ?? throw new InvalidOperationException($"Quality metric '{metricId}' was not found.");
+
+        return ToMetricResponse(entity);
+    }
+
     public async Task<AssurArrQualityMetricResponse> CreateQualityMetricAsync(Guid scorecardId, CreateAssurArrQualityMetricRequest request, CancellationToken cancellationToken = default)
     {
         var scorecard = await db.QualityScorecards.FirstOrDefaultAsync(x => x.Id == scorecardId, cancellationToken);

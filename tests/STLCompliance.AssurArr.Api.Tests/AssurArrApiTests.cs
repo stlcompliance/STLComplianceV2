@@ -1778,6 +1778,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(metric);
         Assert.Equal(metricKey, metric!.MetricKey);
 
+        var metricDetailResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}/metrics/{metric.Id}");
+        Assert.Equal(HttpStatusCode.OK, metricDetailResponse.StatusCode);
+        var metricDetail = await metricDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityMetricResponse>();
+        Assert.NotNull(metricDetail);
+        Assert.Equal(metric.Id, metricDetail!.Id);
+        Assert.Equal(metric.MetricKey, metricDetail.MetricKey);
+
         var metricCalculatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         metricCalculatedDashboardResponse.EnsureSuccessStatusCode();
         var metricCalculatedDashboard = await metricCalculatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
