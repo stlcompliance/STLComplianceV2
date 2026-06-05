@@ -1732,6 +1732,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(metrics);
         Assert.Contains(metrics!, item => item.MetricKey == metricKey);
 
+        var scorecardListResponse = await _client.GetAsync("/api/v1/integrations/scorecards");
+        scorecardListResponse.EnsureSuccessStatusCode();
+        var scorecards = await scorecardListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityScorecardResponse>>();
+        Assert.NotNull(scorecards);
+        Assert.Contains(scorecards!, item => item.Id == scorecard.Id);
+
         var reviewByPersonId = Guid.NewGuid();
         var reviewResponse = await _client.PostAsJsonAsync(
             $"/api/v1/integrations/scorecards/{scorecard.Id}/review",

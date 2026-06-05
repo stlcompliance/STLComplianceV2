@@ -757,7 +757,7 @@ export const assurarrApi = {
       openFindingRefs: body.openFindingRefs ?? [],
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
     }),
-  listScorecards: () => getJson<Scorecard[]>('/api/v1/scorecards'),
+  listScorecards: () => getJson<Scorecard[]>('/api/v1/integrations/scorecards'),
   getScorecard: (id: string) => getJson<Scorecard>(`/api/v1/scorecards/${id}`),
   createScorecard: (body: CreateBase & { targetType: string; targetRef: string; periodStart: string; periodEnd: string; overallScore?: number; qualityStatus: string; trend: string; metricRefs?: string[] }) =>
     sendJson<Scorecard>('/api/v1/scorecards', 'POST', {
