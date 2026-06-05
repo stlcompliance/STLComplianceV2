@@ -10,9 +10,9 @@ RUN dotnet restore apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj
 COPY . .
 RUN dotnet publish apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "AssurArr.Api.dll"]
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet AssurArr.Api.dll"]

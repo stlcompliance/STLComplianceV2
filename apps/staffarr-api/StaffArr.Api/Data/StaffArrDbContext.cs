@@ -91,10 +91,23 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasKey(x => x.Id);
             entity.Property(x => x.UnitType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SiteType).HasMaxLength(32);
+            entity.Property(x => x.Timezone).HasMaxLength(64);
+            entity.Property(x => x.Phone).HasMaxLength(32);
+            entity.Property(x => x.EmergencyContact).HasMaxLength(256);
+            entity.Property(x => x.TeamType).HasMaxLength(32);
+            entity.Property(x => x.PositionCode).HasMaxLength(64);
+            entity.Property(x => x.ComplianceSensitive).HasDefaultValue(false);
+            entity.Property(x => x.SafetySensitive).HasDefaultValue(false);
+            entity.Property(x => x.CanSupervise).HasDefaultValue(false);
+            entity.Property(x => x.CanApprove).HasDefaultValue(false);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.UnitType, x.Name }).IsUnique();
             entity.HasOne(x => x.ParentOrgUnit).WithMany().HasForeignKey(x => x.ParentOrgUnitId);
+            entity.HasOne(x => x.ManagerPerson).WithMany().HasForeignKey(x => x.ManagerPersonId);
+            entity.HasOne(x => x.DefaultSiteOrgUnit).WithMany().HasForeignKey(x => x.DefaultSiteOrgUnitId);
         });
 
         modelBuilder.Entity<StaffPerson>(entity =>
@@ -136,7 +149,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.ToTable("staffarr_org_unit_assignments");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(256);
+            entity.Property(x => x.IsPrimary).HasDefaultValue(false);
             entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
             entity.HasIndex(x => new
             {
                 x.TenantId,
@@ -145,8 +161,12 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
                 x.DepartmentOrgUnitId,
                 x.TeamOrgUnitId,
                 x.PositionOrgUnitId
-            }).IsUnique();
-            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            })
+            .HasFilter("\"Status\" IN ('planned','active')")
+            .IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.PersonId })
+                .HasFilter("\"IsPrimary\" = TRUE AND \"Status\" IN ('planned','active')")
+                .IsUnique();
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
             entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.SiteOrgUnitId);
             entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.DepartmentOrgUnitId);

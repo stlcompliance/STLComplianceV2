@@ -372,6 +372,11 @@ public static class V1FeatureAliasEndpoints
                     current = parent;
                 }
 
+                site ??= unit.DefaultSiteOrgUnitId is Guid defaultSiteOrgUnitId
+                    && byId.TryGetValue(defaultSiteOrgUnitId, out var defaultSite)
+                    && string.Equals(defaultSite.UnitType, "site", StringComparison.OrdinalIgnoreCase)
+                        ? defaultSite
+                        : null;
                 site ??= byId.Values.FirstOrDefault(x => string.Equals(x.UnitType, "site", StringComparison.OrdinalIgnoreCase) && x.OrgUnitId == unit.OrgUnitId);
                 var mapped = new StaffArrIntegrationLocationResponse(
                     unit.OrgUnitId,

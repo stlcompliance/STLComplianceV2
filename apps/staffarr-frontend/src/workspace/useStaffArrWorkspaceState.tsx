@@ -450,50 +450,67 @@ export function useStaffArrWorkspaceState() {
     enabled: Boolean(session?.accessToken && effectivePersonId && selectedDocumentId),
   })
 
+  const invalidatePlacementSurfaces = async (personId?: string | null) => {
+    const invalidations = [
+      queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-subordinate-detail', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-site-readiness-rollups', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-team-readiness-rollups', session?.accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-readiness-rollup-members', session?.accessToken] }),
+    ]
+
+    if (personId) {
+      invalidations.push(
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-lookup', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-manager-chain', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-offboarding', session?.accessToken, personId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, personId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-person-history-summary', session?.accessToken, personId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      )
+    }
+
+    await Promise.all(invalidations)
+  }
+
   const createOrgUnitMutation = useMutation({
-    mutationFn: (payload: { unitType: string; name: string; parentOrgUnitId: string | null }) =>
+    mutationFn: (payload: Parameters<typeof createOrgUnit>[1]) =>
       createOrgUnit(session!.accessToken, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] })
+      await invalidatePlacementSurfaces(effectivePersonId)
     },
   })
 
   const updateOrgUnitMutation = useMutation({
-    mutationFn: (payload: { orgUnitId: string; unitType: string; name: string; parentOrgUnitId: string | null }) =>
-      updateOrgUnit(session!.accessToken, payload.orgUnitId, {
-        unitType: payload.unitType,
-        name: payload.name,
-        parentOrgUnitId: payload.parentOrgUnitId,
-      }),
+    mutationFn: (payload: { orgUnitId: string; request: Parameters<typeof updateOrgUnit>[2] }) =>
+      updateOrgUnit(session!.accessToken, payload.orgUnitId, payload.request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] })
+      await invalidatePlacementSurfaces(effectivePersonId)
     },
   })
 
   const updateOrgUnitStatusMutation = useMutation({
-    mutationFn: (payload: { orgUnitId: string; status: 'active' | 'inactive' }) =>
+    mutationFn: (payload: { orgUnitId: string; status: Parameters<typeof updateOrgUnitStatus>[2]['status'] }) =>
       updateOrgUnitStatus(session!.accessToken, payload.orgUnitId, { status: payload.status }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] })
+      await invalidatePlacementSurfaces(effectivePersonId)
     },
   })
 
   const createAssignmentMutation = useMutation({
-    mutationFn: (payload: {
-      personId: string
-      siteOrgUnitId: string
-      departmentOrgUnitId: string
-      teamOrgUnitId: string
-      positionOrgUnitId: string
-    }) =>
-      createPersonOrgAssignment(session!.accessToken, payload.personId, {
-        siteOrgUnitId: payload.siteOrgUnitId,
-        departmentOrgUnitId: payload.departmentOrgUnitId,
-        teamOrgUnitId: payload.teamOrgUnitId,
-        positionOrgUnitId: payload.positionOrgUnitId,
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
+    mutationFn: (payload: { personId: string; request: Parameters<typeof createPersonOrgAssignment>[2] }) =>
+      createPersonOrgAssignment(session!.accessToken, payload.personId, payload.request),
+    onSuccess: async (_, payload) => {
+      await invalidatePlacementSurfaces(payload.personId)
     },
   })
 
@@ -501,27 +518,23 @@ export function useStaffArrWorkspaceState() {
     mutationFn: (payload: {
       personId: string
       assignmentId: string
-      siteOrgUnitId: string
-      departmentOrgUnitId: string
-      teamOrgUnitId: string
-      positionOrgUnitId: string
+      request: Parameters<typeof updatePersonOrgAssignment>[3]
     }) =>
-      updatePersonOrgAssignment(session!.accessToken, payload.personId, payload.assignmentId, {
-        siteOrgUnitId: payload.siteOrgUnitId,
-        departmentOrgUnitId: payload.departmentOrgUnitId,
-        teamOrgUnitId: payload.teamOrgUnitId,
-        positionOrgUnitId: payload.positionOrgUnitId,
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
+      updatePersonOrgAssignment(session!.accessToken, payload.personId, payload.assignmentId, payload.request),
+    onSuccess: async (_, payload) => {
+      await invalidatePlacementSurfaces(payload.personId)
     },
   })
 
   const updateAssignmentStatusMutation = useMutation({
-    mutationFn: (payload: { personId: string; assignmentId: string; status: 'active' | 'inactive' }) =>
-      updatePersonOrgAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, { status: payload.status }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
+    mutationFn: (payload: {
+      personId: string
+      assignmentId: string
+      request: Parameters<typeof updatePersonOrgAssignmentStatus>[3]
+    }) =>
+      updatePersonOrgAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, payload.request),
+    onSuccess: async (_, payload) => {
+      await invalidatePlacementSurfaces(payload.personId)
     },
   })
   const updateManagerMutation = useMutation({

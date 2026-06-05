@@ -1,6 +1,12 @@
-import { type FormEvent, useMemo, useState } from 'react'
+import { type Dispatch, type FormEvent, type SetStateAction, useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import type { OrgUnitAssignmentResponse, OrgUnitResponse } from '../api/types'
+import type {
+  CreateOrgUnitAssignmentRequest,
+  OrgUnitAssignmentResponse,
+  OrgUnitResponse,
+  UpdateOrgUnitAssignmentRequest,
+  UpdateOrgUnitAssignmentStatusRequest,
+} from '../api/types'
 
 interface PersonOrgAssignmentsManagerProps {
   personId: string
@@ -14,32 +20,140 @@ interface PersonOrgAssignmentsManagerProps {
   canManage: boolean
   isSubmitting: boolean
   actionErrorMessage: string | null
-  onCreate: (request: {
-    siteOrgUnitId: string
-    departmentOrgUnitId: string
-    teamOrgUnitId: string
-    positionOrgUnitId: string
-  }) => Promise<void>
-  onUpdate: (
+  onCreate: (request: CreateOrgUnitAssignmentRequest) => Promise<void>
+  onUpdate: (assignmentId: string, request: UpdateOrgUnitAssignmentRequest) => Promise<void>
+  onStatusChange: (
     assignmentId: string,
-    request: {
-      siteOrgUnitId: string
-      departmentOrgUnitId: string
-      teamOrgUnitId: string
-      positionOrgUnitId: string
-    },
+    request: UpdateOrgUnitAssignmentStatusRequest,
   ) => Promise<void>
-  onStatusChange: (assignmentId: string, status: 'active' | 'inactive') => Promise<void>
 }
 
-function byType(orgUnits: OrgUnitResponse[], unitType: string): OrgUnitResponse[] {
-  return orgUnits
-    .filter((x) => x.status === 'active' && x.unitType.toLowerCase() === unitType)
-    .sort((a, b) => a.name.localeCompare(b.name))
+type EditableAssignmentStatus = 'planned' | 'active'
+
+type AssignmentDraft = {
+  siteOrgUnitId: string
+  departmentOrgUnitId: string
+  teamOrgUnitId: string
+  positionOrgUnitId: string
+  status: EditableAssignmentStatus
+  isPrimary: boolean
+  effectiveAt: string
+  endsAt: string
+  reason: string
 }
 
-function displayUnitName(orgUnits: OrgUnitResponse[], orgUnitId: string): string {
-  return orgUnits.find((x) => x.orgUnitId === orgUnitId)?.name ?? orgUnitId
+function humanize(value: string): string {
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function matchesAllowedStatuses(status: OrgUnitResponse['status'], allowedStatuses: OrgUnitResponse['status'][]): boolean {
+  return allowedStatuses.includes(status)
+}
+
+function isDescendantOrSelf(
+  nodeId: string,
+  ancestorId: string,
+  byId: Map<string, OrgUnitResponse>,
+): boolean {
+  if (nodeId === ancestorId) {
+    return true
+  }
+
+  let cursor = byId.get(nodeId)?.parentOrgUnitId ?? null
+  while (cursor) {
+    if (cursor === ancestorId) {
+      return true
+    }
+
+    cursor = byId.get(cursor)?.parentOrgUnitId ?? null
+  }
+
+  return false
+}
+
+function toIsoDateTime(value: string): string | null {
+  if (!value) {
+    return null
+  }
+
+  return new Date(value).toISOString()
+}
+
+function fromIsoDateTime(value: string | null): string {
+  if (!value) {
+    return ''
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const offsetMs = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
+function emptyDraft(): AssignmentDraft {
+  return {
+    siteOrgUnitId: '',
+    departmentOrgUnitId: '',
+    teamOrgUnitId: '',
+    positionOrgUnitId: '',
+    status: 'active',
+    isPrimary: true,
+    effectiveAt: '',
+    endsAt: '',
+    reason: '',
+  }
+}
+
+function hydrateDraft(assignment: OrgUnitAssignmentResponse): AssignmentDraft {
+  return {
+    siteOrgUnitId: assignment.siteOrgUnitId,
+    departmentOrgUnitId: assignment.departmentOrgUnitId,
+    teamOrgUnitId: assignment.teamOrgUnitId,
+    positionOrgUnitId: assignment.positionOrgUnitId,
+    status: assignment.status === 'planned' ? 'planned' : 'active',
+    isPrimary: assignment.isPrimary ?? false,
+    effectiveAt: fromIsoDateTime(assignment.effectiveAt ?? null),
+    endsAt: fromIsoDateTime(assignment.endsAt ?? null),
+    reason: assignment.reason ?? '',
+  }
+}
+
+function buildPlacementOptions(
+  orgUnits: OrgUnitResponse[],
+  byId: Map<string, OrgUnitResponse>,
+  draft: AssignmentDraft,
+) {
+  const allowedStatuses: OrgUnitResponse['status'][] =
+    draft.status === 'active' ? ['active'] : ['planned', 'active']
+  const sites = orgUnits
+    .filter((unit) => unit.unitType === 'site' && matchesAllowedStatuses(unit.status, allowedStatuses))
+    .sort((left, right) => left.name.localeCompare(right.name))
+  const departments = orgUnits
+    .filter((unit) =>
+      unit.unitType === 'department'
+      && matchesAllowedStatuses(unit.status, allowedStatuses)
+      && (!draft.siteOrgUnitId || isDescendantOrSelf(unit.orgUnitId, draft.siteOrgUnitId, byId)),
+    )
+    .sort((left, right) => left.name.localeCompare(right.name))
+  const teams = orgUnits
+    .filter((unit) =>
+      unit.unitType === 'team'
+      && matchesAllowedStatuses(unit.status, allowedStatuses)
+      && (!draft.departmentOrgUnitId || isDescendantOrSelf(unit.orgUnitId, draft.departmentOrgUnitId, byId)),
+    )
+    .sort((left, right) => left.name.localeCompare(right.name))
+  const positions = orgUnits
+    .filter((unit) =>
+      unit.unitType === 'position'
+      && matchesAllowedStatuses(unit.status, allowedStatuses)
+      && (!draft.teamOrgUnitId || isDescendantOrSelf(unit.orgUnitId, draft.teamOrgUnitId, byId)),
+    )
+    .sort((left, right) => left.name.localeCompare(right.name))
+
+  return { sites, departments, teams, positions }
 }
 
 function toPickerOptions(orgUnits: OrgUnitResponse[]): PickerOption[] {
@@ -47,6 +161,37 @@ function toPickerOptions(orgUnits: OrgUnitResponse[]): PickerOption[] {
     value: unit.orgUnitId,
     label: unit.name,
   }))
+}
+
+function displayUnitName(orgUnits: OrgUnitResponse[], orgUnitId: string): string {
+  return orgUnits.find((unit) => unit.orgUnitId === orgUnitId)?.name ?? orgUnitId
+}
+
+function formatWhen(value: string | null): string | null {
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString()
+}
+
+function serializeDraft(draft: AssignmentDraft): CreateOrgUnitAssignmentRequest {
+  return {
+    siteOrgUnitId: draft.siteOrgUnitId,
+    departmentOrgUnitId: draft.departmentOrgUnitId,
+    teamOrgUnitId: draft.teamOrgUnitId,
+    positionOrgUnitId: draft.positionOrgUnitId,
+    status: draft.status,
+    isPrimary: draft.isPrimary,
+    effectiveAt: toIsoDateTime(draft.effectiveAt),
+    endsAt: toIsoDateTime(draft.endsAt),
+    reason: draft.reason.trim() || null,
+  }
 }
 
 export function formatAssignmentMutationError(errorMessage: string | null): string | null {
@@ -86,83 +231,95 @@ export function PersonOrgAssignmentsManager({
   onUpdate,
   onStatusChange,
 }: PersonOrgAssignmentsManagerProps) {
-  const siteUnits = useMemo(() => byType(orgUnits, 'site'), [orgUnits])
-  const departmentUnits = useMemo(() => byType(orgUnits, 'department'), [orgUnits])
-  const teamUnits = useMemo(() => byType(orgUnits, 'team'), [orgUnits])
-  const positionUnits = useMemo(() => byType(orgUnits, 'position'), [orgUnits])
-  const siteOptions = useMemo(() => toPickerOptions(siteUnits), [siteUnits])
-  const departmentOptions = useMemo(() => toPickerOptions(departmentUnits), [departmentUnits])
-  const teamOptions = useMemo(() => toPickerOptions(teamUnits), [teamUnits])
-  const positionOptions = useMemo(() => toPickerOptions(positionUnits), [positionUnits])
-  const normalizedError = formatAssignmentMutationError(actionErrorMessage)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null)
-
-  const [createSiteId, setCreateSiteId] = useState('')
-  const [createDepartmentId, setCreateDepartmentId] = useState('')
-  const [createTeamId, setCreateTeamId] = useState('')
-  const [createPositionId, setCreatePositionId] = useState('')
-
-  const [editSiteId, setEditSiteId] = useState('')
-  const [editDepartmentId, setEditDepartmentId] = useState('')
-  const [editTeamId, setEditTeamId] = useState('')
-  const [editPositionId, setEditPositionId] = useState('')
-
+  const [createDraft, setCreateDraft] = useState<AssignmentDraft>(() => emptyDraft())
+  const [editDraft, setEditDraft] = useState<AssignmentDraft>(() => emptyDraft())
+  const normalizedError = formatAssignmentMutationError(actionErrorMessage)
+  const byId = useMemo(() => new Map(orgUnits.map((unit) => [unit.orgUnitId, unit])), [orgUnits])
   const selected = selectedAssignmentId
-    ? assignments.find((x) => x.assignmentId === selectedAssignmentId) ?? null
+    ? assignments.find((assignment) => assignment.assignmentId === selectedAssignmentId) ?? null
     : null
+  const createOptions = useMemo(
+    () => buildPlacementOptions(orgUnits, byId, createDraft),
+    [byId, createDraft, orgUnits],
+  )
+  const editOptions = useMemo(
+    () => buildPlacementOptions(orgUnits, byId, editDraft),
+    [byId, editDraft, orgUnits],
+  )
+
+  useEffect(() => {
+    if (selected) {
+      setEditDraft(hydrateDraft(selected))
+    }
+  }, [selected])
 
   const selectedCreateSiteOption = useMemo(
-    () => siteOptions.find((option) => option.value === createSiteId),
-    [createSiteId, siteOptions],
+    () => toPickerOptions(createOptions.sites).find((option) => option.value === createDraft.siteOrgUnitId),
+    [createDraft.siteOrgUnitId, createOptions.sites],
   )
   const selectedCreateDepartmentOption = useMemo(
-    () => departmentOptions.find((option) => option.value === createDepartmentId),
-    [createDepartmentId, departmentOptions],
+    () =>
+      toPickerOptions(createOptions.departments).find(
+        (option) => option.value === createDraft.departmentOrgUnitId,
+      ),
+    [createDraft.departmentOrgUnitId, createOptions.departments],
   )
   const selectedCreateTeamOption = useMemo(
-    () => teamOptions.find((option) => option.value === createTeamId),
-    [createTeamId, teamOptions],
+    () => toPickerOptions(createOptions.teams).find((option) => option.value === createDraft.teamOrgUnitId),
+    [createDraft.teamOrgUnitId, createOptions.teams],
   )
   const selectedCreatePositionOption = useMemo(
-    () => positionOptions.find((option) => option.value === createPositionId),
-    [createPositionId, positionOptions],
+    () =>
+      toPickerOptions(createOptions.positions).find(
+        (option) => option.value === createDraft.positionOrgUnitId,
+      ),
+    [createDraft.positionOrgUnitId, createOptions.positions],
   )
   const selectedEditSiteOption = useMemo(
-    () => siteOptions.find((option) => option.value === editSiteId),
-    [editSiteId, siteOptions],
+    () => toPickerOptions(editOptions.sites).find((option) => option.value === editDraft.siteOrgUnitId),
+    [editDraft.siteOrgUnitId, editOptions.sites],
   )
   const selectedEditDepartmentOption = useMemo(
-    () => departmentOptions.find((option) => option.value === editDepartmentId),
-    [editDepartmentId, departmentOptions],
+    () =>
+      toPickerOptions(editOptions.departments).find(
+        (option) => option.value === editDraft.departmentOrgUnitId,
+      ),
+    [editDraft.departmentOrgUnitId, editOptions.departments],
   )
   const selectedEditTeamOption = useMemo(
-    () => teamOptions.find((option) => option.value === editTeamId),
-    [editTeamId, teamOptions],
+    () => toPickerOptions(editOptions.teams).find((option) => option.value === editDraft.teamOrgUnitId),
+    [editDraft.teamOrgUnitId, editOptions.teams],
   )
   const selectedEditPositionOption = useMemo(
-    () => positionOptions.find((option) => option.value === editPositionId),
-    [editPositionId, positionOptions],
+    () =>
+      toPickerOptions(editOptions.positions).find(
+        (option) => option.value === editDraft.positionOrgUnitId,
+      ),
+    [editDraft.positionOrgUnitId, editOptions.positions],
   )
 
   const hasAllUnitTypes =
-    siteUnits.length > 0 && departmentUnits.length > 0 && teamUnits.length > 0 && positionUnits.length > 0
+    createOptions.sites.length > 0
+    && createOptions.departments.length > 0
+    && createOptions.teams.length > 0
+    && createOptions.positions.length > 0
 
-  const pickForEdit = (assignment: OrgUnitAssignmentResponse) => {
-    setSelectedAssignmentId(assignment.assignmentId)
-    setEditSiteId(assignment.siteOrgUnitId)
-    setEditDepartmentId(assignment.departmentOrgUnitId)
-    setEditTeamId(assignment.teamOrgUnitId)
-    setEditPositionId(assignment.positionOrgUnitId)
-  }
+  const editChainChanged = Boolean(
+    selected
+    && (
+      selected.siteOrgUnitId !== editDraft.siteOrgUnitId
+      || selected.departmentOrgUnitId !== editDraft.departmentOrgUnitId
+      || selected.teamOrgUnitId !== editDraft.teamOrgUnitId
+      || selected.positionOrgUnitId !== editDraft.positionOrgUnitId
+    ),
+  )
+  const editWillTransfer = Boolean(selected && selected.status === 'active' && editChainChanged)
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
-    await onCreate({
-      siteOrgUnitId: createSiteId,
-      departmentOrgUnitId: createDepartmentId,
-      teamOrgUnitId: createTeamId,
-      positionOrgUnitId: createPositionId,
-    })
+    await onCreate(serializeDraft(createDraft))
+    setCreateDraft((current) => ({ ...emptyDraft(), status: current.status }))
   }
 
   const handleUpdate = async (event: FormEvent) => {
@@ -171,12 +328,7 @@ export function PersonOrgAssignmentsManager({
       return
     }
 
-    await onUpdate(selected.assignmentId, {
-      siteOrgUnitId: editSiteId,
-      departmentOrgUnitId: editDepartmentId,
-      teamOrgUnitId: editTeamId,
-      positionOrgUnitId: editPositionId,
-    })
+    await onUpdate(selected.assignmentId, serializeDraft(editDraft) as UpdateOrgUnitAssignmentRequest)
   }
 
   return (
@@ -188,13 +340,16 @@ export function PersonOrgAssignmentsManager({
         </span>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        Managing assignments for {personDisplayName} ({personId})
+        Managing placements for {personDisplayName} ({personId}). Active placement edits create transfer history instead
+        of overwriting the current chain.
       </p>
+
       {normalizedError ? (
         <div className="mt-3">
           <ApiErrorCallout title="Org assignment update failed" message={normalizedError} />
         </div>
       ) : null}
+
       {isError ? (
         <div className="mt-3">
           <ApiErrorCallout
@@ -213,151 +368,155 @@ export function PersonOrgAssignmentsManager({
       ) : !isError ? (
         <ul className="mt-4 divide-y divide-slate-700">
           {assignments.map((assignment) => (
-            <li key={assignment.assignmentId} className="flex items-center justify-between py-3 text-sm">
+            <li key={assignment.assignmentId} className="flex items-start justify-between gap-4 py-3 text-sm">
               <button
                 type="button"
-                disabled={!canManage}
-                onClick={() => pickForEdit(assignment)}
-                className="text-left text-white hover:text-sky-300 disabled:text-slate-200"
+                onClick={() => {
+                  setSelectedAssignmentId(assignment.assignmentId)
+                  setEditDraft(hydrateDraft(assignment))
+                }}
+                className="text-left text-white hover:text-sky-300"
               >
-                {displayUnitName(orgUnits, assignment.siteOrgUnitId)} /{' '}
-                {displayUnitName(orgUnits, assignment.departmentOrgUnitId)} /{' '}
-                {displayUnitName(orgUnits, assignment.teamOrgUnitId)} /{' '}
-                {displayUnitName(orgUnits, assignment.positionOrgUnitId)}
+                <div className="font-medium">
+                  {assignment.assignmentId === selectedAssignmentId ? 'Selected: ' : ''}
+                  {displayUnitName(orgUnits, assignment.siteOrgUnitId)} /{' '}
+                  {displayUnitName(orgUnits, assignment.departmentOrgUnitId)} /{' '}
+                  {displayUnitName(orgUnits, assignment.teamOrgUnitId)} /{' '}
+                  {displayUnitName(orgUnits, assignment.positionOrgUnitId)}
+                </div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {assignment.isPrimary ? 'Primary placement · ' : ''}
+                  {humanize(assignment.status)}
+                  {assignment.effectiveAt ? ` · effective ${formatWhen(assignment.effectiveAt)}` : ''}
+                  {assignment.endsAt ? ` · ends ${formatWhen(assignment.endsAt)}` : ''}
+                </div>
+                {assignment.reason ? (
+                  <div className="mt-1 text-xs text-slate-500">{assignment.reason}</div>
+                ) : null}
               </button>
-              <span className="text-xs uppercase tracking-wide text-slate-500">{assignment.status}</span>
+              <span className="text-xs uppercase tracking-wide text-slate-500">
+                {assignment.status}
+              </span>
             </li>
           ))}
         </ul>
       ) : null}
 
       {canManage && !isLoading && !isError ? (
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <form className="space-y-3" onSubmit={handleCreate}>
-            <h3 className="text-sm font-medium text-slate-300">Create assignment</h3>
+        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+          <form className="space-y-4" onSubmit={handleCreate}>
+            <h3 className="text-sm font-medium text-slate-300">Create placement</h3>
             {!hasAllUnitTypes ? (
-              <p className="text-xs text-amber-300">Create active site/department/team/position org units first.</p>
+              <p className="text-xs text-amber-300">
+                Create active/planned site, department, team, and position org units first.
+              </p>
             ) : null}
-            <StaticSearchPicker
-              id="create-assignment-site"
-              label="Site"
-              value={createSiteId}
-              onChange={setCreateSiteId}
-              options={siteOptions}
-              placeholder="Search sites…"
-              testId="create-assignment-site-picker"
-              selectedOption={selectedCreateSiteOption}
-              disabled={!hasAllUnitTypes}
+
+            <PlacementFields
+              draft={createDraft}
+              setDraft={setCreateDraft}
+              options={createOptions}
+              selectedOptions={{
+                site: selectedCreateSiteOption,
+                department: selectedCreateDepartmentOption,
+                team: selectedCreateTeamOption,
+                position: selectedCreatePositionOption,
+              }}
+              prefix="create-assignment"
+              disabled={isSubmitting || !hasAllUnitTypes}
             />
-            <StaticSearchPicker
-              id="create-assignment-department"
-              label="Department"
-              value={createDepartmentId}
-              onChange={setCreateDepartmentId}
-              options={departmentOptions}
-              placeholder="Search departments…"
-              testId="create-assignment-department-picker"
-              selectedOption={selectedCreateDepartmentOption}
-              disabled={!hasAllUnitTypes}
-            />
-            <StaticSearchPicker
-              id="create-assignment-team"
-              label="Team"
-              value={createTeamId}
-              onChange={setCreateTeamId}
-              options={teamOptions}
-              placeholder="Search teams…"
-              testId="create-assignment-team-picker"
-              selectedOption={selectedCreateTeamOption}
-              disabled={!hasAllUnitTypes}
-            />
-            <StaticSearchPicker
-              id="create-assignment-position"
-              label="Position"
-              value={createPositionId}
-              onChange={setCreatePositionId}
-              options={positionOptions}
-              placeholder="Search positions…"
-              testId="create-assignment-position-picker"
-              selectedOption={selectedCreatePositionOption}
-              disabled={!hasAllUnitTypes}
-            />
+
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
               disabled={isSubmitting || !hasAllUnitTypes}
             >
-              {isSubmitting ? 'Saving…' : 'Create assignment'}
+              {isSubmitting ? 'Saving…' : 'Create placement'}
             </button>
           </form>
 
-          <form className="space-y-3" onSubmit={handleUpdate}>
-            <h3 className="text-sm font-medium text-slate-300">Edit selected assignment</h3>
-            {!selected ? <p className="text-sm text-slate-500">Select an assignment from the list to edit.</p> : null}
-            <StaticSearchPicker
-              id="edit-assignment-site"
-              label="Site"
-              value={editSiteId}
-              onChange={setEditSiteId}
-              options={siteOptions}
-              placeholder="Search sites…"
-              testId="edit-assignment-site-picker"
-              selectedOption={selectedEditSiteOption}
-              disabled={!selected}
+          <form className="space-y-4" onSubmit={handleUpdate}>
+            <h3 className="text-sm font-medium text-slate-300">Edit selected placement</h3>
+            {!selected ? (
+              <p className="text-sm text-slate-500">Select a placement from the list to edit.</p>
+            ) : null}
+
+            {editWillTransfer ? (
+              <div className="rounded-lg border border-amber-700/60 bg-amber-950/30 p-3 text-xs text-amber-100">
+                Saving these chain changes will end the current active placement and create a successor row with the
+                new site/department/team/position path.
+              </div>
+            ) : null}
+
+            <PlacementFields
+              draft={editDraft}
+              setDraft={setEditDraft}
+              options={editOptions}
+              selectedOptions={{
+                site: selectedEditSiteOption,
+                department: selectedEditDepartmentOption,
+                team: selectedEditTeamOption,
+                position: selectedEditPositionOption,
+              }}
+              prefix="edit-assignment"
+              disabled={!selected || isSubmitting || selected?.status === 'ended' || selected?.status === 'canceled'}
             />
-            <StaticSearchPicker
-              id="edit-assignment-department"
-              label="Department"
-              value={editDepartmentId}
-              onChange={setEditDepartmentId}
-              options={departmentOptions}
-              placeholder="Search departments…"
-              testId="edit-assignment-department-picker"
-              selectedOption={selectedEditDepartmentOption}
-              disabled={!selected}
-            />
-            <StaticSearchPicker
-              id="edit-assignment-team"
-              label="Team"
-              value={editTeamId}
-              onChange={setEditTeamId}
-              options={teamOptions}
-              placeholder="Search teams…"
-              testId="edit-assignment-team-picker"
-              selectedOption={selectedEditTeamOption}
-              disabled={!selected}
-            />
-            <StaticSearchPicker
-              id="edit-assignment-position"
-              label="Position"
-              value={editPositionId}
-              onChange={setEditPositionId}
-              options={positionOptions}
-              placeholder="Search positions…"
-              testId="edit-assignment-position-picker"
-              selectedOption={selectedEditPositionOption}
-              disabled={!selected}
-            />
-            <div className="flex gap-3">
+
+            <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
                 className="rounded bg-slate-700 px-3 py-2 text-sm text-white disabled:opacity-50"
-                disabled={!selected || isSubmitting}
+                disabled={!selected || isSubmitting || selected?.status === 'ended' || selected?.status === 'canceled'}
               >
                 Save changes
               </button>
-              <button
-                type="button"
-                className="rounded bg-amber-700 px-3 py-2 text-sm text-white disabled:opacity-50"
-                onClick={() =>
-                  selected
-                    ? onStatusChange(selected.assignmentId, selected.status === 'active' ? 'inactive' : 'active')
-                    : null
-                }
-                disabled={!selected || isSubmitting}
-              >
-                {selected?.status === 'active' ? 'Deactivate' : 'Activate'}
-              </button>
+              {selected?.status === 'planned' ? (
+                <>
+                  <button
+                    type="button"
+                    className="rounded border border-emerald-700 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
+                    onClick={() =>
+                      onStatusChange(selected.assignmentId, {
+                        status: 'active',
+                        reason: editDraft.reason.trim() || null,
+                      })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    Activate now
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded border border-amber-700 px-3 py-2 text-sm text-amber-200 disabled:opacity-50"
+                    onClick={() =>
+                      onStatusChange(selected.assignmentId, {
+                        status: 'canceled',
+                        endsAt: toIsoDateTime(editDraft.endsAt) ?? toIsoDateTime(editDraft.effectiveAt),
+                        reason: editDraft.reason.trim() || null,
+                      })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    Cancel placement
+                  </button>
+                </>
+              ) : null}
+              {selected?.status === 'active' ? (
+                <button
+                  type="button"
+                  className="rounded border border-amber-700 px-3 py-2 text-sm text-amber-200 disabled:opacity-50"
+                  onClick={() =>
+                    onStatusChange(selected.assignmentId, {
+                      status: 'ended',
+                      endsAt: toIsoDateTime(editDraft.endsAt),
+                      reason: editDraft.reason.trim() || null,
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  End placement
+                </button>
+              ) : null}
             </div>
           </form>
         </div>
@@ -365,5 +524,196 @@ export function PersonOrgAssignmentsManager({
         <p className="mt-4 text-xs text-slate-500">Your role does not include org assignment write permission.</p>
       ) : null}
     </section>
+  )
+}
+
+function PlacementFields({
+  draft,
+  setDraft,
+  options,
+  selectedOptions,
+  prefix,
+  disabled,
+}: {
+  draft: AssignmentDraft
+  setDraft: Dispatch<SetStateAction<AssignmentDraft>>
+  options: ReturnType<typeof buildPlacementOptions>
+  selectedOptions: {
+    site: PickerOption | undefined
+    department: PickerOption | undefined
+    team: PickerOption | undefined
+    position: PickerOption | undefined
+  }
+  prefix: string
+  disabled: boolean
+}) {
+  const siteOptions = useMemo(() => toPickerOptions(options.sites), [options.sites])
+  const departmentOptions = useMemo(() => toPickerOptions(options.departments), [options.departments])
+  const teamOptions = useMemo(() => toPickerOptions(options.teams), [options.teams])
+  const positionOptions = useMemo(() => toPickerOptions(options.positions), [options.positions])
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block text-sm text-slate-300">
+          Placement status
+          <select
+            value={draft.status}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                status: event.target.value as EditableAssignmentStatus,
+              }))
+            }
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            disabled={disabled}
+          >
+            <option value="active">Active</option>
+            <option value="planned">Planned</option>
+          </select>
+        </label>
+
+        <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={draft.isPrimary}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, isPrimary: event.target.checked }))
+            }
+            disabled={disabled}
+          />
+          Primary placement
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          Effective at
+          <input
+            type="datetime-local"
+            value={draft.effectiveAt}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, effectiveAt: event.target.value }))
+            }
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            disabled={disabled}
+          />
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          Ends at
+          <input
+            type="datetime-local"
+            value={draft.endsAt}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, endsAt: event.target.value }))
+            }
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            disabled={disabled}
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block text-sm text-slate-300">
+          Site
+          <div className="mt-1">
+            <StaticSearchPicker
+              id={`${prefix}-site`}
+              label="Site"
+              value={draft.siteOrgUnitId}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  siteOrgUnitId: value,
+                  departmentOrgUnitId: '',
+                  teamOrgUnitId: '',
+                  positionOrgUnitId: '',
+                }))
+              }
+              options={siteOptions}
+              placeholder="Search sites…"
+              testId={`${prefix}-site-picker`}
+              selectedOption={selectedOptions.site}
+              disabled={disabled}
+            />
+          </div>
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          Department
+          <div className="mt-1">
+            <StaticSearchPicker
+              id={`${prefix}-department`}
+              label="Department"
+              value={draft.departmentOrgUnitId}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  departmentOrgUnitId: value,
+                  teamOrgUnitId: '',
+                  positionOrgUnitId: '',
+                }))
+              }
+              options={departmentOptions}
+              placeholder="Search departments…"
+              testId={`${prefix}-department-picker`}
+              selectedOption={selectedOptions.department}
+              disabled={disabled}
+            />
+          </div>
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          Team
+          <div className="mt-1">
+            <StaticSearchPicker
+              id={`${prefix}-team`}
+              label="Team"
+              value={draft.teamOrgUnitId}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  teamOrgUnitId: value,
+                  positionOrgUnitId: '',
+                }))
+              }
+              options={teamOptions}
+              placeholder="Search teams…"
+              testId={`${prefix}-team-picker`}
+              selectedOption={selectedOptions.team}
+              disabled={disabled}
+            />
+          </div>
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          Position
+          <div className="mt-1">
+            <StaticSearchPicker
+              id={`${prefix}-position`}
+              label="Position"
+              value={draft.positionOrgUnitId}
+              onChange={(value) =>
+                setDraft((current) => ({ ...current, positionOrgUnitId: value }))
+              }
+              options={positionOptions}
+              placeholder="Search positions…"
+              testId={`${prefix}-position-picker`}
+              selectedOption={selectedOptions.position}
+              disabled={disabled}
+            />
+          </div>
+        </label>
+      </div>
+
+      <label className="block text-sm text-slate-300">
+        Reason
+        <textarea
+          value={draft.reason}
+          onChange={(event) => setDraft((current) => ({ ...current, reason: event.target.value }))}
+          className="mt-1 min-h-24 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+          disabled={disabled}
+        />
+      </label>
+    </div>
   )
 }

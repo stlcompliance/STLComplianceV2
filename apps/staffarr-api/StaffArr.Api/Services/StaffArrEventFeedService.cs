@@ -17,9 +17,14 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         "people.manager_update",
         "org_unit.create",
         "org_unit.update",
+        "org_unit.status_update",
         "org_assignment.create",
         "org_assignment.update",
         "org_assignment.status_update",
+        "person.site_changed",
+        "person.department_changed",
+        "person.team_changed",
+        "person.position_changed",
         "person_role_assignment.create",
         "person_role_assignment.status_update",
         "readiness_override.grant",
@@ -157,23 +162,29 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
     {
         return auditEvent.Action switch
         {
-            "person.create" => "person.created",
-            "person.update" => "person.updated",
+            "person.create" => "staffarr.person.created",
+            "person.update" => "staffarr.person.updated",
             "person.employment_status_update" => ResolvePersonStatusEventKind(auditEvent, peopleById),
-            "people.manager_update" => "person.manager.changed",
-            "org_assignment.create" or "org_assignment.update" or "org_assignment.status_update" => "person.assignment.changed",
+            "people.manager_update" => "staffarr.person.manager_changed",
+            "org_assignment.create" => "staffarr.person.assignment_created",
+            "org_assignment.update" => "staffarr.person.assignment_updated",
+            "org_assignment.status_update" => "staffarr.person.assignment_status_updated",
+            "person.site_changed" => "staffarr.person.site_changed",
+            "person.department_changed" => "staffarr.person.department_changed",
+            "person.team_changed" => "staffarr.person.team_changed",
+            "person.position_changed" => "staffarr.person.position_changed",
             "org_unit.create" => ResolveOrgUnitEventKind(auditEvent, orgUnitsById, "created"),
-            "org_unit.update" => ResolveOrgUnitEventKind(auditEvent, orgUnitsById, "updated"),
-            "person_role_assignment.create" => "permission.assigned",
+            "org_unit.update" or "org_unit.status_update" => ResolveOrgUnitEventKind(auditEvent, orgUnitsById, "updated"),
+            "person_role_assignment.create" => "staffarr.permission.assigned",
             "person_role_assignment.status_update" => ResolvePermissionAssignmentEventKind(auditEvent, roleAssignmentsById),
-            "readiness_override.grant" => "override.created",
+            "readiness_override.grant" => "staffarr.override.created",
             "readiness_override.clear" => ResolveOverrideEventKind(auditEvent, overridesById),
             "incident.status_update" => ResolveIncidentStatusEventKind(auditEvent, incidentsById),
-            "incident.intake" or "incident.product_intake" or "incident.self_report.submitted" => "incident.created",
-            "incident.note.create" => "incident.note.created",
-            "incident.corrective_action.create" => "incident.corrective_action.created",
+            "incident.intake" or "incident.product_intake" or "incident.self_report.submitted" => "staffarr.incident.created",
+            "incident.note.create" => "staffarr.incident.note.created",
+            "incident.corrective_action.create" => "staffarr.incident.corrective_action.created",
             "incident.corrective_action.status_update" => ResolveCorrectiveActionEventKind(auditEvent),
-            "incident.attachment.upload" => "incident.attachment.uploaded",
+            "incident.attachment.upload" => "staffarr.incident.attachment.uploaded",
             _ => null
         };
     }
@@ -186,10 +197,10 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             && peopleById.TryGetValue(personId, out var person)
             && string.Equals(person.EmploymentStatus, "active", StringComparison.OrdinalIgnoreCase))
         {
-            return "person.activated";
+            return "staffarr.person.activated";
         }
 
-        return "person.deactivated";
+        return "staffarr.person.deactivated";
     }
 
     private static string ResolveOrgUnitEventKind(
@@ -198,13 +209,12 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         string suffix)
     {
         if (TryGetTargetId(auditEvent, out var orgUnitId)
-            && orgUnitsById.TryGetValue(orgUnitId, out var orgUnit)
-            && orgUnit.UnitType is "site" or "department" or "position" or "team")
+            && orgUnitsById.TryGetValue(orgUnitId, out var orgUnit))
         {
-            return $"{orgUnit.UnitType}.{suffix}";
+            return $"staffarr.{orgUnit.UnitType}.{suffix}";
         }
 
-        return $"org_unit.{suffix}";
+        return $"staffarr.org_unit.{suffix}";
     }
 
     private static string ResolvePermissionAssignmentEventKind(
@@ -215,10 +225,10 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             && roleAssignmentsById.TryGetValue(assignmentId, out var assignment)
             && string.Equals(assignment.Status, "inactive", StringComparison.OrdinalIgnoreCase))
         {
-            return "permission.revoked";
+            return "staffarr.permission.revoked";
         }
 
-        return "permission.assigned";
+        return "staffarr.permission.assigned";
     }
 
     private static string ResolveOverrideEventKind(
@@ -229,10 +239,10 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             && overridesById.TryGetValue(overrideId, out var readinessOverride)
             && string.Equals(readinessOverride.Status, "active", StringComparison.OrdinalIgnoreCase))
         {
-            return "override.created";
+            return "staffarr.override.created";
         }
 
-        return "override.revoked";
+        return "staffarr.override.revoked";
     }
 
     private static string ResolveIncidentStatusEventKind(
@@ -242,7 +252,7 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         if (!TryGetTargetId(auditEvent, out var incidentId)
             || !incidentsById.TryGetValue(incidentId, out var incident))
         {
-            return "incident.status_updated";
+            return "staffarr.incident.status_updated";
         }
 
         var status = string.IsNullOrWhiteSpace(auditEvent.ReasonCode)
@@ -251,25 +261,25 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
 
         if (string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase))
         {
-            return "incident.closed";
+            return "staffarr.incident.closed";
         }
 
         if (string.Equals(status, "open", StringComparison.OrdinalIgnoreCase))
         {
-            return "incident.reopened";
+            return "staffarr.incident.reopened";
         }
 
-        return "incident.status_updated";
+        return "staffarr.incident.status_updated";
     }
 
     private static string ResolveCorrectiveActionEventKind(StaffArrAuditEvent auditEvent)
     {
         if (string.Equals(auditEvent.ReasonCode, "completed", StringComparison.OrdinalIgnoreCase))
         {
-            return "incident.corrective_action.completed";
+            return "staffarr.incident.corrective_action.completed";
         }
 
-        return "incident.corrective_action.reopened";
+        return "staffarr.incident.corrective_action.reopened";
     }
 
     private static bool TryGetTargetId(StaffArrAuditEvent auditEvent, out Guid targetId) =>

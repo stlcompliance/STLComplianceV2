@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { OrgUnitResponse } from '../api/types'
 import { formatRoleTemplateMutationError, RoleTemplateAssignmentPanel } from './RoleTemplateAssignmentPanel'
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
@@ -30,13 +31,13 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   }
 })
 
-const orgUnits = [
+const orgUnits: OrgUnitResponse[] = [
   {
     orgUnitId: 'site-1',
     unitType: 'site',
     name: 'HQ',
     parentOrgUnitId: null,
-    status: 'active' as const,
+    status: 'active',
   },
 ]
 

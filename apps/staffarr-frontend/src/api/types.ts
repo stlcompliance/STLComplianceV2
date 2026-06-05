@@ -209,6 +209,11 @@ export interface PersonLookupOrgAssignmentResponse {
   positionOrgUnitId: string
   positionName: string
   assignmentPath: string
+  status?: OrgUnitAssignmentStatus
+  isPrimary?: boolean
+  effectiveAt?: string | null
+  endsAt?: string | null
+  reason?: string | null
 }
 
 export interface PersonLookupPlacementResponse {
@@ -233,6 +238,45 @@ export interface PersonLookupResponse {
   placement: PersonLookupPlacementResponse
   lookedUpAt: string
 }
+
+export type OrgUnitType =
+  | 'company'
+  | 'division'
+  | 'region'
+  | 'business_unit'
+  | 'cost_center'
+  | 'site'
+  | 'department'
+  | 'team'
+  | 'position'
+  | 'other'
+
+export type OrgUnitStatus = 'planned' | 'active' | 'inactive' | 'archived'
+
+export type OrgUnitSiteType =
+  | 'office'
+  | 'warehouse'
+  | 'plant'
+  | 'shop'
+  | 'yard'
+  | 'terminal'
+  | 'customer_embedded'
+  | 'mixed'
+  | 'other'
+
+export type OrgUnitTeamType =
+  | 'operational'
+  | 'maintenance'
+  | 'warehouse'
+  | 'dispatch'
+  | 'safety'
+  | 'quality'
+  | 'training'
+  | 'admin'
+  | 'project'
+  | 'emergency_response'
+
+export type OrgUnitAssignmentStatus = 'planned' | 'active' | 'ended' | 'canceled'
 
 export interface CreateStaffPersonRequest {
   legalFirstName?: string | null
@@ -484,10 +528,25 @@ export interface StaffArrWorkerRunsResponse {
 
 export interface OrgUnitResponse {
   orgUnitId: string
-  unitType: string
+  unitType: OrgUnitType
   name: string
   parentOrgUnitId: string | null
-  status: 'active' | 'inactive'
+  status: OrgUnitStatus
+  description?: string | null
+  managerPersonId?: string | null
+  effectiveStartDate?: string | null
+  effectiveEndDate?: string | null
+  siteType?: OrgUnitSiteType | null
+  timezone?: string | null
+  phone?: string | null
+  emergencyContact?: string | null
+  teamType?: OrgUnitTeamType | null
+  positionCode?: string | null
+  defaultSiteOrgUnitId?: string | null
+  complianceSensitive?: boolean
+  safetySensitive?: boolean
+  canSupervise?: boolean
+  canApprove?: boolean
 }
 
 export interface StaffArrIntegrationLocationResponse {
@@ -505,19 +564,51 @@ export interface StaffArrIntegrationLocationResponse {
 }
 
 export interface CreateOrgUnitRequest {
-  unitType: string
+  unitType: OrgUnitType
   name: string
   parentOrgUnitId: string | null
+  description?: string | null
+  managerPersonId?: string | null
+  effectiveStartDate?: string | null
+  effectiveEndDate?: string | null
+  siteType?: OrgUnitSiteType | null
+  timezone?: string | null
+  phone?: string | null
+  emergencyContact?: string | null
+  teamType?: OrgUnitTeamType | null
+  positionCode?: string | null
+  defaultSiteOrgUnitId?: string | null
+  complianceSensitive?: boolean
+  safetySensitive?: boolean
+  canSupervise?: boolean
+  canApprove?: boolean
+  status?: OrgUnitStatus | null
 }
 
 export interface UpdateOrgUnitRequest {
-  unitType: string
+  unitType: OrgUnitType
   name: string
   parentOrgUnitId: string | null
+  description?: string | null
+  managerPersonId?: string | null
+  effectiveStartDate?: string | null
+  effectiveEndDate?: string | null
+  siteType?: OrgUnitSiteType | null
+  timezone?: string | null
+  phone?: string | null
+  emergencyContact?: string | null
+  teamType?: OrgUnitTeamType | null
+  positionCode?: string | null
+  defaultSiteOrgUnitId?: string | null
+  complianceSensitive?: boolean
+  safetySensitive?: boolean
+  canSupervise?: boolean
+  canApprove?: boolean
+  status?: OrgUnitStatus | null
 }
 
 export interface UpdateOrgUnitStatusRequest {
-  status: 'active' | 'inactive'
+  status: OrgUnitStatus
 }
 
 export interface OrgUnitAssignmentResponse {
@@ -527,9 +618,13 @@ export interface OrgUnitAssignmentResponse {
   departmentOrgUnitId: string
   teamOrgUnitId: string
   positionOrgUnitId: string
-  status: 'active' | 'inactive'
+  status: OrgUnitAssignmentStatus
   createdAt: string
   updatedAt: string
+  isPrimary?: boolean
+  effectiveAt?: string | null
+  endsAt?: string | null
+  reason?: string | null
 }
 
 export interface CreateOrgUnitAssignmentRequest {
@@ -537,6 +632,11 @@ export interface CreateOrgUnitAssignmentRequest {
   departmentOrgUnitId: string
   teamOrgUnitId: string
   positionOrgUnitId: string
+  status?: OrgUnitAssignmentStatus
+  isPrimary?: boolean | null
+  effectiveAt?: string | null
+  endsAt?: string | null
+  reason?: string | null
 }
 
 export interface UpdateOrgUnitAssignmentRequest {
@@ -544,10 +644,17 @@ export interface UpdateOrgUnitAssignmentRequest {
   departmentOrgUnitId: string
   teamOrgUnitId: string
   positionOrgUnitId: string
+  status?: OrgUnitAssignmentStatus
+  isPrimary?: boolean | null
+  effectiveAt?: string | null
+  endsAt?: string | null
+  reason?: string | null
 }
 
 export interface UpdateOrgUnitAssignmentStatusRequest {
-  status: 'active' | 'inactive'
+  status: OrgUnitAssignmentStatus
+  endsAt?: string | null
+  reason?: string | null
 }
 
 export interface UpdatePersonManagerRequest {

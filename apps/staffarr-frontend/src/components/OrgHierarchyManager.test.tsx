@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { OrgUnitResponse } from '../api/types'
 import { canManageOrgHierarchy, OrgHierarchyManager } from './OrgHierarchyManager'
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
@@ -36,20 +37,27 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   }
 })
 
-const sampleOrgUnits = [
+const sampleOrgUnits: OrgUnitResponse[] = [
+  {
+    orgUnitId: '00000000-0000-0000-0000-000000000000',
+    unitType: 'site',
+    name: 'North Site',
+    parentOrgUnitId: null,
+    status: 'active',
+  },
   {
     orgUnitId: '11111111-1111-1111-1111-111111111111',
     unitType: 'department',
     name: 'Operations',
-    parentOrgUnitId: null,
-    status: 'active' as const,
+    parentOrgUnitId: '00000000-0000-0000-0000-000000000000',
+    status: 'active',
   },
   {
     orgUnitId: '22222222-2222-2222-2222-222222222222',
     unitType: 'team',
     name: 'Field Team',
     parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
-    status: 'active' as const,
+    status: 'active',
   },
 ]
 
@@ -124,14 +132,30 @@ describe('OrgHierarchyManager', () => {
       target: { value: 'Safety' },
     })
     fireEvent.change(screen.getByTestId('create-org-unit-parent'), {
-      target: { value: '11111111-1111-1111-1111-111111111111' },
+      target: { value: '00000000-0000-0000-0000-000000000000' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
     expect(onCreate).toHaveBeenCalledWith({
       unitType: 'department',
       name: 'Safety',
-      parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
+      parentOrgUnitId: '00000000-0000-0000-0000-000000000000',
+      description: null,
+      managerPersonId: null,
+      effectiveStartDate: null,
+      effectiveEndDate: null,
+      siteType: null,
+      timezone: null,
+      phone: null,
+      emergencyContact: null,
+      teamType: null,
+      positionCode: null,
+      defaultSiteOrgUnitId: null,
+      complianceSensitive: false,
+      safetySensitive: false,
+      canSupervise: false,
+      canApprove: false,
+      status: 'planned',
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Field Team' }))
@@ -147,6 +171,22 @@ describe('OrgHierarchyManager', () => {
       unitType: 'team',
       name: 'Field Ops',
       parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
+      description: null,
+      managerPersonId: null,
+      effectiveStartDate: null,
+      effectiveEndDate: null,
+      siteType: null,
+      timezone: null,
+      phone: null,
+      emergencyContact: null,
+      teamType: null,
+      positionCode: null,
+      defaultSiteOrgUnitId: null,
+      complianceSensitive: false,
+      safetySensitive: false,
+      canSupervise: false,
+      canApprove: false,
+      status: 'active',
     })
   })
 

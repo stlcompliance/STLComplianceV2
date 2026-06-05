@@ -22,7 +22,11 @@ public sealed class WorkforceOnboardingJourneyService(
         CancellationToken cancellationToken = default)
     {
         var person = await peopleService.GetByIdAsync(tenantId, personId, cancellationToken);
-        var hasActiveOrgPlacement = await HasActiveOrgPlacementAsync(tenantId, personId, person.PrimaryOrgUnitId, cancellationToken);
+        var orgPlacementState = await GetOrgPlacementStateAsync(
+            tenantId,
+            personId,
+            person.PrimaryOrgUnitId,
+            cancellationToken);
         var permissionProjection = await roleTemplateService.ComputeEffectivePermissionProjectionAsync(
             tenantId,
             personId,
@@ -72,14 +76,16 @@ public sealed class WorkforceOnboardingJourneyService(
                 "Primary org unit or active site/department/team assignment.",
                 !employmentActive
                     ? "blocked"
-                    : hasActiveOrgPlacement
+                    : orgPlacementState.HasActivePlacement || orgPlacementState.HasLegacyPrimarySnapshot
                         ? "complete"
                         : "pending",
                 !employmentActive
                     ? "Resolve employment status first."
-                    : hasActiveOrgPlacement
+                    : orgPlacementState.HasActivePlacement || orgPlacementState.HasLegacyPrimarySnapshot
                         ? null
-                        : "Assign a primary org unit or create an org assignment."),
+                        : orgPlacementState.HasPlannedPlacement
+                            ? "A planned placement exists; activate it before operational assignment."
+                            : "Assign a primary org unit or create an org assignment."),
             BuildStep(
                 "permissions_assigned",
                 "Permissions assigned",
@@ -211,21 +217,48 @@ public sealed class WorkforceOnboardingJourneyService(
         string eventKind) =>
         items?.Any(x => string.Equals(x.EventKind, eventKind, StringComparison.OrdinalIgnoreCase)) == true;
 
-    private async Task<bool> HasActiveOrgPlacementAsync(
+    private async Task<OrgPlacementState> GetOrgPlacementStateAsync(
         Guid tenantId,
         Guid personId,
         Guid? primaryOrgUnitId,
         CancellationToken cancellationToken)
     {
-        if (primaryOrgUnitId.HasValue)
+        var selectableStatuses = await db.OrgUnitAssignments
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && (x.Status == "planned" || x.Status == "active"))
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenByDescending(x => x.Status == "active")
+            .ThenByDescending(x => x.EffectiveAt)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        if (selectableStatuses.Contains("active"))
         {
-            return true;
+            return new OrgPlacementState(
+                HasActivePlacement: true,
+                HasPlannedPlacement: selectableStatuses.Contains("planned"),
+                HasLegacyPrimarySnapshot: primaryOrgUnitId.HasValue);
         }
 
-        return await db.OrgUnitAssignments.AsNoTracking().AnyAsync(
-            x => x.TenantId == tenantId
-                && x.PersonId == personId
-                && x.Status == "active",
-            cancellationToken);
+        if (selectableStatuses.Contains("planned"))
+        {
+            return new OrgPlacementState(
+                HasActivePlacement: false,
+                HasPlannedPlacement: true,
+                HasLegacyPrimarySnapshot: false);
+        }
+
+        return new OrgPlacementState(
+            HasActivePlacement: false,
+            HasPlannedPlacement: false,
+            HasLegacyPrimarySnapshot: primaryOrgUnitId.HasValue);
     }
+
+    private sealed record OrgPlacementState(
+        bool HasActivePlacement,
+        bool HasPlannedPlacement,
+        bool HasLegacyPrimarySnapshot);
 }

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { OrgUnitAssignmentResponse, OrgUnitResponse } from '../api/types'
 import { formatAssignmentMutationError, PersonOrgAssignmentsManager } from './PersonOrgAssignmentsManager'
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
@@ -38,14 +39,14 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   }
 })
 
-const orgUnits = [
-  { orgUnitId: 's1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' as const },
-  { orgUnitId: 'd1', unitType: 'department', name: 'Ops', parentOrgUnitId: 's1', status: 'active' as const },
-  { orgUnitId: 't1', unitType: 'team', name: 'Field Team', parentOrgUnitId: 'd1', status: 'active' as const },
-  { orgUnitId: 'p1', unitType: 'position', name: 'Operator', parentOrgUnitId: 't1', status: 'active' as const },
+const orgUnits: OrgUnitResponse[] = [
+  { orgUnitId: 's1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
+  { orgUnitId: 'd1', unitType: 'department', name: 'Ops', parentOrgUnitId: 's1', status: 'active' },
+  { orgUnitId: 't1', unitType: 'team', name: 'Field Team', parentOrgUnitId: 'd1', status: 'active' },
+  { orgUnitId: 'p1', unitType: 'position', name: 'Operator', parentOrgUnitId: 't1', status: 'active' },
 ]
 
-const assignments = [
+const assignments: OrgUnitAssignmentResponse[] = [
   {
     assignmentId: 'a1',
     personId: 'person-1',
@@ -53,9 +54,13 @@ const assignments = [
     departmentOrgUnitId: 'd1',
     teamOrgUnitId: 't1',
     positionOrgUnitId: 'p1',
-    status: 'active' as const,
+    status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    isPrimary: true,
+    effectiveAt: null,
+    endsAt: null,
+    reason: null,
   },
 ]
 
@@ -110,10 +115,14 @@ describe('PersonOrgAssignmentsManager', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'North Site / Ops / Field Team / Operator' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }))
+    fireEvent.click(screen.getByRole('button', { name: /North Site \/ Ops \/ Field Team \/ Operator/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'End placement' }))
 
-    expect(onStatusChange).toHaveBeenCalledWith('a1', 'inactive')
+    expect(onStatusChange).toHaveBeenCalledWith('a1', {
+      status: 'ended',
+      endsAt: null,
+      reason: null,
+    })
   })
 
   it('creates an assignment through the searchable org-unit pickers', async () => {
@@ -142,13 +151,18 @@ describe('PersonOrgAssignmentsManager', () => {
     fireEvent.change(screen.getByTestId('create-assignment-department-picker'), { target: { value: 'd1' } })
     fireEvent.change(screen.getByTestId('create-assignment-team-picker'), { target: { value: 't1' } })
     fireEvent.change(screen.getByTestId('create-assignment-position-picker'), { target: { value: 'p1' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Create assignment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create placement' }))
 
     expect(onCreate).toHaveBeenCalledWith({
       siteOrgUnitId: 's1',
       departmentOrgUnitId: 'd1',
       teamOrgUnitId: 't1',
       positionOrgUnitId: 'p1',
+      status: 'active',
+      isPrimary: true,
+      effectiveAt: null,
+      endsAt: null,
+      reason: null,
     })
   })
 
@@ -174,7 +188,7 @@ describe('PersonOrgAssignmentsManager', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'North Site / Ops / Field Team / Operator' }))
+    fireEvent.click(screen.getByRole('button', { name: /North Site \/ Ops \/ Field Team \/ Operator/i }))
     expect((screen.getByTestId('edit-assignment-site-picker') as HTMLInputElement).value).toBe('s1')
     expect((screen.getByTestId('edit-assignment-department-picker') as HTMLInputElement).value).toBe('d1')
     expect((screen.getByTestId('edit-assignment-team-picker') as HTMLInputElement).value).toBe('t1')

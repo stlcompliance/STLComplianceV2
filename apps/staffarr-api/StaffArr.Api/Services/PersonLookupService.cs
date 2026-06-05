@@ -144,13 +144,19 @@ public sealed class PersonLookupService(StaffArrDbContext db)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        var activeAssignments = await db.OrgUnitAssignments
+        var selectableAssignments = await db.OrgUnitAssignments
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active")
-            .OrderByDescending(x => x.UpdatedAt)
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && (x.Status == "planned" || x.Status == "active"))
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenByDescending(x => x.Status == "active")
+            .ThenByDescending(x => x.EffectiveAt)
+            .ThenByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
 
-        var orgUnitIds = activeAssignments
+        var orgUnitIds = selectableAssignments
             .SelectMany(x => new[] { x.SiteOrgUnitId, x.DepartmentOrgUnitId, x.TeamOrgUnitId, x.PositionOrgUnitId })
             .Distinct()
             .ToArray();
@@ -166,7 +172,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
                 .Where(x => x.TenantId == tenantId && orgUnitIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id, x => (x.Name, x.UnitType), cancellationToken);
 
-        var assignmentResponses = activeAssignments
+        var assignmentResponses = selectableAssignments
             .Select(assignment => MapAssignment(assignment, orgUnitsById))
             .ToList();
 
@@ -209,7 +215,12 @@ public sealed class PersonLookupService(StaffArrDbContext db)
             teamName,
             assignment.PositionOrgUnitId,
             positionName,
-            string.Join(" / ", siteName, departmentName, teamName, positionName));
+            string.Join(" / ", siteName, departmentName, teamName, positionName),
+            assignment.Status,
+            assignment.IsPrimary,
+            assignment.EffectiveAt,
+            assignment.EndsAt,
+            assignment.Reason);
     }
 
     private static string ResolveOrgUnitName(

@@ -46,21 +46,24 @@ export function OrgSection({ state }: Props) {
               ? getErrorMessage(s.assignmentMutationError, 'Failed to save org assignments.')
               : null
           }
-          onCreate={async (payload) => {
-            await s.createAssignmentMutation.mutateAsync({ personId: s.selectedPerson!.personId, ...payload })
+          onCreate={async (request) => {
+            await s.createAssignmentMutation.mutateAsync({
+              personId: s.selectedPerson!.personId,
+              request,
+            })
           }}
-          onUpdate={async (assignmentId, payload) => {
+          onUpdate={async (assignmentId, request) => {
             await s.updateAssignmentMutation.mutateAsync({
               personId: s.selectedPerson!.personId,
               assignmentId,
-              ...payload,
+              request,
             })
           }}
-          onStatusChange={async (assignmentId, status) => {
+          onStatusChange={async (assignmentId, request) => {
             await s.updateAssignmentStatusMutation.mutateAsync({
               personId: s.selectedPerson!.personId,
               assignmentId,
-              status,
+              request,
             })
           }}
         />
@@ -126,6 +129,10 @@ export function OrgSection({ state }: Props) {
 
       <OrgHierarchyManager
         orgUnits={s.orgUnits}
+        peopleOptions={s.people.map((person) => ({
+          personId: person.personId,
+          displayName: person.displayName,
+        }))}
         isLoading={s.orgUnitsQuery.isLoading}
         isError={s.orgUnitsQuery.isError}
         readErrorMessage={
@@ -149,8 +156,8 @@ export function OrgSection({ state }: Props) {
         onCreate={async (payload) => {
           await s.createOrgUnitMutation.mutateAsync(payload)
         }}
-        onUpdate={async (orgUnitId, payload) => {
-          await s.updateOrgUnitMutation.mutateAsync({ orgUnitId, ...payload })
+        onUpdate={async (orgUnitId, request) => {
+          await s.updateOrgUnitMutation.mutateAsync({ orgUnitId, request })
         }}
         onStatusChange={async (orgUnitId, status) => {
           await s.updateOrgUnitStatusMutation.mutateAsync({ orgUnitId, status })

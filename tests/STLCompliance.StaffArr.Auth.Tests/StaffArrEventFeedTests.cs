@@ -94,17 +94,17 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
 
         var feed = (await response.Content.ReadFromJsonAsync<StaffArrEventFeedResponse>())!;
         Assert.True(feed.TotalCount >= 5);
-        Assert.Contains(feed.Items, x => x.EventKind == "person.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "person.activated");
-        Assert.Contains(feed.Items, x => x.EventKind == "site.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "permission.revoked");
-        Assert.Contains(feed.Items, x => x.EventKind == "override.revoked");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.note.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.corrective_action.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.corrective_action.completed");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.attachment.uploaded");
-        Assert.Contains(feed.Items, x => x.EventKind == "incident.closed");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.person.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.person.activated");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.site.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.permission.revoked");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.override.revoked");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.note.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.corrective_action.created");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.corrective_action.completed");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.attachment.uploaded");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.closed");
     }
 
     [Fact]

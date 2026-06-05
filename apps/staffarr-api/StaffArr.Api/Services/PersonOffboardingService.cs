@@ -198,17 +198,27 @@ public sealed class PersonOffboardingService(
                 cancellationToken);
         }
 
-        var activeOrgAssignments = await db.OrgUnitAssignments
-            .Where(x => x.TenantId == tenantId && x.PersonId == record.PersonId && x.Status == "active")
+        var selectableOrgAssignments = await db.OrgUnitAssignments
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == record.PersonId
+                && (x.Status == "planned" || x.Status == "active"))
             .ToListAsync(cancellationToken);
-        foreach (var assignment in activeOrgAssignments)
+        foreach (var assignment in selectableOrgAssignments)
         {
+            var terminalStatus = string.Equals(assignment.Status, "planned", StringComparison.OrdinalIgnoreCase)
+                ? "canceled"
+                : "ended";
+            var endsAt = string.Equals(assignment.Status, "planned", StringComparison.OrdinalIgnoreCase)
+                ? assignment.EffectiveAt > now ? assignment.EffectiveAt : now
+                : now;
+
             await orgUnitAssignmentService.UpdateStatusAsync(
                 tenantId,
                 actorUserId,
                 record.PersonId,
                 assignment.Id,
-                new UpdateOrgUnitAssignmentStatusRequest("inactive"),
+                new UpdateOrgUnitAssignmentStatusRequest(terminalStatus, endsAt, "Workforce offboarding"),
                 cancellationToken);
         }
 
@@ -217,7 +227,7 @@ public sealed class PersonOffboardingService(
             OffboardingStepKeys.EndOrgAssignments,
             actorUserId,
             now,
-            $"Ended {activeOrgAssignments.Count} org assignment(s).",
+            $"Closed {selectableOrgAssignments.Count} planned/active org assignment(s).",
             cancellationToken);
 
         var activeRoleAssignments = await db.PersonRoleAssignments
@@ -391,7 +401,7 @@ public sealed class PersonOffboardingService(
                 OffboardingStepKeys.EndOrgAssignments,
                 3,
                 "End org assignments",
-                $"End {context.ActiveOrgAssignmentCount} active site/department/team assignment(s).",
+                $"Close {context.ActiveOrgAssignmentCount} planned/active site/department/team assignment(s).",
                 OffboardingStepStatuses.Pending,
                 null,
                 now),
@@ -536,7 +546,10 @@ public sealed class PersonOffboardingService(
                 && (x.ExpiresAt == null || x.ExpiresAt > now),
             cancellationToken);
         var activeOrgAssignmentCount = await db.OrgUnitAssignments.CountAsync(
-            x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active",
+            x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && (x.Status == "planned" || x.Status == "active"),
             cancellationToken);
 
         return new OffboardingContext(

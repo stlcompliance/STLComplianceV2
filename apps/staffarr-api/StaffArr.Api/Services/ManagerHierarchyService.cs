@@ -367,12 +367,18 @@ public sealed class ManagerHierarchyService(
             .Where(x => x.TenantId == tenantId && managerIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, x => x.DisplayName, cancellationToken);
 
-        var activeAssignments = await db.OrgUnitAssignments
+        var selectableAssignments = await db.OrgUnitAssignments
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.Status == "active" && personIds.Contains(x.PersonId))
-            .OrderByDescending(x => x.UpdatedAt)
+            .Where(x =>
+                x.TenantId == tenantId
+                && personIds.Contains(x.PersonId)
+                && (x.Status == "planned" || x.Status == "active"))
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenByDescending(x => x.Status == "active")
+            .ThenByDescending(x => x.EffectiveAt)
+            .ThenByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
-        var assignmentByPersonId = activeAssignments
+        var assignmentByPersonId = selectableAssignments
             .GroupBy(x => x.PersonId)
             .ToDictionary(x => x.Key, x => x.First());
 

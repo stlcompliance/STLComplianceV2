@@ -143,17 +143,64 @@ public sealed record OrgUnitResponse(
     string UnitType,
     string Name,
     Guid? ParentOrgUnitId,
-    string Status);
+    string Status,
+    string? Description = null,
+    Guid? ManagerPersonId = null,
+    DateTimeOffset? EffectiveStartDate = null,
+    DateTimeOffset? EffectiveEndDate = null,
+    string? SiteType = null,
+    string? Timezone = null,
+    string? Phone = null,
+    string? EmergencyContact = null,
+    string? TeamType = null,
+    string? PositionCode = null,
+    Guid? DefaultSiteOrgUnitId = null,
+    bool ComplianceSensitive = false,
+    bool SafetySensitive = false,
+    bool CanSupervise = false,
+    bool CanApprove = false);
 
 public sealed record CreateOrgUnitRequest(
     string UnitType,
     string Name,
-    Guid? ParentOrgUnitId);
+    Guid? ParentOrgUnitId,
+    string? Description = null,
+    Guid? ManagerPersonId = null,
+    DateTimeOffset? EffectiveStartDate = null,
+    DateTimeOffset? EffectiveEndDate = null,
+    string? SiteType = null,
+    string? Timezone = null,
+    string? Phone = null,
+    string? EmergencyContact = null,
+    string? TeamType = null,
+    string? PositionCode = null,
+    Guid? DefaultSiteOrgUnitId = null,
+    bool ComplianceSensitive = false,
+    bool SafetySensitive = false,
+    bool CanSupervise = false,
+    bool CanApprove = false,
+    string? Status = null);
 
 public sealed record UpdateOrgUnitRequest(
     string UnitType,
     string Name,
-    Guid? ParentOrgUnitId);
+    Guid? ParentOrgUnitId,
+    string? Description = null,
+    Guid? ManagerPersonId = null,
+    DateTimeOffset? EffectiveStartDate = null,
+    DateTimeOffset? EffectiveEndDate = null,
+    string? SiteType = null,
+    string? Timezone = null,
+    string? Phone = null,
+    string? EmergencyContact = null,
+    string? TeamType = null,
+    string? PositionCode = null,
+    Guid? DefaultSiteOrgUnitId = null,
+    bool ComplianceSensitive = false,
+    bool SafetySensitive = false,
+    bool CanSupervise = false,
+    bool CanApprove = false,
+    string? Status = null);
 
 public sealed record UpdateOrgUnitStatusRequest(
     string Status);
@@ -167,22 +214,38 @@ public sealed record OrgUnitAssignmentResponse(
     Guid PositionOrgUnitId,
     string Status,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    bool IsPrimary = false,
+    DateTimeOffset? EffectiveAt = null,
+    DateTimeOffset? EndsAt = null,
+    string? Reason = null);
 
 public sealed record CreateOrgUnitAssignmentRequest(
     Guid SiteOrgUnitId,
     Guid DepartmentOrgUnitId,
     Guid TeamOrgUnitId,
-    Guid PositionOrgUnitId);
+    Guid PositionOrgUnitId,
+    string Status = "active",
+    bool? IsPrimary = null,
+    DateTimeOffset? EffectiveAt = null,
+    DateTimeOffset? EndsAt = null,
+    string? Reason = null);
 
 public sealed record UpdateOrgUnitAssignmentRequest(
     Guid SiteOrgUnitId,
     Guid DepartmentOrgUnitId,
     Guid TeamOrgUnitId,
-    Guid PositionOrgUnitId);
+    Guid PositionOrgUnitId,
+    string Status = "active",
+    bool? IsPrimary = null,
+    DateTimeOffset? EffectiveAt = null,
+    DateTimeOffset? EndsAt = null,
+    string? Reason = null);
 
 public sealed record UpdateOrgUnitAssignmentStatusRequest(
-    string Status);
+    string Status,
+    DateTimeOffset? EndsAt = null,
+    string? Reason = null);
 
 public sealed record UpdatePersonManagerRequest(
     Guid? ManagerPersonId);

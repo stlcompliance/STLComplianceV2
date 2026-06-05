@@ -10,7 +10,12 @@ public sealed record PersonLookupOrgAssignmentResponse(
     string TeamName,
     Guid PositionOrgUnitId,
     string PositionName,
-    string AssignmentPath);
+    string AssignmentPath,
+    string Status = "active",
+    bool IsPrimary = false,
+    DateTimeOffset? EffectiveAt = null,
+    DateTimeOffset? EndsAt = null,
+    string? Reason = null);
 
 public sealed record PersonLookupPlacementResponse(
     Guid? PrimaryOrgUnitId,

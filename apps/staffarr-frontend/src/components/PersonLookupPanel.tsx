@@ -98,9 +98,9 @@ export function PersonLookupPanel({
           </div>
 
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Active assignments</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Placements</h3>
             {lookup.placement.activeAssignments.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-400">No active site/department/team assignments.</p>
+              <p className="mt-3 text-sm text-slate-400">No planned or active site/department/team assignments.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {lookup.placement.activeAssignments.map((assignment) => (
@@ -108,7 +108,12 @@ export function PersonLookupPanel({
                     key={assignment.assignmentId}
                     className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-sm text-slate-200"
                   >
-                    {assignment.assignmentPath}
+                    <div>{assignment.assignmentPath}</div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      {assignment.isPrimary ? 'Primary · ' : ''}
+                      {assignment.status}
+                      {assignment.effectiveAt ? ` · effective ${new Date(assignment.effectiveAt).toLocaleString()}` : ''}
+                    </div>
                   </li>
                 ))}
               </ul>

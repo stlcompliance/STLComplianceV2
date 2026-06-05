@@ -20,6 +20,14 @@ public sealed class OrgUnitAssignment : IHasTenant
 
     public string Status { get; set; } = "active";
 
+    public bool IsPrimary { get; set; }
+
+    public DateTimeOffset EffectiveAt { get; set; }
+
+    public DateTimeOffset? EndsAt { get; set; }
+
+    public string? Reason { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

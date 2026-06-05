@@ -707,13 +707,24 @@ export function PeopleSection({ state }: Props) {
                 : null
             }
             onCreate={async (request) => {
-              await s.createAssignmentMutation.mutateAsync({ personId: selectedPerson.personId, ...request })
+              await s.createAssignmentMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                request,
+              })
             }}
             onUpdate={async (assignmentId, request) => {
-              await s.updateAssignmentMutation.mutateAsync({ personId: selectedPerson.personId, assignmentId, ...request })
+              await s.updateAssignmentMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                assignmentId,
+                request,
+              })
             }}
-            onStatusChange={async (assignmentId, status) => {
-              await s.updateAssignmentStatusMutation.mutateAsync({ personId: selectedPerson.personId, assignmentId, status })
+            onStatusChange={async (assignmentId, request) => {
+              await s.updateAssignmentStatusMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                assignmentId,
+                request,
+              })
             }}
           />
 
