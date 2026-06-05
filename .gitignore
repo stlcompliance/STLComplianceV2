@@ -35,3 +35,12 @@ appsettings.*.local.json
 # TrainArr local evidence uploads
 **/trainarr-evidence/
 **/maintainarr-evidence/
+
+# Render artifacts
+render/binaries/
+**/render/binaries/
+extract/
+**/extract/
+**render-cli-extract
+render.exe
+render-cli.zip

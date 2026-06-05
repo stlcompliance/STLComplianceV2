@@ -829,5 +829,23 @@ services:
           name: compliancecore-db
           property: connectionString
 
-  # Frontend assets are bundled into the API Docker images now, so there are
-  # no standalone static site services here.
+  # --- Marketing static site ---
+  - type: web
+    name: stlcompliancesite
+    runtime: static
+    plan: starter
+    rootDir: apps/stlcompliancesite
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SITE_BASE_URL
+        value: https://stlcompliancesite.onrender.com
+      - key: VITE_SUITE_LOGIN_URL
+        value: https://app.stlcompliance.com/login
+
+  # Frontend assets are bundled into the API Docker images now, except for
+  # stlcompliancesite (standalone static site).
