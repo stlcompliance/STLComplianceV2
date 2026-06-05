@@ -19,11 +19,11 @@ const journeyProducts = [
   },
   {
     productKey: 'trainarr',
-    surfaceHeading: 'Training qualification workspace',
+    surfaceHeading: 'Training programs',
   },
   {
     productKey: 'compliancecore',
-    surfaceHeading: 'Compliance authority registry',
+    surfaceHeading: 'Compliance registry',
   },
 ] as const
 

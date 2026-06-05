@@ -1,3 +1,8 @@
+x-stl-integration-bootstrap: &stl-integration-bootstrap
+  STL_INTEGRATION_TOKEN_AUTO_PROVISION: "true"
+  STL_INTEGRATION_BOOTSTRAP_SECRET: stl-local-bootstrap-secret
+  NexArr__BaseUrl: http://nexarr-api:8080
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -30,8 +35,10 @@ services:
     ports:
       - "5101:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=nexarr;Username=stl;Password=stl_dev_password
+      STL_SERVICE_NAME: nexarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,8 +53,10 @@ services:
     ports:
       - "5102:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=staffarr;Username=stl;Password=stl_dev_password
+      STL_SERVICE_NAME: staffarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,9 +71,11 @@ services:
     ports:
       - "5103:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=trainarr;Username=stl;Password=stl_dev_password
       TrainArr__FrontendBaseUrl: http://127.0.0.1:5176
+      STL_SERVICE_NAME: trainarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,9 +90,11 @@ services:
     ports:
       - "5104:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=maintainarr;Username=stl;Password=stl_dev_password
       MaintainArr__FrontendBaseUrl: http://127.0.0.1:5178
+      STL_SERVICE_NAME: maintainarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,9 +109,11 @@ services:
     ports:
       - "5105:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=routarr;Username=stl;Password=stl_dev_password
       RoutArr__FrontendBaseUrl: http://127.0.0.1:5180
+      STL_SERVICE_NAME: routarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,9 +128,11 @@ services:
     ports:
       - "5106:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=supplyarr;Username=stl;Password=stl_dev_password
       SupplyArr__FrontendBaseUrl: http://127.0.0.1:5179
+      STL_SERVICE_NAME: supplyarr-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -130,8 +147,10 @@ services:
     ports:
       - "5107:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=compliancecore;Username=stl;Password=stl_dev_password
+      STL_SERVICE_NAME: compliancecore-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,9 +165,11 @@ services:
     ports:
       - "5110:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       Cors__RecordArrFrontendOrigin: http://127.0.0.1:5184
       NexArr__BaseUrl: http://nexarr-api:8080
+      STL_SERVICE_NAME: recordarr-api
 
   assurarr-api:
     build:
@@ -177,9 +198,11 @@ services:
     ports:
       - "5108:8080"
     environment:
+      <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=loadarr;Username=stl;Password=stl_dev_password
       LoadArr__FrontendBaseUrl: http://127.0.0.1:5182
+      STL_SERVICE_NAME: loadarr-api
     depends_on:
       postgres:
         condition: service_healthy

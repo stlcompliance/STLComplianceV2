@@ -11,6 +11,7 @@ RUN dotnet publish "${PROJECT_PATH}" -c Release -o /app/publish /p:UseAppHost=fa
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 ARG ASSEMBLY_NAME
+ENV ASSEMBLY_NAME=${ASSEMBLY_NAME}
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080

@@ -13,6 +13,7 @@ vi.mock('../../components/AvailabilitySnapshotsPanel', () => ({
 
 const baseState = {
   partsQuery: { data: [], isLoading: false },
+  vendorsQuery: { data: [], isLoading: false },
   pricingSnapshotsQuery: { data: [], isLoading: false },
   leadTimeSnapshotsQuery: { data: [], isLoading: false },
   availabilitySnapshotsQuery: { data: [], isLoading: false },

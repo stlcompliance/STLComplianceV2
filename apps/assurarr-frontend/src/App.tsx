@@ -1099,7 +1099,7 @@ function HoldDetailPage() {
           items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
           emptyLabel="No timeline events recorded yet."
         />
-        <SectionCard title="Event log" items={review.eventLog} emptyLabel="No review event log entries recorded yet." />
+        <SectionCard title="Event log" items={hold.eventLog} emptyLabel="No hold event log entries recorded yet." />
       </div>
     </div>
   )
@@ -1850,7 +1850,7 @@ function CapaDetailPage() {
           items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
           emptyLabel="No timeline events recorded yet."
         />
-        <SectionCard title="Event log" items={release.eventLog} emptyLabel="No release event log entries recorded yet." />
+        <SectionCard title="Event log" items={capa.eventLog} emptyLabel="No CAPA event log entries recorded yet." />
       </div>
     </div>
   )

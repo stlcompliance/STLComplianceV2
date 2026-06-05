@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { SettingsSection } from './SettingsSection'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
@@ -59,7 +60,9 @@ describe('SettingsSection', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <SettingsSection state={buildState(true, true)} />
+        <MemoryRouter initialEntries={['/settings']}>
+          <SettingsSection state={buildState(true, true)} />
+        </MemoryRouter>
       </QueryClientProvider>,
     )
 
@@ -76,7 +79,9 @@ describe('SettingsSection', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <SettingsSection state={buildState(true, true, true)} />
+        <MemoryRouter initialEntries={['/settings']}>
+          <SettingsSection state={buildState(true, true, true)} />
+        </MemoryRouter>
       </QueryClientProvider>,
     )
 
@@ -89,7 +94,9 @@ describe('SettingsSection', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <SettingsSection state={buildState(true, false)} />
+        <MemoryRouter initialEntries={['/settings']}>
+          <SettingsSection state={buildState(true, false)} />
+        </MemoryRouter>
       </QueryClientProvider>,
     )
 

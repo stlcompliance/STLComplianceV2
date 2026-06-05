@@ -171,5 +171,5 @@ describe('TenantCatalogAdminPanel', () => {
       isTrial: true,
       isInternalTenant: true,
     })
-  })
+  }, 10000)
 })

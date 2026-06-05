@@ -68,7 +68,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
         var status = (await response.Content.ReadFromJsonAsync<PlatformWorkerHealthOrchestrationStatusResponse>())!;
         Assert.NotEqual(default, status.GeneratedAt);
         Assert.False(string.IsNullOrWhiteSpace(status.PlatformHealthStatus));
-        Assert.Equal(6, status.ProductHealth.Count);
+        Assert.Equal(7, status.ProductHealth.Count);
         Assert.True(status.ServiceTokens.ActiveCount >= 0);
         Assert.Equal(4, status.Workers.Count);
         Assert.Contains(status.Workers, x => x.WorkerKey == "service_token_cleanup");

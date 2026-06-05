@@ -35,9 +35,9 @@ public class ReadinessRollupRulesTests
     {
         var members = new[]
         {
-            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "ready", false),
-            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "not_ready", true),
-            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "not_ready", false)
+            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "ready", false, "high"),
+            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "not_ready", true, "medium"),
+            new PersonReadinessRollupSnapshot(Guid.NewGuid(), "not_ready", false, "low")
         };
 
         var (ready, notReady, overrides) = ReadinessRollupRules.AggregateCounts(members);

@@ -9,7 +9,7 @@ namespace STLCompliance.Shared.Data;
 public static class StlDatabaseConnection
 {
     public static string? Resolve(IConfiguration configuration) =>
-        Normalize(configuration.GetConnectionString("Database") ?? configuration["DATABASE_URL"]);
+        Normalize(configuration["DATABASE_URL"] ?? configuration.GetConnectionString("Database"));
 
     public static string? Normalize(string? raw)
     {

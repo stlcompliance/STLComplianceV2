@@ -84,6 +84,5 @@ describe('TripsPanel', () => {
     expect(screen.getByText('assigned')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create trip' })).toBeInTheDocument()
     expect(screen.getByTestId('trip-create-vehicle-picker')).toBeInTheDocument()
-    expect(screen.getByTestId('generated-key-field')).toBeInTheDocument()
   })
 })

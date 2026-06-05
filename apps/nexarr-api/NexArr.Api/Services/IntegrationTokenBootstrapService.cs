@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using STLCompliance.Shared.Auth;
@@ -118,7 +119,16 @@ public sealed class IntegrationTokenBootstrapService(
                 ModifiedAt = now
             };
             db.ServiceClients.Add(client);
-            await db.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (IsUniqueClientKeyViolation(ex))
+            {
+                db.Entry(client).State = EntityState.Detached;
+                client = await db.ServiceClients
+                    .FirstAsync(c => c.ClientKey == clientKey, cancellationToken);
+            }
         }
 
         var existingToken = await db.ServiceTokens
@@ -241,4 +251,9 @@ public sealed class IntegrationTokenBootstrapService(
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         return Convert.ToHexString(hash);
     }
+
+    private static bool IsUniqueClientKeyViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+        && string.Equals(postgresException.ConstraintName, "IX_service_clients_ClientKey", StringComparison.Ordinal);
 }

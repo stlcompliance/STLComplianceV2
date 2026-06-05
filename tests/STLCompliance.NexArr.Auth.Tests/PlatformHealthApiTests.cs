@@ -36,7 +36,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
         var payload = await response.Content.ReadFromJsonAsync<PlatformHealthResponse>();
         Assert.NotNull(payload);
         Assert.Contains(payload.Status, new[] { "Healthy", "Degraded", "Unhealthy" });
-        Assert.Equal(6, payload.Products.Count);
+        Assert.Equal(7, payload.Products.Count);
         Assert.Contains(payload.Products, p => p.ProductKey == "staffarr");
         Assert.Contains(payload.Products, p => p.ProductKey == "compliancecore");
     }
@@ -52,7 +52,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
 
         var payload = await response.Content.ReadFromJsonAsync<PlatformHealthResponse>();
         Assert.NotNull(payload);
-        Assert.Equal(6, payload.Products.Count);
+        Assert.Equal(7, payload.Products.Count);
     }
 
     [Fact]

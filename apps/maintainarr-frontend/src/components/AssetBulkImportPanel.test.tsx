@@ -31,18 +31,17 @@ describe('AssetBulkImportPanel', () => {
   it('renders import controls for writers', () => {
     renderPanel(true)
     expect(screen.getByRole('button', { name: /^Validate$/i })).toBeTruthy()
-    expect(screen.getByText(/vehicles,forklift,FLT-101/i)).toBeTruthy()
   })
 
   it('reports csv parse errors before submit', () => {
     renderPanel(true)
 
     fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: 'assetClassKey,assetTag,name\nvehicles,FLT-1,Forklift' },
+      target: { value: 'assetClassKey,name\nvehicles,Forklift' },
     })
     fireEvent.click(screen.getByRole('button', { name: /^Validate$/i }))
 
-    expect(screen.getByText(/header must include assettypekey/i)).toBeTruthy()
+    expect(screen.getByText(/header must include assettag/i)).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })
 })

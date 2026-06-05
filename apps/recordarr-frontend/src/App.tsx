@@ -28,6 +28,7 @@ import {
   useProductWorkspaceLaunch,
   type ProductNavItem,
 } from '@stl/shared-ui'
+import { LaunchPage } from './LaunchPage'
 import {
   activateLegalHold,
   applyManualCorrection,
@@ -3398,6 +3399,10 @@ export function App() {
       setBootstrapRedirected(true)
     }
   }, [bootstrapError, bootstrapRedirected])
+
+  if (location.pathname === '/launch') {
+    return <LaunchPage />
+  }
 
   const currentTitle = useMemo(() => {
     if (location.pathname.startsWith('/records/')) return 'Record detail'

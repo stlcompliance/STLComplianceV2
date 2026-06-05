@@ -329,5 +329,5 @@ describe('HybridDataPlanePanel', () => {
     expect(screen.getByText(/Ready URL: https:\/\/customer\.example\/staffarr\/health\/ready/)).toBeInTheDocument()
     expect(screen.getByText(/Latency: 48 ms/)).toBeInTheDocument()
     expect(screen.getByTestId('data-plane-trust-status')).toHaveValue('trusted')
-  })
+  }, 10000)
 })

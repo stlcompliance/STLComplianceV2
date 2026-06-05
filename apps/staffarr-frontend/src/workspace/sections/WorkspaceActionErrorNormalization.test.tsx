@@ -42,6 +42,10 @@ describe('Workspace section action error normalization', () => {
       canManagePersonIncidents: true,
       createIncidentMutation: { isPending: false, mutateAsync: vi.fn() },
       routeIncidentToTrainarrMutation: { isPending: false, mutateAsync: vi.fn() },
+      updateIncidentStatusMutation: { isPending: false, mutateAsync: vi.fn() },
+      createIncidentNoteMutation: { isPending: false, mutateAsync: vi.fn() },
+      updateIncidentNoteStatusMutation: { isPending: false, mutateAsync: vi.fn() },
+      createIncidentAttachmentMutation: { isPending: false, mutateAsync: vi.fn() },
       incidentMutationError: new Error('Incident service unreachable'),
       setSelectedIncidentId: vi.fn(),
     } as unknown as StaffArrWorkspaceState

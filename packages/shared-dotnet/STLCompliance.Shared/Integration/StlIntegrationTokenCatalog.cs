@@ -110,6 +110,8 @@ public static class StlIntegrationTokenCatalog
         Profile("handoff-loadarr", "loadarr-api", "Handoff__ServiceToken", "loadarr", ["loadarr"], "launch.redeem"),
         Profile("loadarr-staffarr", "loadarr-api", "StaffArr__ServiceToken", "loadarr", ["staffarr"], "staffarr.sites.read"),
 
+        Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
+
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
         Profile(
             "worker-trainarr-recertification",

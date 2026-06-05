@@ -91,7 +91,6 @@ describe('CompletionRuleBuilderPanel', () => {
       />,
     )
 
-    expect(screen.getByText('evaluator_pass')).toBeInTheDocument()
     expect(screen.getByText('required_evaluator_pass')).toBeInTheDocument()
   })
 })

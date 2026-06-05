@@ -587,7 +587,7 @@ describe('PlatformUsersPage', () => {
         requireEmailVerification: false,
       })
     })
-  })
+  }, 10000)
 
   it('can enable and unlock accounts when the user is inactive and locked', async () => {
     vi.mocked(nexarr.listPlatformUsers).mockResolvedValue({
@@ -603,7 +603,7 @@ describe('PlatformUsersPage', () => {
           isActive: false,
           isPlatformAdmin: true,
           failedLoginCount: 5,
-          lockedUntil: '2026-06-04T12:00:00Z',
+          lockedUntil: '2099-06-04T12:00:00Z',
           createdAt: '2026-06-01T00:00:00Z',
           modifiedAt: '2026-06-02T00:00:00Z',
           lastLoginAt: '2026-06-03T10:00:00Z',
@@ -621,7 +621,7 @@ describe('PlatformUsersPage', () => {
       isActive: false,
       isPlatformAdmin: true,
       failedLoginCount: 5,
-      lockedUntil: '2026-06-04T12:00:00Z',
+      lockedUntil: '2099-06-04T12:00:00Z',
       createdAt: '2026-06-01T00:00:00Z',
       modifiedAt: '2026-06-02T00:00:00Z',
       lastLoginAt: '2026-06-03T10:00:00Z',

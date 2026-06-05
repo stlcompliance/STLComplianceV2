@@ -46,6 +46,8 @@ const baseState = {
   updateReceivingLineMutation: { mutate: () => {}, isPending: false },
   createReceivingExceptionMutation: { mutate: () => {}, isPending: false },
   resolveReceivingExceptionMutation: { mutate: () => {}, isPending: false },
+  cancelReceivingExceptionMutation: { mutate: () => {}, isPending: false },
+  reopenReceivingExceptionMutation: { mutate: () => {}, isPending: false },
   postReceivingReceiptMutation: { mutate: () => {}, isPending: false },
   backordersQuery: { data: [], isLoading: false },
   issuedPurchaseOrdersWithReceived: [],

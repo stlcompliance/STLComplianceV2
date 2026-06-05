@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { RemediationAssignmentPanel } from './RemediationAssignmentPanel'
 
+vi.mock('./QualificationCheckPanel', () => ({
+  QualificationCheckPanel: () => null,
+}))
+
 describe('RemediationAssignmentPanel', () => {
   it('hides panel when user cannot manage assignments', () => {
     const { container } = render(

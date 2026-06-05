@@ -1,4 +1,5 @@
 using RecordArr.Api.Data;
+using RecordArr.Api.Services;
 using STLCompliance.Shared.Integration;
 
 namespace RecordArr.Api;
@@ -9,6 +10,8 @@ public static class RecordArrServiceRegistration
     {
         builder.Services.AddSingleton<RecordArrStore>();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.AddScoped<RecordArrTokenService>();
+        builder.Services.AddScoped<HandoffAuthService>();
 
         var frontendOrigin = builder.Configuration["Cors:RecordArrFrontendOrigin"] ?? "http://localhost:5184";
         builder.Services.AddCors(options =>

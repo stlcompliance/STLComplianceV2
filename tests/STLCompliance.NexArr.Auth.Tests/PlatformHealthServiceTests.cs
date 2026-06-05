@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Options;
 using NexArr.Api.Services;
@@ -12,26 +13,26 @@ public class PlatformHealthServiceTests
     [Fact]
     public async Task Aggregate_is_healthy_when_all_configured_products_report_healthy()
     {
-        var service = CreateService(new AggregateHealthStubHandler(_ => Healthy("staffarr")));
+        var service = CreateService(new AggregateHealthStubHandler(_ => HealthyResponse("staffarr")));
 
         var report = await service.GetAggregateHealthAsync();
 
         Assert.Equal("Healthy", report.Status);
-        Assert.Equal(6, report.Products.Count);
+        Assert.Equal(7, report.Products.Count);
         Assert.All(report.Products, probe => Assert.Equal("Healthy", probe.Status));
     }
 
     [Fact]
     public async Task Aggregate_is_degraded_when_some_products_are_unreachable()
     {
-        var service = CreateService(new AggregateHealthStubHandler(uri =>
+        var service = CreateService(new AggregateHealthStubHandler(request =>
         {
-            if (uri.Host.Contains("staffarr", StringComparison.Ordinal))
+            if (request.RequestUri?.Host.Contains("staffarr", StringComparison.Ordinal) == true)
             {
-                return Healthy("staffarr");
+                return HealthyResponse("staffarr");
             }
 
-            return Unreachable();
+            throw new HttpRequestException("network down");
         }));
 
         var report = await service.GetAggregateHealthAsync();
@@ -44,7 +45,7 @@ public class PlatformHealthServiceTests
     [Fact]
     public async Task Aggregate_is_unhealthy_when_all_configured_products_fail()
     {
-        var service = CreateService(new AggregateHealthStubHandler(_ => Unreachable()));
+        var service = CreateService(new AggregateHealthStubHandler(_ => throw new HttpRequestException("network down")));
 
         var report = await service.GetAggregateHealthAsync();
 
@@ -65,7 +66,7 @@ public class PlatformHealthServiceTests
             ComplianceCoreBaseUrl = "http://stub.compliancecore",
         };
 
-        var service = CreateService(new AggregateHealthStubHandler(_ => Healthy("trainarr")), options);
+        var service = CreateService(new AggregateHealthStubHandler(_ => HealthyResponse("trainarr")), options);
 
         var report = await service.GetAggregateHealthAsync();
         var staffarr = report.Products.Single(p => p.ProductKey == "staffarr");
@@ -78,60 +79,44 @@ public class PlatformHealthServiceTests
         HttpMessageHandler handler,
         PlatformProductUrlsOptions? options = null)
     {
-        var factory = new StubHttpClientFactory(handler);
-        return new PlatformHealthService(factory, Options.Create(options ?? CreateDefaultOptions()));
+        var services = new ServiceCollection();
+        services.AddSingleton<IOptions<PlatformProductUrlsOptions>>(Options.Create(options ?? new PlatformProductUrlsOptions
+        {
+            StaffArrBaseUrl = "http://stub.staffarr",
+            TrainArrBaseUrl = "http://stub.trainarr",
+            MaintainArrBaseUrl = "http://stub.maintainarr",
+            RoutArrBaseUrl = "http://stub.routarr",
+            SupplyArrBaseUrl = "http://stub.supplyarr",
+            ComplianceCoreBaseUrl = "http://stub.compliancecore",
+            RecordArrBaseUrl = "http://stub.recordarr",
+        }));
+        services.AddSingleton<IHttpClientFactory>(new StubHttpClientFactory(handler));
+
+        var provider = services.BuildServiceProvider();
+        return new PlatformHealthService(
+            provider.GetRequiredService<IHttpClientFactory>(),
+            provider.GetRequiredService<IOptions<PlatformProductUrlsOptions>>());
     }
 
-    private static PlatformProductUrlsOptions CreateDefaultOptions() => new()
+    private static HttpResponseMessage HealthyResponse(string productKey) => new(HttpStatusCode.OK)
     {
-        StaffArrBaseUrl = "http://stub.staffarr",
-        TrainArrBaseUrl = "http://stub.trainarr",
-        MaintainArrBaseUrl = "http://stub.maintainarr",
-        RoutArrBaseUrl = "http://stub.routarr",
-        SupplyArrBaseUrl = "http://stub.supplyarr",
-        ComplianceCoreBaseUrl = "http://stub.compliancecore",
+        Content = JsonContent.Create(new HealthResponse(
+            "Healthy",
+            productKey,
+            "1.0.0",
+            DateTimeOffset.UtcNow)),
     };
-
-    private static HttpResponseMessage Healthy(string productKey) =>
-        new(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(new HealthResponse(
-                "Healthy",
-                productKey,
-                "1.0.0",
-                DateTimeOffset.UtcNow,
-                new Dictionary<string, object> { ["self"] = new { status = "Healthy" } }))
-        };
-
-    private static HttpResponseMessage Unreachable() =>
-        throw new HttpRequestException("Connection refused.");
 
     private sealed class StubHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
     {
         public HttpClient CreateClient(string name) => new(handler, disposeHandler: false);
     }
 
-    private sealed class AggregateHealthStubHandler(
-        Func<Uri, HttpResponseMessage> respond) : HttpMessageHandler
+    private sealed class AggregateHealthStubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            if (request.RequestUri is null
-                || !request.RequestUri.AbsolutePath.EndsWith("/health/ready", StringComparison.Ordinal))
-            {
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-
-            try
-            {
-                return Task.FromResult(respond(request.RequestUri));
-            }
-            catch (HttpRequestException)
-            {
-                throw;
-            }
-        }
+            CancellationToken cancellationToken) =>
+            Task.FromResult(responder(request));
     }
 }
