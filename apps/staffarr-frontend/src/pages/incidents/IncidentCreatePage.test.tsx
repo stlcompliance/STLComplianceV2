@@ -67,6 +67,8 @@ describe('IncidentCreatePage', () => {
       {
         personId: 'person-1',
         externalUserId: null,
+        givenName: 'Alex',
+        familyName: 'Worker',
         displayName: 'Alex Worker',
         primaryEmail: 'alex@example.com',
         employmentStatus: 'active',
@@ -78,6 +80,8 @@ describe('IncidentCreatePage', () => {
       {
         personId: 'person-2',
         externalUserId: null,
+        givenName: 'Taylor',
+        familyName: 'Reporter',
         displayName: 'Taylor Reporter',
         primaryEmail: 'taylor@example.com',
         employmentStatus: 'active',
@@ -89,6 +93,8 @@ describe('IncidentCreatePage', () => {
       {
         personId: 'person-3',
         externalUserId: null,
+        givenName: 'Morgan',
+        familyName: 'Manager',
         displayName: 'Morgan Manager',
         primaryEmail: 'morgan@example.com',
         employmentStatus: 'active',

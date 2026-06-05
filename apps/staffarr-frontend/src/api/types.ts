@@ -149,18 +149,6 @@ export interface MyTeamDashboardResponse {
 export interface StaffPersonSummaryResponse {
   personId: string
   externalUserId: string | null
-  displayName: string
-  primaryEmail: string
-  employmentStatus: string
-  primaryOrgUnitId: string | null
-  primaryOrgUnitName: string | null
-  managerPersonId: string | null
-  jobTitle: string | null
-}
-
-export interface StaffPersonDetailResponse {
-  personId: string
-  externalUserId: string | null
   givenName: string
   familyName: string
   displayName: string
@@ -170,6 +158,42 @@ export interface StaffPersonDetailResponse {
   primaryOrgUnitName: string | null
   managerPersonId: string | null
   jobTitle: string | null
+  preferredName?: string | null
+  workRelationshipType?: string | null
+  employmentType?: string | null
+  canLoginSnapshot?: boolean
+  hasUserAccountSnapshot?: boolean
+}
+
+export interface StaffPersonDetailResponse {
+  personId: string
+  externalUserId: string | null
+  givenName: string
+  familyName: string
+  legalFirstName: string
+  legalMiddleName: string | null
+  legalLastName: string
+  preferredName: string | null
+  pronouns: string | null
+  displayName: string
+  primaryEmail: string
+  alternateEmail: string | null
+  primaryPhone: string | null
+  alternatePhone: string | null
+  workPhone: string | null
+  employmentStatus: string
+  workRelationshipType: string | null
+  employmentType: string | null
+  primaryOrgUnitId: string | null
+  primaryOrgUnitName: string | null
+  managerPersonId: string | null
+  jobTitle: string | null
+  startDate: string | null
+  expectedStartDate: string | null
+  homeBaseLocationId: string | null
+  homeBaseLocationName: string | null
+  canLoginSnapshot: boolean
+  hasUserAccountSnapshot: boolean
   createdAt: string
   updatedAt: string
 }
@@ -211,22 +235,58 @@ export interface PersonLookupResponse {
 }
 
 export interface CreateStaffPersonRequest {
-  givenName: string
-  familyName: string
+  legalFirstName?: string | null
+  legalMiddleName?: string | null
+  legalLastName?: string | null
+  preferredName?: string | null
+  pronouns?: string | null
+  givenName?: string | null
+  familyName?: string | null
   primaryEmail: string
   employmentStatus: string
-  primaryOrgUnitId: string | null
-  managerPersonId: string | null
-  jobTitle: string | null
+  workRelationshipType?: string | null
+  employmentType?: string | null
+  alternateEmail?: string | null
+  primaryPhone?: string | null
+  alternatePhone?: string | null
+  workPhone?: string | null
+  startDate?: string | null
+  expectedStartDate?: string | null
+  primaryOrgUnitId?: string | null
+  siteOrgUnitId?: string | null
+  departmentOrgUnitId?: string | null
+  teamOrgUnitId?: string | null
+  positionOrgUnitId?: string | null
+  managerPersonId?: string | null
+  jobTitle?: string | null
+  homeBaseLocationId?: string | null
+  canLogin?: boolean
+  initialRoleAssignments?: CreatePersonRoleAssignmentRequest[] | null
 }
 
 export interface UpdateStaffPersonRequest {
-  givenName: string
-  familyName: string
+  legalFirstName?: string | null
+  legalMiddleName?: string | null
+  legalLastName?: string | null
+  preferredName?: string | null
+  pronouns?: string | null
+  givenName?: string | null
+  familyName?: string | null
   primaryEmail: string
-  primaryOrgUnitId: string | null
-  managerPersonId: string | null
-  jobTitle: string | null
+  alternateEmail?: string | null
+  primaryPhone?: string | null
+  alternatePhone?: string | null
+  workPhone?: string | null
+  workRelationshipType?: string | null
+  employmentType?: string | null
+  startDate?: string | null
+  expectedStartDate?: string | null
+  primaryOrgUnitId?: string | null
+  siteOrgUnitId?: string | null
+  managerPersonId?: string | null
+  jobTitle?: string | null
+  homeBaseLocationId?: string | null
+  canLoginSnapshot?: boolean | null
 }
 
 export interface UpdatePersonEmploymentStatusRequest {
@@ -428,6 +488,20 @@ export interface OrgUnitResponse {
   name: string
   parentOrgUnitId: string | null
   status: 'active' | 'inactive'
+}
+
+export interface StaffArrIntegrationLocationResponse {
+  locationId: string
+  tenantId: string
+  locationNumber: string
+  name: string
+  locationType: string
+  parentLocationId: string | null
+  siteOrgUnitId: string | null
+  siteNameSnapshot: string
+  parentPathSnapshot: string
+  status: string
+  allowedProductUsage: string
 }
 
 export interface CreateOrgUnitRequest {

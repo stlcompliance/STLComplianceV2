@@ -52,6 +52,8 @@ envVarGroups:
         value: https://compliancecore-api-b6fs.onrender.com
       - key: LoadArr__BaseUrl
         value: https://loadarr-api.onrender.com
+      - key: AssurArr__BaseUrl
+        value: https://assurarr-api.onrender.com
       - key: RecordArr__BaseUrl
         value: https://recordarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
@@ -76,6 +78,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/compliancecore
       - key: LOADARR_FRONTEND_URL
         value: https://app.stlcompliance.com/loadarr
+      - key: ASSURARR_FRONTEND_URL
+        value: https://app.stlcompliance.com/assurarr
       - key: REPORTARR_FRONTEND_URL
         value: https://app.stlcompliance.com/reportarr
       - key: FIELDCOMPANION_FRONTEND_URL
@@ -103,6 +107,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/compliancecore
       - key: VITE_LOADARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/loadarr
+      - key: VITE_ASSURARR_FRONTEND_BASE
+        value: https://app.stlcompliance.com/assurarr
       - key: VITE_RECORDARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/recordarr
       - key: VITE_REPORTARR_FRONTEND_BASE
@@ -128,6 +134,8 @@ envVarGroups:
         value: https://compliancecore-api-b6fs.onrender.com
       - key: LOADARR_PUBLIC_API_URL
         value: https://loadarr-api.onrender.com
+      - key: ASSURARR_PUBLIC_API_URL
+        value: https://assurarr-api.onrender.com
 databases:
   - name: nexarr-db
     plan: basic-256mb
@@ -161,6 +169,10 @@ databases:
     plan: basic-256mb
     databaseName: loadarr
     user: loadarr
+  - name: assurarr-db
+    plan: basic-256mb
+    databaseName: assurarr
+    user: assurarr
 
 services:
   - type: keyvalue
@@ -210,6 +222,8 @@ services:
         value: https://app.stlcompliance.com/compliancecore
       - key: Launch__Products__loadarr__BaseUrl
         value: https://app.stlcompliance.com/loadarr
+      - key: Launch__Products__assurarr__BaseUrl
+        value: https://app.stlcompliance.com/assurarr
       - key: Launch__Products__recordarr__BaseUrl
         value: https://app.stlcompliance.com/recordarr
       - key: Launch__Products__reportarr__BaseUrl
@@ -227,6 +241,8 @@ services:
       - key: Launch__Products__compliancecore__LaunchPath
         value: /launch
       - key: Launch__Products__loadarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__assurarr__LaunchPath
         value: /launch
       - key: Launch__Products__recordarr__LaunchPath
         value: /handoff
@@ -489,6 +505,30 @@ services:
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
+        sync: false
+
+  - type: web
+    name: assurarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/assurarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: assurarr-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: assurarr-db
+          property: connectionString
+      - key: Cors__AssurArrFrontendOrigin
+        value: https://app.stlcompliance.com
+      - key: Handoff__ServiceToken
         sync: false
 
   - type: web

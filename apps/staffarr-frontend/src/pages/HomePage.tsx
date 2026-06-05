@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { ApiErrorCallout, PageHeader, getErrorMessage } from '@stl/shared-ui'
+import type { CreateStaffPersonRequest, UpdateStaffPersonRequest } from '../api/types'
 import {
   createPersonOrgAssignment,
   createPerson,
@@ -363,15 +364,7 @@ export function HomePage() {
     },
   })
   const createPersonMutation = useMutation({
-    mutationFn: (payload: {
-      givenName: string
-      familyName: string
-      primaryEmail: string
-      employmentStatus: string
-      primaryOrgUnitId: string | null
-      managerPersonId: string | null
-      jobTitle: string | null
-    }) => createPerson(session!.accessToken, payload),
+    mutationFn: (payload: CreateStaffPersonRequest) => createPerson(session!.accessToken, payload),
     onSuccess: async (created) => {
       setSelectedPersonId(created.personId)
       await Promise.all([
@@ -572,23 +565,8 @@ export function HomePage() {
     },
   })
   const updatePersonMutation = useMutation({
-    mutationFn: (payload: {
-      personId: string
-      givenName: string
-      familyName: string
-      primaryEmail: string
-      primaryOrgUnitId: string | null
-      managerPersonId: string | null
-      jobTitle: string | null
-    }) =>
-      updatePerson(session!.accessToken, payload.personId, {
-        givenName: payload.givenName,
-        familyName: payload.familyName,
-        primaryEmail: payload.primaryEmail,
-        primaryOrgUnitId: payload.primaryOrgUnitId,
-        managerPersonId: payload.managerPersonId,
-        jobTitle: payload.jobTitle,
-      }),
+    mutationFn: (payload: { personId: string } & UpdateStaffPersonRequest) =>
+      updatePerson(session!.accessToken, payload.personId, payload),
     onSuccess: async (_, payload) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
@@ -1142,11 +1120,13 @@ export function HomePage() {
       </section>
 
       <CreatePersonPanel
+        accessToken={session!.accessToken}
         orgUnits={orgUnits}
         peopleOptions={people.map((person) => ({
           personId: person.personId,
           displayName: person.displayName,
         }))}
+        roleTemplates={roleTemplates}
         canManage={canManagePeopleProfiles}
         isSubmitting={createPersonMutation.isPending}
         errorMessage={
@@ -1197,12 +1177,14 @@ export function HomePage() {
 
       {profile ? (
         <PersonProfileEditorPanel
+          accessToken={session!.accessToken}
           profile={profile}
           orgUnits={orgUnits}
           peopleOptions={people.map((person) => ({
             personId: person.personId,
             displayName: person.displayName,
           }))}
+          siteContextOrgUnitId={null}
           canManage={canManagePeopleProfiles}
           isSubmitting={updatePersonMutation.isPending || updateEmploymentStatusMutation.isPending}
           errorMessage={

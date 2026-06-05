@@ -29,6 +29,7 @@ export type {
   DetailMetricConfig,
   DetailRailSectionConfig,
   DetailSnapshotFieldConfig,
+  DetailTabConfig,
   DetailTone,
   ProfileDetailsLayoutProps,
 } from './ProfileDetailsLayout'

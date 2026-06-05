@@ -40,6 +40,8 @@ const people = [
   {
     personId: 'person-1',
     externalUserId: null,
+    givenName: 'Alice',
+    familyName: 'Admin',
     displayName: 'Alice Admin',
     primaryEmail: 'alice@example.com',
     employmentStatus: 'active',
@@ -51,6 +53,8 @@ const people = [
   {
     personId: 'person-2',
     externalUserId: null,
+    givenName: 'Bob',
+    familyName: 'Lead',
     displayName: 'Bob Lead',
     primaryEmail: 'bob@example.com',
     employmentStatus: 'active',

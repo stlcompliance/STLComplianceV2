@@ -17,6 +17,8 @@ public static class AssurArrServiceRegistration
         }
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.AddScoped<AssurArrTokenService>();
+        builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<AssurArrQualityService>();
 
         var frontendOrigin = builder.Configuration["Cors:AssurArrFrontendOrigin"] ?? "http://localhost:5183";

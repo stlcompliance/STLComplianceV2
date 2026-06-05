@@ -15,7 +15,18 @@ public sealed class PeopleBulkImportService(
     public const int MaxBatchSize = 100;
 
     private static readonly HashSet<string> AllowedEmploymentStatuses =
-        new(StringComparer.OrdinalIgnoreCase) { "active", "inactive", "terminated" };
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "applicant",
+            "pending_start",
+            "onboarding",
+            "active",
+            "leave",
+            "suspended",
+            "terminated",
+            "inactive",
+            "archived",
+        };
 
     public async Task<BulkPersonImportResponse> ImportAsync(
         Guid tenantId,
@@ -98,12 +109,16 @@ public sealed class PeopleBulkImportService(
                     TenantId = tenantId,
                     GivenName = row.GivenName.Trim(),
                     FamilyName = row.FamilyName.Trim(),
+                    LegalFirstName = row.GivenName.Trim(),
+                    LegalLastName = row.FamilyName.Trim(),
                     DisplayName = BuildDisplayName(row.GivenName, row.FamilyName),
                     PrimaryEmail = normalizedEmail,
                     EmploymentStatus = row.EmploymentStatus.Trim().ToLowerInvariant(),
                     PrimaryOrgUnitId = row.PrimaryOrgUnitId,
                     ManagerPersonId = managerPersonId,
                     JobTitle = row.JobTitle?.Trim(),
+                    CanLoginSnapshot = false,
+                    HasUserAccountSnapshot = false,
                     CreatedAt = DateTimeOffset.UtcNow,
                     UpdatedAt = DateTimeOffset.UtcNow,
                 };
@@ -345,7 +360,7 @@ public sealed class PeopleBulkImportService(
         {
             throw new StlApiException(
                 "people.validation",
-                "Employment status must be active, inactive, or terminated.",
+                "Employment status must be applicant, pending_start, onboarding, active, leave, suspended, terminated, inactive, or archived.",
                 400);
         }
     }

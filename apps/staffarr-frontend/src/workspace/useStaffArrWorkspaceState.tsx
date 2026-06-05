@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   createPerson,
   createPersonOrgAssignment,
@@ -79,10 +79,41 @@ import { canManageOrgHierarchy } from '../components/OrgHierarchyManager'
 import type { PersonTimelineCategoryFilter } from '../components/PersonTimelinePanel'
 import type { ReadinessRollupSelection } from '../api/types'
 
+export type PeopleDetailTab =
+  | 'overview'
+  | 'permissions'
+  | 'certifications'
+  | 'assignments'
+  | 'training'
+  | 'incidents'
+  | 'documents'
+  | 'history'
+
+const PEOPLE_DETAIL_TABS: PeopleDetailTab[] = [
+  'overview',
+  'permissions',
+  'certifications',
+  'assignments',
+  'training',
+  'incidents',
+  'documents',
+  'history',
+]
+
+function normalizePeopleDetailTab(value: string | null): PeopleDetailTab {
+  return value && PEOPLE_DETAIL_TABS.includes(value as PeopleDetailTab)
+    ? (value as PeopleDetailTab)
+    : 'overview'
+}
+
 export function useStaffArrWorkspaceState() {
 
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const handoff = searchParams.get('handoff')
+  const requestedPersonId = searchParams.get('person')
+  const peopleDetailTab = normalizePeopleDetailTab(searchParams.get('tab'))
   const handoffRedirect = handoff
     ? <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
     : null
@@ -107,7 +138,7 @@ export function useStaffArrWorkspaceState() {
     queryFn: () => getOrgUnits(session!.accessToken),
     enabled: Boolean(session?.accessToken),
   })
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const [selectedPersonIdState, setSelectedPersonIdState] = useState<string | null>(requestedPersonId)
   const [activeDirectoryPersonId, setActiveDirectoryPersonId] = useState<string | null>(null)
   const [peopleDirectoryQuery, setPeopleDirectoryQuery] = useState('')
   const [personTimelinePage, setPersonTimelinePage] = useState(1)
@@ -116,12 +147,87 @@ export function useStaffArrWorkspaceState() {
     useState<PersonTimelineCategoryFilter>('')
   const fallbackPersonId = peopleQuery.data?.[0]?.personId ?? meQuery.data?.personId ?? null
   useEffect(() => {
-    if (!selectedPersonId && fallbackPersonId) {
-      setSelectedPersonId(fallbackPersonId)
+    if (requestedPersonId && requestedPersonId !== selectedPersonIdState) {
+      setSelectedPersonIdState(requestedPersonId)
     }
-  }, [fallbackPersonId, selectedPersonId])
+  }, [requestedPersonId, selectedPersonIdState])
 
-  const effectivePersonId = selectedPersonId ?? fallbackPersonId
+  useEffect(() => {
+    if (!selectedPersonIdState && fallbackPersonId) {
+      setSelectedPersonIdState(fallbackPersonId)
+    }
+  }, [fallbackPersonId, selectedPersonIdState])
+
+  const effectivePersonId = selectedPersonIdState ?? fallbackPersonId
+
+  const syncPeopleDetailQuery = (
+    personId: string | null,
+    tab: PeopleDetailTab = peopleDetailTab,
+    replace = false,
+  ) => {
+    const params = new URLSearchParams(searchParams)
+    if (personId) {
+      params.set('person', personId)
+    } else {
+      params.delete('person')
+    }
+    params.set('tab', tab)
+    setSearchParams(params, { replace })
+  }
+
+  const setSelectedPersonId = (
+    personId: string | null,
+    options?: { syncDetailQuery?: boolean; tab?: PeopleDetailTab; replace?: boolean },
+  ) => {
+    setSelectedPersonIdState(personId)
+    if ((options?.syncDetailQuery ?? location.pathname.startsWith('/people/details')) && personId) {
+      syncPeopleDetailQuery(personId, options?.tab ?? peopleDetailTab, options?.replace ?? false)
+    }
+  }
+
+  const setPeopleDetailTab = (
+    tab: PeopleDetailTab,
+    options?: { personId?: string | null; replace?: boolean },
+  ) => {
+    syncPeopleDetailQuery(
+      options?.personId ?? selectedPersonIdState ?? fallbackPersonId,
+      tab,
+      options?.replace ?? false,
+    )
+  }
+
+  const goToPeopleDetails = (
+    personId: string,
+    tab: PeopleDetailTab = 'overview',
+    options?: { replace?: boolean },
+  ) => {
+    setSelectedPersonIdState(personId)
+    navigate(`/people/details?person=${encodeURIComponent(personId)}&tab=${tab}`, {
+      replace: options?.replace ?? false,
+    })
+  }
+
+  useEffect(() => {
+    if (!location.pathname.startsWith('/people/details')) {
+      return
+    }
+
+    const routePersonId = requestedPersonId ?? effectivePersonId
+    if (!routePersonId) {
+      return
+    }
+
+    const currentTab = searchParams.get('tab')
+    if (requestedPersonId !== routePersonId || currentTab !== peopleDetailTab) {
+      syncPeopleDetailQuery(routePersonId, peopleDetailTab, true)
+    }
+  }, [
+    effectivePersonId,
+    location.pathname,
+    peopleDetailTab,
+    requestedPersonId,
+    searchParams,
+  ])
 
   useEffect(() => {
     setPersonTimelinePage(1)
@@ -562,16 +668,42 @@ export function useStaffArrWorkspaceState() {
   })
   const createPersonMutation = useMutation({
     mutationFn: (payload: {
-      givenName: string
-      familyName: string
+      legalFirstName?: string | null
+      legalMiddleName?: string | null
+      legalLastName?: string | null
+      preferredName?: string | null
+      pronouns?: string | null
+      givenName?: string | null
+      familyName?: string | null
       primaryEmail: string
       employmentStatus: string
-      primaryOrgUnitId: string | null
-      managerPersonId: string | null
-      jobTitle: string | null
+      workRelationshipType?: string | null
+      employmentType?: string | null
+      alternateEmail?: string | null
+      primaryPhone?: string | null
+      alternatePhone?: string | null
+      workPhone?: string | null
+      startDate?: string | null
+      expectedStartDate?: string | null
+      primaryOrgUnitId?: string | null
+      siteOrgUnitId?: string | null
+      departmentOrgUnitId?: string | null
+      teamOrgUnitId?: string | null
+      positionOrgUnitId?: string | null
+      managerPersonId?: string | null
+      jobTitle?: string | null
+      homeBaseLocationId?: string | null
+      canLogin?: boolean
+      initialRoleAssignments?: Array<{
+        roleTemplateId: string
+        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+        scopeValue: string | null
+        expiresAt: string | null
+      }> | null
     }) => createPerson(session!.accessToken, payload),
     onSuccess: async (created) => {
-      setSelectedPersonId(created.personId)
+      setSelectedPersonIdState(created.personId)
+      navigate(`/people/details?person=${encodeURIComponent(created.personId)}&tab=overview`)
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, created.personId] }),
@@ -583,20 +715,52 @@ export function useStaffArrWorkspaceState() {
   const updatePersonMutation = useMutation({
     mutationFn: (payload: {
       personId: string
-      givenName: string
-      familyName: string
+      legalFirstName?: string | null
+      legalMiddleName?: string | null
+      legalLastName?: string | null
+      preferredName?: string | null
+      pronouns?: string | null
+      givenName?: string | null
+      familyName?: string | null
       primaryEmail: string
-      primaryOrgUnitId: string | null
-      managerPersonId: string | null
-      jobTitle: string | null
+      alternateEmail?: string | null
+      primaryPhone?: string | null
+      alternatePhone?: string | null
+      workPhone?: string | null
+      workRelationshipType?: string | null
+      employmentType?: string | null
+      startDate?: string | null
+      expectedStartDate?: string | null
+      primaryOrgUnitId?: string | null
+      siteOrgUnitId?: string | null
+      managerPersonId?: string | null
+      jobTitle?: string | null
+      homeBaseLocationId?: string | null
+      canLoginSnapshot?: boolean | null
     }) =>
       updatePerson(session!.accessToken, payload.personId, {
+        legalFirstName: payload.legalFirstName,
+        legalMiddleName: payload.legalMiddleName,
+        legalLastName: payload.legalLastName,
+        preferredName: payload.preferredName,
+        pronouns: payload.pronouns,
         givenName: payload.givenName,
         familyName: payload.familyName,
         primaryEmail: payload.primaryEmail,
+        alternateEmail: payload.alternateEmail,
+        primaryPhone: payload.primaryPhone,
+        alternatePhone: payload.alternatePhone,
+        workPhone: payload.workPhone,
+        workRelationshipType: payload.workRelationshipType,
+        employmentType: payload.employmentType,
+        startDate: payload.startDate,
+        expectedStartDate: payload.expectedStartDate,
         primaryOrgUnitId: payload.primaryOrgUnitId,
+        siteOrgUnitId: payload.siteOrgUnitId,
         managerPersonId: payload.managerPersonId,
         jobTitle: payload.jobTitle,
+        homeBaseLocationId: payload.homeBaseLocationId,
+        canLoginSnapshot: payload.canLoginSnapshot,
       }),
     onSuccess: async (_, payload) => {
       await Promise.all([
@@ -832,6 +996,7 @@ export function useStaffArrWorkspaceState() {
   })
 
   const me = meQuery.data
+  const selectedPersonId = selectedPersonIdState
   const people = peopleQuery.data ?? []
   const filteredPeople = filterPeopleDirectory(people, peopleDirectoryQuery)
   const orgUnits = orgUnitsQuery.data ?? []
@@ -905,6 +1070,10 @@ export function useStaffArrWorkspaceState() {
     accessToken,
     apiError,
     searchParams,
+    setSearchParams,
+    peopleDetailTab,
+    setPeopleDetailTab,
+    goToPeopleDetails,
     selectedPersonId,
     setSelectedPersonId,
     activeDirectoryPersonId,

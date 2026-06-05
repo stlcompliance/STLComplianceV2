@@ -9,7 +9,9 @@ ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_ROUTARR_API_BASE=https://routarr-api-8oc7.onrender.com \
     VITE_SUPPLYARR_API_BASE=https://supplyarr-api-te1h.onrender.com \
     VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-b6fs.onrender.com \
-    VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com
+    VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com \
+    VITE_ASSURARR_API_BASE=https://assurarr-api.onrender.com \
+    VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com
 COPY . .
 RUN npm ci --prefix packages/shared-ui
 RUN npm ci --prefix apps/suite-frontend \
@@ -19,7 +21,9 @@ RUN npm ci --prefix apps/suite-frontend \
     && npm ci --prefix apps/routarr-frontend \
     && npm ci --prefix apps/supplyarr-frontend \
     && npm ci --prefix apps/compliancecore-frontend \
-    && npm ci --prefix apps/loadarr-frontend
+    && npm ci --prefix apps/loadarr-frontend \
+    && npm ci --prefix apps/assurarr-frontend \
+    && npm ci --prefix apps/recordarr-frontend
 RUN npm run build --prefix apps/suite-frontend \
     && VITE_ROUTER_BASENAME=/staffarr npm run build --prefix apps/staffarr-frontend \
     && VITE_ROUTER_BASENAME=/trainarr npm run build --prefix apps/trainarr-frontend \
@@ -27,7 +31,9 @@ RUN npm run build --prefix apps/suite-frontend \
     && VITE_ROUTER_BASENAME=/routarr npm run build --prefix apps/routarr-frontend \
     && VITE_ROUTER_BASENAME=/supplyarr npm run build --prefix apps/supplyarr-frontend \
     && VITE_ROUTER_BASENAME=/compliancecore npm run build --prefix apps/compliancecore-frontend \
-    && VITE_ROUTER_BASENAME=/loadarr npm run build --prefix apps/loadarr-frontend
+    && VITE_ROUTER_BASENAME=/loadarr npm run build --prefix apps/loadarr-frontend \
+    && VITE_ROUTER_BASENAME=/assurarr npm run build --prefix apps/assurarr-frontend \
+    && VITE_ROUTER_BASENAME=/recordarr npm run build --prefix apps/recordarr-frontend
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -46,5 +52,7 @@ COPY --from=frontend-build /src/apps/routarr-frontend/dist ./wwwroot/routarr
 COPY --from=frontend-build /src/apps/supplyarr-frontend/dist ./wwwroot/supplyarr
 COPY --from=frontend-build /src/apps/compliancecore-frontend/dist ./wwwroot/compliancecore
 COPY --from=frontend-build /src/apps/loadarr-frontend/dist ./wwwroot/loadarr
+COPY --from=frontend-build /src/apps/assurarr-frontend/dist ./wwwroot/assurarr
+COPY --from=frontend-build /src/apps/recordarr-frontend/dist ./wwwroot/recordarr
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet NexArr.Api.dll"]

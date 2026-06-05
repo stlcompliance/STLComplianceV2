@@ -10,10 +10,44 @@ namespace StaffArr.Api.Services;
 public sealed class PeopleService(
     StaffArrDbContext db,
     IStaffArrAuditService audit,
-    StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync)
+    StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync,
+    OrgUnitAssignmentService orgUnitAssignmentService,
+    RoleTemplateService roleTemplateService)
 {
     private static readonly HashSet<string> AllowedEmploymentStatuses =
-        new(StringComparer.OrdinalIgnoreCase) { "active", "inactive", "terminated" };
+    [
+        "applicant",
+        "pending_start",
+        "onboarding",
+        "active",
+        "leave",
+        "suspended",
+        "terminated",
+        "inactive",
+        "archived",
+    ];
+
+    private static readonly HashSet<string> AllowedWorkRelationshipTypes =
+    [
+        "employee",
+        "contractor",
+        "temp",
+        "vendor_worker",
+        "customer_contact",
+        "auditor",
+        "service_account_contact",
+        "other",
+    ];
+
+    private static readonly HashSet<string> AllowedEmploymentTypes =
+    [
+        "full_time",
+        "part_time",
+        "seasonal",
+        "temporary",
+        "contract",
+        "non_employee",
+    ];
 
     public async Task<IReadOnlyList<StaffPersonSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -46,13 +80,20 @@ public sealed class PeopleService(
             .Select(p => new StaffPersonSummaryResponse(
                 p.Id,
                 p.ExternalUserId,
+                p.GivenName,
+                p.FamilyName,
                 p.DisplayName,
                 p.PrimaryEmail,
                 p.EmploymentStatus,
                 p.PrimaryOrgUnitId,
                 p.PrimaryOrgUnit != null ? p.PrimaryOrgUnit.Name : null,
                 p.ManagerPersonId,
-                p.JobTitle))
+                p.JobTitle,
+                p.PreferredName,
+                p.WorkRelationshipType,
+                p.EmploymentType,
+                p.CanLoginSnapshot,
+                p.HasUserAccountSnapshot))
             .ToListAsync(cancellationToken);
     }
 
@@ -69,13 +110,30 @@ public sealed class PeopleService(
                 p.ExternalUserId,
                 p.GivenName,
                 p.FamilyName,
+                p.LegalFirstName,
+                p.LegalMiddleName,
+                p.LegalLastName,
+                p.PreferredName,
+                p.Pronouns,
                 p.DisplayName,
                 p.PrimaryEmail,
+                p.AlternateEmail,
+                p.PrimaryPhone,
+                p.AlternatePhone,
+                p.WorkPhone,
                 p.EmploymentStatus,
+                p.WorkRelationshipType,
+                p.EmploymentType,
                 p.PrimaryOrgUnitId,
                 p.PrimaryOrgUnit != null ? p.PrimaryOrgUnit.Name : null,
                 p.ManagerPersonId,
                 p.JobTitle,
+                p.StartDate,
+                p.ExpectedStartDate,
+                p.HomeBaseLocationId,
+                p.HomeBaseLocation != null ? p.HomeBaseLocation.Name : null,
+                p.CanLoginSnapshot,
+                p.ExternalUserId != null || p.HasUserAccountSnapshot,
                 p.CreatedAt,
                 p.UpdatedAt))
             .FirstOrDefaultAsync(cancellationToken);
@@ -89,34 +147,126 @@ public sealed class PeopleService(
         CreateStaffPersonRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidatePersonFields(request.GivenName, request.FamilyName, request.PrimaryEmail, request.JobTitle);
-        ValidateEmploymentStatus(request.EmploymentStatus);
+        var legalFirstName = ResolveLegalFirstName(request.LegalFirstName, request.GivenName);
+        var legalLastName = ResolveLegalLastName(request.LegalLastName, request.FamilyName);
+        var legalMiddleName = NormalizeOptionalNamePart(request.LegalMiddleName, "Legal middle name");
+        var preferredName = NormalizeOptionalNamePart(request.PreferredName, "Preferred name");
+        var pronouns = NormalizeOptionalText(request.Pronouns, 64, "Pronouns");
+        var normalizedPrimaryEmail = NormalizeRequiredEmail(request.PrimaryEmail, "Primary email");
+        var normalizedAlternateEmail = NormalizeOptionalEmail(request.AlternateEmail, "Alternate email");
+        var normalizedPrimaryPhone = NormalizeOptionalPhone(request.PrimaryPhone, "Primary phone");
+        var normalizedAlternatePhone = NormalizeOptionalPhone(request.AlternatePhone, "Alternate phone");
+        var normalizedWorkPhone = NormalizeOptionalPhone(request.WorkPhone, "Work phone");
+        var normalizedJobTitle = NormalizeOptionalText(request.JobTitle, 128, "Job title");
+        var normalizedWorkRelationshipType = NormalizeOptionalCatalogValue(
+            request.WorkRelationshipType,
+            AllowedWorkRelationshipTypes,
+            "Work relationship type");
+        var normalizedEmploymentType = NormalizeOptionalCatalogValue(
+            request.EmploymentType,
+            AllowedEmploymentTypes,
+            "Employment type");
+        var normalizedEmploymentStatus = NormalizeEmploymentStatus(request.EmploymentStatus);
+        var primaryOrgUnitId = ResolvePrimaryOrgUnitId(
+            request.PrimaryOrgUnitId,
+            request.DepartmentOrgUnitId,
+            request.SiteOrgUnitId,
+            request.TeamOrgUnitId,
+            request.PositionOrgUnitId);
 
-        var normalizedEmail = request.PrimaryEmail.Trim().ToLowerInvariant();
-        await EnsureEmailAvailableAsync(tenantId, normalizedEmail, null, cancellationToken);
-        await EnsurePrimaryOrgUnitExistsAsync(tenantId, request.PrimaryOrgUnitId, cancellationToken);
+        ValidateChronology(request.ExpectedStartDate, request.StartDate);
+        ValidateInitialPlacementSeed(
+            request.SiteOrgUnitId,
+            request.DepartmentOrgUnitId,
+            request.TeamOrgUnitId,
+            request.PositionOrgUnitId);
+
+        await EnsureEmailAvailableAsync(tenantId, normalizedPrimaryEmail, null, cancellationToken);
+        await EnsureAlternateEmailAvailableAsync(
+            tenantId,
+            normalizedAlternateEmail,
+            normalizedPrimaryEmail,
+            null,
+            cancellationToken);
+        await EnsurePrimaryOrgUnitExistsAsync(tenantId, primaryOrgUnitId, cancellationToken);
+        await ValidateHomeBaseLocationAsync(
+            tenantId,
+            request.HomeBaseLocationId,
+            request.SiteOrgUnitId,
+            primaryOrgUnitId,
+            cancellationToken);
 
         var personId = Guid.NewGuid();
         await ValidateManagerReferenceAsync(tenantId, personId, request.ManagerPersonId, cancellationToken);
 
+        var now = DateTimeOffset.UtcNow;
         var person = new StaffPerson
         {
             Id = personId,
             TenantId = tenantId,
-            GivenName = request.GivenName.Trim(),
-            FamilyName = request.FamilyName.Trim(),
-            DisplayName = BuildDisplayName(request.GivenName, request.FamilyName),
-            PrimaryEmail = normalizedEmail,
-            EmploymentStatus = request.EmploymentStatus.Trim().ToLowerInvariant(),
-            PrimaryOrgUnitId = request.PrimaryOrgUnitId,
+            GivenName = legalFirstName,
+            FamilyName = legalLastName,
+            LegalFirstName = legalFirstName,
+            LegalMiddleName = legalMiddleName,
+            LegalLastName = legalLastName,
+            PreferredName = preferredName,
+            Pronouns = pronouns,
+            DisplayName = BuildDisplayName(legalFirstName, legalLastName, preferredName),
+            PrimaryEmail = normalizedPrimaryEmail,
+            AlternateEmail = normalizedAlternateEmail,
+            PrimaryPhone = normalizedPrimaryPhone,
+            AlternatePhone = normalizedAlternatePhone,
+            WorkPhone = normalizedWorkPhone,
+            EmploymentStatus = normalizedEmploymentStatus,
+            WorkRelationshipType = normalizedWorkRelationshipType,
+            EmploymentType = normalizedEmploymentType,
+            PrimaryOrgUnitId = primaryOrgUnitId,
             ManagerPersonId = request.ManagerPersonId,
-            JobTitle = request.JobTitle?.Trim(),
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
+            JobTitle = normalizedJobTitle,
+            StartDate = request.StartDate,
+            ExpectedStartDate = request.ExpectedStartDate,
+            HomeBaseLocationId = request.HomeBaseLocationId,
+            CanLoginSnapshot = request.CanLogin,
+            HasUserAccountSnapshot = false,
+            CreatedAt = now,
+            UpdatedAt = now,
         };
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         db.People.Add(person);
         await db.SaveChangesAsync(cancellationToken);
+
+        if (HasInitialPlacementSeed(
+                request.SiteOrgUnitId,
+                request.DepartmentOrgUnitId,
+                request.TeamOrgUnitId,
+                request.PositionOrgUnitId))
+        {
+            await orgUnitAssignmentService.CreateAsync(
+                tenantId,
+                actorUserId ?? Guid.Empty,
+                personId,
+                new CreateOrgUnitAssignmentRequest(
+                    request.SiteOrgUnitId!.Value,
+                    request.DepartmentOrgUnitId!.Value,
+                    request.TeamOrgUnitId!.Value,
+                    request.PositionOrgUnitId!.Value),
+                cancellationToken);
+        }
+
+        if (request.InitialRoleAssignments is { Count: > 0 })
+        {
+            foreach (var assignment in request.InitialRoleAssignments)
+            {
+                await roleTemplateService.CreatePersonRoleAssignmentAsync(
+                    tenantId,
+                    actorUserId ?? Guid.Empty,
+                    personId,
+                    assignment,
+                    cancellationToken);
+            }
+        }
 
         await audit.WriteAsync(
             "person.create",
@@ -126,6 +276,8 @@ public sealed class PeopleService(
             person.Id.ToString(),
             "success",
             cancellationToken: cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
 
         await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
             person,
@@ -142,8 +294,6 @@ public sealed class PeopleService(
         UpdateStaffPersonRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidatePersonFields(request.GivenName, request.FamilyName, request.PrimaryEmail, request.JobTitle);
-
         var person = await db.People.FirstOrDefaultAsync(
             p => p.TenantId == tenantId && p.Id == personId,
             cancellationToken);
@@ -152,18 +302,71 @@ public sealed class PeopleService(
             throw new StlApiException("people.not_found", "Person was not found.", 404);
         }
 
-        var normalizedEmail = request.PrimaryEmail.Trim().ToLowerInvariant();
-        await EnsureEmailAvailableAsync(tenantId, normalizedEmail, personId, cancellationToken);
+        var legalFirstName = ResolveLegalFirstName(request.LegalFirstName, request.GivenName);
+        var legalLastName = ResolveLegalLastName(request.LegalLastName, request.FamilyName);
+        var legalMiddleName = NormalizeOptionalNamePart(request.LegalMiddleName, "Legal middle name");
+        var preferredName = NormalizeOptionalNamePart(request.PreferredName, "Preferred name");
+        var pronouns = NormalizeOptionalText(request.Pronouns, 64, "Pronouns");
+        var normalizedPrimaryEmail = NormalizeRequiredEmail(request.PrimaryEmail, "Primary email");
+        var normalizedAlternateEmail = NormalizeOptionalEmail(request.AlternateEmail, "Alternate email");
+        var normalizedPrimaryPhone = NormalizeOptionalPhone(request.PrimaryPhone, "Primary phone");
+        var normalizedAlternatePhone = NormalizeOptionalPhone(request.AlternatePhone, "Alternate phone");
+        var normalizedWorkPhone = NormalizeOptionalPhone(request.WorkPhone, "Work phone");
+        var normalizedJobTitle = NormalizeOptionalText(request.JobTitle, 128, "Job title");
+        var normalizedWorkRelationshipType = NormalizeOptionalCatalogValue(
+            request.WorkRelationshipType,
+            AllowedWorkRelationshipTypes,
+            "Work relationship type");
+        var normalizedEmploymentType = NormalizeOptionalCatalogValue(
+            request.EmploymentType,
+            AllowedEmploymentTypes,
+            "Employment type");
+
+        ValidateChronology(request.ExpectedStartDate, request.StartDate);
+
+        await EnsureEmailAvailableAsync(tenantId, normalizedPrimaryEmail, personId, cancellationToken);
+        await EnsureAlternateEmailAvailableAsync(
+            tenantId,
+            normalizedAlternateEmail,
+            normalizedPrimaryEmail,
+            personId,
+            cancellationToken);
         await EnsurePrimaryOrgUnitExistsAsync(tenantId, request.PrimaryOrgUnitId, cancellationToken);
+        await ValidateHomeBaseLocationAsync(
+            tenantId,
+            request.HomeBaseLocationId,
+            request.SiteOrgUnitId,
+            request.PrimaryOrgUnitId ?? person.PrimaryOrgUnitId,
+            cancellationToken);
         await ValidateManagerReferenceAsync(tenantId, personId, request.ManagerPersonId, cancellationToken);
 
-        person.GivenName = request.GivenName.Trim();
-        person.FamilyName = request.FamilyName.Trim();
-        person.DisplayName = BuildDisplayName(request.GivenName, request.FamilyName);
-        person.PrimaryEmail = normalizedEmail;
+        person.GivenName = legalFirstName;
+        person.FamilyName = legalLastName;
+        person.LegalFirstName = legalFirstName;
+        person.LegalMiddleName = legalMiddleName;
+        person.LegalLastName = legalLastName;
+        person.PreferredName = preferredName;
+        person.Pronouns = pronouns;
+        person.DisplayName = BuildDisplayName(legalFirstName, legalLastName, preferredName);
+        person.PrimaryEmail = normalizedPrimaryEmail;
+        person.AlternateEmail = normalizedAlternateEmail;
+        person.PrimaryPhone = normalizedPrimaryPhone;
+        person.AlternatePhone = normalizedAlternatePhone;
+        person.WorkPhone = normalizedWorkPhone;
+        person.WorkRelationshipType = normalizedWorkRelationshipType;
+        person.EmploymentType = normalizedEmploymentType;
         person.PrimaryOrgUnitId = request.PrimaryOrgUnitId;
         person.ManagerPersonId = request.ManagerPersonId;
-        person.JobTitle = request.JobTitle?.Trim();
+        person.JobTitle = normalizedJobTitle;
+        person.StartDate = request.StartDate;
+        person.ExpectedStartDate = request.ExpectedStartDate;
+        person.HomeBaseLocationId = request.HomeBaseLocationId;
+        if (request.CanLoginSnapshot.HasValue)
+        {
+            person.CanLoginSnapshot = request.CanLoginSnapshot.Value;
+        }
+
+        person.HasUserAccountSnapshot = person.ExternalUserId != null || person.HasUserAccountSnapshot;
         person.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -192,7 +395,7 @@ public sealed class PeopleService(
         UpdatePersonEmploymentStatusRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidateEmploymentStatus(request.EmploymentStatus);
+        var normalizedStatus = NormalizeEmploymentStatus(request.EmploymentStatus);
 
         var person = await db.People.FirstOrDefaultAsync(
             p => p.TenantId == tenantId && p.Id == personId,
@@ -202,7 +405,6 @@ public sealed class PeopleService(
             throw new StlApiException("people.not_found", "Person was not found.", 404);
         }
 
-        var normalizedStatus = request.EmploymentStatus.Trim().ToLowerInvariant();
         if (!string.Equals(person.EmploymentStatus, normalizedStatus, StringComparison.OrdinalIgnoreCase)
             && normalizedStatus is not "active")
         {
@@ -249,6 +451,41 @@ public sealed class PeopleService(
         }
     }
 
+    private async Task EnsureAlternateEmailAvailableAsync(
+        Guid tenantId,
+        string? alternateEmail,
+        string primaryEmail,
+        Guid? excludePersonId,
+        CancellationToken cancellationToken)
+    {
+        if (alternateEmail is null)
+        {
+            return;
+        }
+
+        if (string.Equals(alternateEmail, primaryEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException("people.validation", "Alternate email must differ from primary email.", 400);
+        }
+
+        var query = db.People.Where(p =>
+            p.TenantId == tenantId
+            && p.AlternateEmail != null
+            && p.AlternateEmail.ToLower() == alternateEmail);
+        if (excludePersonId is Guid personId)
+        {
+            query = query.Where(p => p.Id != personId);
+        }
+
+        if (await query.AnyAsync(cancellationToken))
+        {
+            throw new StlApiException(
+                "people.email_conflict",
+                "A person with that alternate email already exists in this tenant.",
+                409);
+        }
+    }
+
     private async Task EnsurePrimaryOrgUnitExistsAsync(
         Guid tenantId,
         Guid? orgUnitId,
@@ -265,6 +502,81 @@ public sealed class PeopleService(
         if (!unitExists)
         {
             throw new StlApiException("org_unit.not_found", "Primary org unit was not found.", 404);
+        }
+    }
+
+    private async Task ValidateHomeBaseLocationAsync(
+        Guid tenantId,
+        Guid? homeBaseLocationId,
+        Guid? siteOrgUnitId,
+        Guid? primaryOrgUnitId,
+        CancellationToken cancellationToken)
+    {
+        if (homeBaseLocationId is not Guid requestedLocationId)
+        {
+            return;
+        }
+
+        var locationExists = await db.OrgUnits.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == requestedLocationId,
+            cancellationToken);
+        if (!locationExists)
+        {
+            throw new StlApiException("location.not_found", "Home base location was not found.", 404);
+        }
+
+        var expectedSiteId = siteOrgUnitId
+            ?? await ResolveSiteOrgUnitIdForOrgUnitAsync(tenantId, primaryOrgUnitId, cancellationToken);
+        if (expectedSiteId is not Guid resolvedSiteId)
+        {
+            return;
+        }
+
+        var locationSiteId = await ResolveSiteOrgUnitIdForOrgUnitAsync(tenantId, requestedLocationId, cancellationToken);
+        if (locationSiteId is not Guid resolvedLocationSiteId || resolvedLocationSiteId != resolvedSiteId)
+        {
+            throw new StlApiException(
+                "people.validation",
+                "Home base location must belong to the selected site.",
+                409);
+        }
+    }
+
+    private async Task<Guid?> ResolveSiteOrgUnitIdForOrgUnitAsync(
+        Guid tenantId,
+        Guid? orgUnitId,
+        CancellationToken cancellationToken)
+    {
+        if (orgUnitId is not Guid requestedOrgUnitId)
+        {
+            return null;
+        }
+
+        var cursor = requestedOrgUnitId;
+        while (true)
+        {
+            var node = await db.OrgUnits
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.Id == cursor)
+                .Select(x => new { x.Id, x.UnitType, x.ParentOrgUnitId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (node is null)
+            {
+                return null;
+            }
+
+            if (string.Equals(node.UnitType, "site", StringComparison.OrdinalIgnoreCase))
+            {
+                return node.Id;
+            }
+
+            if (node.ParentOrgUnitId is not Guid parentId)
+            {
+                return null;
+            }
+
+            cursor = parentId;
         }
     }
 
@@ -341,54 +653,205 @@ public sealed class PeopleService(
         }
     }
 
-    private static void ValidatePersonFields(
-        string givenName,
-        string familyName,
-        string primaryEmail,
-        string? jobTitle)
+    private static string ResolveLegalFirstName(string? legalFirstName, string? givenName)
     {
-        if (string.IsNullOrWhiteSpace(givenName) || givenName.Trim().Length > 100)
+        var resolved = string.IsNullOrWhiteSpace(legalFirstName) ? givenName : legalFirstName;
+        return NormalizeRequiredNamePart(resolved, "Legal first name");
+    }
+
+    private static string ResolveLegalLastName(string? legalLastName, string? familyName)
+    {
+        var resolved = string.IsNullOrWhiteSpace(legalLastName) ? familyName : legalLastName;
+        return NormalizeRequiredNamePart(resolved, "Legal last name");
+    }
+
+    private static string NormalizeRequiredNamePart(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
-            throw new StlApiException("people.validation", "Given name is required and must be 100 characters or less.", 400);
+            throw new StlApiException("people.validation", $"{fieldName} is required.", 400);
         }
 
-        if (string.IsNullOrWhiteSpace(familyName) || familyName.Trim().Length > 100)
+        var normalized = value.Trim();
+        if (normalized.Length > 100)
         {
-            throw new StlApiException("people.validation", "Family name is required and must be 100 characters or less.", 400);
+            throw new StlApiException("people.validation", $"{fieldName} must be 100 characters or less.", 400);
         }
 
-        if (string.IsNullOrWhiteSpace(primaryEmail) || primaryEmail.Trim().Length > 320)
+        return normalized;
+    }
+
+    private static string? NormalizeOptionalNamePart(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
-            throw new StlApiException("people.validation", "Primary email is required and must be 320 characters or less.", 400);
+            return null;
         }
 
-        if (!new EmailAddressAttribute().IsValid(primaryEmail.Trim()))
+        var normalized = value.Trim();
+        if (normalized.Length > 100)
         {
-            throw new StlApiException("people.validation", "Primary email must be valid.", 400);
+            throw new StlApiException("people.validation", $"{fieldName} must be 100 characters or less.", 400);
         }
 
-        if (jobTitle is { Length: > 128 })
+        return normalized;
+    }
+
+    private static string NormalizeRequiredEmail(string value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 320)
         {
-            throw new StlApiException("people.validation", "Job title must be 128 characters or less.", 400);
+            throw new StlApiException("people.validation", $"{fieldName} is required and must be 320 characters or less.", 400);
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (!new EmailAddressAttribute().IsValid(normalized))
+        {
+            throw new StlApiException("people.validation", $"{fieldName} must be valid.", 400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptionalEmail(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return NormalizeRequiredEmail(value, fieldName);
+    }
+
+    private static string? NormalizeOptionalPhone(string? value, string fieldName)
+    {
+        return NormalizeOptionalText(value, 32, fieldName);
+    }
+
+    private static string? NormalizeOptionalText(string? value, int maxLength, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+        {
+            throw new StlApiException("people.validation", $"{fieldName} must be {maxLength} characters or less.", 400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptionalCatalogValue(
+        string? value,
+        IReadOnlySet<string> allowedValues,
+        string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length > 32)
+        {
+            throw new StlApiException("people.validation", $"{fieldName} must be 32 characters or less.", 400);
+        }
+
+        if (!allowedValues.Contains(normalized))
+        {
+            throw new StlApiException(
+                "people.validation",
+                $"{fieldName} is invalid.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static void ValidateChronology(DateTimeOffset? expectedStartDate, DateTimeOffset? startDate)
+    {
+        if (expectedStartDate is DateTimeOffset expected
+            && startDate is DateTimeOffset actual
+            && expected > actual.AddYears(5))
+        {
+            throw new StlApiException(
+                "people.validation",
+                "Expected start date is not realistic relative to the start date.",
+                400);
         }
     }
 
-    private static void ValidateEmploymentStatus(string employmentStatus)
+    private static string NormalizeEmploymentStatus(string employmentStatus)
     {
         if (string.IsNullOrWhiteSpace(employmentStatus) || employmentStatus.Trim().Length > 32)
         {
             throw new StlApiException("people.validation", "Employment status is required and must be 32 characters or less.", 400);
         }
 
-        if (!AllowedEmploymentStatuses.Contains(employmentStatus.Trim()))
+        var normalized = employmentStatus.Trim().ToLowerInvariant();
+        if (!AllowedEmploymentStatuses.Contains(normalized))
         {
             throw new StlApiException(
                 "people.validation",
-                "Employment status must be active, inactive, or terminated.",
+                "Employment status must be applicant, pending_start, onboarding, active, leave, suspended, terminated, inactive, or archived.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static Guid? ResolvePrimaryOrgUnitId(
+        Guid? primaryOrgUnitId,
+        Guid? departmentOrgUnitId,
+        Guid? siteOrgUnitId,
+        Guid? teamOrgUnitId,
+        Guid? positionOrgUnitId) =>
+        primaryOrgUnitId
+        ?? departmentOrgUnitId
+        ?? siteOrgUnitId
+        ?? teamOrgUnitId
+        ?? positionOrgUnitId;
+
+    private static void ValidateInitialPlacementSeed(
+        Guid? siteOrgUnitId,
+        Guid? departmentOrgUnitId,
+        Guid? teamOrgUnitId,
+        Guid? positionOrgUnitId)
+    {
+        Guid?[] values =
+        [
+            siteOrgUnitId,
+            departmentOrgUnitId,
+            teamOrgUnitId,
+            positionOrgUnitId,
+        ];
+
+        var populatedCount = values.Count(value => value.HasValue);
+        if (populatedCount is > 0 and < 4)
+        {
+            throw new StlApiException(
+                "people.validation",
+                "Initial placement requires site, department, team, and position together.",
                 400);
         }
     }
 
-    private static string BuildDisplayName(string givenName, string familyName) =>
-        $"{givenName.Trim()} {familyName.Trim()}".Trim();
+    private static bool HasInitialPlacementSeed(
+        Guid? siteOrgUnitId,
+        Guid? departmentOrgUnitId,
+        Guid? teamOrgUnitId,
+        Guid? positionOrgUnitId) =>
+        siteOrgUnitId.HasValue
+        && departmentOrgUnitId.HasValue
+        && teamOrgUnitId.HasValue
+        && positionOrgUnitId.HasValue;
+
+    private static string BuildDisplayName(string legalFirstName, string legalLastName, string? preferredName)
+    {
+        var firstName = string.IsNullOrWhiteSpace(preferredName) ? legalFirstName.Trim() : preferredName.Trim();
+        return $"{firstName} {legalLastName.Trim()}".Trim();
+    }
 }

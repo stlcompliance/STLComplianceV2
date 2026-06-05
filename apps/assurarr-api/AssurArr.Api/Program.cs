@@ -11,6 +11,7 @@ await StlApiHost.RunAsync<AssurArrDbContext>(
     AssurArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
+        app.MapAssurArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapAssurArrEndpoints();
         await AssurArrServiceRegistration.SeedAsync(app);

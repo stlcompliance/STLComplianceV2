@@ -2,6 +2,7 @@ import {
   DetailBadge as Badge,
   getErrorMessage,
   ProfileDetailsLayout,
+  type DetailTabConfig,
   type DetailTone,
 } from '@stl/shared-ui'
 import {
@@ -22,9 +23,24 @@ import {
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { createLaunchHandoff } from '../../api/client'
 import { CreatePersonPanel } from '../../components/CreatePersonPanel'
+import { ManagerHierarchyPanel } from '../../components/ManagerHierarchyPanel'
+import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
+import { PersonLookupPanel } from '../../components/PersonLookupPanel'
+import { PersonOffboardingPanel } from '../../components/PersonOffboardingPanel'
+import { PersonOrgAssignmentsManager } from '../../components/PersonOrgAssignmentsManager'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
+import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
+import { PersonTrainarrTrainingHistoryPanel } from '../../components/PersonTrainarrTrainingHistoryPanel'
+import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
+import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
+import { TrainingAcknowledgementsPanel } from '../../components/TrainingAcknowledgementsPanel'
+import { WorkforceOnboardingJourneyPanel } from '../../components/WorkforceOnboardingJourneyPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
+import { CertificationsSection } from './CertificationsSection'
+import { IncidentsSection } from './IncidentsSection'
+import { PermissionsSection } from './PermissionsSection'
 
 type Props = { state: StaffArrWorkspaceState }
 type PeopleViewMode = 'drawer' | 'details' | 'create'
@@ -44,7 +60,16 @@ const ALL_DRAWER_COLUMNS: Array<{ key: DrawerColumnKey; label: string }> = [
 
 const DEFAULT_DRAWER_COLUMNS: DrawerColumnKey[] = ['name', 'email', 'jobTitle', 'orgUnit', 'status']
 
-const detailTabs = ['Overview', 'Permissions', 'Certifications', 'Assignments', 'Training', 'Incidents', 'Documents', 'History']
+const DETAIL_TABS: DetailTabConfig[] = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'permissions', label: 'Permissions' },
+  { key: 'certifications', label: 'Certifications' },
+  { key: 'assignments', label: 'Assignments' },
+  { key: 'training', label: 'Training' },
+  { key: 'incidents', label: 'Incidents' },
+  { key: 'documents', label: 'Documents' },
+  { key: 'history', label: 'History' },
+]
 
 function humanize(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
@@ -109,6 +134,10 @@ export function PeopleSection({ state }: Props) {
   const location = useLocation()
   const [selectedColumns, setSelectedColumns] = useState<DrawerColumnKey[]>(DEFAULT_DRAWER_COLUMNS)
   const [showEditor, setShowEditor] = useState(false)
+  const [isLaunchingTraining, setIsLaunchingTraining] = useState(false)
+  const [trainingLaunchError, setTrainingLaunchError] = useState<string | null>(null)
+  const [showMoreActions, setShowMoreActions] = useState(false)
+  const [showOffboardingShortcut, setShowOffboardingShortcut] = useState(false)
   const managerDisplayName = s.profile?.managerPersonId
     ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
     : 'None'
@@ -151,7 +180,17 @@ export function PeopleSection({ state }: Props) {
 
   useEffect(() => {
     setShowEditor(false)
+    setShowOffboardingShortcut(false)
+    setShowMoreActions(false)
+    setTrainingLaunchError(null)
   }, [s.effectivePersonId, mode])
+
+  useEffect(() => {
+    if (mode === 'details' && (location.state as { openEditor?: boolean } | null)?.openEditor) {
+      setShowEditor(true)
+      s.setPeopleDetailTab('overview')
+    }
+  }, [location.state, mode, s])
 
   const visibleColumns = useMemo(() => {
     const picked = selectedColumns
@@ -326,15 +365,16 @@ export function PeopleSection({ state }: Props) {
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2 text-xs">
                           <Link
-                            to="/people/details"
-                            onClick={() => s.setSelectedPersonId(person.personId)}
+                            to={`/people/details?person=${encodeURIComponent(person.personId)}&tab=overview`}
+                            onClick={() => s.setSelectedPersonId(person.personId, { syncDetailQuery: true, tab: 'overview' })}
                             className="text-sky-300 hover:text-sky-200 hover:underline"
                           >
                             View
                           </Link>
                           <Link
-                            to="/people/create"
-                            onClick={() => s.setSelectedPersonId(person.personId)}
+                            to={`/people/details?person=${encodeURIComponent(person.personId)}&tab=overview`}
+                            state={{ openEditor: true }}
+                            onClick={() => s.setSelectedPersonId(person.personId, { syncDetailQuery: true, tab: 'overview' })}
                             className="text-emerald-300 hover:text-emerald-200 hover:underline"
                           >
                             Edit
@@ -366,7 +406,7 @@ export function PeopleSection({ state }: Props) {
                     onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
                     onClick={() => {
                       s.setActiveDirectoryPersonId(person.personId)
-                      s.setSelectedPersonId(person.personId)
+                      s.setSelectedPersonId(person.personId, { syncDetailQuery: true })
                     }}
                     className={buttonClass}
                   >
@@ -384,6 +424,25 @@ export function PeopleSection({ state }: Props) {
       </div>
     </section>
   )
+
+  const handleAssignTraining = async () => {
+    if (!s.selectedPerson || isLaunchingTraining) {
+      return
+    }
+
+    setTrainingLaunchError(null)
+    setIsLaunchingTraining(true)
+    try {
+      const callbackUrl = `${window.location.origin}/people/details?person=${encodeURIComponent(s.selectedPerson.personId)}&tab=training`
+      const handoff = await createLaunchHandoff(s.accessToken, 'trainarr', callbackUrl)
+      window.location.assign(handoff.launchUrl)
+    } catch (error) {
+      setTrainingLaunchError(
+        error instanceof Error ? error.message : 'Failed to launch TrainArr via suite handoff.',
+      )
+      setIsLaunchingTraining(false)
+    }
+  }
 
   if (mode === 'details') {
     const profile = s.profile
@@ -407,7 +466,8 @@ export function PeopleSection({ state }: Props) {
     const departmentName = activeAssignment?.departmentName ?? 'Not assigned'
     const positionName = activeAssignment?.positionName ?? jobTitle
     const managerName = lookup?.placement.managerDisplayName ?? managerDisplayName
-    const hasUserAccount = Boolean(profile?.externalUserId ?? selectedPerson?.externalUserId)
+    const hasUserAccount = profile?.hasUserAccountSnapshot ?? Boolean(profile?.externalUserId ?? selectedPerson?.externalUserId)
+    const canLogin = profile?.canLoginSnapshot ?? false
     const activeCertifications = certifications.filter((cert) => cert.effectiveStatus === 'active')
     const expiringCertifications = activeCertifications.filter((cert) => {
       const remaining = daysUntil(cert.expiresAt)
@@ -444,15 +504,18 @@ export function PeopleSection({ state }: Props) {
     ].slice(0, 3)
     const documentCards = documents.slice(0, 4)
     const recentActivityCards = recentActivity.slice(0, 5)
+    const siteContextOrgUnitId = activeAssignment?.siteOrgUnitId ?? null
 
     const editorPanel = profile ? (
       <PersonProfileEditorPanel
+        accessToken={s.accessToken}
         profile={profile}
         orgUnits={s.orgUnits}
         peopleOptions={s.people.map((person) => ({
           personId: person.personId,
           displayName: person.displayName,
         }))}
+        siteContextOrgUnitId={siteContextOrgUnitId}
         canManage={s.canManagePeopleProfiles}
         isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
         errorMessage={
@@ -474,6 +537,418 @@ export function PeopleSection({ state }: Props) {
         }}
       />
     ) : null
+
+    const renderOverviewTab = () => (
+      <>
+        {showEditor ? editorPanel : null}
+        {trainingLaunchError ? (
+          <p className="rounded-xl border border-rose-800 bg-rose-950/20 px-4 py-3 text-sm text-rose-200">
+            {trainingLaunchError}
+          </p>
+        ) : null}
+        {showOffboardingShortcut && selectedPerson ? (
+          <PersonOffboardingPanel
+            personId={selectedPerson.personId}
+            personDisplayName={selectedPerson.displayName}
+            peopleOptions={s.people.map((person) => ({
+              personId: person.personId,
+              displayName: person.displayName,
+            }))}
+            offboarding={s.personOffboardingQuery.data ?? null}
+            isLoading={s.personOffboardingQuery.isLoading}
+            isError={s.personOffboardingQuery.isError}
+            readErrorMessage={
+              s.personOffboardingQuery.isError
+                ? getErrorMessage(
+                    s.personOffboardingQuery.error,
+                    'Failed to load offboarding workflow.',
+                  )
+                : null
+            }
+            onRetryRead={() => void s.personOffboardingQuery.refetch()}
+            canManage={s.canManagePeopleProfiles}
+            isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
+            actionErrorMessage={
+              s.offboardingMutationError
+                ? getErrorMessage(s.offboardingMutationError, 'Failed to save offboarding changes.')
+                : null
+            }
+            onStart={async (request) => {
+              await s.startOffboardingMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                ...request,
+              })
+            }}
+            onExecute={async (request) => {
+              const offboardingId = s.personOffboardingQuery.data?.offboardingId
+              if (!offboardingId) return
+              await s.executeOffboardingMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                offboardingId,
+                ...request,
+              })
+            }}
+          />
+        ) : null}
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-white">Product permissions</h3>
+              <Badge label="StaffArr-owned access" tone="info" />
+            </div>
+            <div className="space-y-3">
+              <ProductPermissionCard
+                product="MaintainArr"
+                role={hasProductSignal('maintainarr') ? 'Fleet Technician' : 'No product entitlement'}
+                detail={hasProductSignal('maintainarr') ? 'Work orders, inspections, defects, asset notes' : 'No direct access'}
+                allowed={hasProductSignal('maintainarr')}
+              />
+              <ProductPermissionCard
+                product="TrainArr"
+                role={hasProductSignal('trainarr') ? 'Trainee / Evaluator' : 'No product entitlement'}
+                detail={hasProductSignal('trainarr') ? 'Published training history and acknowledgements' : 'No direct access'}
+                allowed={hasProductSignal('trainarr')}
+              />
+              <ProductPermissionCard
+                product="StaffArr"
+                role={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'People workspace user' : 'No product entitlement'}
+                detail={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Profile, access, incident, history, and document workflows' : 'No direct access'}
+                allowed={hasProductSignal('staffarr') || activeRoleAssignments.length > 0}
+              />
+              <ProductPermissionCard
+                product="SupplyArr"
+                role={hasProductSignal('supplyarr') ? 'Supply workspace user' : 'No product entitlement'}
+                detail={hasProductSignal('supplyarr') ? 'Parts and procurement access' : 'No direct access'}
+                allowed={hasProductSignal('supplyarr')}
+              />
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-white">Certification status</h3>
+              <button
+                type="button"
+                onClick={() => s.setPeopleDetailTab('certifications')}
+                className="text-sm font-semibold text-sky-300 hover:text-sky-200"
+              >
+                Open certifications
+              </button>
+            </div>
+            <div className="space-y-3">
+              {certificationCards.length > 0 ? certificationCards.map((cert) => (
+                <div key={cert.personCertificationId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-white">{cert.certificationName}</p>
+                      <p className="mt-3 text-sm text-slate-100">Expires: {formatDate(cert.expiresAt)}</p>
+                      <p className="mt-2 text-xs text-slate-400">{humanize(cert.sourceType)} - Training completion</p>
+                    </div>
+                    <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
+                  </div>
+                </div>
+              )) : (
+                <p className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  No certifications are recorded for this person.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {selectedPerson ? (
+          <PersonLookupPanel
+            personId={selectedPerson.personId}
+            personDisplayName={selectedPerson.displayName}
+            lookup={s.personLookupQuery.data ?? null}
+            isLoading={s.personLookupQuery.isLoading}
+            isError={s.personLookupQuery.isError}
+            readErrorMessage={
+              s.personLookupQuery.isError
+                ? getErrorMessage(s.personLookupQuery.error, 'Failed to load person lookup.')
+                : null
+            }
+            onRetryRead={() => void s.personLookupQuery.refetch()}
+          />
+        ) : null}
+      </>
+    )
+
+    const renderAssignmentsTab = () => {
+      if (!selectedPerson) {
+        return <p className="text-sm text-slate-400">Select a person to manage assignments.</p>
+      }
+
+      return (
+        <>
+          <PersonOrgAssignmentsManager
+            personId={selectedPerson.personId}
+            personDisplayName={selectedPerson.displayName}
+            orgUnits={s.orgUnits}
+            assignments={s.assignments}
+            isLoading={s.assignmentQuery.isLoading}
+            isError={s.assignmentQuery.isError}
+            readErrorMessage={
+              s.assignmentQuery.isError
+                ? getErrorMessage(s.assignmentQuery.error, 'Failed to load org assignments.')
+                : null
+            }
+            onRetryRead={() => void s.assignmentQuery.refetch()}
+            canManage={s.canManageHierarchy}
+            isSubmitting={
+              s.createAssignmentMutation.isPending ||
+              s.updateAssignmentMutation.isPending ||
+              s.updateAssignmentStatusMutation.isPending
+            }
+            actionErrorMessage={
+              s.assignmentMutationError
+                ? getErrorMessage(s.assignmentMutationError, 'Failed to save assignment changes.')
+                : null
+            }
+            onCreate={async (request) => {
+              await s.createAssignmentMutation.mutateAsync({ personId: selectedPerson.personId, ...request })
+            }}
+            onUpdate={async (assignmentId, request) => {
+              await s.updateAssignmentMutation.mutateAsync({ personId: selectedPerson.personId, assignmentId, ...request })
+            }}
+            onStatusChange={async (assignmentId, status) => {
+              await s.updateAssignmentStatusMutation.mutateAsync({ personId: selectedPerson.personId, assignmentId, status })
+            }}
+          />
+
+          <ManagerHierarchyPanel
+            selectedPersonId={selectedPerson.personId}
+            selectedPersonDisplayName={selectedPerson.displayName}
+            people={s.people}
+            managerChain={s.managerChain}
+            subordinates={s.subordinates}
+            selectedSubordinateId={s.selectedSubordinateId}
+            selectedSubordinate={s.selectedSubordinateDetail}
+            isLoading={s.managerChainQuery.isLoading || s.subordinatesQuery.isLoading}
+            isError={s.managerChainQuery.isError || s.subordinatesQuery.isError}
+            readErrorMessage={
+              s.managerChainQuery.isError
+                ? getErrorMessage(s.managerChainQuery.error, 'Failed to load manager chain.')
+                : s.subordinatesQuery.isError
+                  ? getErrorMessage(s.subordinatesQuery.error, 'Failed to load subordinate hierarchy.')
+                  : null
+            }
+            onRetryRead={() => {
+              void s.managerChainQuery.refetch()
+              void s.subordinatesQuery.refetch()
+            }}
+            isLoadingSubordinateDetail={s.subordinateDetailQuery.isLoading}
+            isSubordinateDetailError={s.subordinateDetailQuery.isError}
+            subordinateDetailErrorMessage={
+              s.subordinateDetailQuery.isError
+                ? getErrorMessage(s.subordinateDetailQuery.error, 'Failed to load subordinate detail.')
+                : null
+            }
+            onRetrySubordinateDetail={() => void s.subordinateDetailQuery.refetch()}
+            canManage={s.canManageHierarchy}
+            isSubmitting={s.updateManagerMutation.isPending}
+            actionErrorMessage={
+              s.managerMutationError
+                ? getErrorMessage(s.managerMutationError, 'Failed to update manager.')
+                : null
+            }
+            onSelectSubordinate={s.setSelectedSubordinateId}
+            onUpdateManager={async (managerPersonId) => {
+              await s.updateManagerMutation.mutateAsync({
+                personId: selectedPerson.personId,
+                managerPersonId,
+              })
+            }}
+          />
+        </>
+      )
+    }
+
+    const renderTrainingTab = () => (
+      <>
+        <WorkforceOnboardingJourneyPanel
+          accessToken={s.accessToken}
+          personDisplayName={displayName}
+          journey={s.workforceOnboardingJourneyQuery.data ?? null}
+          isLoading={s.workforceOnboardingJourneyQuery.isLoading}
+          isError={s.workforceOnboardingJourneyQuery.isError}
+          readErrorMessage={
+            s.workforceOnboardingJourneyQuery.isError
+              ? getErrorMessage(s.workforceOnboardingJourneyQuery.error, 'Failed to load workforce onboarding journey.')
+              : null
+          }
+          onRetryRead={() => void s.workforceOnboardingJourneyQuery.refetch()}
+        />
+
+        {selectedPerson ? (
+          <TrainingAcknowledgementsPanel
+            accessToken={s.accessToken}
+            personId={selectedPerson.personId}
+            displayName={selectedPerson.displayName}
+          />
+        ) : null}
+
+        <PersonTrainarrTrainingHistoryPanel
+          personDisplayName={displayName}
+          history={s.trainarrTrainingHistoryQuery.data ?? null}
+          isLoading={s.trainarrTrainingHistoryQuery.isLoading}
+          isError={s.trainarrTrainingHistoryQuery.isError}
+          readErrorMessage={
+            s.trainarrTrainingHistoryQuery.isError
+              ? getErrorMessage(s.trainarrTrainingHistoryQuery.error, 'Failed to load TrainArr training history.')
+              : null
+          }
+          onRetryRead={() => void s.trainarrTrainingHistoryQuery.refetch()}
+        />
+      </>
+    )
+
+    const renderDocumentsTab = () => {
+      if (!selectedPerson) {
+        return <p className="text-sm text-slate-400">Select a person to view documents.</p>
+      }
+
+      return (
+        <PersonnelDocumentsPanel
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          accessToken={s.accessToken}
+          documents={s.personDocuments}
+          selectedDocumentId={s.selectedDocumentId}
+          selectedDocument={s.documentDetailQuery.data ?? null}
+          isLoading={s.personDocumentsQuery.isLoading}
+          isError={s.personDocumentsQuery.isError}
+          readErrorMessage={
+            s.personDocumentsQuery.isError
+              ? getErrorMessage(s.personDocumentsQuery.error, 'Failed to load personnel documents.')
+              : null
+          }
+          onRetryRead={() => void s.personDocumentsQuery.refetch()}
+          isLoadingDetail={s.documentDetailQuery.isLoading}
+          isDetailError={s.documentDetailQuery.isError}
+          detailErrorMessage={
+            s.documentDetailQuery.isError
+              ? getErrorMessage(s.documentDetailQuery.error, 'Failed to load document detail.')
+              : null
+          }
+          onRetryDetail={() => void s.documentDetailQuery.refetch()}
+          canManage={s.canManagePersonDocuments}
+          isSubmitting={s.uploadDocumentMutation.isPending}
+          actionErrorMessage={
+            s.documentMutationError
+              ? getErrorMessage(s.documentMutationError, 'Failed to upload personnel document.')
+              : null
+          }
+          onSelectDocument={s.setSelectedDocumentId}
+          onUploadDocument={async (request) => {
+            await s.uploadDocumentMutation.mutateAsync(request)
+          }}
+          contentUrlFor={(documentId) => s.personnelDocumentContentUrl(selectedPerson.personId, documentId)}
+        />
+      )
+    }
+
+    const renderHistoryTab = () => {
+      if (!selectedPerson) {
+        return <p className="text-sm text-slate-400">Select a person to review history.</p>
+      }
+
+      return (
+        <>
+          <PersonnelNotesPanel
+            personId={selectedPerson.personId}
+            personDisplayName={selectedPerson.displayName}
+            notes={s.personNotes}
+            selectedNoteId={s.selectedNoteId}
+            selectedNote={s.noteDetailQuery.data ?? null}
+            isLoading={s.personNotesQuery.isLoading}
+            isError={s.personNotesQuery.isError}
+            readErrorMessage={
+              s.personNotesQuery.isError
+                ? getErrorMessage(s.personNotesQuery.error, 'Failed to load personnel notes.')
+                : null
+            }
+            onRetryRead={() => void s.personNotesQuery.refetch()}
+            isLoadingDetail={s.noteDetailQuery.isLoading}
+            isDetailError={s.noteDetailQuery.isError}
+            detailErrorMessage={
+              s.noteDetailQuery.isError
+                ? getErrorMessage(s.noteDetailQuery.error, 'Failed to load note detail.')
+                : null
+            }
+            onRetryDetail={() => void s.noteDetailQuery.refetch()}
+            canManage={s.canManagePersonNotes}
+            isSubmitting={s.createNoteMutation.isPending}
+            actionErrorMessage={
+              s.noteMutationError
+                ? getErrorMessage(s.noteMutationError, 'Failed to save personnel note.')
+                : null
+            }
+            onSelectNote={s.setSelectedNoteId}
+            onCreateNote={async (request) => {
+              await s.createNoteMutation.mutateAsync(request)
+            }}
+          />
+
+          <PersonHistorySummaryPanel
+            personDisplayName={selectedPerson.displayName}
+            summary={s.personHistorySummaryQuery.data ?? null}
+            isLoading={s.personHistorySummaryQuery.isLoading}
+            isError={s.personHistorySummaryQuery.isError}
+            readErrorMessage={
+              s.personHistorySummaryQuery.isError
+                ? getErrorMessage(s.personHistorySummaryQuery.error, 'Failed to load history summary.')
+                : null
+            }
+            onRetryRead={() => void s.personHistorySummaryQuery.refetch()}
+          />
+
+          <PersonTimelinePanel
+            personDisplayName={selectedPerson.displayName}
+            entries={s.personTimelineEntries}
+            totalCount={s.personTimelineTotalCount}
+            page={s.personTimelinePage}
+            pageSize={s.personTimelinePageSize}
+            hasNextPage={s.personTimelineHasNextPage}
+            categoryFilter={s.personTimelineCategoryFilter}
+            isLoading={s.personTimelineQuery.isLoading}
+            isError={s.personTimelineQuery.isError}
+            readErrorMessage={
+              s.personTimelineQuery.isError
+                ? getErrorMessage(s.personTimelineQuery.error, 'Failed to load timeline.')
+                : null
+            }
+            onRetryRead={() => void s.personTimelineQuery.refetch()}
+            onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
+            onPageChange={s.setPersonTimelinePage}
+            onPageSizeChange={s.setPersonTimelinePageSize}
+          />
+        </>
+      )
+    }
+
+    const renderMainContent = () => {
+      switch (s.peopleDetailTab) {
+        case 'permissions':
+          return <PermissionsSection state={s} />
+        case 'certifications':
+          return <CertificationsSection state={s} />
+        case 'assignments':
+          return renderAssignmentsTab()
+        case 'training':
+          return renderTrainingTab()
+        case 'incidents':
+          return <IncidentsSection state={s} />
+        case 'documents':
+          return renderDocumentsTab()
+        case 'history':
+          return renderHistoryTab()
+        case 'overview':
+        default:
+          return renderOverviewTab()
+      }
+    }
 
     return (
       <ProfileDetailsLayout
@@ -500,7 +975,11 @@ export function PeopleSection({ state }: Props) {
           <>
             <button
               type="button"
-              onClick={() => setShowEditor((current) => !current)}
+              onClick={() => {
+                s.setPeopleDetailTab('overview')
+                setShowEditor((current) => !current)
+                setShowOffboardingShortcut(false)
+              }}
               className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
             >
               <Pencil className="h-4 w-4" />
@@ -508,32 +987,81 @@ export function PeopleSection({ state }: Props) {
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+              onClick={() => void handleAssignTraining()}
+              disabled={isLaunchingTraining}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-60"
             >
               <GraduationCap className="h-4 w-4" />
-              Assign training
+              {isLaunchingTraining ? 'Opening TrainArr...' : 'Assign training'}
             </button>
             <button
               type="button"
+              onClick={() => {
+                s.setPeopleDetailTab('permissions')
+                setShowEditor(false)
+                setShowOffboardingShortcut(false)
+              }}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
             >
               <ShieldCheck className="h-4 w-4" />
               Manage access
             </button>
-            <button
-              type="button"
-              aria-label="More person actions"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="More person actions"
+                onClick={() => setShowMoreActions((current) => !current)}
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+              {showMoreActions ? (
+                <div className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-slate-700 bg-slate-950 p-2 shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      s.setPeopleDetailTab('overview')
+                      setShowOffboardingShortcut(true)
+                      setShowEditor(false)
+                      setShowMoreActions(false)
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                  >
+                    Offboarding
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      s.setPeopleDetailTab('history')
+                      setShowOffboardingShortcut(false)
+                      setShowMoreActions(false)
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                  >
+                    Notes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      s.setPeopleDetailTab('overview')
+                      setShowOffboardingShortcut(false)
+                      setShowEditor(false)
+                      setShowMoreActions(false)
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                  >
+                    Full lookup
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </>
         )}
         metrics={[
           {
             label: 'Account state',
-            value: hasUserAccount ? 'Enabled' : 'Not linked',
-            hint: hasUserAccount ? 'NexArr login allowed' : 'No NexArr login account',
+            value: hasUserAccount ? 'Linked' : 'Not linked',
+            hint: canLogin ? 'Login requested in NexArr' : 'No login requested',
             icon: <KeyRound className="h-5 w-5" />,
             tone: hasUserAccount ? 'good' : 'neutral',
           },
@@ -559,89 +1087,36 @@ export function PeopleSection({ state }: Props) {
             tone: incidents.length > 0 ? 'warn' : 'good',
           },
         ]}
-        tabs={detailTabs}
+        tabs={DETAIL_TABS}
+        activeTab={s.peopleDetailTab}
+        onTabChange={(tabKey) => {
+          s.setPeopleDetailTab(tabKey as typeof s.peopleDetailTab)
+          setShowOffboardingShortcut(false)
+          if (tabKey !== 'overview') {
+            setShowEditor(false)
+          }
+        }}
         snapshotTitle="Person snapshot"
         snapshotSubtitle="Identity, employment placement, login capability, assignments, and source-of-truth references."
         snapshotFields={[
           { label: 'Person ID', value: personId ?? 'Not selected', source: 'NexArr source of truth' },
-          { label: 'Employee number', value: profile?.externalUserId ?? 'Not linked', source: 'StaffArr' },
-          { label: 'Display name', value: displayName, source: 'NexArr person record' },
-          { label: 'Preferred name', value: profile?.givenName ?? lookup?.givenName ?? 'Not recorded', source: 'StaffArr profile' },
+          { label: 'Display name', value: displayName, source: 'StaffArr person record' },
+          { label: 'Legal name', value: profile ? `${profile.legalFirstName} ${profile.legalLastName}`.trim() : 'Not recorded', source: 'StaffArr profile' },
+          { label: 'Preferred name', value: profile?.preferredName ?? profile?.givenName ?? lookup?.givenName ?? 'Not recorded', source: 'StaffArr profile' },
+          { label: 'Status', value: humanize(employmentStatus), source: 'Employment lifecycle' },
+          { label: 'Work relationship', value: humanize(profile?.workRelationshipType), source: 'StaffArr profile' },
           { label: 'Email', value: email, source: 'Login/contact' },
-          { label: 'Phone', value: lookup?.workPhone ?? 'Not recorded', source: 'Contact profile' },
+          { label: 'Phone', value: profile?.primaryPhone ?? lookup?.workPhone ?? 'Not recorded', source: 'Contact profile' },
           { label: 'Site', value: siteName, source: 'StaffArr org structure' },
           { label: 'Department', value: departmentName, source: 'StaffArr org structure' },
           { label: 'Position', value: positionName, source: 'StaffArr position catalog' },
           { label: 'Manager', value: managerName, source: 'Reporting line' },
-          { label: 'Hire date', value: formatDate(profile?.createdAt), source: 'Personnel record' },
-          { label: 'Shift', value: 'Not assigned', source: 'Schedule profile' },
+          { label: 'Home base', value: profile?.homeBaseLocationName ?? profile?.homeBaseLocationId ?? 'Not recorded', source: 'Location snapshot' },
+          { label: 'Can login', value: canLogin ? 'Requested' : 'No', source: 'NexArr capability snapshot' },
+          { label: 'Has account', value: hasUserAccount ? 'Yes' : 'No', source: 'NexArr account snapshot' },
+          { label: 'Start date', value: formatDate(profile?.startDate ?? profile?.expectedStartDate), source: 'Personnel record' },
         ]}
-        mainContent={(
-          <>
-            {showEditor ? <div>{editorPanel}</div> : null}
-            <div className="grid gap-5 lg:grid-cols-2">
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold text-white">Product permissions</h3>
-                  <Badge label="NexArr entitlement checked" tone="info" />
-                </div>
-                <div className="space-y-3">
-                  <ProductPermissionCard
-                    product="MaintainArr"
-                    role={hasProductSignal('maintainarr') ? 'Fleet Technician' : 'No product entitlement'}
-                    detail={hasProductSignal('maintainarr') ? 'Work orders, inspections, defects, asset notes' : 'No direct access'}
-                    allowed={hasProductSignal('maintainarr')}
-                  />
-                  <ProductPermissionCard
-                    product="TrainArr"
-                    role={hasProductSignal('trainarr') ? 'Trainee / Evaluator' : 'No product entitlement'}
-                    detail={hasProductSignal('trainarr') ? 'Assigned training, evaluator signoffs where qualified' : 'No direct access'}
-                    allowed={hasProductSignal('trainarr')}
-                  />
-                  <ProductPermissionCard
-                    product="StaffArr"
-                    role={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Self Service' : 'No product entitlement'}
-                    detail={hasProductSignal('staffarr') || activeRoleAssignments.length > 0 ? 'Own profile, own documents, own training history' : 'No direct access'}
-                    allowed={hasProductSignal('staffarr') || activeRoleAssignments.length > 0}
-                  />
-                  <ProductPermissionCard
-                    product="SupplyArr"
-                    role={hasProductSignal('supplyarr') ? 'Supply workspace user' : 'No product entitlement'}
-                    detail={hasProductSignal('supplyarr') ? 'Parts and procurement access' : 'No direct access'}
-                    allowed={hasProductSignal('supplyarr')}
-                  />
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold text-white">Certification status</h3>
-                  <Link to="/certifications" className="text-sm font-semibold text-sky-300 hover:text-sky-200">
-                    View all
-                  </Link>
-                </div>
-                <div className="space-y-3">
-                  {certificationCards.length > 0 ? certificationCards.map((cert) => (
-                    <div key={cert.personCertificationId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-bold text-white">{cert.certificationName}</p>
-                          <p className="mt-3 text-sm text-slate-100">Expires: {formatDate(cert.expiresAt)}</p>
-                          <p className="mt-2 text-xs text-slate-400">{humanize(cert.sourceType)} - Training completion</p>
-                        </div>
-                        <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
-                      </div>
-                    </div>
-                  )) : (
-                    <p className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-                      No certifications are recorded for this person.
-                    </p>
-                  )}
-                </div>
-              </section>
-            </div>
-          </>
-        )}
+        mainContent={renderMainContent()}
         decisionTitle="Authorization decision"
         decisionBadge={{ label: readinessAllowed ? 'Allowed' : 'Blocked', tone: readinessAllowed ? 'good' : 'bad' }}
         decisionIcon={readinessAllowed ? <UserCheck className="h-5 w-5 text-emerald-300" /> : <XCircle className="h-5 w-5 text-red-300" />}
@@ -660,13 +1135,13 @@ export function PeopleSection({ state }: Props) {
             content: (
               <div className="space-y-3">
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                  <p className="text-sm font-bold text-white">Person source</p>
-                  <p className="mt-1 text-sm text-sky-100/75">NexArr personId is the human identity source of truth.</p>
+                  <p className="text-sm font-bold text-white">Identity source</p>
+                  <p className="mt-1 text-sm text-sky-100/75">StaffArr tracks the person record; NexArr credentials remain authoritative for auth.</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
                   <p className="text-sm font-bold text-white">Login capability</p>
                   <p className="mt-1 text-sm text-sky-100/75">
-                    hasUserAccount = {hasUserAccount ? 'true' : 'false'}; credentials managed by NexArr.
+                    canLoginSnapshot = {canLogin ? 'true' : 'false'}; hasUserAccountSnapshot = {hasUserAccount ? 'true' : 'false'}.
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
@@ -757,11 +1232,11 @@ export function PeopleSection({ state }: Props) {
     <>
       {mode === 'create' ? (
         <div className="rounded-xl border border-teal-700/50 bg-teal-950/20 p-4 text-sm text-teal-100">
-          <p>Create people in a guided flow using friendly business fields only.</p>
+          <p>Create people in a guided flow using business-aligned identity, placement, login intent, and initial access fields.</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>Step 1: Add identity fields so this person can be recognized in staffing workflows.</li>
-            <li>Step 2: Set organization placement to route assignments and approvals correctly.</li>
-            <li>Step 3: Confirm role and status so readiness and training logic stays accurate.</li>
+            <li>Step 1: Capture the canonical identity fields used across StaffArr and NexArr.</li>
+            <li>Step 2: Set contact, lifecycle status, and work relationship details.</li>
+            <li>Step 3: Seed placement and optional role assignments in one creation flow.</li>
           </ol>
         </div>
       ) : null}
@@ -770,11 +1245,13 @@ export function PeopleSection({ state }: Props) {
 
       {mode === 'create' ? (
         <CreatePersonPanel
+          accessToken={s.accessToken}
           orgUnits={s.orgUnits}
           peopleOptions={s.people.map((person) => ({
             personId: person.personId,
             displayName: person.displayName,
           }))}
+          roleTemplates={s.roleTemplates}
           canManage={s.canManagePeopleProfiles}
           isSubmitting={s.createPersonMutation.isPending}
           errorMessage={

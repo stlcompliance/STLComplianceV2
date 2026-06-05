@@ -99,7 +99,7 @@ export function CertificationsSection({ state }: Props) {
         <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-3">
           <dt className="text-xs uppercase tracking-wide text-slate-400">Readiness blockers</dt>
           <dd className="mt-1 text-lg font-semibold text-white">
-            {s.personReadinessQuery.data?.blockers.length ?? 0}
+            {s.personReadinessQuery?.data?.blockers.length ?? 0}
           </dd>
         </div>
       </dl>

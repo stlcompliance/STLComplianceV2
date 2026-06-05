@@ -19,10 +19,20 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
-import { ProductAppShell, type ProductNavItem } from '@stl/shared-ui'
 import {
-  assurarrApi,
-} from './api'
+  ProductAppShell,
+  buildProductLaunchUrlMap,
+  formatProductLaunchError,
+  getLaunchCatalog,
+  resolveProductWorkspaceBootstrapError,
+  resolveSuiteHomeUrl,
+  useProductWorkspaceLaunch,
+  type ProductNavItem,
+} from '@stl/shared-ui'
+import { assurarrApi } from './api'
+import { getSessionBootstrap } from './api/client'
+import { clearSession, loadSession } from './auth/sessionStorage'
+import { LaunchPage } from './LaunchPage'
 
 const asNavIcon = (icon: LucideIcon): ProductNavItem['icon'] => icon as unknown as ProductNavItem['icon']
 
@@ -46,6 +56,10 @@ const navItems: ProductNavItem[] = [
   { label: 'Settings', to: '/settings', icon: asNavIcon(FolderKanban), sectionBreakBefore: true },
 ]
 
+const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
+const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
+const apiBase = import.meta.env.VITE_ASSURARR_API_BASE ?? ''
+
 const statusOptions: Record<string, readonly string[]> = {
   nonconformance: ['open', 'containment', 'investigation', 'disposition_pending', 'corrective_action', 'verification', 'release_pending', 'closed', 'canceled'],
   hold: ['draft', 'active', 'release_pending', 'released', 'rejected', 'canceled', 'expired'],
@@ -61,13 +75,42 @@ const statusOptions: Record<string, readonly string[]> = {
   customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
 
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({
+  children,
+  tenantDisplayName,
+  tenantSlug,
+  userDisplayName,
+  entitlements = ['assurarr'],
+  onSelectProduct,
+  onSignOut,
+  isProductLaunchPending,
+  productLaunchError,
+}: {
+  children: ReactNode
+  tenantDisplayName?: string
+  tenantSlug?: string
+  userDisplayName?: string
+  entitlements?: readonly string[]
+  onSelectProduct?: (productKey: string) => void
+  onSignOut?: () => void
+  isProductLaunchPending?: boolean
+  productLaunchError?: string | null
+}) {
   return (
     <ProductAppShell
       productName="AssurArr"
       productKey="assurarr"
       workspaceSubtitle="Quality assurance, holds, and CAPA"
-      entitlements={['assurarr']}
+      tenantDisplayName={tenantDisplayName}
+      tenantSlug={tenantSlug}
+      userDisplayName={userDisplayName}
+      entitlements={entitlements}
+      suiteHomeUrl={suiteHomeUrl}
+      productLaunchUrls={productLaunchUrls}
+      onSelectProduct={onSelectProduct}
+      onSignOut={onSignOut}
+      isProductLaunchPending={isProductLaunchPending}
+      productLaunchError={productLaunchError}
       navItems={navItems}
     >
       {children}
@@ -6059,9 +6102,41 @@ function SettingsPage() {
 
 export function App() {
   const location = useLocation()
+  const session = loadSession()
+  const sessionQuery = useQuery({
+    queryKey: ['assurarr-session', session?.accessToken],
+    queryFn: () => getSessionBootstrap(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
+  const launchCatalogQuery = useQuery({
+    queryKey: ['assurarr-launch-catalog', session?.accessToken],
+    queryFn: () => getLaunchCatalog(apiBase, session!.accessToken, 'assurarr'),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
+  useEffect(() => {
+    if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
+      clearSession()
+    }
+  }, [sessionQuery.error, sessionQuery.isError])
+
+  useEffect(() => {
+    if (launchCatalogQuery.isError && resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)) {
+      clearSession()
+    }
+  }, [launchCatalogQuery.error, launchCatalogQuery.isError])
+
+  const normalizedPathname = location.pathname.replace(/\/+$/, '') || '/'
+
+  if (normalizedPathname === '/launch') {
+    return <LaunchPage />
+  }
 
   const title = useMemo(() => {
-    const path = location.pathname
+    const path = normalizedPathname
     if (path.startsWith('/nonconformances')) return 'Nonconformances'
     if (path.startsWith('/holds')) return 'Holds'
     if (path.startsWith('/audits')) return 'Audits'
@@ -6087,10 +6162,58 @@ export function App() {
     if (path.startsWith('/scorecards')) return 'Scorecards'
     if (path.startsWith('/history')) return 'History'
     return 'Dashboard'
-  }, [location.pathname])
+  }, [normalizedPathname])
+
+  const bootstrapError = sessionQuery.isError
+    ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
+    : null
+
+  const workspaceSession =
+    session && sessionQuery.data && !bootstrapError
+      ? {
+          userDisplayName: session.displayName,
+          tenantDisplayName: session.tenantDisplayName,
+          tenantSlug: session.tenantSlug,
+        }
+      : null
+
+  const switcherEntitlements =
+    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
+    sessionQuery.data?.entitlements ??
+    ['assurarr']
+
+  const productLaunch = useProductWorkspaceLaunch({
+    apiBase,
+    accessToken: session?.accessToken ?? '',
+    currentProductKey: 'assurarr',
+    suiteHomeUrl,
+    productLaunchUrls,
+  })
 
   return (
-    <AppShell>
+    <AppShell
+      tenantDisplayName={workspaceSession?.tenantDisplayName}
+      tenantSlug={workspaceSession?.tenantSlug}
+      userDisplayName={workspaceSession?.userDisplayName}
+      entitlements={switcherEntitlements}
+      onSelectProduct={
+        session?.accessToken
+          ? (productKey) => {
+              void productLaunch.mutate(productKey)
+            }
+          : undefined
+      }
+      onSignOut={
+        session
+          ? () => {
+              clearSession()
+              window.location.assign(suiteHomeUrl)
+            }
+          : undefined
+      }
+      isProductLaunchPending={productLaunch.isPending}
+      productLaunchError={productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null}
+    >
       <Routes>
         <Route index element={<DashboardPage />} />
         <Route path="/nonconformances" element={<NonconformancePage />} />

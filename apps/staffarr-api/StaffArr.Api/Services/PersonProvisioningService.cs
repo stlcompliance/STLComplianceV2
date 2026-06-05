@@ -23,6 +23,8 @@ public sealed class PersonProvisioningService(StaffArrDbContext db)
             {
                 existing.PrimaryEmail = email.Trim();
                 existing.DisplayName = displayName.Trim();
+                existing.CanLoginSnapshot = true;
+                existing.HasUserAccountSnapshot = true;
                 existing.UpdatedAt = DateTimeOffset.UtcNow;
                 await db.SaveChangesAsync(cancellationToken);
             }
@@ -38,9 +40,13 @@ public sealed class PersonProvisioningService(StaffArrDbContext db)
             ExternalUserId = externalUserId,
             GivenName = givenName,
             FamilyName = familyName,
+            LegalFirstName = givenName,
+            LegalLastName = familyName,
             DisplayName = displayName.Trim(),
             PrimaryEmail = email.Trim(),
             EmploymentStatus = "active",
+            CanLoginSnapshot = true,
+            HasUserAccountSnapshot = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };

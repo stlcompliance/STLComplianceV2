@@ -91,7 +91,7 @@ export function PersonnelReportsPanel({
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
-          <option value="on_leave">On leave</option>
+          <option value="leave">On leave</option>
         </select>
       </label>
 

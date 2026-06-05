@@ -21,12 +21,6 @@ vi.mock('../../components/ReadinessRollupSupervisorPanel', () => ({
   ReadinessRollupSupervisorPanel: () => null,
 }))
 
-vi.mock('../../components/CertificationPanel', () => ({
-  CertificationPanel: ({ actionErrorMessage }: { actionErrorMessage: string | null }) => (
-    <div data-testid="certifications-action-error">{actionErrorMessage ?? ''}</div>
-  ),
-}))
-
 describe('Workspace section action error normalization', () => {
   afterEach(() => {
     cleanup()
@@ -69,11 +63,13 @@ describe('Workspace section action error normalization', () => {
     expect(screen.getByTestId('readiness-action-error').textContent).toContain('Override policy check failed')
   })
 
-  it('passes generic certification mutation errors to CertificationPanel', () => {
+  it('renders the TrainArr-owned certification mirror without surfacing StaffArr write errors', () => {
     const state = {
       selectedPerson: { personId: 'person-1', displayName: 'Alex Rivera' },
+      accessToken: 'token',
       certificationDefinitions: [],
       personCertifications: [],
+      personReadinessQuery: { data: null, isLoading: false, isError: false, error: null, refetch: vi.fn() },
       certificationDefinitionsQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn() },
       personCertificationsQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn() },
       canManagePeopleProfiles: true,
@@ -83,6 +79,7 @@ describe('Workspace section action error normalization', () => {
     } as unknown as StaffArrWorkspaceState
 
     render(<CertificationsSection state={state} />)
-    expect(screen.getByTestId('certifications-action-error').textContent).toContain('Certification write timeout')
+    expect(screen.getByText('Certification actions moved to TrainArr')).toBeTruthy()
+    expect(screen.queryByText('Certification write timeout')).toBeNull()
   })
 })

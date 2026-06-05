@@ -30,7 +30,7 @@ public sealed class PersonnelReportService(StaffArrDbContext db)
         var inactiveCount = people.Count(x =>
             string.Equals(x.EmploymentStatus, "inactive", StringComparison.OrdinalIgnoreCase));
         var onLeaveCount = people.Count(x =>
-            string.Equals(x.EmploymentStatus, "on_leave", StringComparison.OrdinalIgnoreCase));
+            string.Equals(x.EmploymentStatus, "leave", StringComparison.OrdinalIgnoreCase));
         var total = people.Count;
         var activePercent = total == 0 ? 0m : Math.Round(activeCount * 100m / total, 1);
 

@@ -6,6 +6,8 @@ const people: StaffPersonSummaryResponse[] = [
   {
     personId: '1',
     externalUserId: null,
+    givenName: 'Alex',
+    familyName: 'Rivera',
     displayName: 'Alex Rivera',
     primaryEmail: 'alex.rivera@example.com',
     employmentStatus: 'active',
@@ -17,6 +19,8 @@ const people: StaffPersonSummaryResponse[] = [
   {
     personId: '2',
     externalUserId: null,
+    givenName: 'Sam',
+    familyName: 'Patel',
     displayName: 'Sam Patel',
     primaryEmail: 'sam.patel@example.com',
     employmentStatus: 'inactive',

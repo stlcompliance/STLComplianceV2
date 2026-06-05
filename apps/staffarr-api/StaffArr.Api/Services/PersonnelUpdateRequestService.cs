@@ -209,14 +209,16 @@ public sealed class PersonnelUpdateRequestService(
             case "job_title":
                 person.JobTitle = NormalizeJobTitle(record.RequestedValue);
                 break;
-            case "given_name":
-                person.GivenName = NormalizeNamePart(record.RequestedValue, "Given name");
-                person.DisplayName = BuildDisplayName(person.GivenName, person.FamilyName);
-                break;
-            case "family_name":
-                person.FamilyName = NormalizeNamePart(record.RequestedValue, "Family name");
-                person.DisplayName = BuildDisplayName(person.GivenName, person.FamilyName);
-                break;
+            case "given_name":
+                person.GivenName = NormalizeNamePart(record.RequestedValue, "Given name");
+                person.LegalFirstName = person.GivenName;
+                person.DisplayName = BuildDisplayName(person.LegalFirstName, person.LegalLastName, person.PreferredName);
+                break;
+            case "family_name":
+                person.FamilyName = NormalizeNamePart(record.RequestedValue, "Family name");
+                person.LegalLastName = person.FamilyName;
+                person.DisplayName = BuildDisplayName(person.LegalFirstName, person.LegalLastName, person.PreferredName);
+                break;
             default:
                 throw new StlApiException(
                     "personnel_update.apply_unsupported",
@@ -340,8 +342,8 @@ public sealed class PersonnelUpdateRequestService(
         return trimmed;
     }
 
-    private static string BuildDisplayName(string givenName, string familyName) =>
-        $"{givenName.Trim()} {familyName.Trim()}".Trim();
+    private static string BuildDisplayName(string legalFirstName, string legalLastName, string? preferredName) =>
+        $"{(string.IsNullOrWhiteSpace(preferredName) ? legalFirstName.Trim() : preferredName.Trim())} {legalLastName.Trim()}".Trim();
 
     private static PersonnelUpdateRequestResponse Map(PersonnelUpdateRequest record) =>
         new(
@@ -361,4 +363,4 @@ public sealed class PersonnelUpdateRequestService(
             record.CreatedAt,
             record.UpdatedAt);
 }
-
+

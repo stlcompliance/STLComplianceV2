@@ -28,6 +28,11 @@ export interface DetailRailSectionConfig {
   content: ReactNode
 }
 
+export interface DetailTabConfig {
+  key: string
+  label: string
+}
+
 export interface ProfileDetailsLayoutProps {
   testId?: string
   backLabel: string
@@ -39,7 +44,9 @@ export interface ProfileDetailsLayoutProps {
   badges: DetailBadgeConfig[]
   actions?: ReactNode
   metrics: DetailMetricConfig[]
-  tabs: string[]
+  tabs: Array<string | DetailTabConfig>
+  activeTab?: string
+  onTabChange?: (tabKey: string) => void
   snapshotTitle: string
   snapshotSubtitle: string
   snapshotFields: DetailSnapshotFieldConfig[]
@@ -106,6 +113,8 @@ export function ProfileDetailsLayout({
   actions,
   metrics,
   tabs,
+  activeTab,
+  onTabChange,
   snapshotTitle,
   snapshotSubtitle,
   snapshotFields,
@@ -121,6 +130,9 @@ export function ProfileDetailsLayout({
   railSections,
 }: ProfileDetailsLayoutProps) {
   const activeTone = decisionBadge.tone ?? 'neutral'
+  const normalizedTabs = tabs.map((tab) =>
+    typeof tab === 'string' ? { key: tab, label: tab } : tab,
+  )
 
   return (
     <div className="space-y-6" data-testid={testId}>
@@ -181,19 +193,22 @@ export function ProfileDetailsLayout({
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
           <div className="flex overflow-x-auto border-b border-slate-800">
-            {tabs.map((tab, index) => (
+            {normalizedTabs.map((tab, index) => {
+              const isActive = activeTab ? tab.key === activeTab : index === 0
+              return (
               <button
-                key={tab}
+                key={tab.key}
                 type="button"
                 role="tab"
-                aria-selected={index === 0}
+                aria-selected={isActive}
                 className={`shrink-0 px-5 py-4 text-sm font-semibold ${
-                  index === 0 ? 'bg-slate-900 text-sky-300' : 'text-sky-200/75 hover:bg-slate-900/50'
+                  isActive ? 'bg-slate-900 text-sky-300' : 'text-sky-200/75 hover:bg-slate-900/50'
                 }`}
+                onClick={() => onTabChange?.(tab.key)}
               >
-                {tab}
+                {tab.label}
               </button>
-            ))}
+            )})}
           </div>
           <div className="space-y-6 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">

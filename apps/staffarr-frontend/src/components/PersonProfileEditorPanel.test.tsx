@@ -1,6 +1,15 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { canManagePeople, PersonProfileEditorPanel } from './PersonProfileEditorPanel'
+
+const mocked = vi.hoisted(() => ({
+  listSiteLocations: vi.fn(async () => []),
+}))
+
+vi.mock('../api/client', () => ({
+  listSiteLocations: mocked.listSiteLocations,
+}))
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
   const mod = await importOriginal<typeof import('@stl/shared-ui')>()
@@ -12,12 +21,14 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       onChange,
       options,
       testId,
+      disabled,
     }: {
       label?: string
       value: string
       onChange: (value: string) => void
       options: { value: string; label: string }[]
       testId?: string
+      disabled?: boolean
     }) => (
       <label htmlFor={testId ?? 'mock-static-search-picker'}>
         {label}
@@ -25,6 +36,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
           id={testId ?? 'mock-static-search-picker'}
           aria-label={label}
           data-testid={testId}
+          disabled={disabled}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -38,20 +50,47 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   }
 })
 
+import { canManagePeople, PersonProfileEditorPanel } from './PersonProfileEditorPanel'
+
 const profile = {
   personId: '11111111-1111-1111-1111-111111111101',
   externalUserId: null,
   givenName: 'Demo',
   familyName: 'Worker',
+  legalFirstName: 'Demo',
+  legalMiddleName: null,
+  legalLastName: 'Worker',
+  preferredName: 'Demo',
+  pronouns: null,
   displayName: 'Demo Worker',
   primaryEmail: 'worker@demo.stl',
+  alternateEmail: null,
+  primaryPhone: null,
+  alternatePhone: null,
+  workPhone: null,
   employmentStatus: 'active',
+  workRelationshipType: 'employee',
+  employmentType: 'full_time',
   primaryOrgUnitId: null,
   primaryOrgUnitName: null,
   managerPersonId: null,
   jobTitle: 'Technician',
+  startDate: null,
+  expectedStartDate: null,
+  homeBaseLocationId: null,
+  homeBaseLocationName: null,
+  canLoginSnapshot: false,
+  hasUserAccountSnapshot: false,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+}
+
+function renderPanel(node: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+
+  return render(<QueryClientProvider client={queryClient}>{node}</QueryClientProvider>)
 }
 
 describe('PersonProfileEditorPanel', () => {
@@ -62,11 +101,13 @@ describe('PersonProfileEditorPanel', () => {
   })
 
   it('shows read-only notice for non-writers', () => {
-    render(
+    renderPanel(
       <PersonProfileEditorPanel
+        accessToken="token"
         profile={profile}
         orgUnits={[]}
         peopleOptions={[]}
+        siteContextOrgUnitId={null}
         canManage={false}
         isSubmitting={false}
         errorMessage={null}
@@ -80,12 +121,14 @@ describe('PersonProfileEditorPanel', () => {
   })
 
   it('renders edit controls for writers', () => {
-    render(
+    renderPanel(
       <PersonProfileEditorPanel
+        accessToken="token"
         profile={profile}
         orgUnits={[]}
         peopleOptions={[]}
-        canManage={true}
+        siteContextOrgUnitId={null}
+        canManage
         isSubmitting={false}
         errorMessage={null}
         onUpdate={async () => {}}
@@ -94,18 +137,20 @@ describe('PersonProfileEditorPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: /Save profile changes/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Mark inactive/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Apply status/i })).toBeTruthy()
     expect(screen.getByTestId('edit-person-primary-org-unit-picker')).toBeTruthy()
     expect(screen.getByTestId('edit-person-manager-picker')).toBeTruthy()
   })
 
   it('renders profile error in callout', () => {
-    render(
+    renderPanel(
       <PersonProfileEditorPanel
+        accessToken="token"
         profile={profile}
         orgUnits={[]}
         peopleOptions={[]}
-        canManage={true}
+        siteContextOrgUnitId={null}
+        canManage
         isSubmitting={false}
         errorMessage="profile save failed"
         onUpdate={async () => {}}

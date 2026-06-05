@@ -95,6 +95,7 @@ import type {
   CertificationReportSummaryResponse,
   EntityExportManifestResponse,
   LaunchHandoffResponse,
+  StaffArrIntegrationLocationResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -586,6 +587,22 @@ export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OrgUnitResponse[]>(response, 'Failed to load org units')
+}
+
+export async function listSiteLocations(
+  accessToken: string,
+  siteOrgUnitId: string,
+): Promise<StaffArrIntegrationLocationResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/v1/integrations/sites/${siteOrgUnitId}/locations`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<StaffArrIntegrationLocationResponse[]>(
+    response,
+    'Failed to load site locations',
+  )
 }
 
 export async function createOrgUnit(accessToken: string, request: CreateOrgUnitRequest): Promise<OrgUnitResponse> {
