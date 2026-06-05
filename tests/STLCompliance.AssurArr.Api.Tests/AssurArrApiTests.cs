@@ -72,6 +72,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(title, created!.Title);
 
+        var createdDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        createdDashboardResponse.EnsureSuccessStatusCode();
+        var createdDashboard = await createdDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(createdDashboard);
+        Assert.Contains(createdDashboard!.RecentEvents, entry => entry.EventType == "assurarr.nonconformance.created" && entry.SubjectId == created.Id);
+
         var initialStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
         initialStatusResponse.EnsureSuccessStatusCode();
         var initialStatus = await initialStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
@@ -251,7 +257,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         nonconformanceDashboardResponse.EnsureSuccessStatusCode();
         var nonconformanceDashboard = await nonconformanceDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(nonconformanceDashboard);
-        Assert.Contains(nonconformanceDashboard!.RecentEvents, entry => entry.EventType == "assurarr.nonconformance.status_changed");
+        Assert.Contains(nonconformanceDashboard!.RecentEvents, entry => entry.EventType == "assurarr.nonconformance.status_changed" && entry.SubjectId == nonconformance.Id);
         Assert.Contains(nonconformanceDashboard.RecentEvents, entry => entry.EventType == "assurarr.nonconformance.closed");
     }
 
@@ -293,7 +299,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         approvalHoldDashboardResponse.EnsureSuccessStatusCode();
         var approvalHoldDashboard = await approvalHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(approvalHoldDashboard);
-        Assert.Contains(approvalHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.placed");
+        Assert.Contains(approvalHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.placed" && entry.SubjectId == approvalHold.Id);
 
         var approvalHoldDetailResponse = await _client.GetAsync($"/api/v1/integrations/holds/{approvalHold!.Id}");
         Assert.Equal(HttpStatusCode.OK, approvalHoldDetailResponse.StatusCode);
@@ -331,7 +337,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         releaseRequestedDashboardResponse.EnsureSuccessStatusCode();
         var releaseRequestedDashboard = await releaseRequestedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(releaseRequestedDashboard);
-        Assert.Contains(releaseRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.release_requested");
+        Assert.Contains(releaseRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.release_requested" && entry.SubjectId == approvalHold.Id);
 
         var holdsAfterRequestResponse = await _client.GetAsync("/api/v1/integrations/holds");
         holdsAfterRequestResponse.EnsureSuccessStatusCode();
@@ -417,7 +423,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         cancelHoldDashboardResponse.EnsureSuccessStatusCode();
         var cancelHoldDashboard = await cancelHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(cancelHoldDashboard);
-        Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.canceled");
+        Assert.Contains(cancelHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.canceled" && entry.SubjectId == cancelHold.Id);
+        Assert.Contains(cancelHoldDashboard.RecentEvents, entry => entry.EventType == "assurarr.hold.status_changed" && entry.SubjectId == cancelHold.Id);
 
         var canceledHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
         canceledHoldStatusResponse.EnsureSuccessStatusCode();
@@ -537,6 +544,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(review);
         Assert.Equal(reviewTitle, review!.Title);
 
+        var reviewRequestedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        reviewRequestedDashboardResponse.EnsureSuccessStatusCode();
+        var reviewRequestedDashboard = await reviewRequestedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(reviewRequestedDashboard);
+        Assert.Contains(reviewRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_review.requested" && entry.SubjectId == review.Id);
+
         var reviewDetailResponse = await _client.GetAsync($"/api/v1/integrations/quality-reviews/{review.Id}");
         Assert.Equal(HttpStatusCode.OK, reviewDetailResponse.StatusCode);
         var reviewDetail = await reviewDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityReviewResponse>();
@@ -603,7 +616,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         rejectedReviewDashboardResponse.EnsureSuccessStatusCode();
         var rejectedReviewDashboard = await rejectedReviewDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(rejectedReviewDashboard);
-        Assert.Contains(rejectedReviewDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_review.rejected");
+        Assert.Contains(rejectedReviewDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_review.rejected" && entry.SubjectId == rejectedReview!.Id);
+        Assert.Contains(rejectedReviewDashboard.RecentEvents, entry => entry.EventType == "assurarr.quality_review.requested" && entry.SubjectId == rejectedReview.Id);
 
         var releaseTitle = $"Test quality release {Guid.NewGuid():N}";
         var releaseResponse = await _client.PostAsJsonAsync(
@@ -630,6 +644,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var release = await releaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
         Assert.NotNull(release);
         Assert.Equal(releaseTitle, release!.Title);
+
+        var releaseRequestedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        releaseRequestedDashboardResponse.EnsureSuccessStatusCode();
+        var releaseRequestedDashboard = await releaseRequestedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(releaseRequestedDashboard);
+        Assert.Contains(releaseRequestedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_release.requested" && entry.SubjectId == release.Id);
 
         var releaseDetailResponse = await _client.GetAsync($"/api/v1/integrations/quality-releases/{release.Id}");
         Assert.Equal(HttpStatusCode.OK, releaseDetailResponse.StatusCode);
@@ -662,6 +682,48 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(releaseDashboard);
         Assert.Contains(releaseDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_release.approved");
         Assert.Contains(releaseDashboard.RecentEvents, entry => entry.EventType == "assurarr.quality_release.executed");
+
+        var rejectedReleaseTitle = $"Test rejected quality release {Guid.NewGuid():N}";
+        var rejectedReleaseResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/quality-releases",
+            new CreateAssurArrQualityReleaseRequest(
+                rejectedReleaseTitle,
+                "Automated coverage for rejected quality release workflow.",
+                "low",
+                "assurarr",
+                "HOLD-000001",
+                ["loadarr:inventory:test"],
+                null,
+                "HOLD-000001",
+                "full",
+                null,
+                DateTimeOffset.UtcNow,
+                "Rejected release review evidence.",
+                DateTimeOffset.UtcNow.AddDays(1),
+                ["recordarr:doc:test"],
+                "Rejected release notes"));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedReleaseResponse.StatusCode);
+        var rejectedRelease = await rejectedReleaseResponse.Content.ReadFromJsonAsync<AssurArrQualityReleaseResponse>();
+        Assert.NotNull(rejectedRelease);
+
+        var rejectedReleasePendingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/quality-releases/{rejectedRelease!.Id}/status",
+            new UpdateAssurArrStatusRequest("pending_review", "Release pending review."));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedReleasePendingResponse.StatusCode);
+
+        var rejectedReleaseStatusResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/quality-releases/{rejectedRelease!.Id}/status",
+            new UpdateAssurArrStatusRequest("rejected", "Release rejected."));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedReleaseStatusResponse.StatusCode);
+
+        var rejectedReleaseDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        rejectedReleaseDashboardResponse.EnsureSuccessStatusCode();
+        var rejectedReleaseDashboard = await rejectedReleaseDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(rejectedReleaseDashboard);
+        Assert.Contains(rejectedReleaseDashboard!.RecentEvents, entry => entry.EventType == "assurarr.quality_release.rejected" && entry.SubjectId == rejectedRelease.Id);
 
         var listResponse = await _client.GetAsync("/api/v1/integrations/quality-reviews");
         listResponse.EnsureSuccessStatusCode();
@@ -1069,6 +1131,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var audit = await auditResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
         Assert.NotNull(audit);
 
+        var auditCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        auditCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var auditCreatedDashboard = await auditCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(auditCreatedDashboard);
+        Assert.Contains(auditCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.created" && entry.SubjectId == audit.Id);
+
         var auditDetailResponse = await _client.GetAsync($"/api/v1/audits/{audit!.Id}");
         Assert.Equal(HttpStatusCode.OK, auditDetailResponse.StatusCode);
         var auditDetail = await auditDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
@@ -1086,7 +1154,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         startedDashboardResponse.EnsureSuccessStatusCode();
         var startedDashboard = await startedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(startedDashboard);
-        Assert.Contains(startedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.started");
+        Assert.Contains(startedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.started" && entry.SubjectId == audit.Id);
+        Assert.Contains(startedDashboard.RecentEvents, entry => entry.EventType == "assurarr.audit.status_changed" && entry.SubjectId == audit.Id);
 
         var checklistTitle = $"Test checklist {Guid.NewGuid():N}";
         var checklistResponse = await _client.PostAsJsonAsync(
@@ -1105,7 +1174,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         checklistCreatedDashboardResponse.EnsureSuccessStatusCode();
         var checklistCreatedDashboard = await checklistCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(checklistCreatedDashboard);
-        Assert.Contains(checklistCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist_created");
+        Assert.Contains(checklistCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist_created" && entry.SubjectId == audit.Id);
 
         var itemPrompt = $"Check release signature {Guid.NewGuid():N}";
         var itemResponse = await _client.PostAsJsonAsync(
@@ -1148,7 +1217,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         itemCreatedDashboardResponse.EnsureSuccessStatusCode();
         var itemCreatedDashboard = await itemCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(itemCreatedDashboard);
-        Assert.Contains(itemCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist.item_created");
+        Assert.Contains(itemCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.checklist.item_created" && entry.SubjectId == checklist.Id);
 
         var findingTitle = $"Test finding {Guid.NewGuid():N}";
         var findingResponse = await _client.PostAsJsonAsync(
@@ -1182,8 +1251,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         findingCreatedDashboardResponse.EnsureSuccessStatusCode();
         var findingCreatedDashboard = await findingCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(findingCreatedDashboard);
-        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.created");
-        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.finding_created");
+        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.created" && entry.SubjectId == finding.Id);
+        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.finding_created" && entry.SubjectId == finding.Id);
 
         var acceptFindingResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/findings/{finding.Id}/status",
@@ -1201,8 +1270,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         findingStatusDashboardResponse.EnsureSuccessStatusCode();
         var findingStatusDashboard = await findingStatusDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(findingStatusDashboard);
-        Assert.Contains(findingStatusDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.accepted");
-        Assert.Contains(findingStatusDashboard.RecentEvents, entry => entry.EventType == "assurarr.finding.nonconformance_created");
+        Assert.Contains(findingStatusDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.accepted" && entry.SubjectId == finding.Id);
+        Assert.Contains(findingStatusDashboard.RecentEvents, entry => entry.EventType == "assurarr.finding.nonconformance_created" && entry.SubjectId == finding.Id);
 
         var checklistListResponse = await _client.GetAsync($"/api/v1/audits/{audit.Id}/checklists");
         checklistListResponse.EnsureSuccessStatusCode();
@@ -1290,6 +1359,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(supplierIssue);
         Assert.Equal(supplierTitle, supplierIssue!.Title);
 
+        var supplierCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        supplierCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var supplierCreatedDashboard = await supplierCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(supplierCreatedDashboard);
+        Assert.Contains(supplierCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.supplier_quality_issue.created" && entry.SubjectId == supplierIssue.Id);
+
         var supplierDetailResponse = await _client.GetAsync($"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}");
         Assert.Equal(HttpStatusCode.OK, supplierDetailResponse.StatusCode);
         var supplierDetail = await supplierDetailResponse.Content.ReadFromJsonAsync<AssurArrSupplierQualityIssueResponse>();
@@ -1340,7 +1415,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         supplierDashboardResponse.EnsureSuccessStatusCode();
         var supplierDashboard = await supplierDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(supplierDashboard);
-        Assert.Contains(supplierDashboard!.RecentEvents, entry => entry.EventType == "assurarr.supplier_quality_issue.closed");
+        Assert.Contains(supplierDashboard!.RecentEvents, entry => entry.EventType == "assurarr.supplier_quality_issue.status_changed" && entry.SubjectId == supplierIssue.Id);
+        Assert.Contains(supplierDashboard.RecentEvents, entry => entry.EventType == "assurarr.supplier_quality_issue.closed" && entry.SubjectId == supplierIssue.Id);
 
         var complaintTitle = $"Test complaint case {Guid.NewGuid():N}";
         var complaintResponse = await _client.PostAsJsonAsync(
@@ -1373,6 +1449,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var complaint = await complaintResponse.Content.ReadFromJsonAsync<AssurArrCustomerComplaintQualityCaseResponse>();
         Assert.NotNull(complaint);
         Assert.Equal(complaintTitle, complaint!.Title);
+
+        var complaintCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        complaintCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var complaintCreatedDashboard = await complaintCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(complaintCreatedDashboard);
+        Assert.Contains(complaintCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.created" && entry.SubjectId == complaint.Id);
 
         var complaintDetailResponse = await _client.GetAsync($"/api/v1/integrations/customer-complaint-quality-cases/{complaint.Id}");
         Assert.Equal(HttpStatusCode.OK, complaintDetailResponse.StatusCode);
@@ -1427,8 +1509,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         complaintDashboardResponse.EnsureSuccessStatusCode();
         var complaintDashboard = await complaintDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(complaintDashboard);
-        Assert.Contains(complaintDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.response_sent");
-        Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.closed");
+        Assert.Contains(complaintDashboard!.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.response_sent" && entry.SubjectId == complaint.Id);
+        Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.status_changed" && entry.SubjectId == complaint.Id);
+        Assert.Contains(complaintDashboard.RecentEvents, entry => entry.EventType == "assurarr.customer_complaint.closed" && entry.SubjectId == complaint.Id);
 
         var supplierList = await _client.GetAsync("/api/v1/integrations/supplier-quality-issues");
         supplierList.EnsureSuccessStatusCode();
@@ -1487,6 +1570,52 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var scars = await listResponse.Content.ReadFromJsonAsync<List<AssurArrSupplierCorrectiveActionRequestResponse>>();
         Assert.NotNull(scars);
         Assert.Contains(scars!, item => item.Title == title);
+
+        var rejectedTitle = $"Test rejected SCAR {Guid.NewGuid():N}";
+        var rejectedCreateResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/scars",
+            new CreateAssurArrSupplierCorrectiveActionRequest(
+                rejectedTitle,
+                "Automated coverage for rejected SCARs.",
+                "high",
+                "assurarr",
+                "SQA-000001",
+                ["loadarr:receipt:test", "supplyarr:po:test"],
+                "supplyarr:supplier:test",
+                "NCR-000001",
+                "CAPA-000001",
+                null,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(7),
+                ["recordarr:doc:test"],
+                null,
+                DateTimeOffset.UtcNow,
+                "accepted",
+                "CAPA-000001",
+                ["recordarr:doc:test"],
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedCreateResponse.StatusCode);
+        var rejectedScar = await rejectedCreateResponse.Content.ReadFromJsonAsync<AssurArrSupplierCorrectiveActionRequestResponse>();
+        Assert.NotNull(rejectedScar);
+
+        var rejectedScarSentResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{rejectedScar!.Id}/status",
+            new UpdateAssurArrStatusRequest("sent", "Supplier response sent."));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedScarSentResponse.StatusCode);
+
+        var rejectedScarResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{rejectedScar!.Id}/status",
+            new UpdateAssurArrStatusRequest("rejected", "Supplier response rejected."));
+
+        Assert.Equal(HttpStatusCode.OK, rejectedScarResponse.StatusCode);
+
+        var rejectedScarDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        rejectedScarDashboardResponse.EnsureSuccessStatusCode();
+        var rejectedScarDashboard = await rejectedScarDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(rejectedScarDashboard);
+        Assert.Contains(rejectedScarDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.rejected" && entry.SubjectId == rejectedScar.Id);
     }
 
     [Fact]
@@ -1612,6 +1741,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(containment);
         Assert.Equal(containmentTitle, containment!.Title);
 
+        var containmentCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        containmentCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var containmentCreatedDashboard = await containmentCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(containmentCreatedDashboard);
+        Assert.Contains(containmentCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.created" && entry.SubjectId == containment.Id);
+
         var containmentDetailResponse = await _client.GetAsync($"/api/v1/integrations/containment-actions/{containment.Id}");
         Assert.Equal(HttpStatusCode.OK, containmentDetailResponse.StatusCode);
         var containmentDetail = await containmentDetailResponse.Content.ReadFromJsonAsync<AssurArrContainmentActionResponse>();
@@ -1629,7 +1764,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         containmentAssignedDashboardResponse.EnsureSuccessStatusCode();
         var containmentAssignedDashboard = await containmentAssignedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(containmentAssignedDashboard);
-        Assert.Contains(containmentAssignedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.assigned");
+        Assert.Contains(containmentAssignedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.assigned" && entry.SubjectId == containment.Id);
 
         var containmentInProgressResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/containment-actions/{containment.Id}/status",
@@ -1647,7 +1782,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         containmentCompletedDashboardResponse.EnsureSuccessStatusCode();
         var containmentCompletedDashboard = await containmentCompletedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(containmentCompletedDashboard);
-        Assert.Contains(containmentCompletedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.completed");
+        Assert.Contains(containmentCompletedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.completed" && entry.SubjectId == containment.Id);
 
         var containmentVerifiedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/containment-actions/{containment.Id}/status",
@@ -1659,7 +1794,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         containmentVerifiedDashboardResponse.EnsureSuccessStatusCode();
         var containmentVerifiedDashboard = await containmentVerifiedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(containmentVerifiedDashboard);
-        Assert.Contains(containmentVerifiedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.verified");
+        Assert.Contains(containmentVerifiedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.containment.verified" && entry.SubjectId == containment.Id);
 
         var dispositionTitle = $"Test disposition {Guid.NewGuid():N}";
         var dispositionResponse = await _client.PostAsJsonAsync(
@@ -1689,6 +1824,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(disposition);
         Assert.Equal(dispositionTitle, disposition!.Title);
 
+        var dispositionProposedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        dispositionProposedDashboardResponse.EnsureSuccessStatusCode();
+        var dispositionProposedDashboard = await dispositionProposedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(dispositionProposedDashboard);
+        Assert.Contains(dispositionProposedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.proposed" && entry.SubjectId == disposition.Id);
+
         var dispositionDetailResponse = await _client.GetAsync($"/api/v1/integrations/dispositions/{disposition.Id}");
         Assert.Equal(HttpStatusCode.OK, dispositionDetailResponse.StatusCode);
         var dispositionDetail = await dispositionDetailResponse.Content.ReadFromJsonAsync<AssurArrDispositionResponse>();
@@ -1706,7 +1847,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         dispositionApprovedDashboardResponse.EnsureSuccessStatusCode();
         var dispositionApprovedDashboard = await dispositionApprovedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(dispositionApprovedDashboard);
-        Assert.Contains(dispositionApprovedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.approved");
+        Assert.Contains(dispositionApprovedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.approved" && entry.SubjectId == disposition.Id);
 
         var dispositionExecutedResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/dispositions/{disposition.Id}/status",
@@ -1718,7 +1859,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         dispositionExecutedDashboardResponse.EnsureSuccessStatusCode();
         var dispositionExecutedDashboard = await dispositionExecutedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(dispositionExecutedDashboard);
-        Assert.Contains(dispositionExecutedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.executed");
+        Assert.Contains(dispositionExecutedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.executed" && entry.SubjectId == disposition.Id);
 
         var rejectedDispositionTitle = $"Test rejected disposition {Guid.NewGuid():N}";
         var rejectedDispositionResponse = await _client.PostAsJsonAsync(
@@ -1757,7 +1898,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         dispositionRejectedDashboardResponse.EnsureSuccessStatusCode();
         var dispositionRejectedDashboard = await dispositionRejectedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(dispositionRejectedDashboard);
-        Assert.Contains(dispositionRejectedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.rejected");
+        Assert.Contains(dispositionRejectedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.disposition.rejected" && entry.SubjectId == rejectedDisposition.Id);
 
         var containmentList = await _client.GetAsync("/api/v1/integrations/containment-actions");
         containmentList.EnsureSuccessStatusCode();
