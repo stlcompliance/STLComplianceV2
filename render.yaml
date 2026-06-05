@@ -833,7 +833,6 @@ services:
   - type: web
     name: stlcompliancesite
     runtime: static
-    plan: free
     rootDir: apps/stlcompliancesite
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
