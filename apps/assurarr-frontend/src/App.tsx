@@ -1567,18 +1567,6 @@ function CapaDetailPage() {
       })
     },
   })
-  const updateEffectivenessMutation = useMutation({
-    mutationFn: async ({ verificationId, status }: { verificationId: string; status: string }) =>
-      assurarrApi.updateEffectivenessVerificationStatus(id, verificationId, status, {
-        resultSummary: status === 'effective' ? 'Verified effective.' : status === 'ineffective' ? 'Verification found an issue.' : undefined,
-        recurrenceFound: status === 'ineffective',
-        followUpRequired: status === 'ineffective',
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
-    },
-  })
-
   if (query.isLoading) {
     return <LoadingCard label="Loading CAPA detail" />
   }
@@ -1703,7 +1691,7 @@ function CapaDetailPage() {
                 {verificationQuery.data?.length ? (
                   <div className="space-y-2">
                     {verificationQuery.data.map((plan) => (
-                      <div key={plan.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                      <Link key={plan.id} to={`/capa/${id}/verification-plans/${plan.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-cyan-300 transition hover:border-cyan-500/50 hover:text-cyan-200">
                         <div className="flex items-center justify-between gap-3">
                           <strong className="text-sm text-slate-50">{plan.number}</strong>
                           <span className="assurarr-pill">{plan.status}</span>
@@ -1711,7 +1699,7 @@ function CapaDetailPage() {
                         <p className="mt-1 text-sm text-slate-300">{plan.title}</p>
                         <p className="mt-1 text-xs text-slate-400">{plan.verificationType}</p>
                         <p className="mt-1 text-xs text-slate-400">{plan.successCriteria}</p>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (
@@ -1778,25 +1766,14 @@ function CapaDetailPage() {
                 {effectivenessQuery.data?.length ? (
                   <div className="space-y-2">
                     {effectivenessQuery.data.map((verification) => (
-                      <div key={verification.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                      <Link key={verification.id} to={`/capa/${id}/effectiveness-verifications/${verification.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-cyan-300 transition hover:border-cyan-500/50 hover:text-cyan-200">
                         <div className="flex items-center justify-between gap-3">
                           <strong className="text-sm text-slate-50">{verification.number}</strong>
                           <span className="assurarr-pill">{verification.status}</span>
                         </div>
                         <p className="mt-1 text-sm text-slate-300">{verification.resultSummary ?? 'No result summary yet.'}</p>
                         <p className="mt-1 text-xs text-slate-400">Metric results: {verification.metricResults.length ? verification.metricResults.join(', ') : 'none'}</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'effective' })} disabled={updateEffectivenessMutation.isPending}>
-                            Mark effective
-                          </button>
-                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'ineffective' })} disabled={updateEffectivenessMutation.isPending}>
-                            Mark ineffective
-                          </button>
-                          <button className="assurarr-button secondary" type="button" onClick={() => updateEffectivenessMutation.mutate({ verificationId: verification.id, status: 'inconclusive' })} disabled={updateEffectivenessMutation.isPending}>
-                            Mark inconclusive
-                          </button>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (
@@ -1833,6 +1810,224 @@ function CapaDetailPage() {
           items={relatedFindings.map((item) => `${item.number} · ${item.title} · ${item.status}`)}
           emptyLabel="No linked findings were found."
         />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
+    </div>
+  )
+}
+
+function VerificationPlanDetailPage() {
+  const { capaId = '', verificationPlanId = '' } = useParams()
+  const queryClient = useQueryClient()
+  const capaQuery = useQuery({
+    queryKey: ['assurarr', 'capa', capaId],
+    queryFn: () => assurarrApi.getCapa(capaId),
+    enabled: Boolean(capaId),
+  })
+  const planQuery = useQuery({
+    queryKey: ['assurarr', 'verification-plan', capaId, verificationPlanId],
+    queryFn: () => assurarrApi.getVerificationPlan(capaId, verificationPlanId),
+    enabled: Boolean(capaId && verificationPlanId),
+  })
+  const dashboard = useDashboard()
+  const [status, setStatus] = useState('approved')
+  const [closureSummary, setClosureSummary] = useState('')
+  const updateMutation = useMutation({
+    mutationFn: async () => assurarrApi.updateVerificationPlanStatus(capaId, verificationPlanId, status, closureSummary || undefined),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setClosureSummary('')
+    },
+  })
+
+  if (capaQuery.isLoading || planQuery.isLoading) {
+    return <LoadingCard label="Loading verification plan detail" />
+  }
+
+  if (!capaQuery.data || !planQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Verification plan detail" description="Could not load the requested verification plan." />
+        <EmptyState title="Verification plan not found." />
+      </div>
+    )
+  }
+
+  const capa = capaQuery.data
+  const plan = planQuery.data
+  useEffect(() => {
+    setStatus(plan.status)
+  }, [plan.status])
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa_verification' && event.subjectId === plan.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${plan.number} · ${plan.title}`} description="Verification plan criteria, evidence needs, and lifecycle history." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{plan.status}</span>
+                <span className="assurarr-pill">{plan.verificationType}</span>
+              </div>
+              <p className="text-sm text-slate-300">{plan.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-slate-500">Success criteria:</span> {plan.successCriteria}</div>
+                <div><span className="text-slate-500">Sample size:</span> {plan.sampleSize ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Observation days:</span> {plan.observationPeriodDays ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Responsible person:</span> {plan.responsiblePersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Planned verification:</span> {plan.plannedVerificationAt ? new Date(plan.plannedVerificationAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Required evidence</p>
+              <p className="text-sm text-slate-300">
+                {plan.requiredEvidenceTypes.length ? plan.requiredEvidenceTypes.join(', ') : 'none specified'}
+              </p>
+              <div className="grid gap-3">
+                <Field label="Status">
+                  <select className="assurarr-select" value={status} onChange={(event) => setStatus(event.target.value)}>
+                    <option value="approved">Approved</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                    <option value="canceled">Canceled</option>
+                  </select>
+                </Field>
+                <Field label="Closure summary">
+                  <textarea className="assurarr-textarea" value={closureSummary} onChange={(event) => setClosureSummary(event.target.value)} />
+                </Field>
+              </div>
+              <button className="assurarr-button" type="button" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Saving...' : 'Update status'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
+    </div>
+  )
+}
+
+function EffectivenessVerificationDetailPage() {
+  const { capaId = '', verificationId = '' } = useParams()
+  const queryClient = useQueryClient()
+  const capaQuery = useQuery({
+    queryKey: ['assurarr', 'capa', capaId],
+    queryFn: () => assurarrApi.getCapa(capaId),
+    enabled: Boolean(capaId),
+  })
+  const verificationQuery = useQuery({
+    queryKey: ['assurarr', 'effectiveness-verification', capaId, verificationId],
+    queryFn: () => assurarrApi.getEffectivenessVerification(capaId, verificationId),
+    enabled: Boolean(capaId && verificationId),
+  })
+  const planQuery = useQuery({
+    queryKey: ['assurarr', 'verification-plan', capaId, verificationQuery.data?.verificationPlanId ?? 'none'],
+    queryFn: () => assurarrApi.getVerificationPlan(capaId, verificationQuery.data!.verificationPlanId!),
+    enabled: Boolean(capaId && verificationQuery.data?.verificationPlanId),
+  })
+  const dashboard = useDashboard()
+  const updateMutation = useMutation({
+    mutationFn: async ({ status }: { status: string }) =>
+      assurarrApi.updateEffectivenessVerificationStatus(capaId, verificationId, status, {
+        resultSummary: status === 'effective' ? 'Verified effective.' : status === 'ineffective' ? 'Verification found an issue.' : 'Verification updated.',
+        recurrenceFound: status === 'ineffective',
+        followUpRequired: status === 'ineffective',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+
+  if (capaQuery.isLoading || verificationQuery.isLoading) {
+    return <LoadingCard label="Loading effectiveness verification detail" />
+  }
+
+  if (!capaQuery.data || !verificationQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="Effectiveness verification detail" description="Could not load the requested effectiveness verification." />
+        <EmptyState title="Effectiveness verification not found." />
+      </div>
+    )
+  }
+
+  const capa = capaQuery.data
+  const verification = verificationQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa_verification' && event.subjectId === verification.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${verification.number} · Effectiveness verification`} description="Effectiveness results, evidence, and closure history." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{verification.status}</span>
+                <span className="assurarr-pill">{verification.recurrenceFound ? 'recurrence found' : 'no recurrence'}</span>
+                <span className="assurarr-pill">{verification.followUpRequired ? 'follow-up required' : 'no follow-up'}</span>
+              </div>
+              <p className="text-sm text-slate-300">{verification.resultSummary ?? 'No result summary recorded yet.'}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-slate-500">Verification plan:</span> {planQuery.data ? `${planQuery.data.number} · ${planQuery.data.title}` : verification.verificationPlanId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Performed by:</span> {verification.performedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Performed at:</span> {verification.performedAt ? new Date(verification.performedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Reopened CAPA:</span> {verification.reopenedCapaRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Updated:</span> {new Date(verification.updatedAt).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Evidence and results</p>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Evidence refs:</span> {verification.evidenceRecordRefs.length ? verification.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Metric results:</span> {verification.metricResults.length ? verification.metricResults.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Created:</span> {new Date(verification.createdAt).toLocaleString()}</div>
+              </div>
+              <div className="grid gap-2">
+                <button className="assurarr-button secondary" type="button" onClick={() => updateMutation.mutate({ status: 'effective' })} disabled={updateMutation.isPending}>
+                  Mark effective
+                </button>
+                <button className="assurarr-button secondary" type="button" onClick={() => updateMutation.mutate({ status: 'ineffective' })} disabled={updateMutation.isPending}>
+                  Mark ineffective
+                </button>
+                <button className="assurarr-button secondary" type="button" onClick={() => updateMutation.mutate({ status: 'inconclusive' })} disabled={updateMutation.isPending}>
+                  Mark inconclusive
+                </button>
+              </div>
+              {planQuery.data ? (
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-slate-300">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-slate-50">{planQuery.data.number}</strong>
+                    <span className="assurarr-pill">{planQuery.data.status}</span>
+                  </div>
+                  <p className="mt-1">{planQuery.data.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">{planQuery.data.verificationType}</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
         <SectionCard
           title="Timeline"
           items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
@@ -5171,7 +5366,6 @@ export function App() {
     const path = location.pathname
     if (path.startsWith('/nonconformances')) return 'Nonconformances'
     if (path.startsWith('/holds')) return 'Holds'
-    if (path.startsWith('/capa')) return 'CAPA'
     if (path.startsWith('/audits')) return 'Audits'
     if (path.startsWith('/audits/')) return 'Audits'
     if (path.startsWith('/findings')) return 'Findings'
@@ -5183,6 +5377,9 @@ export function App() {
     if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
+    if (path.startsWith('/capa/') && path.includes('/verification-plans/')) return 'Verification plan detail'
+    if (path.startsWith('/capa/') && path.includes('/effectiveness-verifications/')) return 'Effectiveness verification detail'
+    if (path.startsWith('/capa')) return 'CAPA'
     if (path.startsWith('/nonconformances/') && path.includes('/root-causes/')) return 'Root cause analysis'
     if (path.startsWith('/risk-profiles')) return 'Risk profiles'
     if (path.startsWith('/scorecards')) return 'Scorecards'
@@ -5201,6 +5398,8 @@ export function App() {
         <Route path="/holds/:id" element={<HoldDetailPage />} />
         <Route path="/capa" element={<CapaPage />} />
         <Route path="/capa/:id" element={<CapaDetailPage />} />
+        <Route path="/capa/:capaId/verification-plans/:verificationPlanId" element={<VerificationPlanDetailPage />} />
+        <Route path="/capa/:capaId/effectiveness-verifications/:verificationId" element={<EffectivenessVerificationDetailPage />} />
         <Route path="/audits" element={<AuditPage />} />
         <Route path="/audits/:id" element={<AuditDetailPage />} />
         <Route path="/audits/:auditId/checklists/:checklistId" element={<AuditChecklistDetailPage />} />

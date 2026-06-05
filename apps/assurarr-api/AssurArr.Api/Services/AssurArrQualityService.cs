@@ -1727,6 +1727,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToVerificationPlanResponse).ToList();
     }
 
+    public async Task<AssurArrVerificationPlanResponse> GetVerificationPlanAsync(Guid capaId, Guid verificationPlanId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.VerificationPlans
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == verificationPlanId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"Verification plan '{verificationPlanId}' was not found.");
+
+        return ToVerificationPlanResponse(entity);
+    }
+
     public async Task<AssurArrVerificationPlanResponse> CreateVerificationPlanAsync(Guid capaId, CreateAssurArrVerificationPlanRequest request, CancellationToken cancellationToken = default)
     {
         var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
@@ -1781,6 +1791,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .ToListAsync(cancellationToken);
 
         return entities.Select(ToEffectivenessVerificationResponse).ToList();
+    }
+
+    public async Task<AssurArrEffectivenessVerificationResponse> GetEffectivenessVerificationAsync(Guid capaId, Guid verificationId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.EffectivenessVerifications
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == verificationId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"Effectiveness verification '{verificationId}' was not found.");
+
+        return ToEffectivenessVerificationResponse(entity);
     }
 
     public async Task<AssurArrEffectivenessVerificationResponse> CreateEffectivenessVerificationAsync(Guid capaId, CreateAssurArrEffectivenessVerificationRequest request, CancellationToken cancellationToken = default)

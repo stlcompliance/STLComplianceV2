@@ -613,6 +613,8 @@ export const assurarrApi = {
       resolvedByPersonId: resolvedByPersonId ?? null,
       resolvedAt: resolvedAt ? new Date(resolvedAt).toISOString() : null,
     }),
+  getVerificationPlan: (capaId: string, verificationPlanId: string) =>
+    getJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans/${verificationPlanId}`),
   listVerificationPlans: (capaId: string) => getJson<VerificationPlan[]>(`/api/v1/capas/${capaId}/verification-plans`),
   createVerificationPlan: (capaId: string, body: { title: string; description: string; verificationType: string; successCriteria: string; sampleSize?: number; observationPeriodDays?: number; requiredEvidenceTypes?: string[]; responsiblePersonId?: string; plannedVerificationAt?: string }) =>
     sendJson<VerificationPlan>(`/api/v1/integrations/capas/${capaId}/verification`, 'POST', {
@@ -622,6 +624,8 @@ export const assurarrApi = {
     }),
   updateVerificationPlanStatus: (capaId: string, verificationPlanId: string, status: string, closureSummary?: string) =>
     sendJson<VerificationPlan>(`/api/v1/capas/${capaId}/verification-plans/${verificationPlanId}/status`, 'PATCH', { status, closureSummary }),
+  getEffectivenessVerification: (capaId: string, verificationId: string) =>
+    getJson<EffectivenessVerification>(`/api/v1/capas/${capaId}/effectiveness-verifications/${verificationId}`),
   listEffectivenessVerifications: (capaId: string) => getJson<EffectivenessVerification[]>(`/api/v1/capas/${capaId}/effectiveness-verifications`),
   createEffectivenessVerification: (
     capaId: string,

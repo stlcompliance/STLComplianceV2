@@ -166,6 +166,10 @@ public static class AssurArrEndpoints
             Results.Ok(await service.ListVerificationPlansAsync(capaId, cancellationToken)))
             .WithName("ListAssurArrVerificationPlans");
 
+        group.MapGet("/capas/{capaId:guid}/verification-plans/{verificationPlanId:guid}", async (Guid capaId, Guid verificationPlanId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetVerificationPlanAsync(capaId, verificationPlanId, cancellationToken)))
+            .WithName("GetAssurArrVerificationPlan");
+
         group.MapPost("/capas/{capaId:guid}/verification-plans", async (Guid capaId, CreateAssurArrVerificationPlanRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateVerificationPlanAsync(capaId, request, cancellationToken)))
             .WithName("CreateAssurArrVerificationPlan");
@@ -180,6 +184,10 @@ public static class AssurArrEndpoints
         group.MapGet("/capas/{capaId:guid}/effectiveness-verifications", async (Guid capaId, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListEffectivenessVerificationsAsync(capaId, cancellationToken)))
             .WithName("ListAssurArrEffectivenessVerifications");
+
+        group.MapGet("/capas/{capaId:guid}/effectiveness-verifications/{verificationId:guid}", async (Guid capaId, Guid verificationId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetEffectivenessVerificationAsync(capaId, verificationId, cancellationToken)))
+            .WithName("GetAssurArrEffectivenessVerification");
 
         group.MapPost("/capas/{capaId:guid}/effectiveness-verifications", async (Guid capaId, CreateAssurArrEffectivenessVerificationRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateEffectivenessVerificationAsync(capaId, request, cancellationToken)))

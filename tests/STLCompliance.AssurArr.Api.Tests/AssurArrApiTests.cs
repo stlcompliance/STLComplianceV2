@@ -792,6 +792,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(verification);
         Assert.Equal(verificationTitle, verification!.Title);
 
+        var verificationDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/verification-plans/{verification.Id}");
+        Assert.Equal(HttpStatusCode.OK, verificationDetailResponse.StatusCode);
+        var verificationDetail = await verificationDetailResponse.Content.ReadFromJsonAsync<AssurArrVerificationPlanResponse>();
+        Assert.NotNull(verificationDetail);
+        Assert.Equal(verification.Id, verificationDetail!.Id);
+        Assert.Equal(verification.Number, verificationDetail.Number);
+
         var capaVerificationDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         capaVerificationDashboardResponse.EnsureSuccessStatusCode();
         var capaVerificationDashboard = await capaVerificationDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
@@ -829,6 +836,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(effectiveness);
         Assert.Equal(verification.Id, effectiveness!.VerificationPlanId);
         Assert.Equal(capa.Id, effectiveness.CapaId);
+
+        var effectivenessDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/effectiveness-verifications/{effectiveness.Id}");
+        Assert.Equal(HttpStatusCode.OK, effectivenessDetailResponse.StatusCode);
+        var effectivenessDetail = await effectivenessDetailResponse.Content.ReadFromJsonAsync<AssurArrEffectivenessVerificationResponse>();
+        Assert.NotNull(effectivenessDetail);
+        Assert.Equal(effectiveness.Id, effectivenessDetail!.Id);
+        Assert.Equal(effectiveness.Number, effectivenessDetail.Number);
 
         var effectivenessListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/effectiveness-verifications");
         effectivenessListResponse.EnsureSuccessStatusCode();
