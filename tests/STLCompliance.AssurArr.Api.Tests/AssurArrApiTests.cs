@@ -1985,6 +1985,8 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var created = await createResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
         Assert.NotNull(created);
         Assert.Equal(targetProduct, created!.TargetProduct);
+        Assert.Contains(created.EventLog, eventType => eventType == "assurarr.quality_status.changed");
+        Assert.Contains(created.EventLog, eventType => eventType == "assurarr.quality_status.published");
 
         var createdDetailResponse = await _client.GetAsync($"/api/v1/status-snapshots/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, createdDetailResponse.StatusCode);
@@ -1992,6 +1994,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(createdDetail);
         Assert.Equal(created.Id, createdDetail!.Id);
         Assert.Equal(created.Number, createdDetail.Number);
+        Assert.Contains(createdDetail.EventLog, eventType => eventType == "assurarr.quality_status.published");
 
         var lookupResponse = await _client.GetAsync($"/api/v1/integrations/quality-status/{targetProduct}/{targetObjectId}");
         Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
@@ -1999,6 +2002,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var lookup = await lookupResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
         Assert.NotNull(lookup);
         Assert.Equal(targetProduct, lookup!.TargetProduct);
+        Assert.Contains(lookup.EventLog, eventType => eventType == "assurarr.quality_status.changed");
 
         var listResponse = await _client.GetAsync("/api/v1/integrations/quality-status");
         listResponse.EnsureSuccessStatusCode();
@@ -2043,6 +2047,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var scorecard = await scorecardResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(scorecard);
         Assert.Equal(scorecardTitle, scorecard!.Title);
+        Assert.Contains(scorecard.EventLog, eventType => eventType == "assurarr.scorecard.generated");
 
         var scorecardGeneratedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         scorecardGeneratedDashboardResponse.EnsureSuccessStatusCode();
@@ -2091,6 +2096,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var detail = await detailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(detail);
         Assert.Contains(metricKey, detail!.MetricRefs);
+        Assert.Contains(detail.EventLog, eventType => eventType == "assurarr.metric.calculated");
 
         var metricListResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}/metrics");
         metricListResponse.EnsureSuccessStatusCode();
@@ -2114,12 +2120,14 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(reviewed);
         Assert.Equal(reviewByPersonId, reviewed!.ReviewedByPersonId);
         Assert.NotNull(reviewed.ReviewedAt);
+        Assert.Contains(reviewed.EventLog, eventType => eventType == "assurarr.scorecard.reviewed");
 
         var reviewedDetailResponse = await _client.GetAsync($"/api/v1/scorecards/{scorecard.Id}");
         reviewedDetailResponse.EnsureSuccessStatusCode();
         var reviewedDetail = await reviewedDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(reviewedDetail);
         Assert.Equal(reviewByPersonId, reviewedDetail!.ReviewedByPersonId);
+        Assert.Contains(reviewedDetail.EventLog, eventType => eventType == "assurarr.scorecard.reviewed");
 
         var reviewedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         reviewedDashboardResponse.EnsureSuccessStatusCode();
@@ -2334,6 +2342,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(targetType, created!.TargetType);
         Assert.Equal(targetRef, created.TargetRef);
+        Assert.Contains(created.EventLog, eventType => eventType == "assurarr.risk_profile.updated");
 
         var riskProfileUpdatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         riskProfileUpdatedDashboardResponse.EnsureSuccessStatusCode();
@@ -2347,6 +2356,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var lookup = await lookupResponse.Content.ReadFromJsonAsync<AssurArrQualityRiskProfileResponse>();
         Assert.NotNull(lookup);
         Assert.Equal(created.Id, lookup!.Id);
+        Assert.Contains(lookup.EventLog, eventType => eventType == "assurarr.risk_profile.updated");
 
         var listResponse = await _client.GetAsync("/api/v1/integrations/risk-profiles");
         listResponse.EnsureSuccessStatusCode();

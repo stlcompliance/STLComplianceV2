@@ -285,6 +285,7 @@ export type StatusSnapshot = ListItem & {
   reviewedByPersonId: string | null
   expiresAt: string | null
   recordRefs: string[]
+  eventLog: string[]
 }
 
 export type QualityStatus = StatusSnapshot
@@ -303,6 +304,7 @@ export type Scorecard = ListItem & {
   reviewedByPersonId: string | null
   reviewedAt: string | null
   metricRefs: string[]
+  eventLog: string[]
 }
 
 export type QualityMetric = {
@@ -338,6 +340,7 @@ export type QualityRiskProfile = {
   mitigationActions: string[]
   reviewedAt: string | null
   reviewedByPersonId: string | null
+  eventLog: string[]
   createdAt: string
   updatedAt: string
 }

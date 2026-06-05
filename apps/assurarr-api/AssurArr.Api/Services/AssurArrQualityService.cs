@@ -2966,12 +2966,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToStatusSnapshotResponse).ToList();
+        var responses = new List<AssurArrQualityStatusSnapshotResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToStatusSnapshotResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityStatusSnapshotResponse> GetStatusSnapshotAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityStatusSnapshots.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToStatusSnapshotResponse(entity)
+            ? await ToStatusSnapshotResponseAsync(entity, cancellationToken)
             : throw new InvalidOperationException($"Quality status snapshot '{id}' was not found.");
 
     public async Task<List<AssurArrQualityStatusSnapshotResponse>> ListQualityStatusAsync(CancellationToken cancellationToken = default) =>
@@ -2989,7 +2995,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return entity is null ? null : ToStatusSnapshotResponse(entity);
+        return entity is null ? null : await ToStatusSnapshotResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityStatusSnapshotResponse> CreateQualityStatusCheckAsync(CreateAssurArrQualityStatusSnapshotRequest request, CancellationToken cancellationToken = default) =>
@@ -3029,7 +3035,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("status", entity.Id, "assurarr.quality_status.changed", entity.QualityStatus, cancellationToken);
         await AddTimelineAsync("status", entity.Id, "assurarr.quality_status.published", entity.TargetObjectRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToStatusSnapshotResponse(entity);
+        return await ToStatusSnapshotResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrQualityScorecardResponse>> ListScorecardsAsync(CancellationToken cancellationToken = default)
@@ -3039,12 +3045,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.GeneratedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToScorecardResponse).ToList();
+        var responses = new List<AssurArrQualityScorecardResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToScorecardResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityScorecardResponse?> GetScorecardAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityScorecards.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToScorecardResponse(entity)
+            ? await ToScorecardResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrQualityScorecardResponse> CreateScorecardAsync(CreateAssurArrQualityScorecardRequest request, CancellationToken cancellationToken = default)
@@ -3081,7 +3093,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.QualityScorecards.Add(entity);
         await AddTimelineAsync("scorecard", entity.Id, "assurarr.scorecard.generated", entity.TargetRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToScorecardResponse(entity);
+        return await ToScorecardResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityScorecardResponse?> ReviewScorecardAsync(Guid id, ReviewAssurArrQualityScorecardRequest request, CancellationToken cancellationToken = default)
@@ -3098,7 +3110,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         entity.UpdatedAt = now;
         await AddTimelineAsync("scorecard", entity.Id, "assurarr.scorecard.reviewed", entity.TargetRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToScorecardResponse(entity);
+        return await ToScorecardResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrQualityRiskProfileResponse>> ListQualityRiskProfilesAsync(CancellationToken cancellationToken = default)
@@ -3108,12 +3120,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToRiskProfileResponse).ToList();
+        var responses = new List<AssurArrQualityRiskProfileResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToRiskProfileResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityRiskProfileResponse?> GetQualityRiskProfileAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityRiskProfiles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToRiskProfileResponse(entity)
+            ? await ToRiskProfileResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrQualityRiskProfileResponse> CreateQualityRiskProfileAsync(CreateAssurArrQualityRiskProfileRequest request, CancellationToken cancellationToken = default)
@@ -3159,7 +3177,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("risk-profile", entity.Id, "assurarr.risk_profile.updated", entity.TargetRef, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToRiskProfileResponse(entity);
+        return await ToRiskProfileResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrQualityMetricResponse>> ListQualityMetricsAsync(Guid scorecardId, CancellationToken cancellationToken = default)
@@ -3737,7 +3755,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.CompletedAt,
             entity.EvidenceRecordRefs);
 
-    private static AssurArrQualityStatusSnapshotResponse ToStatusSnapshotResponse(AssurArrQualityStatusSnapshot entity) =>
+    private static AssurArrQualityStatusSnapshotResponse ToStatusSnapshotResponse(AssurArrQualityStatusSnapshot entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3755,6 +3773,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
+            eventLog,
             entity.TargetProduct,
             entity.TargetObjectRef,
             entity.QualityStatus,
@@ -3986,7 +4005,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReceivedByPersonId,
             entity.CustomerResponseDueAt);
 
-    private static AssurArrQualityScorecardResponse ToScorecardResponse(AssurArrQualityScorecard entity) =>
+    private static AssurArrQualityScorecardResponse ToScorecardResponse(AssurArrQualityScorecard entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -4004,6 +4023,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
+            eventLog,
             entity.TargetType,
             entity.TargetRef,
             entity.PeriodStart,
@@ -4037,7 +4057,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.CreatedAt,
             entity.UpdatedAt);
 
-    private static AssurArrQualityRiskProfileResponse ToRiskProfileResponse(AssurArrQualityRiskProfile entity) =>
+    private static AssurArrQualityRiskProfileResponse ToRiskProfileResponse(AssurArrQualityRiskProfile entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.TargetType,
@@ -4051,6 +4071,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.MitigationActions,
             entity.ReviewedAt,
             entity.ReviewedByPersonId,
+            eventLog,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private async Task<AssurArrQualityStatusSnapshotResponse> ToStatusSnapshotResponseAsync(AssurArrQualityStatusSnapshot entity, CancellationToken cancellationToken = default) =>
+        ToStatusSnapshotResponse(entity, await GetEventLogAsync("status", entity.Id, cancellationToken));
+
+    private async Task<AssurArrQualityScorecardResponse> ToScorecardResponseAsync(AssurArrQualityScorecard entity, CancellationToken cancellationToken = default) =>
+        ToScorecardResponse(entity, await GetEventLogAsync("scorecard", entity.Id, cancellationToken));
+
+    private async Task<AssurArrQualityRiskProfileResponse> ToRiskProfileResponseAsync(AssurArrQualityRiskProfile entity, CancellationToken cancellationToken = default) =>
+        ToRiskProfileResponse(entity, await GetEventLogAsync("risk-profile", entity.Id, cancellationToken));
 }

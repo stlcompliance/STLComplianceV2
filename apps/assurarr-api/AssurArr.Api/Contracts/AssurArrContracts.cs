@@ -534,6 +534,7 @@ public sealed record AssurArrQualityStatusSnapshotResponse(
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
     string? ClosureSummary,
+    IReadOnlyList<string> EventLog,
     string TargetProduct,
     string TargetObjectRef,
     string QualityStatus,
@@ -579,6 +580,7 @@ public sealed record AssurArrQualityScorecardResponse(
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
     string? ClosureSummary,
+    IReadOnlyList<string> EventLog,
     string TargetType,
     string TargetRef,
     DateTimeOffset PeriodStart,
@@ -643,6 +645,7 @@ public sealed record AssurArrQualityRiskProfileResponse(
     IReadOnlyList<string> MitigationActions,
     DateTimeOffset? ReviewedAt,
     Guid? ReviewedByPersonId,
+    IReadOnlyList<string> EventLog,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

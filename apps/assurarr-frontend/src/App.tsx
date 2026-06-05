@@ -5220,6 +5220,7 @@ function RiskProfileDetailPage() {
           </div>
         </div>
       </div>
+      <SectionCard title="Event log" items={profile.eventLog} emptyLabel="No risk profile event log entries recorded yet." />
       <div className="assurarr-card mt-6">
         <div className="assurarr-card-inner space-y-3">
           <p className="assurarr-label">Timeline</p>
@@ -5318,6 +5319,7 @@ function QualityStatusSnapshotDetailPage() {
           items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
           emptyLabel="No timeline events recorded yet."
         />
+        <SectionCard title="Event log" items={snapshot.eventLog} emptyLabel="No quality status event log entries recorded yet." />
       </div>
     </div>
   )
@@ -5564,6 +5566,7 @@ function ScorecardDetailPage() {
         items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
         emptyLabel="No scorecard timeline events recorded yet."
       />
+      <SectionCard title="Event log" items={scorecard.eventLog} emptyLabel="No scorecard event log entries recorded yet." />
     </div>
   )
 }
