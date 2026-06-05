@@ -2856,6 +2856,42 @@
             "description": "OK"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationDefects",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "inspectionRunId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/integrations/defects/{defectId}": {
@@ -2930,6 +2966,17 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationInspections",
         "responses": {
           "200": {
             "description": "OK"
@@ -3132,6 +3179,42 @@
       }
     },
     "/api/integrations/work-orders": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationWorkOrders",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "defectId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Integrations"
@@ -8183,6 +8266,42 @@
             "description": "OK"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationDefectsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "inspectionRunId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/v1/integrations/defects/{defectId}": {
@@ -8257,6 +8376,17 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationInspectionsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -8459,6 +8589,42 @@
       }
     },
     "/api/v1/integrations/work-orders": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationWorkOrdersV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "defectId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Integrations"
@@ -11652,8 +11818,7 @@
           "sourceObjectRef",
           "title",
           "description",
-          "severity",
-          "createdByPersonId"
+          "severity"
         ],
         "type": "object",
         "properties": {

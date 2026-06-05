@@ -367,6 +367,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Status = "active",
             SourceProduct = "loadarr",
             SourceObjectRef = "RECEIPT-RR-24018",
+            SourceNonconformanceRef = "NCR-000001",
             AffectedObjectRefs = ["loadarr:inventory:LOT-991"],
             RecordRefs = ["recordarr:doc:inspection-photo-1"],
             CreatedAt = now,
@@ -1056,12 +1057,30 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
             Severity = Normalize(request.Severity, "moderate"),
-            Status = (request.BlockerRefs?.Length ?? 0) > 0 ? "blocked" : "open",
+            Status = (request.BlockerRefs?.Length ?? 0) > 0 ? "containment" : "open",
             SourceProduct = NormalizeNullable(request.SourceProduct),
             SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            DiscoveredAt = request.DiscoveredAt ?? now,
+            DiscoveredByPersonId = request.DiscoveredByPersonId,
+            StaffArrSiteId = request.StaffArrSiteId,
+            StaffArrLocationId = request.StaffArrLocationId,
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             OwnerPersonId = request.OwnerPersonId,
             RecordRefs = [],
+            ContainmentRefs = request.ContainmentRefs ?? [],
+            HoldRefs = request.HoldRefs ?? [],
+            AffectedItemRefs = request.AffectedItemRefs ?? [],
+            AffectedAssetRefs = request.AffectedAssetRefs ?? [],
+            AffectedOrderRefs = request.AffectedOrderRefs ?? [],
+            AffectedSupplierRefs = request.AffectedSupplierRefs ?? [],
+            AffectedCustomerRefs = request.AffectedCustomerRefs ?? [],
+            AffectedShipmentRefs = request.AffectedShipmentRefs ?? [],
+            DispositionRefs = request.DispositionRefs ?? [],
+            CapaRefs = request.CapaRefs ?? [],
+            ComplianceRefs = request.ComplianceRefs ?? [],
+            FinancialImpactSnapshot = NormalizeNullable(request.FinancialImpactSnapshot),
+            AuditTrail = [CreateAuditTrailEntry("created", now, request.Title)],
+            BlockerRefs = request.BlockerRefs ?? [],
             CreatedAt = now,
             UpdatedAt = now,
             NonconformanceType = Normalize(request.NonconformanceType, "other"),
@@ -1107,11 +1126,13 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "closed", entity.Status, entity.UpdatedAt);
         }
         else if (!string.IsNullOrWhiteSpace(request.ClosureSummary))
         {
             entity.ClosureSummary = request.ClosureSummary;
         }
+        entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "status_changed", entity.Status, entity.UpdatedAt);
         await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.status_changed", entity.Status, cancellationToken);
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
@@ -1273,11 +1294,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Description = request.Description.Trim(),
             Severity = Normalize(request.Severity, "moderate"),
             Status = "active",
+            SourceNonconformanceRef = NormalizeNullable(request.SourceNonconformanceRef),
             SourceProduct = NormalizeNullable(request.SourceProduct),
             SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            StaffArrSiteId = request.StaffArrSiteId,
+            StaffArrLocationId = request.StaffArrLocationId,
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             OwnerPersonId = request.OwnerPersonId,
             RecordRefs = [],
+            AuditTrail = [CreateAuditTrailEntry("placed", now, request.Title)],
             ReleaseRequirements = [],
             ReleaseApprovalRefs = [],
             CreatedAt = now,
@@ -1290,9 +1315,20 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             LotNumber = NormalizeNullable(request.LotNumber),
             SerialNumber = NormalizeNullable(request.SerialNumber),
             PlacedAt = now,
+            PlacedByPersonId = request.PlacedByPersonId,
         };
 
         db.QualityHolds.Add(entity);
+        if (!string.IsNullOrWhiteSpace(entity.SourceNonconformanceRef))
+        {
+            var sourceNonconformance = await db.Nonconformances.FirstOrDefaultAsync(x => x.Number == entity.SourceNonconformanceRef, cancellationToken);
+            if (sourceNonconformance is not null && !sourceNonconformance.HoldRefs.Contains(entity.Number, StringComparer.OrdinalIgnoreCase))
+            {
+                sourceNonconformance.HoldRefs = [.. sourceNonconformance.HoldRefs, entity.Number];
+                sourceNonconformance.UpdatedAt = now;
+                sourceNonconformance.AuditTrail = AppendAuditTrail(sourceNonconformance.AuditTrail, "hold_linked", entity.Number, now);
+            }
+        }
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.placed", entity.Title, cancellationToken);
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.created", entity.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
@@ -1311,18 +1347,22 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             entity.ReleasedAt = entity.UpdatedAt;
             entity.ReleaseReason = request.ClosureSummary ?? entity.ReleaseReason;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "released", entity.Status, entity.UpdatedAt);
         }
         else if (string.Equals(entity.Status, "rejected", StringComparison.OrdinalIgnoreCase))
         {
             entity.RejectedAt = entity.UpdatedAt;
             entity.RejectedByPersonId = null;
             entity.RejectionReason = request.ClosureSummary ?? entity.RejectionReason;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "rejected", entity.Status, entity.UpdatedAt);
         }
         else if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "closed", entity.Status, entity.UpdatedAt);
         }
+        entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "status_changed", entity.Status, entity.UpdatedAt);
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.status_changed", entity.Status, cancellationToken);
         if (string.Equals(entity.Status, "canceled", StringComparison.OrdinalIgnoreCase))
         {
@@ -1515,6 +1555,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
     public async Task<AssurArrCapaResponse> CreateCapaAsync(CreateAssurArrCapaRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
+        var sourceObjectRef = NormalizeNullable(request.SourceObjectRef);
+        var openedAt = request.OpenedAt ?? now;
         var entity = new AssurArrCapa
         {
             Id = Guid.NewGuid(),
@@ -1525,12 +1567,22 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Severity = Normalize(request.Severity, "moderate"),
             Status = "open",
             SourceProduct = NormalizeNullable(request.SourceProduct),
-            SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
+            SourceObjectRef = sourceObjectRef,
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             OwnerPersonId = request.OwnerPersonId,
-            RecordRefs = [],
+            StaffArrSiteId = request.StaffArrSiteId,
+            StaffArrLocationId = request.StaffArrLocationId,
+            SourceRefs = request.SourceRefs ?? (sourceObjectRef is { Length: > 0 } ? [sourceObjectRef] : []),
+            RecordRefs = request.RecordRefs ?? [],
+            ActionPlanRefs = request.ActionPlanRefs ?? [],
+            VerificationPlanRef = NormalizeNullable(request.VerificationPlanRef),
+            RelatedCustomerComplaintRefs = request.RelatedCustomerComplaintRefs ?? [],
+            RelatedSupplierIssueRefs = request.RelatedSupplierIssueRefs ?? [],
+            ComplianceRefs = request.ComplianceRefs ?? [],
+            AuditTrail = [CreateAuditTrailEntry("created", now, request.Title), CreateAuditTrailEntry("opened", openedAt, request.Title)],
             CreatedAt = now,
             UpdatedAt = now,
+            OpenedAt = openedAt,
             CapaType = Normalize(request.CapaType, "corrective"),
             SourceType = Normalize(request.SourceType, "manual"),
             SponsorPersonId = request.SponsorPersonId,
@@ -1570,7 +1622,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "closed", entity.Status, entity.UpdatedAt);
         }
+        entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "status_changed", entity.Status, entity.UpdatedAt);
         await AddTimelineAsync("capa", entity.Id, "assurarr.capa.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return await ToCapaResponseAsync(entity, cancellationToken);
@@ -1963,15 +2017,21 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = now,
             AuditType = Normalize(request.AuditType, "internal"),
             AuditScope = NormalizeNullable(request.AuditScope),
+            StandardRefs = request.StandardRefs ?? [],
+            ComplianceRefs = request.ComplianceRefs ?? [],
             AuditorPersonIds = request.AuditorPersonIds ?? [],
             LeadAuditorPersonId = request.LeadAuditorPersonId,
+            AuditeeRefs = request.AuditeeRefs ?? [],
             StaffArrSiteId = request.StaffArrSiteId,
             StaffArrLocationId = request.StaffArrLocationId,
             SupplierRef = NormalizeNullable(request.SupplierRef),
             CustomerRef = NormalizeNullable(request.CustomerRef),
             PlannedStartAt = request.PlannedStartAt,
             PlannedEndAt = request.PlannedEndAt,
+            ActualStartAt = request.ActualStartAt,
+            ActualEndAt = request.ActualEndAt,
             ChecklistRefs = request.ChecklistRefs ?? [],
+            AuditTrail = [CreateAuditTrailEntry("created", now, request.Title)],
         };
 
         db.QualityAudits.Add(entity);
@@ -1989,14 +2049,19 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         entity.UpdatedAt = DateTimeOffset.UtcNow;
         if (string.Equals(entity.Status, "in_progress", StringComparison.OrdinalIgnoreCase))
         {
+            entity.ActualStartAt ??= entity.UpdatedAt;
             await AddTimelineAsync("audit", entity.Id, "assurarr.audit.started", entity.Title, cancellationToken);
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "started", entity.Status, entity.UpdatedAt);
         }
         if (string.Equals(entity.Status, "closed", StringComparison.OrdinalIgnoreCase))
         {
             entity.ClosedAt = entity.UpdatedAt;
             entity.ClosureSummary = request.ClosureSummary ?? entity.ClosureSummary;
+            entity.ActualEndAt ??= entity.UpdatedAt;
+            entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "closed", entity.Status, entity.UpdatedAt);
             await AddTimelineAsync("audit", entity.Id, "assurarr.audit.closed", entity.Title, cancellationToken);
         }
+        entity.AuditTrail = AppendAuditTrail(entity.AuditTrail, "status_changed", entity.Status, entity.UpdatedAt);
         await AddTimelineAsync("audit", entity.Id, "assurarr.audit.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToAuditResponse(entity);
@@ -2187,7 +2252,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             OwnerPersonId = request.OwnerPersonId,
+            SourceRequirementRef = NormalizeNullable(request.SourceRequirementRef),
             RecordRefs = [],
+            EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
             CreatedAt = now,
             UpdatedAt = now,
             FindingType = Normalize(request.FindingType, "observation"),
@@ -3041,6 +3108,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             OpenFindingRefs = request.OpenFindingRefs ?? [],
             LastReviewedAt = now,
             ExpiresAt = request.ExpiresAt,
+            Notes = NormalizeNullable(request.Notes),
         };
 
         db.QualityStatusSnapshots.Add(entity);
@@ -3470,9 +3538,26 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Category,
             entity.SourceProduct,
             entity.SourceObjectRef,
+            entity.DiscoveredAt,
+            entity.DiscoveredByPersonId,
+            entity.StaffArrSiteId,
+            entity.StaffArrLocationId,
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            entity.ContainmentRefs,
+            entity.HoldRefs,
+            entity.AffectedItemRefs,
+            entity.AffectedAssetRefs,
+            entity.AffectedOrderRefs,
+            entity.AffectedSupplierRefs,
+            entity.AffectedCustomerRefs,
+            entity.AffectedShipmentRefs,
+            entity.DispositionRefs,
+            entity.CapaRefs,
+            entity.ComplianceRefs,
+            entity.FinancialImpactSnapshot,
+            entity.AuditTrail,
             eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
@@ -3499,11 +3584,15 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Severity,
             entity.HoldType,
             entity.HoldScope,
+            entity.SourceNonconformanceRef,
             entity.SourceProduct,
             entity.SourceObjectRef,
+            entity.StaffArrSiteId,
+            entity.StaffArrLocationId,
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            entity.AuditTrail,
             eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
@@ -3542,10 +3631,20 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.SourceObjectRef,
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
+            entity.StaffArrSiteId,
+            entity.StaffArrLocationId,
+            entity.SourceRefs,
             entity.RecordRefs,
+            entity.ActionPlanRefs,
+            entity.VerificationPlanRef,
+            entity.RelatedCustomerComplaintRefs,
+            entity.RelatedSupplierIssueRefs,
+            entity.ComplianceRefs,
+            entity.AuditTrail,
             eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
+            entity.OpenedAt,
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
@@ -3569,6 +3668,12 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
     private async Task<AssurArrQualityHoldResponse> ToQualityHoldResponseAsync(AssurArrQualityHold entity, CancellationToken cancellationToken = default) =>
         ToQualityHoldResponse(entity, await GetEventLogAsync("hold", entity.Id, cancellationToken));
+
+    private static string CreateAuditTrailEntry(string action, DateTimeOffset timestamp, string subject) =>
+        $"{timestamp:O}|{action}|{subject}";
+
+    private static string[] AppendAuditTrail(IEnumerable<string> currentTrail, string action, string subject, DateTimeOffset timestamp) =>
+        [.. currentTrail, CreateAuditTrailEntry(action, timestamp, subject)];
 
     private async Task<AssurArrCapaResponse> ToCapaResponseAsync(AssurArrCapa entity, CancellationToken cancellationToken = default) =>
         ToCapaResponse(entity, await GetEventLogAsync("capa", entity.Id, cancellationToken));
@@ -3671,8 +3776,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
+            entity.StandardRefs,
+            entity.ComplianceRefs,
             entity.AuditorPersonIds,
             entity.LeadAuditorPersonId,
+            entity.AuditeeRefs,
             entity.StaffArrSiteId,
             entity.StaffArrLocationId,
             entity.SupplierRef,
@@ -3682,7 +3790,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ActualStartAt,
             entity.ActualEndAt,
             entity.ChecklistRefs,
-            entity.FindingRefs);
+            entity.FindingRefs,
+            entity.AuditTrail);
 
     private static AssurArrQualityAuditChecklistResponse ToChecklistResponse(AssurArrQualityAuditChecklist entity) =>
         new(
@@ -3734,6 +3843,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            entity.SourceRequirementRef,
+            entity.EvidenceRecordRefs,
             entity.CreatedAt,
             entity.UpdatedAt,
             entity.ClosedAt,
@@ -3795,7 +3906,8 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.OpenFindingRefs,
             entity.LastReviewedAt,
             entity.ReviewedByPersonId,
-            entity.ExpiresAt);
+            entity.ExpiresAt,
+            entity.Notes);
 
     private static AssurArrQualityReviewResponse ToReviewResponse(AssurArrQualityReview entity, IReadOnlyList<string> eventLog) =>
         new(

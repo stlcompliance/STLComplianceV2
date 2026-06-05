@@ -39,7 +39,24 @@ export type Nonconformance = ListItem & {
   description: string
   nonconformanceType: string
   category: string
+  discoveredAt: string | null
+  discoveredByPersonId: string | null
+  staffArrSiteId: string | null
+  staffArrLocationId: string | null
   recordRefs: string[]
+  containmentRefs: string[]
+  holdRefs: string[]
+  affectedItemRefs: string[]
+  affectedAssetRefs: string[]
+  affectedOrderRefs: string[]
+  affectedSupplierRefs: string[]
+  affectedCustomerRefs: string[]
+  affectedShipmentRefs: string[]
+  dispositionRefs: string[]
+  capaRefs: string[]
+  complianceRefs: string[]
+  financialImpactSnapshot: string | null
+  auditTrail: string[]
   eventLog: string[]
   closedAt: string | null
   closedByPersonId: string | null
@@ -59,7 +76,11 @@ export type QualityHold = ListItem & {
   description: string
   holdType: string
   holdScope: string
+  sourceNonconformanceRef: string | null
+  staffArrSiteId: string | null
+  staffArrLocationId: string | null
   recordRefs: string[]
+  auditTrail: string[]
   eventLog: string[]
   closedAt: string | null
   closedByPersonId: string | null
@@ -87,8 +108,18 @@ export type Capa = ListItem & {
   description: string
   capaType: string
   sourceType: string
+  staffArrSiteId: string | null
+  staffArrLocationId: string | null
+  sourceRefs: string[]
   recordRefs: string[]
+  actionPlanRefs: string[]
+  verificationPlanRef: string | null
+  relatedCustomerComplaintRefs: string[]
+  relatedSupplierIssueRefs: string[]
+  complianceRefs: string[]
+  auditTrail: string[]
   eventLog: string[]
+  openedAt: string | null
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
@@ -186,8 +217,11 @@ export type Audit = ListItem & {
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
+  standardRefs: string[]
+  complianceRefs: string[]
   auditorPersonIds: string[]
   leadAuditorPersonId: string | null
+  auditeeRefs: string[]
   staffArrSiteId: string | null
   staffArrLocationId: string | null
   supplierRef: string | null
@@ -198,6 +232,7 @@ export type Audit = ListItem & {
   actualEndAt: string | null
   checklistRefs: string[]
   findingRefs: string[]
+  auditTrail: string[]
 }
 
 export type AuditChecklist = {
@@ -240,6 +275,8 @@ export type Finding = ListItem & {
   description: string
   findingType: string
   recordRefs: string[]
+  sourceRequirementRef: string | null
+  evidenceRecordRefs: string[]
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
@@ -284,6 +321,7 @@ export type StatusSnapshot = ListItem & {
   lastReviewedAt: string | null
   reviewedByPersonId: string | null
   expiresAt: string | null
+  notes: string | null
   recordRefs: string[]
   eventLog: string[]
 }
@@ -519,11 +557,28 @@ export const assurarrApi = {
   getDashboard: () => getJson<DashboardResponse>('/api/v1/dashboard'),
   listNonconformances: () => getJson<Nonconformance[]>('/api/v1/nonconformances'),
   getNonconformance: (id: string) => getJson<Nonconformance>(`/api/v1/nonconformances/${id}`),
-  createNonconformance: (body: CreateBase & { nonconformanceType: string; category: string; recurrenceFlag?: boolean; dueAt?: string }) =>
+  createNonconformance: (body: CreateBase & { nonconformanceType: string; category: string; recurrenceFlag?: boolean; blockerRefs?: string[]; dueAt?: string; discoveredAt?: string; discoveredByPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; containmentRefs?: string[]; holdRefs?: string[]; affectedItemRefs?: string[]; affectedAssetRefs?: string[]; affectedOrderRefs?: string[]; affectedSupplierRefs?: string[]; affectedCustomerRefs?: string[]; affectedShipmentRefs?: string[]; dispositionRefs?: string[]; capaRefs?: string[]; complianceRefs?: string[]; financialImpactSnapshot?: string }) =>
     sendJson<Nonconformance>('/api/v1/nonconformances', 'POST', {
       ...body,
       recurrenceFlag: body.recurrenceFlag ?? false,
+      blockerRefs: body.blockerRefs ?? [],
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
+      discoveredAt: body.discoveredAt ? new Date(body.discoveredAt).toISOString() : null,
+      discoveredByPersonId: body.discoveredByPersonId ?? null,
+      staffArrSiteId: body.staffArrSiteId ?? null,
+      staffArrLocationId: body.staffArrLocationId ?? null,
+      containmentRefs: body.containmentRefs ?? [],
+      holdRefs: body.holdRefs ?? [],
+      affectedItemRefs: body.affectedItemRefs ?? [],
+      affectedAssetRefs: body.affectedAssetRefs ?? [],
+      affectedOrderRefs: body.affectedOrderRefs ?? [],
+      affectedSupplierRefs: body.affectedSupplierRefs ?? [],
+      affectedCustomerRefs: body.affectedCustomerRefs ?? [],
+      affectedShipmentRefs: body.affectedShipmentRefs ?? [],
+      dispositionRefs: body.dispositionRefs ?? [],
+      capaRefs: body.capaRefs ?? [],
+      complianceRefs: body.complianceRefs ?? [],
+      financialImpactSnapshot: body.financialImpactSnapshot ?? null,
     }),
   updateNonconformanceStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Nonconformance>(`/api/v1/nonconformances/${id}/status`, 'PATCH', { status, closureSummary }),
@@ -561,10 +616,14 @@ export const assurarrApi = {
     }),
   listHolds: () => getJson<QualityHold[]>('/api/v1/integrations/holds'),
   getHold: (id: string) => getJson<QualityHold>(`/api/v1/integrations/holds/${id}`),
-  createHold: (body: CreateBase & { holdType: string; holdScope: string; holdReason?: string; quantityHeld?: number; unitOfMeasure?: string; lotNumber?: string; serialNumber?: string; expiresAt?: string }) =>
+  createHold: (body: CreateBase & { holdType: string; holdScope: string; sourceNonconformanceRef?: string; holdReason?: string; quantityHeld?: number; unitOfMeasure?: string; lotNumber?: string; serialNumber?: string; expiresAt?: string; staffArrSiteId?: string; staffArrLocationId?: string; placedByPersonId?: string }) =>
     sendJson<QualityHold>('/api/v1/holds', 'POST', {
       ...body,
+      sourceNonconformanceRef: body.sourceNonconformanceRef ?? null,
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
+      staffArrSiteId: body.staffArrSiteId ?? null,
+      staffArrLocationId: body.staffArrLocationId ?? null,
+      placedByPersonId: body.placedByPersonId ?? null,
     }),
   updateHoldStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<QualityHold>(`/api/v1/holds/${id}/status`, 'PATCH', { status, closureSummary }),
@@ -587,13 +646,23 @@ export const assurarrApi = {
     sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/reject`, 'POST', { status: 'rejected', closureSummary }),
   listCapas: () => getJson<Capa[]>('/api/v1/integrations/capas'),
   getCapa: (id: string) => getJson<Capa>(`/api/v1/integrations/capas/${id}`),
-  createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[]; effectivenessVerificationRefs?: string[] }) =>
+  createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[]; effectivenessVerificationRefs?: string[]; staffArrSiteId?: string; staffArrLocationId?: string; sourceRefs?: string[]; recordRefs?: string[]; actionPlanRefs?: string[]; verificationPlanRef?: string; relatedCustomerComplaintRefs?: string[]; relatedSupplierIssueRefs?: string[]; complianceRefs?: string[]; openedAt?: string }) =>
     sendJson<Capa>('/api/v1/integrations/capas', 'POST', {
       ...body,
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
       relatedNonconformanceRefs: body.relatedNonconformanceRefs ?? [],
       relatedAuditFindingRefs: body.relatedAuditFindingRefs ?? [],
       effectivenessVerificationRefs: body.effectivenessVerificationRefs ?? [],
+      staffArrSiteId: body.staffArrSiteId || null,
+      staffArrLocationId: body.staffArrLocationId || null,
+      sourceRefs: body.sourceRefs ?? [],
+      recordRefs: body.recordRefs ?? [],
+      actionPlanRefs: body.actionPlanRefs ?? [],
+      verificationPlanRef: body.verificationPlanRef || null,
+      relatedCustomerComplaintRefs: body.relatedCustomerComplaintRefs ?? [],
+      relatedSupplierIssueRefs: body.relatedSupplierIssueRefs ?? [],
+      complianceRefs: body.complianceRefs ?? [],
+      openedAt: body.openedAt ? new Date(body.openedAt).toISOString() : null,
     }),
   updateCapaStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Capa>(`/api/v1/capas/${id}/status`, 'PATCH', { status, closureSummary }),
@@ -679,13 +748,18 @@ export const assurarrApi = {
     }),
   listAudits: () => getJson<Audit[]>('/api/v1/audits'),
   getAudit: (id: string) => getJson<Audit>(`/api/v1/audits/${id}`),
-  createAudit: (body: CreateBase & { auditType: string; auditScope?: string; auditorPersonIds?: string[]; leadAuditorPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; supplierRef?: string; customerRef?: string; plannedStartAt?: string; plannedEndAt?: string; checklistRefs?: string[] }) =>
+  createAudit: (body: CreateBase & { auditType: string; auditScope?: string; auditorPersonIds?: string[]; leadAuditorPersonId?: string; staffArrSiteId?: string; staffArrLocationId?: string; supplierRef?: string; customerRef?: string; plannedStartAt?: string; plannedEndAt?: string; checklistRefs?: string[]; standardRefs?: string[]; complianceRefs?: string[]; auditeeRefs?: string[]; actualStartAt?: string; actualEndAt?: string }) =>
     sendJson<Audit>('/api/v1/audits', 'POST', {
       ...body,
       auditorPersonIds: body.auditorPersonIds ?? [],
       checklistRefs: body.checklistRefs ?? [],
+      standardRefs: body.standardRefs ?? [],
+      complianceRefs: body.complianceRefs ?? [],
+      auditeeRefs: body.auditeeRefs ?? [],
       plannedStartAt: body.plannedStartAt ? new Date(body.plannedStartAt).toISOString() : null,
       plannedEndAt: body.plannedEndAt ? new Date(body.plannedEndAt).toISOString() : null,
+      actualStartAt: body.actualStartAt ? new Date(body.actualStartAt).toISOString() : null,
+      actualEndAt: body.actualEndAt ? new Date(body.actualEndAt).toISOString() : null,
     }),
   updateAuditStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Audit>(`/api/v1/audits/${id}/status`, 'PATCH', { status, closureSummary }),
@@ -749,15 +823,17 @@ export const assurarrApi = {
     }),
   listFindings: () => getJson<Finding[]>('/api/v1/findings'),
   getFinding: (id: string) => getJson<Finding>(`/api/v1/findings/${id}`),
-  createFinding: (body: CreateBase & { findingType: string; auditRef?: string; nonconformanceRef?: string; capaRef?: string; dueAt?: string }) =>
+  createFinding: (body: CreateBase & { findingType: string; sourceRequirementRef?: string; auditRef?: string; nonconformanceRef?: string; capaRef?: string; dueAt?: string; evidenceRecordRefs?: string[] }) =>
     sendJson<Finding>('/api/v1/findings', 'POST', {
       ...body,
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
+      sourceRequirementRef: body.sourceRequirementRef || null,
+      evidenceRecordRefs: body.evidenceRecordRefs ?? [],
     }),
   updateFindingStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Finding>(`/api/v1/findings/${id}/status`, 'PATCH', { status, closureSummary }),
   listSnapshots: () => getJson<StatusSnapshot[]>('/api/v1/status-snapshots'),
-  createSnapshot: (body: CreateBase & { targetProduct: string; targetObjectRef: string; qualityStatus: string; activeHoldRefs?: string[]; openNonconformanceRefs?: string[]; openCapaRefs?: string[]; openFindingRefs?: string[]; expiresAt?: string }) =>
+  createSnapshot: (body: CreateBase & { targetProduct: string; targetObjectRef: string; qualityStatus: string; activeHoldRefs?: string[]; openNonconformanceRefs?: string[]; openCapaRefs?: string[]; openFindingRefs?: string[]; expiresAt?: string; notes?: string }) =>
     sendJson<StatusSnapshot>('/api/v1/status-snapshots', 'POST', {
       ...body,
       activeHoldRefs: body.activeHoldRefs ?? [],
@@ -765,6 +841,7 @@ export const assurarrApi = {
       openCapaRefs: body.openCapaRefs ?? [],
       openFindingRefs: body.openFindingRefs ?? [],
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
+      notes: body.notes || null,
     }),
   getSnapshot: (id: string) => getJson<StatusSnapshot>(`/api/v1/status-snapshots/${id}`),
   listQualityStatus: () => getJson<QualityStatus[]>('/api/v1/integrations/quality-status'),

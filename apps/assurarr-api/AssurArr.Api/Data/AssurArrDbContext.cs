@@ -37,15 +37,15 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
 
         ConfigureNonconformance(modelBuilder);
         ConfigureQualityHold(modelBuilder);
-        ConfigureRecord<AssurArrCapa>(modelBuilder, "assurarr_capas");
+        ConfigureCapa(modelBuilder);
         ConfigureCapaAction(modelBuilder);
         ConfigureCapaActionBlocker(modelBuilder);
         ConfigureVerificationPlan(modelBuilder);
         ConfigureEffectivenessVerification(modelBuilder);
-        ConfigureRecord<AssurArrQualityAudit>(modelBuilder, "assurarr_quality_audits");
+        ConfigureQualityAudit(modelBuilder);
         ConfigureChecklist(modelBuilder);
         ConfigureChecklistItem(modelBuilder);
-        ConfigureRecord<AssurArrAuditFinding>(modelBuilder, "assurarr_audit_findings");
+        ConfigureAuditFinding(modelBuilder);
         ConfigureRootCauseAnalysis(modelBuilder);
         ConfigureRecord<AssurArrQualityStatusSnapshot>(modelBuilder, "assurarr_quality_status_snapshots");
         ConfigureRecord<AssurArrQualityScorecard>(modelBuilder, "assurarr_quality_scorecards");
@@ -103,6 +103,52 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         });
     }
 
+    private static void ConfigureCapa(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrCapa>(entity =>
+        {
+            entity.ToTable("assurarr_capas");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OwnerPersonId);
+            entity.Property(x => x.StaffArrSiteId);
+            entity.Property(x => x.StaffArrLocationId);
+            entity.Property(x => x.SourceRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ActionPlanRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.VerificationPlanRef).HasMaxLength(256);
+            entity.Property(x => x.RelatedCustomerComplaintRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RelatedSupplierIssueRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ComplianceRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AuditTrail).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.OpenedAt);
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.CapaType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SponsorPersonId);
+            entity.Property(x => x.RootCauseSummary).HasMaxLength(4000);
+            entity.Property(x => x.DueAt);
+            entity.Property(x => x.RelatedNonconformanceRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.RelatedAuditFindingRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.EffectivenessVerificationRefs).HasColumnType("text[]").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
     private static void ConfigureNonconformance(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AssurArrNonconformance>(entity =>
@@ -117,9 +163,26 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SourceProduct).HasMaxLength(64);
             entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.DiscoveredAt);
+            entity.Property(x => x.DiscoveredByPersonId);
+            entity.Property(x => x.StaffArrSiteId);
+            entity.Property(x => x.StaffArrLocationId);
             entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
             entity.Property(x => x.OwnerPersonId);
             entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ContainmentRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.HoldRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedItemRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedAssetRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedOrderRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedSupplierRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedCustomerRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AffectedShipmentRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.DispositionRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CapaRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ComplianceRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.FinancialImpactSnapshot).HasMaxLength(4000);
+            entity.Property(x => x.AuditTrail).HasColumnType("text[]").IsRequired();
             entity.Property(x => x.BlockerRefs).HasColumnType("text[]").IsRequired();
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.Property(x => x.UpdatedAt).IsRequired();
@@ -142,11 +205,46 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         });
     }
 
-    private static void ConfigureQualityHold(ModelBuilder modelBuilder)
+    private static void ConfigureAuditFinding(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AssurArrQualityHold>(entity =>
+        modelBuilder.Entity<AssurArrAuditFinding>(entity =>
         {
-            entity.ToTable("assurarr_quality_holds");
+            entity.ToTable("assurarr_audit_findings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OwnerPersonId);
+            entity.Property(x => x.SourceRequirementRef).HasMaxLength(256);
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.EvidenceRecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.FindingType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AuditRef).HasMaxLength(256);
+            entity.Property(x => x.NonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.CapaRef).HasMaxLength(256);
+            entity.Property(x => x.DueAt);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureQualityAudit(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityAudit>(entity =>
+        {
+            entity.ToTable("assurarr_quality_audits");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.TenantId).IsRequired();
             entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
@@ -159,6 +257,56 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
             entity.Property(x => x.OwnerPersonId);
             entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+            entity.Property(x => x.ClosedAt);
+            entity.Property(x => x.ClosedByPersonId);
+            entity.Property(x => x.ClosureSummary).HasMaxLength(4000);
+            entity.Property(x => x.AuditType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AuditScope).HasMaxLength(4000);
+            entity.Property(x => x.StandardRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.ComplianceRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AuditorPersonIds).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.LeadAuditorPersonId);
+            entity.Property(x => x.AuditeeRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.StaffArrSiteId);
+            entity.Property(x => x.StaffArrLocationId);
+            entity.Property(x => x.SupplierRef).HasMaxLength(256);
+            entity.Property(x => x.CustomerRef).HasMaxLength(256);
+            entity.Property(x => x.PlannedStartAt);
+            entity.Property(x => x.PlannedEndAt);
+            entity.Property(x => x.ActualStartAt);
+            entity.Property(x => x.ActualEndAt);
+            entity.Property(x => x.ChecklistRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.FindingRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AuditTrail).HasColumnType("text[]").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+        });
+    }
+
+    private static void ConfigureQualityHold(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssurArrQualityHold>(entity =>
+        {
+            entity.ToTable("assurarr_quality_holds");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceNonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.StaffArrSiteId);
+            entity.Property(x => x.StaffArrLocationId);
+            entity.Property(x => x.AffectedObjectRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.OwnerPersonId);
+            entity.Property(x => x.RecordRefs).HasColumnType("text[]").IsRequired();
+            entity.Property(x => x.AuditTrail).HasColumnType("text[]").IsRequired();
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.Property(x => x.UpdatedAt).IsRequired();
             entity.Property(x => x.ClosedAt);

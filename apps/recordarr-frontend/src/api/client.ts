@@ -96,6 +96,21 @@ export type RecordArrRecord = {
   accessPolicyRef: string | null
   complianceRefs: string[]
   auditTrail: RecordArrAuditTrailEntry[]
+  recordRef: RecordArrRecordRef | null
+}
+
+export type RecordArrRecordRef = {
+  recordarrRecordId: string
+  recordNumberSnapshot: string
+  titleSnapshot: string
+  recordTypeSnapshot: string
+  documentTypeSnapshot: string
+  statusSnapshot: string
+  classificationSnapshot: string
+  versionSnapshot: number
+  expiresAtSnapshot: string | null
+  retentionStatusSnapshot: string | null
+  lastResolvedAt: string
 }
 
 export type RecordArrFileRendition = {

@@ -69,10 +69,12 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         _assurarrIntegrationToken = await IssueServiceTokenAsync(
             adminToken,
             "assurarr",
+            ["maintainarr"],
             actionScope: "maintainarr.quality_holds.write");
         _supplyarrIntegrationToken = await IssueServiceTokenAsync(
             adminToken,
             "supplyarr",
+            ["maintainarr"],
             actionScope: "maintainarr.demand_status.write");
         _trainarrQualificationHandler = new RecordingTrainArrQualificationCheckHandler();
         _complianceCoreGateHandler = new RecordingComplianceCoreWorkOrderGateHandler();
@@ -1713,14 +1715,16 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     private async Task<string> IssueServiceTokenAsync(
         string adminToken,
         string productKey,
+        IReadOnlyList<string>? allowedProductKeys = null,
         string? actionScope = null)
     {
+        var allowedKeys = allowedProductKeys is { Count: > 0 } ? allowedProductKeys : [productKey];
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.RegisterServiceClientRequest(
             $"{productKey}-wo-test",
             $"{productKey} WO Test",
             productKey,
-            [productKey]));
+            allowedKeys));
         var registerResponse = await _nexarrClient.SendAsync(registerRequest);
         registerResponse.EnsureSuccessStatusCode();
         var client = (await registerResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceClientResponse>())!;
@@ -1729,7 +1733,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         issueRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.IssueServiceTokenRequest(
             client.ServiceClientId,
             PlatformSeeder.DemoTenantId,
-            null,
+            allowedKeys,
             actionScope ?? "launch.redeem",
             30));
         var issueResponse = await _nexarrClient.SendAsync(issueRequest);

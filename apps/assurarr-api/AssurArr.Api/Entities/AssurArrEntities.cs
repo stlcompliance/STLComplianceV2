@@ -11,9 +11,26 @@ public sealed class AssurArrNonconformance
     public string Status { get; set; } = "draft";
     public string? SourceProduct { get; set; }
     public string? SourceObjectRef { get; set; }
+    public DateTimeOffset? DiscoveredAt { get; set; }
+    public Guid? DiscoveredByPersonId { get; set; }
+    public Guid? StaffArrSiteId { get; set; }
+    public Guid? StaffArrLocationId { get; set; }
     public string[] AffectedObjectRefs { get; set; } = [];
     public Guid? OwnerPersonId { get; set; }
     public string[] RecordRefs { get; set; } = [];
+    public string[] ContainmentRefs { get; set; } = [];
+    public string[] AffectedItemRefs { get; set; } = [];
+    public string[] AffectedAssetRefs { get; set; } = [];
+    public string[] AffectedOrderRefs { get; set; } = [];
+    public string[] AffectedSupplierRefs { get; set; } = [];
+    public string[] AffectedCustomerRefs { get; set; } = [];
+    public string[] AffectedShipmentRefs { get; set; } = [];
+    public string[] DispositionRefs { get; set; } = [];
+    public string[] CapaRefs { get; set; } = [];
+    public string[] ComplianceRefs { get; set; } = [];
+    public string? FinancialImpactSnapshot { get; set; }
+    public string[] AuditTrail { get; set; } = [];
+    public string[] HoldRefs { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
@@ -41,11 +58,15 @@ public sealed class AssurArrQualityHold
     public string Description { get; set; } = string.Empty;
     public string Severity { get; set; } = "moderate";
     public string Status { get; set; } = "draft";
+    public string? SourceNonconformanceRef { get; set; }
     public string? SourceProduct { get; set; }
     public string? SourceObjectRef { get; set; }
+    public Guid? StaffArrSiteId { get; set; }
+    public Guid? StaffArrLocationId { get; set; }
     public string[] AffectedObjectRefs { get; set; } = [];
     public Guid? OwnerPersonId { get; set; }
     public string[] RecordRefs { get; set; } = [];
+    public string[] AuditTrail { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
@@ -85,9 +106,19 @@ public sealed class AssurArrCapa
     public string? SourceObjectRef { get; set; }
     public string[] AffectedObjectRefs { get; set; } = [];
     public Guid? OwnerPersonId { get; set; }
+    public Guid? StaffArrSiteId { get; set; }
+    public Guid? StaffArrLocationId { get; set; }
+    public string[] SourceRefs { get; set; } = [];
     public string[] RecordRefs { get; set; } = [];
+    public string[] ActionPlanRefs { get; set; } = [];
+    public string? VerificationPlanRef { get; set; }
+    public string[] RelatedCustomerComplaintRefs { get; set; } = [];
+    public string[] RelatedSupplierIssueRefs { get; set; } = [];
+    public string[] ComplianceRefs { get; set; } = [];
+    public string[] AuditTrail { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? OpenedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
@@ -208,8 +239,11 @@ public sealed class AssurArrQualityAudit
     public string? ClosureSummary { get; set; }
     public string AuditType { get; set; } = "internal";
     public string? AuditScope { get; set; }
+    public string[] StandardRefs { get; set; } = [];
+    public string[] ComplianceRefs { get; set; } = [];
     public string[] AuditorPersonIds { get; set; } = [];
     public Guid? LeadAuditorPersonId { get; set; }
+    public string[] AuditeeRefs { get; set; } = [];
     public Guid? StaffArrSiteId { get; set; }
     public Guid? StaffArrLocationId { get; set; }
     public string? SupplierRef { get; set; }
@@ -220,6 +254,7 @@ public sealed class AssurArrQualityAudit
     public DateTimeOffset? ActualEndAt { get; set; }
     public string[] ChecklistRefs { get; set; } = [];
     public string[] FindingRefs { get; set; } = [];
+    public string[] AuditTrail { get; set; } = [];
 }
 
 public sealed class AssurArrQualityAuditChecklist
@@ -275,7 +310,9 @@ public sealed class AssurArrAuditFinding
     public string? SourceObjectRef { get; set; }
     public string[] AffectedObjectRefs { get; set; } = [];
     public Guid? OwnerPersonId { get; set; }
+    public string? SourceRequirementRef { get; set; }
     public string[] RecordRefs { get; set; } = [];
+    public string[] EvidenceRecordRefs { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
@@ -342,6 +379,7 @@ public sealed class AssurArrQualityStatusSnapshot
     public DateTimeOffset? LastReviewedAt { get; set; }
     public Guid? ReviewedByPersonId { get; set; }
     public DateTimeOffset? ExpiresAt { get; set; }
+    public string? Notes { get; set; }
 }
 
 public sealed class AssurArrQualityScorecard

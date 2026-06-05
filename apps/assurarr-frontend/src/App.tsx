@@ -484,6 +484,7 @@ function NonconformancePage() {
         nonconformanceType: body.extra?.nonconformanceType ?? 'receiving',
         category: body.extra?.category ?? 'failed_inspection',
         recurrenceFlag: false,
+        blockerRefs: body.extra?.blockerRefs ? joinRefs(body.extra.blockerRefs) : [],
       }),
   })
 
@@ -582,7 +583,7 @@ function NonconformanceDetailPage() {
     return <LoadingCard label="Loading nonconformance detail" />
   }
   const relatedHolds = holds.data?.filter((hold) => hold.sourceObjectRef === nonconformance?.number || hold.sourceObjectRef === nonconformance?.sourceObjectRef || hold.sourceProduct === nonconformance?.sourceProduct || nonconformance?.number === hold.sourceObjectRef)
-  const relatedCapas = capas.data?.filter((capa) => capa.relatedNonconformanceRefs.includes(nonconformance?.number ?? '') || capa.sourceObjectRef === nonconformance?.number || capa.sourceObjectRef === nonconformance?.sourceObjectRef)
+  const relatedCapas = capas.data?.filter((capa) => capa.relatedNonconformanceRefs.includes(nonconformance?.number ?? '') || capa.sourceRefs.includes(nonconformance?.number ?? '') || capa.sourceObjectRef === nonconformance?.number || capa.sourceObjectRef === nonconformance?.sourceObjectRef)
   const relatedContainments = containmentActions.data?.filter((action) => action.nonconformanceRef === nonconformance?.number || action.nonconformanceRef === nonconformance?.sourceObjectRef)
   const relatedDispositions = dispositions.data?.filter((item) => item.nonconformanceRef === nonconformance?.number || item.nonconformanceRef === nonconformance?.sourceObjectRef)
   const relatedFindings = findings.data?.filter((finding) => finding.nonconformanceRef === nonconformance?.number || finding.nonconformanceRef === nonconformance?.sourceObjectRef)
@@ -610,6 +611,10 @@ function NonconformanceDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {nonconformance.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {nonconformance.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Discovered:</span> {nonconformance.discoveredAt ? new Date(nonconformance.discoveredAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Discovered by:</span> {nonconformance.discoveredByPersonId ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">StaffArr site:</span> {nonconformance.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">StaffArr location:</span> {nonconformance.staffArrLocationId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Owner:</span> {nonconformance.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Due:</span> {nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Root cause:</span> {nonconformance.rootCauseRef ?? 'not started'}</div>
@@ -630,9 +635,22 @@ function NonconformanceDetailPage() {
               </div>
               <div className="text-sm text-slate-300">
                 <div><span className="text-slate-500">Record refs:</span> {nonconformance.recordRefs.length ? nonconformance.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Containment refs:</span> {nonconformance.containmentRefs.length ? nonconformance.containmentRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Hold refs:</span> {nonconformance.holdRefs.length ? nonconformance.holdRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Item refs:</span> {nonconformance.affectedItemRefs.length ? nonconformance.affectedItemRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Asset refs:</span> {nonconformance.affectedAssetRefs.length ? nonconformance.affectedAssetRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Order refs:</span> {nonconformance.affectedOrderRefs.length ? nonconformance.affectedOrderRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Supplier refs:</span> {nonconformance.affectedSupplierRefs.length ? nonconformance.affectedSupplierRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Customer refs:</span> {nonconformance.affectedCustomerRefs.length ? nonconformance.affectedCustomerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Shipment refs:</span> {nonconformance.affectedShipmentRefs.length ? nonconformance.affectedShipmentRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Disposition refs:</span> {nonconformance.dispositionRefs.length ? nonconformance.dispositionRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">CAPA refs:</span> {nonconformance.capaRefs.length ? nonconformance.capaRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Compliance refs:</span> {nonconformance.complianceRefs.length ? nonconformance.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Financial impact:</span> {nonconformance.financialImpactSnapshot ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Blockers:</span> {nonconformance.blockerRefs.length ? nonconformance.blockerRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Recurrence:</span> {nonconformance.recurrenceFlag ? 'Yes' : 'No'}</div>
                 <div><span className="text-slate-500">Repeat of:</span> {nonconformance.repeatOfNonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Audit trail:</span> {nonconformance.auditTrail.length ? nonconformance.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -1047,7 +1065,10 @@ function HoldDetailPage() {
               <p className="text-sm text-slate-300">{hold.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {hold.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-slate-500">Source nonconformance:</span> {hold.sourceNonconformanceRef ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Source object:</span> {hold.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">StaffArr site:</span> {hold.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">StaffArr location:</span> {hold.staffArrLocationId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Owner:</span> {hold.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Placed:</span> {hold.placedAt ? new Date(hold.placedAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Released:</span> {hold.releasedAt ? new Date(hold.releasedAt).toLocaleString() : 'n/a'}</div>
@@ -1068,6 +1089,7 @@ function HoldDetailPage() {
                 <div><span className="text-slate-500">Hold reason:</span> {hold.holdReason ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Release reason:</span> {hold.releaseReason ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Rejection reason:</span> {hold.rejectionReason ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Audit trail:</span> {hold.auditTrail.length ? hold.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -1643,6 +1665,9 @@ function CapaDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {capa.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {capa.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Opened:</span> {capa.openedAt ? new Date(capa.openedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">StaffArr site:</span> {capa.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">StaffArr location:</span> {capa.staffArrLocationId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Owner:</span> {capa.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Sponsor:</span> {capa.sponsorPersonId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Due:</span> {capa.dueAt ? new Date(capa.dueAt).toLocaleString() : 'n/a'}</div>
@@ -1655,9 +1680,16 @@ function CapaDetailPage() {
               <p className="assurarr-label">Root cause and sources</p>
               <div className="text-sm text-slate-300">
                 <div><span className="text-slate-500">Root cause:</span> {capa.rootCauseSummary ?? 'Awaiting analysis'}</div>
-                <div><span className="text-slate-500">Source refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Source refs:</span> {capa.sourceRefs.length ? capa.sourceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Record refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Action plans:</span> {capa.actionPlanRefs.length ? capa.actionPlanRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Verification plan:</span> {capa.verificationPlanRef ?? 'none'}</div>
                 <div><span className="text-slate-500">Related nonconformances:</span> {capa.relatedNonconformanceRefs.length ? capa.relatedNonconformanceRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Related findings:</span> {capa.relatedAuditFindingRefs.length ? capa.relatedAuditFindingRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Customer complaints:</span> {capa.relatedCustomerComplaintRefs.length ? capa.relatedCustomerComplaintRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Supplier issues:</span> {capa.relatedSupplierIssueRefs.length ? capa.relatedSupplierIssueRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Compliance refs:</span> {capa.complianceRefs.length ? capa.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Audit trail:</span> {capa.auditTrail.length ? capa.auditTrail.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Effectiveness refs:</span> {capa.effectivenessVerificationRefs.length ? capa.effectivenessVerificationRefs.join(', ') : 'none'}</div>
               </div>
             </div>
@@ -2414,7 +2446,12 @@ function AuditPage() {
             auditType: 'internal',
             auditScope: 'Receiving process review',
             auditorPersonIds: [],
+            standardRefs: ['ISO 9001:2015'],
+            complianceRefs: ['COMPLIANCE:RECEIVING'],
+            auditeeRefs: ['loadarr:receiving'],
             checklistRefs: [],
+            actualStartAt: undefined,
+            actualEndAt: undefined,
           })
         }
       />
@@ -2648,6 +2685,8 @@ function AuditDetailPage() {
                 <div><span className="text-slate-500">Owner:</span> {audit.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Planned start:</span> {audit.plannedStartAt ? new Date(audit.plannedStartAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Planned end:</span> {audit.plannedEndAt ? new Date(audit.plannedEndAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Actual start:</span> {audit.actualStartAt ? new Date(audit.actualStartAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Actual end:</span> {audit.actualEndAt ? new Date(audit.actualEndAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2656,11 +2695,15 @@ function AuditDetailPage() {
               <p className="assurarr-label">Coverage</p>
               <div className="text-sm text-slate-300">
                 <div><span className="text-slate-500">Auditors:</span> {audit.auditorPersonIds.length ? audit.auditorPersonIds.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Auditees:</span> {audit.auditeeRefs.length ? audit.auditeeRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Sites:</span> {audit.staffArrSiteId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Locations:</span> {audit.staffArrLocationId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Supplier:</span> {audit.supplierRef ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Customer:</span> {audit.customerRef ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Record refs:</span> {audit.recordRefs.length ? audit.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Standards:</span> {audit.standardRefs.length ? audit.standardRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Compliance refs:</span> {audit.complianceRefs.length ? audit.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Audit trail:</span> {audit.auditTrail.length ? audit.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -3054,6 +3097,7 @@ function FindingDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {finding.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {finding.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Source requirement:</span> {finding.sourceRequirementRef ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Owner:</span> {finding.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Due:</span> {finding.dueAt ? new Date(finding.dueAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Closed:</span> {finding.closedAt ? new Date(finding.closedAt).toLocaleString() : 'n/a'}</div>
@@ -3080,7 +3124,7 @@ function FindingDetailPage() {
         />
         <SectionCard
           title="Evidence"
-          items={finding.recordRefs.map((ref) => ref)}
+          items={finding.evidenceRecordRefs.length ? finding.evidenceRecordRefs : finding.recordRefs}
           emptyLabel="No evidence records linked to this finding."
         />
         <SectionCard

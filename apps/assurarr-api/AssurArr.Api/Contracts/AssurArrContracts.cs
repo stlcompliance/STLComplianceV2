@@ -44,9 +44,26 @@ public sealed record AssurArrNonconformanceResponse(
     string Category,
     string? SourceProduct,
     string? SourceObjectRef,
+    DateTimeOffset? DiscoveredAt,
+    Guid? DiscoveredByPersonId,
+    Guid? StaffArrSiteId,
+    Guid? StaffArrLocationId,
     IReadOnlyList<string> AffectedObjectRefs,
     Guid? OwnerPersonId,
     IReadOnlyList<string> RecordRefs,
+    IReadOnlyList<string> ContainmentRefs,
+    IReadOnlyList<string> HoldRefs,
+    IReadOnlyList<string> AffectedItemRefs,
+    IReadOnlyList<string> AffectedAssetRefs,
+    IReadOnlyList<string> AffectedOrderRefs,
+    IReadOnlyList<string> AffectedSupplierRefs,
+    IReadOnlyList<string> AffectedCustomerRefs,
+    IReadOnlyList<string> AffectedShipmentRefs,
+    IReadOnlyList<string> DispositionRefs,
+    IReadOnlyList<string> CapaRefs,
+    IReadOnlyList<string> ComplianceRefs,
+    string? FinancialImpactSnapshot,
+    IReadOnlyList<string> AuditTrail,
     IReadOnlyList<string> EventLog,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
@@ -81,7 +98,23 @@ public sealed record CreateAssurArrNonconformanceRequest(
     string? RepeatOfNonconformanceRef,
     string? RootCauseRef,
     string[] BlockerRefs,
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+    Guid? StaffArrSiteId = null,
+    Guid? StaffArrLocationId = null,
+    DateTimeOffset? DiscoveredAt = null,
+    Guid? DiscoveredByPersonId = null,
+    string[]? ContainmentRefs = null,
+    string[]? DispositionRefs = null,
+    string[]? CapaRefs = null,
+    string[]? ComplianceRefs = null,
+    string? FinancialImpactSnapshot = null,
+    string[]? HoldRefs = null,
+    string[]? AffectedItemRefs = null,
+    string[]? AffectedAssetRefs = null,
+    string[]? AffectedOrderRefs = null,
+    string[]? AffectedSupplierRefs = null,
+    string[]? AffectedCustomerRefs = null,
+    string[]? AffectedShipmentRefs = null);
 
 public sealed record AssurArrQualityHoldResponse(
     Guid Id,
@@ -92,11 +125,15 @@ public sealed record AssurArrQualityHoldResponse(
     string Severity,
     string HoldType,
     string HoldScope,
+    string? SourceNonconformanceRef,
     string? SourceProduct,
     string? SourceObjectRef,
+    Guid? StaffArrSiteId,
+    Guid? StaffArrLocationId,
     IReadOnlyList<string> AffectedObjectRefs,
     Guid? OwnerPersonId,
     IReadOnlyList<string> RecordRefs,
+    IReadOnlyList<string> AuditTrail,
     IReadOnlyList<string> EventLog,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
@@ -127,6 +164,7 @@ public sealed record CreateAssurArrQualityHoldRequest(
     string Severity,
     string HoldType,
     string HoldScope,
+    string? SourceNonconformanceRef,
     string? SourceProduct,
     string? SourceObjectRef,
     string[] AffectedObjectRefs,
@@ -136,7 +174,10 @@ public sealed record CreateAssurArrQualityHoldRequest(
     string? UnitOfMeasure,
     string? LotNumber,
     string? SerialNumber,
-    DateTimeOffset? ExpiresAt);
+    DateTimeOffset? ExpiresAt,
+    Guid? StaffArrSiteId = null,
+    Guid? StaffArrLocationId = null,
+    Guid? PlacedByPersonId = null);
 
 public sealed record AssurArrCapaResponse(
     Guid Id,
@@ -151,10 +192,20 @@ public sealed record AssurArrCapaResponse(
     string? SourceObjectRef,
     IReadOnlyList<string> AffectedObjectRefs,
     Guid? OwnerPersonId,
+    Guid? StaffArrSiteId,
+    Guid? StaffArrLocationId,
+    IReadOnlyList<string> SourceRefs,
     IReadOnlyList<string> RecordRefs,
+    IReadOnlyList<string> ActionPlanRefs,
+    string? VerificationPlanRef,
+    IReadOnlyList<string> RelatedCustomerComplaintRefs,
+    IReadOnlyList<string> RelatedSupplierIssueRefs,
+    IReadOnlyList<string> ComplianceRefs,
+    IReadOnlyList<string> AuditTrail,
     IReadOnlyList<string> EventLog,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
+    DateTimeOffset? OpenedAt,
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
     string? ClosureSummary,
@@ -180,7 +231,17 @@ public sealed record CreateAssurArrCapaRequest(
     DateTimeOffset? DueAt,
     string[] RelatedNonconformanceRefs,
     string[] RelatedAuditFindingRefs,
-    string[] EffectivenessVerificationRefs);
+    string[] EffectivenessVerificationRefs,
+    Guid? StaffArrSiteId = null,
+    Guid? StaffArrLocationId = null,
+    string[]? SourceRefs = null,
+    string[]? RecordRefs = null,
+    string[]? ActionPlanRefs = null,
+    string? VerificationPlanRef = null,
+    string[]? RelatedCustomerComplaintRefs = null,
+    string[]? RelatedSupplierIssueRefs = null,
+    string[]? ComplianceRefs = null,
+    DateTimeOffset? OpenedAt = null);
 
 public sealed record AssurArrCapaActionResponse(
     Guid Id,
@@ -344,8 +405,11 @@ public sealed record AssurArrQualityAuditResponse(
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
     string? ClosureSummary,
+    IReadOnlyList<string> StandardRefs,
+    IReadOnlyList<string> ComplianceRefs,
     IReadOnlyList<string> AuditorPersonIds,
     Guid? LeadAuditorPersonId,
+    IReadOnlyList<string> AuditeeRefs,
     Guid? StaffArrSiteId,
     Guid? StaffArrLocationId,
     string? SupplierRef,
@@ -355,7 +419,8 @@ public sealed record AssurArrQualityAuditResponse(
     DateTimeOffset? ActualStartAt,
     DateTimeOffset? ActualEndAt,
     IReadOnlyList<string> ChecklistRefs,
-    IReadOnlyList<string> FindingRefs);
+    IReadOnlyList<string> FindingRefs,
+    IReadOnlyList<string> AuditTrail);
 
 public sealed record CreateAssurArrQualityAuditRequest(
     string Title,
@@ -375,7 +440,12 @@ public sealed record CreateAssurArrQualityAuditRequest(
     string? CustomerRef,
     DateTimeOffset? PlannedStartAt,
     DateTimeOffset? PlannedEndAt,
-    string[] ChecklistRefs);
+    string[] ChecklistRefs,
+    string[]? StandardRefs = null,
+    string[]? ComplianceRefs = null,
+    string[]? AuditeeRefs = null,
+    DateTimeOffset? ActualStartAt = null,
+    DateTimeOffset? ActualEndAt = null);
 
 public sealed record AssurArrQualityAuditChecklistResponse(
     Guid Id,
@@ -453,6 +523,8 @@ public sealed record AssurArrAuditFindingResponse(
     IReadOnlyList<string> AffectedObjectRefs,
     Guid? OwnerPersonId,
     IReadOnlyList<string> RecordRefs,
+    string? SourceRequirementRef,
+    IReadOnlyList<string> EvidenceRecordRefs,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ClosedAt,
@@ -472,10 +544,12 @@ public sealed record CreateAssurArrAuditFindingRequest(
     string? SourceObjectRef,
     string[] AffectedObjectRefs,
     Guid? OwnerPersonId,
+    string? SourceRequirementRef,
     string? AuditRef,
     string? NonconformanceRef,
     string? CapaRef,
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+    string[]? EvidenceRecordRefs = null);
 
 public sealed record AssurArrRootCauseAnalysisResponse(
     Guid Id,
@@ -544,7 +618,8 @@ public sealed record AssurArrQualityStatusSnapshotResponse(
     IReadOnlyList<string> OpenFindingRefs,
     DateTimeOffset? LastReviewedAt,
     Guid? ReviewedByPersonId,
-    DateTimeOffset? ExpiresAt);
+    DateTimeOffset? ExpiresAt,
+    string? Notes);
 
 public sealed record CreateAssurArrQualityStatusSnapshotRequest(
     string TargetProduct,
@@ -561,7 +636,8 @@ public sealed record CreateAssurArrQualityStatusSnapshotRequest(
     string[] OpenNonconformanceRefs,
     string[] OpenCapaRefs,
     string[] OpenFindingRefs,
-    DateTimeOffset? ExpiresAt);
+    DateTimeOffset? ExpiresAt,
+    string? Notes = null);
 
 public sealed record AssurArrQualityScorecardResponse(
     Guid Id,

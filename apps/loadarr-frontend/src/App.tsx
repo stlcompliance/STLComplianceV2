@@ -113,6 +113,85 @@ type LoadArrRouteHandoff = {
   notes: string
 }
 
+type LoadArrExpectedReceipt = {
+  id: string
+  expectedReceiptNumber: string
+  sourceProductKey: string
+  sourceObjectRef: string
+  supplierNameSnapshot: string
+  warehouseLocationId: string
+  locationNameSnapshot: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  expectedQuantity: number
+  receivedQuantity: number
+  status: string
+  dueAtUtc: string
+}
+
+type LoadArrReservation = {
+  id: string
+  reservationNumber: string
+  demandReference: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  locationNameSnapshot: string
+  quantity: number
+  status: string
+  reservedAtUtc: string
+}
+
+type LoadArrWorkflowRecord = {
+  id: string
+  recordNumber: string
+  subject: string
+  status: string
+  locationNameSnapshot: string
+  quantity: number
+  reasonCode: string
+  updatedAtUtc: string
+  notes: string
+}
+
+type LoadArrDiscrepancyRecord = {
+  id: string
+  discrepancyNumber: string
+  sourceType: string
+  status: string
+  locationNameSnapshot: string
+  itemNameSnapshot: string
+  quantity: number
+  reasonCode: string
+  openedAtUtc: string
+  notes: string
+}
+
+type LoadArrLedgerEntry = {
+  id: string
+  movementType: string
+  sourceType: string
+  status: string
+  locationNameSnapshot: string
+  itemNameSnapshot: string
+  quantity: number
+  unitOfMeasure: string
+  occurredAtUtc: string
+  reasonCode: string
+}
+
+type LoadArrBalanceRollup = {
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  unitOfMeasureSnapshot: string
+  quantityOnHand: number
+  quantityReserved: number
+  quantityAllocated: number
+  quantityBlocked: number
+  locationCount: number
+  locations: string[]
+  activeStates: string[]
+}
+
 type LoadArrTruckStock = {
   id: string
   truckStockNumber: string
@@ -532,18 +611,31 @@ type KitFormState = {
 type KitOperation = 'build' | 'reserve' | 'pick' | 'break' | 'replenish' | 'inspect' | 'assign' | 'return' | 'expire-components' | 'track-location'
 
 type ViewKey =
+  | 'dashboard'
   | 'inventory'
+  | 'balances'
+  | 'expected-receipts'
   | 'receiving'
+  | 'putaway'
+  | 'reservations'
+  | 'picks'
+  | 'issues'
+  | 'returns'
   | 'transfers'
   | 'truckstock'
   | 'kits'
   | 'locations'
   | 'counts'
+  | 'adjustments'
+  | 'ledger'
+  | 'discrepancies'
+  | 'replenishment'
   | 'history'
   | 'tasks'
   | 'holds'
   | 'unexplained'
   | 'handoffs'
+  | 'settings'
 
 type LoadArrRoute = {
   key: ViewKey
@@ -557,12 +649,24 @@ type LoadArrRoute = {
 type NavIcon = NonNullable<ProductNavItem['icon']>
 
 const loadarrRoutes: LoadArrRoute[] = [
+  { key: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: BarChart3 as NavIcon },
   { key: 'inventory', label: 'Inventory', path: '/inventory', icon: Boxes as NavIcon },
+  { key: 'balances', label: 'Balances', path: '/balances', icon: PackageCheck as NavIcon, sectionBreakBefore: true },
+  { key: 'expected-receipts', label: 'Expected Receipts', path: '/expected-receipts', icon: PackagePlus as NavIcon },
   { key: 'receiving', label: 'Receiving', path: '/receiving', icon: PackagePlus as NavIcon },
+  { key: 'putaway', label: 'Putaway', path: '/putaway', icon: PackagePlus as NavIcon },
+  { key: 'reservations', label: 'Reservations', path: '/reservations', icon: ClipboardCheck as NavIcon },
+  { key: 'picks', label: 'Picks', path: '/picks', icon: ClipboardList as NavIcon },
+  { key: 'issues', label: 'Issues', path: '/issues', icon: AlertTriangle as NavIcon },
+  { key: 'returns', label: 'Returns', path: '/returns', icon: Route as NavIcon },
   { key: 'transfers', label: 'Transfers', path: '/transfers', icon: Route as NavIcon },
   { key: 'truckstock', label: 'Truck Stock', path: '/truck-stock', icon: Truck as NavIcon },
   { key: 'locations', label: 'Locations', path: '/locations', icon: MapPin as NavIcon },
   { key: 'counts', label: 'Counts', path: '/counts', icon: Activity as NavIcon },
+  { key: 'adjustments', label: 'Adjustments', path: '/adjustments', icon: ClipboardCheck as NavIcon },
+  { key: 'ledger', label: 'Stock Ledger', path: '/ledger', icon: DatabaseZap as NavIcon, sectionBreakBefore: true },
+  { key: 'discrepancies', label: 'Discrepancies', path: '/discrepancies', icon: AlertTriangle as NavIcon },
+  { key: 'replenishment', label: 'Replenishment', path: '/replenishment', icon: Truck as NavIcon },
   { key: 'history', label: 'History', path: '/history', icon: BarChart3 as NavIcon },
   {
     key: 'tasks',
@@ -574,6 +678,7 @@ const loadarrRoutes: LoadArrRoute[] = [
   { key: 'holds', label: 'Holds', path: '/holds', icon: ShieldCheck as NavIcon },
   { key: 'unexplained', label: 'Unexplained', path: '/unexplained', icon: AlertTriangle as NavIcon },
   { key: 'handoffs', label: 'Handoffs', path: '/handoffs', icon: Route as NavIcon },
+  { key: 'settings', label: 'Settings', path: '/settings', icon: Warehouse as NavIcon, sectionBreakBefore: true },
   {
     key: 'kits',
     label: 'Kits',
@@ -1407,20 +1512,20 @@ export function App() {
   const normalizedPathname = location.pathname.replace(/\/+$/, '') || '/'
   const activeView = useMemo<ViewKey>(() => {
     if (normalizedPathname === '/') {
-      return 'inventory'
+      return 'dashboard'
     }
 
-    return loadarrRouteByPath.get(normalizedPathname) ?? 'inventory'
+    return loadarrRouteByPath.get(normalizedPathname) ?? 'dashboard'
   }, [normalizedPathname])
 
   useEffect(() => {
     if (normalizedPathname === '/') {
-      navigate('/inventory', { replace: true })
+      navigate('/dashboard', { replace: true })
       return
     }
 
     if (!loadarrRouteByPath.has(normalizedPathname)) {
-      navigate('/inventory', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [navigate, normalizedPathname])
 
@@ -1698,6 +1803,15 @@ export function App() {
     [normalizedQuery, summary.tasks],
   )
 
+  const filteredPutawayTasks = useMemo(
+    () =>
+      [
+        receivingCompletion?.putawayTask,
+        ...summary.tasks.filter((task) => task.taskType === 'putaway'),
+      ].filter((task): task is LoadArrTask => Boolean(task)),
+    [receivingCompletion?.putawayTask, summary.tasks],
+  )
+
   const filteredHolds = useMemo(
     () =>
       summary.holds.filter((hold) =>
@@ -1715,6 +1829,17 @@ export function App() {
       ),
     [normalizedQuery, summary.holds],
   )
+
+  const replenishmentRows = useMemo(
+    () => [
+      ...truckStockRecords.filter((record) => record.quantityOnHand < record.minimumQuantity),
+      ...kitRecords.filter((record) => record.quantityOnHand < record.minimumQuantity),
+      ...summary.routeHandoffs.filter((handoff) => handoff.status !== 'ready'),
+    ],
+    [kitRecords, summary.routeHandoffs, truckStockRecords],
+  )
+
+  const showInventoryOverview = activeView === 'inventory' || activeView === 'dashboard'
 
   const filteredTruckStock = useMemo(
     () =>
@@ -1943,6 +2068,236 @@ export function App() {
   const selectedAdjustment = useMemo(
     () => adjustments.find((adjustment) => adjustment.id === adjustmentResult?.adjustment.id) ?? adjustments[0],
     [adjustmentResult?.adjustment.id, adjustments],
+  )
+
+  const selectedInventoryItem = useMemo(
+    () => filteredInventory[0] ?? summary.inventory[0] ?? null,
+    [filteredInventory, summary.inventory],
+  )
+
+  const inventoryBalancesByItem = useMemo<LoadArrBalanceRollup[]>(
+    () => {
+      const rollups = new Map<
+        string,
+        {
+          supplyarrItemId: string
+          itemNameSnapshot: string
+          unitOfMeasureSnapshot: string
+          quantityOnHand: number
+          quantityReserved: number
+          quantityAllocated: number
+          quantityBlocked: number
+          locations: Set<string>
+          states: Set<string>
+        }
+      >()
+
+      for (const item of summary.inventory) {
+        const current = rollups.get(item.supplyarrItemId)
+        if (current) {
+          current.quantityOnHand += item.quantityOnHand
+          current.quantityReserved += item.quantityReserved
+          current.quantityAllocated += item.quantityAllocated
+          current.quantityBlocked += item.quantityBlocked
+          current.locations.add(item.locationNameSnapshot)
+          current.states.add(item.state)
+          continue
+        }
+
+        rollups.set(item.supplyarrItemId, {
+          supplyarrItemId: item.supplyarrItemId,
+          itemNameSnapshot: item.itemNameSnapshot,
+          unitOfMeasureSnapshot: item.unitOfMeasureSnapshot,
+          quantityOnHand: item.quantityOnHand,
+          quantityReserved: item.quantityReserved,
+          quantityAllocated: item.quantityAllocated,
+          quantityBlocked: item.quantityBlocked,
+          locations: new Set([item.locationNameSnapshot]),
+          states: new Set([item.state]),
+        })
+      }
+
+      return [...rollups.values()].map((entry) => ({
+        supplyarrItemId: entry.supplyarrItemId,
+        itemNameSnapshot: entry.itemNameSnapshot,
+        unitOfMeasureSnapshot: entry.unitOfMeasureSnapshot,
+        quantityOnHand: entry.quantityOnHand,
+        quantityReserved: entry.quantityReserved,
+        quantityAllocated: entry.quantityAllocated,
+        quantityBlocked: entry.quantityBlocked,
+        locationCount: entry.locations.size,
+        locations: [...entry.locations],
+        activeStates: [...entry.states],
+      }))
+    },
+    [summary.inventory],
+  )
+
+  const expectedReceiptRows = useMemo<LoadArrExpectedReceipt[]>(
+    () =>
+      summary.tasks
+        .filter((task) => task.taskType === 'receive')
+        .map((task) => ({
+          id: task.id,
+          expectedReceiptNumber: `EXP-${task.id.slice(-4).toUpperCase()}`,
+          sourceProductKey: task.requiredSignals.includes('purchase_receipt') ? 'supplyarr' : 'routarr',
+          sourceObjectRef: task.title,
+          supplierNameSnapshot: task.assignedRole,
+          warehouseLocationId:
+            summary.locations.find((location) => location.name === task.locationNameSnapshot)?.id ?? summary.locations[0]?.id ?? 'location-001',
+          locationNameSnapshot: task.locationNameSnapshot,
+          supplyarrItemId: task.supplyarrItemId,
+          itemNameSnapshot:
+            summary.inventory.find((item) => item.supplyarrItemId === task.supplyarrItemId)?.itemNameSnapshot ??
+            task.supplyarrItemId,
+          expectedQuantity: task.quantity,
+          receivedQuantity: 0,
+          status: task.status,
+          dueAtUtc: task.dueAtUtc,
+        })),
+    [summary.inventory, summary.locations, summary.tasks],
+  )
+
+  const reservationRows = useMemo<LoadArrReservation[]>(
+    () =>
+      summary.inventory
+        .filter((item) => item.quantityReserved > 0)
+        .map((item) => ({
+          id: item.id,
+          reservationNumber: `RSV-${item.id.slice(-4).toUpperCase()}`,
+          demandReference: item.originReference,
+          supplyarrItemId: item.supplyarrItemId,
+          itemNameSnapshot: item.itemNameSnapshot,
+          locationNameSnapshot: item.locationNameSnapshot,
+          quantity: item.quantityReserved,
+          status: item.state === 'reserved' ? 'reserved' : 'partially_reserved',
+          reservedAtUtc: summary.generatedAt,
+        })),
+    [summary.generatedAt, summary.inventory],
+  )
+
+  const pickRows = useMemo<LoadArrWorkflowRecord[]>(
+    () =>
+      summary.tasks
+        .filter((task) => task.taskType === 'pick')
+        .map((task) => ({
+          id: task.id,
+          recordNumber: `PICK-${task.id.slice(-4).toUpperCase()}`,
+          subject: task.title,
+          status: task.status,
+          locationNameSnapshot: task.locationNameSnapshot,
+          quantity: task.quantity,
+          reasonCode: task.requiredSignals[0] ?? 'pick_request',
+          updatedAtUtc: task.dueAtUtc,
+          notes: `Assigned to ${task.assignedRole}`,
+        })),
+    [summary.tasks],
+  )
+
+  const issueRows = useMemo<LoadArrWorkflowRecord[]>(
+    () =>
+      truckStockRecords.map((record) => ({
+        id: record.id,
+        recordNumber: record.truckStockNumber,
+        subject: record.itemNameSnapshot,
+        status: record.status,
+        locationNameSnapshot: record.truckLocationNameSnapshot,
+        quantity: record.quantityOnHand,
+        reasonCode: 'issue_to_service_truck',
+        updatedAtUtc: record.lastMovementAtUtc,
+        notes: `Assigned to ${record.assignedPersonNameSnapshot}`,
+      })),
+    [truckStockRecords],
+  )
+
+  const returnRows = useMemo<LoadArrWorkflowRecord[]>(
+    () =>
+      summary.inventory
+        .filter((item) => item.originEventType === 'route_return')
+        .map((item) => ({
+          id: item.id,
+          recordNumber: `RET-${item.id.slice(-4).toUpperCase()}`,
+          subject: item.itemNameSnapshot,
+          status: item.state,
+          locationNameSnapshot: item.locationNameSnapshot,
+          quantity: item.quantityOnHand,
+          reasonCode: 'route_return',
+          updatedAtUtc: summary.generatedAt,
+          notes: item.originReference,
+        })),
+    [summary.generatedAt, summary.inventory],
+  )
+
+  const discrepancyRows = useMemo<LoadArrDiscrepancyRecord[]>(
+    () =>
+      summary.unexplainedInventory.map((record) => ({
+        id: record.id,
+        discrepancyNumber: record.recordNumber,
+        sourceType: record.discoverySource,
+        status: record.status,
+        locationNameSnapshot: record.locationNameSnapshot,
+        itemNameSnapshot: record.itemNameSnapshot,
+        quantity: record.varianceQuantity,
+        reasonCode: record.reasonCode,
+        openedAtUtc: record.discoveredAtUtc,
+        notes: record.evidenceSummary,
+      })),
+    [summary.unexplainedInventory],
+  )
+
+  const ledgerRows = useMemo<LoadArrLedgerEntry[]>(
+    () => [
+      ...summary.inventory.map((item) => ({
+        id: `bal-${item.id}`,
+        movementType: item.originEventType,
+        sourceType: item.originReference,
+        status: item.state,
+        locationNameSnapshot: item.locationNameSnapshot,
+        itemNameSnapshot: item.itemNameSnapshot,
+        quantity: item.quantityOnHand,
+        unitOfMeasure: item.unitOfMeasureSnapshot,
+        occurredAtUtc: summary.generatedAt,
+        reasonCode: item.notes,
+      })),
+      ...counts.map((count) => ({
+        id: `cnt-${count.id}`,
+        movementType: count.varianceQuantity === 0 ? 'count' : 'count_variance',
+        sourceType: count.countNumber,
+        status: count.status,
+        locationNameSnapshot: count.locationNameSnapshot,
+        itemNameSnapshot: count.itemNameSnapshot,
+        quantity: Math.abs(count.varianceQuantity),
+        unitOfMeasure: count.unitOfMeasure,
+        occurredAtUtc: count.updatedAtUtc,
+        reasonCode: count.reasonCode,
+      })),
+      ...adjustments.map((adjustment) => ({
+        id: `adj-${adjustment.id}`,
+        movementType: 'adjustment',
+        sourceType: adjustment.adjustmentNumber,
+        status: adjustment.status,
+        locationNameSnapshot: adjustment.locationNameSnapshot,
+        itemNameSnapshot: adjustment.itemNameSnapshot,
+        quantity: adjustment.quantityDelta,
+        unitOfMeasure: adjustment.unitOfMeasure,
+        occurredAtUtc: adjustment.updatedAtUtc,
+        reasonCode: adjustment.reasonCode,
+      })),
+    ].sort((left, right) => right.occurredAtUtc.localeCompare(left.occurredAtUtc)),
+    [adjustments, counts, summary.generatedAt, summary.inventory],
+  )
+
+  const settingRows = useMemo(
+    () => [
+      { key: 'canonical_location_owner', label: 'Canonical location owner', value: 'StaffArr' },
+      { key: 'wms_behavior_owner', label: 'WMS behavior owner', value: 'LoadArr' },
+      { key: 'inventory_owner', label: 'Inventory balances', value: 'LoadArr' },
+      { key: 'stock_ledger_owner', label: 'Stock ledger truth', value: 'LoadArr' },
+      { key: 'quality_hold_owner', label: 'Hold and release decisions', value: 'AssurArr' },
+      { key: 'route_handoff_owner', label: 'Route handoff consumer', value: 'RoutArr' },
+      { key: 'suite_home', label: 'Suite home', value: suiteHomeUrl },
+    ],
+    [suiteHomeUrl],
   )
 
   const quarantineLocationOptions = useMemo<PickerOption[]>(
@@ -2578,37 +2933,80 @@ export function App() {
             </label>
           </section>
 
-        {activeView === 'inventory' && (
-          <section className="data-grid inventory-grid" aria-label="Inventory balances">
-            {filteredInventory.map((item) => (
-              <article className="panel" key={item.id}>
-                <div className="panel-title-row">
-                  <div>
-                    <span className="kicker">{item.supplyarrItemId}</span>
-                    <h2>{item.itemNameSnapshot}</h2>
-                  </div>
-                  <StatusChip value={item.state} />
+        {showInventoryOverview && (
+          <section className="receiving-layout" aria-label="Inventory balances and item detail">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Boxes aria-hidden="true" />
+                <h2>Inventory balances</h2>
+              </div>
+
+              <section className="data-grid inventory-grid" aria-label="Inventory balance list">
+                {filteredInventory.map((item) => (
+                  <article className="panel" key={item.id}>
+                    <div className="panel-title-row">
+                      <div>
+                        <span className="kicker">{item.supplyarrItemId}</span>
+                        <h2>{item.itemNameSnapshot}</h2>
+                      </div>
+                      <StatusChip value={item.state} />
+                    </div>
+                    <dl className="quantity-grid">
+                      <Quantity label="On hand" value={item.quantityOnHand} />
+                      <Quantity label="Reserved" value={item.quantityReserved} />
+                      <Quantity label="Allocated" value={item.quantityAllocated} />
+                      <Quantity label="Blocked" value={item.quantityBlocked} />
+                    </dl>
+                    <div className="detail-line">
+                      <MapPin aria-hidden="true" />
+                      <span>{item.locationNameSnapshot}</span>
+                    </div>
+                    <div className="detail-line">
+                      <DatabaseZap aria-hidden="true" />
+                      <span>
+                        {item.originEventType} · {item.originReference}
+                      </span>
+                    </div>
+                    <TagList tags={item.traceTags} />
+                    <p className="notes">{item.notes}</p>
+                  </article>
+                ))}
+              </section>
+            </article>
+
+            <aside className="side-panel" aria-label="Inventory item detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Item detail</h2>
+              </div>
+
+              {selectedInventoryItem ? (
+                <div className="completion-stack">
+                  <AuditFact label="Item" value={`${selectedInventoryItem.supplyarrItemId} · ${selectedInventoryItem.itemNameSnapshot}`} />
+                  <AuditFact label="Location" value={selectedInventoryItem.locationNameSnapshot} />
+                  <AuditFact label="Status" value={selectedInventoryItem.state} />
+                  <AuditFact
+                    label="Balance"
+                    value={`${formatNumber.format(selectedInventoryItem.quantityOnHand)} on hand, ${formatNumber.format(selectedInventoryItem.quantityReserved)} reserved`}
+                  />
+                  <AuditFact
+                    label="Availability"
+                    value={
+                      selectedInventoryItem.quantityBlocked > 0
+                        ? `${formatNumber.format(selectedInventoryItem.quantityBlocked)} blocked`
+                        : 'Available for work'
+                    }
+                  />
+                  <TagList tags={selectedInventoryItem.traceTags} />
+                  <p className="notes">{selectedInventoryItem.notes}</p>
                 </div>
-                <dl className="quantity-grid">
-                  <Quantity label="On hand" value={item.quantityOnHand} />
-                  <Quantity label="Reserved" value={item.quantityReserved} />
-                  <Quantity label="Allocated" value={item.quantityAllocated} />
-                  <Quantity label="Blocked" value={item.quantityBlocked} />
-                </dl>
-                <div className="detail-line">
-                  <MapPin aria-hidden="true" />
-                  <span>{item.locationNameSnapshot}</span>
+              ) : (
+                <div className="empty-state">
+                  <strong>No inventory selected</strong>
+                  <span>Inventory balances are currently empty.</span>
                 </div>
-                <div className="detail-line">
-                  <DatabaseZap aria-hidden="true" />
-                  <span>
-                    {item.originEventType} · {item.originReference}
-                  </span>
-                </div>
-                <TagList tags={item.traceTags} />
-                <p className="notes">{item.notes}</p>
-              </article>
-            ))}
+              )}
+            </aside>
           </section>
         )}
 
@@ -2792,6 +3190,499 @@ export function App() {
                 <div className="empty-state">
                   <strong>Awaiting completion</strong>
                   <span>Completing receiving will create the origin, movement, balance, and putaway task records.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'balances' && (
+          <section className="receiving-layout" aria-label="Inventory balances by item">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <PackageCheck aria-hidden="true" />
+                <h2>Balance rollup</h2>
+              </div>
+
+              <div className="data-grid inventory-grid">
+                {inventoryBalancesByItem.map((item) => (
+                  <article className="panel" key={item.supplyarrItemId}>
+                    <div className="panel-title-row">
+                      <div>
+                        <span className="kicker">{item.supplyarrItemId}</span>
+                        <h2>{item.itemNameSnapshot}</h2>
+                      </div>
+                      <StatusChip value={item.activeStates.join(' / ')} />
+                    </div>
+                    <dl className="quantity-grid">
+                      <Quantity label="Locations" value={item.locationCount} />
+                      <Quantity label="On hand" value={item.quantityOnHand} />
+                      <Quantity label="Reserved" value={item.quantityReserved} />
+                      <Quantity label="Allocated" value={item.quantityAllocated} />
+                      <Quantity label="Blocked" value={item.quantityBlocked} />
+                    </dl>
+                    <TagList tags={item.locations} />
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Balance summary">
+              <div className="section-heading">
+                <BarChart3 aria-hidden="true" />
+                <h2>Balance snapshot</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Items tracked" value={inventoryBalancesByItem.length.toString()} />
+                <AuditFact label="Open tasks" value={summary.metrics.openTasks.toString()} />
+                <AuditFact label="Open holds" value={summary.metrics.openHolds.toString()} />
+                <AuditFact label="Unexplained" value={summary.metrics.unexplainedInventory.toString()} />
+                <AuditFact label="Last refresh" value={formatDate(summary.generatedAt)} />
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'expected-receipts' && (
+          <section className="receiving-layout" aria-label="Expected receipts">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <PackagePlus aria-hidden="true" />
+                <h2>Expected receipt watchlist</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {expectedReceiptRows.map((receipt) => (
+                  <article className="queue-row" key={receipt.id}>
+                    <PackagePlus aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{receipt.expectedReceiptNumber}</h2>
+                        <StatusChip value={receipt.status} />
+                      </div>
+                      <p>
+                        {receipt.itemNameSnapshot} · expected {formatNumber.format(receipt.expectedQuantity)}{' '}
+                        {selectedSupplyArrItem?.unitOfMeasureSnapshot ?? 'each'} · {receipt.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[receipt.supplierNameSnapshot, receipt.sourceObjectRef, receipt.sourceProductKey]} />
+                    </div>
+                    <time dateTime={receipt.dueAtUtc}>{formatDate(receipt.dueAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Expected receipt detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Receipt detail</h2>
+              </div>
+              {expectedReceiptRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Receipt" value={expectedReceiptRows[0].expectedReceiptNumber} />
+                  <AuditFact label="Source" value={`${expectedReceiptRows[0].sourceProductKey} · ${expectedReceiptRows[0].sourceObjectRef}`} />
+                  <AuditFact label="Location" value={expectedReceiptRows[0].locationNameSnapshot} />
+                  <AuditFact
+                    label="Quantity"
+                    value={`${formatNumber.format(expectedReceiptRows[0].expectedQuantity)} expected, ${formatNumber.format(expectedReceiptRows[0].receivedQuantity)} received`}
+                  />
+                  <AuditFact label="Due" value={formatDate(expectedReceiptRows[0].dueAtUtc)} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No expected receipts</strong>
+                  <span>LoadArr exposes the expected-receipt watchlist for inbound receiving readiness.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'reservations' && (
+          <section className="receiving-layout" aria-label="Reservations">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ClipboardCheck aria-hidden="true" />
+                <h2>Reservation queue</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {reservationRows.map((reservation) => (
+                  <article className="queue-row" key={reservation.id}>
+                    <ClipboardCheck aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{reservation.reservationNumber}</h2>
+                        <StatusChip value={reservation.status} />
+                      </div>
+                      <p>
+                        {reservation.itemNameSnapshot} · {formatNumber.format(reservation.quantity)} reserved ·{' '}
+                        {reservation.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[reservation.demandReference, reservation.supplyarrItemId]} />
+                    </div>
+                    <time dateTime={reservation.reservedAtUtc}>{formatDate(reservation.reservedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Reservation detail">
+              <div className="section-heading">
+                <ClipboardCheck aria-hidden="true" />
+                <h2>Reservation detail</h2>
+              </div>
+              {reservationRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Reservation" value={reservationRows[0].reservationNumber} />
+                  <AuditFact label="Demand" value={reservationRows[0].demandReference} />
+                  <AuditFact label="Item" value={reservationRows[0].itemNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(reservationRows[0].quantity)} />
+                  <AuditFact label="Status" value={reservationRows[0].status} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No reservations</strong>
+                  <span>Reserved quantities will appear here for inbound demand and fulfillment demand.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'picks' && (
+          <section className="receiving-layout" aria-label="Pick tasks">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ClipboardList aria-hidden="true" />
+                <h2>Pick task list</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {pickRows.map((pick) => (
+                  <article className="queue-row" key={pick.id}>
+                    <ClipboardList aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{pick.recordNumber}</h2>
+                        <StatusChip value={pick.status} />
+                      </div>
+                      <p>
+                        {pick.subject} · {formatNumber.format(pick.quantity)} · {pick.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[pick.reasonCode, pick.notes]} />
+                    </div>
+                    <time dateTime={pick.updatedAtUtc}>{formatDate(pick.updatedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Pick detail">
+              <div className="section-heading">
+                <ClipboardCheck aria-hidden="true" />
+                <h2>Pick detail</h2>
+              </div>
+              {pickRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Pick" value={pickRows[0].recordNumber} />
+                  <AuditFact label="Subject" value={pickRows[0].subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(pickRows[0].quantity)} />
+                  <AuditFact label="Location" value={pickRows[0].locationNameSnapshot} />
+                  <AuditFact label="Status" value={pickRows[0].status} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No pick tasks</strong>
+                  <span>Pick tasks appear here for routed or order-driven demand.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'issues' && (
+          <section className="receiving-layout" aria-label="Issues">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <AlertTriangle aria-hidden="true" />
+                <h2>Issue queue</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {issueRows.map((issue) => (
+                  <article className="queue-row" key={issue.id}>
+                    <AlertTriangle aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{issue.recordNumber}</h2>
+                        <StatusChip value={issue.status} />
+                      </div>
+                      <p>
+                        {issue.subject} · {formatNumber.format(issue.quantity)} · {issue.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[issue.reasonCode, issue.notes]} />
+                    </div>
+                    <time dateTime={issue.updatedAtUtc}>{formatDate(issue.updatedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Issue detail">
+              <div className="section-heading">
+                <Truck aria-hidden="true" />
+                <h2>Issue detail</h2>
+              </div>
+              {issueRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Issue" value={issueRows[0].recordNumber} />
+                  <AuditFact label="Item" value={issueRows[0].subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(issueRows[0].quantity)} />
+                  <AuditFact label="Location" value={issueRows[0].locationNameSnapshot} />
+                  <AuditFact label="Status" value={issueRows[0].status} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No issues</strong>
+                  <span>Issued stock for truck stock and mobile operations shows up here.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'returns' && (
+          <section className="receiving-layout" aria-label="Returns">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Route aria-hidden="true" />
+                <h2>Return queue</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {returnRows.map((ret) => (
+                  <article className="queue-row" key={ret.id}>
+                    <Route aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{ret.recordNumber}</h2>
+                        <StatusChip value={ret.status} />
+                      </div>
+                      <p>
+                        {ret.subject} · {formatNumber.format(ret.quantity)} · {ret.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[ret.reasonCode, ret.notes]} />
+                    </div>
+                    <time dateTime={ret.updatedAtUtc}>{formatDate(ret.updatedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Return detail">
+              <div className="section-heading">
+                <Route aria-hidden="true" />
+                <h2>Return detail</h2>
+              </div>
+              {returnRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Return" value={returnRows[0].recordNumber} />
+                  <AuditFact label="Item" value={returnRows[0].subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(returnRows[0].quantity)} />
+                  <AuditFact label="Location" value={returnRows[0].locationNameSnapshot} />
+                  <AuditFact label="Reference" value={returnRows[0].notes} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No returns</strong>
+                  <span>Returned stock and route returns appear here.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'ledger' && (
+          <section className="receiving-layout" aria-label="Stock ledger">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <DatabaseZap aria-hidden="true" />
+                <h2>Stock ledger</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {ledgerRows.map((entry) => (
+                  <article className="queue-row" key={entry.id}>
+                    <DatabaseZap aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{entry.movementType.replaceAll('_', ' ')}</h2>
+                        <StatusChip value={entry.status} />
+                      </div>
+                      <p>
+                        {entry.itemNameSnapshot} · {formatNumber.format(entry.quantity)} {entry.unitOfMeasure} ·{' '}
+                        {entry.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[entry.sourceType, entry.reasonCode]} />
+                    </div>
+                    <time dateTime={entry.occurredAtUtc}>{formatDate(entry.occurredAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Ledger detail">
+              <div className="section-heading">
+                <BarChart3 aria-hidden="true" />
+                <h2>Ledger summary</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Entries" value={ledgerRows.length.toString()} />
+                <AuditFact label="Current balances" value={summary.inventory.length.toString()} />
+                <AuditFact label="Counts" value={counts.length.toString()} />
+                <AuditFact label="Adjustments" value={adjustments.length.toString()} />
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'discrepancies' && (
+          <section className="receiving-layout" aria-label="Discrepancies">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <AlertTriangle aria-hidden="true" />
+                <h2>Discrepancy queue</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {discrepancyRows.map((discrepancy) => (
+                  <article className="queue-row" key={discrepancy.id}>
+                    <AlertTriangle aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{discrepancy.discrepancyNumber}</h2>
+                        <StatusChip value={discrepancy.status} />
+                      </div>
+                      <p>
+                        {discrepancy.itemNameSnapshot} · {formatNumber.format(discrepancy.quantity)} ·{' '}
+                        {discrepancy.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[discrepancy.sourceType, discrepancy.reasonCode]} />
+                    </div>
+                    <time dateTime={discrepancy.openedAtUtc}>{formatDate(discrepancy.openedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Discrepancy detail">
+              <div className="section-heading">
+                <ShieldCheck aria-hidden="true" />
+                <h2>Discrepancy detail</h2>
+              </div>
+              {discrepancyRows[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Discrepancy" value={discrepancyRows[0].discrepancyNumber} />
+                  <AuditFact label="Item" value={discrepancyRows[0].itemNameSnapshot} />
+                  <AuditFact label="Variance" value={formatNumber.format(discrepancyRows[0].quantity)} />
+                  <AuditFact label="Status" value={discrepancyRows[0].status} />
+                  <AuditFact label="Notes" value={discrepancyRows[0].notes} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No discrepancies</strong>
+                  <span>Inventory anomalies, holds, and unexplained stock can be tracked here.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'settings' && (
+          <section className="receiving-layout" aria-label="LoadArr settings">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Warehouse aria-hidden="true" />
+                <h2>Workspace settings</h2>
+              </div>
+
+              <div className="data-grid inventory-grid">
+                {settingRows.map((setting) => (
+                  <article className="panel" key={setting.key}>
+                    <div className="panel-title-row">
+                      <div>
+                        <span className="kicker">{setting.key}</span>
+                        <h2>{setting.label}</h2>
+                      </div>
+                      <StatusChip value="active" />
+                    </div>
+                    <p className="notes">{setting.value}</p>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Workspace configuration summary">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Configuration</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Product" value="LoadArr" />
+                <AuditFact label="Launch URL" value={productLaunchUrls.loadarr ?? 'Not configured'} />
+                <AuditFact label="Suite home" value={suiteHomeUrl} />
+                <AuditFact label="Site source" value="StaffArr-owned locations" />
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'putaway' && (
+          <section className="receiving-layout" aria-label="Putaway">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <PackagePlus aria-hidden="true" />
+                <h2>Putaway tasks</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {filteredPutawayTasks.map((task) => (
+                  <article className="queue-row" key={task.id}>
+                    <PackagePlus aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{task.title}</h2>
+                        <StatusChip value={task.status} />
+                      </div>
+                      <p>
+                        {task.locationNameSnapshot} · {formatNumber.format(task.quantity)} · {task.assignedRole}
+                      </p>
+                      <TagList tags={task.requiredSignals} />
+                    </div>
+                    <time dateTime={task.dueAtUtc}>{formatDate(task.dueAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Putaway detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Putaway completion</h2>
+              </div>
+              {receivingCompletion ? (
+                <div className="completion-stack">
+                  <AuditFact label="Receipt" value={receivingCompletion.session.receivingNumber} />
+                  <AuditFact label="Putaway task" value={receivingCompletion.putawayTask.title} />
+                  <AuditFact label="Status" value={receivingCompletion.putawayTask.status} />
+                  <AuditFact label="Location" value={receivingCompletion.putawayTask.locationNameSnapshot} />
+                  <AuditFact label="Signals" value={receivingCompletion.putawayTask.requiredSignals.join(' · ')} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No putaway completion</strong>
+                  <span>Receiving completion produces the putaway task that this surface summarizes.</span>
                 </div>
               )}
             </aside>
@@ -3729,6 +4620,120 @@ export function App() {
                 <ShieldCheck aria-hidden="true" />
                 <span>{adjustmentStatus === 'submitting' ? 'Approving' : 'Approve adjustment'}</span>
               </button>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'adjustments' && (
+          <section className="receiving-layout" aria-label="Adjustments">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ClipboardCheck aria-hidden="true" />
+                <h2>Adjustment queue</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {adjustments.map((adjustment) => (
+                  <article className="queue-row" key={adjustment.id}>
+                    <ClipboardCheck aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>{adjustment.adjustmentNumber}</h2>
+                        <StatusChip value={adjustment.status} />
+                      </div>
+                      <p>
+                        {adjustment.itemNameSnapshot} · {formatNumber.format(adjustment.quantityDelta)}{' '}
+                        {adjustment.unitOfMeasure} · {adjustment.locationNameSnapshot}
+                      </p>
+                      <TagList tags={[adjustment.adjustmentType, adjustment.reasonCode, adjustment.staffarrSiteNameSnapshot]} />
+                    </div>
+                    <time dateTime={adjustment.updatedAtUtc}>{formatDate(adjustment.updatedAtUtc)}</time>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Adjustment detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Adjustment detail</h2>
+              </div>
+              {adjustments[0] ? (
+                <div className="completion-stack">
+                  <AuditFact label="Adjustment" value={adjustments[0].adjustmentNumber} />
+                  <AuditFact label="Item" value={adjustments[0].itemNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(adjustments[0].quantityDelta)} />
+                  <AuditFact label="Status" value={adjustments[0].status} />
+                  <AuditFact label="Reason" value={adjustments[0].reasonCode} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No adjustments</strong>
+                  <span>Approval-ready inventory adjustments will appear here.</span>
+                </div>
+              )}
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'replenishment' && (
+          <section className="receiving-layout" aria-label="Replenishment">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Truck aria-hidden="true" />
+                <h2>Replenishment signals</h2>
+              </div>
+
+              <div className="queue compact-queue">
+                {replenishmentRows.map((record, index) => (
+                  <article
+                    className="queue-row"
+                    key={`${index}-${'truckStockNumber' in record ? record.truckStockNumber : 'kitNumber' in record ? record.kitNumber : record.targetReference}`}
+                  >
+                    <Truck aria-hidden="true" />
+                    <div>
+                      <div className="row-heading">
+                        <h2>
+                          {'truckStockNumber' in record
+                            ? record.truckStockNumber
+                            : 'kitNumber' in record
+                              ? record.kitNumber
+                              : record.targetReference}
+                        </h2>
+                        <StatusChip value={'status' in record ? record.status : 'ready'} />
+                      </div>
+                      <p>
+                        {'quantityOnHand' in record
+                          ? 'truckStockNumber' in record
+                            ? `${record.itemNameSnapshot} · ${formatNumber.format(record.quantityOnHand)} on hand`
+                            : `${record.kitNameSnapshot} · ${formatNumber.format(record.quantityOnHand)} on hand`
+                          : `${record.locationNameSnapshot} · ${formatNumber.format(record.quantity)} handoff quantity`}
+                      </p>
+                      <TagList
+                        tags={
+                          'traceTags' in record
+                            ? [...record.traceTags]
+                            : 'notes' in record
+                              ? [record.notes]
+                              : ['route_handoff']
+                        }
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Replenishment detail">
+              <div className="section-heading">
+                <PackagePlus aria-hidden="true" />
+                <h2>Replenishment summary</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Truck stock rows" value={truckStockRecords.filter((record) => record.quantityOnHand < record.minimumQuantity).length.toString()} />
+                <AuditFact label="Kit rows" value={kitRecords.filter((record) => record.quantityOnHand < record.minimumQuantity).length.toString()} />
+                <AuditFact label="Route handoffs" value={summary.routeHandoffs.filter((handoff) => handoff.status !== 'ready').length.toString()} />
+              </div>
             </aside>
           </section>
         )}

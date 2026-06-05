@@ -138,11 +138,25 @@ const navItems: ProductNavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
   { label: 'Records', to: '/records', icon: FileText as ProductNavItem['icon'] },
   { label: 'Capture', to: '/capture', icon: FileUp as ProductNavItem['icon'] },
-  { label: 'Documents', to: '/documents', icon: Archive as ProductNavItem['icon'] },
+  { label: 'Upload Sessions', to: '/upload-sessions', icon: FileUp as ProductNavItem['icon'] },
+  { label: 'Uploads', to: '/uploads', icon: Upload as ProductNavItem['icon'] },
+  { label: 'Scan Processing', to: '/scan-processing', icon: ScanSearch as ProductNavItem['icon'] },
+  { label: 'OCR Review', to: '/ocr-review', icon: FileText as ProductNavItem['icon'] },
+  { label: 'Evidence Mappings', to: '/evidence-mappings', icon: BadgeCheck as ProductNavItem['icon'] },
+  { label: 'Controlled Documents', to: '/controlled-documents', icon: Archive as ProductNavItem['icon'] },
+  { label: 'Reviews', to: '/document-reviews', icon: MessageSquare as ProductNavItem['icon'] },
+  { label: 'Distributions', to: '/distributions', icon: Upload as ProductNavItem['icon'] },
+  { label: 'Acknowledgements', to: '/acknowledgements', icon: BadgeCheck as ProductNavItem['icon'] },
   { label: 'Packages', to: '/packages', icon: PackageSearch as ProductNavItem['icon'] },
+  { label: 'Record Packages', to: '/record-packages', icon: PackageSearch as ProductNavItem['icon'] },
   { label: 'Retention', to: '/retention', icon: Clock3 as ProductNavItem['icon'] },
+  { label: 'Disposal Reviews', to: '/disposal-reviews', icon: History as ProductNavItem['icon'] },
   { label: 'Holds', to: '/holds', icon: ShieldCheck as ProductNavItem['icon'], sectionBreakBefore: true },
+  { label: 'Legal Holds', to: '/legal-holds', icon: ShieldCheck as ProductNavItem['icon'] },
   { label: 'Access', to: '/access', icon: LockKeyhole as ProductNavItem['icon'] },
+  { label: 'External Shares', to: '/external-shares', icon: Upload as ProductNavItem['icon'] },
+  { label: 'Redactions', to: '/redactions', icon: Archive as ProductNavItem['icon'] },
+  { label: 'Access Logs', to: '/access-logs', icon: History as ProductNavItem['icon'] },
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
 
@@ -935,6 +949,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                 <p><strong className="text-slate-100">Source:</strong> {record.sourceProduct} · {record.sourceObjectDisplayName}</p>
                 <p><strong className="text-slate-100">Object:</strong> {record.sourceObjectType} · {record.sourceObjectId}</p>
                 <p><strong className="text-slate-100">Owner:</strong> {record.ownerPersonId}</p>
+                <p><strong className="text-slate-100">Record ref:</strong> {record.recordRef?.recordarrRecordId ?? record.recordId}</p>
                 <p><strong className="text-slate-100">Version:</strong> v{record.versionNumber}</p>
                 <p><strong className="text-slate-100">Current ref:</strong> {record.currentVersionRef}</p>
                 <p><strong className="text-slate-100">Audit trail:</strong> {record.auditTrail.length} entries</p>
@@ -953,6 +968,15 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                         <span key={ref} className="recordarr-pill text-[0.65rem]">{ref}</span>
                       ))}
                     </div>
+                    {record.recordRef ? (
+                      <div className="mt-3 rounded-lg border border-slate-800/80 bg-slate-950/40 p-3">
+                        <p className="font-semibold text-slate-100">Structured record ref</p>
+                        <p className="mt-1">ID: {record.recordRef.recordarrRecordId}</p>
+                        <p className="mt-1">Title: {record.recordRef.titleSnapshot}</p>
+                        <p className="mt-1">Status: {record.recordRef.statusSnapshot} · Classification: {record.recordRef.classificationSnapshot}</p>
+                        <p className="mt-1">Retention: {record.recordRef.retentionStatusSnapshot ?? 'n/a'} · Expires: {formatDate(record.recordRef.expiresAtSnapshot)}</p>
+                      </div>
+                    ) : null}
                   </div>
                   <div>
                     <p className="font-semibold text-slate-100">Governance refs</p>
@@ -3407,12 +3431,12 @@ export function App() {
   const currentTitle = useMemo(() => {
     if (location.pathname.startsWith('/records/')) return 'Record detail'
     if (location.pathname.startsWith('/records')) return 'Records'
-    if (location.pathname.startsWith('/capture')) return 'Capture'
-    if (location.pathname.startsWith('/documents')) return 'Documents'
-    if (location.pathname.startsWith('/packages')) return 'Packages'
-    if (location.pathname.startsWith('/retention')) return 'Retention'
-    if (location.pathname.startsWith('/holds')) return 'Holds'
-    if (location.pathname.startsWith('/access')) return 'Access'
+    if (['/capture', '/upload-sessions', '/uploads', '/scan-processing', '/ocr-review', '/evidence-mappings'].some((path) => location.pathname.startsWith(path))) return 'Capture'
+    if (['/documents', '/controlled-documents', '/document-reviews', '/distributions', '/acknowledgements'].some((path) => location.pathname.startsWith(path))) return 'Controlled Documents'
+    if (['/packages', '/record-packages'].some((path) => location.pathname.startsWith(path))) return 'Packages'
+    if (['/retention', '/disposal-reviews'].some((path) => location.pathname.startsWith(path))) return 'Retention'
+    if (['/holds', '/legal-holds'].some((path) => location.pathname.startsWith(path))) return 'Holds'
+    if (['/access', '/external-shares', '/redactions', '/access-logs'].some((path) => location.pathname.startsWith(path))) return 'Access'
     if (location.pathname.startsWith('/settings')) return 'Settings'
     return 'Dashboard'
   }, [location.pathname])
@@ -3459,11 +3483,26 @@ export function App() {
         <Route path="/records" element={<RecordsPage accessToken={accessToken} />} />
         <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} />} />
         <Route path="/capture" element={<CapturePage accessToken={accessToken} />} />
+        <Route path="/upload-sessions" element={<CapturePage accessToken={accessToken} />} />
+        <Route path="/uploads" element={<CapturePage accessToken={accessToken} />} />
+        <Route path="/scan-processing" element={<CapturePage accessToken={accessToken} />} />
+        <Route path="/ocr-review" element={<CapturePage accessToken={accessToken} />} />
+        <Route path="/evidence-mappings" element={<CapturePage accessToken={accessToken} />} />
         <Route path="/documents" element={<DocumentsPage accessToken={accessToken} />} />
+        <Route path="/controlled-documents" element={<DocumentsPage accessToken={accessToken} />} />
+        <Route path="/document-reviews" element={<DocumentsPage accessToken={accessToken} />} />
+        <Route path="/distributions" element={<DocumentsPage accessToken={accessToken} />} />
+        <Route path="/acknowledgements" element={<DocumentsPage accessToken={accessToken} />} />
         <Route path="/packages" element={<PackagesPage accessToken={accessToken} />} />
+        <Route path="/record-packages" element={<PackagesPage accessToken={accessToken} />} />
         <Route path="/retention" element={<RetentionPage accessToken={accessToken} />} />
+        <Route path="/disposal-reviews" element={<RetentionPage accessToken={accessToken} />} />
         <Route path="/holds" element={<HoldsPage accessToken={accessToken} />} />
+        <Route path="/legal-holds" element={<HoldsPage accessToken={accessToken} />} />
         <Route path="/access" element={<AccessPage accessToken={accessToken} />} />
+        <Route path="/external-shares" element={<AccessPage accessToken={accessToken} />} />
+        <Route path="/redactions" element={<AccessPage accessToken={accessToken} />} />
+        <Route path="/access-logs" element={<AccessPage accessToken={accessToken} />} />
         <Route path="/settings" element={<SettingsPage accessToken={accessToken} session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

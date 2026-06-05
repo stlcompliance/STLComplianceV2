@@ -804,7 +804,17 @@ public sealed class ReportArrStore
         lock (_gate)
         {
             var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == dashboardId);
-            return dashboard is not null && CanAccessDashboard(principal, dashboard) ? dashboard : null;
+            if (dashboard is null || !CanAccessDashboard(principal, dashboard))
+            {
+                return null;
+            }
+
+            var viewed = dashboard with
+            {
+                LastViewedAt = DateTimeOffset.UtcNow
+            };
+            ReplaceDashboard(viewed);
+            return viewed;
         }
     }
 
@@ -875,7 +885,7 @@ public sealed class ReportArrStore
                 "private",
                 [ownerPersonId],
                 ["owner"],
-                ["reportarr.dashboards.read"],
+                ["reportarr.dashboards.read", "reportarr.dashboards.update"],
                 ["reportarr"],
                 true,
                 now,
@@ -903,7 +913,7 @@ public sealed class ReportArrStore
                 Status = status,
                 DefaultDateRange = defaultDateRange,
                 UpdatedAt = DateTimeOffset.UtcNow,
-                UpdatedByPersonId = existing.CreatedByPersonId
+                UpdatedByPersonId = principal.GetPersonId().ToString()
             };
             ReplaceDashboard(updated);
             return updated;
@@ -918,6 +928,10 @@ public sealed class ReportArrStore
             var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == widget.DashboardId)
                 ?? throw new InvalidOperationException("Dashboard not found.");
             EnsureCanViewDashboard(principal, dashboard);
+            ReplaceDashboard(dashboard with
+            {
+                LastViewedAt = DateTimeOffset.UtcNow
+            });
             var updated = widget with
             {
                 LastRenderedAt = DateTimeOffset.UtcNow
@@ -997,7 +1011,7 @@ public sealed class ReportArrStore
                 "private",
                 [ownerPersonId],
                 ["owner"],
-                ["reportarr.reports.read"],
+                ["reportarr.reports.read", "reportarr.reports.update"],
                 ["reportarr"],
                 true,
                 true,
@@ -1260,6 +1274,9 @@ public sealed class ReportArrStore
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             ReportArrReportRunResponse? run = null;
             ReportArrDashboardResponse? dashboard = null;
+            ReportArrDatasetResponse? dataset = null;
+            ReportArrAuditPackageResponse? auditPackage = null;
+            ReportArrReportDefinitionResponse? report = null;
 
             if (!string.IsNullOrWhiteSpace(reportRunId))
             {
@@ -1276,13 +1293,64 @@ public sealed class ReportArrStore
                     throw new StlApiException("reportarr.export_source_required", "Dashboard exports require a dashboard source ref.", 400);
                 }
 
-                dashboard = GetDashboard(principal, sourceRef);
+                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef);
                 RequireCondition(
-                    dashboard is not null,
+                    dashboard is not null && CanAccessDashboard(principal, dashboard),
                     "reportarr.forbidden",
                     "You do not have access to this dashboard.",
                     403);
                 EnsureCanExportDashboard(principal, dashboard!);
+            }
+            else if (string.Equals(exportType, "dataset", StringComparison.OrdinalIgnoreCase) || string.Equals(exportType, "table", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(sourceRef))
+                {
+                    throw new StlApiException("reportarr.export_source_required", "Dataset exports require a dataset source ref.", 400);
+                }
+
+                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef);
+                RequireCondition(
+                    dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts),
+                    "reportarr.forbidden",
+                    "You do not have access to this dataset.",
+                    403);
+            }
+            else if (string.Equals(exportType, "audit_package", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(sourceRef))
+                {
+                    throw new StlApiException("reportarr.export_source_required", "Audit package exports require an audit package source ref.", 400);
+                }
+
+                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef);
+                RequireCondition(
+                    auditPackage is not null && CanAccessAuditPackage(principal, auditPackage),
+                    "reportarr.forbidden",
+                    "You do not have access to this audit package.",
+                    403);
+            }
+            else if (string.Equals(exportType, "chart", StringComparison.OrdinalIgnoreCase) || string.Equals(exportType, "custom", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(sourceRef))
+                {
+                    throw new StlApiException("reportarr.export_source_required", "Custom exports require a source ref.", 400);
+                }
+
+                report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == sourceRef);
+                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef);
+                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef);
+                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef);
+
+                var canAccessReport = report is not null && CanAccessReport(principal, report);
+                var canAccessDashboard = dashboard is not null && CanAccessDashboard(principal, dashboard);
+                var canAccessDataset = dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts);
+                var canAccessAuditPackage = auditPackage is not null && CanAccessAuditPackage(principal, auditPackage);
+
+                RequireCondition(
+                    canAccessReport || canAccessDashboard || canAccessDataset || canAccessAuditPackage,
+                    "reportarr.forbidden",
+                    "You do not have access to this export source.",
+                    403);
             }
 
             if (run is null && string.IsNullOrWhiteSpace(sourceRef))
@@ -1324,18 +1392,7 @@ public sealed class ReportArrStore
         lock (_gate)
         {
             var export = _exportJobs.FirstOrDefault(item => item.ExportJobId == exportJobId);
-            if (export is null)
-            {
-                return null;
-            }
-
-            if (string.IsNullOrWhiteSpace(export.ReportRunId))
-            {
-                return export;
-            }
-
-            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == export.ReportRunId);
-            return run is not null && CanAccessReport(principal, run.ReportDefinitionId) ? export : null;
+            return export is not null && CanAccessExportJob(principal, export) ? export : null;
         }
     }
 
@@ -1343,13 +1400,8 @@ public sealed class ReportArrStore
     {
         lock (_gate)
         {
-            var accessibleReportRunIds = _reportRuns
-                .Where(run => CanAccessReport(principal, run.ReportDefinitionId))
-                .Select(run => run.ReportRunId)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
             return _exportJobs
-                .Where(job => string.IsNullOrWhiteSpace(job.ReportRunId) || accessibleReportRunIds.Contains(job.ReportRunId))
+                .Where(job => CanAccessExportJob(principal, job))
                 .OrderByDescending(item => item.GeneratedAt)
                 .ToList();
         }
@@ -2206,6 +2258,7 @@ public sealed class ReportArrStore
                 failureReason,
                 correlationId);
             _sourceEvents.Add(receipt);
+            ApplySourceEventOutcome(sourceProduct, status, now);
             return receipt;
         }
     }
@@ -2334,6 +2387,159 @@ public sealed class ReportArrStore
         {
             _auditPackages[index] = auditPackage;
         }
+    }
+
+    private bool CanAccessExportJob(ClaimsPrincipal principal, ReportArrExportJobResponse export)
+    {
+        if (principal.IsPlatformAdmin())
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(export.ReportRunId))
+        {
+            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == export.ReportRunId);
+            return run is not null && CanAccessReport(principal, run.ReportDefinitionId);
+        }
+
+        if (string.Equals(export.ExportType, "dashboard", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(export.SourceRef))
+        {
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef);
+            return dashboard is not null && CanAccessDashboard(principal, dashboard);
+        }
+
+        if ((string.Equals(export.ExportType, "dataset", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(export.ExportType, "table", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(export.ExportType, "chart", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(export.ExportType, "custom", StringComparison.OrdinalIgnoreCase)) &&
+            !string.IsNullOrWhiteSpace(export.SourceRef))
+        {
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == export.SourceRef);
+            if (dataset is not null)
+            {
+                return CanAccessSourceProducts(principal, dataset.SourceProducts);
+            }
+
+            var auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == export.SourceRef);
+            if (auditPackage is not null)
+            {
+                return CanAccessAuditPackage(principal, auditPackage);
+            }
+
+            var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == export.SourceRef);
+            if (report is not null)
+            {
+                return CanAccessReport(principal, report);
+            }
+
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef);
+            if (dashboard is not null)
+            {
+                return CanAccessDashboard(principal, dashboard);
+            }
+        }
+
+        return string.Equals(export.RequestedByPersonId, principal.GetPersonId().ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ApplySourceEventOutcome(string sourceProduct, string status, DateTimeOffset now)
+    {
+        var impactedDatasets = _datasets
+            .Where(dataset => dataset.SourceProducts.Any(product => string.Equals(product, sourceProduct, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        if (impactedDatasets.Count == 0)
+        {
+            return;
+        }
+
+        var impactedDatasetIds = impactedDatasets
+            .Select(dataset => dataset.DatasetId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var processed = string.Equals(status, "processed", StringComparison.OrdinalIgnoreCase);
+
+        foreach (var dataset in impactedDatasets)
+        {
+            var updatedDataset = dataset with
+            {
+                FreshnessStatus = processed ? "fresh" : "stale",
+                LastRefreshedAt = now,
+                LastSuccessfulRefreshAt = processed ? now : dataset.LastSuccessfulRefreshAt,
+                LastFailedRefreshAt = processed ? dataset.LastFailedRefreshAt : now,
+                UpdatedAt = now
+            };
+            ReplaceDataset(updatedDataset);
+        }
+
+        foreach (var readModel in _readModels.Where(model => model.DatasetRefs.Any(datasetId => impactedDatasetIds.Contains(datasetId))).ToList())
+        {
+            var updatedReadModel = readModel with
+            {
+                Status = processed ? "active" : "stale",
+                LastUpdatedAt = now,
+                UpdatedAt = now
+            };
+            ReplaceReadModel(updatedReadModel);
+        }
+
+        foreach (var dashboard in _dashboards
+                     .Where(item => _widgets.Any(widget =>
+                         string.Equals(widget.DashboardId, item.DashboardId, StringComparison.OrdinalIgnoreCase) &&
+                         impactedDatasetIds.Contains(widget.DatasetRef)))
+                     .ToList())
+        {
+            var updatedDashboard = dashboard with
+            {
+                FreshnessStatus = ResolveDashboardFreshness(dashboard.DashboardId),
+                UpdatedAt = now,
+                UpdatedByPersonId = "reportarr-system"
+            };
+            ReplaceDashboard(updatedDashboard);
+        }
+    }
+
+    private string ResolveDashboardFreshness(string dashboardId)
+    {
+        var widgetDatasetIds = _widgets
+            .Where(widget => string.Equals(widget.DashboardId, dashboardId, StringComparison.OrdinalIgnoreCase) &&
+                             !string.IsNullOrWhiteSpace(widget.DatasetRef))
+            .Select(widget => widget.DatasetRef)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (widgetDatasetIds.Count == 0)
+        {
+            return "unknown";
+        }
+
+        var freshnessStatuses = widgetDatasetIds
+            .Select(datasetId => _datasets.FirstOrDefault(dataset => string.Equals(dataset.DatasetId, datasetId, StringComparison.OrdinalIgnoreCase))?.FreshnessStatus)
+            .Where(status => !string.IsNullOrWhiteSpace(status))
+            .Select(status => status!)
+            .ToList();
+
+        if (freshnessStatuses.Count == 0)
+        {
+            return "unknown";
+        }
+
+        if (freshnessStatuses.Any(status => string.Equals(status, "failed", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "failed";
+        }
+
+        if (freshnessStatuses.Any(status => string.Equals(status, "stale", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "stale";
+        }
+
+        if (freshnessStatuses.Any(status => string.Equals(status, "slightly_stale", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "slightly_stale";
+        }
+
+        return "fresh";
     }
 
     private string NextId(string prefix) => $"{prefix}-{Guid.NewGuid():N}";

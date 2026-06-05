@@ -490,6 +490,70 @@ public sealed class ReportArrValidationTests
     }
 
     [Fact]
+    public void Dashboard_export_jobs_require_dashboard_access()
+    {
+        var store = new ReportArrStore();
+        var creator = CreatePrincipal(
+            personId: Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"]);
+
+        var dashboard = store.CreateDashboard(
+            creator,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "finance-summary",
+                "Finance summary",
+                "Finance dashboard.",
+                "executive",
+                "last_30_days",
+                creator.GetPersonId().ToString()));
+
+        var export = store.CreateExport(
+            creator,
+            new IntegrationEndpoints.CreateExportRequest(
+                null,
+                "dashboard",
+                dashboard.DashboardId,
+                "pdf",
+                creator.GetPersonId().ToString()));
+
+        var unauthorized = CreatePrincipal(
+            personId: Guid.Parse("66666666-6666-6666-6666-666666666666"),
+            roleKey: "operations",
+            entitlements: ["reportarr"]);
+
+        Assert.Null(store.GetExportJob(unauthorized, export.ExportJobId));
+        Assert.DoesNotContain(store.GetExportJobs(unauthorized), item => item.ExportJobId == export.ExportJobId);
+    }
+
+    [Fact]
+    public void Dataset_export_jobs_require_dataset_access()
+    {
+        var store = new ReportArrStore();
+        var creator = CreatePrincipal(
+            personId: Guid.Parse("77777777-7777-7777-7777-777777777777"),
+            roleKey: "report_runner",
+            entitlements: ["reportarr", "routarr"]);
+
+        var export = store.CreateExport(
+            creator,
+            new IntegrationEndpoints.CreateExportRequest(
+                null,
+                "dataset",
+                "ds-003",
+                "csv",
+                creator.GetPersonId().ToString()));
+
+        var unauthorized = CreatePrincipal(
+            personId: Guid.Parse("88888888-8888-8888-8888-888888888888"),
+            roleKey: "operations",
+            entitlements: ["reportarr"]);
+
+        Assert.Null(store.GetExportJob(unauthorized, export.ExportJobId));
+        Assert.DoesNotContain(store.GetExportJobs(unauthorized), item => item.ExportJobId == export.ExportJobId);
+    }
+
+    [Fact]
     public void GetKpiValues_filters_out_inaccessible_source_products()
     {
         var store = new ReportArrStore();
@@ -572,6 +636,39 @@ public sealed class ReportArrValidationTests
     }
 
     [Fact]
+    public void CreateDashboard_grants_creator_dashboard_update_access()
+    {
+        var store = new ReportArrStore();
+        var principal = CreatePrincipal(
+            personId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"]);
+
+        var dashboard = store.CreateDashboard(
+            principal,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "transport-summary",
+                "Transport summary",
+                "Transportation dashboard.",
+                "transportation",
+                "last_7_days",
+                principal.GetPersonId().ToString()));
+
+        var updated = store.UpdateDashboard(
+            principal,
+            dashboard.DashboardId,
+            new IntegrationEndpoints.UpdateDashboardRequest(
+                "Transport summary refreshed",
+                "Transportation dashboard refreshed.",
+                "active",
+                "last_30_days"));
+
+        Assert.Equal("active", updated.Status);
+        Assert.Equal("Transport summary refreshed", updated.Title);
+        Assert.Equal(principal.GetPersonId().ToString(), updated.UpdatedByPersonId);
+    }
+
+    [Fact]
     public void UpdateReportDefinition_rejects_principal_without_report_update_permission()
     {
         var store = new ReportArrStore();
@@ -589,6 +686,64 @@ public sealed class ReportArrValidationTests
 
         Assert.Equal("reportarr.report_update_forbidden", ex.Code);
         Assert.Equal(403, ex.StatusCode);
+    }
+
+    [Fact]
+    public void CreateReportDefinition_grants_creator_report_update_access()
+    {
+        var store = new ReportArrStore();
+        var principal = CreatePrincipal(
+            personId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"]);
+
+        var report = store.CreateReportDefinition(
+            principal,
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "transport-summary",
+                "Transport summary",
+                "Transportation report.",
+                "operational",
+                "layout:grid:2x2",
+                ["pdf"],
+                principal.GetPersonId().ToString()));
+
+        var updated = store.UpdateReportDefinition(
+            principal,
+            report.ReportDefinitionId,
+            new IntegrationEndpoints.UpdateReportDefinitionRequest(
+                "active",
+                "person-transport-lead"));
+
+        Assert.Equal("active", updated.Status);
+        Assert.Equal("person-transport-lead", updated.UpdatedByPersonId);
+    }
+
+    [Fact]
+    public void GetDashboard_records_dashboard_view_timestamp()
+    {
+        var store = new ReportArrStore();
+        var principal = CreatePrincipal(
+            personId: Guid.Parse("44444444-4444-4444-4444-444444444444"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"]);
+
+        var dashboard = store.CreateDashboard(
+            principal,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "ops-summary",
+                "Ops summary",
+                "Operational dashboard.",
+                "transportation",
+                "last_7_days",
+                principal.GetPersonId().ToString()));
+
+        Assert.Null(dashboard.LastViewedAt);
+
+        var viewed = store.GetDashboard(principal, dashboard.DashboardId);
+
+        Assert.NotNull(viewed);
+        Assert.NotNull(viewed!.LastViewedAt);
     }
 
     [Fact]

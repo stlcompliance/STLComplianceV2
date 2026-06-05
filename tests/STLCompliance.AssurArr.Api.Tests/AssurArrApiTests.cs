@@ -44,6 +44,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     public async Task Can_create_and_list_nonconformance_records()
     {
         var title = $"Test nonconformance {Guid.NewGuid():N}";
+        var siteId = Guid.NewGuid();
+        var locationId = Guid.NewGuid();
+        var discoveredBy = Guid.NewGuid();
         var createResponse = await _client.PostAsJsonAsync(
             "/api/v1/nonconformances",
             new CreateAssurArrNonconformanceRequest(
@@ -64,13 +67,33 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 null,
                 null,
                 [],
-                DateTimeOffset.UtcNow.AddDays(2)));
+                DateTimeOffset.UtcNow.AddDays(2),
+                StaffArrSiteId: siteId,
+                StaffArrLocationId: locationId,
+                DiscoveredAt: DateTimeOffset.UtcNow.AddDays(-1),
+                DiscoveredByPersonId: discoveredBy,
+                AffectedItemRefs: ["loadarr:item:test-1"],
+                ContainmentRefs: ["CONT-0001"],
+                DispositionRefs: ["DISP-0001"],
+                CapaRefs: ["CAPA-0001"],
+                ComplianceRefs: ["COMP-0001"],
+                FinancialImpactSnapshot: "1200.00 USD"));
 
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
 
         var created = await createResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
         Assert.NotNull(created);
         Assert.Equal(title, created!.Title);
+        Assert.Equal(siteId, created.StaffArrSiteId);
+        Assert.Equal(locationId, created.StaffArrLocationId);
+        Assert.Equal(discoveredBy, created.DiscoveredByPersonId);
+        Assert.Equal("1200.00 USD", created.FinancialImpactSnapshot);
+        Assert.Equal(["CONT-0001"], created.ContainmentRefs);
+        Assert.Equal(["DISP-0001"], created.DispositionRefs);
+        Assert.Equal(["CAPA-0001"], created.CapaRefs);
+        Assert.Equal(["COMP-0001"], created.ComplianceRefs);
+        Assert.Equal(["loadarr:item:test-1"], created.AffectedItemRefs);
+        Assert.Contains(created.AuditTrail, entry => entry.Contains("|created|", StringComparison.Ordinal));
         Assert.Contains(created.EventLog, eventType => eventType == "assurarr.nonconformance.created");
 
         var createdDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
@@ -120,6 +143,109 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(list);
         Assert.Contains(list!, item => item.Title == title);
 
+    }
+
+    [Fact]
+    public async Task Nonconformance_blocker_refs_are_persisted_and_drive_containment_status()
+    {
+        var title = $"Blocked nonconformance {Guid.NewGuid():N}";
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/nonconformances",
+            new CreateAssurArrNonconformanceRequest(
+                title,
+                "Created with blockers to cover containment state handling.",
+                "high",
+                "receiving",
+                "failed_inspection",
+                "loadarr",
+                "loadarr:receiving:blocker-test",
+                ["loadarr:inventory:blocker-test"],
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                ["HOLD-000123", "CAPA-000456"],
+                DateTimeOffset.UtcNow.AddDays(1)));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(created);
+        Assert.Equal("containment", created!.Status);
+        Assert.Equal(["HOLD-000123", "CAPA-000456"], created.BlockerRefs);
+
+        var statusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/loadarr:receiving:blocker-test");
+        statusResponse.EnsureSuccessStatusCode();
+        var status = await statusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
+        Assert.NotNull(status);
+        Assert.Equal("on_hold", status!.QualityStatus);
+        Assert.Contains(status.OpenNonconformanceRefs, item => item == created.Number);
+    }
+
+    [Fact]
+    public async Task Quality_holds_are_linked_back_to_source_nonconformances()
+    {
+        var nonconformanceTitle = $"Linked hold nonconformance {Guid.NewGuid():N}";
+        var nonconformanceResponse = await _client.PostAsJsonAsync(
+            "/api/v1/nonconformances",
+            new CreateAssurArrNonconformanceRequest(
+                nonconformanceTitle,
+                "Created to verify reverse hold linkage.",
+                "moderate",
+                "receiving",
+                "failed_inspection",
+                "loadarr",
+                "loadarr:receiving:link-test",
+                ["loadarr:inventory:link-test"],
+                OwnerPersonId: null,
+                CustomerImpact: null,
+                SupplierImpact: null,
+                SafetyImpact: null,
+                ComplianceImpact: null,
+                RecurrenceFlag: false,
+                RepeatOfNonconformanceRef: null,
+                RootCauseRef: null,
+                BlockerRefs: [],
+                DueAt: DateTimeOffset.UtcNow.AddDays(2)));
+
+        Assert.Equal(HttpStatusCode.OK, nonconformanceResponse.StatusCode);
+        var nonconformance = await nonconformanceResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(nonconformance);
+
+        var holdResponse = await _client.PostAsJsonAsync(
+            "/api/v1/holds",
+            new CreateAssurArrQualityHoldRequest(
+                "Linked hold",
+                "Hold linked to a source nonconformance.",
+                "moderate",
+                "inventory",
+                "full",
+                nonconformance!.Number,
+                "loadarr",
+                "loadarr:inventory:link-test",
+                ["loadarr:inventory:link-test"],
+                null,
+                "Linked for reverse relation coverage.",
+                null,
+                null,
+                null,
+                null,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, holdResponse.StatusCode);
+        var hold = await holdResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(hold);
+        Assert.Equal(nonconformance.Number, hold!.SourceNonconformanceRef);
+
+        var refreshedNonconformanceResponse = await _client.GetAsync($"/api/v1/integrations/nonconformances/{nonconformance.Id}");
+        refreshedNonconformanceResponse.EnsureSuccessStatusCode();
+        var refreshedNonconformance = await refreshedNonconformanceResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
+        Assert.NotNull(refreshedNonconformance);
+        Assert.Contains(refreshedNonconformance!.HoldRefs, item => item == hold.Number);
     }
 
     [Fact]
@@ -275,6 +401,9 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     public async Task Can_request_approve_and_reject_hold_releases()
     {
         var approvalHoldTitle = $"Test approval hold {Guid.NewGuid():N}";
+        var holdSiteId = Guid.NewGuid();
+        var holdLocationId = Guid.NewGuid();
+        var placedBy = Guid.NewGuid();
         var approvalHoldResponse = await _client.PostAsJsonAsync(
             "/api/v1/holds",
             new CreateAssurArrQualityHoldRequest(
@@ -283,6 +412,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 "moderate",
                 "inventory",
                 "full",
+                "NCR-000001",
                 "loadarr",
                 "loadarr:inventory:test",
                 ["loadarr:inventory:test"],
@@ -292,12 +422,20 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 null,
                 null,
                 null,
-                null));
+                null,
+                holdSiteId,
+                holdLocationId,
+                placedBy));
 
         Assert.Equal(HttpStatusCode.OK, approvalHoldResponse.StatusCode);
         var approvalHold = await approvalHoldResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
         Assert.NotNull(approvalHold);
+        Assert.Equal(holdSiteId, approvalHold!.StaffArrSiteId);
+        Assert.Equal(holdLocationId, approvalHold.StaffArrLocationId);
+        Assert.Equal(placedBy, approvalHold.PlacedByPersonId);
+        Assert.Contains(approvalHold.AuditTrail, entry => entry.Contains("|placed|", StringComparison.Ordinal));
         Assert.Contains(approvalHold!.EventLog, eventType => eventType == "assurarr.hold.placed");
+        Assert.Equal("NCR-000001", approvalHold.SourceNonconformanceRef);
 
         var initialHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
         initialHoldStatusResponse.EnsureSuccessStatusCode();
@@ -415,6 +553,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 "moderate",
                 "inventory",
                 "full",
+                null,
                 "loadarr",
                 "loadarr:inventory:test",
                 ["loadarr:inventory:test"],
@@ -474,6 +613,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 "moderate",
                 "inventory",
                 "full",
+                null,
                 "loadarr",
                 "loadarr:inventory:test",
                 ["loadarr:inventory:test"],
@@ -807,12 +947,34 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 DateTimeOffset.UtcNow.AddDays(7),
                 ["NCR-000001"],
                 ["FIND-000001"],
-                []));
+                [],
+                StaffArrSiteId: Guid.NewGuid(),
+                StaffArrLocationId: Guid.NewGuid(),
+                SourceRefs: ["SRC-000001"],
+                RecordRefs: ["REC-000001"],
+                ActionPlanRefs: ["ACT-000001"],
+                VerificationPlanRef: "VER-000001",
+                RelatedCustomerComplaintRefs: ["CC-000001"],
+                RelatedSupplierIssueRefs: ["SI-000001"],
+                ComplianceRefs: ["COMP-000001"],
+                OpenedAt: DateTimeOffset.UtcNow.AddHours(-2)));
 
         Assert.Equal(HttpStatusCode.OK, capaResponse.StatusCode);
         var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(capa);
         Assert.Contains(capa!.EventLog, eventType => eventType == "assurarr.capa.created");
+        Assert.Contains(capa.AuditTrail, entry => entry.Contains("|created|", StringComparison.Ordinal));
+        Assert.Contains(capa.AuditTrail, entry => entry.Contains("|opened|", StringComparison.Ordinal));
+        Assert.Equal(["SRC-000001"], capa.SourceRefs);
+        Assert.Equal(["REC-000001"], capa.RecordRefs);
+        Assert.Equal(["ACT-000001"], capa.ActionPlanRefs);
+        Assert.Equal("VER-000001", capa.VerificationPlanRef);
+        Assert.Equal(["CC-000001"], capa.RelatedCustomerComplaintRefs);
+        Assert.Equal(["SI-000001"], capa.RelatedSupplierIssueRefs);
+        Assert.Equal(["COMP-000001"], capa.ComplianceRefs);
+        Assert.NotNull(capa.OpenedAt);
+        Assert.NotNull(capa.StaffArrSiteId);
+        Assert.NotNull(capa.StaffArrLocationId);
 
         var capaCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         capaCreatedDashboardResponse.EnsureSuccessStatusCode();
@@ -1187,11 +1349,22 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 null,
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow.AddDays(1),
-                []));
+                [],
+                StandardRefs: ["STD-001"],
+                ComplianceRefs: ["COMP-001"],
+                AuditeeRefs: ["loadarr:receiving"],
+                ActualStartAt: DateTimeOffset.UtcNow,
+                ActualEndAt: DateTimeOffset.UtcNow.AddHours(3)));
 
         Assert.Equal(HttpStatusCode.OK, auditResponse.StatusCode);
         var audit = await auditResponse.Content.ReadFromJsonAsync<AssurArrQualityAuditResponse>();
         Assert.NotNull(audit);
+        Assert.Equal(["STD-001"], audit!.StandardRefs);
+        Assert.Equal(["COMP-001"], audit.ComplianceRefs);
+        Assert.Equal(["loadarr:receiving"], audit.AuditeeRefs);
+        Assert.NotNull(audit.ActualStartAt);
+        Assert.NotNull(audit.ActualEndAt);
+        Assert.Contains(audit.AuditTrail, entry => entry.Contains("|created|", StringComparison.Ordinal));
 
         var auditCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         auditCreatedDashboardResponse.EnsureSuccessStatusCode();
@@ -1293,14 +1466,18 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 "workflow:finding:test",
                 ["loadarr:inventory:test"],
                 null,
+                "REQ-000123",
                 audit.Number,
                 null,
                 null,
-                DateTimeOffset.UtcNow.AddDays(4)));
+                DateTimeOffset.UtcNow.AddDays(4),
+                ["recordarr:evidence:test"]));
 
         Assert.Equal(HttpStatusCode.OK, findingResponse.StatusCode);
         var finding = await findingResponse.Content.ReadFromJsonAsync<AssurArrAuditFindingResponse>();
         Assert.NotNull(finding);
+        Assert.Equal("REQ-000123", finding!.SourceRequirementRef);
+        Assert.Equal(["recordarr:evidence:test"], finding.EvidenceRecordRefs);
 
         var findingDetailResponse = await _client.GetAsync($"/api/v1/findings/{finding!.Id}");
         Assert.Equal(HttpStatusCode.OK, findingDetailResponse.StatusCode);

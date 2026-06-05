@@ -74,7 +74,15 @@ namespace AssurArr.Api.Migrations
                     b.Property<Guid?>("OwnerPersonId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("SourceRequirementRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.PrimitiveCollection<string[]>("RecordRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("EvidenceRecordRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -129,9 +137,17 @@ namespace AssurArr.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.PrimitiveCollection<string[]>("ActionPlanRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("CapaType")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("ComplianceRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone");
@@ -154,9 +170,16 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset?>("DueAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<string[]>("AuditTrail")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.PrimitiveCollection<string[]>("EffectivenessVerificationRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
+
+                    b.Property<DateTimeOffset?>("OpenedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Number")
                         .IsRequired()
@@ -166,7 +189,21 @@ namespace AssurArr.Api.Migrations
                     b.Property<Guid?>("OwnerPersonId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("StaffArrLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("StaffArrSiteId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<string[]>("SourceRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.PrimitiveCollection<string[]>("RecordRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("RelatedCustomerComplaintRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -175,6 +212,10 @@ namespace AssurArr.Api.Migrations
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("RelatedNonconformanceRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("RelatedSupplierIssueRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -193,6 +234,10 @@ namespace AssurArr.Api.Migrations
                     b.Property<string>("SourceProduct")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("VerificationPlanRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("SourceType")
                         .IsRequired()
@@ -908,8 +953,62 @@ namespace AssurArr.Api.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<DateTimeOffset?>("DiscoveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DiscoveredByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("DueAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("AuditTrail")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("CapaRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("ComplianceRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("ContainmentRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("HoldRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedAssetRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedCustomerRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedItemRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedOrderRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedShipmentRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AffectedSupplierRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("FinancialImpactSnapshot")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<string>("NonconformanceType")
                         .IsRequired()
@@ -925,6 +1024,10 @@ namespace AssurArr.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.PrimitiveCollection<string[]>("RecordRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("DispositionRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -951,6 +1054,12 @@ namespace AssurArr.Api.Migrations
                     b.Property<string>("SourceObjectRef")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("StaffArrLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("StaffArrSiteId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SourceProduct")
                         .HasMaxLength(64)
@@ -1011,7 +1120,19 @@ namespace AssurArr.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.PrimitiveCollection<string[]>("AuditeeRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.PrimitiveCollection<string[]>("AuditorPersonIds")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AuditTrail")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("ComplianceRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -1061,6 +1182,10 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset?>("PlannedStartAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<string[]>("StandardRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.PrimitiveCollection<string[]>("RecordRefs")
                         .IsRequired()
                         .HasColumnType("text[]");
@@ -1074,15 +1199,15 @@ namespace AssurArr.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<string>("SourceProduct")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
                     b.Property<Guid?>("StaffArrLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("StaffArrSiteId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SourceProduct")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1338,6 +1463,10 @@ namespace AssurArr.Api.Migrations
                         .HasColumnType("numeric");
 
                     b.PrimitiveCollection<string[]>("RecordRefs")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("AuditTrail")
                         .IsRequired()
                         .HasColumnType("text[]");
 

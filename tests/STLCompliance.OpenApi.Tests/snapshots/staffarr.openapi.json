@@ -2706,214 +2706,6 @@
         }
       }
     },
-    "/api/people/export": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ExportStaffArrPeople",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "employmentStatus",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "orgUnitId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-notifications": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-pending": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryPending",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-runs": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryRuns",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/manifest": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportManifest",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/preset": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportPreset",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportPreset",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/schedule": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportSchedule",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportSchedule",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/import": {
-      "post": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "BulkImportStaffPeople",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkPersonImportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/people/{personId}": {
       "get": {
         "tags": [
@@ -4017,6 +3809,214 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ExportStaffArrPeople",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPending",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/manifest": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/preset": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportPreset",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportPreset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/schedule": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportSchedule",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/import": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "BulkImportStaffPeople",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPersonImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -5798,6 +5798,52 @@
         }
       }
     },
+    "/api/v1/integrations/assignment-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationAssignmentCheckV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAssignmentCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-packages": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationAuditPackageV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/certification-grants": {
       "post": {
         "tags": [
@@ -5837,6 +5883,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/departments": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationDepartmentsV1Alias",
         "responses": {
           "200": {
             "description": "OK"
@@ -5908,6 +5967,230 @@
         }
       }
     },
+    "/api/v1/integrations/incidents": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationIncidentsV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationIncidentV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonnelIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationIncidentV1Alias",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/incidents/{incidentId}/status-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateIntegrationIncidentStatusV1Alias",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonnelIncidentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/incidents/{incidentId}/training-impact": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RouteIntegrationIncidentTrainingImpactV1Alias",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/locations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationLocationsV1Alias",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationLocationV1Alias",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/locations/{locationId}/children": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationLocationChildrenV1Alias",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/org-units": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationOrgUnitsV1Alias",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/org-units/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationOrgUnitV1Alias",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/permission-check": {
       "get": {
         "tags": [
@@ -5945,6 +6228,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/permission-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationPermissionCheckV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonPermissionCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6002,6 +6308,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-history-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationPersonHistoryEventV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonHistoryEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6074,6 +6403,288 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationPersonReadinessCheckV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonReadinessCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationPersonsV1Alias",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/history": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonHistoryV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/permissions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonPermissionsV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/qualifications-snapshot": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonQualificationsSnapshotV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/readiness": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonReadinessV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/restrictions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonRestrictionsV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/persons/{personId}/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationPersonSummaryV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/positions": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationPositionsV1Alias",
         "responses": {
           "200": {
             "description": "OK"
@@ -6255,6 +6866,53 @@
         }
       }
     },
+    "/api/v1/integrations/restrictions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateIntegrationRestrictionV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/restrictions/{restrictionId}/lift": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "LiftIntegrationRestrictionV1Alias",
+        "parameters": [
+          {
+            "name": "restrictionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/routarr-readiness": {
       "get": {
         "tags": [
@@ -6293,11 +6951,24 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "IntegrationListSitesV1",
+        "operationId": "ListIntegrationSitesV1Alias",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/sites/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationSiteV1Alias",
         "parameters": [
           {
-            "name": "tenantId",
-            "in": "query",
+            "name": "orgUnitId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
@@ -6312,24 +6983,15 @@
         }
       }
     },
-    "/api/v1/integrations/sites/{orgUnitId}": {
+    "/api/v1/integrations/sites/{siteOrgUnitId}/locations": {
       "get": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IntegrationGetSiteV1",
+        "operationId": "ListIntegrationSiteLocationsV1Alias",
         "parameters": [
           {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "orgUnitId",
+            "name": "siteOrgUnitId",
             "in": "path",
             "required": true,
             "schema": {
@@ -6361,6 +7023,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/teams": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationTeamsV1Alias",
         "responses": {
           "200": {
             "description": "OK"
@@ -7157,214 +7832,6 @@
         }
       }
     },
-    "/api/v1/people/export": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ExportStaffArrPeopleV1",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "employmentStatus",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "orgUnitId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-notifications": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryNotificationsV1",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-pending": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryPendingV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-runs": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryRunsV1",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/manifest": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportManifestV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/preset": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportPresetV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportPresetV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/schedule": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportScheduleV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportScheduleV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/import": {
-      "post": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "BulkImportStaffPeopleV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkPersonImportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/people/{personId}": {
       "get": {
         "tags": [
@@ -7978,6 +8445,214 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ExportStaffArrPeopleV1",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotificationsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPendingV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRunsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/manifest": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/preset": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportPresetV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportPresetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/schedule": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportScheduleV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportScheduleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/import": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "BulkImportStaffPeopleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPersonImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -8763,7 +9438,7 @@
             ]
           },
           "quantityRequested": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -9181,6 +9856,30 @@
           }
         }
       },
+      "CreateRestrictionRequest": {
+        "required": [
+          "personId",
+          "reason",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateRoleTemplateRequest": {
         "required": [
           "roleKey",
@@ -9521,7 +10220,7 @@
             "format": "uuid"
           },
           "quantityReceivedDelta": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "null",
               "number",
@@ -9631,6 +10330,94 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "PersonAssignmentCheckRequest": {
+        "required": [
+          "personId",
+          "permissionKey"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissionKey": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PersonHistoryEventRequest": {
+        "required": [
+          "personId",
+          "action",
+          "result"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PersonPermissionCheckRequest": {
+        "required": [
+          "personId",
+          "permissionKey"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissionKey": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PersonReadinessCheckRequest": {
+        "required": [
+          "personId"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },

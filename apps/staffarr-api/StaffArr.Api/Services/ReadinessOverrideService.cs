@@ -112,6 +112,48 @@ public sealed class ReadinessOverrideService(
         return MapResponse(activeOverride);
     }
 
+    public async Task<ReadinessOverrideResponse> ClearOverrideByIdAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid overrideId,
+        CancellationToken cancellationToken = default)
+    {
+        var activeOverride = await db.PersonReadinessOverrides
+            .Where(x => x.TenantId == tenantId && x.Id == overrideId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (activeOverride is null)
+        {
+            throw new StlApiException("readiness_override.not_found", "Readiness override was not found.", 404);
+        }
+
+        if (!string.Equals(activeOverride.Status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "readiness_override.not_active",
+                "Readiness override is not active.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        activeOverride.Status = "cleared";
+        activeOverride.ClearedAt = now;
+        activeOverride.ClearedByUserId = actorUserId;
+        activeOverride.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "readiness_override.clear",
+            tenantId,
+            actorUserId,
+            "person_readiness_override",
+            activeOverride.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapResponse(activeOverride);
+    }
+
     public async Task<PersonReadinessOverride?> GetEffectiveActiveOverrideAsync(
         Guid tenantId,
         Guid personId,

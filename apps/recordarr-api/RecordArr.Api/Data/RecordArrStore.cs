@@ -2567,9 +2567,24 @@ public sealed class RecordArrStore
             LegalHoldRefs = legalHoldRefs,
             AccessPolicyRef = accessPolicyRef,
             ComplianceRefs = complianceRefs,
-            AuditTrail = auditTrail
+            AuditTrail = auditTrail,
+            RecordRef = BuildRecordRef(record, retentionStatus)
         };
     }
+
+    private static RecordArrRecordRefResponse BuildRecordRef(RecordArrRecordResponse record, RecordArrRetentionStatusResponse? retentionStatus)
+        => new(
+            record.RecordId,
+            record.RecordNumber,
+            record.Title,
+            record.RecordType,
+            record.DocumentType,
+            record.Status,
+            record.Classification,
+            record.VersionNumber,
+            record.ExpiresAt,
+            retentionStatus?.Status,
+            DateTimeOffset.UtcNow);
 
     private RecordArrFileResponse? FindFile(string fileId)
         => _files.FirstOrDefault(candidate => string.Equals(candidate.FileId, fileId, StringComparison.OrdinalIgnoreCase));
@@ -4510,7 +4525,7 @@ public sealed class RecordArrStore
             now,
             redactedByPersonId));
 
-        return redactedRecord;
+        return ProjectRecord(redactedRecord);
     }
 
     private static string BuildRedactedFileName(string sourceFileName)

@@ -14,6 +14,7 @@ public static class V1FeatureAliasEndpoints
         MapOverrideAlias(app);
         MapOnboardingAlias(app);
         MapDocumentAlias(app);
+        MapIntegrationSurfaceAliases(app);
         MapIntegrationsIndexAlias(app);
     }
 
@@ -330,6 +331,663 @@ public static class V1FeatureAliasEndpoints
         .WithName("DownloadDocumentContentV1Alias");
     }
 
+    private static void MapIntegrationSurfaceAliases(WebApplication app)
+    {
+        var integrations = app.MapGroup("/api/v1/integrations")
+            .WithTags("Integrations")
+            .RequireAuthorization();
+
+        static IReadOnlyList<StaffArrIntegrationLocationResponse> BuildLocations(
+            Guid tenantId,
+            IReadOnlyList<OrgUnitResponse> units)
+        {
+            var byId = units.ToDictionary(x => x.OrgUnitId);
+            var cache = new Dictionary<Guid, StaffArrIntegrationLocationResponse>();
+
+            StaffArrIntegrationLocationResponse Map(Guid unitId)
+            {
+                if (cache.TryGetValue(unitId, out var cached))
+                {
+                    return cached;
+                }
+
+                var unit = byId[unitId];
+                var parentPath = new List<string>();
+                var current = unit;
+                OrgUnitResponse? site = null;
+
+                while (true)
+                {
+                    parentPath.Add(current.Name);
+                    if (string.Equals(current.UnitType, "site", StringComparison.OrdinalIgnoreCase))
+                    {
+                        site ??= current;
+                    }
+
+                    if (current.ParentOrgUnitId is not Guid parentId || !byId.TryGetValue(parentId, out var parent))
+                    {
+                        break;
+                    }
+
+                    current = parent;
+                }
+
+                site ??= byId.Values.FirstOrDefault(x => string.Equals(x.UnitType, "site", StringComparison.OrdinalIgnoreCase) && x.OrgUnitId == unit.OrgUnitId);
+                var mapped = new StaffArrIntegrationLocationResponse(
+                    unit.OrgUnitId,
+                    tenantId,
+                    $"LOC-{unit.OrgUnitId.ToString("N")[..12]}",
+                    unit.Name,
+                    unit.UnitType,
+                    unit.ParentOrgUnitId,
+                    site?.OrgUnitId ?? unit.OrgUnitId,
+                    site?.Name ?? unit.Name,
+                    string.Join(" / ", parentPath.AsEnumerable().Reverse()),
+                    unit.Status);
+
+                cache[unitId] = mapped;
+                return mapped;
+            }
+
+            return units.Select(x => Map(x.OrgUnitId)).ToList();
+        }
+
+        integrations.MapGet("/persons", async (
+            string? query,
+            Guid? orgUnitId,
+            int? limit,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, query, orgUnitId, limit ?? 50, cancellationToken));
+        })
+        .WithName("ListIntegrationPersonsV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetByIdAsync(tenantId, personId, cancellationToken));
+        })
+        .WithName("GetIntegrationPersonV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/readiness", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind));
+        })
+        .WithName("GetIntegrationPersonReadinessV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/permissions", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PermissionProjectionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePermissionProjectionRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                personId,
+                cancellationToken));
+        })
+        .WithName("GetIntegrationPersonPermissionsV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/qualifications-snapshot", async (
+            Guid personId,
+            int? limit,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            TrainarrPersonTrainingHistoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonHistoryRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.GetForPersonAsync(
+                tenantId,
+                actorUserId,
+                personId,
+                limit,
+                cancellationToken));
+        })
+        .WithName("GetIntegrationPersonQualificationsSnapshotV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/history", async (
+            Guid personId,
+            int? page,
+            int? pageSize,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PersonnelHistoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonHistoryRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListPersonHistoryAsync(
+                tenantId,
+                personId,
+                page ?? 1,
+                pageSize ?? 50,
+                cancellationToken));
+        })
+        .WithName("GetIntegrationPersonHistoryV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/summary", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleService peopleService,
+            ReadinessService readinessService,
+            PermissionProjectionService permissionProjectionService,
+            TrainarrPersonTrainingHistoryService trainingHistoryService,
+            PersonnelHistoryService historyService,
+            ReadinessOverrideService overrideService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireStaffArrEntitlement(context.User);
+            var currentPersonId = context.User.GetPersonId();
+            if (currentPersonId != personId)
+            {
+                authorization.RequirePeopleRead(context.User);
+            }
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+
+            var person = await peopleService.GetByIdAsync(tenantId, personId, cancellationToken);
+            var readiness = await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind);
+            var permissions = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                personId,
+                cancellationToken);
+            var qualifications = await trainingHistoryService.GetForPersonAsync(
+                tenantId,
+                actorUserId,
+                personId,
+                limit: 20,
+                cancellationToken);
+            var historySummary = await historyService.GetSummaryAsync(tenantId, personId, cancellationToken);
+            var activeOverride = await overrideService.GetEffectiveActiveOverrideAsync(
+                tenantId,
+                personId,
+                cancellationToken);
+
+            return Results.Ok(new StaffArrPersonIntegrationSummaryResponse(
+                person,
+                readiness,
+                permissions,
+                qualifications,
+                historySummary,
+                activeOverride is null
+                    ? []
+                    : [new ReadinessOverrideResponse(
+                        activeOverride.Id,
+                        activeOverride.PersonId,
+                        activeOverride.Status,
+                        activeOverride.Reason,
+                        activeOverride.GrantedAt,
+                        activeOverride.ExpiresAt,
+                        activeOverride.GrantedByUserId,
+                        activeOverride.ClearedAt,
+                        activeOverride.ClearedByUserId)]));
+        })
+        .WithName("GetIntegrationPersonSummaryV1Alias");
+
+        integrations.MapGet("/persons/{personId:guid}/restrictions", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessOverrideService overrideService,
+            ReadinessService readinessService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var readiness = await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind);
+            var activeOverride = await overrideService.GetEffectiveActiveOverrideAsync(tenantId, personId, cancellationToken);
+
+            return Results.Ok(new StaffArrRestrictionSnapshotResponse(
+                personId,
+                activeOverride is null
+                    ? []
+                    : [new ReadinessOverrideResponse(
+                        activeOverride.Id,
+                        activeOverride.PersonId,
+                        activeOverride.Status,
+                        activeOverride.Reason,
+                        activeOverride.GrantedAt,
+                        activeOverride.ExpiresAt,
+                        activeOverride.GrantedByUserId,
+                        activeOverride.ClearedAt,
+                        activeOverride.ClearedByUserId)],
+                readiness.Blockers));
+        })
+        .WithName("GetIntegrationPersonRestrictionsV1Alias");
+
+        integrations.MapPost("/person-readiness-checks", async (
+            PersonReadinessCheckRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRead(context.User, request.PersonId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.GetPersonReadinessAsync(
+                tenantId,
+                request.PersonId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind));
+        })
+        .WithName("CreateIntegrationPersonReadinessCheckV1Alias");
+
+        integrations.MapPost("/permission-checks", async (
+            PersonPermissionCheckRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IntegrationPermissionCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePermissionProjectionRead(context.User, request.PersonId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.CheckAsync(
+                tenantId,
+                request.PersonId,
+                request.PermissionKey,
+                cancellationToken));
+        })
+        .WithName("CreateIntegrationPermissionCheckV1Alias");
+
+        integrations.MapPost("/assignment-checks", async (
+            PersonAssignmentCheckRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessService readinessService,
+            PermissionProjectionService permissionProjectionService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRead(context.User, request.PersonId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var readiness = await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                request.PersonId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind);
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                request.PersonId,
+                cancellationToken);
+            var permissionKeys = request.PermissionKey
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var granted = permissionKeys.Length == 0
+                || permissionKeys.All(key => projection.Permissions.Any(permission => string.Equals(permission.PermissionKey, key, StringComparison.OrdinalIgnoreCase)));
+            var blockingReasons = readiness.Blockers
+                .Select(blocker => blocker.Message)
+                .ToList();
+            if (!granted)
+            {
+                blockingReasons.Add("Missing one or more required permissions.");
+            }
+
+            return Results.Ok(new StaffArrAssignmentCheckResponse(
+                request.PersonId,
+                granted && string.Equals(readiness.ReadinessStatus, "ready", StringComparison.OrdinalIgnoreCase),
+                readiness,
+                projection,
+                blockingReasons));
+        })
+        .WithName("CreateIntegrationAssignmentCheckV1Alias");
+
+        integrations.MapPost("/restrictions", async (
+            CreateRestrictionRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessOverrideService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessOverrideWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.GrantOverrideAsync(
+                tenantId,
+                actorUserId,
+                request.PersonId,
+                new GrantReadinessOverrideRequest(request.Reason, request.ExpiresAt),
+                cancellationToken);
+            return Results.Ok(created);
+        })
+        .WithName("CreateIntegrationRestrictionV1Alias");
+
+        integrations.MapPost("/restrictions/{restrictionId:guid}/lift", async (
+            Guid restrictionId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessOverrideService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessOverrideWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ClearOverrideByIdAsync(
+                tenantId,
+                actorUserId,
+                restrictionId,
+                cancellationToken));
+        })
+        .WithName("LiftIntegrationRestrictionV1Alias");
+
+        integrations.MapPost("/person-history-events", async (
+            PersonHistoryEventRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IStaffArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonHistoryRead(context.User, request.PersonId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await audit.WriteAsync(
+                request.Action,
+                tenantId,
+                actorUserId,
+                request.TargetType ?? "person_history_event",
+                request.TargetId ?? request.PersonId.ToString(),
+                request.Result,
+                request.ReasonCode,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("CreateIntegrationPersonHistoryEventV1Alias");
+
+        integrations.MapPost("/audit-packages", async (
+            CreateAuditPackageGenerationJobRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            AuditPackageGenerationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var job = await service.CreateJobAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Accepted($"/api/v1/audit-packages/jobs/{job.JobId}", job);
+        })
+        .WithName("CreateIntegrationAuditPackageV1Alias");
+
+        integrations.MapGet("/org-units", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
+        })
+        .WithName("ListIntegrationOrgUnitsV1Alias");
+
+        integrations.MapGet("/org-units/{orgUnitId:guid}", async (
+            Guid orgUnitId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var units = await service.ListAsync(tenantId, cancellationToken);
+            var unit = units.FirstOrDefault(item => item.OrgUnitId == orgUnitId);
+            return unit is null
+                ? Results.NotFound(new { code = "org_unit.not_found", message = "Org unit was not found." })
+                : Results.Ok(unit);
+        })
+        .WithName("GetIntegrationOrgUnitV1Alias");
+
+        integrations.MapGet("/locations", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(BuildLocations(tenantId, await service.ListAsync(tenantId, cancellationToken)));
+        })
+        .WithName("ListIntegrationLocationsV1Alias");
+
+        integrations.MapGet("/locations/{locationId:guid}", async (
+            Guid locationId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var location = BuildLocations(tenantId, await service.ListAsync(tenantId, cancellationToken))
+                .FirstOrDefault(x => x.LocationId == locationId);
+            return location is null
+                ? Results.NotFound(new { code = "location.not_found", message = "Location was not found." })
+                : Results.Ok(location);
+        })
+        .WithName("GetIntegrationLocationV1Alias");
+
+        integrations.MapGet("/sites/{siteOrgUnitId:guid}/locations", async (
+            Guid siteOrgUnitId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var locations = BuildLocations(tenantId, await service.ListAsync(tenantId, cancellationToken))
+                .Where(x => x.SiteOrgUnitId == siteOrgUnitId)
+                .ToList();
+            return Results.Ok(locations);
+        })
+        .WithName("ListIntegrationSiteLocationsV1Alias");
+
+        integrations.MapGet("/locations/{locationId:guid}/children", async (
+            Guid locationId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var locations = BuildLocations(tenantId, await service.ListAsync(tenantId, cancellationToken))
+                .Where(x => x.ParentLocationId == locationId)
+                .ToList();
+            return Results.Ok(locations);
+        })
+        .WithName("ListIntegrationLocationChildrenV1Alias");
+
+        integrations.MapGet("/sites", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListActiveSitesAsync(tenantId, cancellationToken));
+        })
+        .WithName("ListIntegrationSitesV1Alias");
+
+        integrations.MapGet("/sites/{orgUnitId:guid}", async (
+            Guid orgUnitId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetActiveSiteAsync(tenantId, orgUnitId, cancellationToken));
+        })
+        .WithName("GetIntegrationSiteV1Alias");
+
+        integrations.MapGet("/departments", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var units = await service.ListAsync(tenantId, cancellationToken);
+            return Results.Ok(units.Where(x => x.UnitType == "department").ToList());
+        })
+        .WithName("ListIntegrationDepartmentsV1Alias");
+
+        integrations.MapGet("/positions", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var units = await service.ListAsync(tenantId, cancellationToken);
+            return Results.Ok(units.Where(x => x.UnitType == "position").ToList());
+        })
+        .WithName("ListIntegrationPositionsV1Alias");
+
+        integrations.MapGet("/teams", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var units = await service.ListAsync(tenantId, cancellationToken);
+            return Results.Ok(units.Where(x => x.UnitType == "team").ToList());
+        })
+        .WithName("ListIntegrationTeamsV1Alias");
+
+        integrations.MapGet("/incidents", async (
+            Guid? personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireIncidentsRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListIncidentsAsync(tenantId, personId, cancellationToken));
+        })
+        .WithName("ListIntegrationIncidentsV1Alias");
+
+        integrations.MapPost("/incidents", async (
+            CreatePersonnelIncidentRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireIncidentsManageWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.CreateIncidentAsync(tenantId, actorUserId, request, cancellationToken));
+        })
+        .WithName("CreateIntegrationIncidentV1Alias");
+
+        integrations.MapGet("/incidents/{incidentId:guid}", async (
+            Guid incidentId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            var detail = await service.GetIncidentAsync(tenantId, incidentId, cancellationToken);
+            authorization.RequireIncidentsRead(context.User, detail.PersonId);
+            return Results.Ok(detail);
+        })
+        .WithName("GetIntegrationIncidentV1Alias");
+
+        integrations.MapPost("/incidents/{incidentId:guid}/status-updates", async (
+            Guid incidentId,
+            UpdatePersonnelIncidentStatusRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireIncidentsManageWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateIncidentStatusAsync(
+                tenantId,
+                actorUserId,
+                incidentId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdateIntegrationIncidentStatusV1Alias");
+
+        integrations.MapPost("/incidents/{incidentId:guid}/training-impact", async (
+            Guid incidentId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IncidentRoutingService routingService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireIncidentsManageWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await routingService.RouteToTrainarrAsync(
+                tenantId,
+                actorUserId,
+                incidentId,
+                cancellationToken));
+        })
+        .WithName("RouteIntegrationIncidentTrainingImpactV1Alias");
+    }
+
     private static void MapIntegrationsIndexAlias(WebApplication app)
     {
         app.MapGet("/api/v1/integrations", (
@@ -346,10 +1004,24 @@ public static class V1FeatureAliasEndpoints
                 new { key = "person-lookup", path = "/api/v1/integrations/person-lookup" },
                 new { key = "person-history", path = "/api/v1/integrations/person-history" },
                 new { key = "person-history-summary", path = "/api/v1/integrations/person-history/summary" },
+                new { key = "persons", path = "/api/v1/integrations/persons" },
+                new { key = "person-readiness-checks", path = "/api/v1/integrations/person-readiness-checks" },
+                new { key = "permission-checks", path = "/api/v1/integrations/permission-checks" },
+                new { key = "assignment-checks", path = "/api/v1/integrations/assignment-checks" },
+                new { key = "restrictions", path = "/api/v1/integrations/restrictions" },
+                new { key = "person-history-events", path = "/api/v1/integrations/person-history-events" },
                 new { key = "routarr-readiness", path = "/api/v1/integrations/routarr-readiness" },
                 new { key = "readiness-rollups-teams", path = "/api/v1/integrations/readiness-rollups/teams" },
                 new { key = "readiness-rollups-sites", path = "/api/v1/integrations/readiness-rollups/sites" },
                 new { key = "readiness-rollups-departments", path = "/api/v1/integrations/readiness-rollups/departments" },
+                new { key = "org-units", path = "/api/v1/integrations/org-units" },
+                new { key = "sites", path = "/api/v1/integrations/sites" },
+                new { key = "locations", path = "/api/v1/integrations/locations" },
+                new { key = "departments", path = "/api/v1/integrations/departments" },
+                new { key = "positions", path = "/api/v1/integrations/positions" },
+                new { key = "teams", path = "/api/v1/integrations/teams" },
+                new { key = "incidents", path = "/api/v1/integrations/incidents" },
+                new { key = "audit-packages", path = "/api/v1/integrations/audit-packages" },
                 new { key = "supplyarr-demand-status", path = "/api/v1/integrations/supplyarr-demand-status" },
                 new { key = "training-acknowledgements", path = "/api/v1/integrations/training-acknowledgements" },
                 new { key = "training-acknowledgements-supersede", path = "/api/v1/integrations/training-acknowledgements/supersede" },

@@ -64,7 +64,23 @@ public sealed record RecordArrRecordResponse(
     IReadOnlyList<string> ComplianceRefs,
     IReadOnlyList<RecordArrAuditTrailEntryResponse> AuditTrail,
     DateTimeOffset? ArchivedAt = null,
-    DateTimeOffset? PurgedAt = null);
+    DateTimeOffset? PurgedAt = null)
+{
+    public RecordArrRecordRefResponse? RecordRef { get; init; }
+}
+
+public sealed record RecordArrRecordRefResponse(
+    string RecordarrRecordId,
+    string RecordNumberSnapshot,
+    string TitleSnapshot,
+    string RecordTypeSnapshot,
+    string DocumentTypeSnapshot,
+    string StatusSnapshot,
+    string ClassificationSnapshot,
+    int VersionSnapshot,
+    DateTimeOffset? ExpiresAtSnapshot,
+    string? RetentionStatusSnapshot,
+    DateTimeOffset LastResolvedAt);
 
 public sealed record RecordArrFileRenditionResponse(
     string RenditionId,
