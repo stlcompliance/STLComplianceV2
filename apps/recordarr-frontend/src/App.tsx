@@ -3424,22 +3424,36 @@ export function App() {
     }
   }, [bootstrapError, bootstrapRedirected])
 
-  if (location.pathname === '/launch') {
+  const routerBasename = import.meta.env.VITE_ROUTER_BASENAME?.replace(/\/+$/, '') ?? ''
+  const normalizedPathname = (() => {
+    const pathname = location.pathname.replace(/\/+$/, '') || '/'
+    if (routerBasename && pathname.startsWith(routerBasename)) {
+      const stripped = pathname.slice(routerBasename.length)
+      return stripped || '/'
+    }
+    return pathname
+  })()
+
+  if (normalizedPathname === '/launch') {
+    return <Navigate to={`/handoff${location.search}`} replace />
+  }
+
+  if (normalizedPathname === '/handoff') {
     return <LaunchPage />
   }
 
   const currentTitle = useMemo(() => {
-    if (location.pathname.startsWith('/records/')) return 'Record detail'
-    if (location.pathname.startsWith('/records')) return 'Records'
-    if (['/capture', '/upload-sessions', '/uploads', '/scan-processing', '/ocr-review', '/evidence-mappings'].some((path) => location.pathname.startsWith(path))) return 'Capture'
-    if (['/documents', '/controlled-documents', '/document-reviews', '/distributions', '/acknowledgements'].some((path) => location.pathname.startsWith(path))) return 'Controlled Documents'
-    if (['/packages', '/record-packages'].some((path) => location.pathname.startsWith(path))) return 'Packages'
-    if (['/retention', '/disposal-reviews'].some((path) => location.pathname.startsWith(path))) return 'Retention'
-    if (['/holds', '/legal-holds'].some((path) => location.pathname.startsWith(path))) return 'Holds'
-    if (['/access', '/external-shares', '/redactions', '/access-logs'].some((path) => location.pathname.startsWith(path))) return 'Access'
-    if (location.pathname.startsWith('/settings')) return 'Settings'
+    if (normalizedPathname.startsWith('/records/')) return 'Record detail'
+    if (normalizedPathname.startsWith('/records')) return 'Records'
+    if (['/capture', '/upload-sessions', '/uploads', '/scan-processing', '/ocr-review', '/evidence-mappings'].some((path) => normalizedPathname.startsWith(path))) return 'Capture'
+    if (['/documents', '/controlled-documents', '/document-reviews', '/distributions', '/acknowledgements'].some((path) => normalizedPathname.startsWith(path))) return 'Controlled Documents'
+    if (['/packages', '/record-packages'].some((path) => normalizedPathname.startsWith(path))) return 'Packages'
+    if (['/retention', '/disposal-reviews'].some((path) => normalizedPathname.startsWith(path))) return 'Retention'
+    if (['/holds', '/legal-holds'].some((path) => normalizedPathname.startsWith(path))) return 'Holds'
+    if (['/access', '/external-shares', '/redactions', '/access-logs'].some((path) => normalizedPathname.startsWith(path))) return 'Access'
+    if (normalizedPathname.startsWith('/settings')) return 'Settings'
     return 'Dashboard'
-  }, [location.pathname])
+  }, [normalizedPathname])
 
   const accessToken = session?.accessToken ?? ''
 

@@ -1,6 +1,7 @@
 FROM node:22-bookworm-slim AS frontend-build
 WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
+ARG VITE_ROUTER_BASENAME=/recordarr
 ARG VITE_SUITE_URL=https://app.stlcompliance.com
 ARG VITE_STAFFARR_FRONTEND_BASE=https://app.stlcompliance.com/staffarr
 ARG VITE_TRAINARR_FRONTEND_BASE=https://app.stlcompliance.com/trainarr
@@ -13,6 +14,7 @@ ARG VITE_RECORDARR_FRONTEND_BASE=https://app.stlcompliance.com/recordarr
 ARG VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com
 ARG VITE_COMPANION_FRONTEND_BASE=https://fieldcompanion-frontend-vf7o.onrender.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
+    VITE_ROUTER_BASENAME=${VITE_ROUTER_BASENAME} \
     VITE_SUITE_URL=${VITE_SUITE_URL} \
     VITE_STAFFARR_FRONTEND_BASE=${VITE_STAFFARR_FRONTEND_BASE} \
     VITE_TRAINARR_FRONTEND_BASE=${VITE_TRAINARR_FRONTEND_BASE} \

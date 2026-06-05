@@ -48,6 +48,11 @@ function readAppPublicBaseUrl(env: Record<string, string | undefined>): string |
   return trimmed ? trimmed.replace(/\/$/, '') : undefined
 }
 
+function getProductLaunchPath(productKey: string): string {
+  const normalized = normalizeProductKey(productKey)
+  return normalized === 'recordarr' ? '/handoff' : '/launch'
+}
+
 /** Build direct `/launch` URLs for entitled product frontends from Vite env (with local defaults). */
 export function buildProductLaunchUrlMap(
   env: Record<string, string | undefined>,
@@ -58,13 +63,14 @@ export function buildProductLaunchUrlMap(
     if (entry.productKey === 'nexarr') {
       continue
     }
+    const launchPath = getProductLaunchPath(entry.productKey)
     if (appBase) {
-      map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}/launch`
+      map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}${launchPath}`
       continue
     }
     const base = readFrontendBase(env, entry.productKey)
     if (base) {
-      map[entry.productKey] = `${base}/launch`
+      map[entry.productKey] = `${base}${launchPath}`
     }
   }
   return map
@@ -87,5 +93,5 @@ export function resolveProductLaunchUrl(
   }
 
   const suiteUrl = resolveSuiteHomeUrl(suiteHomeUrl)
-  return `${suiteUrl}/${getProductRouteSlug(normalized)}/launch`
+  return `${suiteUrl}/${getProductRouteSlug(normalized)}${getProductLaunchPath(normalized)}`
 }

@@ -1,5 +1,6 @@
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
+using LoadArr.Api.Services;
 
 namespace LoadArr.Api;
 
@@ -10,6 +11,8 @@ public static class LoadArrServiceRegistration
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.AddScoped<LoadArrTokenService>();
+        builder.Services.AddScoped<HandoffAuthService>();
 
         var frontendOrigin = builder.Configuration["Cors:LoadArrFrontendOrigin"] ?? "http://localhost:5182";
         builder.Services.AddCors(options =>

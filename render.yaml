@@ -76,6 +76,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/compliancecore
       - key: LOADARR_FRONTEND_URL
         value: https://app.stlcompliance.com/loadarr
+      - key: REPORTARR_FRONTEND_URL
+        value: https://app.stlcompliance.com/reportarr
       - key: FIELDCOMPANION_FRONTEND_URL
         value: https://fieldcompanion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
@@ -103,6 +105,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/loadarr
       - key: VITE_RECORDARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/recordarr
+      - key: VITE_REPORTARR_FRONTEND_BASE
+        value: https://app.stlcompliance.com/reportarr
       - key: VITE_FIELDCOMPANION_FRONTEND_BASE
         value: https://fieldcompanion-frontend-vf7o.onrender.com
 
@@ -207,7 +211,9 @@ services:
       - key: Launch__Products__loadarr__BaseUrl
         value: https://app.stlcompliance.com/loadarr
       - key: Launch__Products__recordarr__BaseUrl
-        value: https://recordarr-api.onrender.com
+        value: https://app.stlcompliance.com/recordarr
+      - key: Launch__Products__reportarr__BaseUrl
+        value: https://app.stlcompliance.com/reportarr
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -223,6 +229,8 @@ services:
       - key: Launch__Products__loadarr__LaunchPath
         value: /launch
       - key: Launch__Products__recordarr__LaunchPath
+        value: /handoff
+      - key: Launch__Products__reportarr__LaunchPath
         value: /launch
       - key: Launch__Products__fieldcompanion__BaseUrl
         value: https://fieldcompanion-frontend-vf7o.onrender.com

@@ -10,6 +10,22 @@ export interface LoadArrSessionBootstrapResponse {
   entitlements: string[]
 }
 
+export interface LoadArrHandoffSessionResponse {
+  accessToken: string
+  accessTokenExpiresAt: string
+  userId: string
+  personId: string
+  email: string
+  displayName: string
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  entitlements: string[]
+}
+
 const apiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
 
 function authHeaders(accessToken: string): HeadersInit {
@@ -38,4 +54,13 @@ export async function getSessionBootstrap(
     response,
     'Failed to load session bootstrap',
   )
+}
+
+export async function redeemHandoff(handoffCode: string): Promise<LoadArrHandoffSessionResponse> {
+  const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ handoffCode }),
+  })
+  return parseJsonResponse<LoadArrHandoffSessionResponse>(response, 'Handoff redeem failed')
 }

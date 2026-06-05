@@ -35,6 +35,7 @@ import {
 } from '@stl/shared-ui'
 import { getSessionBootstrap } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
+import { LaunchPage } from './LaunchPage'
 import { ReportsPanel } from './components/ReportsPanel'
 
 type LoadArrMetrics = {
@@ -1509,7 +1510,20 @@ export function App() {
     retry: false,
   })
 
-  const normalizedPathname = location.pathname.replace(/\/+$/, '') || '/'
+  const routerBasename = import.meta.env.VITE_ROUTER_BASENAME?.replace(/\/+$/, '') ?? ''
+  const normalizedPathname = (() => {
+    const pathname = location.pathname.replace(/\/+$/, '') || '/'
+    if (routerBasename && pathname.startsWith(routerBasename)) {
+      const stripped = pathname.slice(routerBasename.length)
+      return stripped || '/'
+    }
+    return pathname
+  })()
+
+  if (normalizedPathname === '/launch') {
+    return <LaunchPage />
+  }
+
   const activeView = useMemo<ViewKey>(() => {
     if (normalizedPathname === '/') {
       return 'dashboard'

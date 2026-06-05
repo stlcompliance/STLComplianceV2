@@ -5086,6 +5086,11 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listReportSchedules(accessToken),
     enabled: Boolean(accessToken) && Boolean(scheduleId),
   })
+  const recipientsQuery = useQuery({
+    queryKey: ['reportarr', 'report-recipients', scheduleId, accessToken],
+    queryFn: () => listReportRecipients(accessToken),
+    enabled: Boolean(accessToken) && Boolean(scheduleId),
+  })
 
   if (!scheduleId) {
     return <Navigate to="/reports" replace />
@@ -5105,7 +5110,10 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
         description={`Inspect a single schedule (${scheduleId}).`}
       />
       <Panel title="Report schedule detail">
-        <ReportScheduleDetail reportSchedule={reportSchedule} />
+        <ReportScheduleDetail
+          schedule={reportSchedule}
+          recipients={(recipientsQuery.data ?? []).filter((recipient) => recipient.scheduleId === scheduleId)}
+        />
       </Panel>
     </div>
   )
@@ -5591,8 +5599,10 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
             <p><strong className="text-slate-100">Source dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert.datasetRef || 'not set'}</p>
             <p><strong className="text-slate-100">Source metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert.metricRef || 'not set'}</p>
             <p><strong className="text-slate-100">Triggered at:</strong> {formatDate(alert.triggeredAt)}</p>
-            <p><strong className="text-slate-100">Acknowledgement/resolution:</strong>{' '}
-            {alert.acknowledgedByPersonId ?? 'not acknowledged'} / {formatDate(alert.acknowledgedAt)} / {formatDate(alert.resolvedAt)}
+            <p>
+              <strong className="text-slate-100">Acknowledgement/resolution:</strong>{' '}
+              {alert.acknowledgedByPersonId ?? 'not acknowledged'} / {formatDate(alert.acknowledgedAt)} / {formatDate(alert.resolvedAt)}
+            </p>
             <div className="pt-2">
               <p><strong className="text-slate-100">Trigger history:</strong></p>
               <ul className="mt-1 list-disc pl-5">
@@ -5871,26 +5881,35 @@ export function App() {
   })
   const sessionRoleKey = sessionQuery.data?.tenantRoleKey ?? ''
   const isPlatformAdmin = sessionQuery.data?.isPlatformAdmin ?? false
+  const routerBasename = import.meta.env.VITE_ROUTER_BASENAME?.replace(/\/+$/, '') ?? ''
+  const normalizedPathname = (() => {
+    const pathname = location.pathname.replace(/\/+$/, '') || '/'
+    if (routerBasename && pathname.startsWith(routerBasename)) {
+      const stripped = pathname.slice(routerBasename.length)
+      return stripped || '/'
+    }
+    return pathname
+  })()
   const currentTitle = useMemo(() => {
-    if (location.pathname.startsWith('/datasets')) return 'Datasets'
-    if (location.pathname.startsWith('/read-models')) return 'Read models'
-    if (location.pathname.startsWith('/refresh-jobs')) return 'Refresh jobs'
-    if (location.pathname.startsWith('/dashboards')) return 'Dashboards'
-    if (location.pathname.startsWith('/reports/builder')) return 'Report builder'
-    if (location.pathname.startsWith('/reports/schedules')) return 'Report schedules'
-    if (location.pathname.startsWith('/reports/exports')) return 'Report exports'
-    if (location.pathname.startsWith('/reports')) return 'Reports'
-    if (location.pathname.startsWith('/kpis')) return 'KPIs'
-    if (location.pathname.startsWith('/metrics')) return 'Metrics'
-    if (location.pathname.startsWith('/alerts')) return 'Alerts'
-    if (location.pathname.startsWith('/audit')) return 'Audit'
-    if (location.pathname.startsWith('/source-connectors') || location.pathname.startsWith('/integrations')) return 'Source connectors'
-    if (location.pathname.startsWith('/ingestion-status') || location.pathname.startsWith('/history')) return 'Ingestion status'
-    if (location.pathname.startsWith('/settings')) return 'Settings'
+    if (normalizedPathname.startsWith('/datasets')) return 'Datasets'
+    if (normalizedPathname.startsWith('/read-models')) return 'Read models'
+    if (normalizedPathname.startsWith('/refresh-jobs')) return 'Refresh jobs'
+    if (normalizedPathname.startsWith('/dashboards')) return 'Dashboards'
+    if (normalizedPathname.startsWith('/reports/builder')) return 'Report builder'
+    if (normalizedPathname.startsWith('/reports/schedules')) return 'Report schedules'
+    if (normalizedPathname.startsWith('/reports/exports')) return 'Report exports'
+    if (normalizedPathname.startsWith('/reports')) return 'Reports'
+    if (normalizedPathname.startsWith('/kpis')) return 'KPIs'
+    if (normalizedPathname.startsWith('/metrics')) return 'Metrics'
+    if (normalizedPathname.startsWith('/alerts')) return 'Alerts'
+    if (normalizedPathname.startsWith('/audit')) return 'Audit'
+    if (normalizedPathname.startsWith('/source-connectors') || normalizedPathname.startsWith('/integrations')) return 'Source connectors'
+    if (normalizedPathname.startsWith('/ingestion-status') || normalizedPathname.startsWith('/history')) return 'Ingestion status'
+    if (normalizedPathname.startsWith('/settings')) return 'Settings'
     return 'Overview'
-  }, [location.pathname])
+  }, [normalizedPathname])
 
-  if (location.pathname.startsWith('/launch')) {
+  if (normalizedPathname.startsWith('/launch')) {
     return <LaunchPage />
   }
 
