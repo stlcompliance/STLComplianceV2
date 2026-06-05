@@ -1504,6 +1504,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(created);
         Assert.Equal(title, created!.Title);
 
+        var createdDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        createdDashboardResponse.EnsureSuccessStatusCode();
+        var createdDashboard = await createdDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(createdDashboard);
+        Assert.Contains(createdDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.created" && entry.SubjectId == created.Id);
+
         var listResponse = await _client.GetAsync("/api/v1/integrations/scars");
         listResponse.EnsureSuccessStatusCode();
 
@@ -1511,11 +1517,53 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(list);
         Assert.Contains(list!, item => item.Title == title);
 
-        var updateResponse = await _client.PatchAsJsonAsync(
+        var sentResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/integrations/scars/{created.Id}/status",
             new UpdateAssurArrStatusRequest("sent", "Ready for supplier transmission."));
 
-        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, sentResponse.StatusCode);
+
+        var sentDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        sentDashboardResponse.EnsureSuccessStatusCode();
+        var sentDashboard = await sentDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(sentDashboard);
+        Assert.Contains(sentDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.sent" && entry.SubjectId == created.Id);
+
+        var responseReceivedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{created.Id}/status",
+            new UpdateAssurArrStatusRequest("response_received", "Supplier response received."));
+
+        Assert.Equal(HttpStatusCode.OK, responseReceivedResponse.StatusCode);
+
+        var responseReceivedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        responseReceivedDashboardResponse.EnsureSuccessStatusCode();
+        var responseReceivedDashboard = await responseReceivedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(responseReceivedDashboard);
+        Assert.Contains(responseReceivedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.response_received" && entry.SubjectId == created.Id);
+
+        var acceptedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{created.Id}/status",
+            new UpdateAssurArrStatusRequest("accepted", "Supplier response accepted."));
+
+        Assert.Equal(HttpStatusCode.OK, acceptedResponse.StatusCode);
+
+        var acceptedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        acceptedDashboardResponse.EnsureSuccessStatusCode();
+        var acceptedDashboard = await acceptedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(acceptedDashboard);
+        Assert.Contains(acceptedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.accepted" && entry.SubjectId == created.Id);
+
+        var closedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/scars/{created.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Supplier corrective action request closed."));
+
+        Assert.Equal(HttpStatusCode.OK, closedResponse.StatusCode);
+
+        var closedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        closedDashboardResponse.EnsureSuccessStatusCode();
+        var closedDashboard = await closedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(closedDashboard);
+        Assert.Contains(closedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.scar.closed" && entry.SubjectId == created.Id);
     }
 
     [Fact]
