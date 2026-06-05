@@ -23,6 +23,8 @@ import { OverviewPage } from './pages/overview/OverviewPage'
 
 import { PmProgramsPage } from './pages/pm-programs/PmProgramsPage'
 
+import { ReportsPage } from './pages/reports/ReportsPage'
+
 import { SettingsPage } from './pages/settings/SettingsPage'
 
 import { WorkOrdersPage } from './pages/work-orders/WorkOrdersPage'
@@ -111,6 +113,8 @@ export default function App() {
             <Route path="/inspection-templates/create" element={<InspectionTemplatesPage />} />
 
             <Route path="/history" element={<HistoryPage />} />
+
+            <Route path="/reports/*" element={<ReportsPage />} />
 
             <Route path="/downtime" element={<DowntimePage />} />
 

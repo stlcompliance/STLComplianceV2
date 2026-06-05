@@ -1,4 +1,11 @@
-import { createWorkspacePage } from '../../lib/createWorkspacePage'
-import { MaintainArrWorkspacePage } from '../../workspace/MaintainArrWorkspacePage'
+import { useMaintainArrWorkspaceState } from '../../workspace/useMaintainArrWorkspaceState'
+import { ReportsSection } from '../../workspace/sections/ReportsSection'
 
-export const ReportsPage = createWorkspacePage(MaintainArrWorkspacePage, 'reports')
+export function ReportsPage() {
+  const state = useMaintainArrWorkspaceState()
+
+  if (state.handoffRedirect) return state.handoffRedirect
+  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+
+  return <ReportsSection state={state} />
+}
