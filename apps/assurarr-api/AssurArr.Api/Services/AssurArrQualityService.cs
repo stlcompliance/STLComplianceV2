@@ -1031,12 +1031,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToNonconformanceResponse).ToList();
+        var responses = new List<AssurArrNonconformanceResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToNonconformanceResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrNonconformanceResponse?> GetNonconformanceAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.Nonconformances.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToNonconformanceResponse(entity)
+            ? await ToNonconformanceResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrNonconformanceResponse> CreateNonconformanceAsync(CreateAssurArrNonconformanceRequest request, CancellationToken cancellationToken = default)
@@ -1074,7 +1080,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("nonconformance", entity.Id, "assurarr.nonconformance.created", entity.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToNonconformanceResponse(entity);
+        return await ToNonconformanceResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrNonconformanceResponse> UpdateNonconformanceStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -1113,7 +1119,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToNonconformanceResponse(entity);
+        return await ToNonconformanceResponseAsync(entity, cancellationToken);
     }
 
     private async Task PublishQualityStatusSnapshotAsync(AssurArrNonconformance entity, CancellationToken cancellationToken)
@@ -1241,12 +1247,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToQualityHoldResponse).ToList();
+        var responses = new List<AssurArrQualityHoldResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToQualityHoldResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrQualityHoldResponse?> GetQualityHoldAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.QualityHolds.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToQualityHoldResponse(entity)
+            ? await ToQualityHoldResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrQualityHoldResponse> CreateQualityHoldAsync(CreateAssurArrQualityHoldRequest request, CancellationToken cancellationToken = default)
@@ -1285,7 +1297,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("hold", entity.Id, "assurarr.hold.created", entity.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToQualityHoldResponse(entity);
+        return await ToQualityHoldResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityHoldResponse> UpdateQualityHoldStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -1318,7 +1330,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToQualityHoldResponse(entity);
+        return await ToQualityHoldResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrQualityReleaseResponse> RequestHoldReleaseAsync(Guid holdId, CreateAssurArrQualityReleaseRequest request, CancellationToken cancellationToken = default)
@@ -1486,12 +1498,18 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(ToCapaResponse).ToList();
+        var responses = new List<AssurArrCapaResponse>(entities.Count);
+        foreach (var entity in entities)
+        {
+            responses.Add(await ToCapaResponseAsync(entity, cancellationToken));
+        }
+
+        return responses;
     }
 
     public async Task<AssurArrCapaResponse?> GetCapaAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await db.Capas.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken)) is { } entity
-            ? ToCapaResponse(entity)
+            ? await ToCapaResponseAsync(entity, cancellationToken)
             : null;
 
     public async Task<AssurArrCapaResponse> CreateCapaAsync(CreateAssurArrCapaRequest request, CancellationToken cancellationToken = default)
@@ -1525,7 +1543,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.Capas.Add(entity);
         await AddTimelineAsync("capa", entity.Id, "assurarr.capa.created", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToCapaResponse(entity);
+        return await ToCapaResponseAsync(entity, cancellationToken);
     }
 
     public async Task<AssurArrCapaResponse> UpdateCapaStatusAsync(Guid id, UpdateAssurArrStatusRequest request, CancellationToken cancellationToken = default)
@@ -1555,7 +1573,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
         await AddTimelineAsync("capa", entity.Id, "assurarr.capa.status_changed", entity.Status, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return ToCapaResponse(entity);
+        return await ToCapaResponseAsync(entity, cancellationToken);
     }
 
     public async Task<List<AssurArrCapaActionResponse>> ListCapaActionsAsync(Guid capaId, CancellationToken cancellationToken = default)
@@ -3410,7 +3428,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         throw new InvalidOperationException($"Referenced nonconformance '{nonconformanceRef}' was not found.");
     }
 
-    private static AssurArrNonconformanceResponse ToNonconformanceResponse(AssurArrNonconformance entity) =>
+    private static AssurArrNonconformanceResponse ToNonconformanceResponse(AssurArrNonconformance entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3425,6 +3443,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
             entity.ClosedAt,
@@ -3440,7 +3459,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.BlockerRefs,
             entity.DueAt);
 
-    private static AssurArrQualityHoldResponse ToQualityHoldResponse(AssurArrQualityHold entity) =>
+    private static AssurArrQualityHoldResponse ToQualityHoldResponse(AssurArrQualityHold entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3455,6 +3474,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
             entity.ClosedAt,
@@ -3478,7 +3498,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.RejectedByPersonId,
             entity.ExpiresAt);
 
-    private static AssurArrCapaResponse ToCapaResponse(AssurArrCapa entity) =>
+    private static AssurArrCapaResponse ToCapaResponse(AssurArrCapa entity, IReadOnlyList<string> eventLog) =>
         new(
             entity.Id,
             entity.Number,
@@ -3493,6 +3513,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AffectedObjectRefs,
             entity.OwnerPersonId,
             entity.RecordRefs,
+            eventLog,
             entity.CreatedAt,
             entity.UpdatedAt,
             entity.ClosedAt,
@@ -3504,6 +3525,23 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.RelatedNonconformanceRefs,
             entity.RelatedAuditFindingRefs,
             entity.EffectivenessVerificationRefs);
+
+    private async Task<IReadOnlyList<string>> GetEventLogAsync(string subjectType, Guid subjectId, CancellationToken cancellationToken = default) =>
+        await db.TimelineEvents
+            .AsNoTracking()
+            .Where(x => x.SubjectType == subjectType && x.SubjectId == subjectId)
+            .OrderBy(x => x.OccurredAt)
+            .Select(x => x.EventType)
+            .ToListAsync(cancellationToken);
+
+    private async Task<AssurArrNonconformanceResponse> ToNonconformanceResponseAsync(AssurArrNonconformance entity, CancellationToken cancellationToken = default) =>
+        ToNonconformanceResponse(entity, await GetEventLogAsync("nonconformance", entity.Id, cancellationToken));
+
+    private async Task<AssurArrQualityHoldResponse> ToQualityHoldResponseAsync(AssurArrQualityHold entity, CancellationToken cancellationToken = default) =>
+        ToQualityHoldResponse(entity, await GetEventLogAsync("hold", entity.Id, cancellationToken));
+
+    private async Task<AssurArrCapaResponse> ToCapaResponseAsync(AssurArrCapa entity, CancellationToken cancellationToken = default) =>
+        ToCapaResponse(entity, await GetEventLogAsync("capa", entity.Id, cancellationToken));
 
     private static AssurArrEffectivenessVerificationResponse ToEffectivenessVerificationResponse(AssurArrEffectivenessVerification entity) =>
         new(

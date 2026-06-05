@@ -754,6 +754,7 @@ function NonconformanceDetailPage() {
             </div>
           </div>
         </div>
+        <SectionCard title="Event log" items={nonconformance.eventLog} emptyLabel="No event log entries recorded yet." />
         <SectionCard title="Timeline" items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)} emptyLabel="No timeline events recorded yet." />
       </div>
     </div>
@@ -767,8 +768,8 @@ function SectionCard({ title, items, emptyLabel }: { title: string; items: strin
         <p className="assurarr-label">{title}</p>
         {items.length > 0 ? (
           <ul className="space-y-2 text-sm text-slate-300">
-            {items.map((item) => (
-              <li key={item} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2">
+            {items.map((item, index) => (
+              <li key={`${item}-${index}`} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2">
                 {item}
               </li>
             ))}
@@ -1087,6 +1088,7 @@ function HoldDetailPage() {
           items={hold.recordRefs.map((item) => item)}
           emptyLabel="No evidence records are linked to this hold."
         />
+        <SectionCard title="Event log" items={hold.eventLog} emptyLabel="No event log entries recorded yet." />
         <LinkedSectionCard
           title="Related quality releases"
           items={relatedReleases.map((release) => ({ label: `${release.number} · ${release.status} · ${release.releaseType}${release.evidenceRecordRefs.length ? ` · evidence ${release.evidenceRecordRefs.length}` : ''}`, to: `/releases/${release.id}` }))}
@@ -1660,6 +1662,7 @@ function CapaDetailPage() {
             </div>
           </div>
         </div>
+        <SectionCard title="Event log" items={capa.eventLog} emptyLabel="No event log entries recorded yet." />
 
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">

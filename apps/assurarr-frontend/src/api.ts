@@ -40,6 +40,7 @@ export type Nonconformance = ListItem & {
   nonconformanceType: string
   category: string
   recordRefs: string[]
+  eventLog: string[]
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
@@ -59,6 +60,7 @@ export type QualityHold = ListItem & {
   holdType: string
   holdScope: string
   recordRefs: string[]
+  eventLog: string[]
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
@@ -86,6 +88,7 @@ export type Capa = ListItem & {
   capaType: string
   sourceType: string
   recordRefs: string[]
+  eventLog: string[]
   closedAt: string | null
   closedByPersonId: string | null
   closureSummary: string | null
