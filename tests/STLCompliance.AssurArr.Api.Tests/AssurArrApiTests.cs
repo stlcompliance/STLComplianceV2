@@ -1828,6 +1828,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var dashboard = await dashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(dashboard);
         Assert.Contains(dashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.quality_status.changed" && eventItem.SubjectId == created.Id);
+        Assert.Contains(dashboard.RecentEvents, eventItem => eventItem.EventType == "assurarr.quality_status.published" && eventItem.SubjectId == created.Id);
     }
 
     [Fact]
