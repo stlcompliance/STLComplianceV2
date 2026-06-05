@@ -1757,6 +1757,186 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
+    public async Task Can_recalculate_supplier_and_customer_quality_metrics_from_workflows()
+    {
+        var supplierRef = $"supplyarr:supplier:{Guid.NewGuid():N}";
+        var supplierScorecardResponse = await _client.PostAsJsonAsync(
+            "/api/v1/scorecards",
+            new CreateAssurArrQualityScorecardRequest(
+                "supplier",
+                supplierRef,
+                DateTimeOffset.UtcNow.AddDays(-7),
+                DateTimeOffset.UtcNow,
+                88,
+                "warning",
+                "stable",
+                $"Supplier scorecard {Guid.NewGuid():N}",
+                "Automated supplier metric coverage.",
+                "moderate",
+                "assurarr",
+                supplierRef,
+                [supplierRef],
+                null,
+                []));
+
+        Assert.Equal(HttpStatusCode.OK, supplierScorecardResponse.StatusCode);
+        var supplierScorecard = await supplierScorecardResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(supplierScorecard);
+
+        var supplierIssueResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/supplier-quality-issues",
+            new CreateAssurArrSupplierQualityIssueRequest(
+                $"Supplier metric issue {Guid.NewGuid():N}",
+                "Automated coverage for supplier metric calculation.",
+                "high",
+                "damaged_received",
+                "loadarr",
+                $"loadarr:receipt:{Guid.NewGuid():N}",
+                [$"loadarr:receipt:{Guid.NewGuid():N}"],
+                [],
+                [],
+                supplierRef,
+                null,
+                null,
+                [],
+                [],
+                null,
+                DateTimeOffset.UtcNow));
+
+        Assert.Equal(HttpStatusCode.OK, supplierIssueResponse.StatusCode);
+        var supplierIssue = await supplierIssueResponse.Content.ReadFromJsonAsync<AssurArrSupplierQualityIssueResponse>();
+        Assert.NotNull(supplierIssue);
+
+        var supplierMetricsResponse = await _client.GetAsync($"/api/v1/scorecards/{supplierScorecard!.Id}/metrics");
+        supplierMetricsResponse.EnsureSuccessStatusCode();
+        var supplierMetrics = await supplierMetricsResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
+        Assert.NotNull(supplierMetrics);
+        var supplierMetric = Assert.Single(supplierMetrics!, item => item.MetricKey == "supplier-quality-issue-count");
+        Assert.Equal(1, supplierMetric.Value);
+        Assert.Equal("warning", supplierMetric.Status);
+
+        var supplierNotifiedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue!.Id}/status",
+            new UpdateAssurArrStatusRequest("supplier_notified", "Supplier notified for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierNotifiedResponse.StatusCode);
+
+        var supplierResponsePendingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("response_pending", "Supplier response pending for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierResponsePendingResponse.StatusCode);
+
+        var supplierResolvedResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("resolved", "Supplier issue resolved for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierResolvedResponse.StatusCode);
+
+        var supplierCloseResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/supplier-quality-issues/{supplierIssue.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Supplier issue closed for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, supplierCloseResponse.StatusCode);
+
+        var supplierMetricsAfterCloseResponse = await _client.GetAsync($"/api/v1/scorecards/{supplierScorecard.Id}/metrics");
+        supplierMetricsAfterCloseResponse.EnsureSuccessStatusCode();
+        var supplierMetricsAfterClose = await supplierMetricsAfterCloseResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
+        Assert.NotNull(supplierMetricsAfterClose);
+        var supplierMetricAfterClose = Assert.Single(supplierMetricsAfterClose!, item => item.MetricKey == "supplier-quality-issue-count");
+        Assert.Equal(0, supplierMetricAfterClose.Value);
+        Assert.Equal("acceptable", supplierMetricAfterClose.Status);
+
+        var customerRef = $"customarr:customer:{Guid.NewGuid():N}";
+        var customerScorecardResponse = await _client.PostAsJsonAsync(
+            "/api/v1/scorecards",
+            new CreateAssurArrQualityScorecardRequest(
+                "customer",
+                customerRef,
+                DateTimeOffset.UtcNow.AddDays(-7),
+                DateTimeOffset.UtcNow,
+                88,
+                "warning",
+                "stable",
+                $"Customer scorecard {Guid.NewGuid():N}",
+                "Automated customer metric coverage.",
+                "moderate",
+                "assurarr",
+                customerRef,
+                [customerRef],
+                null,
+                []));
+
+        Assert.Equal(HttpStatusCode.OK, customerScorecardResponse.StatusCode);
+        var customerScorecard = await customerScorecardResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
+        Assert.NotNull(customerScorecard);
+
+        var customerComplaintResponse = await _client.PostAsJsonAsync(
+            "/api/v1/integrations/customer-complaint-quality-cases",
+            new CreateAssurArrCustomerComplaintQualityCaseRequest(
+                $"Customer metric complaint {Guid.NewGuid():N}",
+                "Automated coverage for customer metric calculation.",
+                "high",
+                "delivery_quality",
+                "routarr",
+                $"routarr:shipment:{Guid.NewGuid():N}",
+                [],
+                [],
+                [],
+                [],
+                customerRef,
+                "Jordan Lee, logistics manager",
+                null,
+                null,
+                [],
+                [],
+                null,
+                [],
+                null,
+                DateTimeOffset.UtcNow,
+                null,
+                DateTimeOffset.UtcNow.AddDays(4)));
+
+        Assert.Equal(HttpStatusCode.OK, customerComplaintResponse.StatusCode);
+        var customerComplaint = await customerComplaintResponse.Content.ReadFromJsonAsync<AssurArrCustomerComplaintQualityCaseResponse>();
+        Assert.NotNull(customerComplaint);
+
+        var customerMetricsResponse = await _client.GetAsync($"/api/v1/scorecards/{customerScorecard!.Id}/metrics");
+        customerMetricsResponse.EnsureSuccessStatusCode();
+        var customerMetrics = await customerMetricsResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
+        Assert.NotNull(customerMetrics);
+        var customerMetric = Assert.Single(customerMetrics!, item => item.MetricKey == "customer-complaint-count");
+        Assert.Equal(1, customerMetric.Value);
+        Assert.Equal("warning", customerMetric.Status);
+
+        var customerTriageResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{customerComplaint!.Id}/status",
+            new UpdateAssurArrStatusRequest("triage", "Customer complaint triaged for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, customerTriageResponse.StatusCode);
+
+        var customerResponsePendingResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{customerComplaint.Id}/status",
+            new UpdateAssurArrStatusRequest("response_pending", "Customer response pending for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, customerResponsePendingResponse.StatusCode);
+
+        var customerCloseResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/integrations/customer-complaint-quality-cases/{customerComplaint.Id}/status",
+            new UpdateAssurArrStatusRequest("closed", "Customer complaint closed for metric verification."));
+
+        Assert.Equal(HttpStatusCode.OK, customerCloseResponse.StatusCode);
+
+        var customerMetricsAfterCloseResponse = await _client.GetAsync($"/api/v1/scorecards/{customerScorecard.Id}/metrics");
+        customerMetricsAfterCloseResponse.EnsureSuccessStatusCode();
+        var customerMetricsAfterClose = await customerMetricsAfterCloseResponse.Content.ReadFromJsonAsync<List<AssurArrQualityMetricResponse>>();
+        Assert.NotNull(customerMetricsAfterClose);
+        var customerMetricAfterClose = Assert.Single(customerMetricsAfterClose!, item => item.MetricKey == "customer-complaint-count");
+        Assert.Equal(0, customerMetricAfterClose.Value);
+        Assert.Equal("acceptable", customerMetricAfterClose.Status);
+    }
+
+    [Fact]
     public async Task Can_create_and_lookup_quality_risk_profiles()
     {
         var targetType = "process";

@@ -2532,6 +2532,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.SupplierQualityIssues.Add(entity);
         await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.created", entity.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
+        await RecalculateSupplierQualityMetricsAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToSupplierQualityIssueResponse(entity);
     }
@@ -2556,6 +2557,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("supplier_quality_issue", entity.Id, "assurarr.supplier_quality_issue.status_changed", entity.Status, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
+        await RecalculateSupplierQualityMetricsAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToSupplierQualityIssueResponse(entity);
     }
@@ -2726,6 +2728,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         db.CustomerComplaintQualityCases.Add(entity);
         await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.created", entity.Title, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
+        await RecalculateCustomerComplaintMetricsAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCustomerComplaintQualityCaseResponse(entity);
     }
@@ -2754,6 +2757,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
 
         await AddTimelineAsync("customer_complaint", entity.Id, "assurarr.customer_complaint.status_changed", entity.Status, cancellationToken);
         await PublishQualityStatusSnapshotAsync(entity, cancellationToken);
+        await RecalculateCustomerComplaintMetricsAsync(entity, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCustomerComplaintQualityCaseResponse(entity);
     }
@@ -3101,6 +3105,127 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await AddTimelineAsync("scorecard", scorecardId, "assurarr.metric.calculated", entity.MetricKey, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToMetricResponse(entity);
+    }
+
+    private async Task RecalculateSupplierQualityMetricsAsync(AssurArrSupplierQualityIssue entity, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(entity.SupplierRef))
+        {
+            return;
+        }
+
+        var supplierRef = entity.SupplierRef.Trim();
+        var openIssueCount = await db.SupplierQualityIssues.CountAsync(x =>
+            x.SupplierRef == supplierRef && x.Status != "closed" && x.Status != "canceled", cancellationToken);
+
+        var scorecards = await db.QualityScorecards
+            .Where(x => x.TargetType == "supplier" && x.TargetRef == supplierRef)
+            .ToListAsync(cancellationToken);
+
+        foreach (var scorecard in scorecards)
+        {
+            await UpsertCalculatedMetricAsync(
+                scorecard,
+                "supplier-quality-issue-count",
+                "Supplier quality issue count",
+                "Open supplier-responsible quality issues for the target supplier.",
+                "supplier",
+                openIssueCount,
+                "count",
+                0,
+                1,
+                3,
+                new[] { entity.SourceProduct ?? "assurarr", "supplyarr" },
+                cancellationToken);
+        }
+    }
+
+    private async Task RecalculateCustomerComplaintMetricsAsync(AssurArrCustomerComplaintQualityCase entity, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(entity.CustomerRef))
+        {
+            return;
+        }
+
+        var customerRef = entity.CustomerRef.Trim();
+        var openComplaintCount = await db.CustomerComplaintQualityCases.CountAsync(x =>
+            x.CustomerRef == customerRef && x.Status != "closed" && x.Status != "canceled", cancellationToken);
+
+        var scorecards = await db.QualityScorecards
+            .Where(x => x.TargetType == "customer" && x.TargetRef == customerRef)
+            .ToListAsync(cancellationToken);
+
+        foreach (var scorecard in scorecards)
+        {
+            await UpsertCalculatedMetricAsync(
+                scorecard,
+                "customer-complaint-count",
+                "Customer complaint count",
+                "Open customer complaint quality cases for the target customer.",
+                "customer",
+                openComplaintCount,
+                "count",
+                0,
+                1,
+                3,
+                new[] { entity.SourceProduct ?? "assurarr", "customarr" },
+                cancellationToken);
+        }
+    }
+
+    private async Task UpsertCalculatedMetricAsync(
+        AssurArrQualityScorecard scorecard,
+        string metricKey,
+        string title,
+        string description,
+        string category,
+        decimal value,
+        string unit,
+        decimal targetValue,
+        decimal warningThreshold,
+        decimal criticalThreshold,
+        string[] sourceProductRefs,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var metric = await db.QualityMetrics.FirstOrDefaultAsync(x => x.ScorecardId == scorecard.Id && x.MetricKey == metricKey, cancellationToken);
+        if (metric is null)
+        {
+            metric = new AssurArrQualityMetric
+            {
+                Id = Guid.NewGuid(),
+                TenantId = DefaultTenantId,
+                ScorecardId = scorecard.Id,
+                MetricKey = metricKey,
+                CreatedAt = now,
+            };
+            db.QualityMetrics.Add(metric);
+        }
+
+        metric.Title = title;
+        metric.Description = description;
+        metric.Category = category;
+        metric.Value = value;
+        metric.Numerator = value;
+        metric.Denominator = 0;
+        metric.Unit = unit;
+        metric.TargetValue = targetValue;
+        metric.WarningThreshold = warningThreshold;
+        metric.CriticalThreshold = criticalThreshold;
+        metric.Status = value <= targetValue ? "acceptable"
+            : value >= criticalThreshold ? "critical"
+            : value >= warningThreshold ? "warning"
+            : "acceptable";
+        metric.SourceProductRefs = sourceProductRefs;
+        metric.UpdatedAt = now;
+
+        if (!scorecard.MetricRefs.Contains(metricKey, StringComparer.OrdinalIgnoreCase))
+        {
+            scorecard.MetricRefs = scorecard.MetricRefs.Append(metricKey).ToArray();
+            scorecard.UpdatedAt = now;
+        }
+
+        await AddTimelineAsync("scorecard", scorecard.Id, "assurarr.metric.calculated", metricKey, cancellationToken);
     }
 
     public async Task AddTimelineAsync(string subjectType, Guid subjectId, string eventType, string? details, CancellationToken cancellationToken = default)
