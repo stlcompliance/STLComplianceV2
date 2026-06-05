@@ -29,7 +29,12 @@ export function toStoredSession(session: LoadArrHandoffSessionResponse): StoredL
 }
 
 export function loadSession(): StoredLoadArrSession | null {
-  const raw = sessionStorage.getItem(STORAGE_KEY)
+  let raw: string | null = null
+  try {
+    raw = sessionStorage.getItem(STORAGE_KEY)
+  } catch {
+    return null
+  }
   if (!raw) {
     return null
   }
@@ -43,9 +48,17 @@ export function loadSession(): StoredLoadArrSession | null {
 }
 
 export function clearSession(): void {
-  sessionStorage.removeItem(STORAGE_KEY)
+  try {
+    sessionStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignore storage access issues in restricted browser contexts.
+  }
 }
 
 export function saveSession(session: StoredLoadArrSession): void {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+  } catch {
+    // Ignore storage access issues in restricted browser contexts.
+  }
 }

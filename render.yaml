@@ -844,7 +844,7 @@ services:
     name: fieldcompanion-frontend
     runtime: static
     rootDir: apps/fieldcompanion-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
