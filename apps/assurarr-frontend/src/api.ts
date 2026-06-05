@@ -575,10 +575,10 @@ export const assurarrApi = {
     sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/release`, 'POST', { status: 'executed', closureSummary }),
   rejectHoldRelease: (holdId: string, closureSummary?: string) =>
     sendJson<QualityRelease>(`/api/v1/integrations/holds/${holdId}/reject`, 'POST', { status: 'rejected', closureSummary }),
-  listCapas: () => getJson<Capa[]>('/api/v1/capas'),
-  getCapa: (id: string) => getJson<Capa>(`/api/v1/capas/${id}`),
+  listCapas: () => getJson<Capa[]>('/api/v1/integrations/capas'),
+  getCapa: (id: string) => getJson<Capa>(`/api/v1/integrations/capas/${id}`),
   createCapa: (body: CreateBase & { capaType: string; sourceType: string; sponsorPersonId?: string; rootCauseSummary?: string; dueAt?: string; relatedNonconformanceRefs?: string[]; relatedAuditFindingRefs?: string[]; effectivenessVerificationRefs?: string[] }) =>
-    sendJson<Capa>('/api/v1/capas', 'POST', {
+    sendJson<Capa>('/api/v1/integrations/capas', 'POST', {
       ...body,
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,
       relatedNonconformanceRefs: body.relatedNonconformanceRefs ?? [],
@@ -589,7 +589,7 @@ export const assurarrApi = {
     sendJson<Capa>(`/api/v1/capas/${id}/status`, 'PATCH', { status, closureSummary }),
   listCapaActions: (capaId: string) => getJson<CapaAction[]>(`/api/v1/capas/${capaId}/actions`),
   createCapaAction: (capaId: string, body: { title: string; description: string; actionType: string; assignedPersonId?: string; assignedTeamRef?: string; sourceProductActionRef?: string; targetProduct: string; targetObjectRef?: string; dueAt?: string; verificationRequired?: boolean; evidenceRecordRefs?: string[]; blockerRefs?: string[]; notes?: string }) =>
-    sendJson<CapaAction>(`/api/v1/capas/${capaId}/actions`, 'POST', {
+    sendJson<CapaAction>(`/api/v1/integrations/capas/${capaId}/actions`, 'POST', {
       ...body,
       verificationRequired: body.verificationRequired ?? true,
       dueAt: body.dueAt ? new Date(body.dueAt).toISOString() : null,

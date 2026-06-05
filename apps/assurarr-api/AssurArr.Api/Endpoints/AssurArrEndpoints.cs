@@ -98,9 +98,23 @@ public static class AssurArrEndpoints
                 : Results.NotFound())
             .WithName("GetAssurArrCapa");
 
+        integrationGroup.MapGet("/capas", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListCapasAsync(cancellationToken)))
+            .WithName("ListAssurArrCapasIntegration");
+
+        integrationGroup.MapGet("/capas/{capaId:guid}", async (Guid capaId, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            await service.GetCapaAsync(capaId, cancellationToken) is { } response
+                ? Results.Ok(response)
+                : Results.NotFound())
+            .WithName("GetAssurArrCapaIntegration");
+
         group.MapPost("/capas", async (CreateAssurArrCapaRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateCapaAsync(request, cancellationToken)))
             .WithName("CreateAssurArrCapa");
+
+        integrationGroup.MapPost("/capas", async (CreateAssurArrCapaRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateCapaAsync(request, cancellationToken)))
+            .WithName("CreateAssurArrCapaIntegration");
 
         group.MapPatch("/capas/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.UpdateCapaStatusAsync(id, request, cancellationToken)))
@@ -113,6 +127,10 @@ public static class AssurArrEndpoints
         group.MapPost("/capas/{capaId:guid}/actions", async (Guid capaId, CreateAssurArrCapaActionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateCapaActionAsync(capaId, request, cancellationToken)))
             .WithName("CreateAssurArrCapaAction");
+
+        integrationGroup.MapPost("/capas/{capaId:guid}/actions", async (Guid capaId, CreateAssurArrCapaActionRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.CreateCapaActionAsync(capaId, request, cancellationToken)))
+            .WithName("CreateAssurArrCapaActionIntegration");
 
         group.MapPatch("/capas/{capaId:guid}/actions/{actionId:guid}/status", async (Guid capaId, Guid actionId, UpdateAssurArrCapaActionStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.UpdateCapaActionStatusAsync(capaId, actionId, request, cancellationToken)))
@@ -233,10 +251,6 @@ public static class AssurArrEndpoints
             Results.Ok(await service.CreateStatusSnapshotAsync(request, cancellationToken)))
             .WithName("CreateAssurArrQualityStatusSnapshot");
 
-        group.MapGet("/scorecards", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
-            Results.Ok(await service.ListScorecardsAsync(cancellationToken)))
-            .WithName("ListAssurArrQualityScorecards");
-
         group.MapGet("/scorecards/{id:guid}", async (Guid id, AssurArrQualityService service, CancellationToken cancellationToken) =>
             await service.GetScorecardAsync(id, cancellationToken) is { } response
                 ? Results.Ok(response)
@@ -254,12 +268,6 @@ public static class AssurArrEndpoints
         group.MapPost("/scorecards/{scorecardId:guid}/metrics", async (Guid scorecardId, CreateAssurArrQualityMetricRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.CreateQualityMetricAsync(scorecardId, request, cancellationToken)))
             .WithName("CreateAssurArrQualityMetric");
-
-        group.MapPost("/scorecards/{id:guid}/review", async (Guid id, ReviewAssurArrQualityScorecardRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
-            await service.ReviewScorecardAsync(id, request, cancellationToken) is { } response
-                ? Results.Ok(response)
-                : Results.NotFound())
-            .WithName("ReviewAssurArrQualityScorecard");
 
         integrationGroup.MapPost("/scorecards/{id:guid}/review", async (Guid id, ReviewAssurArrQualityScorecardRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             await service.ReviewScorecardAsync(id, request, cancellationToken) is { } response

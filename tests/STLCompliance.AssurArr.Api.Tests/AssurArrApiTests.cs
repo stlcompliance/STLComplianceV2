@@ -618,7 +618,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     {
         var capaTitle = $"Test CAPA {Guid.NewGuid():N}";
         var capaResponse = await _client.PostAsJsonAsync(
-            "/api/v1/capas",
+            "/api/v1/integrations/capas",
             new CreateAssurArrCapaRequest(
                 capaTitle,
                 "Automated coverage for CAPA actions.",
@@ -640,7 +640,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(capa);
 
-        var capaDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa!.Id}");
+        var capaDetailResponse = await _client.GetAsync($"/api/v1/integrations/capas/{capa!.Id}");
         Assert.Equal(HttpStatusCode.OK, capaDetailResponse.StatusCode);
         var capaDetail = await capaDetailResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(capaDetail);
@@ -649,7 +649,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         var actionTitle = $"Test CAPA action {Guid.NewGuid():N}";
         var actionResponse = await _client.PostAsJsonAsync(
-            $"/api/v1/capas/{capa!.Id}/actions",
+            $"/api/v1/integrations/capas/{capa!.Id}/actions",
             new CreateAssurArrCapaActionRequest(
                 actionTitle,
                 "Automated coverage for CAPA action records.",
@@ -859,7 +859,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         var reopenedCapaTitle = $"Test reopened CAPA {Guid.NewGuid():N}";
         var reopenedCapaResponse = await _client.PostAsJsonAsync(
-            "/api/v1/capas",
+            "/api/v1/integrations/capas",
             new CreateAssurArrCapaRequest(
                 reopenedCapaTitle,
                 "Automated coverage for ineffective CAPA verification.",
@@ -934,7 +934,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
 
         Assert.Equal(HttpStatusCode.OK, reopenedVerificationStatusResponse.StatusCode);
 
-        var reopenedCapaResponseAfterVerification = await _client.GetAsync($"/api/v1/capas/{reopenedCapa.Id}");
+        var reopenedCapaResponseAfterVerification = await _client.GetAsync($"/api/v1/integrations/capas/{reopenedCapa.Id}");
         reopenedCapaResponseAfterVerification.EnsureSuccessStatusCode();
         var reopenedCapaAfterVerification = await reopenedCapaResponseAfterVerification.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(reopenedCapaAfterVerification);
