@@ -787,7 +787,7 @@ function LinkedSectionCard({
   emptyLabel,
 }: {
   title: string
-  items: Array<{ label: string; to: string }>
+  items: Array<{ label: string; to?: string }>
   emptyLabel: string
 }) {
   return (
@@ -797,9 +797,15 @@ function LinkedSectionCard({
         {items.length ? (
           <div className="space-y-2">
             {items.map((item) => (
-              <Link key={item.to} to={item.to} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-cyan-300 hover:border-cyan-500/50 hover:text-cyan-200">
-                {item.label}
-              </Link>
+              item.to ? (
+                <Link key={`${item.label}-${item.to}`} to={item.to} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-cyan-300 hover:border-cyan-500/50 hover:text-cyan-200">
+                  {item.label}
+                </Link>
+              ) : (
+                <div key={item.label} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-slate-300">
+                  {item.label}
+                </div>
+              )
             ))}
           </div>
         ) : (
@@ -992,6 +998,12 @@ function HoldDetailPage() {
 
   const hold = query.data
   const relatedReleases = releases.data?.filter((release) => release.holdRef === hold.number) ?? []
+  const approvalRefs = hold.releaseApprovalRefs.map((ref) => {
+    const match = releases.data?.find((release) => release.number === ref || release.id === ref) ?? null
+    return match
+      ? { label: `${match.number} · ${match.status} · ${match.releaseType}`, to: `/releases/${match.id}` }
+      : { label: ref }
+  })
   const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'hold' && event.subjectId === hold.id) ?? []
 
   return (
@@ -1045,9 +1057,9 @@ function HoldDetailPage() {
           items={hold.releaseRequirements.map((item) => item)}
           emptyLabel="No release requirements have been captured yet."
         />
-        <SectionCard
+        <LinkedSectionCard
           title="Release approvals"
-          items={hold.releaseApprovalRefs.map((item) => item)}
+          items={approvalRefs}
           emptyLabel="No release approvals have been captured yet."
         />
         <SectionCard
@@ -1055,9 +1067,9 @@ function HoldDetailPage() {
           items={hold.recordRefs.map((item) => item)}
           emptyLabel="No evidence records are linked to this hold."
         />
-        <SectionCard
+        <LinkedSectionCard
           title="Related quality releases"
-          items={relatedReleases.map((release) => `${release.number} · ${release.status} · ${release.releaseType}${release.evidenceRecordRefs.length ? ` · evidence ${release.evidenceRecordRefs.length}` : ''}`)}
+          items={relatedReleases.map((release) => ({ label: `${release.number} · ${release.status} · ${release.releaseType}${release.evidenceRecordRefs.length ? ` · evidence ${release.evidenceRecordRefs.length}` : ''}`, to: `/releases/${release.id}` }))}
           emptyLabel="No quality release requests are linked to this hold."
         />
         <SectionCard
