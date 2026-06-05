@@ -697,6 +697,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var capa = await capaResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
         Assert.NotNull(capa);
 
+        var capaCreatedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        capaCreatedDashboardResponse.EnsureSuccessStatusCode();
+        var capaCreatedDashboard = await capaCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(capaCreatedDashboard);
+        Assert.Contains(capaCreatedDashboard!.RecentEvents, eventItem => eventItem.EventType == "assurarr.capa.created" && eventItem.SubjectId == capa.Id);
+
         var capaDetailResponse = await _client.GetAsync($"/api/v1/integrations/capas/{capa!.Id}");
         Assert.Equal(HttpStatusCode.OK, capaDetailResponse.StatusCode);
         var capaDetail = await capaDetailResponse.Content.ReadFromJsonAsync<AssurArrCapaResponse>();
