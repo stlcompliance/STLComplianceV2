@@ -5835,6 +5835,19 @@ function SettingsPage() {
     'AssurArr owns the quality workflow state, history, and dashboard summaries.',
   ]
 
+  const ownedRecordClasses = [
+    {
+      name: 'Assurance cases',
+      description: 'Constitution-owned quality assurance records that group evidence, decisions, and release intent.',
+      notes: ['No separate product doc shape yet', 'Anchored in AssurArr ownership', 'Represented today by the quality workflow record graph'],
+    },
+    {
+      name: 'Deviation records',
+      description: 'Formal records for accepted deviations, exceptions, or temporary quality departures.',
+      notes: ['No separate product doc shape yet', 'Anchored in AssurArr ownership', 'Typically expressed through nonconformance, hold, and disposition workflows'],
+    },
+  ]
+
   return (
     <div className="assurarr-page">
       <PageHeader title="Settings" description="Admin reference for roles, product surfaces, and AssurArr integration boundaries." />
@@ -5875,6 +5888,26 @@ function SettingsPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Owned record classes</h2>
+            <p className="text-sm text-slate-400">AssurArr-owned records that are named in the constitution and surfaced here as admin reference.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-4">
+            {ownedRecordClasses.map((recordClass) => (
+              <div key={recordClass.name} className="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{recordClass.name}</h3>
+                <p className="mt-2 text-sm text-slate-400">{recordClass.description}</p>
+                <ul className="mt-3 space-y-1 text-sm text-slate-300">
+                  {recordClass.notes.map((note) => (
+                    <li key={note}>• {note}</li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
