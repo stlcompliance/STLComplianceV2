@@ -15,8 +15,8 @@ describe('hasProductEntitlement', () => {
   })
 
   it('matches Field Companion through canonical and legacy keys', () => {
-    expect(hasProductEntitlement(['companion'], 'fieldcompanion')).toBe(true)
-    expect(hasProductEntitlement(['field-companion'], 'companion')).toBe(true)
+    expect(hasProductEntitlement(['fieldcompanion'], 'fieldcompanion')).toBe(true)
+    expect(hasProductEntitlement(['field-companion'], 'fieldcompanion')).toBe(true)
   })
 })
 

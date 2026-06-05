@@ -8,12 +8,12 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string SuiteLoginHandoffSmokeSpec = "suite-login-handoff-smoke.spec.ts";
     public const string ProductHandoffSmokeSpec = "product-handoff-smoke.spec.ts";
     public const string ProductHandoffTenantChromeSpec = "product-handoff-tenant-chrome.spec.ts";
-    public const string CompanionFieldInboxTrainarrDeepLinkSpec =
-        "companion-field-inbox-trainarr-deep-link.spec.ts";
+    public const string FieldCompanionFieldInboxTrainarrDeepLinkSpec =
+        "FieldCompanion-field-inbox-trainarr-deep-link.spec.ts";
     public const string ProductTrainarrAssignmentDeepLinkSpec =
         "product-trainarr-assignment-deep-link.spec.ts";
-    public const string CompanionFieldInboxMaintainarrDeepLinkSpec =
-        "companion-field-inbox-operations-deep-links.spec.ts";
+    public const string FieldCompanionFieldInboxMaintainarrDeepLinkSpec =
+        "FieldCompanion-field-inbox-operations-deep-links.spec.ts";
     public const string PlatformAdminAuditExportSmokeSpec =
         "platform-admin-audit-export-smoke.spec.ts";
 
@@ -356,31 +356,31 @@ public static class StlE2ePlaywrightSpecCatalog
 
     public const string SuiteMultiProductHandoffJourneySpec =
         "suite-multi-product-handoff-journey.spec.ts";
-    public const string CompanionOfflineQueueNotificationSpec =
-        "companion-offline-queue-notification.spec.ts";
+    public const string FieldCompanionOfflineQueueNotificationSpec =
+        "FieldCompanion-offline-queue-notification.spec.ts";
 
-    public const string CompanionFieldTaskEvidenceSpec = "companion-field-task-evidence.spec.ts";
+    public const string FieldCompanionFieldTaskEvidenceSpec = "FieldCompanion-field-task-evidence.spec.ts";
 
-    public const string CompanionFieldSubmissionStateSpec = "companion-field-submission-state.spec.ts";
+    public const string FieldCompanionFieldSubmissionStateSpec = "FieldCompanion-field-submission-state.spec.ts";
 
-    public const string CompanionProductSwitcherSpec = "companion-product-switcher.spec.ts";
+    public const string FieldCompanionProductSwitcherSpec = "FieldCompanion-product-switcher.spec.ts";
 
-    public const string CompanionFieldScanSpec = "companion-field-scan.spec.ts";
+    public const string FieldCompanionFieldScanSpec = "FieldCompanion-field-scan.spec.ts";
 
-    public static readonly IReadOnlyList<string> CompanionOperationalSpecs =
+    public static readonly IReadOnlyList<string> FieldCompanionOperationalSpecs =
     [
-        CompanionOfflineQueueNotificationSpec,
-        CompanionFieldTaskEvidenceSpec,
-        CompanionFieldSubmissionStateSpec,
-        CompanionProductSwitcherSpec,
-        CompanionFieldScanSpec,
+        FieldCompanionOfflineQueueNotificationSpec,
+        FieldCompanionFieldTaskEvidenceSpec,
+        FieldCompanionFieldSubmissionStateSpec,
+        FieldCompanionProductSwitcherSpec,
+        FieldCompanionFieldScanSpec,
     ];
 
     public static readonly IReadOnlyList<string> DeepLinkSmokeSpecs =
     [
-        CompanionFieldInboxTrainarrDeepLinkSpec,
+        FieldCompanionFieldInboxTrainarrDeepLinkSpec,
         ProductTrainarrAssignmentDeepLinkSpec,
-        CompanionFieldInboxMaintainarrDeepLinkSpec,
+        FieldCompanionFieldInboxMaintainarrDeepLinkSpec,
     ];
 
     public static readonly IReadOnlyList<string> PlatformAdminSmokeSpecs =
@@ -516,7 +516,7 @@ public static class StlE2ePlaywrightSpecCatalog
         SuiteLoginHandoffSmokeSpec,
         ProductHandoffSmokeSpec,
         ProductHandoffTenantChromeSpec,
-        ..CompanionOperationalSpecs,
+        ..FieldCompanionOperationalSpecs,
         ..DeepLinkSmokeSpecs,
         ..PlatformAdminSmokeSpecs,
         ..ProductAdminSmokeSpecs,

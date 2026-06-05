@@ -26,7 +26,7 @@ describe('MARKETING_PRODUCTS', () => {
     expect(getMarketingProduct('staffarr')?.category).toBe('workforce')
     expect(getMarketingProduct('fieldcompanion')?.category).toBe('field')
     expect(getMarketingProduct('field-companion')?.category).toBe('field')
-    expect(getMarketingProduct('companion')?.category).toBe('field')
+    expect(getMarketingProduct('fieldcompanion')?.category).toBe('field')
     expect(MARKETING_PRODUCTS.every((p) => p.tagline.length > 0)).toBe(true)
   })
 
@@ -40,8 +40,8 @@ describe('MARKETING_PRODUCTS', () => {
     expect(routarr.connectedReasons.warehouse).toMatch(/stock|load/i)
   })
 
-  it('keeps legacy companion links on the canonical field companion page', () => {
-    expect(productPagePath('companion')).toBe('/products/field-companion')
+  it('keeps legacy fieldcompanion links on the canonical Field Companion page', () => {
+    expect(productPagePath('fieldcompanion')).toBe('/products/field-companion')
     expect(productPagePath('field-companion')).toBe('/products/field-companion')
   })
 })

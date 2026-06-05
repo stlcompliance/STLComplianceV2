@@ -491,17 +491,17 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<SupplyArrNotificationDispatchJob>();
 
-        builder.Services.Configure<NexArrCompanionNotificationDispatchOptions>(
-            builder.Configuration.GetSection(NexArrCompanionNotificationDispatchOptions.SectionName));
+        builder.Services.Configure<NexArrFieldCompanionNotificationDispatchOptions>(
+            builder.Configuration.GetSection(NexArrFieldCompanionNotificationDispatchOptions.SectionName));
 
-        builder.Services.AddHttpClient<NexArrCompanionNotificationDispatchClient>((sp, client) =>
+        builder.Services.AddHttpClient<NexArrFieldCompanionNotificationDispatchClient>((sp, client) =>
         {
-            var options = sp.GetRequiredService<IOptions<NexArrCompanionNotificationDispatchOptions>>().Value;
+            var options = sp.GetRequiredService<IOptions<NexArrFieldCompanionNotificationDispatchOptions>>().Value;
             client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
             client.Timeout = TimeSpan.FromMinutes(2);
         });
 
-        builder.Services.AddHostedService<NexArrCompanionNotificationDispatchJob>();
+        builder.Services.AddHostedService<NexArrFieldCompanionNotificationDispatchJob>();
 
         builder.Services.Configure<NexArrPlatformAuditPackageGenerationOptions>(
             builder.Configuration.GetSection(NexArrPlatformAuditPackageGenerationOptions.SectionName));

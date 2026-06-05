@@ -124,7 +124,7 @@ jobs:
             apps/supplyarr-frontend/package-lock.json
             apps/routarr-frontend/package-lock.json
             apps/assurarr-frontend/package-lock.json
-            apps/companion-frontend/package-lock.json
+            apps/fieldcompanion-frontend/package-lock.json
 
       - name: Start docker-compose APIs
         run: |

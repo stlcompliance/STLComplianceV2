@@ -32,7 +32,7 @@ public static class PlatformSeeder
         new("assurarr", "AssurArr", 76, "assurance", "Quality and Assurance", "available", "http://localhost:5109", "http://localhost:5109/health/ready", "stl:assurarr:api"),
         new("reportarr", "ReportArr", 77, "analytics", "Analytics and Reporting", "available", "http://localhost:5111", "http://localhost:5111/health/ready", "stl:reportarr:api"),
         new("recordarr", "RecordArr", 78, "records", "Records and Evidence", "available", "http://localhost:5110", "http://localhost:5110/health/ready", "stl:recordarr:api"),
-        new("companion", "Field Companion", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:companion:frontend")
+        new("fieldcompanion", "Field Companion", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:fieldcompanion:frontend")
     ];
 
     private static readonly (string ProductKey, string BaseUrl, string LaunchPath)[] DefaultLaunchProfiles =
@@ -48,7 +48,7 @@ public static class PlatformSeeder
         ("assurarr", "http://localhost:5183", "/launch"),
         ("reportarr", "http://localhost:5185", "/launch"),
         ("recordarr", "http://localhost:5184", "/launch"),
-        ("companion", "http://localhost:5181", "/launch")
+        ("fieldcompanion", "http://localhost:5181", "/launch")
     ];
 
     public static async Task SeedAsync(
@@ -320,8 +320,8 @@ public static class PlatformSeeder
                 product.ProductCategory = seed.Category;
             }
 
-            if (seed.Key is "companion"
-                && product.DisplayName.Equals("Companion App", StringComparison.OrdinalIgnoreCase))
+            if (seed.Key is "fieldcompanion"
+                && product.DisplayName.Equals("fieldcompanion App", StringComparison.OrdinalIgnoreCase))
             {
                 product.DisplayName = seed.Name;
             }
@@ -467,7 +467,7 @@ public static class PlatformSeeder
             "assurarr" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr,compliancecore,loadarr,recordarr",
             "reportarr" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr,compliancecore,loadarr,recordarr,assurarr",
             "recordarr" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr,compliancecore,loadarr",
-            "companion" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
+            "fieldcompanion" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
             _ => "nexarr"
         };
 

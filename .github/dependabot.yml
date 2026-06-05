@@ -58,13 +58,13 @@ updates:
           - patch
 
   - package-ecosystem: npm
-    directory: /apps/companion-frontend
+    directory: /apps/fieldcompanion-frontend
     schedule:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
     labels:
-      - dependabot:companion
+      - dependabot:fieldcompanion
     groups:
       npm-minor-patch:
         update-types:

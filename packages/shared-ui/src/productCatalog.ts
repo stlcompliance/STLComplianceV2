@@ -21,7 +21,6 @@ import {
 export {
   getProductRouteSlug,
   normalizeProductKey,
-  toLegacyProductKey,
 } from './productOwnershipManifest'
 
 export type SuiteProductCatalogEntry = {

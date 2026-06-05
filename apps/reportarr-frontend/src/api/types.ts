@@ -686,6 +686,12 @@ export type ReportArrCreateReportDefinitionRequest = {
   layoutDefinition: string
   exportFormats: string[]
   ownerPersonId: string
+  datasetRefs?: string[]
+  readModelRefs?: string[]
+  parameterRefs?: string[]
+  defaultFilters?: string[]
+  sectionRefs?: string[]
+  accessPolicyRef?: string
 }
 
 export type ReportArrUpdateReportDefinitionRequest = {

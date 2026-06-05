@@ -8,7 +8,7 @@ Every product may have its own domain, database, permissions, workflows, and nav
 
 The shared shell exists to make NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, LoadArr, SupplyArr, Compliance Core, and future Arr products feel unified.
 
-Desktop and mobile are both first-class surfaces. Mobile is not a companion-only afterthought. Desktop is not the only “real” app.
+Desktop and mobile are both first-class surfaces. Mobile is not a Field Companion-only afterthought. Desktop is not the only “real” app.
 
 ---
 

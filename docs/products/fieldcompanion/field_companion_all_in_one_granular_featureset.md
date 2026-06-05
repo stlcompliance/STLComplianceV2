@@ -611,22 +611,22 @@ MobileNotification
 ## Mobile task events
 
 ```text
-fieldcompanion.mobile_task.created
-fieldcompanion.mobile_task.assigned
-fieldcompanion.mobile_task.viewed
-fieldcompanion.mobile_task.accepted
-fieldcompanion.mobile_task.started
-fieldcompanion.mobile_task.blocked
-fieldcompanion.mobile_task.submitted
-fieldcompanion.mobile_task.synced
-fieldcompanion.mobile_task.failed_sync
-fieldcompanion.mobile_task.completed
-fieldcompanion.mobile_task.expired
-fieldcompanion.mobile_session.started
-fieldcompanion.mobile_session.ended
-fieldcompanion.product_surface.opened
-fieldcompanion.notification.sent
-fieldcompanion.notification.read
+FieldCompanion.mobile_task.created
+FieldCompanion.mobile_task.assigned
+FieldCompanion.mobile_task.viewed
+FieldCompanion.mobile_task.accepted
+FieldCompanion.mobile_task.started
+FieldCompanion.mobile_task.blocked
+FieldCompanion.mobile_task.submitted
+FieldCompanion.mobile_task.synced
+FieldCompanion.mobile_task.failed_sync
+FieldCompanion.mobile_task.completed
+FieldCompanion.mobile_task.expired
+FieldCompanion.mobile_session.started
+FieldCompanion.mobile_session.ended
+FieldCompanion.product_surface.opened
+FieldCompanion.notification.sent
+FieldCompanion.notification.read
 ```
 
 
@@ -976,18 +976,18 @@ VoiceNoteCapture
 ## Capture events
 
 ```text
-fieldcompanion.secure_upload.created
-fieldcompanion.secure_upload.opened
-fieldcompanion.secure_upload.completed
-fieldcompanion.secure_upload.expired
-fieldcompanion.secure_upload.revoked
-fieldcompanion.capture.photo_captured
-fieldcompanion.capture.signature_captured
-fieldcompanion.capture.document_scanned
-fieldcompanion.capture.voice_note_captured
-fieldcompanion.scan.completed
-fieldcompanion.capture.uploaded_to_recordarr
-fieldcompanion.capture.rejected_by_source
+FieldCompanion.secure_upload.created
+FieldCompanion.secure_upload.opened
+FieldCompanion.secure_upload.completed
+FieldCompanion.secure_upload.expired
+FieldCompanion.secure_upload.revoked
+FieldCompanion.capture.photo_captured
+FieldCompanion.capture.signature_captured
+FieldCompanion.capture.document_scanned
+FieldCompanion.capture.voice_note_captured
+FieldCompanion.scan.completed
+FieldCompanion.capture.uploaded_to_recordarr
+FieldCompanion.capture.rejected_by_source
 ```
 
 
@@ -1298,29 +1298,29 @@ NetworkSnapshot
 ## Offline/sync/device events
 
 ```text
-fieldcompanion.offline_action.created
-fieldcompanion.offline_action.queued
-fieldcompanion.offline_action.sync_started
-fieldcompanion.offline_action.synced
-fieldcompanion.offline_action.rejected
-fieldcompanion.offline_action.failed
-fieldcompanion.offline_action.conflict
+FieldCompanion.offline_action.created
+FieldCompanion.offline_action.queued
+FieldCompanion.offline_action.sync_started
+FieldCompanion.offline_action.synced
+FieldCompanion.offline_action.rejected
+FieldCompanion.offline_action.failed
+FieldCompanion.offline_action.conflict
 
-fieldcompanion.sync_batch.created
-fieldcompanion.sync_batch.completed
-fieldcompanion.sync_batch.failed
+FieldCompanion.sync_batch.created
+FieldCompanion.sync_batch.completed
+FieldCompanion.sync_batch.failed
 
-fieldcompanion.conflict.created
-fieldcompanion.conflict.resolved
-fieldcompanion.conflict.discarded
+FieldCompanion.conflict.created
+FieldCompanion.conflict.resolved
+FieldCompanion.conflict.discarded
 
-fieldcompanion.device.registered
-fieldcompanion.device.seen
-fieldcompanion.device.revoked
+FieldCompanion.device.registered
+FieldCompanion.device.seen
+FieldCompanion.device.revoked
 
-fieldcompanion.cache.created
-fieldcompanion.cache.invalidated
-fieldcompanion.cache.expired
+FieldCompanion.cache.created
+FieldCompanion.cache.invalidated
+FieldCompanion.cache.expired
 ```
 
 
@@ -1807,46 +1807,46 @@ MobileBlockerDisplay
 ## Field Companion emitted events
 
 ```text
-fieldcompanion.mobile_session.started
-fieldcompanion.mobile_session.ended
-fieldcompanion.product_surface.opened
+FieldCompanion.mobile_session.started
+FieldCompanion.mobile_session.ended
+FieldCompanion.product_surface.opened
 
-fieldcompanion.mobile_task.created
-fieldcompanion.mobile_task.assigned
-fieldcompanion.mobile_task.viewed
-fieldcompanion.mobile_task.accepted
-fieldcompanion.mobile_task.started
-fieldcompanion.mobile_task.submitted
-fieldcompanion.mobile_task.synced
-fieldcompanion.mobile_task.failed_sync
-fieldcompanion.mobile_task.completed
-fieldcompanion.mobile_task.expired
+FieldCompanion.mobile_task.created
+FieldCompanion.mobile_task.assigned
+FieldCompanion.mobile_task.viewed
+FieldCompanion.mobile_task.accepted
+FieldCompanion.mobile_task.started
+FieldCompanion.mobile_task.submitted
+FieldCompanion.mobile_task.synced
+FieldCompanion.mobile_task.failed_sync
+FieldCompanion.mobile_task.completed
+FieldCompanion.mobile_task.expired
 
-fieldcompanion.action.submitted
-fieldcompanion.action.accepted
-fieldcompanion.action.rejected
-fieldcompanion.action.conflict
+FieldCompanion.action.submitted
+FieldCompanion.action.accepted
+FieldCompanion.action.rejected
+FieldCompanion.action.conflict
 
-fieldcompanion.secure_upload.created
-fieldcompanion.secure_upload.opened
-fieldcompanion.secure_upload.completed
-fieldcompanion.secure_upload.expired
-fieldcompanion.secure_upload.revoked
+FieldCompanion.secure_upload.created
+FieldCompanion.secure_upload.opened
+FieldCompanion.secure_upload.completed
+FieldCompanion.secure_upload.expired
+FieldCompanion.secure_upload.revoked
 
-fieldcompanion.capture.photo_captured
-fieldcompanion.capture.signature_captured
-fieldcompanion.capture.document_scanned
-fieldcompanion.capture.voice_note_captured
-fieldcompanion.capture.uploaded_to_recordarr
+FieldCompanion.capture.photo_captured
+FieldCompanion.capture.signature_captured
+FieldCompanion.capture.document_scanned
+FieldCompanion.capture.voice_note_captured
+FieldCompanion.capture.uploaded_to_recordarr
 
-fieldcompanion.offline_action.created
-fieldcompanion.offline_action.synced
-fieldcompanion.offline_action.failed
-fieldcompanion.offline_action.conflict
+FieldCompanion.offline_action.created
+FieldCompanion.offline_action.synced
+FieldCompanion.offline_action.failed
+FieldCompanion.offline_action.conflict
 
-fieldcompanion.device.registered
-fieldcompanion.device.revoked
-fieldcompanion.notification.sent
+FieldCompanion.device.registered
+FieldCompanion.device.revoked
+FieldCompanion.notification.sent
 ```
 
 ## APIs Field Companion should expose
@@ -1961,17 +1961,17 @@ CustomArr
 ## Permission examples
 
 ```text
-fieldcompanion.mobile.use
-fieldcompanion.mobile.offline_use
-fieldcompanion.mobile.scan
-fieldcompanion.mobile.capture_photo
-fieldcompanion.mobile.capture_signature
-fieldcompanion.mobile.capture_document
-fieldcompanion.mobile.secure_upload.create
-fieldcompanion.mobile.secure_upload.revoke
-fieldcompanion.mobile.device.manage
-fieldcompanion.mobile.sync_conflicts.resolve
-fieldcompanion.mobile.admin
+FieldCompanion.mobile.use
+FieldCompanion.mobile.offline_use
+FieldCompanion.mobile.scan
+FieldCompanion.mobile.capture_photo
+FieldCompanion.mobile.capture_signature
+FieldCompanion.mobile.capture_document
+FieldCompanion.mobile.secure_upload.create
+FieldCompanion.mobile.secure_upload.revoke
+FieldCompanion.mobile.device.manage
+FieldCompanion.mobile.sync_conflicts.resolve
+FieldCompanion.mobile.admin
 ```
 
 Most product actions should still require source-product permissions, such as:

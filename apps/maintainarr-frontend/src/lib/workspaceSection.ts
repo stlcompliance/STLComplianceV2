@@ -29,8 +29,8 @@ export const workspaceSectionHeaders: Record<
   { title: string; subtitle: string }
 > = {
   overview: {
-    title: 'Maintenance overview',
-    subtitle: 'Due preventive maintenance and fleet readiness',
+    title: 'Maintenance readiness',
+    subtitle: 'Asset readiness, active work, defects, PM risk, and execution blockers',
   },
   assets: {
     title: 'Asset registry',

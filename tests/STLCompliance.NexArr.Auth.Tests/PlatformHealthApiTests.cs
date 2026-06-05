@@ -83,12 +83,12 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
 
         using var scope = factory.Services.CreateScope();
         var platformOptions = scope.ServiceProvider.GetRequiredService<IOptions<PlatformProductUrlsOptions>>().Value;
-        var companionOptions = scope.ServiceProvider.GetRequiredService<IOptions<CompanionProductUrlsOptions>>().Value;
+        var FieldCompanionOptions = scope.ServiceProvider.GetRequiredService<IOptions<FieldCompanionProductUrlsOptions>>().Value;
 
         Assert.Equal("https://staffarr-api.example.test", platformOptions.StaffArrBaseUrl);
         Assert.Equal("https://trainarr-api.example.test", platformOptions.TrainArrBaseUrl);
         Assert.Equal("https://compliancecore-api.example.test", platformOptions.ComplianceCoreBaseUrl);
-        Assert.Equal("https://staffarr-api.example.test", companionOptions.StaffArrBaseUrl);
-        Assert.Equal("https://trainarr-api.example.test", companionOptions.TrainArrBaseUrl);
+        Assert.Equal("https://staffarr-api.example.test", FieldCompanionOptions.StaffArrBaseUrl);
+        Assert.Equal("https://trainarr-api.example.test", FieldCompanionOptions.TrainArrBaseUrl);
     }
 }

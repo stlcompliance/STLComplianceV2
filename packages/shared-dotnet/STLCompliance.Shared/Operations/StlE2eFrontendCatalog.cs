@@ -19,11 +19,11 @@ public static class StlE2eFrontendCatalog
     public const string PlaywrightTenantChromeHandoffSpec =
         StlE2ePlaywrightSpecCatalog.ProductHandoffTenantChromeSpec;
 
-    public const int CompanionPort = 5181;
-    public const string CompanionDefaultBaseUrl = "http://localhost:5181";
+    public const int FieldCompanionPort = 5181;
+    public const string FieldCompanionDefaultBaseUrl = "http://localhost:5181";
 
-    public static readonly StlE2eFrontendEndpoint CompanionFrontend =
-        new("companion", CompanionPort, CompanionDefaultBaseUrl);
+    public static readonly StlE2eFrontendEndpoint FieldCompanionFrontend =
+        new("fieldcompanion", FieldCompanionPort, FieldCompanionDefaultBaseUrl);
 
     public static readonly StlE2eFrontendEndpoint SuiteFrontend =
         new(Suite, SuitePort, SuiteDefaultBaseUrl, LaunchPath: "/login");
@@ -42,7 +42,7 @@ public static class StlE2eFrontendCatalog
     ];
 
     public static readonly IReadOnlyList<StlE2eFrontendEndpoint> All =
-        [SuiteFrontend, CompanionFrontend, ..ProductHandoffFrontends];
+        [SuiteFrontend, FieldCompanionFrontend, ..ProductHandoffFrontends];
 
     public static bool IsKnownHandoffProduct(string productKey) =>
         ProductHandoffFrontends.Any(

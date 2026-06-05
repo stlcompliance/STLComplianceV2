@@ -196,7 +196,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.Contains(catalog.Products, x => x.ProductKey == "recordarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "reportarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "assurarr");
-        Assert.Contains(catalog.Products, x => x.ProductKey == "companion");
+        Assert.Contains(catalog.Products, x => x.ProductKey == "fieldcompanion");
 
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "shared-worker");
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "nexarr-worker");

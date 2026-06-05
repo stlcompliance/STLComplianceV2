@@ -8,7 +8,7 @@ public sealed record CreateAssetQualityHoldRequest(
     string Title,
     string Description,
     string Severity,
-    string? CreatedByPersonId);
+    string? CreatedByPersonId = null);
 
 public sealed record AssetQualityHoldResponse(
     Guid HoldId,

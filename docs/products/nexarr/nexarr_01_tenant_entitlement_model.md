@@ -181,7 +181,7 @@ ProductRegistryEntry
   - recordarr
   - assurarr
   - reportarr
-  - fieldcompanion
+  - FieldCompanion
   - stlcompliancesite
 - displayName
 - description

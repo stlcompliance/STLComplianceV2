@@ -2,16 +2,8 @@ namespace STLCompliance.Shared.Auth;
 
 public static class ProductKeyAliases
 {
-    public const string Companion = "companion";
-    public const string FieldCompanion = "fieldcompanion";
-
     public static string Normalize(string productKey)
     {
-        var normalized = productKey.Trim().ToLowerInvariant().Replace("-", "").Replace("_", "");
-        return normalized switch
-        {
-            FieldCompanion => Companion,
-            _ => normalized,
-        };
+        return productKey.Trim().ToLowerInvariant().Replace("-", "").Replace("_", "");
     }
 }

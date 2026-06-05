@@ -21,7 +21,7 @@ ProductMarketingPage
   - recordarr
   - assurarr
   - reportarr
-  - fieldcompanion
+  - FieldCompanion
 - pageId
 - productName
 - productTagline

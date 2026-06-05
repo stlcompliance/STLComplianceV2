@@ -631,7 +631,7 @@ const allMarketingProducts: MarketingProduct[] = [
     icon: Inbox,
     sortOrder: 80,
     category: 'field',
-    brandImageSrc: '/brand/companion-icon.svg',
+    brandImageSrc: '/brand/fieldcompanion-icon.svg',
     brandAccentClass: 'from-slate-500/20 to-teal-400/10',
   },
   {

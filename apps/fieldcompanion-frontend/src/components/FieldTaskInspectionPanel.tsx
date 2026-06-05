@@ -1,0 +1,343 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+
+import {
+  completeFieldCompanionFieldInspection,
+  getFieldCompanionFieldInspectionDetail,
+  submitFieldCompanionFieldInspectionAnswers,
+  validateFieldCompanionFieldTask,
+} from '../api/client'
+import type { FieldInboxTaskItem } from '../api/types'
+import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
+import { resolveDeniedReason } from '../lib/FieldCompanionDeniedReasonCatalog'
+import {
+  buildInspectionAnswerInputs,
+  draftsFromInspectionAnswers,
+  requiredInspectionItemsAnswered,
+  type InspectionAnswerDraft,
+} from '../lib/fieldInspection'
+import { pushSubmissionToast, setLocalSubmission } from '../lib/submissionState'
+
+interface FieldTaskInspectionPanelProps {
+  accessToken: string
+  task: FieldInboxTaskItem
+  onSubmitComplete?: () => void
+}
+
+export function FieldTaskInspectionPanel({
+  accessToken,
+  task,
+  onSubmitComplete,
+}: FieldTaskInspectionPanelProps) {
+  const queryClient = useQueryClient()
+  const [drafts, setDrafts] = useState<Record<string, InspectionAnswerDraft>>({})
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  const detailQuery = useQuery({
+    queryKey: ['fieldcompanion-field-inspection', accessToken, task.taskKey],
+    queryFn: async () => {
+      const validation = await validateFieldCompanionFieldTask(accessToken, {
+        taskKey: task.taskKey,
+        submissionKind: 'inspection',
+        productKey: task.productKey,
+      })
+      if (!validation.allowed) {
+        throw new Error(
+          resolveDeniedReason(
+            validation,
+            'Inspection capture is not allowed for this task right now.',
+          ),
+        )
+      }
+
+      return getFieldCompanionFieldInspectionDetail(accessToken, task.taskKey)
+    },
+    enabled: Boolean(accessToken),
+  })
+
+  const initializedDrafts = useMemo(() => {
+    if (!detailQuery.data) {
+      return drafts
+    }
+
+    if (Object.keys(drafts).length > 0) {
+      return drafts
+    }
+
+    return draftsFromInspectionAnswers(detailQuery.data.answers)
+  }, [detailQuery.data, drafts])
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const detail = detailQuery.data
+      if (!detail) {
+        throw new Error('Inspection detail is not loaded yet.')
+      }
+
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'syncing',
+      })
+
+      return submitFieldCompanionFieldInspectionAnswers(accessToken, {
+        taskKey: task.taskKey,
+        answers: buildInspectionAnswerInputs(
+          initializedDrafts,
+          detail.checklistItems.map((item) => item.checklistItemId),
+        ),
+      })
+    },
+    onSuccess: (response) => {
+      const message = `Saved ${response.answerCount} inspection answer(s) to MaintainArr.`
+      setSuccessMessage(message)
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'synced',
+        message,
+      })
+      pushSubmissionToast({ tone: 'success', message })
+      void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-field-inbox', accessToken] })
+      void queryClient.invalidateQueries({
+        queryKey: ['fieldcompanion-field-inspection', accessToken, task.taskKey],
+      })
+    },
+    onError: (error) => {
+      const message = FieldCompanionPlainReason(error, 'Inspection answer submission failed.')
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'failed',
+        message,
+      })
+      pushSubmissionToast({ tone: 'error', message })
+    },
+  })
+
+  const completeMutation = useMutation({
+    mutationFn: async () => {
+      const detail = detailQuery.data
+      if (!detail) {
+        throw new Error('Inspection detail is not loaded yet.')
+      }
+
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'syncing',
+      })
+
+      await submitFieldCompanionFieldInspectionAnswers(accessToken, {
+        taskKey: task.taskKey,
+        answers: buildInspectionAnswerInputs(
+          initializedDrafts,
+          detail.checklistItems.map((item) => item.checklistItemId),
+        ),
+      })
+
+      return completeFieldCompanionFieldInspection(accessToken, { taskKey: task.taskKey })
+    },
+    onSuccess: (response) => {
+      const message = `Inspection completed (${response.result}) in MaintainArr.`
+      setSuccessMessage(message)
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'synced',
+        message,
+      })
+      pushSubmissionToast({ tone: 'success', message })
+      void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-field-inbox', accessToken] })
+      onSubmitComplete?.()
+    },
+    onError: (error) => {
+      const message = FieldCompanionPlainReason(error, 'Inspection completion failed.')
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'inspection',
+        phase: 'failed',
+        message,
+      })
+      pushSubmissionToast({ tone: 'error', message })
+    },
+  })
+
+  const detail = detailQuery.data
+  const canComplete =
+    detail &&
+    requiredInspectionItemsAnswered(detail.checklistItems, initializedDrafts) &&
+    detail.status === 'in_progress'
+
+  function updateDraft(checklistItemId: string, patch: Partial<InspectionAnswerDraft>): void {
+    setDrafts((current) => {
+      const base = Object.keys(current).length > 0 ? current : initializedDrafts
+      const existing = base[checklistItemId] ?? {
+        passFailValue: '',
+        numericValue: '',
+        textValue: '',
+      }
+      return {
+        ...base,
+        [checklistItemId]: { ...existing, ...patch },
+      }
+    })
+  }
+
+  if (detailQuery.isLoading) {
+    return (
+      <div
+        className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-400"
+        data-testid="fieldcompanion-field-inspection-panel"
+      >
+        Loading inspection checklist…
+      </div>
+    )
+  }
+
+  if (detailQuery.isError) {
+    return (
+      <div
+        className="mt-4"
+        data-testid="fieldcompanion-field-inspection-panel"
+      >
+        <ApiErrorCallout
+          message={getErrorMessage(detailQuery.error, 'Failed to load inspection checklist.')}
+          onRetry={() => void detailQuery.refetch()}
+          retryLabel="Retry inspection"
+        />
+      </div>
+    )
+  }
+
+  if (!detail) {
+    return null
+  }
+
+  return (
+    <div
+      className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+      data-testid="fieldcompanion-field-inspection-panel"
+    >
+      <h4 className="text-sm font-semibold text-slate-100">Complete inspection</h4>
+      <p className="mt-1 text-xs text-slate-400">
+        {detail.templateName} · {detail.assetTag} · {detail.assetName}
+      </p>
+
+      <ul className="mt-4 space-y-3">
+        {detail.checklistItems.map((item) => {
+          const draft = initializedDrafts[item.checklistItemId] ?? {
+            passFailValue: '',
+            numericValue: '',
+            textValue: '',
+          }
+
+          return (
+            <li
+              key={item.checklistItemId}
+              className="rounded-md border border-slate-800 bg-slate-900/70 p-3"
+              data-testid={`fieldcompanion-inspection-item-${item.itemKey}`}
+            >
+              <p
+                id={`fieldcompanion-inspection-prompt-${item.itemKey}`}
+                className="text-sm text-slate-100"
+              >
+                {item.prompt}
+                {item.isRequired && <span className="text-rose-300"> *</span>}
+              </p>
+
+              {item.itemType === 'pass_fail' && (
+                <select
+                  id={`fieldcompanion-inspection-pass-fail-${item.itemKey}`}
+                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  value={draft.passFailValue}
+                  onChange={(event) =>
+                    updateDraft(item.checklistItemId, { passFailValue: event.target.value })
+                  }
+                  aria-labelledby={`fieldcompanion-inspection-prompt-${item.itemKey}`}
+                  data-testid={`fieldcompanion-inspection-pass-fail-${item.itemKey}`}
+                >
+                  <option value="">Select…</option>
+                  <option value="pass">Pass</option>
+                  <option value="fail">Fail</option>
+                  <option value="na">N/A</option>
+                </select>
+              )}
+
+              {item.itemType === 'numeric' && (
+                <input
+                  id={`fieldcompanion-inspection-numeric-${item.itemKey}`}
+                  type="number"
+                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  value={draft.numericValue}
+                  onChange={(event) =>
+                    updateDraft(item.checklistItemId, { numericValue: event.target.value })
+                  }
+                  aria-labelledby={`fieldcompanion-inspection-prompt-${item.itemKey}`}
+                  data-testid={`fieldcompanion-inspection-numeric-${item.itemKey}`}
+                />
+              )}
+
+              {item.itemType === 'text' && (
+                <textarea
+                  id={`fieldcompanion-inspection-text-${item.itemKey}`}
+                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  rows={2}
+                  value={draft.textValue}
+                  onChange={(event) =>
+                    updateDraft(item.checklistItemId, { textValue: event.target.value })
+                  }
+                  aria-labelledby={`fieldcompanion-inspection-prompt-${item.itemKey}`}
+                  data-testid={`fieldcompanion-inspection-text-${item.itemKey}`}
+                />
+              )}
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-100 hover:border-teal-500 disabled:opacity-50"
+          disabled={saveMutation.isPending || completeMutation.isPending}
+          data-testid="fieldcompanion-inspection-save"
+          onClick={() => {
+            setSuccessMessage(null)
+            saveMutation.mutate()
+          }}
+        >
+          {saveMutation.isPending ? 'Saving…' : 'Save answers'}
+        </button>
+        <button
+          type="button"
+          className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          disabled={!canComplete || saveMutation.isPending || completeMutation.isPending}
+          data-testid="fieldcompanion-inspection-complete"
+          onClick={() => {
+            setSuccessMessage(null)
+            completeMutation.mutate()
+          }}
+        >
+          {completeMutation.isPending ? 'Completing…' : 'Complete inspection'}
+        </button>
+      </div>
+
+      {(saveMutation.isError || completeMutation.isError) && (
+        <ApiErrorCallout
+          className="mt-2"
+          testId="fieldcompanion-inspection-error"
+          title="Inspection submission failed"
+          message={getErrorMessage(saveMutation.error ?? completeMutation.error, 'Inspection submission failed.')}
+        />
+      )}
+
+      {successMessage && (
+        <p className="mt-2 text-sm text-emerald-300" data-testid="fieldcompanion-inspection-success">
+          {successMessage}
+        </p>
+      )}
+    </div>
+  )
+}

@@ -39,6 +39,7 @@ public static class StlM13ShipGateCatalog
         new("maintainarr", "maintainarr", "/api/me"),
         new("routarr", "routarr", "/api/me"),
         new("supplyarr", "supplyarr", "/api/me"),
+        new("reportarr", "reportarr", "/api/me"),
         new("compliancecore", "compliancecore", "/api/me"),
     ];
 
@@ -52,9 +53,9 @@ public static class StlM13ShipGateCatalog
 
     /// <summary>
     /// Minimum integration facts in <c>EntitlementDenialFlowTests</c>
-    /// (six product APIs + NexArr launch denial).
+    /// (seven product APIs + NexArr launch denial).
     /// </summary>
-    public const int MinimumEntitlementDenialIntegrationTests = 7;
+    public const int MinimumEntitlementDenialIntegrationTests = 8;
 }
 
 /// <param name="ProductKey">Catalog product key and test host selector.</param>

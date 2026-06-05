@@ -126,7 +126,17 @@ export async function getWorkspaceSummary(accessToken: string): Promise<ReportAr
 }
 
 export async function listDatasets(accessToken: string): Promise<ReportArrDatasetResponse[]> {
-  return getJson<ReportArrDatasetResponse[]>('/api/v1/workspace/datasets', accessToken)
+  return getJson<ReportArrDatasetResponse[]>('/api/v1/integrations/datasets', accessToken)
+}
+
+export async function getDataset(
+  accessToken: string,
+  datasetId: string,
+): Promise<ReportArrDatasetResponse> {
+  return getJson<ReportArrDatasetResponse>(
+    `/api/v1/integrations/datasets/${encodeURIComponent(datasetId)}`,
+    accessToken,
+  )
 }
 
 export async function listDatasetFields(accessToken: string): Promise<ReportArrDatasetFieldResponse[]> {
@@ -137,7 +147,7 @@ export async function createDataset(
   accessToken: string,
   body: ReportArrCreateDatasetRequest,
 ): Promise<ReportArrDatasetResponse> {
-  return sendJson<ReportArrDatasetResponse>('/api/integrations/datasets', accessToken, 'POST', body)
+  return sendJson<ReportArrDatasetResponse>('/api/v1/integrations/datasets', accessToken, 'POST', body)
 }
 
 export async function refreshDataset(
@@ -146,7 +156,7 @@ export async function refreshDataset(
   body: ReportArrRefreshDatasetRequest,
 ): Promise<ReportArrRefreshJobResponse> {
   return sendJson<ReportArrRefreshJobResponse>(
-    `/api/integrations/datasets/${encodeURIComponent(datasetId)}/refresh`,
+    `/api/v1/integrations/datasets/${encodeURIComponent(datasetId)}/refresh`,
     accessToken,
     'POST',
     body,
@@ -154,7 +164,14 @@ export async function refreshDataset(
 }
 
 export async function listDashboards(accessToken: string): Promise<ReportArrDashboardResponse[]> {
-  return getJson<ReportArrDashboardResponse[]>('/api/v1/workspace/dashboards', accessToken)
+  return getJson<ReportArrDashboardResponse[]>('/api/v1/integrations/dashboards', accessToken)
+}
+
+export async function getDashboard(accessToken: string, dashboardId: string): Promise<ReportArrDashboardResponse> {
+  return getJson<ReportArrDashboardResponse>(
+    `/api/v1/integrations/dashboards/${encodeURIComponent(dashboardId)}`,
+    accessToken,
+  )
 }
 
 export async function listDashboardAccessPolicies(accessToken: string): Promise<ReportArrDashboardAccessPolicyResponse[]> {
@@ -173,7 +190,7 @@ export async function createDashboard(
   accessToken: string,
   body: ReportArrCreateDashboardRequest,
 ): Promise<ReportArrDashboardResponse> {
-  return sendJson<ReportArrDashboardResponse>('/api/integrations/dashboards', accessToken, 'POST', body)
+  return sendJson<ReportArrDashboardResponse>('/api/v1/integrations/dashboards', accessToken, 'POST', body)
 }
 
 export async function updateDashboard(
@@ -182,7 +199,7 @@ export async function updateDashboard(
   body: ReportArrUpdateDashboardRequest,
 ): Promise<ReportArrDashboardResponse> {
   return sendJson<ReportArrDashboardResponse>(
-    `/api/integrations/dashboards/${encodeURIComponent(dashboardId)}`,
+    `/api/v1/integrations/dashboards/${encodeURIComponent(dashboardId)}`,
     accessToken,
     'PATCH',
     body,
@@ -190,11 +207,18 @@ export async function updateDashboard(
 }
 
 export async function renderWidget(accessToken: string, widgetId: string): Promise<Record<string, unknown>> {
-  return getJson<Record<string, unknown>>(`/api/integrations/widgets/${encodeURIComponent(widgetId)}/render`, accessToken)
+  return getJson<Record<string, unknown>>(`/api/v1/integrations/widgets/${encodeURIComponent(widgetId)}/render`, accessToken)
 }
 
 export async function listReportDefinitions(accessToken: string): Promise<ReportArrReportDefinitionResponse[]> {
-  return getJson<ReportArrReportDefinitionResponse[]>('/api/v1/workspace/reports', accessToken)
+  return getJson<ReportArrReportDefinitionResponse[]>('/api/v1/integrations/report-definitions', accessToken)
+}
+
+export async function getReportDefinition(accessToken: string, reportDefinitionId: string): Promise<ReportArrReportDefinitionResponse> {
+  return getJson<ReportArrReportDefinitionResponse>(
+    `/api/v1/integrations/report-definitions/${encodeURIComponent(reportDefinitionId)}`,
+    accessToken,
+  )
 }
 
 export async function listReportAccessPolicies(accessToken: string): Promise<ReportArrReportAccessPolicyResponse[]> {
@@ -205,7 +229,7 @@ export async function createReportDefinition(
   accessToken: string,
   body: ReportArrCreateReportDefinitionRequest,
 ): Promise<ReportArrReportDefinitionResponse> {
-  return sendJson<ReportArrReportDefinitionResponse>('/api/integrations/report-definitions', accessToken, 'POST', body)
+  return sendJson<ReportArrReportDefinitionResponse>('/api/v1/integrations/report-definitions', accessToken, 'POST', body)
 }
 
 export async function updateReportDefinition(
@@ -214,7 +238,7 @@ export async function updateReportDefinition(
   body: ReportArrUpdateReportDefinitionRequest,
 ): Promise<ReportArrReportDefinitionResponse> {
   return sendJson<ReportArrReportDefinitionResponse>(
-    `/api/integrations/report-definitions/${encodeURIComponent(reportDefinitionId)}`,
+    `/api/v1/integrations/report-definitions/${encodeURIComponent(reportDefinitionId)}`,
     accessToken,
     'PATCH',
     body,
@@ -225,7 +249,14 @@ export async function createReportRun(
   accessToken: string,
   body: ReportArrCreateReportRunRequest,
 ): Promise<ReportArrReportRunResponse> {
-  return sendJson<ReportArrReportRunResponse>('/api/integrations/report-runs', accessToken, 'POST', body)
+  return sendJson<ReportArrReportRunResponse>('/api/v1/integrations/report-runs', accessToken, 'POST', body)
+}
+
+export async function getReportRun(accessToken: string, reportRunId: string): Promise<ReportArrReportRunResponse> {
+  return getJson<ReportArrReportRunResponse>(
+    `/api/v1/integrations/report-runs/${encodeURIComponent(reportRunId)}`,
+    accessToken,
+  )
 }
 
 export async function cancelReportRun(
@@ -234,7 +265,7 @@ export async function cancelReportRun(
   body: ReportArrCancelReportRunRequest,
 ): Promise<ReportArrReportRunResponse> {
   return sendJson<ReportArrReportRunResponse>(
-    `/api/integrations/report-runs/${encodeURIComponent(reportRunId)}/cancel`,
+    `/api/v1/integrations/report-runs/${encodeURIComponent(reportRunId)}/cancel`,
     accessToken,
     'POST',
     body,
@@ -242,7 +273,7 @@ export async function cancelReportRun(
 }
 
 export async function listReportSchedules(accessToken: string): Promise<ReportArrReportScheduleResponse[]> {
-  return getJson<ReportArrReportScheduleResponse[]>('/api/v1/workspace/report-schedules', accessToken)
+  return getJson<ReportArrReportScheduleResponse[]>('/api/v1/integrations/report-schedules', accessToken)
 }
 
 export async function listReportRecipients(accessToken: string): Promise<ReportArrReportRecipientResponse[]> {
@@ -258,14 +289,14 @@ export async function listReportSections(accessToken: string): Promise<ReportArr
 }
 
 export async function listReportRuns(accessToken: string): Promise<ReportArrReportRunResponse[]> {
-  return getJson<ReportArrReportRunResponse[]>('/api/integrations/report-runs', accessToken)
+  return getJson<ReportArrReportRunResponse[]>('/api/v1/integrations/report-runs', accessToken)
 }
 
 export async function createReportSchedule(
   accessToken: string,
   body: ReportArrCreateReportScheduleRequest,
 ): Promise<ReportArrReportScheduleResponse> {
-  return sendJson<ReportArrReportScheduleResponse>('/api/integrations/report-schedules', accessToken, 'POST', body)
+  return sendJson<ReportArrReportScheduleResponse>('/api/v1/integrations/report-schedules', accessToken, 'POST', body)
 }
 
 export async function updateReportSchedule(
@@ -274,7 +305,7 @@ export async function updateReportSchedule(
   body: ReportArrUpdateReportScheduleRequest,
 ): Promise<ReportArrReportScheduleResponse> {
   return sendJson<ReportArrReportScheduleResponse>(
-    `/api/integrations/report-schedules/${encodeURIComponent(scheduleId)}`,
+    `/api/v1/integrations/report-schedules/${encodeURIComponent(scheduleId)}`,
     accessToken,
     'PATCH',
     body,
@@ -285,15 +316,23 @@ export async function createExport(
   accessToken: string,
   body: ReportArrCreateExportRequest,
 ): Promise<ReportArrExportJobResponse> {
-  return sendJson<ReportArrExportJobResponse>('/api/integrations/exports', accessToken, 'POST', body)
+  return sendJson<ReportArrExportJobResponse>('/api/v1/integrations/exports', accessToken, 'POST', body)
 }
 
 export async function listExportJobs(accessToken: string): Promise<ReportArrExportJobResponse[]> {
-  return getJson<ReportArrExportJobResponse[]>('/api/integrations/exports', accessToken)
+  return getJson<ReportArrExportJobResponse[]>('/api/v1/integrations/exports', accessToken)
+}
+
+export async function getExportJob(accessToken: string, exportJobId: string): Promise<ReportArrExportJobResponse> {
+  return getJson<ReportArrExportJobResponse>(`/api/v1/integrations/exports/${encodeURIComponent(exportJobId)}`, accessToken)
 }
 
 export async function listKpis(accessToken: string): Promise<ReportArrKpiDefinitionResponse[]> {
-  return getJson<ReportArrKpiDefinitionResponse[]>('/api/v1/workspace/kpis', accessToken)
+  return getJson<ReportArrKpiDefinitionResponse[]>('/api/v1/integrations/kpis', accessToken)
+}
+
+export async function getKpi(accessToken: string, kpiId: string): Promise<ReportArrKpiDefinitionResponse> {
+  return getJson<ReportArrKpiDefinitionResponse>(`/api/v1/integrations/kpis/${encodeURIComponent(kpiId)}`, accessToken)
 }
 
 export async function listKpiValues(accessToken: string): Promise<ReportArrKpiValueResponse[]> {
@@ -301,7 +340,7 @@ export async function listKpiValues(accessToken: string): Promise<ReportArrKpiVa
 }
 
 export async function listMetrics(accessToken: string): Promise<ReportArrMetricDefinitionResponse[]> {
-  return getJson<ReportArrMetricDefinitionResponse[]>('/api/integrations/kpis', accessToken)
+  return getJson<ReportArrMetricDefinitionResponse[]>('/api/v1/integrations/metrics', accessToken)
 }
 
 export async function listMetricValues(accessToken: string): Promise<ReportArrMetricValueResponse[]> {
@@ -330,7 +369,7 @@ export async function calculateKpi(
   body: ReportArrCalculateKpiRequest,
 ): Promise<ReportArrKpiValueResponse> {
   return sendJson<ReportArrKpiValueResponse>(
-    `/api/integrations/kpis/${encodeURIComponent(kpiId)}/calculate`,
+    `/api/v1/integrations/kpis/${encodeURIComponent(kpiId)}/calculate`,
     accessToken,
     'POST',
     body,
@@ -338,7 +377,7 @@ export async function calculateKpi(
 }
 
 export async function listAlerts(accessToken: string): Promise<ReportArrAlertResponse[]> {
-  return getJson<ReportArrAlertResponse[]>('/api/v1/workspace/alerts', accessToken)
+  return getJson<ReportArrAlertResponse[]>('/api/v1/integrations/alerts', accessToken)
 }
 
 export async function acknowledgeAlert(
@@ -347,7 +386,7 @@ export async function acknowledgeAlert(
   body: ReportArrAcknowledgeAlertRequest,
 ): Promise<ReportArrAlertResponse> {
   return sendJson<ReportArrAlertResponse>(
-    `/api/integrations/alerts/${encodeURIComponent(alertId)}/acknowledge`,
+    `/api/v1/integrations/alerts/${encodeURIComponent(alertId)}/acknowledge`,
     accessToken,
     'POST',
     body,
@@ -360,7 +399,7 @@ export async function resolveAlert(
   body: ReportArrResolveAlertRequest,
 ): Promise<ReportArrAlertResponse> {
   return sendJson<ReportArrAlertResponse>(
-    `/api/integrations/alerts/${encodeURIComponent(alertId)}/resolve`,
+    `/api/v1/integrations/alerts/${encodeURIComponent(alertId)}/resolve`,
     accessToken,
     'POST',
     body,
@@ -368,7 +407,17 @@ export async function resolveAlert(
 }
 
 export async function listAuditPackages(accessToken: string): Promise<ReportArrAuditPackageResponse[]> {
-  return getJson<ReportArrAuditPackageResponse[]>('/api/v1/workspace/audit-packages', accessToken)
+  return getJson<ReportArrAuditPackageResponse[]>('/api/v1/integrations/audit-packages', accessToken)
+}
+
+export async function getAuditPackage(
+  accessToken: string,
+  auditReportPackageId: string,
+): Promise<ReportArrAuditPackageResponse> {
+  return getJson<ReportArrAuditPackageResponse>(
+    `/api/v1/integrations/audit-packages/${encodeURIComponent(auditReportPackageId)}`,
+    accessToken,
+  )
 }
 
 export async function listAuditScopes(accessToken: string): Promise<ReportArrAuditScopeResponse[]> {
@@ -379,7 +428,7 @@ export async function createAuditPackage(
   accessToken: string,
   body: ReportArrCreateAuditPackageRequest,
 ): Promise<ReportArrAuditPackageResponse> {
-  return sendJson<ReportArrAuditPackageResponse>('/api/integrations/audit-packages', accessToken, 'POST', body)
+  return sendJson<ReportArrAuditPackageResponse>('/api/v1/integrations/audit-packages', accessToken, 'POST', body)
 }
 
 export async function lockAuditPackage(
@@ -388,7 +437,7 @@ export async function lockAuditPackage(
   body: ReportArrLockAuditPackageRequest,
 ): Promise<ReportArrAuditPackageResponse> {
   return sendJson<ReportArrAuditPackageResponse>(
-    `/api/integrations/audit-packages/${encodeURIComponent(auditPackageId)}/lock`,
+    `/api/v1/integrations/audit-packages/${encodeURIComponent(auditPackageId)}/lock`,
     accessToken,
     'POST',
     body,
@@ -404,15 +453,19 @@ export async function listIngestionCursors(accessToken: string): Promise<ReportA
 }
 
 export async function listWidgets(accessToken: string): Promise<ReportArrDashboardWidgetResponse[]> {
-  return getJson<ReportArrDashboardWidgetResponse[]>('/api/integrations/widgets', accessToken)
+  return getJson<ReportArrDashboardWidgetResponse[]>('/api/v1/integrations/widgets', accessToken)
 }
 
 export async function listWidgetVisualizations(accessToken: string): Promise<ReportArrWidgetVisualizationSettingsResponse[]> {
-  return getJson<ReportArrWidgetVisualizationSettingsResponse[]>('/api/integrations/widget-visualizations', accessToken)
+  return getJson<ReportArrWidgetVisualizationSettingsResponse[]>('/api/v1/integrations/widget-visualizations', accessToken)
 }
 
 export async function listReadModels(accessToken: string): Promise<ReportArrReadModelResponse[]> {
-  return getJson<ReportArrReadModelResponse[]>('/api/v1/workspace/read-models', accessToken)
+  return getJson<ReportArrReadModelResponse[]>('/api/v1/integrations/read-models', accessToken)
+}
+
+export async function getReadModel(accessToken: string, readModelId: string): Promise<ReportArrReadModelResponse> {
+  return getJson<ReportArrReadModelResponse>(`/api/v1/integrations/read-models/${encodeURIComponent(readModelId)}`, accessToken)
 }
 
 export async function listReadModelRecords(accessToken: string): Promise<ReportArrReadModelRecordResponse[]> {
@@ -429,7 +482,7 @@ export async function rebuildReadModel(
   requestedByPersonId: string,
 ): Promise<ReportArrRefreshJobResponse> {
   return sendJson<ReportArrRefreshJobResponse>(
-    `/api/integrations/read-models/${encodeURIComponent(readModelId)}/rebuild`,
+    `/api/v1/integrations/read-models/${encodeURIComponent(readModelId)}/rebuild`,
     accessToken,
     'POST',
     { requestedByPersonId },
@@ -441,14 +494,14 @@ export async function listRefreshJobs(accessToken: string): Promise<ReportArrRef
 }
 
 export async function listSourceEvents(accessToken: string): Promise<ReportArrSourceEventReceiptResponse[]> {
-  return getJson<ReportArrSourceEventReceiptResponse[]>('/api/integrations/events', accessToken)
+  return getJson<ReportArrSourceEventReceiptResponse[]>('/api/v1/integrations/source-events', accessToken)
 }
 
 export async function receiveEvent(
   accessToken: string,
   body: ReportArrIntegrationEventRequest,
 ): Promise<ReportArrSourceEventReceiptResponse> {
-  return sendJson<ReportArrSourceEventReceiptResponse>('/api/integrations/events', accessToken, 'POST', body)
+  return sendJson<ReportArrSourceEventReceiptResponse>('/api/v1/integrations/events', accessToken, 'POST', body)
 }
 
 export async function receiveEventBatch(
@@ -456,7 +509,7 @@ export async function receiveEventBatch(
   body: { events: ReportArrIntegrationEventRequest[] },
 ): Promise<{ received: number; receipts: ReportArrSourceEventReceiptResponse[] }> {
   return sendJson<{ received: number; receipts: ReportArrSourceEventReceiptResponse[] }>(
-    '/api/integrations/events/batch',
+    '/api/v1/integrations/events/batch',
     accessToken,
     'POST',
     body,

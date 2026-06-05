@@ -835,7 +835,7 @@ Examples:
 - ordarr.order
 - recordarr.record
 - assurarr.nonconformance
-- fieldcompanion.mobile_upload
+- FieldCompanion.mobile_upload
 ```
 
 ## Applicability rule

@@ -42,7 +42,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 |-----------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Login, StaffArr launch surface, StaffArr handoff redirect |
 | `product-handoff-smoke.spec.ts` | Handoff redirect for all seven product frontends |
-| `companion-field-inbox-trainarr-deep-link.spec.ts` | Field Companion field inbox → TrainArr assignment deep link (W133) |
+| `FieldCompanion-field-inbox-trainarr-deep-link.spec.ts` | Field Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
 | `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
 | `platform-admin-worker-health-orchestration-smoke.spec.ts` | Suite platform-admin orchestration panel: product health, token inventory, lifecycle worker sections + trigger controls visible (W260/W262; no live triggers) |
@@ -134,10 +134,10 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `staffarr-reports-audit-export-smoke.spec.ts` | StaffArr handoff → `/reports` audit package export: manifest, summary, timeline, filters, background ZIP job (Worker 5) |
 | `staffarr-settings-admin-workspace-smoke.spec.ts` | StaffArr handoff → `/admin` `staffarr-settings-admin-workspace`: all six product-admin panels visible with save controls; export delivery pending/runs/notifications + worker pending/run sections loaded (W325; audit export panel outside wrapper W238; no save mutations) |
 | `routarr-reports-audit-export-smoke.spec.ts` | RoutArr handoff → Reports audit package panel: manifest, summary, filters, sync ZIP/JSON/CSV, background job (W227/W241) |
-| `companion-field-inbox-operations-deep-links.spec.ts` | Field Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
-| `companion-offline-queue-notification.spec.ts` | Field Companion offline acknowledge queue sync + notification/push readiness surfaces (W146) |
-| `companion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via Field Companion API (W147) |
-| `companion-field-scan.spec.ts` | Field Companion manual scan resolve → field inbox task highlight (M11) |
+| `FieldCompanion-field-inbox-operations-deep-links.spec.ts` | Field Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
+| `FieldCompanion-offline-queue-notification.spec.ts` | Field Companion offline acknowledge queue sync + notification/push readiness surfaces (W146) |
+| `FieldCompanion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via Field Companion API (W147) |
+| `FieldCompanion-field-scan.spec.ts` | Field Companion manual scan resolve → field inbox task highlight (M11) |
 | `compliancecore-operator-rule-evaluate-smoke.spec.ts` | Compliance Core handoff → rule pack seed + evaluate (operator path) |
 | `compliancecore-operator-workflow-gate-journey-smoke.spec.ts` | Compliance Core journey seed → `/findings` dispatch gate check (allow) + `/operator` dashboard summary sections (W326) |
 | `compliancecore-operator-batch-evaluate-findings-emit-journey-smoke.spec.ts` | Compliance Core journey seed → `/evaluation` batch rule evaluate (allow) + `/findings` gate check with emit-on-block finding (W327) |
@@ -158,7 +158,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `compliancecore-routarr-dispatch-gate-multi-event-notification-journey-smoke.spec.ts` | Cross-product journey: Compliance Core `/findings` dispatch gate block check → suite → RoutArr `/dispatch` unassigned assign override → command-center Dispatch → bulk in_progress → bulk completed → `/settings` Recent dispatches shows pending rows for trip_assigned, trip_dispatched, trip_in_progress, and trip_completed (no trip_cancelled) + optional internal process-batch verify (W351; builds on W344/W285/W343) |
 | `suite-multi-product-handoff-journey.spec.ts` | Suite session chains StaffArr → TrainArr → Compliance Core handoffs |
 
-Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFrontend` in shared .NET (`Category=E2e` tests).
+Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.FieldCompanionFrontend` in shared .NET (`Category=E2e` tests).
 
 ## Skip behavior
 
@@ -181,7 +181,7 @@ Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFronten
 | `E2E_SUPPLYARR_URL` | `http://localhost:5179` |
 | `E2E_ROUTARR_URL` | `http://localhost:5180` |
 | `E2E_LOADARR_URL` | `http://localhost:5182` |
-| `E2E_COMPANION_URL` | `http://localhost:5181` |
+| `E2E_FIELDCOMPANION_URL` | `http://localhost:5181` |
 | `E2E_LOADARR_API_URL` | `http://localhost:5108` |
 | `E2E_TRAINARR_API_URL` | `http://localhost:5103` |
 | `E2E_STAFFARR_API_URL` | `http://localhost:5102` |

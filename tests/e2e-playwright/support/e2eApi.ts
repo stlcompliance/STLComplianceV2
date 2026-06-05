@@ -194,9 +194,9 @@ async function createActiveTrainingAssignment(
   return payload.assignmentId
 }
 
-/** Ensures an active TrainArr assignment exists for companion field-inbox deep-link smokes. */
+/** Ensures an active TrainArr assignment exists for fieldcompanion field-inbox deep-link smokes. */
 
-export type CompanionOfflineActionSyncedItem = {
+export type FieldCompanionOfflineActionSyncedItem = {
   idempotencyKey: string
   actionKind: string
   taskKey: string
@@ -204,17 +204,17 @@ export type CompanionOfflineActionSyncedItem = {
   syncedAt: string
 }
 
-export async function listCompanionOfflineActions(
-  companionAccessToken: string,
+export async function listFieldCompanionOfflineActions(
+  FieldCompanionAccessToken: string,
   limit = 10,
-): Promise<{ items: CompanionOfflineActionSyncedItem[] }> {
+): Promise<{ items: FieldCompanionOfflineActionSyncedItem[] }> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${nexarrApiUrl()}/api/companion/offline-actions?${search}`, {
+  const response = await fetch(`${nexarrApiUrl()}/api/fieldcompanion/offline-actions?${search}`, {
     headers: {
-      Authorization: `Bearer ${companionAccessToken}`,
+      Authorization: `Bearer ${FieldCompanionAccessToken}`,
     },
   })
-  return readJson<{ items: CompanionOfflineActionSyncedItem[] }>(response)
+  return readJson<{ items: FieldCompanionOfflineActionSyncedItem[] }>(response)
 }
 
 const platformAuditGenerateScope = 'nexarr.platform_audit_packages.generate'

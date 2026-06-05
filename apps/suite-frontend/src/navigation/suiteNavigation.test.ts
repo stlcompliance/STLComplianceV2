@@ -72,11 +72,11 @@ describe('suiteNavigation', () => {
     expect(product?.productKey).toBe('staffarr')
   })
 
-  it('canonicalizes the legacy companion alias', () => {
-    expect(normalizeProductKey('Companion')).toBe('fieldcompanion')
+  it('canonicalizes the legacy fieldcompanion alias', () => {
+    expect(normalizeProductKey('fieldcompanion')).toBe('fieldcompanion')
     expect(normalizeProductKey('field-companion')).toBe('fieldcompanion')
-    expect(buildProductSurfacePath('companion', surfaces[0])).toBe('/app/field-companion')
+    expect(buildProductSurfacePath('fieldcompanion', surfaces[0])).toBe('/app/field-companion')
     expect(buildProductSurfacePath('field-companion', surfaces[1])).toBe('/app/field-companion/dispatch')
-    expect(getProductDisplayName('companion', 'Companion App')).toBe('Field Companion')
+    expect(getProductDisplayName('fieldcompanion', 'fieldcompanion App')).toBe('Field Companion')
   })
 })

@@ -2,25 +2,25 @@ import { describe, expect, it } from 'vitest'
 import { buildProductLaunchUrlMap, resolveProductLaunchUrl } from './productLaunchUrls'
 
 describe('productLaunchUrls', () => {
-  it('builds canonical and legacy Field Companion launch URLs from env', () => {
+  it('builds canonical Field Companion launch URLs from env', () => {
     const map = buildProductLaunchUrlMap({
-      VITE_COMPANION_FRONTEND_BASE: 'http://localhost:5181/',
+      VITE_FIELDCOMPANION_FRONTEND_BASE: 'http://localhost:5181/',
     })
 
     expect(map.fieldcompanion).toBe('http://localhost:5181/launch')
-    expect(map.companion).toBe('http://localhost:5181/launch')
+    expect(map.nexarr).toBeUndefined()
   })
 
-  it('resolves direct launch URLs using canonical or legacy product keys', () => {
+  it('resolves direct launch URLs using canonical product keys only', () => {
     const launchUrls = {
-      companion: 'http://localhost:5181/launch',
+      fieldcompanion: 'http://localhost:5181/launch',
     }
 
     expect(resolveProductLaunchUrl('fieldcompanion', 'http://localhost:5174', launchUrls)).toBe(
       'http://localhost:5181/launch',
     )
-    expect(resolveProductLaunchUrl('companion', 'http://localhost:5174', launchUrls)).toBe(
-      'http://localhost:5181/launch',
+    expect(resolveProductLaunchUrl('fieldcompanion', 'http://localhost:5174', {})).toBe(
+      'http://localhost:5174/app/field-companion/launch',
     )
   })
 
@@ -31,6 +31,6 @@ describe('productLaunchUrls', () => {
 
     expect(map.staffarr).toBe('https://app.stlcompliance.com/staffarr/launch')
     expect(map.fieldcompanion).toBe('https://app.stlcompliance.com/field-companion/launch')
-    expect(map.companion).toBe('https://app.stlcompliance.com/field-companion/launch')
+    expect(map.nexarr).toBeUndefined()
   })
 })

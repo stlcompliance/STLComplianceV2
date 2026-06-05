@@ -35,6 +35,8 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _maintainarrIntegrationToken = null!;
+    private string _assurarrIntegrationToken = null!;
+    private string _supplyarrIntegrationToken = null!;
     private RecordingTrainArrQualificationCheckHandler _trainarrQualificationHandler = null!;
     private RecordingComplianceCoreWorkOrderGateHandler _complianceCoreGateHandler = null!;
     private RecordingComplianceCoreAssetReadinessGateHandler _complianceCoreReadinessGateHandler = null!;
@@ -64,6 +66,14 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         _maintainarrIntegrationToken = await IssueServiceTokenAsync(adminToken, "maintainarr");
+        _assurarrIntegrationToken = await IssueServiceTokenAsync(
+            adminToken,
+            "assurarr",
+            actionScope: "maintainarr.quality_holds.write");
+        _supplyarrIntegrationToken = await IssueServiceTokenAsync(
+            adminToken,
+            "supplyarr",
+            actionScope: "maintainarr.demand_status.write");
         _trainarrQualificationHandler = new RecordingTrainArrQualificationCheckHandler();
         _complianceCoreGateHandler = new RecordingComplianceCoreWorkOrderGateHandler();
         _complianceCoreReadinessGateHandler = new RecordingComplianceCoreAssetReadinessGateHandler();
@@ -749,11 +759,35 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Integration_work_order_list_uses_integration_token()
+    {
+        var assetId = await SeedIntegrationAssetAsync();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/work-orders", _maintainarrIntegrationToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Integration work-order list",
+            "Created to verify integration listing",
+            "medium",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/integrations/work-orders", _maintainarrIntegrationToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<WorkOrderSummaryResponse[]>() )!;
+        Assert.Contains(list, item => item.WorkOrderId == created.WorkOrderId);
+    }
+
+    [Fact]
     public async Task Integration_quality_hold_blocks_and_release_clears_asset_readiness()
     {
         var assetId = await SeedIntegrationAssetAsync();
 
-        var holdRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-holds", _maintainarrIntegrationToken);
+        var holdRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-holds", _assurarrIntegrationToken);
         holdRequest.Content = JsonContent.Create(new CreateAssetQualityHoldRequest(
             assetId,
             "quality_hold",
@@ -776,7 +810,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             && blocker.SourceEntityType == "asset_quality_hold"
             && blocker.SourceEntityId == hold.HoldId.ToString());
 
-        var releaseRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-hold-releases", _maintainarrIntegrationToken);
+        var releaseRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-hold-releases", _assurarrIntegrationToken);
         releaseRequest.Content = JsonContent.Create(new ReleaseAssetQualityHoldRequest(
             hold.HoldId,
             null,
@@ -840,7 +874,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             await db.SaveChangesAsync();
         }
 
-        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/part-issue-events", _maintainarrIntegrationToken);
+        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/part-issue-events", _supplyarrIntegrationToken);
         issueRequest.Content = JsonContent.Create(new IngestPartIssueEventRequest(
             tenantId,
             created.WorkOrderId,
@@ -866,6 +900,55 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Integration_defect_list_uses_integration_token()
+    {
+        var assetId = await SeedIntegrationAssetAsync();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/defects", _maintainarrIntegrationToken);
+        createRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "Integration defect list",
+            "Created to verify integration defect listing",
+            "high"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/integrations/defects", _maintainarrIntegrationToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<DefectSummaryResponse[]>() )!;
+        Assert.Contains(list, item => item.DefectId == created.DefectId);
+    }
+
+    [Fact]
+    public async Task Integration_quality_hold_routes_require_assurarr_token()
+    {
+        var assetId = await SeedIntegrationAssetAsync();
+
+        var holdRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-holds", _maintainarrIntegrationToken);
+        holdRequest.Content = JsonContent.Create(new CreateAssetQualityHoldRequest(
+            assetId,
+            "quality_hold",
+            "assurarr",
+            "release-blocked",
+            "Quality hold requires AssurArr source token.",
+            "high",
+            null));
+        var holdResponse = await _maintainarrClient.SendAsync(holdRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, holdResponse.StatusCode);
+
+        var fakeHoldId = Guid.NewGuid();
+        var releaseRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/quality-hold-releases", _maintainarrIntegrationToken);
+        releaseRequest.Content = JsonContent.Create(new ReleaseAssetQualityHoldRequest(
+            fakeHoldId,
+            null,
+            "Blocked by missing AssurArr token."));
+        var releaseResponse = await _maintainarrClient.SendAsync(releaseRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, releaseResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Integration_supplier_work_status_upserts_vendor_work()
     {
         var assetId = await SeedIntegrationAssetAsync();
@@ -883,7 +966,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         createResponse.EnsureSuccessStatusCode();
         var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
 
-        var vendorRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/supplier-work-status", _maintainarrIntegrationToken);
+        var vendorRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/supplier-work-status", _supplyarrIntegrationToken);
         vendorRequest.Content = JsonContent.Create(new IngestSupplierWorkStatusRequest(
             tenantId,
             created.WorkOrderId,
@@ -911,6 +994,71 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var stored = await verifyDb.MaintenanceVendorWorks.SingleAsync(x => x.WorkOrderId == created.WorkOrderId);
         Assert.Equal("supplier-123", stored.SupplierRef);
         Assert.Equal("scheduled", stored.Status);
+    }
+
+    [Fact]
+    public async Task Integration_inspection_list_uses_integration_token()
+    {
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            "/api/v1/integrations/inspections",
+            _maintainarrIntegrationToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<InspectionRunSummaryResponse[]>())!;
+        Assert.NotNull(list);
+    }
+
+    [Fact]
+    public async Task Integration_inspection_create_get_and_answers_use_real_service_data()
+    {
+        var assetId = await SeedIntegrationAssetAsync();
+        var integrationTenantId = GetIntegrationTenantId();
+        Guid assetTypeId;
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            assetTypeId = (await db.Assets.SingleAsync(x => x.Id == assetId)).AssetTypeId;
+        }
+
+        var (templateId, checklistItemId) = await SeedIntegrationInspectionTemplateAsync(integrationTenantId, assetTypeId);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/inspections", _maintainarrIntegrationToken);
+        createRequest.Content = JsonContent.Create(new StartInspectionRunRequest(
+            assetId,
+            templateId));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var run = (await createResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal("in_progress", run.Status);
+        Assert.Equal(assetId, run.AssetId);
+        Assert.Equal(templateId, run.InspectionTemplateId);
+        Assert.Empty(run.Answers);
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/integrations/inspections/{run.InspectionRunId}", _maintainarrIntegrationToken);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal(run.InspectionRunId, fetched.InspectionRunId);
+        Assert.Equal("in_progress", fetched.Status);
+        Assert.Single(fetched.ChecklistItems);
+
+        var answersRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/integrations/inspections/{run.InspectionRunId}/answers",
+            _maintainarrIntegrationToken);
+        answersRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest(new[]
+        {
+            new InspectionRunAnswerInput(checklistItemId, InspectionAnswerPassFailValues.Pass, null, null)
+        }));
+        var answersResponse = await _maintainarrClient.SendAsync(answersRequest);
+        answersResponse.EnsureSuccessStatusCode();
+        var updated = (await answersResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal(run.InspectionRunId, updated.InspectionRunId);
+        Assert.Single(updated.Answers);
+        Assert.Equal(checklistItemId, updated.Answers[0].ChecklistItemId);
+        Assert.Equal("in_progress", updated.Status);
     }
 
     [Fact]
@@ -1412,6 +1560,59 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         return assetType.AssetTypeId;
     }
 
+    private async Task<(Guid TemplateId, Guid ChecklistItemId)> SeedIntegrationInspectionTemplateAsync(
+        Guid tenantId,
+        Guid assetTypeId)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var templateId = Guid.NewGuid();
+        var checklistItemId = Guid.NewGuid();
+
+        db.InspectionTemplates.Add(new InspectionTemplate
+        {
+            Id = templateId,
+            TenantId = tenantId,
+            TemplateKey = $"integration-template-{templateId:N}"[..20],
+            Name = "Integration Inspection Template",
+            Description = "Template seeded for integration inspection endpoint coverage.",
+            Version = 1,
+            Status = InspectionTemplateStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        db.InspectionTemplateAssetTypes.Add(new InspectionTemplateAssetType
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            InspectionTemplateId = templateId,
+            AssetTypeId = assetTypeId,
+            CreatedAt = now
+        });
+
+        db.InspectionChecklistItems.Add(new InspectionChecklistItem
+        {
+            Id = checklistItemId,
+            TenantId = tenantId,
+            InspectionTemplateId = templateId,
+            CategoryId = null,
+            ItemKey = $"integration-item-{checklistItemId:N}"[..20],
+            Prompt = "Integration inspection item",
+            ItemType = InspectionChecklistItemTypes.PassFail,
+            ControlledOptionsJson = "[]",
+            IsRequired = true,
+            SortOrder = 10,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await db.SaveChangesAsync();
+        return (templateId, checklistItemId);
+    }
+
     private async Task<DefectDetailResponse> FetchDefectAsync(string token, Guid defectId)
     {
         var request = Authorized(HttpMethod.Get, $"/api/defects/{defectId}", token);
@@ -1509,7 +1710,10 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         return handoff.HandoffCode;
     }
 
-    private async Task<string> IssueServiceTokenAsync(string adminToken, string productKey)
+    private async Task<string> IssueServiceTokenAsync(
+        string adminToken,
+        string productKey,
+        string? actionScope = null)
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.RegisterServiceClientRequest(
@@ -1526,7 +1730,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             client.ServiceClientId,
             PlatformSeeder.DemoTenantId,
             null,
-            "launch.redeem",
+            actionScope ?? "launch.redeem",
             30));
         var issueResponse = await _nexarrClient.SendAsync(issueRequest);
         issueResponse.EnsureSuccessStatusCode();

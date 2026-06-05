@@ -4,7 +4,7 @@ import type { ProductNavItem } from '@stl/shared-ui'
 type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const maintainarrNavItems: ProductNavItem[] = [
-  { label: 'Overview', to: '/overview', icon: LayoutDashboard as NavIcon },
+  { label: 'Readiness', to: '/overview', icon: LayoutDashboard as NavIcon },
   {
     label: 'Assets',
     to: '/assets/drawer',

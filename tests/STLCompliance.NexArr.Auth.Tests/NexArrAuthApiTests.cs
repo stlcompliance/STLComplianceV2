@@ -390,11 +390,11 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.Contains(navigation.Products, p => p.ProductKey.Equals("reportarr", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(navigation.Products, p => p.ProductKey.Equals("assurarr", StringComparison.OrdinalIgnoreCase));
 
-        var companion = navigation.Products.First(p =>
-            p.ProductKey.Equals("companion", StringComparison.OrdinalIgnoreCase));
-        Assert.Equal("/app/field-companion", companion.RoutePath);
-        Assert.Equal("/app/field-companion/launch", companion.LaunchUrl);
-        Assert.Contains(companion.Surfaces, s => s.SurfaceKey == "inbox" && s.IsEnabled);
+        var fieldcompanion = navigation.Products.First(p =>
+            p.ProductKey.Equals("fieldcompanion", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("/app/field-companion", fieldcompanion.RoutePath);
+        Assert.Equal("/app/field-companion/launch", fieldcompanion.LaunchUrl);
+        Assert.Contains(fieldcompanion.Surfaces, s => s.SurfaceKey == "inbox" && s.IsEnabled);
 
         var sharedWorker = navigation.Products.First(p =>
             p.ProductKey.Equals("shared-worker", StringComparison.OrdinalIgnoreCase));

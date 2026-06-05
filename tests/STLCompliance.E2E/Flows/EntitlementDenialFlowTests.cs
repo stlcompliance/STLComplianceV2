@@ -25,12 +25,14 @@ public sealed class EntitlementDenialFlowTests : IAsyncLifetime
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private WebApplicationFactory<global::RoutArr.Api.Program> _routarrFactory = null!;
     private WebApplicationFactory<global::SupplyArr.Api.Program> _supplyarrFactory = null!;
+    private WebApplicationFactory<global::ReportArr.Api.Program> _reportarrFactory = null!;
     private WebApplicationFactory<global::ComplianceCore.Api.Program> _complianceCoreFactory = null!;
     private HttpClient _staffarrClient = null!;
     private HttpClient _trainarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private HttpClient _routarrClient = null!;
     private HttpClient _supplyarrClient = null!;
+    private HttpClient _reportarrClient = null!;
     private HttpClient _complianceCoreClient = null!;
 
     public async Task InitializeAsync()
@@ -71,6 +73,12 @@ public sealed class EntitlementDenialFlowTests : IAsyncLifetime
             nexarrBaseUrl);
         _supplyarrClient = _supplyarrFactory.CreateClient();
 
+        _reportarrFactory = CreateProductFactory<global::ReportArr.Api.Program, ReportArr.Api.Data.ReportArrDbContext>(
+            $"E2E-Entitlement-ReportArr-{Guid.NewGuid():N}",
+            signingKey,
+            nexarrBaseUrl);
+        _reportarrClient = _reportarrFactory.CreateClient();
+
         _complianceCoreFactory = CreateProductFactory<global::ComplianceCore.Api.Program, ComplianceCore.Api.Data.ComplianceCoreDbContext>(
             $"E2E-Entitlement-ComplianceCore-{Guid.NewGuid():N}",
             signingKey,
@@ -85,12 +93,14 @@ public sealed class EntitlementDenialFlowTests : IAsyncLifetime
         _maintainarrClient.Dispose();
         _routarrClient.Dispose();
         _supplyarrClient.Dispose();
+        _reportarrClient.Dispose();
         _complianceCoreClient.Dispose();
         await _staffarrFactory.DisposeAsync();
         await _trainarrFactory.DisposeAsync();
         await _maintainarrFactory.DisposeAsync();
         await _routarrFactory.DisposeAsync();
         await _supplyarrFactory.DisposeAsync();
+        await _reportarrFactory.DisposeAsync();
         await _complianceCoreFactory.DisposeAsync();
         await _nexarr.DisposeAsync();
     }
@@ -142,6 +152,8 @@ public sealed class EntitlementDenialFlowTests : IAsyncLifetime
                 _routarrFactory.Services, tenantId, userId, WrongEntitlements),
             "supplyarr" => E2EAccessTokenHelper.SupplyArr(
                 _supplyarrFactory.Services, tenantId, userId, WrongEntitlements),
+            "reportarr" => E2EAccessTokenHelper.ReportArr(
+                _reportarrFactory.Services, tenantId, userId, WrongEntitlements),
             "compliancecore" => E2EAccessTokenHelper.ComplianceCore(
                 _complianceCoreFactory.Services, tenantId, userId, WrongEntitlements),
             _ => throw new ArgumentOutOfRangeException(nameof(productKey), productKey, "Unknown product key."),
@@ -156,6 +168,7 @@ public sealed class EntitlementDenialFlowTests : IAsyncLifetime
             "maintainarr" => _maintainarrClient,
             "routarr" => _routarrClient,
             "supplyarr" => _supplyarrClient,
+            "reportarr" => _reportarrClient,
             "compliancecore" => _complianceCoreClient,
             _ => throw new ArgumentOutOfRangeException(nameof(productKey), productKey, "Unknown product key."),
         };

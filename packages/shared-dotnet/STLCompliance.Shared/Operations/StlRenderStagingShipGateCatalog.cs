@@ -50,7 +50,7 @@ public static class StlRenderStagingShipGateCatalog
         new("compliancecore-frontend", "RENDER_STAGING_COMPLIANCECORE_FRONTEND_URL"),
         new("loadarr-frontend", "RENDER_STAGING_LOADARR_FRONTEND_URL"),
         new("assurarr-frontend", "RENDER_STAGING_ASSURARR_FRONTEND_URL"),
-        new("companion-frontend", "RENDER_STAGING_COMPANION_FRONTEND_URL"),
+        new("fieldcompanion-frontend", "RENDER_STAGING_FIELDCOMPANION_FRONTEND_URL"),
     ];
 
     public static readonly IReadOnlyList<string> RequiredStagingApiUrlEnvironmentVariables =

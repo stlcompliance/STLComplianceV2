@@ -2,7 +2,6 @@ import {
   getProductRouteSlug,
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
-  toLegacyProductKey,
 } from './productCatalog'
 
 /** Local Vite preview bases aligned with StlE2eFrontendCatalog (+ Field Companion). */
@@ -33,19 +32,8 @@ function readFrontendBase(
   productKey: string,
 ): string | undefined {
   const normalized = normalizeProductKey(productKey)
-  const legacy = toLegacyProductKey(normalized)
   const upper = normalized.toUpperCase()
-  const legacyUpper = legacy.toUpperCase()
-  const candidates = [
-    env[`VITE_${upper}_FRONTEND_BASE`],
-    env[`VITE_${upper}_FRONTEND_URL`],
-  ]
-  if (legacy !== normalized) {
-    candidates.push(env[`VITE_${legacyUpper}_FRONTEND_BASE`], env[`VITE_${legacyUpper}_FRONTEND_URL`])
-  }
-  if (normalized === 'fieldcompanion') {
-    candidates.push(env.VITE_COMPANION_FRONTEND_BASE, env.VITE_COMPANION_FRONTEND_URL)
-  }
+  const candidates = [env[`VITE_${upper}_FRONTEND_BASE`], env[`VITE_${upper}_FRONTEND_URL`]]
   for (const value of candidates) {
     const trimmed = value?.trim()
     if (trimmed) {
@@ -72,19 +60,11 @@ export function buildProductLaunchUrlMap(
     }
     if (appBase) {
       map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}/launch`
-      const legacy = toLegacyProductKey(entry.productKey)
-      if (legacy !== entry.productKey) {
-        map[legacy] = map[entry.productKey]
-      }
       continue
     }
     const base = readFrontendBase(env, entry.productKey)
     if (base) {
       map[entry.productKey] = `${base}/launch`
-      const legacy = toLegacyProductKey(entry.productKey)
-      if (legacy !== entry.productKey) {
-        map[legacy] = map[entry.productKey]
-      }
     }
   }
   return map
@@ -101,7 +81,7 @@ export function resolveProductLaunchUrl(
     return resolveSuiteHomeUrl(suiteHomeUrl)
   }
 
-  const direct = productLaunchUrls[normalized] ?? productLaunchUrls[toLegacyProductKey(normalized)]
+  const direct = productLaunchUrls[normalized]
   if (direct) {
     return direct
   }

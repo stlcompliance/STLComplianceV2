@@ -447,6 +447,13 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Contains("/api/v1/integrations/assets/{assetId}/readiness", paths);
         Assert.Contains("/api/v1/integrations/asset-readiness-checks", paths);
         Assert.Contains("/api/v1/integrations/work-orders", paths);
+        Assert.Contains("/api/v1/integrations/defects", paths);
+        Assert.Contains("/api/v1/integrations/defects/{defectId}", paths);
+        Assert.Contains("/api/v1/integrations/inspections", paths);
+        Assert.Contains("/api/v1/integrations/inspections/{inspectionId}", paths);
+        Assert.Contains("/api/v1/integrations/quality-holds", paths);
+        Assert.Contains("/api/v1/integrations/quality-hold-releases", paths);
+        Assert.Contains("/api/v1/integrations/route-exceptions", paths);
         Assert.Contains("/api/v1/integrations/part-demand-status-updates", paths);
         Assert.Contains("/api/v1/integrations/part-issue-events", paths);
         Assert.Contains("/api/v1/integrations/supplier-work-status", paths);

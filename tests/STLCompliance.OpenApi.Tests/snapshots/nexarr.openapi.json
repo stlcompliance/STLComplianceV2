@@ -255,72 +255,6 @@
         }
       }
     },
-    "/api/internal/companion-notifications/pending": {
-      "get": {
-        "tags": [
-          "Internal"
-        ],
-        "operationId": "InternalListPendingCompanionNotifications",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "asOfUtc",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "batchSize",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/internal/companion-notifications/process-batch": {
-      "post": {
-        "tags": [
-          "Internal"
-        ],
-        "operationId": "InternalProcessCompanionNotifications",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessCompanionNotificationsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/internal/entitlement-reconciliation/pending": {
       "get": {
         "tags": [
@@ -367,6 +301,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProcessEntitlementReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/fieldcompanion-notifications/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingFieldCompanionNotifications",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/fieldcompanion-notifications/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessFieldCompanionNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessFieldCompanionNotificationsRequest"
               }
             }
           },
@@ -4900,9 +4900,9 @@
     "/api/v1/mobile/field-inbox": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "CompanionGetFieldInbox",
+        "operationId": "FieldCompanionGetFieldInbox",
         "responses": {
           "200": {
             "description": "OK"
@@ -4913,14 +4913,14 @@
     "/api/v1/mobile/field-tasks/dvir": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "SubmitCompanionFieldDvir",
+        "operationId": "SubmitFieldCompanionFieldDvir",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldDvirRequest"
+                "$ref": "#/components/schemas/SubmitFieldCompanionFieldDvirRequest"
               }
             }
           },
@@ -4936,14 +4936,14 @@
     "/api/v1/mobile/field-tasks/evidence": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "SubmitCompanionFieldEvidence",
+        "operationId": "SubmitFieldCompanionFieldEvidence",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldEvidenceRequest"
+                "$ref": "#/components/schemas/SubmitFieldCompanionFieldEvidenceRequest"
               }
             }
           },
@@ -4959,9 +4959,9 @@
     "/api/v1/mobile/field-tasks/inspection": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionFieldInspectionDetail",
+        "operationId": "GetFieldCompanionFieldInspectionDetail",
         "parameters": [
           {
             "name": "taskKey",
@@ -4982,14 +4982,14 @@
     "/api/v1/mobile/field-tasks/inspection/answers": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "SubmitCompanionFieldInspectionAnswers",
+        "operationId": "SubmitFieldCompanionFieldInspectionAnswers",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitCompanionFieldInspectionAnswersRequest"
+                "$ref": "#/components/schemas/SubmitFieldCompanionFieldInspectionAnswersRequest"
               }
             }
           },
@@ -5005,14 +5005,14 @@
     "/api/v1/mobile/field-tasks/inspection/complete": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "CompleteCompanionFieldInspection",
+        "operationId": "CompleteFieldCompanionFieldInspection",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CompleteCompanionFieldInspectionRequest"
+                "$ref": "#/components/schemas/CompleteFieldCompanionFieldInspectionRequest"
               }
             }
           },
@@ -5028,9 +5028,9 @@
     "/api/v1/mobile/field-tasks/receiving": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionFieldReceivingDetail",
+        "operationId": "GetFieldCompanionFieldReceivingDetail",
         "parameters": [
           {
             "name": "taskKey",
@@ -5051,14 +5051,14 @@
     "/api/v1/mobile/field-tasks/receiving/line": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "UpdateCompanionFieldReceivingLine",
+        "operationId": "UpdateFieldCompanionFieldReceivingLine",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCompanionFieldReceivingLineRequest"
+                "$ref": "#/components/schemas/UpdateFieldCompanionFieldReceivingLineRequest"
               }
             }
           },
@@ -5074,14 +5074,14 @@
     "/api/v1/mobile/field-tasks/receiving/post": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "PostCompanionFieldReceiving",
+        "operationId": "PostFieldCompanionFieldReceiving",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PostCompanionFieldReceivingRequest"
+                "$ref": "#/components/schemas/PostFieldCompanionFieldReceivingRequest"
               }
             }
           },
@@ -5097,9 +5097,9 @@
     "/api/v1/mobile/field-tasks/submission-status": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionFieldTaskSubmissionStatus",
+        "operationId": "GetFieldCompanionFieldTaskSubmissionStatus",
         "parameters": [
           {
             "name": "taskKeys",
@@ -5119,14 +5119,14 @@
     "/api/v1/mobile/field-tasks/validate": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "ValidateCompanionFieldTask",
+        "operationId": "ValidateFieldCompanionFieldTask",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ValidateCompanionFieldTaskRequest"
+                "$ref": "#/components/schemas/ValidateFieldCompanionFieldTaskRequest"
               }
             }
           },
@@ -5142,9 +5142,9 @@
     "/api/v1/mobile/field-tasks/work-order": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionFieldWorkOrderDetail",
+        "operationId": "GetFieldCompanionFieldWorkOrderDetail",
         "parameters": [
           {
             "name": "taskKey",
@@ -5165,14 +5165,14 @@
     "/api/v1/mobile/field-tasks/work-order/labor": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "LogCompanionFieldWorkOrderLabor",
+        "operationId": "LogFieldCompanionFieldWorkOrderLabor",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LogCompanionFieldWorkOrderLaborRequest"
+                "$ref": "#/components/schemas/LogFieldCompanionFieldWorkOrderLaborRequest"
               }
             }
           },
@@ -5188,14 +5188,14 @@
     "/api/v1/mobile/field-tasks/work-order/status": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "UpdateCompanionFieldWorkOrderStatus",
+        "operationId": "UpdateFieldCompanionFieldWorkOrderStatus",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCompanionFieldWorkOrderStatusRequest"
+                "$ref": "#/components/schemas/UpdateFieldCompanionFieldWorkOrderStatusRequest"
               }
             }
           },
@@ -5211,9 +5211,9 @@
     "/api/v1/mobile/me": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "CompanionGetMe",
+        "operationId": "FieldCompanionGetMe",
         "responses": {
           "200": {
             "description": "OK"
@@ -5224,9 +5224,9 @@
     "/api/v1/mobile/notification-settings": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionNotificationSettings",
+        "operationId": "GetFieldCompanionNotificationSettings",
         "responses": {
           "200": {
             "description": "OK"
@@ -5235,14 +5235,14 @@
       },
       "put": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "UpsertCompanionNotificationSettings",
+        "operationId": "UpsertFieldCompanionNotificationSettings",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpsertCompanionNotificationSettingsRequest"
+                "$ref": "#/components/schemas/UpsertFieldCompanionNotificationSettingsRequest"
               }
             }
           },
@@ -5258,9 +5258,9 @@
     "/api/v1/mobile/notification-settings/dispatches": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "ListCompanionNotificationDispatches",
+        "operationId": "ListFieldCompanionNotificationDispatches",
         "parameters": [
           {
             "name": "limit",
@@ -5285,9 +5285,9 @@
     "/api/v1/mobile/offline-actions": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "ListCompanionOfflineActions",
+        "operationId": "ListFieldCompanionOfflineActions",
         "parameters": [
           {
             "name": "limit",
@@ -5312,14 +5312,14 @@
     "/api/v1/mobile/offline-actions/sync": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "SyncCompanionOfflineActions",
+        "operationId": "SyncFieldCompanionOfflineActions",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SyncCompanionOfflineActionsRequest"
+                "$ref": "#/components/schemas/SyncFieldCompanionOfflineActionsRequest"
               }
             }
           },
@@ -5335,14 +5335,14 @@
     "/api/v1/mobile/push/subscribe": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "SubscribeCompanionPush",
+        "operationId": "SubscribeFieldCompanionPush",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpsertCompanionPushSubscriptionRequest"
+                "$ref": "#/components/schemas/UpsertFieldCompanionPushSubscriptionRequest"
               }
             }
           },
@@ -5356,14 +5356,14 @@
       },
       "delete": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "UnsubscribeCompanionPush",
+        "operationId": "UnsubscribeFieldCompanionPush",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UnsubscribeCompanionPushRequest"
+                "$ref": "#/components/schemas/UnsubscribeFieldCompanionPushRequest"
               }
             }
           },
@@ -5379,9 +5379,9 @@
     "/api/v1/mobile/push/vapid-public-key": {
       "get": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "GetCompanionPushVapidPublicKey",
+        "operationId": "GetFieldCompanionPushVapidPublicKey",
         "responses": {
           "200": {
             "description": "OK"
@@ -5392,14 +5392,14 @@
     "/api/v1/mobile/scan/resolve": {
       "post": {
         "tags": [
-          "FieldCompanion"
+          "fieldcompanion"
         ],
-        "operationId": "CompanionResolveScan",
+        "operationId": "FieldCompanionResolveScan",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CompanionScanResolveRequest"
+                "$ref": "#/components/schemas/FieldCompanionScanResolveRequest"
               }
             }
           },
@@ -7627,103 +7627,7 @@
           }
         }
       },
-      "CompanionFieldInspectionAnswerInput": {
-        "required": [
-          "checklistItemId",
-          "passFailValue",
-          "numericValue",
-          "textValue"
-        ],
-        "type": "object",
-        "properties": {
-          "checklistItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "passFailValue": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "numericValue": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "textValue": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "CompanionOfflineActionItem": {
-        "required": [
-          "idempotencyKey",
-          "actionKind",
-          "taskKey",
-          "productKey",
-          "clientCreatedAt"
-        ],
-        "type": "object",
-        "properties": {
-          "idempotencyKey": {
-            "type": "string"
-          },
-          "actionKind": {
-            "type": "string"
-          },
-          "taskKey": {
-            "type": "string"
-          },
-          "productKey": {
-            "type": "string"
-          },
-          "clientCreatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CompanionPushSubscriptionKeysRequest": {
-        "required": [
-          "p256dh",
-          "auth"
-        ],
-        "type": "object",
-        "properties": {
-          "p256dh": {
-            "type": "string"
-          },
-          "auth": {
-            "type": "string"
-          }
-        }
-      },
-      "CompanionScanResolveRequest": {
-        "required": [
-          "scannedValue"
-        ],
-        "type": "object",
-        "properties": {
-          "scannedValue": {
-            "type": "string"
-          },
-          "symbology": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "CompleteCompanionFieldInspectionRequest": {
+      "CompleteFieldCompanionFieldInspectionRequest": {
         "required": [
           "taskKey"
         ],
@@ -7979,6 +7883,102 @@
           }
         }
       },
+      "FieldCompanionFieldInspectionAnswerInput": {
+        "required": [
+          "checklistItemId",
+          "passFailValue",
+          "numericValue",
+          "textValue"
+        ],
+        "type": "object",
+        "properties": {
+          "checklistItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passFailValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numericValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "textValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "FieldCompanionOfflineActionItem": {
+        "required": [
+          "idempotencyKey",
+          "actionKind",
+          "taskKey",
+          "productKey",
+          "clientCreatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "actionKind": {
+            "type": "string"
+          },
+          "taskKey": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "clientCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FieldCompanionPushSubscriptionKeysRequest": {
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "type": "object",
+        "properties": {
+          "p256dh": {
+            "type": "string"
+          },
+          "auth": {
+            "type": "string"
+          }
+        }
+      },
+      "FieldCompanionScanResolveRequest": {
+        "required": [
+          "scannedValue"
+        ],
+        "type": "object",
+        "properties": {
+          "scannedValue": {
+            "type": "string"
+          },
+          "symbology": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ForgotPasswordRequest": {
         "required": [
           "email"
@@ -8076,7 +8076,7 @@
           }
         }
       },
-      "LogCompanionFieldWorkOrderLaborRequest": {
+      "LogFieldCompanionFieldWorkOrderLaborRequest": {
         "required": [
           "taskKey",
           "hoursWorked",
@@ -8220,7 +8220,7 @@
           }
         }
       },
-      "PostCompanionFieldReceivingRequest": {
+      "PostFieldCompanionFieldReceivingRequest": {
         "required": [
           "taskKey"
         ],
@@ -8231,21 +8231,13 @@
           }
         }
       },
-      "ProcessCompanionNotificationsRequest": {
+      "ProcessEntitlementReconciliationRequest": {
         "required": [
-          "tenantId",
           "asOfUtc",
           "batchSize"
         ],
         "type": "object",
         "properties": {
-          "tenantId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
           "asOfUtc": {
             "type": [
               "null",
@@ -8264,13 +8256,21 @@
           }
         }
       },
-      "ProcessEntitlementReconciliationRequest": {
+      "ProcessFieldCompanionNotificationsRequest": {
         "required": [
+          "tenantId",
           "asOfUtc",
           "batchSize"
         ],
         "type": "object",
         "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "asOfUtc": {
             "type": [
               "null",
@@ -8478,7 +8478,7 @@
           }
         }
       },
-      "SubmitCompanionFieldDvirRequest": {
+      "SubmitFieldCompanionFieldDvirRequest": {
         "required": [
           "taskKey",
           "phase",
@@ -8521,7 +8521,7 @@
           }
         }
       },
-      "SubmitCompanionFieldEvidenceRequest": {
+      "SubmitFieldCompanionFieldEvidenceRequest": {
         "required": [
           "taskKey",
           "captureKind",
@@ -8555,7 +8555,7 @@
           }
         }
       },
-      "SubmitCompanionFieldInspectionAnswersRequest": {
+      "SubmitFieldCompanionFieldInspectionAnswersRequest": {
         "required": [
           "taskKey",
           "answers"
@@ -8568,12 +8568,12 @@
           "answers": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CompanionFieldInspectionAnswerInput"
+              "$ref": "#/components/schemas/FieldCompanionFieldInspectionAnswerInput"
             }
           }
         }
       },
-      "SyncCompanionOfflineActionsRequest": {
+      "SyncFieldCompanionOfflineActionsRequest": {
         "required": [
           "actions"
         ],
@@ -8582,7 +8582,7 @@
           "actions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CompanionOfflineActionItem"
+              "$ref": "#/components/schemas/FieldCompanionOfflineActionItem"
             }
           }
         }
@@ -8610,7 +8610,7 @@
           }
         }
       },
-      "UnsubscribeCompanionPushRequest": {
+      "UnsubscribeFieldCompanionPushRequest": {
         "required": [
           "endpoint"
         ],
@@ -8621,7 +8621,7 @@
           }
         }
       },
-      "UpdateCompanionFieldReceivingLineRequest": {
+      "UpdateFieldCompanionFieldReceivingLineRequest": {
         "required": [
           "taskKey",
           "lineId",
@@ -8646,7 +8646,7 @@
           }
         }
       },
-      "UpdateCompanionFieldWorkOrderStatusRequest": {
+      "UpdateFieldCompanionFieldWorkOrderStatusRequest": {
         "required": [
           "taskKey",
           "status"
@@ -8802,54 +8802,6 @@
           }
         }
       },
-      "UpsertCompanionNotificationSettingsRequest": {
-        "required": [
-          "isEnabled",
-          "notificationWebhookUrl",
-          "notifyOnHandoffRedeemed",
-          "notifyOnFieldInboxRefreshed"
-        ],
-        "type": "object",
-        "properties": {
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "notificationWebhookUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "notifyOnHandoffRedeemed": {
-            "type": "boolean"
-          },
-          "notifyOnFieldInboxRefreshed": {
-            "type": "boolean"
-          }
-        }
-      },
-      "UpsertCompanionPushSubscriptionRequest": {
-        "required": [
-          "endpoint",
-          "keys",
-          "userAgent"
-        ],
-        "type": "object",
-        "properties": {
-          "endpoint": {
-            "type": "string"
-          },
-          "keys": {
-            "$ref": "#/components/schemas/CompanionPushSubscriptionKeysRequest"
-          },
-          "userAgent": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "UpsertDataPlaneProfileRequest": {
         "required": [
           "tenantId",
@@ -8904,6 +8856,54 @@
           },
           "autoRevokeStaleEntitlements": {
             "type": "boolean"
+          }
+        }
+      },
+      "UpsertFieldCompanionNotificationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "notificationWebhookUrl",
+          "notifyOnHandoffRedeemed",
+          "notifyOnFieldInboxRefreshed"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "notificationWebhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notifyOnHandoffRedeemed": {
+            "type": "boolean"
+          },
+          "notifyOnFieldInboxRefreshed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertFieldCompanionPushSubscriptionRequest": {
+        "required": [
+          "endpoint",
+          "keys",
+          "userAgent"
+        ],
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/FieldCompanionPushSubscriptionKeysRequest"
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9132,27 +9132,6 @@
           }
         }
       },
-      "ValidateCompanionFieldTaskRequest": {
-        "required": [
-          "taskKey",
-          "submissionKind"
-        ],
-        "type": "object",
-        "properties": {
-          "taskKey": {
-            "type": "string"
-          },
-          "submissionKind": {
-            "type": "string"
-          },
-          "productKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "ValidateDataPlaneProfileRequest": {
         "required": [
           "tenantId",
@@ -9180,6 +9159,27 @@
             ]
           },
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ValidateFieldCompanionFieldTaskRequest": {
+        "required": [
+          "taskKey",
+          "submissionKind"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "submissionKind": {
+            "type": "string"
+          },
+          "productKey": {
             "type": [
               "null",
               "string"
@@ -9275,7 +9275,7 @@
       "name": "HybridDataPlane"
     },
     {
-      "name": "FieldCompanion"
+      "name": "fieldcompanion"
     }
   ]
 }

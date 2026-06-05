@@ -19,7 +19,7 @@ import {
   ShieldCheck,
   Workflow,
 } from 'lucide-react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiErrorCallout,
   ProductWorkspaceFrame,
@@ -42,6 +42,10 @@ import {
   createReportDefinition,
   createReportRun,
   createReportSchedule,
+  getAuditPackage,
+  getDashboard,
+  getDataset,
+  getExportJob,
   getMe,
   getSessionBootstrap,
   getWorkspaceSummary,
@@ -59,6 +63,8 @@ import {
   listExportJobs,
   listExceptionQueries,
   listExceptionResults,
+  getReadModel,
+  getReportRun,
   listKpiValues,
   listKpis,
   listMetrics,
@@ -129,13 +135,19 @@ const apiBase = import.meta.env.VITE_REPORTARR_API_BASE ?? ''
 const navItems: ProductNavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
   { label: 'Datasets', to: '/datasets', icon: Database as ProductNavItem['icon'] },
+  { label: 'Read models', to: '/read-models', icon: Gauge as ProductNavItem['icon'] },
+  { label: 'Refresh jobs', to: '/refresh-jobs', icon: RefreshCcw as ProductNavItem['icon'] },
   { label: 'Dashboards', to: '/dashboards', icon: BarChart3 as ProductNavItem['icon'] },
   { label: 'Reports', to: '/reports', icon: FileText as ProductNavItem['icon'] },
+  { label: 'Report builder', to: '/reports/builder', icon: Plus as ProductNavItem['icon'] },
+  { label: 'Schedules', to: '/reports/schedules', icon: Workflow as ProductNavItem['icon'] },
+  { label: 'Exports', to: '/reports/exports', icon: FileText as ProductNavItem['icon'] },
   { label: 'KPIs', to: '/kpis', icon: Gauge as ProductNavItem['icon'] },
+  { label: 'Metrics', to: '/metrics', icon: BarChart3 as ProductNavItem['icon'] },
   { label: 'Alerts', to: '/alerts', icon: Bell as ProductNavItem['icon'] },
   { label: 'Audit', to: '/audit', icon: ShieldCheck as ProductNavItem['icon'], sectionBreakBefore: true },
-  { label: 'Integrations', to: '/integrations', icon: PlugZap as ProductNavItem['icon'] },
-  { label: 'History', to: '/history', icon: History as ProductNavItem['icon'] },
+  { label: 'Source connectors', to: '/source-connectors', icon: PlugZap as ProductNavItem['icon'], sectionBreakBefore: true },
+  { label: 'Ingestion status', to: '/ingestion-status', icon: History as ProductNavItem['icon'] },
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
 
@@ -171,6 +183,13 @@ function summarizeText(value: string | null | undefined, maxLength = 120): strin
     return 'n/a'
   }
   return trimmed.length <= maxLength ? trimmed : `${trimmed.slice(0, maxLength - 1).trimEnd()}…`
+}
+
+function parseCsvList(value: string): string[] {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function matchesRole(roleKey: string, candidates: string[]): boolean {
@@ -500,7 +519,7 @@ function ListOfDatasets({ datasets }: { datasets: ReportArrDatasetResponse[] }) 
   return (
     <div className="reportarr-stack">
       {datasets.map((dataset) => (
-        <div key={dataset.datasetId} className="reportarr-row">
+        <Link key={dataset.datasetId} to={`/datasets/${dataset.datasetId}`} className="reportarr-row">
           <div className="reportarr-row-main">
             <strong>{dataset.datasetNumber}</strong>
             <span>{dataset.title}</span>
@@ -510,7 +529,7 @@ function ListOfDatasets({ datasets }: { datasets: ReportArrDatasetResponse[] }) 
             <Pill>{dataset.freshnessStatus}</Pill>
             <Pill>{dataset.datasetType}</Pill>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
@@ -521,7 +540,7 @@ function ListOfDashboards({ dashboards }: { dashboards: ReportArrDashboardRespon
   return (
     <div className="reportarr-stack">
       {dashboards.map((dashboard) => (
-        <div key={dashboard.dashboardId} className="reportarr-row">
+        <Link key={dashboard.dashboardId} to={`/dashboards/${dashboard.dashboardId}`} className="reportarr-row">
           <div className="reportarr-row-main">
             <strong>{dashboard.dashboardNumber}</strong>
             <span>{dashboard.title}</span>
@@ -531,7 +550,7 @@ function ListOfDashboards({ dashboards }: { dashboards: ReportArrDashboardRespon
             <Pill>{dashboard.status}</Pill>
             <Pill>{dashboard.freshnessStatus}</Pill>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
@@ -563,7 +582,7 @@ function ListOfAlerts({ alerts }: { alerts: ReportArrAlertResponse[] }) {
   return (
     <div className="reportarr-stack">
       {alerts.map((alert) => (
-        <div key={alert.alertId} className="reportarr-row">
+        <Link key={alert.alertId} to={`/alerts/${alert.alertId}`} className="reportarr-row">
           <div className="reportarr-row-main">
             <strong>{alert.alertNumber}</strong>
             <span>{alert.title}</span>
@@ -574,7 +593,7 @@ function ListOfAlerts({ alerts }: { alerts: ReportArrAlertResponse[] }) {
             <Pill>{alert.status}</Pill>
             <Pill>{alert.severity}</Pill>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
@@ -1155,6 +1174,376 @@ function ReadModelRecordsList({
   )
 }
 
+function ReadModelsPage({ accessToken }: { accessToken: string }) {
+  const readModelsQuery = useQuery({
+    queryKey: ['reportarr', 'read-models'],
+    queryFn: () => listReadModels(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const readModelRecordsQuery = useQuery({
+    queryKey: ['reportarr', 'read-model-records'],
+    queryFn: () => listReadModelRecords(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const [selectedReadModelId, setSelectedReadModelId] = useState('')
+  const [selectedReadModelRecordId, setSelectedReadModelRecordId] = useState('')
+
+  useEffect(() => {
+    const models = readModelsQuery.data ?? []
+    if (!models.length) {
+      setSelectedReadModelId('')
+      setSelectedReadModelRecordId('')
+      return
+    }
+    if (!models.some((model) => model.readModelId === selectedReadModelId)) {
+      setSelectedReadModelId(models[0].readModelId)
+    }
+  }, [readModelsQuery.data, selectedReadModelId])
+
+  const selectedReadModel = readModelsQuery.data?.find((item) => item.readModelId === selectedReadModelId) ?? null
+  const visibleRecords = selectedReadModel ? readModelRecordsQuery.data?.filter((record) => record.readModelId === selectedReadModel.readModelId) ?? [] : []
+  const safeRecordId = visibleRecords.some((record) => record.readModelRecordId === selectedReadModelRecordId)
+    ? selectedReadModelRecordId
+    : visibleRecords[0]?.readModelRecordId ?? ''
+  useEffect(() => {
+    setSelectedReadModelRecordId(safeRecordId)
+  }, [safeRecordId])
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Datasets" title="Read model registry" description="Inspect every read model, its source trace, and indexed records." action={<Pill>Read models</Pill>} />
+      <div className="reportarr-grid cols-2">
+        <Panel title="Read models" icon={<Gauge className="h-4 w-4 text-cyan-300" />}>
+          <ReadModelsList readModels={readModelsQuery.data ?? []} selectedReadModelId={selectedReadModelId} onSelectReadModel={setSelectedReadModelId} />
+        </Panel>
+        <Panel title="Selected read model" icon={<Gauge className="h-4 w-4 text-cyan-300" />}>
+          {selectedReadModel ? (
+            <div className="space-y-2 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Read model:</strong> {selectedReadModel.readModelNumber}</p>
+              <p><strong className="text-slate-100">Title:</strong> {selectedReadModel.title}</p>
+              <p><strong className="text-slate-100">Status:</strong> {selectedReadModel.status}</p>
+              <p><strong className="text-slate-100">Primary source:</strong> {selectedReadModel.primarySourceProduct}</p>
+              <p><strong className="text-slate-100">Datasets:</strong> {selectedReadModel.datasetRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Refresh jobs:</strong> {selectedReadModel.refreshJobRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(selectedReadModel.lastRebuiltAt)}</p>
+              <p>
+                <Link className="reportarr-button secondary" to={`/read-models/${selectedReadModel.readModelId}`}>
+                  Open read model detail
+                </Link>
+              </p>
+            </div>
+          ) : <EmptyState title="Select a read model to inspect." />}
+        </Panel>
+        <Panel title="Records" icon={<History className="h-4 w-4 text-cyan-300" />}>
+          <ReadModelRecordsList records={visibleRecords} selectedRecordId={selectedReadModelRecordId} onSelectRecord={setSelectedReadModelRecordId} />
+        </Panel>
+      </div>
+    </div>
+  )
+}
+
+function RefreshJobsPage({ accessToken }: { accessToken: string }) {
+  const refreshJobsQuery = useQuery({
+    queryKey: ['reportarr', 'refresh-jobs'],
+    queryFn: () => listRefreshJobs(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const datasetsQuery = useQuery({
+    queryKey: ['reportarr', 'datasets'],
+    queryFn: () => listDatasets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const [selectedRefreshJobId, setSelectedRefreshJobId] = useState('')
+
+  useEffect(() => {
+    const jobs = refreshJobsQuery.data ?? []
+    if (!jobs.length) {
+      setSelectedRefreshJobId('')
+      return
+    }
+    if (!jobs.some((job) => job.refreshJobId === selectedRefreshJobId)) {
+      setSelectedRefreshJobId(jobs[0].refreshJobId)
+    }
+  }, [refreshJobsQuery.data, selectedRefreshJobId])
+
+  const selectedRefreshJob = refreshJobsQuery.data?.find((item) => item.refreshJobId === selectedRefreshJobId) ?? null
+  const selectedDataset = selectedRefreshJob ? datasetsQuery.data?.find((dataset) => dataset.datasetId === selectedRefreshJob.datasetId) ?? null : null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Datasets" title="Refresh jobs" description="Review dataset refresh execution, timing, and error metrics." action={<Pill>Refresh jobs</Pill>} />
+      <div className="reportarr-grid cols-2">
+        <Panel title="Refresh jobs" icon={<RefreshCcw className="h-4 w-4 text-cyan-300" />}>
+          <RefreshJobsList refreshJobs={refreshJobsQuery.data ?? []} selectedRefreshJobId={selectedRefreshJobId} onSelectRefreshJob={setSelectedRefreshJobId} />
+        </Panel>
+        <Panel title="Selected refresh job" icon={<RefreshCcw className="h-4 w-4 text-cyan-300" />}>
+          {selectedRefreshJob ? (
+            <div className="space-y-2 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Job:</strong> {selectedRefreshJob.refreshJobId}</p>
+              <p><strong className="text-slate-100">Type:</strong> {selectedRefreshJob.refreshType}</p>
+              <p><strong className="text-slate-100">Dataset:</strong> {selectedDataset ? `${selectedDataset.datasetNumber} · ${selectedDataset.title}` : selectedRefreshJob.datasetId}</p>
+              <p><strong className="text-slate-100">Status:</strong> {selectedRefreshJob.status}</p>
+              <p><strong className="text-slate-100">Requested by:</strong> {selectedRefreshJob.requestedByPersonId}</p>
+              <p><strong className="text-slate-100">Queued:</strong> {formatDate(selectedRefreshJob.queuedAt)}</p>
+              <p><strong className="text-slate-100">Started:</strong> {formatDate(selectedRefreshJob.startedAt)}</p>
+              <p><strong className="text-slate-100">Completed:</strong> {formatDate(selectedRefreshJob.completedAt)}</p>
+              <p><strong className="text-slate-100">Records:</strong> {formatNumber(selectedRefreshJob.recordsCreated)} created · {formatNumber(selectedRefreshJob.recordsUpdated)} updated</p>
+              <p><strong className="text-slate-100">Skipped / errored:</strong> {formatNumber(selectedRefreshJob.recordsSkipped)} / {formatNumber(selectedRefreshJob.errorCount)}</p>
+              <p>
+                <Link className="reportarr-button secondary" to={`/refresh-jobs/${selectedRefreshJob.refreshJobId}`}>
+                  Open refresh-job detail
+                </Link>
+              </p>
+            </div>
+          ) : <EmptyState title="Select a refresh job to inspect." />}
+        </Panel>
+      </div>
+    </div>
+  )
+}
+
+function ReportBuilderPage({
+  accessToken,
+  roleKey,
+  isPlatformAdmin,
+}: {
+  accessToken: string
+  roleKey: string
+  isPlatformAdmin: boolean
+}) {
+  const queryClient = useQueryClient()
+  const reportsQuery = useQuery({
+    queryKey: ['reportarr', 'reports'],
+    queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const policiesQuery = useQuery({
+    queryKey: ['reportarr', 'report-access-policies'],
+    queryFn: () => listReportAccessPolicies(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const [reportForm, setReportForm] = useState({
+    reportKey: 'operational-pack',
+    title: 'Operational report pack',
+    description: 'Summarizes operational posture for the current cycle.',
+    reportType: 'operational',
+    layoutDefinition: 'layout:split:summary',
+    exportFormats: ['pdf', 'csv'],
+    ownerPersonId: 'person-ops-analyst',
+    datasetRefs: '',
+    readModelRefs: '',
+    parameterRefs: '',
+    defaultFilters: '',
+    sectionRefs: '',
+    accessPolicyRef: '',
+  })
+  const [selectedReportId, setSelectedReportId] = useState('rpt-001')
+
+  const canBuildReports = canUseReportArrAction(roleKey, isPlatformAdmin, ['report_builder', 'reportarr_builder', 'tenant_admin', 'reportarr_admin'])
+  const createReportMutation = useMutation({
+    mutationFn: () =>
+      createReportDefinition(accessToken, {
+        ...reportForm,
+        accessPolicyRef: reportForm.accessPolicyRef || undefined,
+        datasetRefs: parseCsvList(reportForm.datasetRefs),
+        readModelRefs: parseCsvList(reportForm.readModelRefs),
+        parameterRefs: parseCsvList(reportForm.parameterRefs),
+        defaultFilters: parseCsvList(reportForm.defaultFilters),
+        sectionRefs: parseCsvList(reportForm.sectionRefs),
+      }),
+    onSuccess: async (report) => {
+      setSelectedReportId(report.reportDefinitionId)
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+  const updateReportMutation = useMutation({
+    mutationFn: (status: string) => {
+      if (!selectedReportId) {
+        throw new Error('No report selected.')
+      }
+      return updateReportDefinition(accessToken, selectedReportId, {
+        status,
+        requestedByPersonId: 'person-ops-analyst',
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+
+  const selectedReport = reportsQuery.data?.find((item) => item.reportDefinitionId === selectedReportId) ?? null
+  const selectedPolicy = policiesQuery.data?.find((policy) => policy.reportDefinitionId === selectedReportId) ?? null
+
+  useEffect(() => {
+    const reports = reportsQuery.data ?? []
+    if (!reports.length) {
+      setSelectedReportId('')
+      return
+    }
+    if (!reports.some((report) => report.reportDefinitionId === selectedReportId)) {
+      setSelectedReportId(reports[0].reportDefinitionId)
+    }
+  }, [reportsQuery.data, selectedReportId])
+
+  const canUpdateSelectedReport = selectedPolicy?.allowedPermissionRefs.some((permission) => permission === 'reportarr.reports.update') ?? false
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader
+        eyebrow="Reports"
+        title="Report builder"
+        description="Create a report definition, define layout and export formats, then activate and preview the definition."
+      />
+      {canBuildReports ? (
+        <>
+          <Panel title="Report metadata" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <TextInput value={reportForm.reportKey} onChange={(value) => setReportForm({ ...reportForm, reportKey: value })} placeholder="report-key" />
+              <TextInput value={reportForm.title} onChange={(value) => setReportForm({ ...reportForm, title: value })} placeholder="Title" />
+              <TextInput value={reportForm.reportType} onChange={(value) => setReportForm({ ...reportForm, reportType: value })} placeholder="Type" />
+              <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
+              <TextInput value={reportForm.ownerPersonId} onChange={(value) => setReportForm({ ...reportForm, ownerPersonId: value })} placeholder="Owner person id" />
+              <div className="md:col-span-2">
+                <div className="mb-2 text-sm text-slate-300">Access policy</div>
+                <select
+                  className="reportarr-input"
+                  value={reportForm.accessPolicyRef || 'default'}
+                  onChange={(event) => {
+                    const nextValue = event.target.value === 'default' ? '' : event.target.value
+                    setReportForm({ ...reportForm, accessPolicyRef: nextValue })
+                  }}
+                >
+                  <option value="default">Use default policy</option>
+                  {policiesQuery.data?.map((policy) => (
+                    <option key={policy.accessPolicyId} value={policy.accessPolicyId}>
+                      {policy.accessPolicyId}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
+              </div>
+              <div className="md:col-span-2">
+                <TextArea
+                  value={reportForm.datasetRefs}
+                  onChange={(value) => setReportForm({ ...reportForm, datasetRefs: value })}
+                  placeholder="Dataset references (comma-separated IDs)"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextArea
+                  value={reportForm.readModelRefs}
+                  onChange={(value) => setReportForm({ ...reportForm, readModelRefs: value })}
+                  placeholder="Read model references (comma-separated IDs)"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextArea
+                  value={reportForm.parameterRefs}
+                  onChange={(value) => setReportForm({ ...reportForm, parameterRefs: value })}
+                  placeholder="Parameter references (comma-separated IDs)"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextArea
+                  value={reportForm.defaultFilters}
+                  onChange={(value) => setReportForm({ ...reportForm, defaultFilters: value })}
+                  placeholder="Default filters (comma-separated IDs)"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextArea
+                  value={reportForm.sectionRefs}
+                  onChange={(value) => setReportForm({ ...reportForm, sectionRefs: value })}
+                  placeholder="Section references (comma-separated IDs)"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <div className="mb-2 text-sm text-slate-300">Export formats</div>
+                <div className="flex flex-wrap gap-2">
+                  {reportExportFormatOptions.map((format) => {
+                    const active = reportForm.exportFormats.includes(format)
+                    return (
+                      <button
+                        key={format}
+                        type="button"
+                        className={['reportarr-button secondary', active ? 'ring-2 ring-cyan-400 bg-cyan-400/10 text-cyan-100' : ''].join(' ')}
+                        onClick={() =>
+                          setReportForm((current) => ({
+                            ...current,
+                            exportFormats: current.exportFormats.includes(format)
+                              ? current.exportFormats.filter((item) => item !== format)
+                              : [...current.exportFormats, format],
+                          }))
+                        }
+                      >
+                        {format}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                className="reportarr-button"
+                type="button"
+                onClick={() => createReportMutation.mutate()}
+                disabled={createReportMutation.isPending}
+              >
+                {createReportMutation.isPending ? 'Creating…' : 'Save report definition'}
+              </button>
+              <button
+                className="reportarr-button secondary"
+                type="button"
+                onClick={() => updateReportMutation.mutate('active')}
+                disabled={updateReportMutation.isPending || !selectedReportId || !canUpdateSelectedReport}
+              >
+                {updateReportMutation.isPending ? 'Saving…' : 'Activate selected report'}
+              </button>
+              <button
+                className="reportarr-button secondary"
+                type="button"
+                onClick={() => updateReportMutation.mutate('archived')}
+                disabled={updateReportMutation.isPending || !selectedReportId || !canUpdateSelectedReport}
+              >
+                {updateReportMutation.isPending ? 'Saving…' : 'Archive selected report'}
+              </button>
+            </div>
+          </Panel>
+          <Panel title="Preview" icon={<PlayCircle className="h-4 w-4 text-cyan-300" />}>
+            <div className="space-y-2 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Selected report:</strong> {selectedReport ? selectedReport.reportNumber : 'none selected'}</p>
+              <p><strong className="text-slate-100">Status:</strong> {selectedReport?.status ?? 'n/a'}</p>
+              <p><strong className="text-slate-100">Datasets:</strong> {(selectedReport?.datasetRefs ?? parseCsvList(reportForm.datasetRefs)).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Read models:</strong> {(selectedReport?.readModelRefs ?? parseCsvList(reportForm.readModelRefs)).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Parameters:</strong> {(selectedReport?.parameterRefs ?? parseCsvList(reportForm.parameterRefs)).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Filters:</strong> {(selectedReport?.defaultFilters ?? parseCsvList(reportForm.defaultFilters)).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Sections:</strong> {(selectedReport?.sectionRefs ?? parseCsvList(reportForm.sectionRefs)).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Title:</strong> {selectedReport?.title ?? reportForm.title}</p>
+              <p><strong className="text-slate-100">Layout:</strong> {selectedReport ? summarizeConfiguredField(selectedReport.layoutDefinition, 'layout') : reportForm.layoutDefinition}</p>
+              <p><strong className="text-slate-100">Export formats:</strong> {(selectedReport?.exportFormats ?? reportForm.exportFormats).join(', ') || 'n/a'}</p>
+              <p><strong className="text-slate-100">Access policy:</strong> {selectedPolicy ? selectedPolicy.visibility : 'default'}</p>
+              <p><strong className="text-slate-100">Requested policy ref:</strong> {reportForm.accessPolicyRef || 'none'}</p>
+            </div>
+          </Panel>
+        </>
+      ) : (
+        <EmptyState title="You do not have permission to build reports." />
+      )}
+
+      {canBuildReports ? (
+        <div className="mt-4">
+          <Link className="reportarr-button secondary" to="/reports">
+            Open full reports operations
+          </Link>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function RefreshJobsList({
   refreshJobs,
   selectedRefreshJobId = '',
@@ -1671,6 +2060,12 @@ function ReportsPage({
     layoutDefinition: 'layout:split:summary',
     exportFormats: ['pdf', 'csv'],
     ownerPersonId: 'person-ops-analyst',
+    datasetRefs: '',
+    readModelRefs: '',
+    parameterRefs: '',
+    defaultFilters: '',
+    sectionRefs: '',
+    accessPolicyRef: '',
   })
   const [scheduleForm, setScheduleForm] = useState({
     title: 'Weekly operational pack',
@@ -1697,7 +2092,16 @@ function ReportsPage({
     : null
 
   const createReportMutation = useMutation({
-    mutationFn: () => createReportDefinition(accessToken, reportForm),
+    mutationFn: () =>
+      createReportDefinition(accessToken, {
+        ...reportForm,
+        accessPolicyRef: reportForm.accessPolicyRef || undefined,
+        datasetRefs: parseCsvList(reportForm.datasetRefs),
+        readModelRefs: parseCsvList(reportForm.readModelRefs),
+        parameterRefs: parseCsvList(reportForm.parameterRefs),
+        defaultFilters: parseCsvList(reportForm.defaultFilters),
+        sectionRefs: parseCsvList(reportForm.sectionRefs),
+      }),
     onSuccess: async (report) => {
       setSelectedReportId(report.reportDefinitionId)
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
@@ -1886,7 +2290,60 @@ function ReportsPage({
           <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
           <TextInput value={reportForm.ownerPersonId} onChange={(value) => setReportForm({ ...reportForm, ownerPersonId: value })} placeholder="Owner person id" />
           <div className="md:col-span-2">
+            <div className="mb-2 text-sm text-slate-300">Access policy</div>
+            <select
+              className="reportarr-input"
+              value={reportForm.accessPolicyRef || 'default'}
+              onChange={(event) => {
+                const nextValue = event.target.value === 'default' ? '' : event.target.value
+                setReportForm({ ...reportForm, accessPolicyRef: nextValue })
+              }}
+            >
+              <option value="default">Use default policy</option>
+              {reportPoliciesQuery.data?.map((policy) => (
+                <option key={policy.accessPolicyId} value={policy.accessPolicyId}>
+                  {policy.accessPolicyId}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2">
             <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
+          </div>
+          <div className="md:col-span-2">
+            <TextArea
+              value={reportForm.datasetRefs}
+              onChange={(value) => setReportForm({ ...reportForm, datasetRefs: value })}
+              placeholder="Dataset references (comma-separated IDs)"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <TextArea
+              value={reportForm.readModelRefs}
+              onChange={(value) => setReportForm({ ...reportForm, readModelRefs: value })}
+              placeholder="Read model references (comma-separated IDs)"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <TextArea
+              value={reportForm.parameterRefs}
+              onChange={(value) => setReportForm({ ...reportForm, parameterRefs: value })}
+              placeholder="Parameter references (comma-separated IDs)"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <TextArea
+              value={reportForm.defaultFilters}
+              onChange={(value) => setReportForm({ ...reportForm, defaultFilters: value })}
+              placeholder="Default filters (comma-separated IDs)"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <TextArea
+              value={reportForm.sectionRefs}
+              onChange={(value) => setReportForm({ ...reportForm, sectionRefs: value })}
+              placeholder="Section references (comma-separated IDs)"
+            />
           </div>
           <div className="md:col-span-2">
             <div className="mb-2 text-sm text-slate-300">Export formats</div>
@@ -2197,15 +2654,22 @@ function ReportRunsList({
   selectedReportRunId?: string
   onSelectReportRun?: (reportRunId: string) => void
 }) {
+  const navigate = useNavigate()
   if (!reportRuns.length) return <EmptyState title="No report runs yet." />
   return (
     <div className="reportarr-stack">
       {reportRuns.map((run) => (
-        <button
+        <div
           key={run.reportRunId}
-          type="button"
           className={['reportarr-row reportarr-row-button', run.reportRunId === selectedReportRunId ? 'active' : ''].join(' ')}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelectReportRun?.(run.reportRunId)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              onSelectReportRun?.(run.reportRunId)
+            }
+          }}
         >
           <div className="reportarr-row-main">
             <strong>{run.reportRunNumber}</strong>
@@ -2223,8 +2687,18 @@ function ReportRunsList({
             <Pill>{run.warningCount} warnings</Pill>
             <Pill>{run.errorCount} errors</Pill>
             <Pill>{run.rowCount} rows</Pill>
+            <button
+              type="button"
+              className="reportarr-button secondary text-xs"
+              onClick={(event) => {
+                event.stopPropagation()
+                navigate(`/reports/runs/${run.reportRunId}`)
+              }}
+            >
+              Open details
+            </button>
           </div>
-        </button>
+        </div>
       ))}
     </div>
   )
@@ -2271,15 +2745,22 @@ function ReportSchedulesList({
   isUpdating?: boolean
 }) {
   const visibleSchedules = schedules.filter((schedule) => schedule.reportDefinitionId === reportDefinitionId)
+  const navigate = useNavigate()
   if (!visibleSchedules.length) return <EmptyState title="No schedules yet." />
   return (
     <div className="reportarr-stack">
       {visibleSchedules.map((schedule) => (
-        <button
+        <div
           key={schedule.scheduleId}
-          type="button"
           className={['reportarr-row reportarr-row-button', schedule.scheduleId === selectedScheduleId ? 'active' : ''].join(' ')}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelectSchedule(schedule.scheduleId)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              onSelectSchedule(schedule.scheduleId)
+            }
+          }}
         >
           <div className="reportarr-row-main">
             <strong>{schedule.scheduleNumber}</strong>
@@ -2296,6 +2777,16 @@ function ReportSchedulesList({
             <Pill>{schedule.cadence}</Pill>
             {onStatusChange ? (
               <div className="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  className="reportarr-button secondary text-xs"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    navigate(`/reports/schedules/${schedule.scheduleId}`)
+                  }}
+                >
+                  Open details
+                </button>
                 <button
                   type="button"
                   className="reportarr-button secondary"
@@ -2323,7 +2814,7 @@ function ReportSchedulesList({
               </div>
             ) : null}
           </div>
-        </button>
+        </div>
       ))}
     </div>
   )
@@ -2499,15 +2990,22 @@ function ExportJobsList({
   selectedExportJobId?: string
   onSelectExportJob?: (exportJobId: string) => void
 }) {
+  const navigate = useNavigate()
   if (!exports.length) return <EmptyState title="No exports yet." />
   return (
     <div className="reportarr-stack">
       {exports.map((job) => (
-        <button
+        <div
           key={job.exportJobId}
-          type="button"
           className={['reportarr-row reportarr-row-button', job.exportJobId === selectedExportJobId ? 'active' : ''].join(' ')}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelectExportJob(job.exportJobId)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              onSelectExportJob(job.exportJobId)
+            }
+          }}
         >
           <div className="reportarr-row-main">
             <strong>{job.exportNumber}</strong>
@@ -2520,8 +3018,18 @@ function ExportJobsList({
           </div>
           <div className="reportarr-row-meta">
             <Pill>{job.status}</Pill>
+            <button
+              type="button"
+              className="reportarr-button secondary text-xs"
+              onClick={(event) => {
+                event.stopPropagation()
+                navigate(`/reports/exports/${job.exportJobId}`)
+              }}
+            >
+              Open details
+            </button>
           </div>
-        </button>
+        </div>
       ))}
     </div>
   )
@@ -3249,7 +3757,7 @@ function AuditPage({
   const queryClient = useQueryClient()
   const auditPackagesQuery = useQuery({
     queryKey: ['reportarr', 'audit-packages'],
-    queryFn: () => listAuditPackages(accessToken),
+  queryFn: () => listAuditPackages(accessToken),
     enabled: Boolean(accessToken),
   })
   const auditScopesQuery = useQuery({
@@ -4539,6 +5047,810 @@ function SettingsPage({
   )
 }
 
+function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
+  const { reportRunId } = useParams<{ reportRunId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'report-runs', reportRunId, accessToken],
+    queryFn: () => getReportRun(accessToken, reportRunId!),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+
+  if (!reportRunId) {
+    return <Navigate to="/reports" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading report run…</div>
+  }
+
+  const reportRun = query.data ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader
+        eyebrow="Reports"
+        title="Report run detail"
+        description={`Inspect a single report run (${reportRunId}).`}
+      />
+      <Panel title="Report run detail">
+        <ReportRunDetail reportRun={reportRun} />
+      </Panel>
+    </div>
+  )
+}
+
+function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
+  const { scheduleId } = useParams<{ scheduleId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'report-schedules', scheduleId, accessToken],
+    queryFn: () => listReportSchedules(accessToken),
+    enabled: Boolean(accessToken) && Boolean(scheduleId),
+  })
+
+  if (!scheduleId) {
+    return <Navigate to="/reports" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading schedule…</div>
+  }
+
+  const reportSchedule = query.data?.find((item) => item.scheduleId === scheduleId) ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader
+        eyebrow="Reports"
+        title="Report schedule detail"
+        description={`Inspect a single schedule (${scheduleId}).`}
+      />
+      <Panel title="Report schedule detail">
+        <ReportScheduleDetail reportSchedule={reportSchedule} />
+      </Panel>
+    </div>
+  )
+}
+
+function ExportJobDetailPage({ accessToken }: { accessToken: string }) {
+  const { exportJobId } = useParams<{ exportJobId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'export-jobs', exportJobId, accessToken],
+    queryFn: () => getExportJob(accessToken, exportJobId!),
+    enabled: Boolean(accessToken) && Boolean(exportJobId),
+  })
+
+  if (!exportJobId) {
+    return <Navigate to="/reports" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading export job…</div>
+  }
+
+  const exportJob = query.data ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader
+        eyebrow="Reports"
+        title="Export job detail"
+        description={`Inspect a single export job (${exportJobId}).`}
+      />
+      <Panel title="Export job detail">
+        <ExportJobDetail exportJob={exportJob} />
+      </Panel>
+    </div>
+  )
+}
+
+function DatasetDetailPage({ accessToken }: { accessToken: string }) {
+  const { datasetId } = useParams<{ datasetId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'datasets', datasetId, accessToken],
+    queryFn: () => getDataset(accessToken, datasetId!),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const fieldsQuery = useQuery({
+    queryKey: ['reportarr', 'dataset-fields', datasetId, accessToken],
+    queryFn: () => listDatasetFields(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const lineageQuery = useQuery({
+    queryKey: ['reportarr', 'dataset-lineage', datasetId, accessToken],
+    queryFn: () => listDatasetLineage(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const refreshJobsQuery = useQuery({
+    queryKey: ['reportarr', 'refresh-jobs', accessToken],
+    queryFn: () => listRefreshJobs(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const readModelsQuery = useQuery({
+    queryKey: ['reportarr', 'read-models', accessToken],
+    queryFn: () => listReadModels(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const sourceEventsQuery = useQuery({
+    queryKey: ['reportarr', 'source-events', accessToken],
+    queryFn: () => listSourceEvents(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const dashboardsQuery = useQuery({
+    queryKey: ['reportarr', 'dashboards', accessToken],
+    queryFn: () => listDashboards(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const reportDefinitionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-definitions', accessToken],
+    queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+  const widgetsQuery = useQuery({
+    queryKey: ['reportarr', 'widgets', accessToken],
+    queryFn: () => listWidgets(accessToken),
+    enabled: Boolean(accessToken) && Boolean(datasetId),
+  })
+
+  if (!datasetId) {
+    return <Navigate to="/datasets" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading dataset…</div>
+  }
+
+  const dataset = query.data ?? null
+  const datasetFields = fieldsQuery.data?.filter((field) => field.datasetId === datasetId) ?? []
+  const datasetLineage = lineageQuery.data?.filter((lineage) => lineage.datasetId === datasetId) ?? []
+  const datasetRefreshJobs = (refreshJobsQuery.data ?? [])
+    .filter((job) => job.datasetId === datasetId)
+    .sort((a, b) => new Date(b.queuedAt).getTime() - new Date(a.queuedAt).getTime())
+  const ingestionErrors = (sourceEventsQuery.data ?? [])
+    .filter((event) => event.sourceObjectRef === datasetId && event.status === 'failed')
+    .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+  const readModels = (readModelsQuery.data ?? []).filter((model) => model.datasetRefs.includes(datasetId))
+  const datasetWidgetRefs = (widgetsQuery.data ?? []).filter((widget) => widget.datasetRef === datasetId).map((widget) => widget.widgetId)
+  const dependentDashboards =
+    dashboardsQuery.data?.filter((dashboard) => dashboard.widgetRefs.some((ref) => datasetWidgetRefs.includes(ref))) ?? []
+  const dependentReports =
+    reportDefinitionsQuery.data?.filter((report) => report.datasetRefs.includes(datasetId)) ?? []
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Datasets" title="Dataset detail" description={`Inspect a single dataset (${datasetId}).`} />
+      <Panel title="Dataset detail">
+        {dataset ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Dataset number:</strong> {dataset.datasetNumber}</p>
+            <p><strong className="text-slate-100">Dataset key:</strong> {dataset.datasetKey}</p>
+            <p><strong className="text-slate-100">Title:</strong> {dataset.title}</p>
+            <p><strong className="text-slate-100">Description:</strong> {dataset.description}</p>
+            <p><strong className="text-slate-100">Type:</strong> {dataset.datasetType}</p>
+            <p><strong className="text-slate-100">Status:</strong> {dataset.status}</p>
+            <p><strong className="text-slate-100">Refresh:</strong> {dataset.refreshMode} · {dataset.refreshFrequency}</p>
+            <p><strong className="text-slate-100">Freshness:</strong> {dataset.freshnessStatus}</p>
+            <p><strong className="text-slate-100">Last refreshed:</strong> {formatDate(dataset.lastRefreshedAt)}</p>
+            <p><strong className="text-slate-100">Last successful refresh:</strong> {formatDate(dataset.lastSuccessfulRefreshAt)}</p>
+            <p><strong className="text-slate-100">Last failed refresh:</strong> {formatDate(dataset.lastFailedRefreshAt)}</p>
+            <p><strong className="text-slate-100">Source traceability:</strong> {dataset.sourceTraceabilityRules || 'none'}</p>
+            <p><strong className="text-slate-100">Schema version:</strong> {dataset.schemaVersion}</p>
+            <p><strong className="text-slate-100">Retention policy:</strong> {dataset.retentionPolicy}</p>
+            <p><strong className="text-slate-100">Source products:</strong> {dataset.sourceProducts.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Source connectors:</strong> {dataset.sourceConnectors.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Owner:</strong> {dataset.ownerPersonId}</p>
+            <p><strong className="text-slate-100">Field definitions:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Schema/fields:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {datasetFields.length ? (
+                  datasetFields.map((field) => (
+                    <li key={field.fieldId}>
+                      <span className="text-slate-100">{field.fieldKey}</span> · {field.dataType} · {field.sourceProduct}.{field.sourceFieldPath}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Refresh history:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {datasetRefreshJobs.length ? (
+                  datasetRefreshJobs.slice(0, 5).map((job) => (
+                    <li key={job.refreshJobId}>
+                      <Link className="text-cyan-300 underline" to={`/refresh-jobs/${job.refreshJobId}`}>
+                        {job.status}
+                      </Link>{' '}
+                      · queued {formatDate(job.queuedAt)} · started {formatDate(job.startedAt)} · records created {formatNumber(job.recordsCreated)}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Ingestion errors:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {ingestionErrors.length ? (
+                  ingestionErrors.slice(0, 5).map((event) => (
+                    <li key={event.sourceEventReceiptId}>
+                      <Link className="text-cyan-300 underline" to={`/history/events/${event.sourceEventReceiptId}`}>
+                        {event.sourceObjectRef}
+                      </Link>{' '}
+                      · {event.eventType} · {formatDate(event.receivedAt)}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Lineage:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {datasetLineage.length ? (
+                  datasetLineage.map((lineage) => (
+                    <li key={lineage.lineageId}>
+                      {lineage.sourceProduct}.{lineage.sourceObjectType} → {lineage.datasetFieldKey} · {lineage.transformationDescription}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Read models:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {readModels.length ? (
+                  readModels.map((readModel) => (
+                    <li key={readModel.readModelId}>
+                      <Link className="text-cyan-300 underline" to={`/read-models/${readModel.readModelId}`}>{readModel.title}</Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Dependent dashboards/reports:</strong></p>
+              <div className="mt-1">
+                <p className="font-semibold text-slate-100">Dashboards</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {dependentDashboards.length ? (
+                    dependentDashboards.map((dashboard) => (
+                      <li key={dashboard.dashboardId}>
+                        <Link className="text-cyan-300 underline" to={`/dashboards/${dashboard.dashboardId}`}>{dashboard.title}</Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li>none</li>
+                  )}
+                </ul>
+              </div>
+              <div className="mt-3">
+                <p className="font-semibold text-slate-100">Reports</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {dependentReports.length ? (
+                    dependentReports.map((report) => (
+                      <li key={report.reportDefinitionId}>
+                        {report.title}
+                      </li>
+                    ))
+                  ) : (
+                    <li>none</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <EmptyState title="Dataset not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function DashboardDetailPage({ accessToken }: { accessToken: string }) {
+  const { dashboardId } = useParams<{ dashboardId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'dashboards', dashboardId, accessToken],
+    queryFn: () => getDashboard(accessToken, dashboardId!),
+    enabled: Boolean(accessToken) && Boolean(dashboardId),
+  })
+  const queryClient = useQueryClient()
+  const policiesQuery = useQuery({
+    queryKey: ['reportarr', 'dashboard-access-policies', accessToken],
+    queryFn: () => listDashboardAccessPolicies(accessToken),
+    enabled: Boolean(accessToken) && Boolean(dashboardId),
+  })
+  const filtersQuery = useQuery({
+    queryKey: ['reportarr', 'dashboard-filters', accessToken],
+    queryFn: () => listDashboardFilters(accessToken),
+    enabled: Boolean(accessToken) && Boolean(dashboardId),
+  })
+  const drilldownsQuery = useQuery({
+    queryKey: ['reportarr', 'drilldowns', accessToken],
+    queryFn: () => listDrilldowns(accessToken),
+    enabled: Boolean(accessToken) && Boolean(dashboardId),
+  })
+  const widgetsQuery = useQuery({
+    queryKey: ['reportarr', 'widgets', accessToken],
+    queryFn: () => listWidgets(accessToken),
+    enabled: Boolean(accessToken) && Boolean(dashboardId),
+  })
+  const exportMutation = useMutation({
+    mutationFn: () =>
+      createExport(accessToken, {
+        reportRunId: null,
+        exportType: 'dashboard',
+        sourceRef: dashboardId!,
+        exportFormat: 'pdf',
+        requestedByPersonId: query.data?.ownerPersonId ?? 'person-ops-analyst',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+
+  if (!dashboardId) {
+    return <Navigate to="/dashboards" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading dashboard…</div>
+  }
+
+  const dashboard = query.data ?? null
+  const dashboardPolicy = policiesQuery.data?.find((item) => item.dashboardId === dashboardId) ?? null
+  const dashboardFilters = filtersQuery.data?.filter((item) => item.dashboardId === dashboardId) ?? []
+  const dashboardDrilldowns = drilldownsQuery.data?.filter((item) => item.dashboardId === dashboardId) ?? []
+  const dashboardWidgets =
+    (widgetsQuery.data ?? [])
+      .filter((item) => (dashboard ? dashboard.widgetRefs.includes(item.widgetId) : false))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+  const sourceDatasetRefs = [...new Set(dashboardWidgets.map((widget) => widget.datasetRef).filter(Boolean))]
+  const sourceReadModelRefs = [...new Set(dashboardWidgets.map((widget) => widget.readModelRef).filter(Boolean))]
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Dashboards" title="Dashboard detail" description={`Inspect a single dashboard (${dashboardId}).`} />
+      <Panel title="Dashboard detail">
+        {dashboard ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Dashboard number:</strong> {dashboard.dashboardNumber}</p>
+            <p><strong className="text-slate-100">Dashboard key:</strong> {dashboard.dashboardKey}</p>
+            <p><strong className="text-slate-100">Title:</strong> {dashboard.title}</p>
+            <p><strong className="text-slate-100">Type:</strong> {dashboard.dashboardType}</p>
+            <p><strong className="text-slate-100">Description:</strong> {dashboard.description}</p>
+            <p><strong className="text-slate-100">Status:</strong> {dashboard.status}</p>
+            <p><strong className="text-slate-100">Default date range:</strong> {dashboard.defaultDateRange}</p>
+            <p><strong className="text-slate-100">Freshness:</strong> {dashboard.freshnessStatus}</p>
+            <p><strong className="text-slate-100">Widget refs:</strong> {dashboard.widgetRefs.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Filter refs:</strong> {dashboard.filterRefs.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Drilldown refs:</strong> {dashboard.drilldownRefs.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Last viewed:</strong> {formatDate(dashboard.lastViewedAt)}</p>
+            <p><strong className="text-slate-100">Freshness indicator:</strong> {dashboard.freshnessStatus}</p>
+            <p>
+              <strong className="text-slate-100">Source trace summary:</strong> datasets {sourceDatasetRefs.join(', ') || 'none'} · read models{' '}
+              {sourceReadModelRefs.join(', ') || 'none'}
+            </p>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Filters:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {dashboardFilters.length ? (
+                  dashboardFilters.map((filter) => (
+                    <li key={filter.filterId}>
+                      {filter.label} ({filter.filterType}) · required {String(filter.required)} · default {filter.defaultValue}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Widget grid:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {dashboardWidgets.length ? (
+                  dashboardWidgets.map((widget) => (
+                    <li key={widget.widgetId}>
+                      {widget.title} · {widget.widgetType} · status {widget.status}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Drilldowns:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {dashboardDrilldowns.length ? (
+                  dashboardDrilldowns.map((drilldown) => (
+                    <li key={drilldown.drilldownId}>
+                      {drilldown.title} · {drilldown.targetType} → {drilldown.targetRef}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <button
+                className="reportarr-button"
+                type="button"
+                onClick={() => exportMutation.mutate()}
+                disabled={exportMutation.isPending || !(dashboardPolicy?.exportAllowed ?? false)}
+              >
+                {exportMutation.isPending ? 'Exporting…' : 'Export dashboard'}
+              </button>
+              {!dashboardPolicy?.exportAllowed ? <small className="ml-2 text-xs text-amber-200">Export blocked by policy.</small> : null}
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Access settings:</strong></p>
+              <p>Visibility: {dashboardPolicy?.visibility || 'none'} · export allowed: {dashboardPolicy?.exportAllowed ? 'yes' : 'no'}</p>
+              <p>Allowed roles: {dashboardPolicy?.allowedRoleRefs.join(', ') || 'none'}</p>
+              <p>Allowed persons: {dashboardPolicy?.allowedPersonRefs.join(', ') || 'none'}</p>
+              <p>Source product restrictions: {dashboardPolicy?.sourceProductRestrictions.join(', ') || 'none'}</p>
+            </div>
+          </div>
+        ) : (
+          <EmptyState title="Dashboard not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function AlertDetailPage({ accessToken }: { accessToken: string }) {
+  const { alertId } = useParams<{ alertId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'alerts', alertId, accessToken],
+    queryFn: () => listAlerts(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+  const datasetsQuery = useQuery({
+    queryKey: ['reportarr', 'datasets', accessToken],
+    queryFn: () => listDatasets(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+  const metricsQuery = useQuery({
+    queryKey: ['reportarr', 'metrics', accessToken],
+    queryFn: () => listMetrics(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+  const dashboardsQuery = useQuery({
+    queryKey: ['reportarr', 'dashboards', accessToken],
+    queryFn: () => listDashboards(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+  const reportDefinitionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-definitions', accessToken],
+    queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+  const widgetsQuery = useQuery({
+    queryKey: ['reportarr', 'widgets', accessToken],
+    queryFn: () => listWidgets(accessToken),
+    enabled: Boolean(accessToken) && Boolean(alertId),
+  })
+
+  if (!alertId) {
+    return <Navigate to="/alerts" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading alert…</div>
+  }
+
+  const alert = query.data?.find((item) => item.alertId === alertId) ?? null
+  const dataset = alert ? datasetsQuery.data?.find((item) => item.datasetId === alert.datasetRef) ?? null : null
+  const metric = alert ? metricsQuery.data?.find((item) => item.metricId === alert.metricRef) ?? null : null
+  const triggerHistory = query.data
+    ? query.data
+      .filter(
+        (item) =>
+          item.alertId !== alertId &&
+          ((alert?.datasetRef && item.datasetRef === alert.datasetRef) || (alert?.metricRef && item.metricRef === alert.metricRef)),
+      )
+      .sort((a, b) => new Date(b.triggeredAt ?? 0).getTime() - new Date(a.triggeredAt ?? 0).getTime())
+      .slice(0, 5)
+    : []
+  const relatedDashboardIds = dashboardsQuery.data && alert
+    ? dashboardsQuery.data
+        .flatMap((dashboard) => dashboard.widgetRefs)
+        .filter((widgetId) => (widgetsQuery.data ?? []).some((widget) => widget.widgetId === widgetId && widget.datasetRef === alert.datasetRef))
+        .map((widgetId) => {
+          const dashboard = dashboardsQuery.data!.find((item) => item.widgetRefs.includes(widgetId))
+          return dashboard?.dashboardId
+        })
+        .filter((dashboardId): dashboardId is string => Boolean(dashboardId))
+    : []
+  const relatedDashboards = dashboardsQuery.data?.filter((item) => relatedDashboardIds.includes(item.dashboardId)) ?? []
+  const relatedReports = alert && dataset ? reportDefinitionsQuery.data?.filter((item) => item.datasetRefs.includes(dataset.datasetId)) ?? [] : []
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Alerts" title="Alert detail" description={`Inspect a single alert (${alertId}).`} />
+      <Panel title="Alert detail">
+        {alert ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Alert number:</strong> {alert.alertNumber}</p>
+            <p><strong className="text-slate-100">Title:</strong> {alert.title}</p>
+            <p><strong className="text-slate-100">Type:</strong> {alert.alertType}</p>
+            <p><strong className="text-slate-100">Severity:</strong> {alert.severity}</p>
+            <p><strong className="text-slate-100">Status:</strong> {alert.status}</p>
+            <p><strong className="text-slate-100">Description:</strong> {alert.description}</p>
+            <p><strong className="text-slate-100">Condition:</strong> {alert.condition}</p>
+            <p><strong className="text-slate-100">Source dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert.datasetRef || 'not set'}</p>
+            <p><strong className="text-slate-100">Source metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert.metricRef || 'not set'}</p>
+            <p><strong className="text-slate-100">Triggered at:</strong> {formatDate(alert.triggeredAt)}</p>
+            <p><strong className="text-slate-100">Acknowledgement/resolution:</strong>{' '}
+            {alert.acknowledgedByPersonId ?? 'not acknowledged'} / {formatDate(alert.acknowledgedAt)} / {formatDate(alert.resolvedAt)}
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Trigger history:</strong></p>
+              <ul className="mt-1 list-disc pl-5">
+                {triggerHistory.length ? (
+                  triggerHistory.map((item) => (
+                    <li key={item.alertId}>
+                      <Link className="text-cyan-300 underline" to={`/alerts/${item.alertId}`}>
+                        {formatDate(item.triggeredAt)}
+                      </Link>{' '}
+                      · {item.status} · {item.alertType}
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+            </div>
+            <div className="pt-2">
+              <p><strong className="text-slate-100">Related dashboards/reports:</strong></p>
+              <p className="font-semibold text-slate-100 mt-2">Dashboards</p>
+              <ul className="mt-1 list-disc pl-5">
+                {relatedDashboards.length ? (
+                  relatedDashboards.map((item) => (
+                    <li key={item.dashboardId}>
+                      <Link className="text-cyan-300 underline" to={`/dashboards/${item.dashboardId}`}>{item.title}</Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>none</li>
+                )}
+              </ul>
+              <p className="font-semibold text-slate-100 mt-3">Reports</p>
+              <ul className="mt-1 list-disc pl-5">
+                {relatedReports.length ? (
+                  relatedReports.map((item) => (
+                    <li key={item.reportDefinitionId}>
+                      {item.title}
+                    </li>
+                    ))
+                  ) : (
+                    <li>none</li>
+                  )}
+              </ul>
+            </div>
+            <p><strong className="text-slate-100">Acknowledged by:</strong> {alert.acknowledgedByPersonId ?? 'not acknowledged'}</p>
+            <p><strong className="text-slate-100">Acknowledged at:</strong> {formatDate(alert.acknowledgedAt)}</p>
+            <p><strong className="text-slate-100">Resolved at:</strong> {formatDate(alert.resolvedAt)}</p>
+          </div>
+        ) : (
+          <EmptyState title="Alert not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
+  const { auditReportPackageId } = useParams<{ auditReportPackageId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'audit-packages', auditReportPackageId, accessToken],
+    queryFn: () => getAuditPackage(accessToken, auditReportPackageId!),
+    enabled: Boolean(accessToken) && Boolean(auditReportPackageId),
+  })
+
+  if (!auditReportPackageId) {
+    return <Navigate to="/audit" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading audit package…</div>
+  }
+
+  const auditPackage = query.data ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Audit" title="Audit package detail" description={`Inspect a single audit package (${auditReportPackageId}).`} />
+      <Panel title="Audit package detail">
+        {auditPackage ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Package number:</strong> {auditPackage.packageNumber}</p>
+            <p><strong className="text-slate-100">Title:</strong> {auditPackage.title}</p>
+            <p><strong className="text-slate-100">Status:</strong> {auditPackage.status}</p>
+            <p><strong className="text-slate-100">Description:</strong> {auditPackage.description}</p>
+            <p><strong className="text-slate-100">Requested by:</strong> {auditPackage.requestedByPersonId}</p>
+            <p><strong className="text-slate-100">Readiness score:</strong> {formatNumber(auditPackage.readinessScore)}</p>
+            <p><strong className="text-slate-100">Generated at:</strong> {formatDate(auditPackage.generatedAt)}</p>
+            <p><strong className="text-slate-100">Locked at:</strong> {formatDate(auditPackage.lockedAt)}</p>
+            <p><strong className="text-slate-100">Missing evidence:</strong> {auditPackage.missingEvidenceSummary || 'none'}</p>
+            <p><strong className="text-slate-100">Invalid evidence:</strong> {auditPackage.invalidEvidenceSummary || 'none'}</p>
+          </div>
+        ) : (
+          <EmptyState title="Audit package not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
+  const { sourceConnectorId } = useParams<{ sourceConnectorId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'source-connectors', sourceConnectorId, accessToken],
+    queryFn: () => listSourceConnectors(accessToken),
+    enabled: Boolean(accessToken) && Boolean(sourceConnectorId),
+  })
+
+  if (!sourceConnectorId) {
+    return <Navigate to="/integrations" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading source connector…</div>
+  }
+
+  const connector = query.data?.find((item) => item.sourceConnectorId === sourceConnectorId) ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Integrations" title="Source connector detail" description={`Inspect a single source connector (${sourceConnectorId}).`} />
+      <Panel title="Source connector detail">
+        {connector ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Source product:</strong> {connector.sourceProduct}</p>
+            <p><strong className="text-slate-100">Connector type:</strong> {connector.connectorType}</p>
+            <p><strong className="text-slate-100">Status:</strong> {connector.status}</p>
+            <p><strong className="text-slate-100">Service client:</strong> {connector.serviceClientRef}</p>
+            <p><strong className="text-slate-100">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
+            <p><strong className="text-slate-100">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
+            <p><strong className="text-slate-100">Last error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
+            <p><strong className="text-slate-100">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
+          </div>
+        ) : (
+          <EmptyState title="Source connector not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function RefreshJobDetailPage({ accessToken }: { accessToken: string }) {
+  const { refreshJobId } = useParams<{ refreshJobId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'refresh-jobs', refreshJobId, accessToken],
+    queryFn: () => listRefreshJobs(accessToken),
+    enabled: Boolean(accessToken) && Boolean(refreshJobId),
+  })
+
+  if (!refreshJobId) {
+    return <Navigate to="/datasets" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading refresh job…</div>
+  }
+
+  const refreshJob = query.data?.find((item) => item.refreshJobId === refreshJobId) ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Datasets" title="Refresh job detail" description={`Inspect a single refresh job (${refreshJobId}).`} />
+      <Panel title="Refresh job detail">
+        {refreshJob ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Dataset:</strong> {refreshJob.datasetId}</p>
+            <p><strong className="text-slate-100">Read model:</strong> {refreshJob.readModelId ?? 'n/a'}</p>
+            <p><strong className="text-slate-100">Status:</strong> {refreshJob.status}</p>
+            <p><strong className="text-slate-100">Type:</strong> {refreshJob.refreshType}</p>
+            <p><strong className="text-slate-100">Requested by:</strong> {refreshJob.requestedByPersonId}</p>
+            <p><strong className="text-slate-100">Queued at:</strong> {formatDate(refreshJob.queuedAt)}</p>
+            <p><strong className="text-slate-100">Started at:</strong> {formatDate(refreshJob.startedAt)}</p>
+            <p><strong className="text-slate-100">Completed at:</strong> {formatDate(refreshJob.completedAt)}</p>
+            <p><strong className="text-slate-100">Records created:</strong> {formatNumber(refreshJob.recordsCreated)}</p>
+            <p><strong className="text-slate-100">Records updated:</strong> {formatNumber(refreshJob.recordsUpdated)}</p>
+            <p><strong className="text-slate-100">Records skipped:</strong> {formatNumber(refreshJob.recordsSkipped)}</p>
+            <p><strong className="text-slate-100">Errors:</strong> {formatNumber(refreshJob.errorCount)}</p>
+          </div>
+        ) : (
+          <EmptyState title="Refresh job not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function SourceEventReceiptDetailPage({ accessToken }: { accessToken: string }) {
+  const { sourceEventReceiptId } = useParams<{ sourceEventReceiptId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'source-events', sourceEventReceiptId, accessToken],
+    queryFn: () => listSourceEvents(accessToken),
+    enabled: Boolean(accessToken) && Boolean(sourceEventReceiptId),
+  })
+
+  if (!sourceEventReceiptId) {
+    return <Navigate to="/history" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading source event…</div>
+  }
+
+  const event = query.data?.find((item) => item.sourceEventReceiptId === sourceEventReceiptId) ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="History" title="Source event detail" description={`Inspect a single source event (${sourceEventReceiptId}).`} />
+      <Panel title="Source event detail">
+        <SourceEventDetail event={event} />
+      </Panel>
+    </div>
+  )
+}
+
+function ReadModelDetailPage({ accessToken }: { accessToken: string }) {
+  const { readModelId } = useParams<{ readModelId: string }>()
+  const query = useQuery({
+    queryKey: ['reportarr', 'read-models', readModelId, accessToken],
+    queryFn: () => getReadModel(accessToken, readModelId!),
+    enabled: Boolean(accessToken) && Boolean(readModelId),
+  })
+
+  if (!readModelId) {
+    return <Navigate to="/datasets" replace />
+  }
+
+  if (query.isLoading) {
+    return <div className="reportarr-page">Loading read model…</div>
+  }
+
+  const readModel = query.data ?? null
+
+  return (
+    <div className="reportarr-page">
+      <SectionHeader eyebrow="Datasets" title="Read model detail" description={`Inspect a single read model (${readModelId}).`} />
+      <Panel title="Read model detail">
+        {readModel ? (
+          <div className="space-y-2 text-sm text-slate-300">
+            <p><strong className="text-slate-100">Read model number:</strong> {readModel.readModelNumber}</p>
+            <p><strong className="text-slate-100">Key:</strong> {readModel.readModelKey}</p>
+            <p><strong className="text-slate-100">Title:</strong> {readModel.title}</p>
+            <p><strong className="text-slate-100">Type:</strong> {readModel.readModelType}</p>
+            <p><strong className="text-slate-100">Status:</strong> {readModel.status}</p>
+            <p><strong className="text-slate-100">Primary source:</strong> {readModel.primarySourceProduct}</p>
+            <p><strong className="text-slate-100">Primary entity:</strong> {readModel.primaryEntityType}</p>
+            <p><strong className="text-slate-100">Datasets:</strong> {readModel.datasetRefs.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Refresh jobs:</strong> {readModel.refreshJobRefs.join(', ') || 'none'}</p>
+            <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(readModel.lastRebuiltAt)}</p>
+            <p><strong className="text-slate-100">Last updated:</strong> {formatDate(readModel.lastUpdatedAt)}</p>
+          </div>
+        ) : (
+          <EmptyState title="Read model not found." />
+        )}
+      </Panel>
+    </div>
+  )
+}
+
 export function App() {
   const location = useLocation()
   const { session, sessionQuery, bootstrapError, workspaceSession, switcherEntitlements, launch } = useReportArrWorkspace()
@@ -4561,13 +5873,19 @@ export function App() {
   const isPlatformAdmin = sessionQuery.data?.isPlatformAdmin ?? false
   const currentTitle = useMemo(() => {
     if (location.pathname.startsWith('/datasets')) return 'Datasets'
+    if (location.pathname.startsWith('/read-models')) return 'Read models'
+    if (location.pathname.startsWith('/refresh-jobs')) return 'Refresh jobs'
     if (location.pathname.startsWith('/dashboards')) return 'Dashboards'
+    if (location.pathname.startsWith('/reports/builder')) return 'Report builder'
+    if (location.pathname.startsWith('/reports/schedules')) return 'Report schedules'
+    if (location.pathname.startsWith('/reports/exports')) return 'Report exports'
     if (location.pathname.startsWith('/reports')) return 'Reports'
     if (location.pathname.startsWith('/kpis')) return 'KPIs'
+    if (location.pathname.startsWith('/metrics')) return 'Metrics'
     if (location.pathname.startsWith('/alerts')) return 'Alerts'
     if (location.pathname.startsWith('/audit')) return 'Audit'
-    if (location.pathname.startsWith('/integrations')) return 'Integrations'
-    if (location.pathname.startsWith('/history')) return 'History'
+    if (location.pathname.startsWith('/source-connectors') || location.pathname.startsWith('/integrations')) return 'Source connectors'
+    if (location.pathname.startsWith('/ingestion-status') || location.pathname.startsWith('/history')) return 'Ingestion status'
     if (location.pathname.startsWith('/settings')) return 'Settings'
     return 'Overview'
   }, [location.pathname])
@@ -4603,13 +5921,34 @@ export function App() {
       <Routes>
         <Route index element={<DashboardPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
         <Route path="/datasets" element={<DatasetsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/read-models" element={<ReadModelsPage accessToken={accessToken} />} />
+        <Route path="/refresh-jobs" element={<RefreshJobsPage accessToken={accessToken} />} />
         <Route path="/dashboards" element={<DashboardsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
         <Route path="/reports" element={<ReportsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/reports/builder" element={<ReportBuilderPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/reports/schedules" element={<ReportsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/reports/exports" element={<ReportsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/reports/runs/:reportRunId" element={<ReportRunDetailPage accessToken={accessToken} />} />
+        <Route path="/reports/schedules/:scheduleId" element={<ReportScheduleDetailPage accessToken={accessToken} />} />
+        <Route path="/reports/exports/:exportJobId" element={<ExportJobDetailPage accessToken={accessToken} />} />
         <Route path="/kpis" element={<KpisPage accessToken={accessToken} />} />
+        <Route path="/metrics" element={<KpisPage accessToken={accessToken} />} />
+        <Route path="/dashboards/:dashboardId" element={<DashboardDetailPage accessToken={accessToken} />} />
         <Route path="/alerts" element={<AlertsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/alerts/:alertId" element={<AlertDetailPage accessToken={accessToken} />} />
         <Route path="/audit" element={<AuditPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/audit/:auditReportPackageId" element={<AuditPackageDetailPage accessToken={accessToken} />} />
         <Route path="/integrations" element={<IntegrationsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/source-connectors" element={<IntegrationsPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/integrations/:sourceConnectorId" element={<SourceConnectorDetailPage accessToken={accessToken} />} />
+        <Route path="/source-connectors/:sourceConnectorId" element={<SourceConnectorDetailPage accessToken={accessToken} />} />
         <Route path="/history" element={<HistoryPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/ingestion-status" element={<HistoryPage accessToken={accessToken} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
+        <Route path="/history/events/:sourceEventReceiptId" element={<SourceEventReceiptDetailPage accessToken={accessToken} />} />
+        <Route path="/source-events/:sourceEventReceiptId" element={<SourceEventReceiptDetailPage accessToken={accessToken} />} />
+        <Route path="/datasets/:datasetId" element={<DatasetDetailPage accessToken={accessToken} />} />
+        <Route path="/read-models/:readModelId" element={<ReadModelDetailPage accessToken={accessToken} />} />
+        <Route path="/refresh-jobs/:refreshJobId" element={<RefreshJobDetailPage accessToken={accessToken} />} />
         <Route path="/settings" element={<SettingsPage accessToken={accessToken} session={session} me={meQuery.data ?? null} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

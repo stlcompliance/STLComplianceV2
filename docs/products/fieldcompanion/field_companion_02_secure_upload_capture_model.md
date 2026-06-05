@@ -341,16 +341,16 @@ VoiceNoteCapture
 ## Capture events
 
 ```text
-fieldcompanion.secure_upload.created
-fieldcompanion.secure_upload.opened
-fieldcompanion.secure_upload.completed
-fieldcompanion.secure_upload.expired
-fieldcompanion.secure_upload.revoked
-fieldcompanion.capture.photo_captured
-fieldcompanion.capture.signature_captured
-fieldcompanion.capture.document_scanned
-fieldcompanion.capture.voice_note_captured
-fieldcompanion.scan.completed
-fieldcompanion.capture.uploaded_to_recordarr
-fieldcompanion.capture.rejected_by_source
+FieldCompanion.secure_upload.created
+FieldCompanion.secure_upload.opened
+FieldCompanion.secure_upload.completed
+FieldCompanion.secure_upload.expired
+FieldCompanion.secure_upload.revoked
+FieldCompanion.capture.photo_captured
+FieldCompanion.capture.signature_captured
+FieldCompanion.capture.document_scanned
+FieldCompanion.capture.voice_note_captured
+FieldCompanion.scan.completed
+FieldCompanion.capture.uploaded_to_recordarr
+FieldCompanion.capture.rejected_by_source
 ```

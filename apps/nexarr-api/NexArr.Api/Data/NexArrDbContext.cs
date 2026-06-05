@@ -24,13 +24,13 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<ProductCallbackAllowlistEntry> CallbackAllowlist => Set<ProductCallbackAllowlistEntry>();
 
-    public DbSet<TenantCompanionNotificationSettings> TenantCompanionNotificationSettings =>
-        Set<TenantCompanionNotificationSettings>();
+    public DbSet<TenantFieldCompanionNotificationSettings> TenantFieldCompanionNotificationSettings =>
+        Set<TenantFieldCompanionNotificationSettings>();
 
-    public DbSet<CompanionNotificationDispatch> CompanionNotificationDispatches =>
-        Set<CompanionNotificationDispatch>();
+    public DbSet<FieldCompanionNotificationDispatch> FieldCompanionNotificationDispatches =>
+        Set<FieldCompanionNotificationDispatch>();
 
-    public DbSet<CompanionPushSubscription> CompanionPushSubscriptions => Set<CompanionPushSubscription>();
+    public DbSet<FieldCompanionPushSubscription> FieldCompanionPushSubscriptions => Set<FieldCompanionPushSubscription>();
 
     public DbSet<PlatformAuditPackageGenerationJob> PlatformAuditPackageGenerationJobs =>
         Set<PlatformAuditPackageGenerationJob>();
@@ -55,8 +55,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
 
     public DbSet<TenantLifecycleRun> TenantLifecycleRuns => Set<TenantLifecycleRun>();
 
-    public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
-    public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
+    public DbSet<FieldCompanionOfflineAction> FieldCompanionOfflineActions => Set<FieldCompanionOfflineAction>();
+    public DbSet<FieldCompanionFieldSubmission> FieldCompanionFieldSubmissions => Set<FieldCompanionFieldSubmission>();
 
     public DbSet<TenantProductDataPlaneProfile> DataPlaneProfiles => Set<TenantProductDataPlaneProfile>();
 
@@ -322,17 +322,17 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
         });
 
-        modelBuilder.Entity<TenantCompanionNotificationSettings>(entity =>
+        modelBuilder.Entity<TenantFieldCompanionNotificationSettings>(entity =>
         {
-            entity.ToTable("nexarr_companion_notification_settings");
+            entity.ToTable("nexarr_fieldcompanion_notification_settings");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
             entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
-        modelBuilder.Entity<CompanionNotificationDispatch>(entity =>
+        modelBuilder.Entity<FieldCompanionNotificationDispatch>(entity =>
         {
-            entity.ToTable("nexarr_companion_notification_dispatches");
+            entity.ToTable("nexarr_fieldcompanion_notification_dispatches");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
             entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
@@ -344,9 +344,9 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
         });
 
-        modelBuilder.Entity<CompanionPushSubscription>(entity =>
+        modelBuilder.Entity<FieldCompanionPushSubscription>(entity =>
         {
-            entity.ToTable("nexarr_companion_push_subscriptions");
+            entity.ToTable("nexarr_fieldcompanion_push_subscriptions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Endpoint).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.P256dhKey).HasMaxLength(256).IsRequired();
@@ -357,9 +357,9 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.Endpoint }).IsUnique();
         });
 
-        modelBuilder.Entity<CompanionOfflineAction>(entity =>
+        modelBuilder.Entity<FieldCompanionOfflineAction>(entity =>
         {
-            entity.ToTable("nexarr_companion_offline_actions");
+            entity.ToTable("nexarr_fieldcompanion_offline_actions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.IdempotencyKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.ActionKind).HasMaxLength(64).IsRequired();
@@ -369,9 +369,9 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.SyncedAt });
         });
 
-        modelBuilder.Entity<CompanionFieldSubmission>(entity =>
+        modelBuilder.Entity<FieldCompanionFieldSubmission>(entity =>
         {
-            entity.ToTable("nexarr_companion_field_submissions");
+            entity.ToTable("nexarr_fieldcompanion_field_submissions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.TaskKey).HasMaxLength(256).IsRequired();
             entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();

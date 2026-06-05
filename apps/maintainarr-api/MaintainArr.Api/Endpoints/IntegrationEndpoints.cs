@@ -10,10 +10,13 @@ namespace MaintainArr.Api.Endpoints;
 public static class IntegrationEndpoints
 {
     public const string SupplyarrDemandStatusIngestActionScope = "maintainarr.demand_status.write";
+    public const string SupplyarrIssueEventIngestActionScope = "maintainarr.demand_status.write";
+    public const string SupplyarrVendorWorkStatusIngestActionScope = "maintainarr.demand_status.write";
     public const string RoutarrAssetReadinessDispatchActionScope = "maintainarr.asset_readiness.dispatch_gate";
     public const string AssetReadinessReadActionScope = "maintainarr.asset_readiness.read";
     public const string RoutarrEventIngestActionScope = "maintainarr.routarr_events.ingest";
     public const string StaffarrPersonSyncActionScope = "maintainarr.technician_refs.sync";
+    public const string AssurarrQualityHoldIngestActionScope = "maintainarr.quality_holds.write";
 
     public static void MapMaintainArrIntegrationEndpoints(this WebApplication app)
     {
@@ -180,6 +183,28 @@ public static class IntegrationEndpoints
             })
             .WithName($"GetMaintainArrIntegrationAssetReadiness{nameSuffix}");
 
+            integrations.MapGet("/work-orders", async (
+                Guid? assetId,
+                Guid? defectId,
+                string? status,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService service,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                return Results.Ok(await service.ListAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    true,
+                    null,
+                    null,
+                    assetId,
+                    defectId,
+                    status,
+                    cancellationToken));
+            })
+            .WithName($"ListMaintainArrIntegrationWorkOrders{nameSuffix}");
+
             integrations.MapGet("/work-orders/{workOrderId}", async (
                 string workOrderId,
                 HttpContext context,
@@ -324,6 +349,27 @@ public static class IntegrationEndpoints
             })
             .WithName($"CreateMaintainArrIntegrationDefect{nameSuffix}");
 
+            integrations.MapGet("/defects", async (
+                Guid? assetId,
+                Guid? inspectionRunId,
+                string? status,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                DefectService service,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                return Results.Ok(await service.ListAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    true,
+                    null,
+                    assetId,
+                    inspectionRunId,
+                    status,
+                    cancellationToken));
+            })
+            .WithName($"ListMaintainArrIntegrationDefects{nameSuffix}");
+
             integrations.MapGet("/defects/{defectId}", async (
                 string defectId,
                 HttpContext context,
@@ -392,6 +438,21 @@ public static class IntegrationEndpoints
                 return Results.Created($"/api/v1/integrations/inspections/{created.InspectionRunId}", created);
             })
             .WithName($"CreateMaintainArrIntegrationInspection{nameSuffix}");
+
+            integrations.MapGet("/inspections", async (
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                InspectionRunService service,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                return Results.Ok(await service.ListAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    true,
+                    cancellationToken));
+            })
+            .WithName($"ListMaintainArrIntegrationInspections{nameSuffix}");
 
             integrations.MapGet("/inspections/{inspectionId}", async (
                 string inspectionId,
@@ -474,7 +535,23 @@ public static class IntegrationEndpoints
                 AssetQualityHoldService assetQualityHoldService,
                 CancellationToken cancellationToken) =>
             {
-                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString());
+                var token = tokenValidator.TryValidate(bearer)
+                    ?? throw new StlApiException(
+                        "auth.service_token_invalid",
+                        "Service token is invalid.",
+                        401);
+
+                tokenValidator.ValidateOrThrow(
+                    bearer,
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "assurarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = token.TenantScope ?? Guid.Empty,
+                        RequiredActionScope = AssurarrQualityHoldIngestActionScope
+                    });
+
                 var hold = await assetQualityHoldService.CreateAsync(
                     token.TenantScope ?? Guid.Empty,
                     token.TokenId,
@@ -491,7 +568,23 @@ public static class IntegrationEndpoints
                 AssetQualityHoldService assetQualityHoldService,
                 CancellationToken cancellationToken) =>
             {
-                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString());
+                var token = tokenValidator.TryValidate(bearer)
+                    ?? throw new StlApiException(
+                        "auth.service_token_invalid",
+                        "Service token is invalid.",
+                        401);
+
+                tokenValidator.ValidateOrThrow(
+                    bearer,
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "assurarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = token.TenantScope ?? Guid.Empty,
+                        RequiredActionScope = AssurarrQualityHoldIngestActionScope
+                    });
+
                 if (request.HoldId == Guid.Empty)
                 {
                     return Results.BadRequest(new
@@ -609,7 +702,22 @@ public static class IntegrationEndpoints
                 WorkOrderPartsDemandService service,
                 CancellationToken cancellationToken) =>
             {
-                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString());
+                tokenValidator.ValidateOrThrow(
+                    bearer,
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "supplyarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = request.TenantId,
+                        RequiredActionScope = SupplyarrIssueEventIngestActionScope
+                    });
+
+                var token = tokenValidator.TryValidate(bearer) ?? throw new StlApiException(
+                    "auth.service_token_invalid",
+                    "Service token is invalid.",
+                    401);
+
                 var response = await service.RecordIssueAsync(
                     token.TenantScope ?? Guid.Empty,
                     token.TokenId,
@@ -626,7 +734,22 @@ public static class IntegrationEndpoints
                 MaintenanceVendorWorkService service,
                 CancellationToken cancellationToken) =>
             {
-                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString());
+                tokenValidator.ValidateOrThrow(
+                    bearer,
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = "supplyarr",
+                        RequiredTargetProduct = "maintainarr",
+                        TenantId = request.TenantId,
+                        RequiredActionScope = SupplyarrVendorWorkStatusIngestActionScope
+                    });
+
+                var token = tokenValidator.TryValidate(bearer) ?? throw new StlApiException(
+                    "auth.service_token_invalid",
+                    "Service token is invalid.",
+                    401);
+
                 var response = await service.UpsertAsync(
                     token.TenantScope ?? Guid.Empty,
                     token.TokenId,

@@ -1,4 +1,4 @@
-import { companionFrontend, handoffProductFrontends } from './productFrontends.js'
+import { FieldCompanionFrontend, handoffProductFrontends } from './productFrontends.js'
 
 const productApis: Record<string, string> = {
   nexarr: process.env.E2E_NEXARR_URL ?? 'http://localhost:5101',
@@ -42,12 +42,12 @@ export async function isLiveStackReachable(): Promise<boolean> {
   return suiteOk && nexarrOk
 }
 
-export function companionBaseUrl(): string {
-  return process.env.E2E_COMPANION_URL ?? companionFrontend.baseUrl
+export function FieldCompanionBaseUrl(): string {
+  return process.env.E2E_FIELDCOMPANION_URL ?? FieldCompanionFrontend.baseUrl
 }
 
-export async function isCompanionFrontendReachable(): Promise<boolean> {
-  return isHttpOk(companionBaseUrl(), '/')
+export async function isFieldCompanionFrontendReachable(): Promise<boolean> {
+  return isHttpOk(FieldCompanionBaseUrl(), '/')
 }
 
 export async function isHandoffFrontendReachable(productKey: string): Promise<boolean> {

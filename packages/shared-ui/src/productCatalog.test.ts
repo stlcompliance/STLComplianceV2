@@ -5,17 +5,15 @@ import {
   listEntitledSuiteProducts,
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
-  toLegacyProductKey,
 } from './productCatalog'
 
 describe('productCatalog', () => {
-  it('canonicalizes Field Companion while preserving the backend legacy key', () => {
-    expect(normalizeProductKey('Companion')).toBe('fieldcompanion')
+  it('canonicalizes Field Companion product keys only', () => {
     expect(normalizeProductKey('field-companion')).toBe('fieldcompanion')
-    expect(normalizeProductKey('field_companion')).toBe('fieldcompanion')
-    expect(toLegacyProductKey('fieldcompanion')).toBe('companion')
-    expect(toLegacyProductKey('staffarr')).toBe('staffarr')
-    expect(getProductRouteSlug('companion')).toBe('field-companion')
+    expect(normalizeProductKey('field_fieldcompanion')).toBe('fieldfieldcompanion')
+    expect(normalizeProductKey('fieldcompanion')).toBe('fieldcompanion')
+    expect(getProductRouteSlug('fieldcompanion')).toBe('field-companion')
+    expect(getProductRouteSlug('companion')).toBe('companion')
   })
 
   it('lists implemented constitution products without future-only products', () => {
@@ -39,10 +37,11 @@ describe('productCatalog', () => {
     expect(keys).not.toContain('ordarr')
   })
 
-  it('matches entitlements through canonical and legacy keys', () => {
-    expect(hasProductEntitlement(['companion'], 'fieldcompanion')).toBe(true)
-    expect(hasProductEntitlement(['field-companion'], 'companion')).toBe(true)
-    expect(listEntitledSuiteProducts(['companion']).map((entry) => entry.productKey)).toEqual([
+  it('matches entitlements through canonical keys only', () => {
+    expect(hasProductEntitlement(['fieldcompanion'], 'fieldcompanion')).toBe(true)
+    expect(hasProductEntitlement(['field-companion'], 'fieldcompanion')).toBe(true)
+    expect(hasProductEntitlement(['fieldcompanion'], 'trainarr')).toBe(false)
+    expect(listEntitledSuiteProducts(['fieldcompanion']).map((entry) => entry.productKey)).toEqual([
       'fieldcompanion',
     ])
   })

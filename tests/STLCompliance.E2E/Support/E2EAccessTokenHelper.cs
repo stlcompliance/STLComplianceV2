@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ComplianceCore.Api.Services;
 using MaintainArr.Api.Services;
 using NexArr.Api.Services;
+using ReportArr.Api.Services;
 using RoutArr.Api.Services;
 using StaffArr.Api.Services;
 using SupplyArr.Api.Services;
@@ -60,6 +61,14 @@ internal static class E2EAccessTokenHelper
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin") =>
         Mint<SupplyArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+
+    public static string ReportArr(
+        IServiceProvider services,
+        Guid tenantId,
+        Guid userId,
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin") =>
+        Mint<ReportArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
 
     private static string Mint<TTokenService>(
         IServiceProvider services,

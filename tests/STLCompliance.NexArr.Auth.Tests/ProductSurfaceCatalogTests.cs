@@ -42,25 +42,19 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
-    public void BuildSurfaces_treats_companion_aliases_as_field_companion_navigation()
+    public void BuildSurfaces_for_fieldcompanion_includes_field_companion_navigation()
     {
-        var canonical = ProductSurfaceCatalog.BuildSurfaces(
-            "field-companion",
-            "available",
-            hasProductEntitlement: true,
-            isPlatformAdmin: false);
-        var legacy = ProductSurfaceCatalog.BuildSurfaces(
-            "companion",
+        var surfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "fieldcompanion",
             "available",
             hasProductEntitlement: true,
             isPlatformAdmin: false);
 
-        Assert.Equal(
-            canonical.Select(surface => surface.SurfaceKey),
-            legacy.Select(surface => surface.SurfaceKey));
-        Assert.Contains(canonical, s => s.SurfaceKey == "inbox" && s.IsEnabled);
-        Assert.Contains(canonical, s => s.SurfaceKey == "capture" && s.IsEnabled);
-        Assert.Contains(canonical, s => s.SurfaceKey == "launch" && s.Label.Contains("Field Companion", StringComparison.Ordinal));
+        Assert.Contains(surfaces, s => s.SurfaceKey == "inbox" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "capture" && s.IsEnabled);
+        Assert.Contains(
+            surfaces,
+            s => s.SurfaceKey == "launch" && s.Label.Contains("Field Companion", StringComparison.Ordinal));
     }
 
     [Fact]

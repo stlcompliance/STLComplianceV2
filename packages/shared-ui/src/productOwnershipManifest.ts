@@ -2,7 +2,6 @@ export type ProductOwnershipManifestEntry = {
   productKey: string
   displayName: string
   routeSlug: string
-  legacyProductKeys?: readonly string[]
   sortOrder: number
   catalogDescription: string
   owns: string
@@ -135,7 +134,6 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     productKey: 'fieldcompanion',
     displayName: 'Field Companion',
     routeSlug: 'field-companion',
-    legacyProductKeys: ['companion'],
     sortOrder: 70,
     catalogDescription: 'Field inbox, capture, and mobile execution surfaces',
     owns:
@@ -150,13 +148,7 @@ export const IMPLEMENTED_PRODUCT_KEYS = IMPLEMENTED_PRODUCT_OWNERSHIP.map(
 )
 
 export function normalizeProductKey(productKey: string): string {
-  const normalized = productKey.trim().toLowerCase().replace(/[-_]/g, '')
-  return normalized === 'companion' ? 'fieldcompanion' : normalized
-}
-
-export function toLegacyProductKey(productKey: string): string {
-  const normalized = normalizeProductKey(productKey)
-  return normalized === 'fieldcompanion' ? 'companion' : normalized
+  return productKey.trim().toLowerCase().replace(/[-_]/g, '')
 }
 
 export function getProductRouteSlug(productKey: string): string {

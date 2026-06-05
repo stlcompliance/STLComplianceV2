@@ -53,13 +53,13 @@ describe('ProductSwitcher', () => {
     )
   })
 
-  it('accepts legacy companion entitlements while exposing Field Companion as canonical UI', () => {
+  it('exposes Field Companion as canonical UI', () => {
     const onSelectProduct = vi.fn()
 
     render(
       <ProductSwitcher
-        currentProductKey="companion"
-        entitlements={['companion', 'recordarr', 'reportarr', 'assurarr']}
+        currentProductKey="fieldcompanion"
+        entitlements={['fieldcompanion', 'recordarr', 'reportarr', 'assurarr']}
         suiteHomeUrl="http://localhost:5174"
         onSelectProduct={onSelectProduct}
       />,

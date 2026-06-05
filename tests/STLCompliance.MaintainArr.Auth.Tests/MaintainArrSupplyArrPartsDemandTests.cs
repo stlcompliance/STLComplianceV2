@@ -612,6 +612,53 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supplyarr_demand_status_updates_path_accepts_service_token()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateWorkOrderPartsDemandLineRequest(
+            partId,
+            "STATUSUP-001",
+            "Demand status updates path",
+            1m,
+            "each",
+            null));
+        await _maintainarrClient.SendAsync(createLineRequest);
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand/publish", maintainarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishWorkOrderPartsDemandRequest(false));
+        var publishResponse = await _maintainarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishWorkOrderPartsDemandResponse>())!;
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/part-demand-status-updates",
+            _maintainarrStatusCallbackToken);
+        callbackRequest.Content = JsonContent.Create(new IngestSupplyarrDemandStatusRequest(
+            PlatformSeeder.DemoTenantId,
+            published.PublicationId,
+            published.SupplyarrDemandRefId,
+            Guid.NewGuid(),
+            "pr_submitted",
+            "pr_submitted",
+            null,
+            null,
+            null,
+            null,
+            "Demand status update path",
+            DateTimeOffset.UtcNow));
+
+        var response = await _maintainarrClient.SendAsync(callbackRequest);
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Supplyarr_demand_status_callback_rejects_missing_service_token()
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/integrations/supplyarr-demand-status");

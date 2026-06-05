@@ -19,10 +19,10 @@ describe('buildProductWorkspaceCallbackUrl', () => {
     ).toBe('http://localhost:5174/app/maintainarr/launch')
   })
 
-  it('resolves Field Companion through legacy companion launch URLs', () => {
+  it('resolves Field Companion through canonical launch URLs', () => {
     expect(
       buildProductWorkspaceCallbackUrl('field-companion', 'http://localhost:5174/app', {
-        companion: 'http://localhost:5181/launch',
+        fieldcompanion: 'http://localhost:5181/launch',
       }),
     ).toBe('http://localhost:5181/launch')
   })

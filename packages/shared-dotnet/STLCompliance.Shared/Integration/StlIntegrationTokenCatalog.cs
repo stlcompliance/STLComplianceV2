@@ -60,6 +60,13 @@ public static class StlIntegrationTokenCatalog
             ["staffarr"],
             "staffarr.person.lookup,staffarr.sites.read"),
         Profile(
+            "assurarr-maintainarr",
+            "assurarr-api",
+            "MaintainArr__ServiceToken",
+            "assurarr",
+            ["maintainarr"],
+            "maintainarr.quality_holds.write"),
+        Profile(
             "maintainarr-supplyarr",
             "maintainarr-api",
             "SupplyArr__ServiceToken",
@@ -308,12 +315,12 @@ public static class StlIntegrationTokenCatalog
             ["compliancecore"],
             "compliancecore.fact_sources.sync"),
         Profile(
-            "worker-nexarr-companion-notifications",
+            "worker-nexarr-fieldcompanion-notifications",
             "shared-worker",
-            "NexArrCompanionNotificationDispatch__ServiceToken",
+            "NexArrFieldCompanionNotificationDispatch__ServiceToken",
             "shared-worker",
             ["nexarr"],
-            "nexarr.companion.notifications.dispatch"),
+            "nexarr.fieldcompanion.notifications.dispatch"),
         Profile(
             "worker-nexarr-platform-audit-packages",
             "shared-worker",

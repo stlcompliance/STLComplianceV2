@@ -210,7 +210,7 @@ function ConvertTo-ProductName {
         'supplyarr' { return 'SupplyArr' }
         'trainarr' { return 'TrainArr' }
         'load' { return 'LoadArr' }
-        'companion' { return 'Companion' }
+        'fieldcompanion' { return 'fieldcompanion' }
         'suite' { return 'Suite' }
         'stlcompliancesite' { return 'STLComplianceSite' }
         'shared' { return 'Shared' }

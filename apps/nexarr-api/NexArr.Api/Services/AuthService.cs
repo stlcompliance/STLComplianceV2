@@ -596,7 +596,7 @@ public sealed class AuthService(
     private static string BuildNavigationRoutePath(string productKey)
     {
         var normalized = ProductKeyAliases.Normalize(productKey);
-        var routeSegment = normalized.Equals(ProductKeyAliases.Companion, StringComparison.OrdinalIgnoreCase)
+        var routeSegment = normalized.Equals("fieldcompanion", StringComparison.OrdinalIgnoreCase)
             ? "field-companion"
             : normalized;
         return $"/app/{routeSegment}";

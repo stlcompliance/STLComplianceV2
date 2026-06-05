@@ -302,27 +302,27 @@ NetworkSnapshot
 ## Offline/sync/device events
 
 ```text
-fieldcompanion.offline_action.created
-fieldcompanion.offline_action.queued
-fieldcompanion.offline_action.sync_started
-fieldcompanion.offline_action.synced
-fieldcompanion.offline_action.rejected
-fieldcompanion.offline_action.failed
-fieldcompanion.offline_action.conflict
+FieldCompanion.offline_action.created
+FieldCompanion.offline_action.queued
+FieldCompanion.offline_action.sync_started
+FieldCompanion.offline_action.synced
+FieldCompanion.offline_action.rejected
+FieldCompanion.offline_action.failed
+FieldCompanion.offline_action.conflict
 
-fieldcompanion.sync_batch.created
-fieldcompanion.sync_batch.completed
-fieldcompanion.sync_batch.failed
+FieldCompanion.sync_batch.created
+FieldCompanion.sync_batch.completed
+FieldCompanion.sync_batch.failed
 
-fieldcompanion.conflict.created
-fieldcompanion.conflict.resolved
-fieldcompanion.conflict.discarded
+FieldCompanion.conflict.created
+FieldCompanion.conflict.resolved
+FieldCompanion.conflict.discarded
 
-fieldcompanion.device.registered
-fieldcompanion.device.seen
-fieldcompanion.device.revoked
+FieldCompanion.device.registered
+FieldCompanion.device.seen
+FieldCompanion.device.revoked
 
-fieldcompanion.cache.created
-fieldcompanion.cache.invalidated
-fieldcompanion.cache.expired
+FieldCompanion.cache.created
+FieldCompanion.cache.invalidated
+FieldCompanion.cache.expired
 ```

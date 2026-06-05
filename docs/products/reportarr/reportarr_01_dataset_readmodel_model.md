@@ -113,7 +113,7 @@ SourceConnector
   - ordarr
   - recordarr
   - assurarr
-  - fieldcompanion
+  - FieldCompanion
 - connectorType
   - event_stream
   - api_poll

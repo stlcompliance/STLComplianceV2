@@ -140,7 +140,7 @@ public static class ProductSurfaceCatalog
                 new("capa", "CAPA", "capa", "shield", 20),
                 new("launch", "Open AssurArr app", "launch", "assurarr", 90, LaunchExternal: true),
             ],
-            "fieldcompanion" or "companion" =>
+            "fieldcompanion" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),
                 new("inbox", "Inbox", "inbox", "inbox", 10),

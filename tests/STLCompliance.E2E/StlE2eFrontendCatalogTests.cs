@@ -14,7 +14,7 @@ public sealed class StlE2eFrontendCatalogTests
             .ToArray();
 
         Assert.Equal(
-            ["compliancecore", "loadarr", "maintainarr", "routarr", "staffarr", "supplyarr", "trainarr"],
+            ["assurarr", "compliancecore", "loadarr", "maintainarr", "reportarr", "routarr", "staffarr", "supplyarr", "trainarr"],
             keys);
     }
 
@@ -26,6 +26,8 @@ public sealed class StlE2eFrontendCatalogTests
     [InlineData("supplyarr", 5179)]
     [InlineData("routarr", 5180)]
     [InlineData("loadarr", 5182)]
+    [InlineData("assurarr", 5183)]
+    [InlineData("reportarr", 5185)]
     public void Handoff_frontend_ports_match_vite_defaults(string productKey, int expectedPort)
     {
         var endpoint = StlE2eFrontendCatalog.TryGetHandoffFrontend(productKey);
@@ -50,10 +52,10 @@ public sealed class StlE2eFrontendCatalogTests
     }
 
     [Fact]
-    public void All_frontends_include_companion_field_inbox_app()
+    public void All_frontends_include_fieldcompanion_field_inbox_app()
     {
         Assert.Contains(
             StlE2eFrontendCatalog.All,
-            endpoint => endpoint.ProductKey == "companion" && endpoint.Port == 5181);
+            endpoint => endpoint.ProductKey == "fieldcompanion" && endpoint.Port == 5181);
     }
 }

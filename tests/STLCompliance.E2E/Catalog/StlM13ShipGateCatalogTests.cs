@@ -11,8 +11,9 @@ public sealed class StlM13ShipGateCatalogTests
     [Fact]
     public void OpenApi_product_keys_match_snapshot_count()
     {
-        Assert.Equal(9, StlM13ShipGateCatalog.OpenApiProductKeys.Count);
+        Assert.Equal(10, StlM13ShipGateCatalog.OpenApiProductKeys.Count);
         Assert.Contains("loadarr", StlM13ShipGateCatalog.OpenApiProductKeys);
+        Assert.Contains("reportarr", StlM13ShipGateCatalog.OpenApiProductKeys);
         Assert.Contains("assurarr", StlM13ShipGateCatalog.OpenApiProductKeys);
     }
 
@@ -25,7 +26,7 @@ public sealed class StlM13ShipGateCatalogTests
 
         foreach (var productKey in StlM13ShipGateCatalog.OpenApiProductKeys)
         {
-            if (productKey is "nexarr" or "loadarr")
+            if (productKey is "nexarr" or "loadarr" or "assurarr")
             {
                 continue;
             }

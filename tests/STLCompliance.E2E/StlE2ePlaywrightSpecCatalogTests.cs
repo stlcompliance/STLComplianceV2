@@ -6,16 +6,16 @@ namespace STLCompliance.E2E;
 public sealed class StlE2ePlaywrightSpecCatalogTests
 {
     [Fact]
-    public void Deep_link_smoke_specs_include_companion_and_trainarr_paths()
+    public void Deep_link_smoke_specs_include_fieldcompanion_and_trainarr_paths()
     {
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionFieldInboxTrainarrDeepLinkSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionFieldInboxTrainarrDeepLinkSpec,
             StlE2ePlaywrightSpecCatalog.DeepLinkSmokeSpecs);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ProductTrainarrAssignmentDeepLinkSpec,
             StlE2ePlaywrightSpecCatalog.DeepLinkSmokeSpecs);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionFieldInboxMaintainarrDeepLinkSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionFieldInboxMaintainarrDeepLinkSpec,
             StlE2ePlaywrightSpecCatalog.DeepLinkSmokeSpecs);
     }
 
@@ -749,19 +749,19 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
-    public void Companion_operational_specs_include_offline_queue_and_notifications()
+    public void fieldcompanion_operational_specs_include_offline_queue_and_notifications()
     {
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
-            StlE2ePlaywrightSpecCatalog.CompanionOperationalSpecs);
+            StlE2ePlaywrightSpecCatalog.FieldCompanionOfflineQueueNotificationSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionOperationalSpecs);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionFieldTaskEvidenceSpec,
-            StlE2ePlaywrightSpecCatalog.CompanionOperationalSpecs);
+            StlE2ePlaywrightSpecCatalog.FieldCompanionFieldTaskEvidenceSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionOperationalSpecs);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionOfflineQueueNotificationSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.CompanionFieldTaskEvidenceSpec,
+            StlE2ePlaywrightSpecCatalog.FieldCompanionFieldTaskEvidenceSpec,
             StlE2ePlaywrightSpecCatalog.All);
     }
 
@@ -774,9 +774,9 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
-    public void Companion_frontend_uses_port_5181()
+    public void fieldcompanion_frontend_uses_port_5181()
     {
-        Assert.Equal(5181, StlE2eFrontendCatalog.CompanionPort);
-        Assert.Equal("companion", StlE2eFrontendCatalog.CompanionFrontend.ProductKey);
+        Assert.Equal(5181, StlE2eFrontendCatalog.FieldCompanionPort);
+        Assert.Equal("fieldcompanion", StlE2eFrontendCatalog.FieldCompanionFrontend.ProductKey);
     }
 }

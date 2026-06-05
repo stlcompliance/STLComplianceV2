@@ -15,7 +15,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: ['staffarr', 'companion', 'recordarr', 'reportarr', 'assurarr'],
+      entitlements: ['staffarr', 'fieldcompanion', 'recordarr', 'reportarr', 'assurarr'],
     },
   }),
 }))
@@ -60,7 +60,7 @@ describe('ProductSwitcher', () => {
           surfaces: [],
         },
         {
-          productKey: 'companion',
+          productKey: 'fieldcompanion',
           displayName: 'Field Companion',
           routePath: '/app/field-companion',
           sortOrder: 2,

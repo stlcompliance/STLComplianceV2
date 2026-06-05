@@ -169,6 +169,39 @@
         }
       }
     },
+    "/api/v1/audits/{auditId}/checklists/{checklistId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrAuditChecklist",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audits/{auditId}/checklists/{checklistId}/items": {
       "get": {
         "tags": [
@@ -236,6 +269,48 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audits/{auditId}/checklists/{checklistId}/items/{itemId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrAuditChecklistItem",
+        "parameters": [
+          {
+            "name": "auditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -486,6 +561,39 @@
         }
       }
     },
+    "/api/v1/capas/{capaId}/actions/{actionId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrCapaAction",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/capas/{capaId}/actions/{actionId}/blockers": {
       "get": {
         "tags": [
@@ -553,6 +661,48 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/actions/{actionId}/blockers/{blockerId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrCapaActionBlocker",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "actionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "blockerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -711,6 +861,39 @@
         }
       }
     },
+    "/api/v1/capas/{capaId}/effectiveness-verifications/{verificationId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrEffectivenessVerification",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "verificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/capas/{capaId}/effectiveness-verifications/{verificationId}/status": {
       "patch": {
         "tags": [
@@ -803,6 +986,39 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/capas/{capaId}/verification-plans/{verificationPlanId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrVerificationPlan",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "verificationPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1157,6 +1373,98 @@
         }
       }
     },
+    "/api/v1/integrations/capas": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrCapasIntegration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrCapaIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCapaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capas/{capaId}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrCapaIntegration",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/capas/{capaId}/actions": {
+      "post": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "CreateAssurArrCapaActionIntegration",
+        "parameters": [
+          {
+            "name": "capaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssurArrCapaActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/capas/{capaId}/verification": {
       "post": {
         "tags": [
@@ -1218,6 +1526,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/containment-actions/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrContainmentAction",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1385,6 +1717,30 @@
         }
       }
     },
+    "/api/v1/integrations/dispositions/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrDisposition",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/dispositions/{id}/status": {
       "patch": {
         "tags": [
@@ -1435,6 +1791,43 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "ListAssurArrQualityHoldsIntegration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/holds/{holdId}": {
+      "get": {
+        "tags": [
+          "AssurArr Integrations"
+        ],
+        "operationId": "GetAssurArrQualityHoldIntegration",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2373,6 +2766,39 @@
         }
       }
     },
+    "/api/v1/nonconformances/{nonconformanceId}/root-cause-analyses/{rootCauseId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrRootCauseAnalysis",
+        "parameters": [
+          {
+            "name": "nonconformanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rootCauseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/scorecards": {
       "post": {
         "tags": [
@@ -2476,6 +2902,39 @@
         }
       }
     },
+    "/api/v1/scorecards/{scorecardId}/metrics/{metricId}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrQualityMetric",
+        "parameters": [
+          {
+            "name": "scorecardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metricId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/status-snapshots": {
       "get": {
         "tags": [
@@ -2503,6 +2962,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/status-snapshots/{id}": {
+      "get": {
+        "tags": [
+          "AssurArr"
+        ],
+        "operationId": "GetAssurArrQualityStatusSnapshot",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

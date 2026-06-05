@@ -57,34 +57,34 @@ public static class NexArrServiceRegistration
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         });
-        builder.Services.AddScoped<CompanionAuthService>();
-        builder.Services.AddScoped<CompanionFieldInboxService>();
-        builder.Services.AddScoped<CompanionProductClient>();
-        builder.Services.AddHttpClient(nameof(CompanionProductClient));
+        builder.Services.AddScoped<FieldCompanionAuthService>();
+        builder.Services.AddScoped<FieldCompanionFieldInboxService>();
+        builder.Services.AddScoped<FieldCompanionProductClient>();
+        builder.Services.AddHttpClient(nameof(FieldCompanionProductClient));
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
-        builder.Services.AddScoped<CompanionNotificationSettingsService>();
-        builder.Services.AddScoped<CompanionNotificationEnqueueService>();
-        builder.Services.AddScoped<CompanionNotificationDispatchService>();
-        builder.Services.AddScoped<CompanionPushSubscriptionService>();
-        builder.Services.AddSingleton<ICompanionWebPushSender, CompanionWebPushSender>();
-        builder.Services.Configure<CompanionWebPushOptions>(builder.Configuration.GetSection(CompanionWebPushOptions.SectionName));
-        builder.Services.AddHttpClient(CompanionNotificationDispatchService.WebhookHttpClientName);
-        builder.Services.AddScoped<CompanionOfflineSyncService>();
-        builder.Services.AddScoped<CompanionFieldEvidenceService>();
-        builder.Services.AddScoped<CompanionFieldDvirService>();
-        builder.Services.AddScoped<CompanionFieldInspectionService>();
-        builder.Services.AddScoped<CompanionFieldWorkOrderService>();
-        builder.Services.AddScoped<CompanionFieldReceivingService>();
-        builder.Services.AddScoped<CompanionFieldSubmissionService>();
-        builder.Services.AddScoped<CompanionFieldTaskValidationService>();
-        builder.Services.AddScoped<CompanionScanResolveService>();
+        builder.Services.AddScoped<FieldCompanionNotificationSettingsService>();
+        builder.Services.AddScoped<FieldCompanionNotificationEnqueueService>();
+        builder.Services.AddScoped<FieldCompanionNotificationDispatchService>();
+        builder.Services.AddScoped<FieldCompanionPushSubscriptionService>();
+        builder.Services.AddSingleton<IFieldCompanionWebPushSender, FieldCompanionWebPushSender>();
+        builder.Services.Configure<FieldCompanionWebPushOptions>(builder.Configuration.GetSection(FieldCompanionWebPushOptions.SectionName));
+        builder.Services.AddHttpClient(FieldCompanionNotificationDispatchService.WebhookHttpClientName);
+        builder.Services.AddScoped<FieldCompanionOfflineSyncService>();
+        builder.Services.AddScoped<FieldCompanionFieldEvidenceService>();
+        builder.Services.AddScoped<FieldCompanionFieldDvirService>();
+        builder.Services.AddScoped<FieldCompanionFieldInspectionService>();
+        builder.Services.AddScoped<FieldCompanionFieldWorkOrderService>();
+        builder.Services.AddScoped<FieldCompanionFieldReceivingService>();
+        builder.Services.AddScoped<FieldCompanionFieldSubmissionService>();
+        builder.Services.AddScoped<FieldCompanionFieldTaskValidationService>();
+        builder.Services.AddScoped<FieldCompanionScanResolveService>();
         builder.Services.AddScoped<PlatformHealthService>();
         builder.Services.AddHttpClient(PlatformHealthService.HttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         });
-        builder.Services.Configure<CompanionProductUrlsOptions>(options =>
+        builder.Services.Configure<FieldCompanionProductUrlsOptions>(options =>
         {
             var configuration = builder.Configuration;
             options.StaffArrBaseUrl = ResolveProductBaseUrl(configuration, "StaffArr", options.StaffArrBaseUrl);
@@ -111,12 +111,12 @@ public static class NexArrServiceRegistration
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
 
         var suiteFrontendOrigin = builder.Configuration["Cors:SuiteFrontendOrigin"] ?? "http://localhost:5174";
-        var companionFrontendOrigin = builder.Configuration["Cors:CompanionFrontendOrigin"] ?? "http://localhost:5181";
+        var FieldCompanionFrontendOrigin = builder.Configuration["Cors:FieldCompanionFrontendOrigin"] ?? "http://localhost:5181";
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("NexArrBrowserClients", policy =>
             {
-                policy.WithOrigins(suiteFrontendOrigin, companionFrontendOrigin)
+                policy.WithOrigins(suiteFrontendOrigin, FieldCompanionFrontendOrigin)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
@@ -174,7 +174,7 @@ public static class NexArrServiceRegistration
             foreach (var origin in new[]
                      {
                          app.Configuration["Cors:SuiteFrontendOrigin"],
-                         app.Configuration["Cors:CompanionFrontendOrigin"],
+                         app.Configuration["Cors:FieldCompanionFrontendOrigin"],
                      })
             {
                 if (!string.IsNullOrWhiteSpace(origin))

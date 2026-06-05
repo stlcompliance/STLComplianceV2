@@ -19,7 +19,6 @@ export {
   getProductOwnershipManifestEntry,
   IMPLEMENTED_PRODUCT_KEYS,
   IMPLEMENTED_PRODUCT_OWNERSHIP,
-  toLegacyProductKey,
 } from './productOwnershipManifest'
 export type { ProductOwnershipManifestEntry } from './productOwnershipManifest'
 export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'

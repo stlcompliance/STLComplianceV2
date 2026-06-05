@@ -76,8 +76,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/compliancecore
       - key: LOADARR_FRONTEND_URL
         value: https://app.stlcompliance.com/loadarr
-      - key: COMPANION_FRONTEND_URL
-        value: https://companion-frontend-vf7o.onrender.com
+      - key: FIELDCOMPANION_FRONTEND_URL
+        value: https://fieldcompanion-frontend-vf7o.onrender.com
       - key: STLCOMPLIANCESITE_URL
         value: https://stlcompliancesite.onrender.com
 
@@ -103,8 +103,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/loadarr
       - key: VITE_RECORDARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/recordarr
-      - key: VITE_COMPANION_FRONTEND_BASE
-        value: https://companion-frontend-vf7o.onrender.com
+      - key: VITE_FIELDCOMPANION_FRONTEND_BASE
+        value: https://fieldcompanion-frontend-vf7o.onrender.com
 
   - name: stl-public-api-urls
     envVars:
@@ -188,8 +188,8 @@ services:
           property: connectionString
       - key: Cors__SuiteFrontendOrigin
         value: https://app.stlcompliance.com
-      - key: Cors__CompanionFrontendOrigin
-        value: https://companion-frontend-vf7o.onrender.com
+      - key: Cors__FieldCompanionFrontendOrigin
+        value: https://fieldcompanion-frontend-vf7o.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
         value: https://app.stlcompliance.com
       - key: Launch__Products__staffarr__BaseUrl
@@ -224,15 +224,15 @@ services:
         value: /launch
       - key: Launch__Products__recordarr__LaunchPath
         value: /launch
-      - key: Launch__Products__companion__BaseUrl
-        value: https://companion-frontend-vf7o.onrender.com
-      - key: Launch__Products__companion__LaunchPath
+      - key: Launch__Products__fieldcompanion__BaseUrl
+        value: https://fieldcompanion-frontend-vf7o.onrender.com
+      - key: Launch__Products__fieldcompanion__LaunchPath
         value: /launch
-      - key: CompanionWebPush__Subject
-        value: mailto:companion-push@stlcompliance.com
-      - key: CompanionWebPush__PublicKey
+      - key: FieldCompanionWebPush__Subject
+        value: mailto:fieldcompanion-push@stlcompliance.com
+      - key: FieldCompanionWebPush__PublicKey
         sync: false
-      - key: CompanionWebPush__PrivateKey
+      - key: FieldCompanionWebPush__PrivateKey
         sync: false
 
   - type: web
@@ -708,9 +708,9 @@ services:
         value: https://compliancecore-api-b6fs.onrender.com
       - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
         sync: false
-      - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
+      - key: NexArrFieldCompanionNotificationDispatch__NexArrBaseUrl
         value: https://app.stlcompliance.com
-      - key: NexArrCompanionNotificationDispatch__ServiceToken
+      - key: NexArrFieldCompanionNotificationDispatch__ServiceToken
         sync: false
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
         value: https://app.stlcompliance.com

@@ -37,7 +37,7 @@ public sealed class IntegrationTokenBootstrapService(
         ("recordarr", "RecordArr", 76),
         ("assurarr", "AssurArr", 77),
         ("reportarr", "ReportArr", 78),
-        ("companion", "Field Companion", 80),
+        ("fieldcompanion", "Field Companion", 80),
     ];
 
     public async Task EnsureProvisionedAsync(CancellationToken cancellationToken = default)
