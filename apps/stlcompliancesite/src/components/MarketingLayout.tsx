@@ -3,13 +3,17 @@ import { CookieNotice } from './CookieNotice'
 import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 const navLinks = [
+  { to: '/', label: 'Home' },
+  { to: '/platform-overview', label: 'Platform Overview' },
   { to: '/products', label: 'Products' },
-  { to: '/compare', label: 'Compare' },
-  { to: '/pricing', label: 'Pricing' },
-  { to: '/resources', label: 'Resources' },
-  { to: '/security', label: 'Security' },
-  { to: '/data-ownership', label: 'Records' },
-  { to: '/demo', label: 'Demo & contact' },
+  { to: '/industries', label: 'Industries' },
+  { to: '/use-cases', label: 'Use Cases' },
+  { to: '/compliance', label: 'Compliance' },
+  { to: '/why-stl-compliance', label: 'Why STL Compliance' },
+  { to: '/about-founder', label: 'About' },
+  { to: '/pricing', label: 'Pricing/Request Access' },
+  { to: '/contact', label: 'Contact' },
+  { to: '/faq', label: 'FAQ' },
 ] as const
 
 export function MarketingLayout() {
@@ -72,11 +76,20 @@ export function MarketingLayout() {
             <Link to="/pricing" className="hover:text-teal-300">
               Pricing
             </Link>
+            <Link to="/compliance" className="hover:text-teal-300">
+              Compliance
+            </Link>
+            <Link to="/contact" className="hover:text-teal-300">
+              Contact
+            </Link>
             <Link to="/privacy" className="hover:text-teal-300">
               Privacy
             </Link>
             <Link to="/terms" className="hover:text-teal-300">
               Terms
+            </Link>
+            <Link to="/faq" className="hover:text-teal-300">
+              FAQ
             </Link>
             <Link to="/demo" className="hover:text-teal-300">
               Contact

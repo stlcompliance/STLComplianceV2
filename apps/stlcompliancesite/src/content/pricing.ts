@@ -74,6 +74,26 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
     displayName: 'Field Companion',
     summary: 'Field inbox, task handoffs, and quick product navigation.',
   },
+  {
+    productKey: 'nexarr',
+    displayName: 'NexArr',
+    summary: 'Secure suite entry, tenant login, and product entitlements.',
+  },
+  {
+    productKey: 'recordarr',
+    displayName: 'RecordArr',
+    summary: 'Document storage, retention, and controlled evidence record management.',
+  },
+  {
+    productKey: 'reportarr',
+    displayName: 'ReportArr',
+    summary: 'Cross-product dashboards, reports, and operational trend visibility.',
+  },
+  {
+    productKey: 'assurarr',
+    displayName: 'AssurArr',
+    summary: 'Nonconformance, CAPA, and assurance actions with effectivity tracking.',
+  },
 ]
 
 export const PRICING_DISCLAIMER =

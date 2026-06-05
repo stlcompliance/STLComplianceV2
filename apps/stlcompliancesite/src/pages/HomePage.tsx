@@ -12,6 +12,19 @@ const proofPoints = [
   'Know what you can prove.',
 ] as const
 
+const connectedTools = [
+  'Fleet maintenance software',
+  'Training tracking software',
+  'EHS/compliance binders',
+  'Warehouse systems',
+  'Dispatch boards',
+  'Shared spreadsheets',
+  'Email follow-up',
+  'Forms tools',
+  'Document folders',
+  'Standalone reporting dashboards',
+]
+
 export function HomePage() {
   const featured = MARKETING_PRODUCTS.filter((p) => p.productKey !== 'fieldcompanion')
 
@@ -32,7 +45,7 @@ export function HomePage() {
         backgroundImageSrc="/brand/stl-full-bluebg.png"
       >
         <Link
-          to="/demo"
+          to="/contact"
           className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
         >
           Request a demo
@@ -102,6 +115,30 @@ export function HomePage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.productKey} product={product} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <h2 className="text-2xl font-bold text-white">One stack. Focused products. Shared accountability.</h2>
+        <p className="mt-3 max-w-3xl text-slate-300">
+          STL Compliance does not ask every team to become experts in every workflow. It gives each team
+          a focused workflow and keeps ownership clear across the handoffs.
+        </p>
+        <h2 className="text-2xl font-bold text-white">Built for the way work actually happens.</h2>
+        <p className="mt-3 max-w-3xl text-slate-300">
+          Teams move from "I think this is ready" to "we know what is ready, what is missing, and what
+          proof is needed." STL Compliance keeps the flow moving so people spend less time chasing
+          follow-up and more time getting work done safely.
+        </p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {connectedTools.map((tool) => (
+            <article
+              key={tool}
+              className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm text-slate-300"
+            >
+              {tool}
+            </article>
           ))}
         </div>
       </section>

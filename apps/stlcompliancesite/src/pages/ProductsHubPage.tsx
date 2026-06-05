@@ -20,8 +20,8 @@ export function ProductsHubPage() {
       />
       <PageHero
         eyebrow="Product suite"
-        title="Connected tools for the work that creates compliance risk"
-        subtitle="Every product focuses on a real part of operations. Together, they help teams know who can work, what is ready, what is missing, and what proof exists."
+        title="Products that keep daily operations ready, connected, and accountable"
+        subtitle="Every product focuses on a real part of work. Together, they help teams know who can work, what is ready, what is missing, and what proof exists."
       />
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">

@@ -3,9 +3,11 @@ WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
 ARG VITE_SUITE_URL=https://app.stlcompliance.com
 ARG VITE_REPORTARR_FRONTEND_BASE=https://app.stlcompliance.com/reportarr
+ARG VITE_REPORTARR_API_BASE=https://reportarr-api.onrender.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_SUITE_URL=${VITE_SUITE_URL} \
-    VITE_REPORTARR_FRONTEND_BASE=${VITE_REPORTARR_FRONTEND_BASE}
+    VITE_REPORTARR_FRONTEND_BASE=${VITE_REPORTARR_FRONTEND_BASE} \
+    VITE_REPORTARR_API_BASE=${VITE_REPORTARR_API_BASE}
 COPY packages/shared-ui/package.json packages/shared-ui/package-lock.json packages/shared-ui/
 RUN npm ci --prefix packages/shared-ui
 COPY apps/reportarr-frontend/package.json apps/reportarr-frontend/package-lock.json apps/reportarr-frontend/

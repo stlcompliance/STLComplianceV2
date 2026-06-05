@@ -14,8 +14,8 @@ export function PricingPage() {
   return (
     <>
       <SiteSeo
-        title={`Pricing & licensing — ${siteConfig.siteName}`}
-        description="How STL Compliance pricing is scoped by product mix, operational scale, and compliance complexity."
+        title={`Pricing / Request Access — ${siteConfig.siteName}`}
+        description="Pricing and access are scoped by product mix, operational scale, and compliance complexity."
         path="/pricing"
       />
       <PageHero
@@ -24,10 +24,10 @@ export function PricingPage() {
         subtitle="STL Compliance is scoped around your product mix, workforce size, sites, and compliance needs. The goal is practical packaging, not a shopping-cart surprise."
       >
         <Link
-          to="/demo"
+          to="/contact"
           className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
         >
-          Request a walkthrough
+          Request access
         </Link>
         <a
           href={suiteLoginUrl()}
@@ -102,7 +102,7 @@ export function PricingPage() {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              to="/demo"
+              to="/contact"
               className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
             >
               Demo & contact

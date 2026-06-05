@@ -10,6 +10,7 @@ ARG VITE_SUPPLYARR_FRONTEND_BASE=https://app.stlcompliance.com/supplyarr
 ARG VITE_COMPLIANCECORE_FRONTEND_BASE=https://app.stlcompliance.com/compliancecore
 ARG VITE_LOADARR_FRONTEND_BASE=https://app.stlcompliance.com/loadarr
 ARG VITE_RECORDARR_FRONTEND_BASE=https://app.stlcompliance.com/recordarr
+ARG VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com
 ARG VITE_COMPANION_FRONTEND_BASE=https://companion-frontend-vf7o.onrender.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_SUITE_URL=${VITE_SUITE_URL} \
@@ -21,6 +22,7 @@ ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_COMPLIANCECORE_FRONTEND_BASE=${VITE_COMPLIANCECORE_FRONTEND_BASE} \
     VITE_LOADARR_FRONTEND_BASE=${VITE_LOADARR_FRONTEND_BASE} \
     VITE_RECORDARR_FRONTEND_BASE=${VITE_RECORDARR_FRONTEND_BASE} \
+    VITE_RECORDARR_API_BASE=${VITE_RECORDARR_API_BASE} \
     VITE_COMPANION_FRONTEND_BASE=${VITE_COMPANION_FRONTEND_BASE}
 COPY packages/shared-ui/package.json packages/shared-ui/package-lock.json packages/shared-ui/
 RUN npm ci --prefix packages/shared-ui

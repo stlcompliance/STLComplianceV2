@@ -29,14 +29,14 @@ export function DemoContactPage() {
   return (
     <>
       <SiteSeo
-        title={`Demo & contact — ${siteConfig.siteName}`}
-        description="Request a walkthrough of the STL Compliance suite or contact the team. Existing customers use secure client sign-in."
+        title={`Contact — ${siteConfig.siteName}`}
+        description="Request a walkthrough, ask a question, or contact the STL Compliance team. Existing customers use secure client sign-in."
         path="/demo"
       />
       <PageHero
         eyebrow="Get started"
-        title="Demo and contact"
-        subtitle="Tell us what you want to see, or use client sign-in if you are already a customer."
+        title="Contact STL Compliance"
+        subtitle="Share what you want to see first. You can also use secure sign-in if you are already a customer."
       >
         <a
           href={suiteLoginUrl()}
@@ -55,15 +55,13 @@ export function DemoContactPage() {
             <h2 className="text-lg font-semibold text-white">Thank you</h2>
             <p className="mt-3 text-slate-200">
               We received your request on this device. Email us at{' '}
-              <a href={contactMailto('STL Compliance demo request')} className="text-teal-300 underline">
+              <a href={contactMailto('STL Compliance contact request')} className="text-teal-300 underline">
                 {siteConfig.contactEmail}
               </a>{' '}
-              with the details you entered, or open your mail client:
+              or open a draft from this page.
             </p>
             <a
-              href={contactMailto(
-                `Demo request from ${form.name || 'visitor'}`,
-              )}
+              href={contactMailto(`Contact request from ${form.name || 'visitor'}`)}
               className="mt-6 inline-flex rounded-lg border border-slate-500 px-4 py-2 text-sm font-medium text-slate-100 hover:border-teal-400"
             >
               Open email draft
@@ -103,7 +101,7 @@ export function DemoContactPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-200">
-              What would you like to see?
+              What would you like to see or ask?
               <textarea
                 required
                 rows={4}
@@ -119,7 +117,7 @@ export function DemoContactPage() {
               Submit request
             </button>
             <p className="text-xs text-slate-500">
-              This public form only prepares your request on this device.
+              This public form prepares your request on this device and then opens an email draft.
             </p>
           </form>
         )}

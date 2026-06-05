@@ -3,9 +3,13 @@ import {
   ClipboardCheck,
   GraduationCap,
   Inbox,
+  Landmark,
   PackageSearch,
   Route,
+  ShieldCheck,
+  FileText,
   Users,
+  DatabaseZap,
   Wrench,
 } from 'lucide-react'
 
@@ -13,9 +17,11 @@ import { productPath } from '../lib/publicRoutes'
 import { PRODUCT_OWNERSHIP } from './ownershipBoundaries'
 
 export type ProductCategoryKey =
+  | 'platform'
   | 'workforce'
   | 'operations'
   | 'compliance'
+  | 'records'
   | 'field'
 
 export type CapabilityKey =
@@ -54,9 +60,11 @@ export type MarketingProduct = {
 }
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
+  platform: 'Platform and access',
   workforce: 'Workforce and readiness',
   operations: 'Daily operations',
   compliance: 'Compliance proof',
+  records: 'Evidence, records, and reporting',
   field: 'Field work',
 }
 
@@ -120,6 +128,56 @@ function normalizeProductKey(productKey: string): string {
 }
 
 export const MARKETING_PRODUCTS: MarketingProduct[] = [
+  {
+    productKey: 'nexarr',
+    displayName: 'NexArr',
+    tagline: 'The secure front door for one-suite access and entitlement.',
+    overview:
+      'NexArr is the secure entry point for STL Compliance. It handles tenant setup, identities, and entitlement so teams are in the right place from the first click.',
+    owns: PRODUCT_OWNERSHIP.nexarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
+    primaryWorkflows: [
+      'Owns tenant login, platform identity, and access launch.',
+      'Controls which products a tenant can use and how teams are onboarded.',
+      'Publishes security and entitlement context used by all suite products.',
+    ],
+    recordsManaged: [
+      'Tenants',
+      'People access',
+      'Membership',
+      'Product entitlements',
+      'Service tokens',
+      'Platform sessions',
+    ],
+    readinessChecks: [
+      'Checks secure login and entitlement before product launch.',
+      'Ensures platform-level authorization is valid before operations begin.',
+      'Supports break-glass and secure admin pathways where required.',
+    ],
+    evidenceOutputs: [
+      'Access audit events',
+      'Session launch records',
+      'Product entitlement snapshots',
+      'Platform admin changes',
+    ],
+    handoffs: [
+      'Hands users into products only after identity and entitlement checks pass.',
+      'Provides authentication context used by operational workflows.',
+      'Keeps access rules separate from product execution records.',
+    ],
+    checklist: checklist(['secureAccess'], ['workforce', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse', 'complianceRules', 'auditEvidence']),
+    connectedReasons: reasons({
+      secureAccess: 'one suite login',
+      workforce: 'shares user identity context',
+      complianceRules: 'enables controlled rule access',
+      auditEvidence: 'records access activity',
+    }),
+    icon: ShieldCheck,
+    sortOrder: 5,
+    category: 'platform',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-sky-500/20 to-cyan-400/10',
+  },
   {
     productKey: 'staffarr',
     displayName: 'StaffArr',
@@ -580,6 +638,155 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     brandImageSrc: '/brand/companion-icon.svg',
     brandAccentClass: 'from-slate-500/20 to-teal-400/10',
   },
+  {
+    productKey: 'recordarr',
+    displayName: 'RecordArr',
+    tagline: 'The document and retention layer that connects proof to work.',
+    overview:
+      'RecordArr stores records your teams need to prove their work happened and keeps document versions, access, and retention organized so support and evidence retrieval stay reliable.',
+    owns: PRODUCT_OWNERSHIP.recordarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.recordarr.doesNotOwn,
+    primaryWorkflows: [
+      'Stores policies, SOPs, certificates, and operational documents.',
+      'Manages retention rules, version control, and legal hold status.',
+      'Supports secure access history and document package handoff.',
+    ],
+    recordsManaged: [
+      'Controlled documents',
+      'Record versions',
+      'SOP and policy files',
+      'Evidence packages',
+      'Retention schedules',
+      'Legal holds',
+    ],
+    readinessChecks: [
+      'Tracks document status and version before work evidence moves forward.',
+      'Keeps retention and evidence timing visible across operations.',
+      'Records document access and acknowledgment history.',
+    ],
+    evidenceOutputs: [
+      'Evidence file libraries',
+      'Record packages',
+      'Retention and hold logs',
+      'Controlled document audit trail',
+    ],
+    handoffs: [
+      'Stores proof from all products for review and audit readiness.',
+      'Supports Compliance Core with evidence references.',
+      'Provides reports and legal evidence attachments to customers and operations teams.',
+    ],
+    checklist: checklist(['auditEvidence'], ['complianceRules', 'secureAccess', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse']),
+    connectedReasons: reasons({
+      auditEvidence: 'captures documents and proof',
+      complianceRules: 'supports evidence mapping',
+      secureAccess: 'controls document access',
+    }),
+    icon: FileText,
+    sortOrder: 85,
+    category: 'records',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-emerald-500/20 to-green-400/10',
+  },
+  {
+    productKey: 'reportarr',
+    displayName: 'ReportArr',
+    tagline: 'Cross-suite reporting and dashboarding for people, operations, and readiness.',
+    overview:
+      'ReportArr connects operational signals into plain summaries and recurring reports so leadership sees what is ready, what is behind, and where attention is needed.',
+    owns: PRODUCT_OWNERSHIP.reportarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.reportarr.doesNotOwn,
+    primaryWorkflows: [
+      'Builds cross-product dashboards and scheduled reporting.',
+      'Tracks KPI snapshots and exportable summaries.',
+      'Provides repeatable reporting views for operations and compliance meetings.',
+    ],
+    recordsManaged: [
+      'Report definitions',
+      'KPI models',
+      'Scheduled runs',
+      'Dashboard filters',
+      'Execution history',
+      'Report outputs',
+    ],
+    readinessChecks: [
+      'Summarizes readiness outcomes from connected products.',
+      'Shows missed follow-up signals and delayed work statuses.',
+      'Highlights evidence and ownership state for decision meetings.',
+    ],
+    evidenceOutputs: [
+      'Cross-suite readiness reports',
+      'Compliance and audit status summaries',
+      'Export packs for leadership reviews',
+      'Trend snapshots',
+    ],
+    handoffs: [
+      'Consumes operational events and presents them in digestible views.',
+      'Supports teams in deciding where to assign follow-up.',
+      'Keeps evidence visibility closer to the operating team.',
+    ],
+    checklist: checklist(['auditEvidence'], ['complianceRules', 'workforce', 'training', 'maintenance', 'dispatch', 'supply', 'warehouse']),
+    connectedReasons: reasons({
+      complianceRules: 'adds rule context',
+      auditEvidence: 'turns evidence into executive visibility',
+      workforce: 'shows people readiness trends',
+      maintenance: 'highlights equipment risk',
+    }),
+    icon: DatabaseZap,
+    sortOrder: 90,
+    category: 'records',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-cyan-500/20 to-teal-400/10',
+  },
+  {
+    productKey: 'assurarr',
+    displayName: 'AssurArr',
+    tagline: 'Nonconformance, quality, CAPA, and release controls for operations.',
+    overview:
+      'AssurArr helps teams handle exceptions with practical assurance workflows: case creation, action plans, holds, and evidence of what was fixed and verified.',
+    owns: PRODUCT_OWNERSHIP.assurarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.assurarr.doesNotOwn,
+    primaryWorkflows: [
+      'Tracks nonconformance reports, findings, and corrective actions.',
+      'Supports investigation, CAPA plan creation, and effectiveness checks.',
+      'Manages holds and release decisions with accountability.',
+    ],
+    recordsManaged: [
+      'Nonconformance reports',
+      'CAPA cases',
+      'Corrective actions',
+      'Findings and holds',
+      'Escalation records',
+      'Supplier and customer deviations',
+    ],
+    readinessChecks: [
+      'Connects root cause and containment to open work.',
+      'Tracks whether corrective actions are complete and verified.',
+      'Flags operational impacts before work or release resumes.',
+    ],
+    evidenceOutputs: [
+      'Assurance case timelines',
+      'CAPA evidence packages',
+      'Release and hold records',
+      'Escalation summaries',
+    ],
+    handoffs: [
+      'Works with originating product for direct corrective execution.',
+      'Escalates training or personnel follow-up when needed.',
+      'Uses RecordArr for evidence attachments and audit traceability.',
+    ],
+    checklist: checklist(['auditEvidence'], ['training', 'maintenance', 'dispatch', 'supply', 'warehouse', 'complianceRules']),
+    connectedReasons: reasons({
+      training: 'triggers qualification retraining when needed',
+      complianceRules: 'links incidents to rule outcomes',
+      maintenance: 'coordinates corrective execution',
+      dispatch: 'manages release/hold impacts',
+    }),
+    icon: Landmark,
+    sortOrder: 95,
+    category: 'compliance',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-amber-500/20 to-orange-400/10',
+  },
 ]
 
 export function getMarketingProduct(productKey: string): MarketingProduct | undefined {
@@ -598,8 +805,10 @@ export function productsByCategory(category: ProductCategoryKey): MarketingProdu
 }
 
 export const PRODUCT_CATEGORY_ORDER: ProductCategoryKey[] = [
+  'platform',
   'workforce',
   'operations',
   'compliance',
+  'records',
   'field',
 ]

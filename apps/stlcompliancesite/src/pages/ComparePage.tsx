@@ -11,6 +11,19 @@ import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
 import { siteConfig } from '../lib/siteConfig'
 
+const comparisonCategories = [
+  'Fleet maintenance software',
+  'Training tracking software',
+  'EHS/compliance binders',
+  'Warehouse systems',
+  'Dispatch boards',
+  'Shared spreadsheets',
+  'Email follow-up',
+  'Forms tools',
+  'Document folders',
+  'Standalone reporting dashboards',
+]
+
 export function ComparePage() {
   return (
     <>
@@ -64,6 +77,23 @@ export function ComparePage() {
             </p>
           </aside>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <h2 className="text-xl font-bold text-white">Everyday category comparison</h2>
+        <p className="mt-2 max-w-4xl text-sm text-slate-400">
+          Teams compare against these familiar stacks more often than they compare against another app:
+        </p>
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {comparisonCategories.map((category) => (
+            <li
+              key={category}
+              className="rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm text-slate-200"
+            >
+              {category}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">

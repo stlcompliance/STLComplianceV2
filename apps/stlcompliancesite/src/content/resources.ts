@@ -19,6 +19,29 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     category: 'suite',
   },
   {
+    id: 'platform-overview-resource',
+    title: 'Platform overview',
+    summary:
+      'A practical view of why STL Compliance is organized as one suite with focused products and shared accountability.',
+    href: '/platform-overview',
+    category: 'suite',
+  },
+  {
+    id: 'industries-resource',
+    title: 'Industry use cases',
+    summary: 'See how STL Compliance applies to fleet, warehousing, maintenance, and field operations.',
+    href: '/industries',
+    category: 'suite',
+  },
+  {
+    id: 'use-cases-resource',
+    title: 'Use case workflows',
+    summary:
+      'Review practical examples: dispatch readiness, receiving, maintenance parts, and supplier exception workflows.',
+    href: '/use-cases',
+    category: 'suite',
+  },
+  {
     id: 'client-sign-in',
     title: 'Client sign-in',
     summary: 'Customers use secure sign-in to access the products their teams use.',
@@ -68,6 +91,27 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     summary: 'Public legal pages for visitors evaluating the suite.',
     href: '/privacy',
     category: 'trust',
+  },
+  {
+    id: 'compliance-overview',
+    title: 'Compliance guidance',
+    summary: 'How STL Compliance helps prepare for audit review and supports evidence organization.',
+    href: '/compliance',
+    category: 'trust',
+  },
+  {
+    id: 'about-founder-resource',
+    title: 'About the founder',
+    summary: 'A grounded perspective from the team behind STL Compliance and why this stack was built.',
+    href: '/about-founder',
+    category: 'suite',
+  },
+  {
+    id: 'faq-resource',
+    title: 'FAQ',
+    summary: 'Answers about rollout, pricing approach, and practical expectations.',
+    href: '/faq',
+    category: 'suite',
   },
 ]
 

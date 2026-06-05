@@ -7,12 +7,15 @@ function routeSlug(productKey: string): string {
 }
 
 export const MARKETING_PRODUCT_KEYS = [
+  'nexarr',
   'staffarr',
   'trainarr',
   'maintainarr',
   'routarr',
   'supplyarr',
   'compliancecore',
+  'recordarr',
+  'reportarr',
   'assurarr',
   'fieldcompanion',
 ] as const
@@ -24,10 +27,19 @@ export function productPath(productKey: string): string {
 export function buildStaticPublicPaths(): string[] {
   return [
     '/',
+    '/platform-overview',
     '/products',
+    '/industries',
+    '/use-cases',
+    '/compliance',
+    '/why-stl-compliance',
+    '/about-founder',
+    '/pricing',
+    '/request-access',
+    '/contact',
+    '/faq',
     '/resources',
     '/compare',
-    '/pricing',
     '/security',
     '/data-ownership',
     '/demo',
