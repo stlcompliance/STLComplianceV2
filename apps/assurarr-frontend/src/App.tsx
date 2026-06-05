@@ -816,15 +816,24 @@ function LinkedSectionCard({
   )
 }
 
-function linkedRecordItems<T extends { id: string; number: string }>(
+function linkedRecordItems<T extends { id: string; number?: string }>(
   refs: string[],
   records: T[] | undefined,
   toPath: (record: T) => string,
 ) {
   return refs.map((ref) => {
     const record = records?.find((item) => item.number === ref || item.id === ref)
-    return record ? { label: record.number, to: toPath(record) } : { label: ref }
+    return record ? { label: record.number ?? record.id, to: toPath(record) } : { label: ref }
   })
+}
+
+function historyRecordLink<T extends { id: string; number?: string }>(
+  subjectId: string,
+  records: T[] | undefined,
+  toPath: (record: T) => string,
+) {
+  const record = records?.find((item) => item.id === subjectId || item.number === subjectId)
+  return record ? { label: record.number ?? record.id, to: toPath(record) } : null
 }
 
 function HoldPage() {
@@ -5632,6 +5641,21 @@ function QualityMetricDetailPage() {
 
 function HistoryPage() {
   const query = useDashboard()
+  const nonconformances = useRecords(['assurarr', 'history', 'nonconformances'], assurarrApi.listNonconformances)
+  const holds = useRecords(['assurarr', 'history', 'holds'], assurarrApi.listHolds)
+  const capas = useRecords(['assurarr', 'history', 'capas'], assurarrApi.listCapas)
+  const audits = useRecords(['assurarr', 'history', 'audits'], assurarrApi.listAudits)
+  const findings = useRecords(['assurarr', 'history', 'findings'], assurarrApi.listFindings)
+  const reviews = useRecords(['assurarr', 'history', 'reviews'], assurarrApi.listQualityReviews)
+  const releases = useRecords(['assurarr', 'history', 'releases'], assurarrApi.listQualityReleases)
+  const containmentActions = useRecords(['assurarr', 'history', 'containment'], assurarrApi.listContainmentActions)
+  const dispositions = useRecords(['assurarr', 'history', 'dispositions'], assurarrApi.listDispositions)
+  const supplierIssues = useRecords(['assurarr', 'history', 'supplier-quality'], assurarrApi.listSupplierQualityIssues)
+  const scars = useRecords(['assurarr', 'history', 'scars'], assurarrApi.listScars)
+  const complaints = useRecords(['assurarr', 'history', 'complaints'], assurarrApi.listCustomerComplaintQualityCases)
+  const snapshots = useRecords(['assurarr', 'history', 'snapshots'], assurarrApi.listSnapshots)
+  const scorecards = useRecords(['assurarr', 'history', 'scorecards'], assurarrApi.listScorecards)
+  const riskProfiles = useRecords(['assurarr', 'history', 'risk-profiles'], assurarrApi.listRiskProfiles)
 
   return (
     <div className="assurarr-page">
@@ -5645,10 +5669,51 @@ function HistoryPage() {
                   <strong className="text-sm text-slate-100">{event.eventType}</strong>
                   <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
                 </div>
-                <p className="mt-1 text-sm text-slate-300">
-                  {event.subjectType} {event.subjectId}
-                  {event.details ? ` - ${event.details}` : ''}
-                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-300">
+                  <span className="assurarr-pill">{event.subjectType}</span>
+                  {(() => {
+                    const link =
+                      event.subjectType === 'nonconformance'
+                        ? historyRecordLink(event.subjectId, nonconformances.data, (record) => `/nonconformances/${record.id}`)
+                        : event.subjectType === 'hold'
+                          ? historyRecordLink(event.subjectId, holds.data, (record) => `/holds/${record.id}`)
+                          : event.subjectType === 'capa'
+                            ? historyRecordLink(event.subjectId, capas.data, (record) => `/capa/${record.id}`)
+                            : event.subjectType === 'audit'
+                              ? historyRecordLink(event.subjectId, audits.data, (record) => `/audits/${record.id}`)
+                              : event.subjectType === 'finding'
+                                ? historyRecordLink(event.subjectId, findings.data, (record) => `/findings/${record.id}`)
+                                : event.subjectType === 'review'
+                                  ? historyRecordLink(event.subjectId, reviews.data, (record) => `/reviews/${record.id}`)
+                                  : event.subjectType === 'release'
+                                    ? historyRecordLink(event.subjectId, releases.data, (record) => `/releases/${record.id}`)
+                                    : event.subjectType === 'containment'
+                                      ? historyRecordLink(event.subjectId, containmentActions.data, (record) => `/containment/${record.id}`)
+                                      : event.subjectType === 'disposition'
+                                        ? historyRecordLink(event.subjectId, dispositions.data, (record) => `/dispositions/${record.id}`)
+                                        : event.subjectType === 'supplier_quality_issue'
+                                          ? historyRecordLink(event.subjectId, supplierIssues.data, (record) => `/supplier-quality/${record.id}`)
+                                          : event.subjectType === 'scar'
+                                            ? historyRecordLink(event.subjectId, scars.data, (record) => `/scars/${record.id}`)
+                                            : event.subjectType === 'customer_complaint'
+                                              ? historyRecordLink(event.subjectId, complaints.data, (record) => `/complaints/${record.id}`)
+                                              : event.subjectType === 'status'
+                                                ? historyRecordLink(event.subjectId, snapshots.data, (record) => `/status-snapshots/${record.id}`)
+                                                : event.subjectType === 'scorecard'
+                                                  ? historyRecordLink(event.subjectId, scorecards.data, (record) => `/scorecards/${record.id}`)
+                                                  : event.subjectType === 'risk-profile'
+                                                    ? historyRecordLink(event.subjectId, riskProfiles.data, (record) => `/risk-profiles/${record.id}`)
+                                                    : null
+                    return link ? (
+                      <Link to={link.to} className="text-cyan-300 hover:text-cyan-200">
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <span>{event.subjectId}</span>
+                    )
+                  })()}
+                  {event.details ? <span className="text-slate-400">- {event.details}</span> : null}
+                </div>
               </div>
             ))
           ) : (
