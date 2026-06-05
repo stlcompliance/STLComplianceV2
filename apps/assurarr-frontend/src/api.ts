@@ -589,6 +589,7 @@ export const assurarrApi = {
     }),
   updateCapaStatus: (id: string, status: string, closureSummary?: string) =>
     sendJson<Capa>(`/api/v1/capas/${id}/status`, 'PATCH', { status, closureSummary }),
+  getCapaAction: (capaId: string, actionId: string) => getJson<CapaAction>(`/api/v1/capas/${capaId}/actions/${actionId}`),
   listCapaActions: (capaId: string) => getJson<CapaAction[]>(`/api/v1/capas/${capaId}/actions`),
   createCapaAction: (capaId: string, body: { title: string; description: string; actionType: string; assignedPersonId?: string; assignedTeamRef?: string; sourceProductActionRef?: string; targetProduct: string; targetObjectRef?: string; dueAt?: string; verificationRequired?: boolean; evidenceRecordRefs?: string[]; blockerRefs?: string[]; notes?: string }) =>
     sendJson<CapaAction>(`/api/v1/integrations/capas/${capaId}/actions`, 'POST', {
@@ -604,6 +605,8 @@ export const assurarrApi = {
       completedAt: body.completedAt ? new Date(body.completedAt).toISOString() : null,
       verifiedAt: body.verifiedAt ? new Date(body.verifiedAt).toISOString() : null,
     }),
+  getCapaActionBlocker: (capaId: string, actionId: string, blockerId: string) =>
+    getJson<CapaActionBlocker>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers/${blockerId}`),
   listCapaActionBlockers: (capaId: string, actionId: string) => getJson<CapaActionBlocker[]>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers`),
   createCapaActionBlocker: (capaId: string, actionId: string, body: { blockerType: string; sourceProduct?: string; sourceObjectRef?: string; title: string; description: string }) =>
     sendJson<CapaActionBlocker>(`/api/v1/capas/${capaId}/actions/${actionId}/blockers`, 'POST', body),

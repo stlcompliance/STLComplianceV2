@@ -1636,11 +1636,10 @@ function CapaDetailPage() {
               {actionQuery.data?.length ? (
                 <div className="space-y-2">
                   {actionQuery.data.map((action) => (
-                    <button
+                    <Link
                       key={action.id}
-                      type="button"
-                      className={`w-full rounded-xl border p-3 text-left transition ${action.id === activeActionId ? 'border-cyan-500/70 bg-slate-900/90' : 'border-slate-700/70 bg-slate-900/80'}`}
-                      onClick={() => setSelectedActionId(action.id)}
+                      to={`/capa/${id}/actions/${action.id}`}
+                      className={`block w-full rounded-xl border p-3 text-left transition ${action.id === activeActionId ? 'border-cyan-500/70 bg-slate-900/90 text-cyan-200' : 'border-slate-700/70 bg-slate-900/80 text-cyan-300 hover:border-cyan-500/50 hover:text-cyan-200'}`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <strong className="text-sm text-slate-50">{action.number}</strong>
@@ -1653,7 +1652,7 @@ function CapaDetailPage() {
                       <p className="mt-1 text-xs text-slate-400">
                         Blockers: {action.blockerRefs.length > 0 ? action.blockerRefs.join(', ') : 'none'}
                       </p>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -1675,14 +1674,14 @@ function CapaDetailPage() {
                 {blockerQuery.data?.length ? (
                   <div className="space-y-2">
                     {blockerQuery.data.map((blocker) => (
-                      <div key={blocker.id} className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                      <Link key={blocker.id} to={`/capa/${id}/actions/${activeActionId}/blockers/${blocker.id}`} className="block rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-cyan-300 transition hover:border-cyan-500/50 hover:text-cyan-200">
                         <div className="flex items-center justify-between gap-3">
                           <strong className="text-sm text-slate-50">{blocker.number}</strong>
                           <span className="assurarr-pill">{blocker.status}</span>
                         </div>
                         <p className="mt-1 text-sm text-slate-300">{blocker.title}</p>
                         <p className="mt-1 text-xs text-slate-400">{blocker.blockerType}{blocker.sourceProduct ? ` - ${blocker.sourceProduct}` : ''}</p>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (
@@ -2024,6 +2023,244 @@ function EffectivenessVerificationDetailPage() {
                   <p className="mt-1 text-xs text-slate-400">{planQuery.data.verificationType}</p>
                 </div>
               ) : null}
+            </div>
+          </div>
+        </div>
+
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
+    </div>
+  )
+}
+
+function CapaActionDetailPage() {
+  const { capaId = '', actionId = '' } = useParams()
+  const queryClient = useQueryClient()
+  const capaQuery = useQuery({
+    queryKey: ['assurarr', 'capa', capaId],
+    queryFn: () => assurarrApi.getCapa(capaId),
+    enabled: Boolean(capaId),
+  })
+  const actionQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action', capaId, actionId],
+    queryFn: () => assurarrApi.getCapaAction(capaId, actionId),
+    enabled: Boolean(capaId && actionId),
+  })
+  const blockerQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action-blockers', capaId, actionId],
+    queryFn: () => assurarrApi.listCapaActionBlockers(capaId, actionId),
+    enabled: Boolean(capaId && actionId),
+    staleTime: 15_000,
+  })
+  const dashboard = useDashboard()
+  const [status, setStatus] = useState('assigned')
+  const [closureSummary, setClosureSummary] = useState('')
+  const updateMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.updateCapaActionStatus(capaId, actionId, {
+        status,
+        closureSummary: closureSummary || undefined,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+      setClosureSummary('')
+    },
+  })
+
+  useEffect(() => {
+    if (actionQuery.data) {
+      setStatus(actionQuery.data.status)
+    }
+  }, [actionQuery.data?.status])
+
+  if (capaQuery.isLoading || actionQuery.isLoading) {
+    return <LoadingCard label="Loading CAPA action detail" />
+  }
+
+  if (!capaQuery.data || !actionQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="CAPA action detail" description="Could not load the requested CAPA action." />
+        <EmptyState title="CAPA action not found." />
+      </div>
+    )
+  }
+
+  const capa = capaQuery.data
+  const action = actionQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa_action' && event.subjectId === action.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${action.number} · ${action.title}`} description="Assigned work, blockers, evidence, and completion history for the CAPA action." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{action.status}</span>
+                <span className="assurarr-pill">{action.actionType}</span>
+                <span className="assurarr-pill">{action.targetProduct}</span>
+              </div>
+              <p className="text-sm text-slate-300">{action.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-slate-500">Target object:</span> {action.targetObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-slate-500">Verified:</span> {action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Status and evidence</p>
+              <div className="grid gap-3">
+                <Field label="Status">
+                  <select className="assurarr-select" value={status} onChange={(event) => setStatus(event.target.value)}>
+                    <option value="open">Open</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="completed">Completed</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="canceled">Canceled</option>
+                  </select>
+                </Field>
+                <Field label="Closure summary">
+                  <textarea className="assurarr-textarea" value={closureSummary} onChange={(event) => setClosureSummary(event.target.value)} />
+                </Field>
+              </div>
+              <button className="assurarr-button" type="button" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Saving...' : 'Update status'}
+              </button>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Verification required:</span> {action.verificationRequired ? 'yes' : 'no'}</div>
+                <div><span className="text-slate-500">Evidence refs:</span> {action.evidenceRecordRefs.length ? action.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Blocker refs:</span> {action.blockerRefs.length ? action.blockerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-slate-500">Notes:</span> {action.notes ?? 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <LinkedSectionCard
+          title="Blockers"
+          items={blockerQuery.data?.map((blocker) => ({ label: `${blocker.number} · ${blocker.title} · ${blocker.status}`, to: `/capa/${capaId}/actions/${actionId}/blockers/${blocker.id}` })) ?? []}
+          emptyLabel="No blockers recorded for this action."
+        />
+        <SectionCard
+          title="Timeline"
+          items={timeline.map((event) => `${event.eventType} · ${new Date(event.occurredAt).toLocaleString()}`)}
+          emptyLabel="No timeline events recorded yet."
+        />
+      </div>
+    </div>
+  )
+}
+
+function CapaActionBlockerDetailPage() {
+  const { capaId = '', actionId = '', blockerId = '' } = useParams()
+  const queryClient = useQueryClient()
+  const capaQuery = useQuery({
+    queryKey: ['assurarr', 'capa', capaId],
+    queryFn: () => assurarrApi.getCapa(capaId),
+    enabled: Boolean(capaId),
+  })
+  const actionQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action', capaId, actionId],
+    queryFn: () => assurarrApi.getCapaAction(capaId, actionId),
+    enabled: Boolean(capaId && actionId),
+  })
+  const blockerQuery = useQuery({
+    queryKey: ['assurarr', 'capa-action-blocker', capaId, actionId, blockerId],
+    queryFn: () => assurarrApi.getCapaActionBlocker(capaId, actionId, blockerId),
+    enabled: Boolean(capaId && actionId && blockerId),
+  })
+  const dashboard = useDashboard()
+  const [status, setStatus] = useState('resolved')
+  const resolveMutation = useMutation({
+    mutationFn: async () =>
+      assurarrApi.updateCapaActionBlockerStatus(capaId, actionId, blockerId, status, undefined, new Date().toISOString()),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['assurarr'] })
+    },
+  })
+
+  useEffect(() => {
+    if (blockerQuery.data) {
+      setStatus(blockerQuery.data.status)
+    }
+  }, [blockerQuery.data?.status])
+
+  if (capaQuery.isLoading || actionQuery.isLoading || blockerQuery.isLoading) {
+    return <LoadingCard label="Loading CAPA blocker detail" />
+  }
+
+  if (!capaQuery.data || !actionQuery.data || !blockerQuery.data) {
+    return (
+      <div className="assurarr-page">
+        <PageHeader title="CAPA blocker detail" description="Could not load the requested CAPA action blocker." />
+        <EmptyState title="CAPA action blocker not found." />
+      </div>
+    )
+  }
+
+  const capa = capaQuery.data
+  const action = actionQuery.data
+  const blocker = blockerQuery.data
+  const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'capa_action_blocker' && event.subjectId === blocker.id) ?? []
+
+  return (
+    <div className="assurarr-page">
+      <PageHeader title={`${blocker.number} · ${blocker.title}`} description="Blocker source, resolution status, and related CAPA action context." />
+      <div className="space-y-4">
+        <div className="assurarr-grid cols-2">
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Overview</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="assurarr-pill">{blocker.status}</span>
+                <span className="assurarr-pill">{blocker.blockerType}</span>
+              </div>
+              <p className="text-sm text-slate-300">{blocker.description}</p>
+              <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-slate-500">Action:</span> {action.number} · {action.title}</div>
+                <div><span className="text-slate-500">Source product:</span> {blocker.sourceProduct ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Source object:</span> {blocker.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Created:</span> {new Date(blocker.createdAt).toLocaleString()}</div>
+                <div><span className="text-slate-500">Resolved:</span> {blocker.resolvedAt ? new Date(blocker.resolvedAt).toLocaleString() : 'n/a'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="assurarr-card">
+            <div className="assurarr-card-inner space-y-3">
+              <p className="assurarr-label">Resolution</p>
+              <div className="grid gap-3">
+                <Field label="Status">
+                  <select className="assurarr-select" value={status} onChange={(event) => setStatus(event.target.value)}>
+                    <option value="active">Active</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="overridden">Overridden</option>
+                  </select>
+                </Field>
+              </div>
+              <button className="assurarr-button" type="button" onClick={() => resolveMutation.mutate()} disabled={resolveMutation.isPending}>
+                {resolveMutation.isPending ? 'Saving...' : 'Update blocker status'}
+              </button>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <div><span className="text-slate-500">Resolved by:</span> {blocker.resolvedByPersonId ?? 'n/a'}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -5377,6 +5614,8 @@ export function App() {
     if (path.startsWith('/scars')) return 'SCARs'
     if (path.startsWith('/complaints')) return 'Complaints'
     if (path.startsWith('/status')) return 'Status'
+    if (path.startsWith('/capa/') && path.includes('/actions/') && path.includes('/blockers/')) return 'CAPA blocker detail'
+    if (path.startsWith('/capa/') && path.includes('/actions/')) return 'CAPA action detail'
     if (path.startsWith('/capa/') && path.includes('/verification-plans/')) return 'Verification plan detail'
     if (path.startsWith('/capa/') && path.includes('/effectiveness-verifications/')) return 'Effectiveness verification detail'
     if (path.startsWith('/capa')) return 'CAPA'
@@ -5398,6 +5637,8 @@ export function App() {
         <Route path="/holds/:id" element={<HoldDetailPage />} />
         <Route path="/capa" element={<CapaPage />} />
         <Route path="/capa/:id" element={<CapaDetailPage />} />
+        <Route path="/capa/:capaId/actions/:actionId" element={<CapaActionDetailPage />} />
+        <Route path="/capa/:capaId/actions/:actionId/blockers/:blockerId" element={<CapaActionBlockerDetailPage />} />
         <Route path="/capa/:capaId/verification-plans/:verificationPlanId" element={<VerificationPlanDetailPage />} />
         <Route path="/capa/:capaId/effectiveness-verifications/:verificationId" element={<EffectivenessVerificationDetailPage />} />
         <Route path="/audits" element={<AuditPage />} />

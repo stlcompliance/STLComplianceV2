@@ -677,6 +677,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(action);
         Assert.Equal(actionTitle, action!.Title);
 
+        var actionDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions/{action.Id}");
+        Assert.Equal(HttpStatusCode.OK, actionDetailResponse.StatusCode);
+        var actionDetail = await actionDetailResponse.Content.ReadFromJsonAsync<AssurArrCapaActionResponse>();
+        Assert.NotNull(actionDetail);
+        Assert.Equal(action.Id, actionDetail!.Id);
+        Assert.Equal(action.Number, actionDetail.Number);
+
         var actionAssignedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
         actionAssignedDashboardResponse.EnsureSuccessStatusCode();
         var actionAssignedDashboard = await actionAssignedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
@@ -698,6 +705,13 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(blocker);
         Assert.Equal(blockerTitle, blocker!.Title);
         Assert.Equal("active", blocker.Status);
+
+        var blockerDetailResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions/{action.Id}/blockers/{blocker.Id}");
+        Assert.Equal(HttpStatusCode.OK, blockerDetailResponse.StatusCode);
+        var blockerDetail = await blockerDetailResponse.Content.ReadFromJsonAsync<AssurArrCapaActionBlockerResponse>();
+        Assert.NotNull(blockerDetail);
+        Assert.Equal(blocker.Id, blockerDetail!.Id);
+        Assert.Equal(blocker.Number, blockerDetail.Number);
 
         var blockerListResponse = await _client.GetAsync($"/api/v1/capas/{capa.Id}/actions/{action.Id}/blockers");
         blockerListResponse.EnsureSuccessStatusCode();

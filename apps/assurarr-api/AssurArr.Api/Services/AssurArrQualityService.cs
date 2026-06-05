@@ -1569,6 +1569,16 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         return entities.Select(ToCapaActionResponse).ToList();
     }
 
+    public async Task<AssurArrCapaActionResponse> GetCapaActionAsync(Guid capaId, Guid actionId, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.CapaActions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == actionId && x.CapaId == capaId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA action '{actionId}' was not found.");
+
+        return ToCapaActionResponse(entity);
+    }
+
     public async Task<AssurArrCapaActionResponse> CreateCapaActionAsync(Guid capaId, CreateAssurArrCapaActionRequest request, CancellationToken cancellationToken = default)
     {
         var capa = await db.Capas.FirstOrDefaultAsync(x => x.Id == capaId, cancellationToken)
@@ -1658,6 +1668,17 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             .ToListAsync(cancellationToken);
 
         return entities.Select(ToCapaActionBlockerResponse).ToList();
+    }
+
+    public async Task<AssurArrCapaActionBlockerResponse> GetCapaActionBlockerAsync(Guid capaId, Guid actionId, Guid blockerId, CancellationToken cancellationToken = default)
+    {
+        await EnsureCapaActionExistsAsync(capaId, actionId, cancellationToken);
+        var entity = await db.CapaActionBlockers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == blockerId && x.CapaActionId == actionId, cancellationToken)
+            ?? throw new InvalidOperationException($"CAPA action blocker '{blockerId}' was not found.");
+
+        return ToCapaActionBlockerResponse(entity);
     }
 
     public async Task<AssurArrCapaActionBlockerResponse> CreateCapaActionBlockerAsync(Guid capaId, Guid actionId, CreateAssurArrCapaActionBlockerRequest request, CancellationToken cancellationToken = default)
