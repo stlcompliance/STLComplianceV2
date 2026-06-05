@@ -530,7 +530,10 @@ public static class PlatformSeeder
     {
         foreach (var product in Products)
         {
-            foreach (var origin in origins.Where(static value => !string.IsNullOrWhiteSpace(value)))
+            foreach (var origin in origins
+                         .Select(NormalizeCallbackOrigin)
+                         .Where(static value => !string.IsNullOrWhiteSpace(value))
+                         .Select(static value => value!))
             {
                 var exists = await db.CallbackAllowlist.AnyAsync(
                     e => e.ProductKey == product.Key
@@ -561,11 +564,30 @@ public static class PlatformSeeder
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    private static string? NormalizeCallbackOrigin(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim().TrimEnd('/');
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+        {
+            return $"{uri.Scheme}://{uri.Authority}";
+        }
+
+        return trimmed;
+    }
+
     private static void SeedCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
     {
         foreach (var product in Products)
         {
-            foreach (var suiteShellOrigin in SuiteShellOrigins)
+            foreach (var suiteShellOrigin in SuiteShellOrigins
+                         .Select(NormalizeCallbackOrigin)
+                         .Where(static value => !string.IsNullOrWhiteSpace(value))
+                         .Select(static value => value!))
             {
                 db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
                 {
@@ -589,12 +611,18 @@ public static class PlatformSeeder
             }
 
             var launchProfile = DefaultLaunchProfiles[launchProfileIndex];
+            var launchProfileOrigin = NormalizeCallbackOrigin(launchProfile.BaseUrl);
+            if (string.IsNullOrWhiteSpace(launchProfileOrigin))
+            {
+                continue;
+            }
+
             db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
             {
                 Id = Guid.NewGuid(),
                 ProductKey = product.Key,
                 TenantId = DemoTenantId,
-                UrlPattern = launchProfile.BaseUrl,
+                UrlPattern = launchProfileOrigin,
                 PatternType = CallbackPatternTypes.Origin,
                 IsActive = true,
                 CreatedAt = now,
