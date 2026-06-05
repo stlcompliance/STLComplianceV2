@@ -1077,6 +1077,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         findingCreatedDashboardResponse.EnsureSuccessStatusCode();
         var findingCreatedDashboard = await findingCreatedDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
         Assert.NotNull(findingCreatedDashboard);
+        Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.finding.created");
         Assert.Contains(findingCreatedDashboard!.RecentEvents, entry => entry.EventType == "assurarr.audit.finding_created");
 
         var acceptFindingResponse = await _client.PatchAsJsonAsync(
