@@ -363,6 +363,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(holdsAfterRelease);
         Assert.Equal("released", holdsAfterRelease!.Single(item => item.Id == approvalHold.Id).Status);
 
+        var releaseDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        releaseDashboardResponse.EnsureSuccessStatusCode();
+        var releaseDashboard = await releaseDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(releaseDashboard);
+        Assert.Contains(releaseDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.released" && entry.SubjectId == approvalHold.Id);
+
         var releasedHoldStatusResponse = await _client.GetAsync("/api/v1/integrations/quality-status/loadarr/test");
         releasedHoldStatusResponse.EnsureSuccessStatusCode();
         var releasedHoldStatus = await releasedHoldStatusResponse.Content.ReadFromJsonAsync<AssurArrQualityStatusSnapshotResponse>();
@@ -487,6 +493,12 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(rejectedHoldStatus);
         Assert.Equal("unknown", rejectedHoldStatus!.QualityStatus);
         Assert.DoesNotContain(rejectedHoldStatus.ActiveHoldRefs, item => item == rejectHold.Number);
+
+        var rejectedHoldDashboardResponse = await _client.GetAsync("/api/v1/dashboard");
+        rejectedHoldDashboardResponse.EnsureSuccessStatusCode();
+        var rejectedHoldDashboard = await rejectedHoldDashboardResponse.Content.ReadFromJsonAsync<AssurArrDashboardResponse>();
+        Assert.NotNull(rejectedHoldDashboard);
+        Assert.Contains(rejectedHoldDashboard!.RecentEvents, entry => entry.EventType == "assurarr.hold.rejected" && entry.SubjectId == rejectHold.Id);
 
         var holdsAfterRejectResponse = await _client.GetAsync("/api/v1/integrations/holds");
         holdsAfterRejectResponse.EnsureSuccessStatusCode();
