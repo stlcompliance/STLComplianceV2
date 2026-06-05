@@ -15,10 +15,8 @@ import {
 } from 'lucide-react'
 import {
   getProductOwnershipManifestEntry,
-  getProductRouteSlug,
   IMPLEMENTED_PRODUCT_OWNERSHIP,
   normalizeProductKey,
-  toLegacyProductKey,
 } from './productOwnershipManifest'
 export {
   getProductRouteSlug,
