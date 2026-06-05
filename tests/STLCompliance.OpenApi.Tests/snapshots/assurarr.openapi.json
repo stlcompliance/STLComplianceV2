@@ -2374,17 +2374,6 @@
       }
     },
     "/api/v1/scorecards": {
-      "get": {
-        "tags": [
-          "AssurArr"
-        ],
-        "operationId": "ListAssurArrQualityScorecards",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
       "post": {
         "tags": [
           "AssurArr"
@@ -2424,40 +2413,6 @@
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/scorecards/{id}/review": {
-      "post": {
-        "tags": [
-          "AssurArr"
-        ],
-        "operationId": "ReviewAssurArrQualityScorecard",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReviewAssurArrQualityScorecardRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK"
