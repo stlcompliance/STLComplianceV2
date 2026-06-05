@@ -5835,6 +5835,29 @@ function SettingsPage() {
     'AssurArr owns the quality workflow state, history, and dashboard summaries.',
   ]
 
+  const externalDependencies = [
+    {
+      product: 'Compliance Core',
+      endpoints: ['GET /catalogs/governing-bodies', 'GET /rulepacks', 'POST /evaluations', 'POST /evidence-mapping/suggest'],
+      note: 'AssurArr consumes rule meaning and controlled quality/compliance vocabularies from Compliance Core.',
+    },
+    {
+      product: 'RecordArr',
+      endpoints: ['POST /records', 'GET /records/{recordId}', 'POST /upload-sessions', 'POST /record-packages'],
+      note: 'AssurArr stores and references evidence through RecordArr rather than owning file truth.',
+    },
+    {
+      product: 'StaffArr',
+      endpoints: ['GET /persons/{personId}', 'GET /persons/{personId}/permissions', 'GET /locations/{locationId}', 'POST /incidents', 'POST /restrictions'],
+      note: 'AssurArr reads person, permission, and location context from StaffArr.',
+    },
+    {
+      product: 'CustomArr',
+      endpoints: ['GET /customers/{customerId}', 'POST /customer-activities', 'POST /customer-issues'],
+      note: 'AssurArr hands off customer-facing quality context without owning the customer master.',
+    },
+  ]
+
   const ownedRecordClasses = [
     {
       name: 'Assurance cases',
@@ -5938,6 +5961,28 @@ function SettingsPage() {
             <p>RecordArr owns controlled templates, document retention, and stored evidence files.</p>
             {integrationBoundaries.map((item) => (
               <p key={item}>{item}</p>
+            ))}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">External dependencies</h2>
+            <p className="text-sm text-slate-400">Read-only reference for the products AssurArr consumes instead of owning those concerns.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-4">
+            {externalDependencies.map((dependency) => (
+              <div key={dependency.product} className="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{dependency.product}</h3>
+                <p className="mt-2 text-sm text-slate-400">{dependency.note}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {dependency.endpoints.map((endpoint) => (
+                    <span key={endpoint} className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                      {endpoint}
+                    </span>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
