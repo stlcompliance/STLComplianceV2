@@ -5768,6 +5768,55 @@ function SettingsPage() {
     },
   ]
 
+  const controlledCatalogGroups = [
+    {
+      name: 'Issue classification',
+      description: 'Doc-defined quality classifications AssurArr uses to categorize the root issue.',
+      values: [
+        'nonconformanceType',
+        'category',
+        'severity',
+        'holdType',
+        'holdScope',
+        'auditType',
+        'findingType',
+        'complaintType',
+        'issueType',
+      ],
+    },
+    {
+      name: 'Workflow vocabulary',
+      description: 'Local workflow enums that gate status transitions and dashboard summaries.',
+      values: [
+        'nonconformance.status',
+        'hold.status',
+        'capa.status',
+        'audit.status',
+        'finding.status',
+        'qualityReview.status',
+        'qualityRelease.status',
+        'containment.status',
+        'disposition.status',
+        'supplierQuality.status',
+        'scar.status',
+        'customerComplaint.status',
+      ],
+    },
+    {
+      name: 'Analytics vocabulary',
+      description: 'Reference values used by quality status snapshots, scorecards, and risk profiles.',
+      values: [
+        'qualityStatus',
+        'severity',
+        'scorecard.targetType',
+        'metric.category',
+        'metric.status',
+        'riskProfile.targetType',
+        'riskProfile.riskLevel',
+      ],
+    },
+  ]
+
   const uiSurfaces = [
     'dashboard',
     'nonconformances',
@@ -5789,6 +5838,7 @@ function SettingsPage() {
   ]
 
   const integrationBoundaries = [
+    'Compliance Core owns governing body catalogs, rulepacks, and the meaning of regulated vocabulary.',
     'RecordArr owns supporting evidence files and document retention.',
     'StaffArr owns reviewer and approver identity data.',
     'CustomArr owns customer-facing closure workflows where referenced.',
@@ -5798,7 +5848,7 @@ function SettingsPage() {
   return (
     <div className="assurarr-page">
       <PageHeader title="Settings" description="Admin reference for roles, product surfaces, and AssurArr integration boundaries." />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <div className="assurarr-card">
           <div className="assurarr-card-header">
             <h2 className="text-lg font-semibold text-slate-50">Role configuration</h2>
@@ -5813,6 +5863,28 @@ function SettingsPage() {
                     <li key={permission}>• {permission}</li>
                   ))}
                 </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-header">
+            <h2 className="text-lg font-semibold text-slate-50">Controlled catalogs</h2>
+            <p className="text-sm text-slate-400">The quality vocabularies AssurArr owns and uses across workflows.</p>
+          </div>
+          <div className="assurarr-card-inner space-y-4">
+            {controlledCatalogGroups.map((group) => (
+              <div key={group.name} className="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{group.name}</h3>
+                <p className="mt-2 text-sm text-slate-400">{group.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {group.values.map((value) => (
+                    <span key={value} className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                      {value}
+                    </span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
