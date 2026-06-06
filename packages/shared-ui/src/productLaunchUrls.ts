@@ -48,9 +48,8 @@ function readAppPublicBaseUrl(env: Record<string, string | undefined>): string |
   return trimmed ? trimmed.replace(/\/$/, '') : undefined
 }
 
-function getProductLaunchPath(productKey: string): string {
-  const normalized = normalizeProductKey(productKey)
-  return normalized === 'recordarr' ? '/handoff' : '/launch'
+function getProductLaunchPath(_productKey: string): string {
+  return '/launch'
 }
 
 /** Build direct `/launch` URLs for entitled product frontends from Vite env (with local defaults). */

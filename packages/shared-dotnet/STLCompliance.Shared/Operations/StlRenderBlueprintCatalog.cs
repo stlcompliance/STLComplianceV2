@@ -43,6 +43,9 @@ public static class StlRenderBlueprintCatalog
         new("supplyarr-api", "./apps/supplyarr-api/Dockerfile"),
         new("compliancecore-api", "./apps/compliancecore-api/Dockerfile"),
         new("loadarr-api", "./apps/loadarr-api/Dockerfile"),
+        new("assurarr-api", "./apps/assurarr-api/Dockerfile"),
+        new("recordarr-api", "./apps/recordarr-api/Dockerfile"),
+        new("reportarr-api", "./apps/reportarr-api/Dockerfile"),
     ];
 
     public static readonly IReadOnlyList<StlRenderStaticSite> StaticSites =
@@ -72,6 +75,7 @@ public static class StlRenderBlueprintCatalog
         new("supplyarr-db", "supplyarr"),
         new("compliancecore-db", "compliancecore"),
         new("loadarr-db", "loadarr"),
+        new("assurarr-db", "assurarr"),
     ];
 
     public static readonly IReadOnlyList<StlRenderEvidenceDisk> EvidenceDisks =
@@ -98,6 +102,9 @@ public static class StlRenderBlueprintCatalog
         ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-te1h.onrender.com"),
         ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-b6fs.onrender.com"),
         ("LoadArr__BaseUrl", "loadarr-api", "https://loadarr-api.onrender.com"),
+        ("AssurArr__BaseUrl", "assurarr-api", "https://assurarr-api.onrender.com"),
+        ("RecordArr__BaseUrl", "recordarr-api", "https://recordarr-api.onrender.com"),
+        ("ReportArr__BaseUrl", "reportarr-api", "https://reportarr-api.onrender.com"),
     ];
 
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> SyncFalseEnvKeysByConsumer() =>

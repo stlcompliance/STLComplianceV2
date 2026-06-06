@@ -14,7 +14,7 @@ public sealed class StlE2eFrontendCatalogTests
             .ToArray();
 
         Assert.Equal(
-            ["assurarr", "compliancecore", "loadarr", "maintainarr", "reportarr", "routarr", "staffarr", "supplyarr", "trainarr"],
+            ["assurarr", "compliancecore", "loadarr", "maintainarr", "recordarr", "reportarr", "routarr", "staffarr", "supplyarr", "trainarr"],
             keys);
     }
 
@@ -27,6 +27,7 @@ public sealed class StlE2eFrontendCatalogTests
     [InlineData("routarr", 5180)]
     [InlineData("loadarr", 5182)]
     [InlineData("assurarr", 5183)]
+    [InlineData("recordarr", 5184)]
     [InlineData("reportarr", 5185)]
     public void Handoff_frontend_ports_match_vite_defaults(string productKey, int expectedPort)
     {

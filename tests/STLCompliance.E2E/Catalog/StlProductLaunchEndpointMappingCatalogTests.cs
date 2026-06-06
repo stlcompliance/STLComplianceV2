@@ -13,6 +13,8 @@ public sealed class StlProductLaunchEndpointMappingCatalogTests
     [InlineData("apps/compliancecore-api/ComplianceCore.Api/Program.cs")]
     [InlineData("apps/loadarr-api/LoadArr.Api/Program.cs")]
     [InlineData("apps/assurarr-api/AssurArr.Api/Program.cs")]
+    [InlineData("apps/recordarr-api/RecordArr.Api/Program.cs")]
+    [InlineData("apps/reportarr-api/ReportArr.Api/Program.cs")]
     public void Product_apis_map_shared_launch_endpoints(string programPath)
     {
         var source = File.ReadAllText(Path.Combine(FindRepoRoot(), programPath));

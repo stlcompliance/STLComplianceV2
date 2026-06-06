@@ -19,10 +19,10 @@ describe('buildProductWorkspaceCallbackUrl', () => {
     ).toBe('http://localhost:5174/app/maintainarr/launch')
   })
 
-  it('uses the RecordArr handoff route when the product URL is missing', () => {
+  it('uses the shared launch route when the product URL is missing', () => {
     expect(
       buildProductWorkspaceCallbackUrl('recordarr', 'http://localhost:5174/app', launchUrls),
-    ).toBe('http://localhost:5174/app/recordarr/handoff')
+    ).toBe('http://localhost:5174/app/recordarr/launch')
   })
 
   it('resolves Field Companion through canonical launch URLs', () => {

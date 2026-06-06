@@ -56,6 +56,8 @@ envVarGroups:
         value: https://assurarr-api.onrender.com
       - key: RecordArr__BaseUrl
         value: https://recordarr-api.onrender.com
+      - key: ReportArr__BaseUrl
+        value: https://reportarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
   # These point at the stable app domain and product paths.
   - name: stl-public-frontend-urls
@@ -80,6 +82,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/loadarr
       - key: ASSURARR_FRONTEND_URL
         value: https://app.stlcompliance.com/assurarr
+      - key: RECORDARR_FRONTEND_URL
+        value: https://app.stlcompliance.com/recordarr
       - key: REPORTARR_FRONTEND_URL
         value: https://app.stlcompliance.com/reportarr
       - key: FIELDCOMPANION_FRONTEND_URL
@@ -136,6 +140,10 @@ envVarGroups:
         value: https://loadarr-api.onrender.com
       - key: ASSURARR_PUBLIC_API_URL
         value: https://assurarr-api.onrender.com
+      - key: RECORDARR_PUBLIC_API_URL
+        value: https://recordarr-api.onrender.com
+      - key: REPORTARR_PUBLIC_API_URL
+        value: https://reportarr-api.onrender.com
 databases:
   - name: nexarr-db
     plan: basic-256mb
@@ -245,7 +253,7 @@ services:
       - key: Launch__Products__assurarr__LaunchPath
         value: /launch
       - key: Launch__Products__recordarr__LaunchPath
-        value: /handoff
+        value: /launch
       - key: Launch__Products__reportarr__LaunchPath
         value: /launch
       - key: Launch__Products__fieldcompanion__BaseUrl
@@ -528,6 +536,8 @@ services:
           property: connectionString
       - key: Cors__AssurArrFrontendOrigin
         value: https://app.stlcompliance.com
+      - key: MaintainArr__ServiceToken
+        sync: false
       - key: Handoff__ServiceToken
         sync: false
 
@@ -542,9 +552,31 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: STL_SERVICE_NAME
         value: recordarr-api
       - key: Cors__RecordArrFrontendOrigin
+        value: https://app.stlcompliance.com
+      - key: Handoff__ServiceToken
+        sync: false
+
+  - type: web
+    name: reportarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/reportarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: reportarr-api
+      - key: Cors__ReportArrFrontendOrigin
         value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false

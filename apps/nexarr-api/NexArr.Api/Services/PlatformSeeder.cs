@@ -47,7 +47,7 @@ public static class PlatformSeeder
         ("loadarr", "http://localhost:5182", "/launch"),
         ("assurarr", "http://localhost:5183", "/launch"),
         ("reportarr", "http://localhost:5185", "/launch"),
-        ("recordarr", "http://localhost:5184", "/handoff"),
+        ("recordarr", "http://localhost:5184", "/launch"),
         ("fieldcompanion", "http://localhost:5181", "/launch")
     ];
 

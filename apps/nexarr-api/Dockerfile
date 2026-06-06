@@ -11,6 +11,7 @@ ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-b6fs.onrender.com \
     VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com \
     VITE_ASSURARR_API_BASE=https://assurarr-api.onrender.com \
+    VITE_REPORTARR_API_BASE=https://reportarr-api.onrender.com \
     VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com
 COPY . .
 RUN npm ci --prefix packages/shared-ui
@@ -23,6 +24,7 @@ RUN npm ci --prefix apps/suite-frontend \
     && npm ci --prefix apps/compliancecore-frontend \
     && npm ci --prefix apps/loadarr-frontend \
     && npm ci --prefix apps/assurarr-frontend \
+    && npm ci --prefix apps/reportarr-frontend \
     && npm ci --prefix apps/recordarr-frontend
 RUN npm run build --prefix apps/suite-frontend \
     && VITE_ROUTER_BASENAME=/staffarr npm run build --prefix apps/staffarr-frontend \
@@ -33,6 +35,7 @@ RUN npm run build --prefix apps/suite-frontend \
     && VITE_ROUTER_BASENAME=/compliancecore npm run build --prefix apps/compliancecore-frontend \
     && VITE_ROUTER_BASENAME=/loadarr npm run build --prefix apps/loadarr-frontend \
     && VITE_ROUTER_BASENAME=/assurarr npm run build --prefix apps/assurarr-frontend \
+    && VITE_ROUTER_BASENAME=/reportarr npm run build --prefix apps/reportarr-frontend \
     && VITE_ROUTER_BASENAME=/recordarr npm run build --prefix apps/recordarr-frontend
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -53,6 +56,7 @@ COPY --from=frontend-build /src/apps/supplyarr-frontend/dist ./wwwroot/supplyarr
 COPY --from=frontend-build /src/apps/compliancecore-frontend/dist ./wwwroot/compliancecore
 COPY --from=frontend-build /src/apps/loadarr-frontend/dist ./wwwroot/loadarr
 COPY --from=frontend-build /src/apps/assurarr-frontend/dist ./wwwroot/assurarr
+COPY --from=frontend-build /src/apps/reportarr-frontend/dist ./wwwroot/reportarr
 COPY --from=frontend-build /src/apps/recordarr-frontend/dist ./wwwroot/recordarr
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet NexArr.Api.dll"]

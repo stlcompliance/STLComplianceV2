@@ -3434,11 +3434,7 @@ export function App() {
     return pathname
   })()
 
-  if (normalizedPathname === '/launch') {
-    return <Navigate to={`/handoff${location.search}`} replace />
-  }
-
-  if (normalizedPathname === '/handoff') {
+  if (normalizedPathname === '/launch' || normalizedPathname === '/handoff') {
     return <LaunchPage />
   }
 

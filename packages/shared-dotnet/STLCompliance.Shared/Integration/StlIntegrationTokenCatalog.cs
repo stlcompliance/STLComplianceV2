@@ -52,6 +52,7 @@ public static class StlIntegrationTokenCatalog
             "compliancecore.rules.evaluate,compliancecore.citations.read,compliancecore.rulepacks.read"),
 
         Profile("handoff-maintainarr", "maintainarr-api", "Handoff__ServiceToken", "maintainarr", ["maintainarr"], "launch.redeem"),
+        Profile("handoff-assurarr", "assurarr-api", "Handoff__ServiceToken", "assurarr", ["assurarr"], "launch.redeem"),
         Profile(
             "maintainarr-staffarr",
             "maintainarr-api",
@@ -118,6 +119,7 @@ public static class StlIntegrationTokenCatalog
         Profile("loadarr-staffarr", "loadarr-api", "StaffArr__ServiceToken", "loadarr", ["staffarr"], "staffarr.sites.read"),
 
         Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
+        Profile("handoff-reportarr", "reportarr-api", "Handoff__ServiceToken", "reportarr", ["reportarr"], "launch.redeem"),
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
         Profile(
