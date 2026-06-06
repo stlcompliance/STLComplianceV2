@@ -64,13 +64,6 @@ public static class PlatformSeeder
         await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
         await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
 
-        if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
-        {
-            await EnsureDemoOwnerRoleAsync(db, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
         if (!await db.Tenants.AnyAsync(t => t.Id == DemoTenantId, cancellationToken))
         {
             db.Tenants.Add(new Tenant
@@ -84,69 +77,77 @@ public static class PlatformSeeder
             });
         }
 
-        db.Users.Add(new PlatformUser
+        if (!await db.Users.AnyAsync(u => u.Id == DemoAdminUserId, cancellationToken))
         {
-            Id = DemoAdminUserId,
-            Email = DemoAdminEmail,
-            DisplayName = "Demo Platform Admin",
-            IsActive = true,
-            IsPlatformAdmin = true,
-            CreatedAt = now,
-            ModifiedAt = now,
-            Credential = new UserCredential
+            db.Users.Add(new PlatformUser
             {
+                Id = DemoAdminUserId,
+                Email = DemoAdminEmail,
+                DisplayName = "Demo Platform Admin",
+                IsActive = true,
+                IsPlatformAdmin = true,
+                CreatedAt = now,
+                ModifiedAt = now,
+                Credential = new UserCredential
+                {
+                    UserId = DemoAdminUserId,
+                    PasswordHash = passwordHasher.Hash(DemoAdminPassword),
+                    PasswordChangedAt = now
+                }
+            });
+        }
+
+        if (!await db.TenantMemberships.AnyAsync(
+                m => m.TenantId == DemoTenantId && m.UserId == DemoAdminUserId,
+                cancellationToken))
+        {
+            db.TenantMemberships.Add(new TenantMembership
+            {
+                Id = Guid.Parse("33333333-3333-3333-3333-333333333301"),
+                TenantId = DemoTenantId,
                 UserId = DemoAdminUserId,
-                PasswordHash = passwordHasher.Hash(DemoAdminPassword),
-                PasswordChangedAt = now
-            }
-        });
+                RoleKey = "platform_admin",
+                IsActive = true,
+                CreatedAt = now
+            });
+        }
 
-        db.TenantMemberships.Add(new TenantMembership
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333301"),
-            TenantId = DemoTenantId,
-            UserId = DemoAdminUserId,
-            RoleKey = "platform_admin",
-            IsActive = true,
-            CreatedAt = now
-        });
+        await EnsureDemoOwnerRoleAsync(db, cancellationToken);
 
-        db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
+        if (!await db.Users.AnyAsync(u => u.Id == DemoTenantAdminUserId, cancellationToken))
         {
-            Id = Guid.Parse("44444444-4444-4444-4444-444444444401"),
-            UserId = DemoAdminUserId,
-            TenantId = null,
-            RoleKey = "platform_owner",
-            CreatedAt = now,
-            CreatedByUserId = DemoAdminUserId,
-        });
-
-        db.Users.Add(new PlatformUser
-        {
-            Id = DemoTenantAdminUserId,
-            Email = DemoTenantAdminEmail,
-            DisplayName = "Demo Tenant Admin",
-            IsActive = true,
-            IsPlatformAdmin = false,
-            CreatedAt = now,
-            ModifiedAt = now,
-            Credential = new UserCredential
+            db.Users.Add(new PlatformUser
             {
-                UserId = DemoTenantAdminUserId,
-                PasswordHash = passwordHasher.Hash(DemoAdminPassword),
-                PasswordChangedAt = now
-            }
-        });
+                Id = DemoTenantAdminUserId,
+                Email = DemoTenantAdminEmail,
+                DisplayName = "Demo Tenant Admin",
+                IsActive = true,
+                IsPlatformAdmin = false,
+                CreatedAt = now,
+                ModifiedAt = now,
+                Credential = new UserCredential
+                {
+                    UserId = DemoTenantAdminUserId,
+                    PasswordHash = passwordHasher.Hash(DemoAdminPassword),
+                    PasswordChangedAt = now
+                }
+            });
+        }
 
-        db.TenantMemberships.Add(new TenantMembership
+        if (!await db.TenantMemberships.AnyAsync(
+                m => m.TenantId == DemoTenantId && m.UserId == DemoTenantAdminUserId,
+                cancellationToken))
         {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333302"),
-            TenantId = DemoTenantId,
-            UserId = DemoTenantAdminUserId,
-            RoleKey = "tenant_admin",
-            IsActive = true,
-            CreatedAt = now
-        });
+            db.TenantMemberships.Add(new TenantMembership
+            {
+                Id = Guid.Parse("33333333-3333-3333-3333-333333333302"),
+                TenantId = DemoTenantId,
+                UserId = DemoTenantAdminUserId,
+                RoleKey = "tenant_admin",
+                IsActive = true,
+                CreatedAt = now
+            });
+        }
 
         foreach (var product in Products)
         {
