@@ -478,23 +478,32 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var updateResponse = await _staffarrClient.SendAsync(updateRequest);
         updateResponse.EnsureSuccessStatusCode();
         var updated = (await updateResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
+        Assert.NotEqual(created.AssignmentId, updated.AssignmentId);
         Assert.Equal(position2Id, updated.PositionOrgUnitId);
 
         var statusRequest = Authorized(
             HttpMethod.Patch,
-            $"/api/people/{personId}/org-assignments/{created.AssignmentId}/status",
+            $"/api/people/{personId}/org-assignments/{updated.AssignmentId}/status",
             token);
-        statusRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentStatusRequest("inactive"));
+        statusRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentStatusRequest("ended"));
         var statusResponse = await _staffarrClient.SendAsync(statusRequest);
         statusResponse.EnsureSuccessStatusCode();
         var statusPayload = (await statusResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
-        Assert.Equal("inactive", statusPayload.Status);
+        Assert.Equal("ended", statusPayload.Status);
+
+        var transferredListResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/org-assignments", token));
+        transferredListResponse.EnsureSuccessStatusCode();
+        var transferredAssignments = (await transferredListResponse.Content.ReadFromJsonAsync<IReadOnlyList<OrgUnitAssignmentResponse>>())!;
+        Assert.Equal(2, transferredAssignments.Count);
+        Assert.Contains(transferredAssignments, x => x.AssignmentId == created.AssignmentId && x.Status == "ended");
+        Assert.Contains(transferredAssignments, x => x.AssignmentId == updated.AssignmentId && x.PositionOrgUnitId == position2Id);
 
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
         var auditEvents = await db.AuditEvents.CountAsync(
             x => x.TenantId == PlatformSeeder.DemoTenantId && x.Action.StartsWith("org_assignment."));
-        Assert.True(auditEvents >= 3);
+        Assert.True(auditEvents >= 4);
     }
 
     [Fact]
@@ -560,25 +569,25 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         await SeedStaffPersonAsync(personId, "V1 Assignment User", "v1.assignment.user@example.com");
 
         var createSiteRequest = Authorized(HttpMethod.Post, "/api/v1/org-units", token);
-        createSiteRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("site", "V1 Site", null));
+        createSiteRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("site", "V1 Site", null, Status: "active"));
         var createSiteResponse = await _staffarrClient.SendAsync(createSiteRequest);
         createSiteResponse.EnsureSuccessStatusCode();
         var site = (await createSiteResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
 
         var createDeptRequest = Authorized(HttpMethod.Post, "/api/v1/org-units", token);
-        createDeptRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("department", "V1 Department", site.OrgUnitId));
+        createDeptRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("department", "V1 Department", site.OrgUnitId, Status: "active"));
         var createDeptResponse = await _staffarrClient.SendAsync(createDeptRequest);
         createDeptResponse.EnsureSuccessStatusCode();
         var dept = (await createDeptResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
 
         var createTeamRequest = Authorized(HttpMethod.Post, "/api/v1/org-units", token);
-        createTeamRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("team", "V1 Team", dept.OrgUnitId));
+        createTeamRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("team", "V1 Team", dept.OrgUnitId, Status: "active"));
         var createTeamResponse = await _staffarrClient.SendAsync(createTeamRequest);
         createTeamResponse.EnsureSuccessStatusCode();
         var team = (await createTeamResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
 
         var createPositionRequest = Authorized(HttpMethod.Post, "/api/v1/org-units", token);
-        createPositionRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("position", "V1 Position", team.OrgUnitId));
+        createPositionRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("position", "V1 Position", team.OrgUnitId, Status: "active"));
         var createPositionResponse = await _staffarrClient.SendAsync(createPositionRequest);
         createPositionResponse.EnsureSuccessStatusCode();
         var position = (await createPositionResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
@@ -607,11 +616,11 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             HttpMethod.Patch,
             $"/api/v1/people/{personId}/org-assignments/{assignment.AssignmentId}/status",
             token);
-        deactivateAssignmentRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentStatusRequest("inactive"));
+        deactivateAssignmentRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentStatusRequest("ended"));
         var deactivateAssignmentResponse = await _staffarrClient.SendAsync(deactivateAssignmentRequest);
         deactivateAssignmentResponse.EnsureSuccessStatusCode();
         var deactivatedAssignment = (await deactivateAssignmentResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
-        Assert.Equal("inactive", deactivatedAssignment.Status);
+        Assert.Equal("ended", deactivatedAssignment.Status);
     }
 
     [Fact]

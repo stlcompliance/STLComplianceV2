@@ -35,7 +35,6 @@ import {
 } from '@stl/shared-ui'
 import { getSessionBootstrap } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
-import { LaunchPage } from './LaunchPage'
 import { ReportsPanel } from './components/ReportsPanel'
 
 type LoadArrMetrics = {
@@ -1519,10 +1518,6 @@ export function App() {
     }
     return pathname
   })()
-
-  if (normalizedPathname === '/launch') {
-    return <LaunchPage />
-  }
 
   const activeView = useMemo<ViewKey>(() => {
     if (normalizedPathname === '/') {

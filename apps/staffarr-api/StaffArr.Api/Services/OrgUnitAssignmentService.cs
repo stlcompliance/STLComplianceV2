@@ -371,7 +371,7 @@ public sealed class OrgUnitAssignmentService(
             request.PositionOrgUnitId,
             successorStatus,
             successorPrimary,
-            null,
+            currentAssignment.Id,
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;

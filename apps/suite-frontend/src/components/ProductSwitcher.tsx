@@ -1,21 +1,16 @@
-import { ChevronDown } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ApiErrorCallout,
   getErrorMessage,
   getSuiteProductCatalogEntry,
+  ProductSwitcher as SharedProductSwitcher,
+  type ProductSwitcherProps as SharedProductSwitcherProps,
 } from '@stl/shared-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { useProductLaunch } from '../hooks/useProductLaunch'
-import { getProductIcon } from '../lib/productIcons'
-import {
-  hasProductEntitlement,
-  isInSuiteProduct,
-} from '../lib/permissions'
-import { getProductDisplayName, normalizeProductKey } from '../navigation/suiteNavigation'
+import { isInSuiteProduct } from '../lib/permissions'
+import { normalizeProductKey } from '../navigation/suiteNavigation'
 
 function resolveCurrentProductKey(pathname: string): string {
   if (pathname.startsWith('/app/platform-admin')) {
@@ -29,15 +24,11 @@ function resolveCurrentProductKey(pathname: string): string {
 }
 
 export function ProductSwitcher() {
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const menuId = useId()
   const location = useLocation()
   const navigate = useNavigate()
   const { me } = useAuth()
   const launch = useProductLaunch()
   const currentProductKey = resolveCurrentProductKey(location.pathname)
-  const CurrentIcon = getProductIcon(currentProductKey)
 
   const navigationQuery = useQuery({
     queryKey: ['navigation', me?.tenantId, currentProductKey],
@@ -45,45 +36,13 @@ export function ProductSwitcher() {
     enabled: me !== undefined,
   })
 
-  const entitlements = me?.entitlements ?? []
-  const entitledProducts = (navigationQuery.data?.products ?? []).filter((product) =>
-    hasProductEntitlement(entitlements, product.productKey),
+  const entitledProducts = resolveSwitcherProductKeys(
+    me?.entitlements ?? [],
+    navigationQuery.data?.products.map((product) => product.productKey) ?? [],
   )
-  const currentProduct =
-    entitledProducts.find((product) => product.isCurrent) ??
-    entitledProducts.find(
-      (product) => normalizeProductKey(product.productKey) === currentProductKey,
-    ) ??
-    entitledProducts[0]
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown)
-    document.addEventListener('keydown', handleEscape)
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [open])
 
   function handleSelect(productKey: string) {
     const normalized = normalizeProductKey(productKey)
-    setOpen(false)
 
     if (normalized === currentProductKey) {
       return
@@ -105,88 +64,36 @@ export function ProductSwitcher() {
     return <span className="text-xs text-slate-500">No entitled products</span>
   }
 
-  const currentEntry = getSuiteProductCatalogEntry(currentProductKey)
-
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        disabled={launch.isPending}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex max-w-[14rem] items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-1.5 text-left text-sm text-white hover:bg-white/10 disabled:opacity-50"
-      >
-        <CurrentIcon className="h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
-        <span className="min-w-0 truncate font-medium">
-          {currentEntry?.displayName ??
-            (currentProductKey === 'nexarr'
-              ? 'Suite'
-              : getProductDisplayName(currentProductKey, currentProduct?.displayName ?? 'Suite'))}
-        </span>
-        <ChevronDown
-          className={['h-4 w-4 shrink-0 text-slate-300 transition-transform', open ? 'rotate-180' : ''].join(
-            ' ',
-          )}
-          aria-hidden
-        />
-      </button>
-
-      {open ? (
-        <ul
-          id={menuId}
-          role="menu"
-          aria-label="Switch product"
-          className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-md border border-slate-600 bg-[#0a101c] py-1 shadow-xl"
-        >
-          {entitledProducts.map((product) => {
-            const productKey = normalizeProductKey(product.productKey)
-            const Icon = getProductIcon(productKey)
-            const catalogEntry = getSuiteProductCatalogEntry(productKey)
-            const isCurrent =
-              Boolean(product.isCurrent) || productKey === currentProductKey
-
-            return (
-              <li key={product.productKey} role="none">
-                <button
-                  type="button"
-                  role="menuitem"
-                  aria-current={isCurrent ? 'true' : undefined}
-                  disabled={launch.isPending}
-                  onClick={() => handleSelect(productKey)}
-                  className={[
-                    'flex w-full items-start gap-3 px-3 py-2 text-left text-sm transition-colors disabled:opacity-50',
-                    isCurrent
-                      ? 'bg-slate-800/80 text-white'
-                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white',
-                  ].join(' ')}
-                >
-                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-stl-teal" aria-hidden />
-                  <span className="min-w-0">
-                    <span className="block font-medium">
-                      {catalogEntry?.displayName ?? getProductDisplayName(productKey, product.displayName)}
-                    </span>
-                    {catalogEntry?.description ? (
-                      <span className="mt-0.5 block text-xs text-slate-400">
-                        {catalogEntry.description}
-                      </span>
-                    ) : null}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
-
-      {launch.isError ? (
-        <ApiErrorCallout
-          className="absolute right-0 mt-1 w-72 text-xs"
-          title="Unable to launch product"
-          message={getErrorMessage(launch.error, 'Failed to launch product.')}
-        />
-      ) : null}
-    </div>
+    <SharedProductSwitcher
+      currentProductKey={currentProductKey}
+      entitlements={entitledProducts}
+      suiteHomeUrl="/app"
+      onSelectProduct={handleSelect}
+      isPending={launch.isPending}
+      errorMessage={launch.isError ? getErrorMessage(launch.error, 'Failed to launch product.') : null}
+    />
   )
+}
+
+function resolveSwitcherProductKeys(
+  entitlements: readonly string[],
+  navigationProductKeys: readonly string[],
+): SharedProductSwitcherProps['entitlements'] {
+  const allowedKeys = new Set(
+    navigationProductKeys
+      .map((productKey) => normalizeProductKey(productKey))
+      .filter((productKey) => Boolean(getSuiteProductCatalogEntry(productKey))),
+  )
+  const seenKeys = new Set<string>()
+
+  return entitlements.filter((productKey) => {
+    const normalized = normalizeProductKey(productKey)
+    if (!allowedKeys.has(normalized) || seenKeys.has(normalized)) {
+      return false
+    }
+
+    seenKeys.add(normalized)
+    return true
+  })
 }

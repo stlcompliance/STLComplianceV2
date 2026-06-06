@@ -5,6 +5,7 @@ import type {
   TenantSummary,
 } from '../api/types'
 import type { StoredAuthSession } from '../auth/authStorage'
+import { getSuiteProductCatalogEntry, normalizeProductKey } from '@stl/shared-ui'
 import { hasProductEntitlement, isInSuiteProduct, isPlatformAdmin } from './permissions'
 
 export type DashboardActionKind = 'warning' | 'action' | 'info'
@@ -66,16 +67,22 @@ export function buildQuickLaunchProducts(
   entitlements: readonly string[],
 ): QuickLaunchProduct[] {
   return [...navigationProducts]
+    .filter((product) => hasProductEntitlement(entitlements, product.productKey))
+    .map((product) => {
+      const normalized = normalizeProductKey(product.productKey)
+      const catalogEntry = getSuiteProductCatalogEntry(normalized)
+      return {
+        productKey: normalized,
+        displayName: catalogEntry?.displayName ?? product.displayName,
+        routePath: product.routePath,
+        sortOrder: catalogEntry?.sortOrder ?? product.sortOrder,
+        inSuite: isInSuiteProduct(normalized),
+        entitled: true,
+        launchable: hasEnabledLaunchSurface(product),
+      }
+    })
+    .filter((product) => Boolean(getSuiteProductCatalogEntry(product.productKey)))
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((product) => ({
-      productKey: product.productKey,
-      displayName: product.displayName,
-      routePath: product.routePath,
-      sortOrder: product.sortOrder,
-      inSuite: isInSuiteProduct(product.productKey),
-      entitled: hasProductEntitlement(entitlements, product.productKey),
-      launchable: hasEnabledLaunchSurface(product),
-    }))
 }
 
 export function summarizeSession(session: StoredAuthSession): SessionSummary {
@@ -135,30 +142,28 @@ export function buildWhatINeedActions(input: {
     })
   }
 
-  for (const product of input.navigationProducts) {
-    const normalized = product.productKey.trim().toLowerCase()
-    if (isInSuiteProduct(normalized)) {
+  for (const product of buildQuickLaunchProducts(input.navigationProducts, input.me.entitlements)) {
+    if (product.inSuite) {
       actions.push({
-        id: `hub-${normalized}`,
+        id: `hub-${product.productKey}`,
         kind: 'action',
         title: `Open ${product.displayName}`,
         description: 'Manage identity and platform settings in-suite.',
         href: product.routePath,
-        productKey: normalized,
+        productKey: product.productKey,
       })
       continue
     }
 
-    const launchable = hasEnabledLaunchSurface(product)
     actions.push({
-      id: `${launchable ? 'launch' : 'open'}-${normalized}`,
+      id: `${product.launchable ? 'launch' : 'open'}-${product.productKey}`,
       kind: 'action',
-      title: `${launchable ? 'Launch' : 'Open'} ${product.displayName}`,
-      description: launchable
+      title: `${product.launchable ? 'Launch' : 'Open'} ${product.displayName}`,
+      description: product.launchable
         ? 'Opens the product app via NexArr handoff when launch is permitted.'
         : 'Opens the suite overview for this product.',
       href: product.routePath,
-      productKey: normalized,
+      productKey: product.launchable ? product.productKey : undefined,
     })
   }
 

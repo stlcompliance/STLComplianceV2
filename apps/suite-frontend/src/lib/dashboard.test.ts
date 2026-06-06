@@ -82,7 +82,7 @@ describe('isTenantActive', () => {
 })
 
 describe('buildQuickLaunchProducts', () => {
-  it('marks in-suite vs external and entitlement', () => {
+  it('marks in-suite vs external and uses canonical catalog metadata', () => {
     const nav: NavigationItem[] = [
       {
         productKey: 'nexarr',
@@ -120,13 +120,13 @@ describe('buildQuickLaunchProducts', () => {
     })
   })
 
-  it('marks products without an enabled launch surface as not launchable', () => {
+  it('marks recognized products without an enabled launch surface as not launchable', () => {
     const products = buildQuickLaunchProducts(
       [
         {
-          productKey: 'shared-worker',
-          displayName: 'STL Shared Worker',
-          routePath: '/app/shared-worker',
+          productKey: 'staffarr',
+          displayName: 'StaffArr worker facade',
+          routePath: '/app/staffarr',
           sortOrder: 0,
           surfaces: [
             {
@@ -141,10 +141,38 @@ describe('buildQuickLaunchProducts', () => {
           ],
         },
       ],
-      ['shared-worker'],
+      ['staffarr'],
     )
 
-    expect(products[0]).toMatchObject({ launchable: false })
+    expect(products[0]).toMatchObject({
+      productKey: 'staffarr',
+      displayName: 'StaffArr',
+      launchable: false,
+    })
+  })
+
+  it('filters unsupported navigation products out of quick launch', () => {
+    const products = buildQuickLaunchProducts(
+      [
+        {
+          productKey: 'shared-worker',
+          displayName: 'STL Shared Worker',
+          routePath: '/app/shared-worker',
+          sortOrder: 0,
+          surfaces: [],
+        },
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          routePath: '/app/staffarr',
+          sortOrder: 1,
+          surfaces: [],
+        },
+      ],
+      ['shared-worker', 'staffarr'],
+    )
+
+    expect(products.map((product) => product.productKey)).toEqual(['staffarr'])
   })
 })
 
@@ -218,6 +246,41 @@ describe('buildWhatINeedActions', () => {
     expect(actions.some((a) => a.id === 'hub-nexarr')).toBe(true)
     expect(actions.some((a) => a.id === 'launch-staffarr')).toBe(true)
     expect(actions.some((a) => a.id === 'platform-admin')).toBe(true)
+  })
+
+  it('avoids launch CTA metadata for non-launchable external products', () => {
+    const actions = buildWhatINeedActions({
+      me,
+      tenants,
+      entitlements,
+      navigationProducts: [
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          routePath: '/app/staffarr',
+          sortOrder: 1,
+          surfaces: [
+            {
+              surfaceKey: 'overview',
+              label: 'Overview',
+              relativePath: '',
+              iconKey: 'dashboard',
+              sortOrder: 0,
+              isEnabled: true,
+              permissionHint: null,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(actions).toContainEqual(
+      expect.objectContaining({
+        id: 'open-staffarr',
+        href: '/app/staffarr',
+        productKey: undefined,
+      }),
+    )
   })
 
   it('warns when tenant is suspended', () => {

@@ -28,6 +28,18 @@ export interface LoadArrHandoffSessionResponse {
 
 const apiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
 
+export class LoadArrApiError extends Error {
+  readonly status: number
+  readonly body: string
+
+  constructor(message: string, status: number, body: string) {
+    super(message)
+    this.name = 'LoadArrApiError'
+    this.status = status
+    this.body = body
+  }
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -38,7 +50,11 @@ function authHeaders(accessToken: string): HeadersInit {
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
     const body = await response.text()
-    throw new Error(body || `${fallbackMessage} (${response.status})`)
+    throw new LoadArrApiError(
+      body || `${fallbackMessage} (${response.status})`,
+      response.status,
+      body,
+    )
   }
 
   return (await response.json()) as T

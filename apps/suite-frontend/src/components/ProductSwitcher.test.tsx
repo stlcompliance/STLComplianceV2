@@ -15,7 +15,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: ['staffarr', 'fieldcompanion', 'recordarr', 'reportarr', 'assurarr'],
+      entitlements: ['staffarr', 'fieldcompanion', 'recordarr', 'reportarr', 'assurarr', 'shared-worker'],
     },
   }),
 }))
@@ -108,5 +108,37 @@ describe('ProductSwitcher', () => {
     expect(screen.getByRole('menuitem', { name: /AssurArr/ })).toBeTruthy()
     expect(await screen.findByText('launch failed')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('hides unsupported navigation products so the suite switcher matches launched apps', async () => {
+    const user = userEvent.setup()
+    vi.mocked(nexarr.getNavigation).mockResolvedValue({
+      tenantId: 'tenant-1',
+      products: [
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          routePath: '/app/staffarr',
+          sortOrder: 1,
+          isCurrent: true,
+          surfaces: [],
+        },
+        {
+          productKey: 'shared-worker',
+          displayName: 'STL Shared Worker',
+          routePath: '/app/shared-worker',
+          sortOrder: 2,
+          isCurrent: false,
+          surfaces: [],
+        },
+      ],
+    })
+
+    renderSwitcher()
+
+    await user.click(await screen.findByRole('button', { name: /StaffArr/ }))
+
+    expect(screen.getByRole('menuitem', { name: /StaffArr/ })).toBeTruthy()
+    expect(screen.queryByRole('menuitem', { name: /shared worker/i })).toBeNull()
   })
 })

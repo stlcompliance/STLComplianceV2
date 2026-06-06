@@ -201,6 +201,94 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
     }
 
     [Fact]
+    public async Task Fieldset_site_options_return_cached_guid_sites_when_live_lookup_is_unavailable()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var cachedSiteId = Guid.Parse("22222222-2222-4222-8222-222222222222");
+        db.ReferenceCacheEntries.Add(new ReferenceCacheEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            SourceOfTruth = "StaffArr",
+            ReferenceKey = "sites",
+            ExternalKey = cachedSiteId.ToString("D"),
+            ExternalId = cachedSiteId.ToString("D"),
+            Label = "Cached Maintenance Site",
+            Description = null,
+            MetadataJson = "{}",
+            IsActive = true,
+            LastSyncedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var catalogService = BuildCatalogService(db, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService, seed, staffArrServiceToken: string.Empty);
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
+        var siteField = Assert.Single(fieldset.Fields, x => x.Key == "siteId");
+        var cachedSiteOption = Assert.Single(siteField.Options!, x => x.Key == cachedSiteId.ToString("D"));
+
+        Assert.Equal("Cached Maintenance Site", cachedSiteOption.Label);
+        Assert.DoesNotContain(siteField.Options!, x => x.Key == "site_a");
+    }
+
+    [Fact]
+    public async Task Fieldset_site_options_stay_empty_when_live_lookup_is_unavailable_and_cache_has_no_guid_sites()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var catalogService = BuildCatalogService(db, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService, seed, staffArrServiceToken: string.Empty);
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
+        var siteField = Assert.Single(fieldset.Fields, x => x.Key == "siteId");
+
+        Assert.NotNull(siteField.Options);
+        Assert.Empty(siteField.Options!);
+    }
+
+    [Fact]
+    public async Task StaffArr_site_resolution_uses_cached_guid_site_when_service_token_is_missing()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var cachedSiteId = Guid.Parse("33333333-3333-4333-8333-333333333333");
+        db.ReferenceCacheEntries.Add(new ReferenceCacheEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            SourceOfTruth = "StaffArr",
+            ReferenceKey = "sites",
+            ExternalKey = cachedSiteId.ToString("D"),
+            ExternalId = cachedSiteId.ToString("D"),
+            Label = "Fallback Snapshot Site",
+            Description = null,
+            MetadataJson = "{}",
+            IsActive = true,
+            LastSyncedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var siteReferenceService = BuildStaffArrSiteReferenceService(db, serviceToken: string.Empty);
+        var site = await siteReferenceService.RequireActiveSiteAsync(tenantId, cachedSiteId, CancellationToken.None);
+
+        Assert.Equal(cachedSiteId, site.OrgUnitId);
+        Assert.Equal("Fallback Snapshot Site", site.Name);
+    }
+
+    [Fact]
     public async Task Controlled_validation_rejects_dependency_mismatch_for_asset_type()
     {
         await using var db = CreateDbContext();
@@ -492,9 +580,13 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
     private static CatalogService BuildCatalogService(MaintainArrDbContext db, CatalogSeedService seed) =>
         new(db, seed);
 
-    private static FieldsetService BuildFieldsetService(MaintainArrDbContext db, CatalogService catalogService, CatalogSeedService seed)
+    private static FieldsetService BuildFieldsetService(
+        MaintainArrDbContext db,
+        CatalogService catalogService,
+        CatalogSeedService seed,
+        string staffArrServiceToken = "maintainarr-to-staffarr-sites")
     {
-        var adapters = BuildAdapters(db);
+        var adapters = BuildAdapters(db, staffArrServiceToken);
         return new FieldsetService(db, catalogService, seed, adapters);
     }
 
@@ -507,25 +599,29 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         return new ControlledValueValidationService(catalogService, pending, adapters);
     }
 
-    private static IReadOnlyList<IExternalReferenceAdapter> BuildAdapters(MaintainArrDbContext db)
+    private static IReadOnlyList<IExternalReferenceAdapter> BuildAdapters(
+        MaintainArrDbContext db,
+        string staffArrServiceToken = "maintainarr-to-staffarr-sites")
     {
         return
         [
             new ComplianceCoreReferenceAdapter(db),
-            new StaffArrReferenceAdapter(db, BuildStaffArrSiteReferenceService()),
+            new StaffArrReferenceAdapter(db, BuildStaffArrSiteReferenceService(db, staffArrServiceToken)),
             new SupplyArrReferenceAdapter(db),
         ];
     }
 
-    private static StaffArrSiteReferenceService BuildStaffArrSiteReferenceService()
+    private static StaffArrSiteReferenceService BuildStaffArrSiteReferenceService(
+        MaintainArrDbContext db,
+        string serviceToken = "maintainarr-to-staffarr-sites")
     {
         var handler = new StaffArrSiteLookupHandler();
         var client = new StaffArrSiteLookupClient(new HttpClient(handler)
         {
             BaseAddress = new Uri("http://staffarr.test/")
         });
-        var options = Options.Create(new StaffArrClientOptions { ServiceToken = "maintainarr-to-staffarr-sites" });
-        return new StaffArrSiteReferenceService(client, options);
+        var options = Options.Create(new StaffArrClientOptions { ServiceToken = serviceToken });
+        return new StaffArrSiteReferenceService(db, client, options);
     }
 
     private static void AssertCatalogOptionDependency(
