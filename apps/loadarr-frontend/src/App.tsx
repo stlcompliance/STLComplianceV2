@@ -33,7 +33,7 @@ import {
   type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
-import { getSessionBootstrap } from './api/client'
+import { getSessionBootstrap, loadArrFetch } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
 import { ReportsPanel } from './components/ReportsPanel'
 
@@ -1452,6 +1452,7 @@ export function App() {
   const location = useLocation()
   const navigate = useNavigate()
   const session = loadSession()
+  const accessToken = session?.accessToken
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
   const [query, setQuery] = useState('')
@@ -1496,16 +1497,16 @@ export function App() {
   const [kitStatus, setKitStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [kitResult, setKitResult] = useState<LoadArrKitMutation | null>(null)
   const sessionQuery = useQuery({
-    queryKey: ['loadarr-session', session?.accessToken],
-    queryFn: () => getSessionBootstrap(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
+    queryKey: ['loadarr-session', accessToken],
+    queryFn: () => getSessionBootstrap(accessToken!),
+    enabled: Boolean(accessToken),
     retry: false,
   })
 
   const launchCatalogQuery = useQuery({
-    queryKey: ['loadarr-launch-catalog', session?.accessToken],
-    queryFn: () => getLaunchCatalog(apiBase, session!.accessToken, 'loadarr'),
-    enabled: Boolean(session?.accessToken),
+    queryKey: ['loadarr-launch-catalog', accessToken],
+    queryFn: () => getLaunchCatalog(apiBase, accessToken!, 'loadarr'),
+    enabled: Boolean(accessToken),
     retry: false,
   })
 
@@ -1553,8 +1554,7 @@ export function App() {
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/workspace/summary', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/workspace/summary', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1577,13 +1577,12 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/counts', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/counts', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1606,13 +1605,12 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/adjustments', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/adjustments', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1635,13 +1633,12 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/truck-stock', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/truck-stock', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1664,13 +1661,12 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/kits', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/kits', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1693,7 +1689,7 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     if (!selectedLocationId) {
@@ -1703,8 +1699,7 @@ export function App() {
 
     const controller = new AbortController()
 
-    fetch(`/api/v1/locations/${selectedLocationId}/utilization`, {
-      credentials: 'include',
+    loadArrFetch(`/api/v1/locations/${selectedLocationId}/utilization`, accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1726,13 +1721,12 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [selectedLocationId])
+  }, [selectedLocationId, accessToken])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/v1/workspace/supplyarr-item-references', {
-      credentials: 'include',
+    loadArrFetch('/api/v1/workspace/supplyarr-item-references', accessToken, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
@@ -1755,7 +1749,7 @@ export function App() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   const normalizedQuery = query.trim().toLowerCase()
   const filteredInventory = useMemo(
@@ -2389,9 +2383,8 @@ export function App() {
     const payload = toReceivingPayload(receivingForm)
 
     try {
-      const response = await fetch('/api/v1/receiving/draft/complete', {
+      const response = await loadArrFetch('/api/v1/receiving/draft/complete', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2422,9 +2415,8 @@ export function App() {
     const payload = toTransferPayload(transferForm)
 
     try {
-      const response = await fetch('/api/v1/transfers/draft/complete', {
+      const response = await loadArrFetch('/api/v1/transfers/draft/complete', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2457,9 +2449,8 @@ export function App() {
     const payload = toHoldPayload(holdForm)
 
     try {
-      const response = await fetch('/api/v1/holds', {
+      const response = await loadArrFetch('/api/v1/holds', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2491,9 +2482,8 @@ export function App() {
     const payload = toHoldReleasePayload(holdReleaseForm)
 
     try {
-      const response = await fetch(`/api/v1/holds/${holdReleaseForm.holdId}/release`, {
+      const response = await loadArrFetch(`/api/v1/holds/${holdReleaseForm.holdId}/release`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2524,9 +2514,8 @@ export function App() {
     const payload = toUnexplainedInventoryPayload(unexplainedForm)
 
     try {
-      const response = await fetch('/api/v1/unexplained-inventory', {
+      const response = await loadArrFetch('/api/v1/unexplained-inventory', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2556,15 +2545,18 @@ export function App() {
     const payload = toUnexplainedResolutionPayload(unexplainedResolutionForm, action)
 
     try {
-      const response = await fetch(`/api/v1/unexplained-inventory/${unexplainedResolutionForm.recordId}/${action}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+      const response = await loadArrFetch(
+        `/api/v1/unexplained-inventory/${unexplainedResolutionForm.recordId}/${action}`,
+        accessToken,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      })
+      )
 
       if (!response.ok) {
         throw new Error(`Unexplained inventory ${action} failed: ${response.status}`)
@@ -2600,9 +2592,8 @@ export function App() {
     }
 
     try {
-      const response = await fetch(`/api/v1/truck-stock/${record.id}/${action}`, {
+      const response = await loadArrFetch(`/api/v1/truck-stock/${record.id}/${action}`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2669,9 +2660,8 @@ export function App() {
             }
 
     try {
-      const response = await fetch(`/api/v1/kits/${record.id}/${operation}`, {
+      const response = await loadArrFetch(`/api/v1/kits/${record.id}/${operation}`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2701,9 +2691,8 @@ export function App() {
     const completePayload = toCountCompletionPayload(countForm)
 
     try {
-      const createResponse = await fetch('/api/v1/counts', {
+      const createResponse = await loadArrFetch('/api/v1/counts', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2717,9 +2706,8 @@ export function App() {
 
       const createdCount = (await createResponse.json()) as LoadArrCount
 
-      const completeResponse = await fetch(`/api/v1/counts/${createdCount.id}/complete`, {
+      const completeResponse = await loadArrFetch(`/api/v1/counts/${createdCount.id}/complete`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2762,9 +2750,8 @@ export function App() {
     }
 
     try {
-      const response = await fetch(`/api/v1/counts/${countId}/approve-variance`, {
+      const response = await loadArrFetch(`/api/v1/counts/${countId}/approve-variance`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2790,9 +2777,8 @@ export function App() {
     const payload = toAdjustmentCreatePayload(adjustmentForm)
 
     try {
-      const response = await fetch('/api/v1/adjustments', {
+      const response = await loadArrFetch('/api/v1/adjustments', accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
@@ -2834,9 +2820,8 @@ export function App() {
     }
 
     try {
-      const response = await fetch(`/api/v1/adjustments/${adjustmentId}/approve`, {
+      const response = await loadArrFetch(`/api/v1/adjustments/${adjustmentId}/approve`, accessToken, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',

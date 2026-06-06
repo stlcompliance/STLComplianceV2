@@ -3434,11 +3434,7 @@ export function App() {
     return pathname
   })()
 
-  if (normalizedPathname === '/launch' || normalizedPathname === '/handoff') {
-    return <LaunchPage />
-  }
-
-  const currentTitle = useMemo(() => {
+  const currentTitle = (() => {
     if (normalizedPathname.startsWith('/records/')) return 'Record detail'
     if (normalizedPathname.startsWith('/records')) return 'Records'
     if (['/capture', '/upload-sessions', '/uploads', '/scan-processing', '/ocr-review', '/evidence-mappings'].some((path) => normalizedPathname.startsWith(path))) return 'Capture'
@@ -3449,7 +3445,11 @@ export function App() {
     if (['/access', '/external-shares', '/redactions', '/access-logs'].some((path) => normalizedPathname.startsWith(path))) return 'Access'
     if (normalizedPathname.startsWith('/settings')) return 'Settings'
     return 'Dashboard'
-  }, [normalizedPathname])
+  })()
+
+  if (normalizedPathname === '/launch' || normalizedPathname === '/handoff') {
+    return <LaunchPage />
+  }
 
   const accessToken = session?.accessToken ?? ''
 

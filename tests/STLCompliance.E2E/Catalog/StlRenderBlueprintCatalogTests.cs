@@ -51,6 +51,25 @@ public sealed class StlRenderBlueprintCatalogTests
     }
 
     [Fact]
+    public void Product_apis_requiring_handoff_token_have_launch_redeem_profile()
+    {
+        foreach (var consumerService in StlRenderBlueprintCatalog.ApiServicesRequiringHandoffToken())
+        {
+            var expectedProductKey = consumerService.Replace("-api", string.Empty, StringComparison.OrdinalIgnoreCase);
+
+            Assert.Contains(
+                StlIntegrationTokenCatalog.All,
+                profile =>
+                    string.Equals(profile.ConsumerService, consumerService, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(profile.ConfigurationKey, "Handoff__ServiceToken", StringComparison.Ordinal)
+                    && string.Equals(profile.SourceProductKey, expectedProductKey, StringComparison.OrdinalIgnoreCase)
+                    && profile.AllowedProductKeys.Count == 1
+                    && string.Equals(profile.AllowedProductKeys[0], expectedProductKey, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(profile.ActionScope, "launch.redeem", StringComparison.Ordinal));
+        }
+    }
+
+    [Fact]
     public void Worker_token_catalog_scopes_match_internal_endpoint_requirements()
     {
         Assert.Contains(

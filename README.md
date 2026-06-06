@@ -80,4 +80,12 @@ GitHub Actions workflow: `.github/workflows/ci.yml` — restore, build, test.
 
 ## Documentation
 
-Architecture and implementation notes are being replaced as part of the active cleanup effort; check active planning notes in-progress.
+The constitution documents in [`docs/constitutions/`](docs/constitutions/) are the authoritative rules for product ownership, shared UI behavior, and cross-product page patterns.
+
+All implementation work should follow the applicable constitution before following older notes or legacy patterns.
+
+Start here:
+
+- [`docs/constitutions/ownership.md`](docs/constitutions/ownership.md)
+- [`docs/constitutions/ui.md`](docs/constitutions/ui.md)
+- [`docs/constitutions/pages/`](docs/constitutions/pages/)
