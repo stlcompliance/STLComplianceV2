@@ -75,6 +75,10 @@ export function DashboardSection({ state }: Props) {
           </p>
         </div>
 
+        <p className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-xs text-slate-400">
+          Scope note: the field inbox can surface read-only cross-product signals from StaffArr, RoutArr, MaintainArr, SupplyArr, and Compliance Core. TrainArr owns the training record and assignment state shown here.
+        </p>
+
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Active assignments" value={String(dashboard.summary.activeAssignmentCount)} />
           <MetricCard label="Overdue assignments" value={String(dashboard.summary.overdueAssignmentCount)} />

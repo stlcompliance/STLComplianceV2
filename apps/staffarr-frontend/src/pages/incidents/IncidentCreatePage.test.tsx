@@ -8,41 +8,40 @@ const session = {
   personId: 'person-2',
 }
 
-vi.mock('@stl/shared-ui', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
-  return {
-    ...mod,
-    StaticSearchPicker: ({
-      label,
-      value,
-      onChange,
-      options,
-      testId,
-    }: {
-      label?: string
-      value: string
-      onChange: (value: string) => void
-      options: { value: string; label: string }[]
-      testId?: string
-    }) => (
-      <label htmlFor={testId ?? 'mock-static-search-picker'}>
-        {label}
-        <input
-          id={testId ?? 'mock-static-search-picker'}
-          aria-label={label}
-          data-testid={testId}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <ul>
-          {options.map((option) => (
-            <li key={option.value}>{option.label}</li>
-          ))}
-        </ul>
-      </label>
-    ),
-  }
-})
+vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({ message }: { message: string }) => <div>{message}</div>,
+  StaticSearchPicker: ({
+    label,
+    value,
+    onChange,
+    options,
+    testId,
+  }: {
+    label?: string
+    value: string
+    onChange: (value: string) => void
+    options: { value: string; label: string }[]
+    testId?: string
+  }) => (
+    <label htmlFor={testId ?? 'mock-static-search-picker'}>
+      {label}
+      <input
+        id={testId ?? 'mock-static-search-picker'}
+        aria-label={label}
+        data-testid={testId}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <ul>
+        {options.map((option) => (
+          <li key={option.value}>{option.label}</li>
+        ))}
+      </ul>
+    </label>
+  ),
+  getErrorMessage: (error: unknown, fallback: string) =>
+    error instanceof Error && error.message ? error.message : fallback,
+}))
 
 vi.mock('../../auth/sessionStorage', () => ({
   loadSession: vi.fn(() => session),
@@ -50,8 +49,13 @@ vi.mock('../../auth/sessionStorage', () => ({
 
 vi.mock('../../api/client', () => ({
   createPersonnelIncident: vi.fn(),
+  getMaintainArrAssetReferences: vi.fn(),
+  getMaintainArrWorkOrderReferences: vi.fn(),
   getOrgUnits: vi.fn(),
   getPeople: vi.fn(),
+  getRecordArrControlledDocumentReferences: vi.fn(),
+  getRoutArrRouteReferences: vi.fn(),
+  getSupplyArrSupplierReferences: vi.fn(),
 }))
 
 import * as client from '../../api/client'
@@ -117,6 +121,48 @@ describe('IncidentCreatePage', () => {
         unitType: 'department',
         name: 'Operations',
         parentOrgUnitId: 'site-1',
+        status: 'active',
+      },
+    ])
+    vi.mocked(client.getMaintainArrAssetReferences).mockResolvedValue([
+      {
+        assetId: 'asset-1',
+        assetTag: 'ASSET-001',
+        name: 'Forklift A',
+        lifecycleStatus: 'active',
+      },
+    ])
+    vi.mocked(client.getMaintainArrWorkOrderReferences).mockResolvedValue([
+      {
+        workOrderId: 'wo-1',
+        workOrderNumber: 'WO-1001',
+        title: 'Forklift inspection',
+        status: 'open',
+      },
+    ])
+    vi.mocked(client.getRoutArrRouteReferences).mockResolvedValue([
+      {
+        routeId: 'route-1',
+        routeNumber: 'R-47',
+        title: 'Dock transfer route',
+        routeStatus: 'active',
+      },
+    ])
+    vi.mocked(client.getSupplyArrSupplierReferences).mockResolvedValue([
+      {
+        partyId: 'supplier-1',
+        partyKey: 'SUP-001',
+        displayName: 'Acme Supply Co',
+        legalName: 'Acme Supply Company LLC',
+        status: 'active',
+      },
+    ])
+    vi.mocked(client.getRecordArrControlledDocumentReferences).mockResolvedValue([
+      {
+        controlledDocumentId: 'doc-1',
+        documentNumber: 'POL-001',
+        title: 'Forklift safety policy',
+        controlledDocumentType: 'policy',
         status: 'active',
       },
     ])
@@ -196,6 +242,24 @@ describe('IncidentCreatePage', () => {
     fireEvent.change(screen.getByTestId('incident-department-picker'), {
       target: { value: 'dept-1' },
     })
+    fireEvent.change(screen.getByTestId('incident-asset-reference-picker'), {
+      target: { value: 'asset-1' },
+    })
+    fireEvent.change(screen.getByTestId('incident-work-order-reference-picker'), {
+      target: { value: 'wo-1' },
+    })
+    fireEvent.change(screen.getByTestId('incident-route-reference-picker'), {
+      target: { value: 'route-1' },
+    })
+    fireEvent.change(screen.getByTestId('incident-supplier-reference-picker'), {
+      target: { value: 'supplier-1' },
+    })
+    fireEvent.change(screen.getByTestId('incident-document-reference-picker'), {
+      target: { value: 'doc-1' },
+    })
+    fireEvent.change(screen.getByTestId('incident-policy-reference-picker'), {
+      target: { value: 'doc-1' },
+    })
     fireEvent.change(screen.getByLabelText(/Location detail/i), {
       target: { value: 'Dock 4' },
     })
@@ -208,9 +272,15 @@ describe('IncidentCreatePage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Submit Incident' })[0])
 
     await waitFor(() => {
-      expect(client.createPersonnelIncident).toHaveBeenCalledWith(
+          expect(client.createPersonnelIncident).toHaveBeenCalledWith(
         'token',
         expect.objectContaining({
+          relatedAssetReference: 'asset-1',
+          relatedWorkOrderReference: 'wo-1',
+          relatedRouteReference: 'route-1',
+          relatedSupplierReference: 'supplier-1',
+          relatedDocumentReference: 'doc-1',
+          relatedPolicyReference: 'doc-1',
           personId: 'person-1',
           reporterPersonId: 'person-2',
           managerPersonId: 'person-3',

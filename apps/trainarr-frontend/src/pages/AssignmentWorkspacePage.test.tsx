@@ -116,7 +116,7 @@ describe('AssignmentWorkspacePage', () => {
     )
 
     expect(await screen.findByTestId('assignment-workspace')).toBeInTheDocument()
-    expect(screen.getByText('Hazmat annual')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hazmat annual' })).toBeInTheDocument()
     expect(screen.getByTestId('assignment-evidence-section')).toBeInTheDocument()
     expect(screen.getByTestId('assignment-labor-panel')).toBeInTheDocument()
     expect(await screen.findByLabelText('Practical result')).toBeInTheDocument()
@@ -141,6 +141,6 @@ describe('AssignmentWorkspacePage', () => {
     )
 
     expect(await screen.findByTestId('assignment-evidence-section')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('Hazmat annual')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Hazmat annual' })).toBeInTheDocument())
   })
 })

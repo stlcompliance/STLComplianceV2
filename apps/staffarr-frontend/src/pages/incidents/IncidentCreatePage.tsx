@@ -31,7 +31,16 @@ import {
   X,
 } from 'lucide-react'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
-import { createPersonnelIncident, getOrgUnits, getPeople } from '../../api/client'
+import {
+  createPersonnelIncident,
+  getMaintainArrAssetReferences,
+  getMaintainArrWorkOrderReferences,
+  getOrgUnits,
+  getPeople,
+  getRecordArrControlledDocumentReferences,
+  getRoutArrRouteReferences,
+  getSupplyArrSupplierReferences,
+} from '../../api/client'
 import type {
   CreatePersonnelIncidentRequest,
   OrgUnitResponse,
@@ -213,6 +222,17 @@ function personSelectOptions(people: StaffPersonSummaryResponse[]) {
   return people
     .filter((person) => person.employmentStatus !== 'inactive')
     .sort((a, b) => a.displayName.localeCompare(b.displayName))
+}
+
+function buildPickerOptions<T>(
+  items: T[],
+  getValue: (item: T) => string,
+  getLabel: (item: T) => string,
+) {
+  return items.map((item) => ({
+    value: getValue(item),
+    label: getLabel(item),
+  })) satisfies PickerOption[]
 }
 
 function SectionHeader({
@@ -539,11 +559,115 @@ export function IncidentCreatePage() {
     enabled: Boolean(session?.accessToken),
   })
 
+  const assetReferencesQuery = useQuery({
+    queryKey: ['staffarr-incident-create-maintainarr-assets', session?.accessToken],
+    queryFn: () => getMaintainArrAssetReferences(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const workOrderReferencesQuery = useQuery({
+    queryKey: ['staffarr-incident-create-maintainarr-work-orders', session?.accessToken],
+    queryFn: () => getMaintainArrWorkOrderReferences(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const routeReferencesQuery = useQuery({
+    queryKey: ['staffarr-incident-create-routarr-routes', session?.accessToken],
+    queryFn: () => getRoutArrRouteReferences(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const supplierReferencesQuery = useQuery({
+    queryKey: ['staffarr-incident-create-supplyarr-suppliers', session?.accessToken],
+    queryFn: () => getSupplyArrSupplierReferences(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const controlledDocumentReferencesQuery = useQuery({
+    queryKey: ['staffarr-incident-create-recordarr-controlled-documents', session?.accessToken],
+    queryFn: () => getRecordArrControlledDocumentReferences(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
   const people = peopleQuery.data ?? []
   const orgUnits = orgUnitsQuery.data ?? []
+  const assetReferences = assetReferencesQuery.data ?? []
+  const workOrderReferences = workOrderReferencesQuery.data ?? []
+  const routeReferences = routeReferencesQuery.data ?? []
+  const supplierReferences = supplierReferencesQuery.data ?? []
+  const controlledDocumentReferences = controlledDocumentReferencesQuery.data ?? []
   const affectedPerson = people.find((person) => person.personId === affectedPersonId) ?? null
   const managerPerson = people.find((person) => person.personId === managerPersonId) ?? null
   const sortedOrgUnits = useMemo(() => sortOrgUnits(orgUnits), [orgUnits])
+  const assetReferenceOptions = useMemo(
+    () =>
+      buildPickerOptions(assetReferences, (asset) => asset.assetId, (asset) =>
+        [asset.assetTag, asset.name, asset.lifecycleStatus].filter(Boolean).join(' · '),
+      ),
+    [assetReferences],
+  )
+  const selectedAssetReferenceOption = useMemo(
+    () => assetReferenceOptions.find((option) => option.value === relatedAssetReference),
+    [assetReferenceOptions, relatedAssetReference],
+  )
+  const workOrderReferenceOptions = useMemo(
+    () =>
+      buildPickerOptions(workOrderReferences, (workOrder) => workOrder.workOrderId, (workOrder) =>
+        [workOrder.workOrderNumber, workOrder.title, workOrder.status].filter(Boolean).join(' · '),
+      ),
+    [workOrderReferences],
+  )
+  const selectedWorkOrderReferenceOption = useMemo(
+    () => workOrderReferenceOptions.find((option) => option.value === relatedWorkOrderReference),
+    [relatedWorkOrderReference, workOrderReferenceOptions],
+  )
+  const routeReferenceOptions = useMemo(
+    () =>
+      buildPickerOptions(routeReferences, (route) => route.routeId, (route) =>
+        [route.routeNumber, route.title, route.routeStatus].filter(Boolean).join(' · '),
+      ),
+    [routeReferences],
+  )
+  const selectedRouteReferenceOption = useMemo(
+    () => routeReferenceOptions.find((option) => option.value === relatedRouteReference),
+    [relatedRouteReference, routeReferenceOptions],
+  )
+  const supplierReferenceOptions = useMemo(
+    () =>
+      buildPickerOptions(supplierReferences, (supplier) => supplier.partyId, (supplier) =>
+        [supplier.partyKey, supplier.displayName, supplier.status].filter(Boolean).join(' · '),
+      ),
+    [supplierReferences],
+  )
+  const selectedSupplierReferenceOption = useMemo(
+    () => supplierReferenceOptions.find((option) => option.value === relatedSupplierReference),
+    [relatedSupplierReference, supplierReferenceOptions],
+  )
+  const controlledDocumentReferenceOptions = useMemo(
+    () =>
+      buildPickerOptions(
+        controlledDocumentReferences,
+        (document) => document.controlledDocumentId,
+        (document) =>
+          [
+            document.documentNumber,
+            document.title,
+            document.controlledDocumentType,
+            document.status,
+          ]
+            .filter(Boolean)
+            .join(' · '),
+      ),
+    [controlledDocumentReferences],
+  )
+  const selectedDocumentReferenceOption = useMemo(
+    () => controlledDocumentReferenceOptions.find((option) => option.value === relatedDocumentReference),
+    [controlledDocumentReferenceOptions, relatedDocumentReference],
+  )
+  const selectedPolicyReferenceOption = useMemo(
+    () => controlledDocumentReferenceOptions.find((option) => option.value === relatedPolicyReference),
+    [controlledDocumentReferenceOptions, relatedPolicyReference],
+  )
 
   const requiredComplete = [
     title.trim().length >= 4,
@@ -1160,55 +1284,74 @@ export function IncidentCreatePage() {
             <FormSection
               number={6}
               title="Related Records & Cross-Product Links"
-              subtitle="Link existing records to provide context and avoid duplication."
+              subtitle="Select existing records to provide context and avoid duplication."
             >
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <Field label="Related asset">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedAssetReference}
-                    onChange={(event) => setRelatedAssetReference(event.target.value)}
+                    onChange={setRelatedAssetReference}
+                    options={assetReferenceOptions}
+                    selectedOption={selectedAssetReferenceOption}
                     placeholder="Search asset"
+                    testId="incident-asset-reference-picker"
                   />
                 </Field>
                 <Field label="Related work order">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedWorkOrderReference}
-                    onChange={(event) => setRelatedWorkOrderReference(event.target.value)}
+                    onChange={setRelatedWorkOrderReference}
+                    options={workOrderReferenceOptions}
+                    selectedOption={selectedWorkOrderReferenceOption}
                     placeholder="Search work order"
+                    testId="incident-work-order-reference-picker"
                   />
                 </Field>
                 <Field label="Related route / trip">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedRouteReference}
-                    onChange={(event) => setRelatedRouteReference(event.target.value)}
+                    onChange={setRelatedRouteReference}
+                    options={routeReferenceOptions}
+                    selectedOption={selectedRouteReferenceOption}
                     placeholder="Search route or trip"
+                    testId="incident-route-reference-picker"
                   />
                 </Field>
                 <Field label="Related supplier / party">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedSupplierReference}
-                    onChange={(event) => setRelatedSupplierReference(event.target.value)}
+                    onChange={setRelatedSupplierReference}
+                    options={supplierReferenceOptions}
+                    selectedOption={selectedSupplierReferenceOption}
                     placeholder="Search supplier or party"
+                    testId="incident-supplier-reference-picker"
                   />
                 </Field>
                 <Field label="Related documents / evidence package">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedDocumentReference}
-                    onChange={(event) => setRelatedDocumentReference(event.target.value)}
+                    onChange={setRelatedDocumentReference}
+                    options={controlledDocumentReferenceOptions}
+                    selectedOption={selectedDocumentReferenceOption}
                     placeholder="Search documents"
+                    testId="incident-document-reference-picker"
                   />
                 </Field>
                 <Field label="Related policy / acknowledgement">
-                  <TextInput
+                  <StaticSearchPicker
                     value={relatedPolicyReference}
-                    onChange={(event) => setRelatedPolicyReference(event.target.value)}
-                    placeholder="Search policy"
+                    onChange={setRelatedPolicyReference}
+                    options={controlledDocumentReferenceOptions}
+                    selectedOption={selectedPolicyReferenceOption}
+                    placeholder="Search policy or acknowledgement"
+                    testId="incident-policy-reference-picker"
                   />
                 </Field>
               </div>
               <p className="mt-3 flex items-start gap-2 text-xs text-slate-400">
                 <LinkIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-300" />
-                Linked references are stored with the incident for cross-product traceability.
+                Linked references are selected from MaintainArr, RoutArr, SupplyArr, and RecordArr source lists
+                for cross-product traceability.
               </p>
             </FormSection>
 

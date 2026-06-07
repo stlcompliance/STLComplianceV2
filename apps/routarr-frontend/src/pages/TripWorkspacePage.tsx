@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
-import { PageHeader } from '@stl/shared-ui'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
 import { canManageTrips, canPerformTrips } from '../auth/sessionStorage'
@@ -33,20 +32,7 @@ export function TripWorkspacePage() {
   const isPlatformAdmin = meQuery.data?.isPlatformAdmin ?? false
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6" data-testid="trip-workspace">
-      <PageHeader
-        title="Trip execution"
-        subtitle="Assign, guide execution, capture proof, and close out transportation work."
-      />
-      <p className="text-sm">
-        <Link to="/trips" className="text-teal-300 hover:text-teal-200">
-          ← Back to trips
-        </Link>
-        {' · '}
-        <Link to="/dispatch" className="text-teal-300 hover:text-teal-200">
-          Dispatch board
-        </Link>
-      </p>
+    <div className="mx-auto max-w-4xl" data-testid="trip-workspace">
       <TripExecutionWorkspacePanel
         accessToken={session.accessToken}
         tripId={tripId}

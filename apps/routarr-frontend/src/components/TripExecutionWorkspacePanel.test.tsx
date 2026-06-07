@@ -190,13 +190,13 @@ describe('TripExecutionWorkspacePanel', () => {
       expect(screen.getByTestId('trip-workspace-readiness')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Morning run')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Morning run' })).toBeInTheDocument()
     expect(screen.getByTestId('trip-workspace-readiness')).toBeInTheDocument()
     expect(screen.getByTestId('trip-workspace-dvir-capture')).toBeInTheDocument()
     expect(screen.getByTestId('trip-workspace-route-route-1')).toBeInTheDocument()
     expect(screen.getByTestId('trip-workspace-audit-trail')).toBeInTheDocument()
     expect(screen.getByText('trip.status')).toBeInTheDocument()
-    expect(screen.getByText(/Trip is at risk/)).toBeInTheDocument()
+    expect(screen.getByText('At risk')).toBeInTheDocument()
   })
 
   it('shows operator DVIR capture forms and submits via trip API', async () => {

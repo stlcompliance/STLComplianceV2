@@ -102,6 +102,10 @@ import type {
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
+const maintainArrApiBase = import.meta.env.VITE_MAINTAINARR_FRONTEND_BASE ?? 'http://localhost:5178'
+const routArrApiBase = import.meta.env.VITE_ROUTARR_FRONTEND_BASE ?? 'http://localhost:5180'
+const supplyArrApiBase = import.meta.env.VITE_SUPPLYARR_FRONTEND_BASE ?? 'http://localhost:5179'
+const recordArrApiBase = import.meta.env.VITE_RECORDARR_FRONTEND_BASE ?? 'http://localhost:5184'
 
 export class StaffArrApiError extends Error {
   constructor(
@@ -178,6 +182,29 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   }
 
   return (await response.json()) as T
+}
+
+async function parseCrossProductJsonResponse<T>(
+  response: Response,
+  fallbackMessage: string,
+): Promise<T> {
+  if (!response.ok) {
+    throw await toApiError(response, fallbackMessage)
+  }
+
+  return (await response.json()) as T
+}
+
+async function fetchCrossProductJson<T>(
+  apiBaseUrl: string,
+  path: string,
+  accessToken: string,
+  fallbackMessage: string,
+): Promise<T> {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseCrossProductJsonResponse<T>(response, fallbackMessage)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
@@ -331,6 +358,98 @@ export async function getPeople(accessToken: string): Promise<StaffPersonSummary
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffPersonSummaryResponse[]>(response, 'Failed to load people directory')
+}
+
+export interface CrossProductAssetReferenceOption {
+  assetId: string
+  assetTag: string
+  name: string
+  lifecycleStatus: string
+}
+
+export interface CrossProductWorkOrderReferenceOption {
+  workOrderId: string
+  workOrderNumber: string
+  title: string
+  status: string
+}
+
+export interface CrossProductRouteReferenceOption {
+  routeId: string
+  routeNumber: string
+  title: string
+  routeStatus: string
+}
+
+export interface CrossProductSupplierReferenceOption {
+  partyId: string
+  partyKey: string
+  displayName: string
+  legalName: string
+  status: string
+}
+
+export interface CrossProductControlledDocumentReferenceOption {
+  controlledDocumentId: string
+  documentNumber: string
+  title: string
+  controlledDocumentType: string
+  status: string
+}
+
+export async function getMaintainArrAssetReferences(
+  accessToken: string,
+): Promise<CrossProductAssetReferenceOption[]> {
+  return fetchCrossProductJson<CrossProductAssetReferenceOption[]>(
+    maintainArrApiBase,
+    '/api/assets',
+    accessToken,
+    'Failed to load asset references',
+  )
+}
+
+export async function getMaintainArrWorkOrderReferences(
+  accessToken: string,
+): Promise<CrossProductWorkOrderReferenceOption[]> {
+  return fetchCrossProductJson<CrossProductWorkOrderReferenceOption[]>(
+    maintainArrApiBase,
+    '/api/work-orders?status=open',
+    accessToken,
+    'Failed to load work order references',
+  )
+}
+
+export async function getRoutArrRouteReferences(
+  accessToken: string,
+): Promise<CrossProductRouteReferenceOption[]> {
+  return fetchCrossProductJson<CrossProductRouteReferenceOption[]>(
+    routArrApiBase,
+    '/api/routes?routeStatus=active',
+    accessToken,
+    'Failed to load route references',
+  )
+}
+
+export async function getSupplyArrSupplierReferences(
+  accessToken: string,
+): Promise<CrossProductSupplierReferenceOption[]> {
+  return fetchCrossProductJson<CrossProductSupplierReferenceOption[]>(
+    supplyArrApiBase,
+    '/api/suppliers',
+    accessToken,
+    'Failed to load supplier references',
+  )
+}
+
+export async function getRecordArrControlledDocumentReferences(
+  accessToken: string,
+): Promise<CrossProductControlledDocumentReferenceOption[]> {
+  return fetchCrossProductJson<CrossProductControlledDocumentReferenceOption[]>(
+    recordArrApiBase,
+    '/api/v1/workspace/controlled-documents',
+    accessToken,
+    'Failed to load controlled document references',
+  )
 }
 
 export async function getPerson(accessToken: string, personId: string): Promise<StaffPersonDetailResponse> {

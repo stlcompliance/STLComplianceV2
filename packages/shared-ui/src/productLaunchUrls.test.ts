@@ -34,4 +34,40 @@ describe('productLaunchUrls', () => {
     expect(map.fieldcompanion).toBe('https://app.stlcompliance.com/field-companion/launch')
     expect(map.nexarr).toBeUndefined()
   })
+
+  it('upgrades same-host launch URLs to https when the browser is on https', () => {
+    const originalWindow = (globalThis as typeof globalThis & { window?: Window }).window
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        location: {
+          href: 'https://app.stlcompliance.com/assurarr',
+          hostname: 'app.stlcompliance.com',
+          port: '',
+          protocol: 'https:',
+        },
+      },
+    })
+
+    try {
+      expect(
+        resolveProductLaunchUrl(
+          'assurarr',
+          'http://app.stlcompliance.com/app',
+          {
+            assurarr: 'http://app.stlcompliance.com/assurarr/launch',
+          },
+        ),
+      ).toBe('https://app.stlcompliance.com/assurarr/launch')
+    } finally {
+      if (originalWindow === undefined) {
+        delete (globalThis as typeof globalThis & { window?: Window }).window
+      } else {
+        Object.defineProperty(globalThis, 'window', {
+          configurable: true,
+          value: originalWindow,
+        })
+      }
+    }
+  })
 })

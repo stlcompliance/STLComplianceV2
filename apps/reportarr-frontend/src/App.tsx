@@ -17,10 +17,13 @@ import {
   RefreshCcw,
   Settings,
   ShieldCheck,
+  Users,
   Workflow,
 } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
+  DetailEmptyState,
+  ProfileDetailsLayout,
   ApiErrorCallout,
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
@@ -29,6 +32,7 @@ import {
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
+  type DetailTone,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import {
@@ -261,6 +265,105 @@ function Pill({ children }: { children: ReactNode }) {
 
 function EmptyState({ title }: { title: string }) {
   return <div className="reportarr-empty">{title}</div>
+}
+
+type ReportDetailMetric = {
+  label: string
+  value: string | number
+  hint: string
+  icon?: ReactNode
+  tone?: DetailTone
+}
+
+type ReportDetailField = {
+  label: string
+  value: string | number
+  source: string
+}
+
+type ReportDetailRailSection = {
+  title: string
+  icon?: ReactNode
+  content: ReactNode
+}
+
+type ReportDetailShellProps = {
+  testId?: string
+  backLabel: string
+  backTo: string
+  breadcrumbs: string[]
+  icon: ReactNode
+  title: string
+  subtitle: ReactNode
+  badges: Array<{ label: string; tone?: DetailTone }>
+  actions?: ReactNode
+  metrics: ReportDetailMetric[]
+  snapshotTitle: string
+  snapshotSubtitle: string
+  snapshotFields: ReportDetailField[]
+  decisionTitle: string
+  decisionBadge: { label: string; tone?: DetailTone }
+  decisionIcon?: ReactNode
+  decisionSummary: string
+  decisionDetail: string
+  allowedChecks: number
+  blockedChecks: number
+  railSections: ReportDetailRailSection[]
+  mainContent?: ReactNode
+}
+
+function ReportDetailShell({
+  testId,
+  backLabel,
+  backTo,
+  breadcrumbs,
+  icon,
+  title,
+  subtitle,
+  badges,
+  actions,
+  metrics,
+  snapshotTitle,
+  snapshotSubtitle,
+  snapshotFields,
+  decisionTitle,
+  decisionBadge,
+  decisionIcon,
+  decisionSummary,
+  decisionDetail,
+  allowedChecks,
+  blockedChecks,
+  railSections,
+  mainContent,
+}: ReportDetailShellProps) {
+  return (
+    <div className="space-y-6" data-testid={testId}>
+      <ProfileDetailsLayout
+        backLabel={backLabel}
+        backTo={backTo}
+        breadcrumbs={breadcrumbs}
+        icon={icon}
+        title={title}
+        subtitle={subtitle}
+        badges={badges}
+        actions={actions}
+        metrics={metrics}
+        tabs={['Overview', 'Related records', 'History']}
+        snapshotTitle={snapshotTitle}
+        snapshotSubtitle={snapshotSubtitle}
+        snapshotFields={snapshotFields}
+        decisionTitle={decisionTitle}
+        decisionBadge={decisionBadge}
+        decisionIcon={decisionIcon}
+        decisionSummary={decisionSummary}
+        decisionDetail={decisionDetail}
+        allowedChecks={allowedChecks}
+        blockedChecks={blockedChecks}
+        railSections={railSections}
+        mainContent={mainContent}
+      />
+    </div>
+  )
 }
 
 function makeEventRow(overrides: Partial<ReportArrIntegrationEventRequest> = {}): ReportArrIntegrationEventRequest {
@@ -2705,27 +2808,56 @@ function ReportRunsList({
 }
 
 function ReportRunDetail({ reportRun }: { reportRun: ReportArrReportRunResponse | null }) {
-  if (!reportRun) return <EmptyState title="Select a report run to inspect details." />
+  if (!reportRun) return <DetailEmptyState text="Select a report run to inspect details." />
+  const tone: DetailTone = reportRun.errorCount > 0 ? 'bad' : reportRun.warningCount > 0 ? 'warn' : 'good'
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Report:</strong> {reportRun.reportDefinitionId}</p>
-      <p><strong className="text-slate-100">Requested by:</strong> {reportRun.requestedByPersonId}</p>
-      <p><strong className="text-slate-100">Requested at:</strong> {formatDate(reportRun.requestedAt)}</p>
-      <p><strong className="text-slate-100">Started at:</strong> {formatDate(reportRun.startedAt)}</p>
-      <p><strong className="text-slate-100">Completed at:</strong> {formatDate(reportRun.completedAt)}</p>
-      <p><strong className="text-slate-100">Parameters used:</strong> {reportRun.parametersUsed.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Filters used:</strong> {reportRun.filtersUsed.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Output format:</strong> {reportRun.outputFormat}</p>
-      <p><strong className="text-slate-100">Output record:</strong> {reportRun.outputRecordRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Output package:</strong> {reportRun.outputPackageRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Source trace summary:</strong> {reportRun.sourceTraceSummary}</p>
-      <p><strong className="text-slate-100">Freshness summary:</strong> {reportRun.freshnessSummary}</p>
-      <p><strong className="text-slate-100">Row count:</strong> {formatNumber(reportRun.rowCount)}</p>
-      <p><strong className="text-slate-100">Warnings:</strong> {reportRun.warningCount}</p>
-      <p><strong className="text-slate-100">Errors:</strong> {reportRun.errorCount}</p>
-      {reportRun.errorMessage ? <p><strong className="text-slate-100">Error message:</strong> {reportRun.errorMessage}</p> : null}
-      <p><strong className="text-slate-100">Export job:</strong> {reportRun.exportJobId ?? 'n/a'}</p>
-    </div>
+    <ReportDetailShell
+      backLabel="Reports"
+      backTo="/reports"
+      breadcrumbs={[reportRun.reportDefinitionId, reportRun.exportJobId ?? 'Run']}
+      icon={<PlayCircle className="h-8 w-8" />}
+      title={reportRun.reportDefinitionId}
+      subtitle="Selected report run details."
+      badges={[
+        { label: `Rows ${formatNumber(reportRun.rowCount)}`, tone },
+        { label: reportRun.outputFormat, tone: 'info' },
+      ]}
+      metrics={[
+        { label: 'Rows', value: formatNumber(reportRun.rowCount), hint: 'Rows produced by the run', icon: <FileText className="h-5 w-5" />, tone },
+        { label: 'Warnings', value: reportRun.warningCount, hint: 'Warnings emitted during generation', icon: <AlertTriangle className="h-5 w-5" />, tone: reportRun.warningCount > 0 ? 'warn' : 'good' },
+        { label: 'Errors', value: reportRun.errorCount, hint: 'Errors emitted during generation', icon: <AlertTriangle className="h-5 w-5" />, tone: reportRun.errorCount > 0 ? 'bad' : 'good' },
+        { label: 'Parameters', value: reportRun.parametersUsed.length, hint: 'Parameters supplied to the run', icon: <Gauge className="h-5 w-5" />, tone: reportRun.parametersUsed.length > 0 ? 'info' : 'neutral' },
+      ]}
+      snapshotTitle="Report run snapshot"
+      snapshotSubtitle="Timing, outputs, and source trace summary."
+      snapshotFields={[
+        { label: 'Requested by', value: reportRun.requestedByPersonId, source: 'ReportArr run' },
+        { label: 'Requested at', value: formatDate(reportRun.requestedAt), source: 'ReportArr run' },
+        { label: 'Started at', value: formatDate(reportRun.startedAt), source: 'ReportArr run' },
+        { label: 'Completed at', value: formatDate(reportRun.completedAt), source: 'ReportArr run' },
+        { label: 'Parameters used', value: reportRun.parametersUsed.join(', ') || 'none', source: 'ReportArr run' },
+        { label: 'Filters used', value: reportRun.filtersUsed.join(', ') || 'none', source: 'ReportArr run' },
+        { label: 'Output format', value: reportRun.outputFormat, source: 'ReportArr output' },
+        { label: 'Output record', value: reportRun.outputRecordRef ?? 'n/a', source: 'ReportArr output' },
+        { label: 'Output package', value: reportRun.outputPackageRef ?? 'n/a', source: 'ReportArr output' },
+        { label: 'Export job', value: reportRun.exportJobId ?? 'n/a', source: 'ReportArr output' },
+      ]}
+      decisionTitle="Run outcome"
+      decisionBadge={{ label: reportRun.errorCount > 0 ? 'Errors' : reportRun.warningCount > 0 ? 'Warnings' : 'Healthy', tone }}
+      decisionIcon={<PlayCircle className="h-5 w-5 text-sky-300" />}
+      decisionSummary={reportRun.errorCount > 0 ? 'The report run completed with errors.' : reportRun.warningCount > 0 ? 'The report run completed with warnings.' : 'The report run completed successfully.'}
+      decisionDetail={reportRun.sourceTraceSummary}
+      allowedChecks={Math.max(0, reportRun.rowCount)}
+      blockedChecks={reportRun.errorCount}
+      railSections={[]}
+      mainContent={
+        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <h3 className="text-lg font-semibold text-white">Freshness summary</h3>
+          <p className="mt-2 text-sm text-slate-400">{reportRun.freshnessSummary}</p>
+          {reportRun.errorMessage ? <p className="mt-3 text-sm text-amber-200">{reportRun.errorMessage}</p> : null}
+        </section>
+      }
+    />
   )
 }
 
@@ -2827,27 +2959,56 @@ function ReportScheduleDetail({
   schedule: ReportArrReportScheduleResponse | null
   recipients: ReportArrReportRecipientResponse[]
 }) {
-  if (!schedule) return <EmptyState title="Select a schedule to inspect details." />
-
+  if (!schedule) return <DetailEmptyState text="Select a schedule to inspect details." />
+  const tone: DetailTone = schedule.status === 'active' ? 'good' : schedule.status === 'paused' ? 'warn' : schedule.status === 'canceled' ? 'bad' : 'info'
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Schedule:</strong> {schedule.scheduleNumber}</p>
-      <p><strong className="text-slate-100">Title:</strong> {schedule.title}</p>
-      <p><strong className="text-slate-100">Status:</strong> {schedule.status}</p>
-      <p><strong className="text-slate-100">Cadence:</strong> {schedule.cadence}</p>
-      <p><strong className="text-slate-100">Timezone:</strong> {schedule.timezone}</p>
-      <p><strong className="text-slate-100">Delivery method:</strong> {schedule.deliveryMethod}</p>
-      <p><strong className="text-slate-100">Cron:</strong> {schedule.cronExpression ?? 'none'}</p>
-      <p><strong className="text-slate-100">Next run:</strong> {formatDate(schedule.nextRunAt)}</p>
-      <p><strong className="text-slate-100">Last run:</strong> {formatDate(schedule.lastRunAt)}</p>
-      <p><strong className="text-slate-100">Starts at:</strong> {formatDate(schedule.startsAt)}</p>
-      <p><strong className="text-slate-100">Ends at:</strong> {formatDate(schedule.endsAt)}</p>
-      <p><strong className="text-slate-100">Parameters:</strong> {schedule.parameters.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Recipients:</strong> {schedule.recipients.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Recipient records:</strong> {recipients.map((recipient) => recipient.recipientRef).join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Report:</strong> {schedule.reportDefinitionId}</p>
-      <p><strong className="text-slate-100">Created by:</strong> {schedule.createdByPersonId}</p>
-    </div>
+    <ReportDetailShell
+      backLabel="Reports"
+      backTo="/reports"
+      breadcrumbs={[schedule.reportDefinitionId, schedule.scheduleNumber]}
+      icon={<Workflow className="h-8 w-8" />}
+      title={schedule.title}
+      subtitle="Selected report schedule details."
+      badges={[
+        { label: schedule.status, tone },
+        { label: schedule.deliveryMethod, tone: 'info' },
+      ]}
+      metrics={[
+        { label: 'Recipients', value: schedule.recipients.length, hint: 'Configured recipients', icon: <Bell className="h-5 w-5" />, tone: schedule.recipients.length > 0 ? 'good' : 'neutral' },
+        { label: 'Parameters', value: schedule.parameters.length, hint: 'Configured parameters', icon: <Gauge className="h-5 w-5" />, tone: schedule.parameters.length > 0 ? 'info' : 'neutral' },
+        { label: 'Next run', value: formatDate(schedule.nextRunAt), hint: 'When this schedule will run next', icon: <PlayCircle className="h-5 w-5" />, tone: 'info' },
+        { label: 'Recipient records', value: recipients.length, hint: 'Resolved recipient records', icon: <Users className="h-5 w-5" />, tone: recipients.length > 0 ? 'good' : 'neutral' },
+      ]}
+      snapshotTitle="Schedule snapshot"
+      snapshotSubtitle="Delivery cadence, timing, and ownership."
+      snapshotFields={[
+        { label: 'Schedule number', value: schedule.scheduleNumber, source: 'ReportArr schedule' },
+        { label: 'Status', value: schedule.status, source: 'ReportArr schedule' },
+        { label: 'Cadence', value: schedule.cadence, source: 'ReportArr schedule' },
+        { label: 'Timezone', value: schedule.timezone, source: 'ReportArr schedule' },
+        { label: 'Delivery method', value: schedule.deliveryMethod, source: 'ReportArr schedule' },
+        { label: 'Cron', value: schedule.cronExpression ?? 'none', source: 'ReportArr schedule' },
+        { label: 'Next run', value: formatDate(schedule.nextRunAt), source: 'ReportArr schedule' },
+        { label: 'Last run', value: formatDate(schedule.lastRunAt), source: 'ReportArr schedule' },
+        { label: 'Starts at', value: formatDate(schedule.startsAt), source: 'ReportArr schedule' },
+        { label: 'Ends at', value: formatDate(schedule.endsAt), source: 'ReportArr schedule' },
+      ]}
+      decisionTitle="Schedule decision"
+      decisionBadge={{ label: schedule.status, tone }}
+      decisionIcon={<Workflow className="h-5 w-5 text-sky-300" />}
+      decisionSummary={schedule.status === 'active' ? 'The schedule is active.' : schedule.status === 'paused' ? 'The schedule is paused.' : 'The schedule is not active.'}
+      decisionDetail={`ReportArr tracks ${schedule.parameters.length} parameter(s) and ${schedule.recipients.length} recipient(s) for this schedule.`}
+      allowedChecks={Math.max(0, schedule.recipients.length + schedule.parameters.length)}
+      blockedChecks={schedule.status === 'canceled' ? 1 : 0}
+      railSections={[]}
+      mainContent={
+        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <h3 className="text-lg font-semibold text-white">Recipients</h3>
+          <p className="mt-2 text-sm text-slate-400">{schedule.recipients.join(', ') || 'none'}</p>
+          <p className="mt-3 text-sm text-slate-400">{recipients.map((recipient) => recipient.recipientRef).join(', ') || 'none'}</p>
+        </section>
+      }
+    />
   )
 }
 
@@ -3036,29 +3197,57 @@ function ExportJobsList({
 }
 
 function ExportJobDetail({ exportJob }: { exportJob: ReportArrExportJobResponse | null }) {
-  if (!exportJob) return <EmptyState title="Select an export job to inspect details." />
+  if (!exportJob) return <DetailEmptyState text="Select an export job to inspect details." />
+  const tone: DetailTone = exportJob.status === 'completed' ? 'good' : exportJob.status === 'failed' ? 'bad' : 'warn'
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Export number:</strong> {exportJob.exportNumber}</p>
-      <p><strong className="text-slate-100">Report run:</strong> {exportJob.reportRunId ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Title:</strong> {exportJob.title}</p>
-      <p><strong className="text-slate-100">Export type:</strong> {exportJob.exportType}</p>
-      <p><strong className="text-slate-100">Status:</strong> {exportJob.status}</p>
-      <p><strong className="text-slate-100">Format:</strong> {exportJob.exportFormat}</p>
-      <p><strong className="text-slate-100">Requested by:</strong> {exportJob.requestedByPersonId}</p>
-      <p><strong className="text-slate-100">Requested at:</strong> {formatDate(exportJob.requestedAt)}</p>
-      <p><strong className="text-slate-100">Started at:</strong> {formatDate(exportJob.startedAt)}</p>
-      <p><strong className="text-slate-100">Completed at:</strong> {formatDate(exportJob.completedAt)}</p>
-      <p><strong className="text-slate-100">Source ref:</strong> {exportJob.sourceRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Output record:</strong> {exportJob.outputRecordRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Rows:</strong> {formatNumber(exportJob.rowCount)}</p>
-      <p><strong className="text-slate-100">File size:</strong> {formatNumber(exportJob.fileSizeBytesSnapshot)} bytes</p>
-      <p><strong className="text-slate-100">Expires at:</strong> {formatDate(exportJob.expiresAt)}</p>
-      <p><strong className="text-slate-100">Generated at:</strong> {formatDate(exportJob.generatedAt)}</p>
-      <p><strong className="text-slate-100">Delivered at:</strong> {formatDate(exportJob.deliveredAt)}</p>
-      <p><strong className="text-slate-100">RecordArr package:</strong> {exportJob.recordArrPackageRef ?? 'n/a'}</p>
-      {exportJob.errorMessage ? <p><strong className="text-slate-100">Error message:</strong> {exportJob.errorMessage}</p> : null}
-    </div>
+    <ReportDetailShell
+      backLabel="Reports"
+      backTo="/reports"
+      breadcrumbs={[exportJob.exportNumber, exportJob.title]}
+      icon={<FileText className="h-8 w-8" />}
+      title={exportJob.title}
+      subtitle="Selected export job details."
+      badges={[
+        { label: exportJob.status, tone },
+        { label: exportJob.exportFormat, tone: 'info' },
+      ]}
+      metrics={[
+        { label: 'Rows', value: formatNumber(exportJob.rowCount), hint: 'Rows included in the export', icon: <Gauge className="h-5 w-5" />, tone: exportJob.rowCount > 0 ? 'good' : 'neutral' },
+        { label: 'File size', value: formatNumber(exportJob.fileSizeBytesSnapshot), hint: 'Snapshot file size in bytes', icon: <FileText className="h-5 w-5" />, tone: 'info' },
+        { label: 'Requested', value: formatDate(exportJob.requestedAt), hint: 'When the export was requested', icon: <PlayCircle className="h-5 w-5" />, tone: 'info' },
+        { label: 'Delivered', value: formatDate(exportJob.deliveredAt), hint: 'When the export was delivered', icon: <CheckCircle2 className="h-5 w-5" />, tone: exportJob.deliveredAt ? 'good' : 'neutral' },
+      ]}
+      snapshotTitle="Export job snapshot"
+      snapshotSubtitle="Delivery, output, and lifecycle details."
+      snapshotFields={[
+        { label: 'Export number', value: exportJob.exportNumber, source: 'ReportArr export' },
+        { label: 'Report run', value: exportJob.reportRunId ?? 'n/a', source: 'ReportArr export' },
+        { label: 'Export type', value: exportJob.exportType, source: 'ReportArr export' },
+        { label: 'Format', value: exportJob.exportFormat, source: 'ReportArr export' },
+        { label: 'Requested by', value: exportJob.requestedByPersonId, source: 'ReportArr request' },
+        { label: 'Requested at', value: formatDate(exportJob.requestedAt), source: 'ReportArr request' },
+        { label: 'Started at', value: formatDate(exportJob.startedAt), source: 'ReportArr request' },
+        { label: 'Completed at', value: formatDate(exportJob.completedAt), source: 'ReportArr request' },
+        { label: 'Source ref', value: exportJob.sourceRef ?? 'n/a', source: 'ReportArr export' },
+        { label: 'Output record', value: exportJob.outputRecordRef ?? 'n/a', source: 'ReportArr export' },
+        { label: 'RecordArr package', value: exportJob.recordArrPackageRef ?? 'n/a', source: 'ReportArr export' },
+        { label: 'Expires at', value: formatDate(exportJob.expiresAt), source: 'ReportArr export' },
+      ]}
+      decisionTitle="Export decision"
+      decisionBadge={{ label: exportJob.status, tone }}
+      decisionIcon={<FileText className="h-5 w-5 text-sky-300" />}
+      decisionSummary={exportJob.status === 'completed' ? 'The export completed successfully.' : exportJob.status === 'failed' ? 'The export failed and needs review.' : 'The export is still in progress.'}
+      decisionDetail={exportJob.errorMessage || 'No export error message is currently recorded.'}
+      allowedChecks={Math.max(0, exportJob.rowCount)}
+      blockedChecks={exportJob.status === 'failed' ? 1 : 0}
+      railSections={[]}
+      mainContent={
+        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <h3 className="text-lg font-semibold text-white">Output and lifecycle</h3>
+          {exportJob.errorMessage ? <p className="mt-2 text-sm text-amber-200">{exportJob.errorMessage}</p> : null}
+        </section>
+      }
+    />
   )
 }
 
@@ -5222,144 +5411,281 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
     dashboardsQuery.data?.filter((dashboard) => dashboard.widgetRefs.some((ref) => datasetWidgetRefs.includes(ref))) ?? []
   const dependentReports =
     reportDefinitionsQuery.data?.filter((report) => report.datasetRefs.includes(datasetId)) ?? []
+  const datasetFieldCount = datasetFields.length
+  const datasetRefreshJobCount = datasetRefreshJobs.length
+  const readModelCount = readModels.length
+  const dependentDashboardCount = dependentDashboards.length
+  const dependentReportCount = dependentReports.length
+  const freshnessTone: DetailTone = dataset?.freshnessStatus?.toLowerCase().includes('fresh')
+    ? 'good'
+    : dataset?.freshnessStatus?.toLowerCase().includes('stale')
+      ? 'warn'
+      : 'info'
+  const statusTone: DetailTone = dataset?.status === 'active' ? 'good' : dataset?.status === 'failed' ? 'bad' : 'neutral'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Datasets" title="Dataset detail" description={`Inspect a single dataset (${datasetId}).`} />
-      <Panel title="Dataset detail">
-        {dataset ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Dataset number:</strong> {dataset.datasetNumber}</p>
-            <p><strong className="text-slate-100">Dataset key:</strong> {dataset.datasetKey}</p>
-            <p><strong className="text-slate-100">Title:</strong> {dataset.title}</p>
-            <p><strong className="text-slate-100">Description:</strong> {dataset.description}</p>
-            <p><strong className="text-slate-100">Type:</strong> {dataset.datasetType}</p>
-            <p><strong className="text-slate-100">Status:</strong> {dataset.status}</p>
-            <p><strong className="text-slate-100">Refresh:</strong> {dataset.refreshMode} · {dataset.refreshFrequency}</p>
-            <p><strong className="text-slate-100">Freshness:</strong> {dataset.freshnessStatus}</p>
-            <p><strong className="text-slate-100">Last refreshed:</strong> {formatDate(dataset.lastRefreshedAt)}</p>
-            <p><strong className="text-slate-100">Last successful refresh:</strong> {formatDate(dataset.lastSuccessfulRefreshAt)}</p>
-            <p><strong className="text-slate-100">Last failed refresh:</strong> {formatDate(dataset.lastFailedRefreshAt)}</p>
-            <p><strong className="text-slate-100">Source traceability:</strong> {dataset.sourceTraceabilityRules || 'none'}</p>
-            <p><strong className="text-slate-100">Schema version:</strong> {dataset.schemaVersion}</p>
-            <p><strong className="text-slate-100">Retention policy:</strong> {dataset.retentionPolicy}</p>
-            <p><strong className="text-slate-100">Source products:</strong> {dataset.sourceProducts.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Source connectors:</strong> {dataset.sourceConnectors.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Owner:</strong> {dataset.ownerPersonId}</p>
-            <p><strong className="text-slate-100">Field definitions:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Schema/fields:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
-                {datasetFields.length ? (
-                  datasetFields.map((field) => (
-                    <li key={field.fieldId}>
-                      <span className="text-slate-100">{field.fieldKey}</span> · {field.dataType} · {field.sourceProduct}.{field.sourceFieldPath}
-                    </li>
-                  ))
-                ) : (
-                  <li>none</li>
-                )}
-              </ul>
+    <ReportDetailShell
+      backLabel="Datasets"
+      backTo="/datasets"
+      breadcrumbs={dataset ? [dataset.datasetKey, dataset.title] : ['Dataset detail']}
+      icon={<Database className="h-8 w-8" />}
+      title={dataset?.title ?? 'Dataset detail'}
+      subtitle={`Inspect a single dataset (${datasetId}).`}
+      badges={[
+        { label: dataset?.status ?? 'Unknown', tone: statusTone },
+        { label: dataset?.freshnessStatus ?? 'Unknown', tone: freshnessTone },
+      ]}
+      metrics={[
+        {
+          label: 'Fields',
+          value: datasetFieldCount,
+          hint: 'Schema fields defined for this dataset',
+          icon: <FileText className="h-5 w-5" />,
+          tone: datasetFieldCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Refresh jobs',
+          value: datasetRefreshJobCount,
+          hint: 'Recent refresh activity',
+          icon: <RefreshCcw className="h-5 w-5" />,
+          tone: datasetRefreshJobCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Read models',
+          value: readModelCount,
+          hint: 'Downstream read models using this dataset',
+          icon: <Gauge className="h-5 w-5" />,
+          tone: readModelCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Dashboards',
+          value: dependentDashboardCount,
+          hint: 'Dashboards driven by this dataset',
+          icon: <BarChart3 className="h-5 w-5" />,
+          tone: dependentDashboardCount > 0 ? 'good' : 'neutral',
+        },
+      ]}
+      snapshotTitle="Dataset snapshot"
+      snapshotSubtitle="Configuration, source traceability, and freshness state."
+      snapshotFields={[
+        { label: 'Dataset number', value: dataset?.datasetNumber ?? 'n/a', source: 'ReportArr dataset' },
+        { label: 'Dataset key', value: dataset?.datasetKey ?? 'n/a', source: 'ReportArr dataset' },
+        { label: 'Type', value: dataset?.datasetType ?? 'n/a', source: 'ReportArr dataset' },
+        { label: 'Refresh mode', value: `${dataset?.refreshMode ?? 'n/a'} · ${dataset?.refreshFrequency ?? 'n/a'}`, source: 'ReportArr dataset' },
+        { label: 'Freshness', value: dataset?.freshnessStatus ?? 'n/a', source: 'Calculated state' },
+        { label: 'Last refreshed', value: formatDate(dataset?.lastRefreshedAt ?? null), source: 'ReportArr refresh' },
+        { label: 'Last successful refresh', value: formatDate(dataset?.lastSuccessfulRefreshAt ?? null), source: 'ReportArr refresh' },
+        { label: 'Last failed refresh', value: formatDate(dataset?.lastFailedRefreshAt ?? null), source: 'ReportArr refresh' },
+        { label: 'Source products', value: dataset?.sourceProducts.join(', ') || 'none', source: 'Source trace' },
+        { label: 'Source connectors', value: dataset?.sourceConnectors.join(', ') || 'none', source: 'Source trace' },
+        { label: 'Owner', value: dataset?.ownerPersonId ?? 'n/a', source: 'ReportArr ownership' },
+      ]}
+      decisionTitle="Data freshness decision"
+      decisionBadge={{ label: dataset?.freshnessStatus ?? 'Unknown', tone: freshnessTone }}
+      decisionIcon={<Database className="h-5 w-5 text-sky-300" />}
+      decisionSummary={dataset?.freshnessStatus?.toLowerCase().includes('fresh')
+        ? 'Dataset refresh state is current.'
+        : dataset?.freshnessStatus?.toLowerCase().includes('stale')
+          ? 'Dataset refresh state needs attention.'
+          : 'Dataset freshness state is informational.'}
+      decisionDetail={dataset
+        ? `Source traceability is ${dataset.sourceTraceabilityRules ? 'defined' : 'not defined'}, with ${datasetFieldCount} field definitions and ${datasetRefreshJobCount} refresh jobs tracked in ReportArr.`
+        : 'No dataset record was found.'}
+      allowedChecks={Math.max(0, readModelCount + dependentDashboardCount)}
+      blockedChecks={ingestionErrors.length}
+      railSections={[
+        {
+          title: 'Source traceability',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          content: dataset ? (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Traceability rules:</strong> {dataset.sourceTraceabilityRules || 'none'}</p>
+              <p><strong className="text-slate-100">Schema version:</strong> {dataset.schemaVersion}</p>
+              <p><strong className="text-slate-100">Retention policy:</strong> {dataset.retentionPolicy}</p>
+              <p><strong className="text-slate-100">Field definitions:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
             </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Refresh history:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
+          ) : (
+            <DetailEmptyState text="No dataset metadata is available." />
+          ),
+        },
+        {
+          title: 'Downstream consumers',
+          icon: <PlayCircle className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Dashboards:</strong> {dependentDashboardCount}</p>
+              <p><strong className="text-slate-100">Reports:</strong> {dependentReportCount}</p>
+              <p><strong className="text-slate-100">Read models:</strong> {readModelCount}</p>
+            </div>
+          ),
+        },
+      ]}
+      mainContent={
+        <div className="space-y-6">
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Schema and fields</h3>
+                <p className="mt-1 text-sm text-slate-400">Field definitions and source paths attached to this dataset.</p>
+              </div>
+              <Pill>{datasetFieldCount > 0 ? `${datasetFieldCount} fields` : 'No fields'}</Pill>
+            </div>
+            <div className="mt-4 space-y-3">
+              {datasetFields.length ? (
+                datasetFields.map((field) => (
+                  <div key={field.fieldId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <p className="font-medium text-white">{field.fieldKey}</p>
+                    <p className="mt-1 text-slate-400">
+                      {field.dataType} · {field.sourceProduct}.{field.sourceFieldPath}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <DetailEmptyState text="No dataset fields are defined." />
+              )}
+            </div>
+          </section>
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Refresh history</h3>
+                  <p className="mt-1 text-sm text-slate-400">Recent refresh jobs and their outcomes.</p>
+                </div>
+                <Pill>{datasetRefreshJobCount > 0 ? `${datasetRefreshJobCount} jobs` : 'No jobs'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {datasetRefreshJobs.length ? (
                   datasetRefreshJobs.slice(0, 5).map((job) => (
-                    <li key={job.refreshJobId}>
-                      <Link className="text-cyan-300 underline" to={`/refresh-jobs/${job.refreshJobId}`}>
-                        {job.status}
-                      </Link>{' '}
-                      · queued {formatDate(job.queuedAt)} · started {formatDate(job.startedAt)} · records created {formatNumber(job.recordsCreated)}
-                    </li>
+                    <div key={job.refreshJobId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <p className="font-medium text-white">
+                        <Link className="text-cyan-300 underline" to={`/refresh-jobs/${job.refreshJobId}`}>
+                          {job.status}
+                        </Link>
+                      </p>
+                      <p className="mt-1 text-slate-400">
+                        queued {formatDate(job.queuedAt)} · started {formatDate(job.startedAt)} · records created {formatNumber(job.recordsCreated)}
+                      </p>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No refresh jobs have been recorded for this dataset." />
                 )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Ingestion errors:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
-                {ingestionErrors.length ? (
-                  ingestionErrors.slice(0, 5).map((event) => (
-                    <li key={event.sourceEventReceiptId}>
-                      <Link className="text-cyan-300 underline" to={`/history/events/${event.sourceEventReceiptId}`}>
-                        {event.sourceObjectRef}
-                      </Link>{' '}
-                      · {event.eventType} · {formatDate(event.receivedAt)}
-                    </li>
-                  ))
-                ) : (
-                  <li>none</li>
-                )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Lineage:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Lineage and errors</h3>
+                  <p className="mt-1 text-sm text-slate-400">Upstream lineage records and failed ingestion events.</p>
+                </div>
+                <Pill>{ingestionErrors.length > 0 ? `${ingestionErrors.length} errors` : 'No errors'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {datasetLineage.length ? (
                   datasetLineage.map((lineage) => (
-                    <li key={lineage.lineageId}>
-                      {lineage.sourceProduct}.{lineage.sourceObjectType} → {lineage.datasetFieldKey} · {lineage.transformationDescription}
-                    </li>
+                    <div key={lineage.lineageId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <p className="font-medium text-white">
+                        {lineage.sourceProduct}.{lineage.sourceObjectType} → {lineage.datasetFieldKey}
+                      </p>
+                      <p className="mt-1 text-slate-400">{lineage.transformationDescription}</p>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No lineage records are available." />
                 )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Read models:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
+                {ingestionErrors.length ? (
+                  ingestionErrors.slice(0, 5).map((event) => (
+                    <div key={event.sourceEventReceiptId} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-slate-200">
+                      <p className="font-medium text-white">
+                        <Link className="text-cyan-300 underline" to={`/history/events/${event.sourceEventReceiptId}`}>
+                          {event.sourceObjectRef}
+                        </Link>
+                      </p>
+                      <p className="mt-1 text-slate-300">
+                        {event.eventType} · {formatDate(event.receivedAt)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <DetailEmptyState text="No ingestion errors are currently associated with this dataset." />
+                )}
+              </div>
+            </section>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Read models</h3>
+                  <p className="mt-1 text-sm text-slate-400">Read models that currently depend on this dataset.</p>
+                </div>
+                <Pill>{readModelCount > 0 ? `${readModelCount} models` : 'No models'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {readModels.length ? (
                   readModels.map((readModel) => (
-                    <li key={readModel.readModelId}>
-                      <Link className="text-cyan-300 underline" to={`/read-models/${readModel.readModelId}`}>{readModel.title}</Link>
-                    </li>
+                    <div key={readModel.readModelId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <Link className="font-medium text-cyan-300 underline" to={`/read-models/${readModel.readModelId}`}>
+                        {readModel.title}
+                      </Link>
+                      <p className="mt-1 text-slate-400">{readModel.readModelType} · {readModel.status}</p>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No downstream read models are linked." />
                 )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Dependent dashboards/reports:</strong></p>
-              <div className="mt-1">
-                <p className="font-semibold text-slate-100">Dashboards</p>
-                <ul className="mt-1 list-disc pl-5">
-                  {dependentDashboards.length ? (
-                    dependentDashboards.map((dashboard) => (
-                      <li key={dashboard.dashboardId}>
-                        <Link className="text-cyan-300 underline" to={`/dashboards/${dashboard.dashboardId}`}>{dashboard.title}</Link>
-                      </li>
-                    ))
-                  ) : (
-                    <li>none</li>
-                  )}
-                </ul>
               </div>
-              <div className="mt-3">
-                <p className="font-semibold text-slate-100">Reports</p>
-                <ul className="mt-1 list-disc pl-5">
-                  {dependentReports.length ? (
-                    dependentReports.map((report) => (
-                      <li key={report.reportDefinitionId}>
-                        {report.title}
-                      </li>
-                    ))
-                  ) : (
-                    <li>none</li>
-                  )}
-                </ul>
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Dependent dashboards and reports</h3>
+                  <p className="mt-1 text-sm text-slate-400">Objects that consume this dataset through widgets or dataset refs.</p>
+                </div>
+                <Pill>{dependentDashboardCount + dependentReportCount > 0 ? `${dependentDashboardCount + dependentReportCount} consumers` : 'No consumers'}</Pill>
               </div>
-            </div>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">Dashboards</p>
+                  <div className="mt-2 space-y-2">
+                    {dependentDashboards.length ? (
+                      dependentDashboards.map((dashboard) => (
+                        <div key={dashboard.dashboardId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                          <Link className="text-cyan-300 underline" to={`/dashboards/${dashboard.dashboardId}`}>
+                            {dashboard.title}
+                          </Link>
+                        </div>
+                      ))
+                    ) : (
+                      <DetailEmptyState text="No dashboards currently consume this dataset." />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Reports</p>
+                  <div className="mt-2 space-y-2">
+                    {dependentReports.length ? (
+                      dependentReports.map((report) => (
+                        <div key={report.reportDefinitionId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                          <p className="text-white">{report.title}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <DetailEmptyState text="No reports currently consume this dataset." />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-        ) : (
-          <EmptyState title="Dataset not found." />
-        )}
-      </Panel>
-    </div>
+        </div>
+      }
+    />
   )
 }
 
@@ -5423,96 +5749,203 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
       .sort((a, b) => a.sortOrder - b.sortOrder)
   const sourceDatasetRefs = [...new Set(dashboardWidgets.map((widget) => widget.datasetRef).filter(Boolean))]
   const sourceReadModelRefs = [...new Set(dashboardWidgets.map((widget) => widget.readModelRef).filter(Boolean))]
+  const dashboardWidgetCount = dashboardWidgets.length
+  const dashboardFilterCount = dashboardFilters.length
+  const dashboardDrilldownCount = dashboardDrilldowns.length
+  const freshnessTone: DetailTone = dashboard?.freshnessStatus?.toLowerCase().includes('fresh')
+    ? 'good'
+    : dashboard?.freshnessStatus?.toLowerCase().includes('stale')
+      ? 'warn'
+      : 'info'
+  const exportAllowed = dashboardPolicy?.exportAllowed ?? false
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Dashboards" title="Dashboard detail" description={`Inspect a single dashboard (${dashboardId}).`} />
-      <Panel title="Dashboard detail">
-        {dashboard ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Dashboard number:</strong> {dashboard.dashboardNumber}</p>
-            <p><strong className="text-slate-100">Dashboard key:</strong> {dashboard.dashboardKey}</p>
-            <p><strong className="text-slate-100">Title:</strong> {dashboard.title}</p>
-            <p><strong className="text-slate-100">Type:</strong> {dashboard.dashboardType}</p>
-            <p><strong className="text-slate-100">Description:</strong> {dashboard.description}</p>
-            <p><strong className="text-slate-100">Status:</strong> {dashboard.status}</p>
-            <p><strong className="text-slate-100">Default date range:</strong> {dashboard.defaultDateRange}</p>
-            <p><strong className="text-slate-100">Freshness:</strong> {dashboard.freshnessStatus}</p>
-            <p><strong className="text-slate-100">Widget refs:</strong> {dashboard.widgetRefs.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Filter refs:</strong> {dashboard.filterRefs.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Drilldown refs:</strong> {dashboard.drilldownRefs.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Last viewed:</strong> {formatDate(dashboard.lastViewedAt)}</p>
-            <p><strong className="text-slate-100">Freshness indicator:</strong> {dashboard.freshnessStatus}</p>
-            <p>
-              <strong className="text-slate-100">Source trace summary:</strong> datasets {sourceDatasetRefs.join(', ') || 'none'} · read models{' '}
-              {sourceReadModelRefs.join(', ') || 'none'}
-            </p>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Filters:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
+    <ReportDetailShell
+      backLabel="Dashboards"
+      backTo="/dashboards"
+      breadcrumbs={dashboard ? [dashboard.dashboardKey, dashboard.title] : ['Dashboard detail']}
+      icon={<BarChart3 className="h-8 w-8" />}
+      title={dashboard?.title ?? 'Dashboard detail'}
+      subtitle={`Inspect a single dashboard (${dashboardId}).`}
+      badges={[
+        { label: dashboard?.status ?? 'Unknown', tone: dashboard?.status === 'active' ? 'good' : dashboard?.status === 'draft' ? 'warn' : 'neutral' },
+        { label: dashboard?.freshnessStatus ?? 'Unknown', tone: freshnessTone },
+      ]}
+      actions={dashboard ? (
+        <>
+          <button
+            className="reportarr-button"
+            type="button"
+            onClick={() => exportMutation.mutate()}
+            disabled={exportMutation.isPending || !exportAllowed}
+          >
+            {exportMutation.isPending ? 'Exporting…' : 'Export dashboard'}
+          </button>
+          {!exportAllowed ? <small className="ml-2 self-center text-xs text-amber-200">Export blocked by policy.</small> : null}
+        </>
+      ) : undefined}
+      metrics={[
+        {
+          label: 'Widgets',
+          value: dashboardWidgetCount,
+          hint: 'Linked widget definitions on this dashboard',
+          icon: <Layers3 className="h-5 w-5" />,
+          tone: dashboardWidgetCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Filters',
+          value: dashboardFilterCount,
+          hint: 'Supported dashboard filters',
+          icon: <Gauge className="h-5 w-5" />,
+          tone: dashboardFilterCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Drilldowns',
+          value: dashboardDrilldownCount,
+          hint: 'Available drill-in targets',
+          icon: <PlayCircle className="h-5 w-5" />,
+          tone: dashboardDrilldownCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Source traces',
+          value: sourceDatasetRefs.length + sourceReadModelRefs.length,
+          hint: 'Datasets and read models referenced by widgets',
+          icon: <Database className="h-5 w-5" />,
+          tone: sourceDatasetRefs.length + sourceReadModelRefs.length > 0 ? 'good' : 'neutral',
+        },
+      ]}
+      snapshotTitle="Dashboard snapshot"
+      snapshotSubtitle="Owned configuration and source trace context."
+      snapshotFields={[
+        { label: 'Dashboard number', value: dashboard?.dashboardNumber ?? 'n/a', source: 'ReportArr dashboard' },
+        { label: 'Dashboard key', value: dashboard?.dashboardKey ?? 'n/a', source: 'ReportArr dashboard' },
+        { label: 'Type', value: dashboard?.dashboardType ?? 'n/a', source: 'ReportArr dashboard' },
+        { label: 'Default range', value: dashboard?.defaultDateRange ?? 'n/a', source: 'ReportArr dashboard' },
+        { label: 'Freshness', value: dashboard?.freshnessStatus ?? 'n/a', source: 'Calculated state' },
+        { label: 'Widget refs', value: dashboard?.widgetRefs.join(', ') || 'none', source: 'ReportArr dashboard' },
+        { label: 'Filter refs', value: dashboard?.filterRefs.join(', ') || 'none', source: 'ReportArr dashboard' },
+        { label: 'Drilldown refs', value: dashboard?.drilldownRefs.join(', ') || 'none', source: 'ReportArr dashboard' },
+        { label: 'Last viewed', value: formatDate(dashboard?.lastViewedAt ?? null), source: 'ReportArr activity' },
+      ]}
+      decisionTitle="Access decision"
+      decisionBadge={{ label: exportAllowed ? 'Export allowed' : 'Export blocked', tone: exportAllowed ? 'good' : 'warn' }}
+      decisionIcon={exportAllowed ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : <AlertTriangle className="h-5 w-5 text-amber-300" />}
+      decisionSummary={exportAllowed ? 'Dashboard exports are available.' : 'Dashboard export is currently blocked.'}
+      decisionDetail={dashboardPolicy
+        ? `Visibility is ${dashboardPolicy.visibility || 'not set'} and access is limited to the configured roles and people.`
+        : 'No access policy record was returned for this dashboard.'}
+      allowedChecks={exportAllowed ? 3 : 1}
+      blockedChecks={exportAllowed ? 0 : 2}
+      railSections={[
+        {
+          title: 'Access policy',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          content: dashboardPolicy ? (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Visibility:</strong> {dashboardPolicy.visibility || 'none'}</p>
+              <p><strong className="text-slate-100">Export allowed:</strong> {dashboardPolicy.exportAllowed ? 'yes' : 'no'}</p>
+              <p><strong className="text-slate-100">Allowed roles:</strong> {dashboardPolicy.allowedRoleRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Allowed persons:</strong> {dashboardPolicy.allowedPersonRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Source restrictions:</strong> {dashboardPolicy.sourceProductRestrictions.join(', ') || 'none'}</p>
+            </div>
+          ) : (
+            <DetailEmptyState text="No access policy is available for this dashboard." />
+          ),
+        },
+        {
+          title: 'Source trace',
+          icon: <Database className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Datasets:</strong> {sourceDatasetRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Read models:</strong> {sourceReadModelRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Widgets:</strong> {dashboardWidgets.map((widget) => widget.widgetId).join(', ') || 'none'}</p>
+            </div>
+          ),
+        },
+      ]}
+      mainContent={
+        <div className="space-y-6">
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Widget grid</h3>
+                <p className="mt-1 text-sm text-slate-400">Widgets, source bindings, and current status for this dashboard.</p>
+              </div>
+              <Pill>{dashboardWidgetCount > 0 ? `${dashboardWidgetCount} widgets` : 'No widgets'}</Pill>
+            </div>
+            <div className="mt-4 space-y-3">
+              {dashboardWidgets.length ? (
+                dashboardWidgets.map((widget) => (
+                  <div key={widget.widgetId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <p className="font-medium text-white">{widget.title}</p>
+                    <p className="mt-1 text-slate-400">
+                      {widget.widgetType} · {widget.status}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Dataset: {widget.datasetRef || 'none'} · Read model: {widget.readModelRef || 'none'}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <DetailEmptyState text="No widgets are configured for this dashboard." />
+              )}
+            </div>
+          </section>
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Filters</h3>
+                  <p className="mt-1 text-sm text-slate-400">Filter definitions available to dashboard viewers.</p>
+                </div>
+                <Pill>{dashboardFilterCount > 0 ? `${dashboardFilterCount} filters` : 'No filters'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {dashboardFilters.length ? (
                   dashboardFilters.map((filter) => (
-                    <li key={filter.filterId}>
-                      {filter.label} ({filter.filterType}) · required {String(filter.required)} · default {filter.defaultValue}
-                    </li>
+                    <div key={filter.filterId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <p className="font-medium text-white">{filter.label}</p>
+                      <p className="mt-1 text-slate-400">
+                        {filter.filterType} · required {String(filter.required)} · default {filter.defaultValue || 'none'}
+                      </p>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No dashboard filters are configured." />
                 )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Widget grid:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
-                {dashboardWidgets.length ? (
-                  dashboardWidgets.map((widget) => (
-                    <li key={widget.widgetId}>
-                      {widget.title} · {widget.widgetType} · status {widget.status}
-                    </li>
-                  ))
-                ) : (
-                  <li>none</li>
-                )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Drilldowns:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Drilldowns</h3>
+                  <p className="mt-1 text-sm text-slate-400">Canonical drill-in targets exposed from this dashboard.</p>
+                </div>
+                <Pill>{dashboardDrilldownCount > 0 ? `${dashboardDrilldownCount} drilldowns` : 'No drilldowns'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {dashboardDrilldowns.length ? (
                   dashboardDrilldowns.map((drilldown) => (
-                    <li key={drilldown.drilldownId}>
-                      {drilldown.title} · {drilldown.targetType} → {drilldown.targetRef}
-                    </li>
+                    <div key={drilldown.drilldownId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <p className="font-medium text-white">{drilldown.title}</p>
+                      <p className="mt-1 text-slate-400">
+                        {drilldown.targetType} → {drilldown.targetRef}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">{drilldown.parameterMappings.join(', ') || 'No parameter mappings'}</p>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No drilldowns are configured." />
                 )}
-              </ul>
-            </div>
-            <div className="pt-2">
-              <button
-                className="reportarr-button"
-                type="button"
-                onClick={() => exportMutation.mutate()}
-                disabled={exportMutation.isPending || !(dashboardPolicy?.exportAllowed ?? false)}
-              >
-                {exportMutation.isPending ? 'Exporting…' : 'Export dashboard'}
-              </button>
-              {!dashboardPolicy?.exportAllowed ? <small className="ml-2 text-xs text-amber-200">Export blocked by policy.</small> : null}
-            </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Access settings:</strong></p>
-              <p>Visibility: {dashboardPolicy?.visibility || 'none'} · export allowed: {dashboardPolicy?.exportAllowed ? 'yes' : 'no'}</p>
-              <p>Allowed roles: {dashboardPolicy?.allowedRoleRefs.join(', ') || 'none'}</p>
-              <p>Allowed persons: {dashboardPolicy?.allowedPersonRefs.join(', ') || 'none'}</p>
-              <p>Source product restrictions: {dashboardPolicy?.sourceProductRestrictions.join(', ') || 'none'}</p>
-            </div>
+              </div>
+            </section>
           </div>
-        ) : (
-          <EmptyState title="Dashboard not found." />
-        )}
-      </Panel>
-    </div>
+        </div>
+      }
+    />
   )
 }
 
@@ -5582,80 +6015,181 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
     : []
   const relatedDashboards = dashboardsQuery.data?.filter((item) => relatedDashboardIds.includes(item.dashboardId)) ?? []
   const relatedReports = alert && dataset ? reportDefinitionsQuery.data?.filter((item) => item.datasetRefs.includes(dataset.datasetId)) ?? [] : []
+  const relatedDashboardCount = relatedDashboards.length
+  const relatedReportCount = relatedReports.length
+  const triggerHistoryCount = triggerHistory.length
+  const sourceRefCount = Number(Boolean(alert?.datasetRef)) + Number(Boolean(alert?.metricRef))
+  const resolutionTone: DetailTone = alert?.resolvedAt ? 'good' : alert?.acknowledgedAt ? 'warn' : 'bad'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Alerts" title="Alert detail" description={`Inspect a single alert (${alertId}).`} />
-      <Panel title="Alert detail">
-        {alert ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Alert number:</strong> {alert.alertNumber}</p>
-            <p><strong className="text-slate-100">Title:</strong> {alert.title}</p>
-            <p><strong className="text-slate-100">Type:</strong> {alert.alertType}</p>
-            <p><strong className="text-slate-100">Severity:</strong> {alert.severity}</p>
-            <p><strong className="text-slate-100">Status:</strong> {alert.status}</p>
-            <p><strong className="text-slate-100">Description:</strong> {alert.description}</p>
-            <p><strong className="text-slate-100">Condition:</strong> {alert.condition}</p>
-            <p><strong className="text-slate-100">Source dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert.datasetRef || 'not set'}</p>
-            <p><strong className="text-slate-100">Source metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert.metricRef || 'not set'}</p>
-            <p><strong className="text-slate-100">Triggered at:</strong> {formatDate(alert.triggeredAt)}</p>
-            <p>
-              <strong className="text-slate-100">Acknowledgement/resolution:</strong>{' '}
-              {alert.acknowledgedByPersonId ?? 'not acknowledged'} / {formatDate(alert.acknowledgedAt)} / {formatDate(alert.resolvedAt)}
-            </p>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Trigger history:</strong></p>
-              <ul className="mt-1 list-disc pl-5">
-                {triggerHistory.length ? (
-                  triggerHistory.map((item) => (
-                    <li key={item.alertId}>
-                      <Link className="text-cyan-300 underline" to={`/alerts/${item.alertId}`}>
-                        {formatDate(item.triggeredAt)}
-                      </Link>{' '}
-                      · {item.status} · {item.alertType}
-                    </li>
-                  ))
-                ) : (
-                  <li>none</li>
-                )}
-              </ul>
+    <ReportDetailShell
+      backLabel="Alerts"
+      backTo="/alerts"
+      breadcrumbs={alert ? [alert.alertNumber, alert.title] : ['Alert detail']}
+      icon={<Bell className="h-8 w-8" />}
+      title={alert?.title ?? 'Alert detail'}
+      subtitle={`Inspect a single alert (${alertId}).`}
+      badges={[
+        { label: alert?.severity ?? 'Unknown', tone: alert?.severity === 'critical' ? 'bad' : alert?.severity === 'high' ? 'warn' : 'info' },
+        { label: alert?.status ?? 'Unknown', tone: resolutionTone },
+      ]}
+      metrics={[
+        {
+          label: 'Trigger history',
+          value: triggerHistoryCount,
+          hint: 'Related trigger records for the same condition',
+          icon: <History className="h-5 w-5" />,
+          tone: triggerHistoryCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Dashboards',
+          value: relatedDashboardCount,
+          hint: 'Dashboards consuming this alert source',
+          icon: <BarChart3 className="h-5 w-5" />,
+          tone: relatedDashboardCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Reports',
+          value: relatedReportCount,
+          hint: 'Report definitions tied to the same dataset',
+          icon: <FileText className="h-5 w-5" />,
+          tone: relatedReportCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Source refs',
+          value: sourceRefCount,
+          hint: 'Dataset and metric references on this alert',
+          icon: <Database className="h-5 w-5" />,
+          tone: sourceRefCount > 0 ? 'info' : 'neutral',
+        },
+      ]}
+      snapshotTitle="Alert snapshot"
+      snapshotSubtitle="Core identity, state, and linked source records."
+      snapshotFields={[
+        { label: 'Alert number', value: alert?.alertNumber ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Type', value: alert?.alertType ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Severity', value: alert?.severity ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Status', value: alert?.status ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Condition', value: alert?.condition ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Source dataset', value: dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert?.datasetRef || 'not set', source: 'ReportArr alert / dataset' },
+        { label: 'Source metric', value: metric ? `${metric.metricKey} (${metric.metricId})` : alert?.metricRef || 'not set', source: 'ReportArr alert / metric' },
+        { label: 'Triggered at', value: formatDate(alert?.triggeredAt ?? null), source: 'ReportArr event' },
+        { label: 'Acknowledged by', value: alert?.acknowledgedByPersonId ?? 'n/a', source: 'ReportArr alert' },
+        { label: 'Acknowledged at', value: formatDate(alert?.acknowledgedAt ?? null), source: 'ReportArr event' },
+        { label: 'Resolved at', value: formatDate(alert?.resolvedAt ?? null), source: 'ReportArr event' },
+      ]}
+      decisionTitle="Attention decision"
+      decisionBadge={{ label: alert?.resolvedAt ? 'Resolved' : alert?.acknowledgedAt ? 'Acknowledged' : 'Open', tone: resolutionTone }}
+      decisionIcon={alert?.resolvedAt ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : <AlertTriangle className="h-5 w-5 text-amber-300" />}
+      decisionSummary={alert?.resolvedAt
+        ? 'The alert is resolved.'
+        : alert?.acknowledgedAt
+          ? 'The alert is acknowledged and still being watched.'
+          : 'The alert is open and needs attention.'}
+      decisionDetail={alert
+        ? `This alert is tied to ${relatedDashboardCount} dashboard(s) and ${relatedReportCount} report(s), with ${triggerHistoryCount} related trigger record(s) in the same condition lineage.`
+        : 'No alert record was found.'}
+      allowedChecks={Math.max(0, relatedDashboardCount + relatedReportCount)}
+      blockedChecks={alert?.resolvedAt ? 0 : 1}
+      railSections={[
+        {
+          title: 'Source signal',
+          icon: <Database className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert?.datasetRef || 'not set'}</p>
+              <p><strong className="text-slate-100">Metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert?.metricRef || 'not set'}</p>
+              <p><strong className="text-slate-100">Description:</strong> {alert?.description ?? 'none'}</p>
             </div>
-            <div className="pt-2">
-              <p><strong className="text-slate-100">Related dashboards/reports:</strong></p>
-              <p className="font-semibold text-slate-100 mt-2">Dashboards</p>
-              <ul className="mt-1 list-disc pl-5">
+          ),
+        },
+        {
+          title: 'Downstream reach',
+          icon: <PlayCircle className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Dashboards:</strong> {relatedDashboards.map((item) => item.title).join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Reports:</strong> {relatedReports.map((item) => item.title).join(', ') || 'none'}</p>
+            </div>
+          ),
+        },
+      ]}
+      mainContent={
+        <div className="space-y-6">
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Trigger history</h3>
+                <p className="mt-1 text-sm text-slate-400">Recent alerts triggered by the same source dataset or metric.</p>
+              </div>
+              <Pill>{triggerHistoryCount > 0 ? `${triggerHistoryCount} related alerts` : 'No related alerts'}</Pill>
+            </div>
+            <div className="mt-4 space-y-3">
+              {triggerHistory.length ? (
+                triggerHistory.map((item) => (
+                  <div key={item.alertId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <Link className="font-medium text-cyan-300 underline" to={`/alerts/${item.alertId}`}>
+                      {formatDate(item.triggeredAt)}
+                    </Link>
+                    <p className="mt-1 text-slate-400">
+                      {item.status} · {item.alertType}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <DetailEmptyState text="No related trigger history exists for this condition." />
+              )}
+            </div>
+          </section>
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Dashboards</h3>
+                  <p className="mt-1 text-sm text-slate-400">Dashboards that include widgets tied to the same source dataset.</p>
+                </div>
+                <Pill>{relatedDashboardCount > 0 ? `${relatedDashboardCount} dashboards` : 'No dashboards'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {relatedDashboards.length ? (
                   relatedDashboards.map((item) => (
-                    <li key={item.dashboardId}>
-                      <Link className="text-cyan-300 underline" to={`/dashboards/${item.dashboardId}`}>{item.title}</Link>
-                    </li>
+                    <div key={item.dashboardId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <Link className="text-cyan-300 underline" to={`/dashboards/${item.dashboardId}`}>
+                        {item.title}
+                      </Link>
+                    </div>
                   ))
                 ) : (
-                  <li>none</li>
+                  <DetailEmptyState text="No dashboards are linked to this alert source." />
                 )}
-              </ul>
-              <p className="font-semibold text-slate-100 mt-3">Reports</p>
-              <ul className="mt-1 list-disc pl-5">
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Reports</h3>
+                  <p className="mt-1 text-sm text-slate-400">Report definitions using the same source dataset.</p>
+                </div>
+                <Pill>{relatedReportCount > 0 ? `${relatedReportCount} reports` : 'No reports'}</Pill>
+              </div>
+              <div className="mt-4 space-y-3">
                 {relatedReports.length ? (
                   relatedReports.map((item) => (
-                    <li key={item.reportDefinitionId}>
-                      {item.title}
-                    </li>
-                    ))
-                  ) : (
-                    <li>none</li>
-                  )}
-              </ul>
-            </div>
-            <p><strong className="text-slate-100">Acknowledged by:</strong> {alert.acknowledgedByPersonId ?? 'not acknowledged'}</p>
-            <p><strong className="text-slate-100">Acknowledged at:</strong> {formatDate(alert.acknowledgedAt)}</p>
-            <p><strong className="text-slate-100">Resolved at:</strong> {formatDate(alert.resolvedAt)}</p>
+                    <div key={item.reportDefinitionId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                      <p className="font-medium text-white">{item.title}</p>
+                    </div>
+                  ))
+                ) : (
+                  <DetailEmptyState text="No report definitions are linked to this alert source." />
+                )}
+              </div>
+            </section>
           </div>
-        ) : (
-          <EmptyState title="Alert not found." />
-        )}
-      </Panel>
-    </div>
+        </div>
+      }
+    />
   )
 }
 
@@ -5676,29 +6210,112 @@ function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const auditPackage = query.data ?? null
+  const readinessScore = auditPackage?.readinessScore ?? 0
+  const missingCount = auditPackage?.missingEvidenceSummary ? auditPackage.missingEvidenceSummary.split(',').filter(Boolean).length : 0
+  const invalidCount = auditPackage?.invalidEvidenceSummary ? auditPackage.invalidEvidenceSummary.split(',').filter(Boolean).length : 0
+  const readinessTone: DetailTone = auditPackage ? (readinessScore >= 90 ? 'good' : readinessScore >= 70 ? 'warn' : 'bad') : 'neutral'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Audit" title="Audit package detail" description={`Inspect a single audit package (${auditReportPackageId}).`} />
-      <Panel title="Audit package detail">
-        {auditPackage ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Package number:</strong> {auditPackage.packageNumber}</p>
-            <p><strong className="text-slate-100">Title:</strong> {auditPackage.title}</p>
-            <p><strong className="text-slate-100">Status:</strong> {auditPackage.status}</p>
-            <p><strong className="text-slate-100">Description:</strong> {auditPackage.description}</p>
-            <p><strong className="text-slate-100">Requested by:</strong> {auditPackage.requestedByPersonId}</p>
-            <p><strong className="text-slate-100">Readiness score:</strong> {formatNumber(auditPackage.readinessScore)}</p>
-            <p><strong className="text-slate-100">Generated at:</strong> {formatDate(auditPackage.generatedAt)}</p>
-            <p><strong className="text-slate-100">Locked at:</strong> {formatDate(auditPackage.lockedAt)}</p>
-            <p><strong className="text-slate-100">Missing evidence:</strong> {auditPackage.missingEvidenceSummary || 'none'}</p>
-            <p><strong className="text-slate-100">Invalid evidence:</strong> {auditPackage.invalidEvidenceSummary || 'none'}</p>
-          </div>
+    <ReportDetailShell
+      backLabel="Audit"
+      backTo="/audit"
+      breadcrumbs={auditPackage ? [auditPackage.packageNumber, auditPackage.title] : ['Audit package detail']}
+      icon={<ShieldCheck className="h-8 w-8" />}
+      title={auditPackage?.title ?? 'Audit package detail'}
+      subtitle={`Inspect a single audit package (${auditReportPackageId}).`}
+      badges={[
+        { label: auditPackage?.status ?? 'Unknown', tone: readinessTone },
+        { label: `${auditPackage?.readinessScore ?? 0}% ready`, tone: readinessTone },
+      ]}
+      metrics={[
+        {
+          label: 'Readiness',
+          value: `${readinessScore}%`,
+          hint: 'Overall package readiness score',
+          icon: <Gauge className="h-5 w-5" />,
+          tone: readinessTone,
+        },
+        {
+          label: 'Missing evidence',
+          value: missingCount,
+          hint: 'Evidence gaps called out by the package',
+          icon: <AlertTriangle className="h-5 w-5" />,
+          tone: missingCount > 0 ? 'warn' : 'good',
+        },
+        {
+          label: 'Invalid evidence',
+          value: invalidCount,
+          hint: 'Evidence items marked invalid',
+          icon: <FileText className="h-5 w-5" />,
+          tone: invalidCount > 0 ? 'bad' : 'good',
+        },
+        {
+          label: 'Locked state',
+          value: auditPackage?.lockedAt ? 'Locked' : 'Unlocked',
+          hint: 'Whether the package is finalized',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          tone: auditPackage?.lockedAt ? 'info' : 'neutral',
+        },
+      ]}
+      snapshotTitle="Audit package snapshot"
+      snapshotSubtitle="Readiness, lock state, and evidence summary."
+      snapshotFields={[
+        { label: 'Package number', value: auditPackage?.packageNumber ?? 'n/a', source: 'ReportArr audit package' },
+        { label: 'Status', value: auditPackage?.status ?? 'n/a', source: 'ReportArr audit package' },
+        { label: 'Requested by', value: auditPackage?.requestedByPersonId ?? 'n/a', source: 'ReportArr request' },
+        { label: 'Generated at', value: formatDate(auditPackage?.generatedAt ?? null), source: 'ReportArr event' },
+        { label: 'Locked at', value: formatDate(auditPackage?.lockedAt ?? null), source: 'ReportArr event' },
+        { label: 'Missing evidence', value: auditPackage?.missingEvidenceSummary || 'none', source: 'ReportArr audit package' },
+        { label: 'Invalid evidence', value: auditPackage?.invalidEvidenceSummary || 'none', source: 'ReportArr audit package' },
+      ]}
+      decisionTitle="Audit readiness"
+      decisionBadge={{ label: auditPackage?.status ?? 'Unknown', tone: readinessTone }}
+      decisionIcon={<ShieldCheck className="h-5 w-5 text-sky-300" />}
+      decisionSummary={readinessScore >= 90
+        ? 'The package is ready for audit review.'
+        : readinessScore >= 70
+          ? 'The package is mostly ready but still has gaps.'
+          : 'The package has significant evidence gaps.'}
+      decisionDetail={auditPackage
+        ? `ReportArr tracks ${missingCount} missing evidence item(s) and ${invalidCount} invalid evidence item(s) for this package.`
+        : 'No audit package record was found.'}
+      allowedChecks={Math.max(0, 5 - missingCount - invalidCount)}
+      blockedChecks={missingCount + invalidCount}
+      railSections={[
+        {
+          title: 'Evidence gaps',
+          icon: <AlertTriangle className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Missing evidence:</strong> {auditPackage?.missingEvidenceSummary || 'none'}</p>
+              <p><strong className="text-slate-100">Invalid evidence:</strong> {auditPackage?.invalidEvidenceSummary || 'none'}</p>
+            </div>
+          ),
+        },
+        {
+          title: 'Lifecycle',
+          icon: <History className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Generated:</strong> {formatDate(auditPackage?.generatedAt ?? null)}</p>
+              <p><strong className="text-slate-100">Locked:</strong> {formatDate(auditPackage?.lockedAt ?? null)}</p>
+            </div>
+          ),
+        },
+      ]}
+      mainContent={
+        auditPackage ? (
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <h3 className="text-lg font-semibold text-white">Package summary</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              {auditPackage.description || 'No description provided for this package.'}
+            </p>
+          </section>
         ) : (
-          <EmptyState title="Audit package not found." />
-        )}
-      </Panel>
-    </div>
+          <DetailEmptyState text="No audit package record is available." />
+        )
+      }
+    />
   )
 }
 
@@ -5719,28 +6336,101 @@ function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const connector = query.data?.find((item) => item.sourceConnectorId === sourceConnectorId) ?? null
+  const supportedEventCount = connector?.supportedEventTypes.length ?? 0
+  const supportedDatasetCount = connector?.supportedDatasets.length ?? 0
+  const connectorTone: DetailTone = connector?.status === 'connected' ? 'good' : connector?.status === 'error' ? 'bad' : 'warn'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Integrations" title="Source connector detail" description={`Inspect a single source connector (${sourceConnectorId}).`} />
-      <Panel title="Source connector detail">
-        {connector ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Source product:</strong> {connector.sourceProduct}</p>
-            <p><strong className="text-slate-100">Connector type:</strong> {connector.connectorType}</p>
-            <p><strong className="text-slate-100">Status:</strong> {connector.status}</p>
-            <p><strong className="text-slate-100">Service client:</strong> {connector.serviceClientRef}</p>
-            <p><strong className="text-slate-100">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
-            <p><strong className="text-slate-100">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
-            <p><strong className="text-slate-100">Last error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
-            <p><strong className="text-slate-100">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
-          </div>
+    <ReportDetailShell
+      backLabel="Source connectors"
+      backTo="/integrations"
+      breadcrumbs={connector ? [connector.sourceProduct, connector.connectorType] : ['Source connector detail']}
+      icon={<PlugZap className="h-8 w-8" />}
+      title={connector?.connectorType ?? 'Source connector detail'}
+      subtitle={`Inspect a single source connector (${sourceConnectorId}).`}
+      badges={[
+        { label: connector?.status ?? 'Unknown', tone: connectorTone },
+        { label: connector?.sourceProduct ?? 'Unknown source', tone: 'info' },
+      ]}
+      metrics={[
+        {
+          label: 'Event types',
+          value: supportedEventCount,
+          hint: 'Supported inbound event types',
+          icon: <History className="h-5 w-5" />,
+          tone: supportedEventCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Datasets',
+          value: supportedDatasetCount,
+          hint: 'Supported downstream datasets',
+          icon: <Database className="h-5 w-5" />,
+          tone: supportedDatasetCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Last connected',
+          value: formatDate(connector?.lastConnectedAt ?? null),
+          hint: 'Most recent successful connection time',
+          icon: <CheckCircle2 className="h-5 w-5" />,
+          tone: connector?.lastConnectedAt ? 'good' : 'neutral',
+        },
+        {
+          label: 'Last error',
+          value: formatDate(connector?.lastErrorAt ?? null),
+          hint: 'Most recent error timestamp',
+          icon: <AlertTriangle className="h-5 w-5" />,
+          tone: connector?.lastErrorAt ? 'warn' : 'good',
+        },
+      ]}
+      snapshotTitle="Connector snapshot"
+      snapshotSubtitle="Source product, service client, and sync state."
+      snapshotFields={[
+        { label: 'Source product', value: connector?.sourceProduct ?? 'n/a', source: 'ReportArr connector' },
+        { label: 'Connector type', value: connector?.connectorType ?? 'n/a', source: 'ReportArr connector' },
+        { label: 'Status', value: connector?.status ?? 'n/a', source: 'ReportArr connector' },
+        { label: 'Service client', value: connector?.serviceClientRef ?? 'n/a', source: 'ReportArr connector' },
+        { label: 'Last connected', value: formatDate(connector?.lastConnectedAt ?? null), source: 'ReportArr event' },
+        { label: 'Last error', value: formatDate(connector?.lastErrorAt ?? null), source: 'ReportArr event' },
+        { label: 'Last error message', value: connector?.lastErrorMessage ?? 'none', source: 'ReportArr connector' },
+        { label: 'Supported event types', value: connector?.supportedEventTypes.join(', ') || 'none', source: 'ReportArr connector' },
+        { label: 'Supported datasets', value: connector?.supportedDatasets.join(', ') || 'none', source: 'ReportArr connector' },
+      ]}
+      decisionTitle="Integration health"
+      decisionBadge={{ label: connector?.status ?? 'Unknown', tone: connectorTone }}
+      decisionIcon={<PlugZap className="h-5 w-5 text-sky-300" />}
+      decisionSummary={connector?.status === 'connected'
+        ? 'The connector is connected and healthy.'
+        : connector?.status === 'error'
+          ? 'The connector is reporting an error.'
+          : 'The connector state needs review.'}
+      decisionDetail={connector
+        ? `This connector supports ${supportedEventCount} event type(s) and ${supportedDatasetCount} dataset target(s).`
+        : 'No source connector record was found.'}
+      allowedChecks={Math.max(0, supportedEventCount + supportedDatasetCount)}
+      blockedChecks={connector?.lastErrorAt ? 1 : 0}
+      railSections={[
+        {
+          title: 'Supported interfaces',
+          icon: <Workflow className="h-5 w-5" />,
+          content: (
+            <div className="space-y-3 text-sm text-slate-300">
+              <p><strong className="text-slate-100">Event types:</strong> {connector?.supportedEventTypes.join(', ') || 'none'}</p>
+              <p><strong className="text-slate-100">Datasets:</strong> {connector?.supportedDatasets.join(', ') || 'none'}</p>
+            </div>
+          ),
+        },
+      ]}
+      mainContent={
+        connector?.lastErrorMessage ? (
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <h3 className="text-lg font-semibold text-white">Last error message</h3>
+            <p className="mt-2 text-sm text-slate-400">{connector.lastErrorMessage}</p>
+          </section>
         ) : (
-          <EmptyState title="Source connector not found." />
-        )}
-      </Panel>
-    </div>
+          <DetailEmptyState text="No connector error message is currently recorded." />
+        )
+      }
+    />
   )
 }
 
@@ -5761,31 +6451,89 @@ function RefreshJobDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const refreshJob = query.data?.find((item) => item.refreshJobId === refreshJobId) ?? null
+  const refreshJobTone: DetailTone = refreshJob?.status === 'completed' ? 'good' : refreshJob?.status === 'failed' ? 'bad' : 'warn'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Datasets" title="Refresh job detail" description={`Inspect a single refresh job (${refreshJobId}).`} />
-      <Panel title="Refresh job detail">
-        {refreshJob ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Dataset:</strong> {refreshJob.datasetId}</p>
-            <p><strong className="text-slate-100">Read model:</strong> {refreshJob.readModelId ?? 'n/a'}</p>
-            <p><strong className="text-slate-100">Status:</strong> {refreshJob.status}</p>
-            <p><strong className="text-slate-100">Type:</strong> {refreshJob.refreshType}</p>
-            <p><strong className="text-slate-100">Requested by:</strong> {refreshJob.requestedByPersonId}</p>
-            <p><strong className="text-slate-100">Queued at:</strong> {formatDate(refreshJob.queuedAt)}</p>
-            <p><strong className="text-slate-100">Started at:</strong> {formatDate(refreshJob.startedAt)}</p>
-            <p><strong className="text-slate-100">Completed at:</strong> {formatDate(refreshJob.completedAt)}</p>
-            <p><strong className="text-slate-100">Records created:</strong> {formatNumber(refreshJob.recordsCreated)}</p>
-            <p><strong className="text-slate-100">Records updated:</strong> {formatNumber(refreshJob.recordsUpdated)}</p>
-            <p><strong className="text-slate-100">Records skipped:</strong> {formatNumber(refreshJob.recordsSkipped)}</p>
-            <p><strong className="text-slate-100">Errors:</strong> {formatNumber(refreshJob.errorCount)}</p>
-          </div>
+    <ReportDetailShell
+      backLabel="Datasets"
+      backTo="/datasets"
+      breadcrumbs={refreshJob ? [refreshJob.datasetId, refreshJob.refreshType] : ['Refresh job detail']}
+      icon={<RefreshCcw className="h-8 w-8" />}
+      title={refreshJob?.refreshType ?? 'Refresh job detail'}
+      subtitle={`Inspect a single refresh job (${refreshJobId}).`}
+      badges={[
+        { label: refreshJob?.status ?? 'Unknown', tone: refreshJobTone },
+        { label: refreshJob?.readModelId ? 'Read model linked' : 'Dataset only', tone: refreshJob?.readModelId ? 'info' : 'neutral' },
+      ]}
+      metrics={[
+        {
+          label: 'Created',
+          value: formatNumber(refreshJob?.recordsCreated ?? 0),
+          hint: 'Records created by the job',
+          icon: <Plus className="h-5 w-5" />,
+          tone: (refreshJob?.recordsCreated ?? 0) > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Updated',
+          value: formatNumber(refreshJob?.recordsUpdated ?? 0),
+          hint: 'Records updated by the job',
+          icon: <RefreshCcw className="h-5 w-5" />,
+          tone: (refreshJob?.recordsUpdated ?? 0) > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Skipped',
+          value: formatNumber(refreshJob?.recordsSkipped ?? 0),
+          hint: 'Records skipped during refresh',
+          icon: <Gauge className="h-5 w-5" />,
+          tone: (refreshJob?.recordsSkipped ?? 0) > 0 ? 'warn' : 'good',
+        },
+        {
+          label: 'Errors',
+          value: formatNumber(refreshJob?.errorCount ?? 0),
+          hint: 'Refresh errors recorded',
+          icon: <AlertTriangle className="h-5 w-5" />,
+          tone: (refreshJob?.errorCount ?? 0) > 0 ? 'bad' : 'good',
+        },
+      ]}
+      snapshotTitle="Refresh job snapshot"
+      snapshotSubtitle="Queue, execution, and outcome details."
+      snapshotFields={[
+        { label: 'Dataset', value: refreshJob?.datasetId ?? 'n/a', source: 'ReportArr refresh job' },
+        { label: 'Read model', value: refreshJob?.readModelId ?? 'n/a', source: 'ReportArr refresh job' },
+        { label: 'Status', value: refreshJob?.status ?? 'n/a', source: 'ReportArr refresh job' },
+        { label: 'Type', value: refreshJob?.refreshType ?? 'n/a', source: 'ReportArr refresh job' },
+        { label: 'Requested by', value: refreshJob?.requestedByPersonId ?? 'n/a', source: 'ReportArr request' },
+        { label: 'Queued at', value: formatDate(refreshJob?.queuedAt ?? null), source: 'ReportArr event' },
+        { label: 'Started at', value: formatDate(refreshJob?.startedAt ?? null), source: 'ReportArr event' },
+        { label: 'Completed at', value: formatDate(refreshJob?.completedAt ?? null), source: 'ReportArr event' },
+      ]}
+      decisionTitle="Refresh decision"
+      decisionBadge={{ label: refreshJob?.status ?? 'Unknown', tone: refreshJobTone }}
+      decisionIcon={<RefreshCcw className="h-5 w-5 text-sky-300" />}
+      decisionSummary={refreshJob?.status === 'completed'
+        ? 'The refresh job completed successfully.'
+        : refreshJob?.status === 'failed'
+          ? 'The refresh job failed and needs review.'
+          : 'The refresh job is still moving through the queue.'}
+      decisionDetail={refreshJob
+        ? `ReportArr recorded ${formatNumber(refreshJob.recordsCreated)} created, ${formatNumber(refreshJob.recordsUpdated)} updated, and ${formatNumber(refreshJob.errorCount)} error(s).`
+        : 'No refresh job record was found.'}
+      allowedChecks={Math.max(0, (refreshJob?.recordsCreated ?? 0) + (refreshJob?.recordsUpdated ?? 0))}
+      blockedChecks={refreshJob?.errorCount ?? 0}
+      railSections={[]}
+      mainContent={
+        refreshJob ? (
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <h3 className="text-lg font-semibold text-white">Outcome summary</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              This job queued {formatDate(refreshJob.queuedAt)}, started {formatDate(refreshJob.startedAt)}, and completed {formatDate(refreshJob.completedAt)}.
+            </p>
+          </section>
         ) : (
-          <EmptyState title="Refresh job not found." />
-        )}
-      </Panel>
-    </div>
+          <DetailEmptyState text="No refresh job record is available." />
+        )
+      }
+    />
   )
 }
 
@@ -5834,30 +6582,91 @@ function ReadModelDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const readModel = query.data ?? null
+  const datasetCount = readModel?.datasetRefs.length ?? 0
+  const refreshJobCount = readModel?.refreshJobRefs.length ?? 0
+  const readModelTone: DetailTone = readModel?.status === 'active' ? 'good' : readModel?.status === 'failed' ? 'bad' : 'warn'
 
   return (
-    <div className="reportarr-page">
-      <SectionHeader eyebrow="Datasets" title="Read model detail" description={`Inspect a single read model (${readModelId}).`} />
-      <Panel title="Read model detail">
-        {readModel ? (
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">Read model number:</strong> {readModel.readModelNumber}</p>
-            <p><strong className="text-slate-100">Key:</strong> {readModel.readModelKey}</p>
-            <p><strong className="text-slate-100">Title:</strong> {readModel.title}</p>
-            <p><strong className="text-slate-100">Type:</strong> {readModel.readModelType}</p>
-            <p><strong className="text-slate-100">Status:</strong> {readModel.status}</p>
-            <p><strong className="text-slate-100">Primary source:</strong> {readModel.primarySourceProduct}</p>
-            <p><strong className="text-slate-100">Primary entity:</strong> {readModel.primaryEntityType}</p>
-            <p><strong className="text-slate-100">Datasets:</strong> {readModel.datasetRefs.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Refresh jobs:</strong> {readModel.refreshJobRefs.join(', ') || 'none'}</p>
-            <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(readModel.lastRebuiltAt)}</p>
-            <p><strong className="text-slate-100">Last updated:</strong> {formatDate(readModel.lastUpdatedAt)}</p>
-          </div>
+    <ReportDetailShell
+      backLabel="Read models"
+      backTo="/read-models"
+      breadcrumbs={readModel ? [readModel.readModelKey, readModel.title] : ['Read model detail']}
+      icon={<Gauge className="h-8 w-8" />}
+      title={readModel?.title ?? 'Read model detail'}
+      subtitle={`Inspect a single read model (${readModelId}).`}
+      badges={[
+        { label: readModel?.status ?? 'Unknown', tone: readModelTone },
+        { label: readModel?.primarySourceProduct ?? 'Unknown source', tone: 'info' },
+      ]}
+      metrics={[
+        {
+          label: 'Datasets',
+          value: datasetCount,
+          hint: 'Source datasets feeding this model',
+          icon: <Database className="h-5 w-5" />,
+          tone: datasetCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Refresh jobs',
+          value: refreshJobCount,
+          hint: 'Refresh jobs tracked for this model',
+          icon: <RefreshCcw className="h-5 w-5" />,
+          tone: refreshJobCount > 0 ? 'good' : 'neutral',
+        },
+        {
+          label: 'Last rebuilt',
+          value: formatDate(readModel?.lastRebuiltAt ?? null),
+          hint: 'Most recent rebuild time',
+          icon: <History className="h-5 w-5" />,
+          tone: readModel?.lastRebuiltAt ? 'info' : 'neutral',
+        },
+        {
+          label: 'Last updated',
+          value: formatDate(readModel?.lastUpdatedAt ?? null),
+          hint: 'Most recent metadata update',
+          icon: <PlayCircle className="h-5 w-5" />,
+          tone: readModel?.lastUpdatedAt ? 'info' : 'neutral',
+        },
+      ]}
+      snapshotTitle="Read model snapshot"
+      snapshotSubtitle="Key identity and dependency information."
+      snapshotFields={[
+        { label: 'Read model number', value: readModel?.readModelNumber ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Key', value: readModel?.readModelKey ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Type', value: readModel?.readModelType ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Status', value: readModel?.status ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Primary source', value: readModel?.primarySourceProduct ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Primary entity', value: readModel?.primaryEntityType ?? 'n/a', source: 'ReportArr read model' },
+        { label: 'Datasets', value: readModel?.datasetRefs.join(', ') || 'none', source: 'ReportArr dependency' },
+        { label: 'Refresh jobs', value: readModel?.refreshJobRefs.join(', ') || 'none', source: 'ReportArr dependency' },
+      ]}
+      decisionTitle="Read model decision"
+      decisionBadge={{ label: readModel?.status ?? 'Unknown', tone: readModelTone }}
+      decisionIcon={<Gauge className="h-5 w-5 text-sky-300" />}
+      decisionSummary={readModel?.status === 'active'
+        ? 'The read model is active.'
+        : readModel?.status === 'failed'
+          ? 'The read model needs repair.'
+          : 'The read model state is informational.'}
+      decisionDetail={readModel
+        ? `ReportArr tracks ${datasetCount} dataset source(s) and ${refreshJobCount} refresh job reference(s) for this read model.`
+        : 'No read model record was found.'}
+      allowedChecks={Math.max(0, datasetCount + refreshJobCount)}
+      blockedChecks={readModel?.status === 'failed' ? 1 : 0}
+      railSections={[]}
+      mainContent={
+        readModel ? (
+          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <h3 className="text-lg font-semibold text-white">Dependency summary</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              This model is currently fed by {datasetCount} dataset(s) and {refreshJobCount} refresh job reference(s).
+            </p>
+          </section>
         ) : (
-          <EmptyState title="Read model not found." />
-        )}
-      </Panel>
-    </div>
+          <DetailEmptyState text="No read model record is available." />
+        )
+      }
+    />
   )
 }
 

@@ -1,8 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ExternalLink, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  Route,
+  ShieldCheck,
+  Truck,
+  X,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  DetailBadge,
+  DetailEmptyState,
+  getErrorMessage,
+  ProfileDetailsLayout,
+  type DetailRailSectionConfig,
+  type DetailTone,
+} from '@stl/shared-ui'
 
 import {
   downloadTripCaptureAttachment,
@@ -36,6 +53,20 @@ function formatTimestamp(iso: string | null | undefined) {
   }
 }
 
+function humanize(value: string | null | undefined) {
+  if (!value) return 'Not recorded'
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function statusTone(value: string | null | undefined): DetailTone {
+  const normalized = value?.toLowerCase() ?? ''
+  if (['assigned', 'dispatched', 'in_progress', 'active', 'arrived'].includes(normalized)) return 'info'
+  if (['completed', 'closed', 'delivered'].includes(normalized)) return 'good'
+  if (['draft', 'planned', 'pending'].includes(normalized)) return 'warn'
+  if (['cancelled', 'failed', 'blocked', 'skipped'].includes(normalized)) return 'bad'
+  return 'neutral'
+}
+
 function statusOptionsFor(currentStatus: string, canManage: boolean): string[] {
   if (currentStatus === 'planned') {
     return canManage ? ['planned', 'cancelled'] : ['planned']
@@ -60,7 +91,7 @@ function statusOptionsFor(currentStatus: string, canManage: boolean): string[] {
 
 function RouteStopsSection({ routes }: { routes: RouteDetailResponse[] }) {
   if (routes.length === 0) {
-    return <p className="text-sm text-slate-500">No routes linked to this trip.</p>
+    return <DetailEmptyState text="No routes are linked to this trip yet." />
   }
 
   return (
@@ -78,10 +109,18 @@ function RouteStopsSection({ routes }: { routes: RouteDetailResponse[] }) {
                 {route.routeNumber} · {route.routeStatus.replace('_', ' ')}
               </p>
             </div>
-            <span className="text-xs text-slate-400">
-              {route.stops.filter((s) => s.stopStatus === 'completed').length}/{route.stops.length}{' '}
-              stops done
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">
+                {route.stops.filter((s) => s.stopStatus === 'completed').length}/{route.stops.length}{' '}
+                stops done
+              </span>
+              <Link
+                to={`/routes/${route.routeId}`}
+                className="rounded-full border border-slate-700 px-2 py-1 text-xs text-sky-300 hover:border-sky-500 hover:text-sky-200"
+              >
+                Open route
+              </Link>
+            </div>
           </div>
           {route.stops.length > 0 ? (
             <ol className="mt-2 space-y-1 border-t border-slate-800 pt-2">
@@ -106,7 +145,7 @@ function RouteStopsSection({ routes }: { routes: RouteDetailResponse[] }) {
   )
 }
 
-function ExecutionProofDvirSection({
+export function ExecutionProofDvirSection({
   accessToken,
   tripId,
   vehicleRefKey,
@@ -389,82 +428,72 @@ export function TripExecutionWorkspacePanel({
   const report = reportQuery.data
   const active =
     trip.dispatchStatus !== 'completed' && trip.dispatchStatus !== 'cancelled'
-
-  return (
-    <div className="space-y-6" data-testid="trip-execution-workspace-panel">
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-white">{trip.title}</h2>
-            <p className="text-sm text-slate-400">{trip.tripNumber}</p>
-          </div>
-          <span className="rounded bg-slate-800 px-2 py-1 text-xs uppercase tracking-wide text-slate-200">
-            {trip.dispatchStatus.replace('_', ' ')}
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-slate-300">{trip.description || 'No description'}</p>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-          <div>
-            <dt className="text-slate-500">Driver</dt>
-            <dd className="text-slate-200">{trip.assignedDriverPersonId ?? 'Unassigned'}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Vehicle</dt>
-            <dd className="text-slate-200">{trip.vehicleRefKey ?? '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Scheduled</dt>
-            <dd className="text-slate-200">
-              {formatTimestamp(trip.scheduledStartAt)} → {formatTimestamp(trip.scheduledEndAt)}
-            </dd>
-          </div>
-          {report ? (
-            <div>
-              <dt className="text-slate-500">Execution</dt>
-              <dd className="text-slate-200">
-                {report.pendingStopCount} pending stop(s) · {report.linkedExceptionCount} open
-                exception(s)
-              </dd>
+  const routes = routesQuery.data ?? []
+  const execution = executionQuery.data ?? null
+  const readiness = readinessQuery.data ?? null
+  const blocked = trip.dispatchStatus === 'cancelled' || !trip.assignedDriverPersonId || !trip.vehicleRefKey
+  const atRisk = Boolean(
+    report?.isAtRisk
+    || report?.isLate
+    || readiness?.items.some((item) => item.required && !item.satisfied),
+  )
+  const decisionTone: DetailTone = blocked ? 'bad' : atRisk ? 'warn' : 'good'
+  const decisionLabel = blocked ? 'Needs assignment' : atRisk ? 'Watch closely' : 'Dispatchable'
+  const decisionSummary = blocked
+    ? 'Trip needs dispatch attention'
+    : atRisk
+      ? 'Trip is on watch for capture readiness or schedule risk'
+      : 'Trip can proceed through dispatch'
+  const decisionDetail = blocked
+    ? 'Driver, vehicle, or lifecycle status must be resolved before normal dispatch execution.'
+    : atRisk
+      ? 'Driver, vehicle, schedule, or capture readiness require close monitoring before closeout.'
+      : 'Driver, vehicle, capture readiness, and trip status support normal dispatch execution.'
+  const railSections: DetailRailSectionConfig[] = [
+    {
+      title: 'Related records',
+      icon: <Route className="h-5 w-5" />,
+      content: routes.length > 0 ? (
+        <div className="space-y-3">
+          {routes.map((route) => (
+            <div key={route.routeId} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium text-white">{route.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {route.routeNumber} · {humanize(route.routeStatus)} · {route.stops.length} stop(s)
+                  </p>
+                </div>
+                <DetailBadge label={humanize(route.routeStatus)} tone={statusTone(route.routeStatus)} />
+              </div>
+              <div className="mt-3">
+                <Link to={`/routes/${route.routeId}`} className="text-sm text-sky-300 hover:text-sky-200">
+                  Open route
+                </Link>
+              </div>
             </div>
-          ) : null}
-        </dl>
-        {report?.isLate ? (
-          <p className="mt-3 text-sm text-red-300">Trip is late against schedule.</p>
-        ) : report?.isAtRisk ? (
-          <p className="mt-3 text-sm text-amber-300">Trip is at risk.</p>
-        ) : null}
-      </section>
-
-      {readinessQuery.data && active ? (
-        <section
-          className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
-          data-testid="trip-workspace-readiness"
-        >
-          <h3 className="text-sm font-semibold text-slate-200">Capture readiness</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Tenant policy gates for start and complete. Capture in this workspace or the driver portal.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-3 text-xs">
-            <span className={readinessQuery.data.canStartTrip ? 'text-emerald-400' : 'text-amber-400'}>
-              Start {readinessQuery.data.canStartTrip ? 'ready' : 'blocked'}
-            </span>
-            <span
-              className={readinessQuery.data.canCompleteTrip ? 'text-emerald-400' : 'text-amber-400'}
-            >
-              Complete {readinessQuery.data.canCompleteTrip ? 'ready' : 'blocked'}
-            </span>
+          ))}
+        </div>
+      ) : (
+        <DetailEmptyState text="No routes are linked to this trip." />
+      ),
+    },
+    {
+      title: 'Capture readiness',
+      icon: <ShieldCheck className="h-5 w-5" />,
+      content: readiness ? (
+        <div className="space-y-3" data-testid="trip-workspace-readiness">
+          <div className="flex flex-wrap items-center gap-2">
+            <DetailBadge label={readiness.canStartTrip ? 'Start ready' : 'Start blocked'} tone={readiness.canStartTrip ? 'good' : 'warn'} />
+            <DetailBadge label={readiness.canCompleteTrip ? 'Complete ready' : 'Complete blocked'} tone={readiness.canCompleteTrip ? 'good' : 'warn'} />
           </div>
-          <ul className="mt-3 space-y-1">
-            {readinessQuery.data.items.map((item) => (
-              <li key={item.key} className="flex items-start gap-2 text-xs text-slate-300">
+          <ul className="space-y-2">
+            {readiness.items.map((item) => (
+              <li key={item.key} className="flex items-start gap-2 text-sm text-slate-300">
                 {item.satisfied ? (
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                 ) : (
-                  <X
-                    className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
-                      item.required ? 'text-amber-400' : 'text-slate-500'
-                    }`}
-                  />
+                  <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-400' : 'text-slate-500'}`} />
                 )}
                 <span>
                   {item.label}
@@ -475,126 +504,376 @@ export function TripExecutionWorkspacePanel({
           </ul>
           <Link
             to="/driver-portal"
-            className="mt-3 inline-flex items-center gap-1 text-xs text-teal-300 hover:text-teal-200"
+            className="inline-flex items-center gap-1 text-sm text-teal-300 hover:text-teal-200"
           >
             Open driver portal
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-4 w-4" />
           </Link>
-        </section>
-      ) : null}
-
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h3 className="text-sm font-semibold text-slate-200">Routes & stops</h3>
-        {routesQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading routes…</p>
-        ) : routesQuery.isError ? (
-          <ApiErrorCallout
-            className="mt-2"
-            message={getErrorMessage(routesQuery.error, 'Failed to load routes for this trip.')}
-            onRetry={() => void routesQuery.refetch()}
-            retryLabel="Retry routes"
-          />
-        ) : (
-          <div className="mt-3">
-            <RouteStopsSection routes={routesQuery.data ?? []} />
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h3 className="text-sm font-semibold text-slate-200">Proof & DVIR</h3>
-        {executionQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading execution capture…</p>
-        ) : executionQuery.isError ? (
-          <ApiErrorCallout
-            className="mt-2"
-            message={getErrorMessage(executionQuery.error, 'Failed to load proof and DVIR data.')}
-            onRetry={() => void executionQuery.refetch()}
-            retryLabel="Retry proof and DVIR"
-          />
-        ) : executionQuery.data ? (
-          <div className="mt-3">
-            <ExecutionProofDvirSection
-              accessToken={accessToken}
-              tripId={tripId}
-              vehicleRefKey={trip.vehicleRefKey}
-              execution={executionQuery.data}
-              canCapture={canPerform && active}
-              dvirPending={dvirMutation.isPending}
-              dvirError={dvirError}
-              onSubmitDvir={(payload) => dvirMutation.mutate(payload)}
-              onCaptureUpdated={() => void invalidateCaptureQueries()}
-            />
-          </div>
-        ) : null}
-      </section>
-
-      {canPerform && active ? (
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-200">Dispatcher status</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Operator override for dispatch status. Capture requirements still apply on driver portal
-            start/complete.
+        </div>
+      ) : (
+        <DetailEmptyState text="Trip capture readiness is unavailable right now." />
+      ),
+    },
+    {
+      title: 'Evidence and documents',
+      icon: <FileText className="h-5 w-5" />,
+      content: execution ? (
+        <div className="space-y-4 text-sm">
+          <p className="text-slate-300" data-testid="trip-workspace-execution-header">
+            Pre DVIR {execution.hasPreTripDvir ? 'captured' : 'missing'} · Post DVIR{' '}
+            {execution.hasPostTripDvir ? 'captured' : 'missing'} · Driver closed{' '}
+            {execution.closedAt ? formatTimestamp(execution.closedAt) : 'no'}
           </p>
-          <label className="mt-3 block text-sm text-slate-300" htmlFor="tripexecutionworkspace-dispatch-status">
-          Dispatch status
-          <select id="tripexecutionworkspace-dispatch-status"
-              className="mt-1 w-full max-w-xs rounded border border-slate-600 bg-slate-950 px-3 py-2"
-              value={trip.dispatchStatus}
-              disabled={statusMutation.isPending}
-              onChange={(event) => {
-                const next = event.target.value
-                if (next !== trip.dispatchStatus) {
-                  statusMutation.mutate(next)
-                }
-              }}
-            >
-              {statusOptionsFor(trip.dispatchStatus, canManage).map((status) => (
-                <option key={status} value={status}>
-                  {status.replace('_', ' ')}
-                </option>
-              ))}
-            </select>
-          </label>
-          {statusMessage ? (
-            <p className="mt-2 text-sm text-red-400" role="alert">
-              {statusMessage}
-            </p>
-          ) : null}
-        </section>
-      ) : null}
 
-      <section
-        className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
-        data-testid="trip-workspace-audit-trail"
-      >
-        <h3 className="text-sm font-semibold text-slate-200">Transportation audit trail</h3>
-        <p className="mt-1 text-xs text-slate-500">
-          Trip-scoped RoutArr audit events including status, proof, and DVIR capture.
-        </p>
-        {auditQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading audit trail…</p>
-        ) : auditQuery.isError ? (
-          <ApiErrorCallout
-            className="mt-2"
-            message={getErrorMessage(auditQuery.error, 'Failed to load transportation audit trail.')}
-            onRetry={() => void auditQuery.refetch()}
-            retryLabel="Retry audit trail"
-          />
-        ) : auditQuery.data && auditQuery.data.entries.length > 0 ? (
-          <ul className="mt-3 max-h-56 divide-y divide-slate-800 overflow-y-auto text-xs text-slate-300">
-            {auditQuery.data.entries.map((entry) => (
-              <li key={entry.auditEventId} className="py-2">
-                <span className="text-slate-500">{formatTimestamp(entry.occurredAt)}</span>
-                <span className="ml-2 font-medium text-slate-200">{entry.action}</span>
-                <span className="ml-2 text-slate-400">{entry.result}</span>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <h4 className="font-medium text-slate-200">Proof ({execution.proofs.length})</h4>
+            {execution.proofs.length === 0 ? (
+              <p className="mt-1 text-xs text-slate-500">No proof captured yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {execution.proofs.map((proof) => (
+                  <li
+                    key={proof.proofId}
+                    className="rounded border border-slate-700 bg-slate-950/50 p-2 text-xs"
+                  >
+                    <span className="font-medium text-slate-200">{proof.proofType}</span>
+                    {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
+                    <p className="text-slate-500">{formatTimestamp(proof.capturedAt)}</p>
+                    {proof.attachments.length > 0 ? (
+                      <ul className="mt-1 space-y-1">
+                        {proof.attachments.map((attachment) => (
+                          <li key={attachment.attachmentId}>
+                            <button
+                              type="button"
+                              className="text-sky-400 underline"
+                              onClick={() =>
+                                void downloadTripCaptureAttachment(
+                                  accessToken,
+                                  tripId,
+                                  'proof',
+                                  proof.proofId,
+                                  attachment.attachmentId,
+                                  attachment.fileName,
+                                )
+                              }
+                            >
+                              {attachment.attachmentKind}: {attachment.fileName}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <h4 className="font-medium text-slate-200">DVIR ({execution.dvirInspections.length})</h4>
+            {execution.dvirInspections.length === 0 ? (
+              <p className="mt-1 text-xs text-slate-500">No DVIR submitted.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {execution.dvirInspections.map((dvir) => (
+                  <li
+                    key={dvir.dvirId}
+                    className="rounded border border-slate-700 bg-slate-950/50 p-2 text-xs"
+                    data-testid={`trip-workspace-dvir-${dvir.dvirId}`}
+                  >
+                    <span className="font-medium text-slate-200">
+                      {dvir.phase.replace('_', ' ')} · {dvir.result}
+                    </span>
+                    <p className="text-slate-500">{formatTimestamp(dvir.submittedAt)}</p>
+                    {dvir.attachments.length > 0 ? (
+                      <ul className="mt-1 space-y-1">
+                        {dvir.attachments.map((attachment) => (
+                          <li key={attachment.attachmentId}>
+                            <button
+                              type="button"
+                              className="text-sky-400 underline"
+                              onClick={() =>
+                                void downloadTripCaptureAttachment(
+                                  accessToken,
+                                  tripId,
+                                  'dvir',
+                                  dvir.dvirId,
+                                  attachment.attachmentId,
+                                  attachment.fileName,
+                                )
+                              }
+                            >
+                              {attachment.attachmentKind}: {attachment.fileName}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {canPerform && active ? (
+                      <TripCaptureAttachmentPanel
+                        accessToken={accessToken}
+                        tripId={tripId}
+                        subjectType="dvir"
+                        subjectId={dvir.dvirId}
+                        subjectLabel={`${dvir.phase.replace('_', ' ')} DVIR`}
+                        attachments={dvir.attachments}
+                        captureChannel="operator"
+                        onUploaded={() => void invalidateCaptureQueries()}
+                      />
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {canPerform && active ? (
+            <div
+              className="space-y-3 border-t border-slate-800 pt-3"
+              data-testid="trip-workspace-dvir-capture"
+            >
+              <p className="text-xs text-slate-500">
+                Operator capture for assigned trips. Submitted DVIR updates capture readiness gates.
+              </p>
+              {!execution.hasPreTripDvir ? (
+                <TripDvirSubmitForm
+                  phase="pre_trip"
+                  label="Pre-trip DVIR"
+                  vehicleRefKey={trip.vehicleRefKey}
+                  disabled={dvirMutation.isPending}
+                  pending={dvirMutation.isPending}
+                  onSubmit={(payload) => dvirMutation.mutate(payload)}
+                />
+              ) : null}
+              {!execution.hasPostTripDvir ? (
+                <TripDvirSubmitForm
+                  phase="post_trip"
+                  label="Post-trip DVIR"
+                  vehicleRefKey={trip.vehicleRefKey}
+                  disabled={dvirMutation.isPending}
+                  pending={dvirMutation.isPending}
+                  onSubmit={(payload) => dvirMutation.mutate(payload)}
+                />
+              ) : null}
+              {dvirError ? (
+                <p className="text-xs text-red-400" role="alert">
+                  {dvirError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <DetailEmptyState text="Evidence and DVIR history are unavailable." />
+      ),
+    },
+    {
+      title: 'Activity',
+      icon: <FileText className="h-5 w-5" />,
+      content: (
+        <section
+          className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+          data-testid="trip-workspace-audit-trail"
+        >
+          <h3 className="text-sm font-semibold text-slate-200">Transportation audit trail</h3>
+          <p className="mt-1 text-xs text-slate-500">
+            Trip-scoped RoutArr audit events including status, proof, and DVIR capture.
+          </p>
+          {auditQuery.isLoading ? (
+            <p className="mt-2 text-sm text-slate-500">Loading audit trail…</p>
+          ) : auditQuery.isError ? (
+            <ApiErrorCallout
+              className="mt-2"
+              message={getErrorMessage(auditQuery.error, 'Failed to load transportation audit trail.')}
+              onRetry={() => void auditQuery.refetch()}
+              retryLabel="Retry audit trail"
+            />
+          ) : auditQuery.data && auditQuery.data.entries.length > 0 ? (
+            <ul className="mt-3 max-h-56 divide-y divide-slate-800 overflow-y-auto text-xs text-slate-300">
+              {auditQuery.data.entries.map((entry) => (
+                <li key={entry.auditEventId} className="py-2">
+                  <span className="text-slate-500">{formatTimestamp(entry.occurredAt)}</span>
+                  <span className="ml-2 font-medium text-slate-200">{entry.action}</span>
+                  <span className="ml-2 text-slate-400">{entry.result}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-slate-500">No audit events recorded for this trip yet.</p>
+          )}
+        </section>
+      ),
+    },
+  ]
+
+  return (
+    <ProfileDetailsLayout
+      testId="trip-execution-workspace-panel"
+      backLabel="Trips"
+      backTo="/trips"
+      breadcrumbs={[trip.tripNumber, trip.title]}
+      icon={<Truck className="h-9 w-9" />}
+      title={trip.title}
+      subtitle={
+        <span className="flex flex-wrap items-center gap-2">
+          <span>{trip.tripNumber}</span>
+          <span className="text-slate-600">-</span>
+          <span>{trip.assignedDriverPersonId ?? 'Unassigned driver'}</span>
+          <span className="text-slate-600">-</span>
+          <span>{trip.vehicleRefKey ?? 'Unassigned vehicle'}</span>
+        </span>
+      }
+      badges={[
+        { label: trip.tripNumber, tone: 'info' },
+        { label: humanize(trip.dispatchStatus), tone: statusTone(trip.dispatchStatus) },
+        { label: report?.isAtRisk ? 'At risk' : 'On track', tone: report?.isAtRisk ? 'warn' : 'good' },
+      ]}
+      actions={
+        <>
+          <Link
+            to="/dispatch"
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+          >
+            Open dispatch board
+          </Link>
+          <Link
+            to="/driver-portal"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+          >
+            Driver portal
+          </Link>
+        </>
+      }
+      metrics={[
+        {
+          label: 'Dispatch state',
+          value: humanize(trip.dispatchStatus),
+          hint: `Scheduled ${formatTimestamp(trip.scheduledStartAt)} → ${formatTimestamp(trip.scheduledEndAt)}`,
+          icon: <Truck className="h-5 w-5" />,
+          tone: statusTone(trip.dispatchStatus),
+        },
+        {
+          label: 'Routes',
+          value: routes.length,
+          hint: `${report?.pendingStopCount ?? 0} pending stop(s)`,
+          icon: <Route className="h-5 w-5" />,
+          tone: routes.length > 0 ? 'info' : 'neutral',
+        },
+        {
+          label: 'Proofs',
+          value: execution?.proofs.length ?? 0,
+          hint: `${execution?.dvirInspections.length ?? 0} DVIR inspection(s)`,
+          icon: <FileText className="h-5 w-5" />,
+          tone: (execution?.proofs.length ?? 0) > 0 ? 'good' : 'warn',
+        },
+        {
+          label: 'Readiness',
+          value: readiness ? (readiness.canStartTrip ? 'Ready' : 'Blocked') : 'Unavailable',
+          hint: readiness
+            ? `${readiness.items.filter((item) => item.required && !item.satisfied).length} required item(s) missing`
+            : 'No readiness snapshot',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          tone: blocked ? 'bad' : atRisk ? 'warn' : 'good',
+        },
+      ]}
+      tabs={['Overview', 'Routes', 'Readiness', 'Evidence', 'History']}
+      snapshotTitle="Trip snapshot"
+      snapshotSubtitle="Dispatch identity, assignment, timing, and source-of-truth labels for cross-product references."
+      snapshotFields={[
+        { label: 'Trip ID', value: trip.tripId, source: 'RoutArr source of truth' },
+        { label: 'Trip number', value: trip.tripNumber, source: 'Trip registry' },
+        { label: 'Description', value: trip.description || 'Not recorded', source: 'Trip plan' },
+        { label: 'Dispatch status', value: humanize(trip.dispatchStatus), source: 'Dispatch execution' },
+        { label: 'Driver', value: trip.assignedDriverPersonId ?? 'Unassigned', source: 'StaffArr personId' },
+        { label: 'Vehicle', value: trip.vehicleRefKey ?? 'Unassigned', source: 'MaintainArr asset ref' },
+        { label: 'Scheduled start', value: formatTimestamp(trip.scheduledStartAt), source: 'Dispatch plan' },
+        { label: 'Scheduled end', value: formatTimestamp(trip.scheduledEndAt), source: 'Dispatch plan' },
+        { label: 'Assigned at', value: formatTimestamp(trip.assignedAt), source: 'Execution record' },
+        { label: 'Dispatched at', value: formatTimestamp(trip.dispatchedAt), source: 'Execution record' },
+        { label: 'Started at', value: formatTimestamp(trip.startedAt), source: 'Execution record' },
+        { label: 'Completed at', value: formatTimestamp(trip.completedAt), source: 'Execution record' },
+      ]}
+      mainContent={(
+        <div className="space-y-5">
+          <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <h3 className="text-sm font-semibold text-slate-200">Routes & stops</h3>
+            {routesQuery.isLoading ? (
+              <p className="mt-2 text-sm text-slate-500">Loading routes…</p>
+            ) : routesQuery.isError ? (
+              <ApiErrorCallout
+                className="mt-2"
+                message={getErrorMessage(routesQuery.error, 'Failed to load routes for this trip.')}
+                onRetry={() => void routesQuery.refetch()}
+                retryLabel="Retry routes"
+              />
+            ) : (
+              <div className="mt-3">
+                <RouteStopsSection routes={routes} />
+              </div>
+            )}
+          </section>
+
+          {canPerform && active ? (
+            <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+              <h3 className="text-sm font-semibold text-slate-200">Dispatcher status</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Operator override for dispatch status. Capture requirements still apply on driver portal start/complete.
+              </p>
+              <label className="mt-3 block text-sm text-slate-300" htmlFor="tripexecutionworkspace-dispatch-status">
+                Dispatch status
+                <select
+                  id="tripexecutionworkspace-dispatch-status"
+                  className="mt-1 w-full max-w-xs rounded border border-slate-600 bg-slate-950 px-3 py-2"
+                  value={trip.dispatchStatus}
+                  disabled={statusMutation.isPending}
+                  onChange={(event) => {
+                    const next = event.target.value
+                    if (next !== trip.dispatchStatus) {
+                      statusMutation.mutate(next)
+                    }
+                  }}
+                >
+                  {statusOptionsFor(trip.dispatchStatus, canManage).map((status) => (
+                    <option key={status} value={status}>
+                      {status.replace('_', ' ')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {statusMessage ? (
+                <p className="mt-2 text-sm text-red-400" role="alert">
+                  {statusMessage}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+        </div>
+      )}
+      decisionTitle="Dispatch decision"
+      decisionBadge={{ label: decisionLabel, tone: decisionTone }}
+      decisionIcon={
+        blocked ? (
+          <X className="h-5 w-5 text-red-300" />
+        ) : atRisk ? (
+          <AlertTriangle className="h-5 w-5 text-amber-300" />
         ) : (
-          <p className="mt-2 text-sm text-slate-500">No audit events recorded for this trip yet.</p>
-        )}
-      </section>
-    </div>
+          <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+        )
+      }
+      decisionSummary={decisionSummary}
+      decisionDetail={decisionDetail}
+      allowedChecks={[
+        Boolean(trip.assignedDriverPersonId),
+        Boolean(trip.vehicleRefKey),
+        trip.dispatchStatus !== 'cancelled',
+        Boolean(execution?.hasPreTripDvir || execution?.hasPostTripDvir),
+      ].filter(Boolean).length}
+      blockedChecks={[
+        !trip.assignedDriverPersonId,
+        !trip.vehicleRefKey,
+        trip.dispatchStatus === 'cancelled',
+      ].filter(Boolean).length}
+      railSections={railSections}
+    />
   )
 }

@@ -3,6 +3,7 @@ import {
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
 } from './productCatalog'
+import { normalizeBrowserLaunchUrl } from './browserLaunchUrl'
 
 /** Local Vite preview bases aligned with StlE2eFrontendCatalog (+ Field Companion). */
 const LOCAL_FRONTEND_BASES: Record<string, string> = {
@@ -24,7 +25,8 @@ function resolveSuiteHomeUrl(suiteHomeUrl: string): string {
   if (!trimmed) {
     return 'http://localhost:5174/app'
   }
-  return trimmed.endsWith('/app') ? trimmed : `${trimmed.replace(/\/$/, '')}/app`
+  const resolved = trimmed.endsWith('/app') ? trimmed : `${trimmed.replace(/\/$/, '')}/app`
+  return normalizeBrowserLaunchUrl(resolved)
 }
 
 function readFrontendBase(
@@ -37,7 +39,7 @@ function readFrontendBase(
   for (const value of candidates) {
     const trimmed = value?.trim()
     if (trimmed) {
-      return trimmed.replace(/\/$/, '')
+      return normalizeBrowserLaunchUrl(trimmed.replace(/\/$/, ''))
     }
   }
   return LOCAL_FRONTEND_BASES[normalized]
@@ -88,7 +90,7 @@ export function resolveProductLaunchUrl(
 
   const direct = productLaunchUrls[normalized]
   if (direct) {
-    return direct
+    return normalizeBrowserLaunchUrl(direct)
   }
 
   const suiteUrl = resolveSuiteHomeUrl(suiteHomeUrl)
