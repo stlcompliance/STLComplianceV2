@@ -69,6 +69,7 @@ import type {
   SourceIngestionBatchSummary,
   RuleChangeEventResponse,
   RuleChangeMonitoringSummaryResponse,
+  RuleChangeImpactReportResponse,
   M12AnalyticsWorkerSettingsResponse,
   UpsertM12AnalyticsWorkerSettingsRequest,
   FactSourceSyncWorkerSettingsResponse,
@@ -103,10 +104,13 @@ import type {
   VocabularyTermResponse,
   VocabularyTypeResponse,
   ComplianceWaiverResponse,
+  ComplianceExceptionExemptionResponse,
   CreateComplianceWaiverRequest,
+  CreateComplianceExceptionExemptionRequest,
   RenewComplianceWaiverRequest,
   WaiverReportSummaryResponse,
   ExceptionExemptionReportSummaryResponse,
+  UpdateComplianceExceptionExemptionRequest,
   CommitPreviewResponse,
   EvidenceOptionProposalResponse,
   ImportCompletionReportResponse,
@@ -131,6 +135,7 @@ import type {
   TheoreticalSituationIncidentResponse,
   TheoreticalSituationListItemResponse,
   TheoreticalSituationResponse,
+  Title49CalculatorSummaryResponse,
   WizardItemResponse,
   WizardSummaryResponse,
 } from './types'
@@ -1916,6 +1921,48 @@ export async function getRuleChangeSummary(
   )
 }
 
+export async function getRuleChangeImpactReportSummary(
+  accessToken: string,
+  params: { packKey?: string } = {},
+): Promise<RuleChangeImpactReportResponse> {
+  const search = new URLSearchParams()
+  if (params.packKey) {
+    search.set('packKey', params.packKey)
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/rule-changes/impact/summary${query ? `?${query}` : ''}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RuleChangeImpactReportResponse>(
+    response,
+    'Failed to load rule change impact report summary',
+  )
+}
+
+export async function exportRuleChangeImpactReportSummaryCsv(
+  accessToken: string,
+  params: { packKey?: string } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.packKey) {
+    search.set('packKey', params.packKey)
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/rule-changes/impact/summary/export${query ? `?${query}` : ''}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export rule change impact report')
+  }
+  return response.blob()
+}
+
 export async function listRuleChangeEvents(
   accessToken: string,
   options?: { packKey?: string; changeType?: string; since?: string; limit?: number },
@@ -2199,6 +2246,107 @@ export async function exportExceptionExemptionReportSummaryCsv(
     throw await toApiError(response, 'Failed to export exception exemption report')
   }
   return response.blob()
+}
+
+export async function listExceptionExemptions(
+  accessToken: string,
+  params: { type?: string; packKey?: string; citationKey?: string; includeInactive?: boolean } = {},
+): Promise<ComplianceExceptionExemptionResponse[]> {
+  const search = new URLSearchParams()
+  if (params.type) search.set('type', params.type)
+  if (params.packKey) search.set('packKey', params.packKey)
+  if (params.citationKey) search.set('citationKey', params.citationKey)
+  if (params.includeInactive) search.set('includeInactive', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/v1/exception-exemptions${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ComplianceExceptionExemptionResponse[]>(
+    response,
+    'Failed to load exception exemptions',
+  )
+}
+
+export async function getExceptionExemptionTypeOptions(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions/options/types`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(
+    response,
+    'Failed to load exception exemption types',
+  )
+}
+
+export async function getExceptionExemptionEffectOptions(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions/options/effects`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(
+    response,
+    'Failed to load exception exemption effects',
+  )
+}
+
+export async function getExceptionExemption(
+  accessToken: string,
+  exceptionExemptionId: string,
+): Promise<ComplianceExceptionExemptionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions/${exceptionExemptionId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceExceptionExemptionResponse>(
+    response,
+    'Failed to load exception exemption',
+  )
+}
+
+export async function createExceptionExemption(
+  accessToken: string,
+  request: CreateComplianceExceptionExemptionRequest,
+): Promise<ComplianceExceptionExemptionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ComplianceExceptionExemptionResponse>(
+    response,
+    'Failed to create exception exemption',
+  )
+}
+
+export async function updateExceptionExemption(
+  accessToken: string,
+  exceptionExemptionId: string,
+  request: UpdateComplianceExceptionExemptionRequest,
+): Promise<ComplianceExceptionExemptionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions/${exceptionExemptionId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ComplianceExceptionExemptionResponse>(
+    response,
+    'Failed to update exception exemption',
+  )
+}
+
+export async function deactivateExceptionExemption(
+  accessToken: string,
+  exceptionExemptionId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/exception-exemptions/${exceptionExemptionId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to deactivate exception exemption')
+  }
 }
 
 export async function getOperatorReportSummary(
@@ -2500,6 +2648,42 @@ export async function getTheoreticalEvidenceOptions(
     response,
     'Failed to load theoretical evidence options',
   )
+}
+
+export async function getTitle49CalculatorSummary(
+  accessToken: string,
+  params: { sourceProduct?: string; sourceEntity?: string } = {},
+): Promise<Title49CalculatorSummaryResponse> {
+  const search = new URLSearchParams()
+  if (params.sourceProduct) search.set('sourceProduct', params.sourceProduct)
+  if (params.sourceEntity) search.set('sourceEntity', params.sourceEntity)
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/calculators/title49/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<Title49CalculatorSummaryResponse>(
+    response,
+    'Failed to load retention rule calculator summary',
+  )
+}
+
+export async function exportTitle49CalculatorSummaryCsv(
+  accessToken: string,
+  params: { sourceProduct?: string; sourceEntity?: string } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.sourceProduct) search.set('sourceProduct', params.sourceProduct)
+  if (params.sourceEntity) search.set('sourceEntity', params.sourceEntity)
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/calculators/title49/summary/export${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to export retention rule calculator summary')
+  }
+  return response.blob()
 }
 
 export async function createTheoreticalSituation(

@@ -25,10 +25,14 @@ export function InspectionsSection({ state }: Props) {
         selectedTemplateId={s.runTemplateId}
         selectedRunId={s.selectedRunId}
         answerDrafts={s.answerDrafts}
+        pauseReason={s.inspectionPauseReason}
+        pauseNotes={s.inspectionPauseNotes}
         isLoading={s.assetsQuery.isLoading || s.templatesQuery.isLoading || s.inspectionRunsQuery.isLoading}
         isRunLoading={s.inspectionRunQuery.isLoading}
         isStarting={s.startRunMutation.isPending}
         isSubmitting={s.submitAnswersMutation.isPending}
+        isPausing={s.isPausingRun}
+        isResuming={s.isResumingRun}
         isCompleting={s.completeRunMutation.isPending}
         isCreatingDefects={s.createDefectsFromRunMutation.isPending}
         onSelectedAssetIdChange={s.setRunAssetId}
@@ -50,6 +54,10 @@ export function InspectionsSection({ state }: Props) {
         }
         onStartRun={() => s.startRunMutation.mutate()}
         onSubmitAnswers={() => s.submitAnswersMutation.mutate()}
+        onPauseReasonChange={s.setInspectionPauseReason}
+        onPauseNotesChange={s.setInspectionPauseNotes}
+        onPauseRun={() => s.pauseRunMutation.mutate()}
+        onResumeRun={() => s.resumeRunMutation.mutate()}
         onCompleteRun={() => s.completeRunMutation.mutate()}
         onCreateDefectsFromRun={() => s.createDefectsFromRunMutation.mutate()}
         runEvidence={s.inspectionRunEvidenceQuery.data ?? []}

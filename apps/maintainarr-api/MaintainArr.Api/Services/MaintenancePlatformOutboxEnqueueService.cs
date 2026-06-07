@@ -215,6 +215,85 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
         string? eventResult = null,
         string? idempotencyDiscriminator = null,
         CancellationToken cancellationToken = default)
+        => await TryEnqueueWorkOrderScopedEventAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
+            workOrder.Id,
+            workOrder,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult,
+            idempotencyDiscriminator,
+            cancellationToken);
+
+    public async Task<Guid?> TryEnqueueLaborEntryEventAsync(
+        Guid tenantId,
+        string eventKind,
+        WorkOrder workOrder,
+        Asset asset,
+        WorkOrderLaborEntry laborEntry,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        string? idempotencyDiscriminator = null,
+        CancellationToken cancellationToken = default)
+        => await TryEnqueueWorkOrderScopedEventAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.LaborEntry,
+            laborEntry.Id,
+            workOrder,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult,
+            idempotencyDiscriminator,
+            cancellationToken);
+
+    public async Task<Guid?> TryEnqueueVendorWorkEventAsync(
+        Guid tenantId,
+        string eventKind,
+        WorkOrder workOrder,
+        Asset asset,
+        MaintenanceVendorWork vendorWork,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        string? idempotencyDiscriminator = null,
+        CancellationToken cancellationToken = default)
+        => await TryEnqueueWorkOrderScopedEventAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.VendorWork,
+            vendorWork.Id,
+            workOrder,
+            asset,
+            actorUserId,
+            occurredAt,
+            summary,
+            eventResult,
+            idempotencyDiscriminator,
+            cancellationToken);
+
+    private async Task<Guid?> TryEnqueueWorkOrderScopedEventAsync(
+        Guid tenantId,
+        string eventKind,
+        string targetEntityType,
+        Guid targetEntityId,
+        WorkOrder workOrder,
+        Asset asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult,
+        string? idempotencyDiscriminator,
+        CancellationToken cancellationToken)
     {
         var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
@@ -237,19 +316,19 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
         var idempotencyKey = string.IsNullOrWhiteSpace(idempotencyDiscriminator)
             ? MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
                 eventKind,
-                MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
-                workOrder.Id)
+                targetEntityType,
+                targetEntityId)
             : MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
                 eventKind,
-                MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
-                workOrder.Id,
+                targetEntityType,
+                targetEntityId,
                 idempotencyDiscriminator);
 
         return await TryEnqueueAsync(
             tenantId,
             eventKind,
-            MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
-            workOrder.Id,
+            targetEntityType,
+            targetEntityId,
             idempotencyKey,
             payload,
             cancellationToken);

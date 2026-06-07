@@ -29,7 +29,12 @@ public sealed record WorkOrderLaborEntryResponse(
     string PersonId,
     decimal HoursWorked,
     string LaborTypeKey,
+    string Status,
     string? Notes,
+    DateTimeOffset? SubmittedAt,
+    string? ApprovedByPersonId,
+    DateTimeOffset? ApprovedAt,
+    string? RejectionReason,
     Guid LoggedByUserId,
     DateTimeOffset LoggedAt);
 
@@ -39,6 +44,10 @@ public sealed record CreateWorkOrderLaborEntryRequest(
     string LaborTypeKey,
     Guid? WorkOrderTaskLineId,
     string? Notes);
+
+public sealed record UpdateWorkOrderLaborEntryStatusRequest(
+    string Status,
+    string? RejectionReason);
 
 public sealed record CreateWorkOrderLaborEntryAliasRequest(
     Guid WorkOrderId,

@@ -31,7 +31,9 @@ public sealed record AssurArrListItemResponse(
     IReadOnlyList<string> AffectedObjectRefs,
     Guid? OwnerPersonId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record AssurArrNonconformanceResponse(
     Guid Id,
@@ -78,7 +80,9 @@ public sealed record AssurArrNonconformanceResponse(
     string? RepeatOfNonconformanceRef,
     string? RootCauseRef,
     string[] BlockerRefs,
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrNonconformanceRequest(
     string Title,
@@ -156,7 +160,9 @@ public sealed record AssurArrQualityHoldResponse(
     Guid? ReleasedByPersonId,
     DateTimeOffset? RejectedAt,
     Guid? RejectedByPersonId,
-    DateTimeOffset? ExpiresAt);
+    DateTimeOffset? ExpiresAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityHoldRequest(
     string Title,
@@ -214,7 +220,9 @@ public sealed record AssurArrCapaResponse(
     DateTimeOffset? DueAt,
     IReadOnlyList<string> RelatedNonconformanceRefs,
     IReadOnlyList<string> RelatedAuditFindingRefs,
-    IReadOnlyList<string> EffectivenessVerificationRefs);
+    IReadOnlyList<string> EffectivenessVerificationRefs,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrCapaRequest(
     string Title,
@@ -267,7 +275,9 @@ public sealed record AssurArrCapaActionResponse(
     IReadOnlyList<string> BlockerRefs,
     string? Notes,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record AssurArrCapaActionBlockerResponse(
     Guid Id,
@@ -281,7 +291,9 @@ public sealed record AssurArrCapaActionBlockerResponse(
     string Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset? ResolvedAt,
-    Guid? ResolvedByPersonId);
+    Guid? ResolvedByPersonId,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrCapaActionBlockerRequest(
     string BlockerType,
@@ -333,7 +345,9 @@ public sealed record AssurArrVerificationPlanResponse(
     DateTimeOffset? PlannedVerificationAt,
     string Status,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrVerificationPlanRequest(
     string Title,
@@ -365,7 +379,9 @@ public sealed record AssurArrEffectivenessVerificationResponse(
     bool FollowUpRequired,
     string? ReopenedCapaRef,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrEffectivenessVerificationRequest(
     Guid? VerificationPlanId,
@@ -420,7 +436,9 @@ public sealed record AssurArrQualityAuditResponse(
     DateTimeOffset? ActualEndAt,
     IReadOnlyList<string> ChecklistRefs,
     IReadOnlyList<string> FindingRefs,
-    IReadOnlyList<string> AuditTrail);
+    IReadOnlyList<string> AuditTrail,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityAuditRequest(
     string Title,
@@ -459,7 +477,9 @@ public sealed record AssurArrQualityAuditChecklistResponse(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
-    string? ClosureSummary);
+    string? ClosureSummary,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityAuditChecklistRequest(
     string Title,
@@ -484,7 +504,9 @@ public sealed record AssurArrQualityAuditChecklistItemResponse(
     DateTimeOffset? AnsweredAt,
     Guid? AnsweredByPersonId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityAuditChecklistItemRequest(
     int Sequence,
@@ -533,7 +555,9 @@ public sealed record AssurArrAuditFindingResponse(
     string? AuditRef,
     string? NonconformanceRef,
     string? CapaRef,
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrAuditFindingRequest(
     string Title,
@@ -571,7 +595,9 @@ public sealed record AssurArrRootCauseAnalysisResponse(
     IReadOnlyList<string> ContributingFactors,
     Guid? AnalyzedByPersonId,
     DateTimeOffset? CompletedAt,
-    IReadOnlyList<string> EvidenceRecordRefs);
+    IReadOnlyList<string> EvidenceRecordRefs,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrRootCauseAnalysisRequest(
     string Title,
@@ -619,7 +645,9 @@ public sealed record AssurArrQualityStatusSnapshotResponse(
     DateTimeOffset? LastReviewedAt,
     Guid? ReviewedByPersonId,
     DateTimeOffset? ExpiresAt,
-    string? Notes);
+    string? Notes,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityStatusSnapshotRequest(
     string TargetProduct,
@@ -668,7 +696,9 @@ public sealed record AssurArrQualityScorecardResponse(
     string GeneratedBy,
     Guid? ReviewedByPersonId,
     DateTimeOffset? ReviewedAt,
-    IReadOnlyList<string> MetricRefs);
+    IReadOnlyList<string> MetricRefs,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record AssurArrQualityMetricResponse(
     Guid Id,
@@ -687,7 +717,9 @@ public sealed record AssurArrQualityMetricResponse(
     string Status,
     IReadOnlyList<string> SourceProductRefs,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityMetricRequest(
     string MetricKey,
@@ -723,7 +755,9 @@ public sealed record AssurArrQualityRiskProfileResponse(
     Guid? ReviewedByPersonId,
     IReadOnlyList<string> EventLog,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityRiskProfileRequest(
     string TargetType,
@@ -765,7 +799,9 @@ public sealed record AssurArrQualityReviewResponse(
     string? DecisionReason,
     IReadOnlyList<string> RequiredEvidenceRefs,
     IReadOnlyList<string> SubmittedEvidenceRefs,
-    string? Notes);
+    string? Notes,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityReviewRequest(
     string Title,
@@ -813,7 +849,9 @@ public sealed record AssurArrQualityReleaseResponse(
     string? Conditions,
     DateTimeOffset? ExpirationAt,
     IReadOnlyList<string> EvidenceRecordRefs,
-    string? Notes);
+    string? Notes,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrQualityReleaseRequest(
     string Title,
@@ -860,7 +898,9 @@ public sealed record AssurArrContainmentActionResponse(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
-    string? ClosureSummary);
+    string? ClosureSummary,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrContainmentActionRequest(
     string Title,
@@ -905,7 +945,9 @@ public sealed record AssurArrDispositionResponse(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
-    string? ClosureSummary);
+    string? ClosureSummary,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrDispositionRequest(
     string Title,
@@ -952,7 +994,9 @@ public sealed record AssurArrSupplierQualityIssueResponse(
     Guid? ClosedByPersonId,
     string? ClosureSummary,
     Guid? OwnerPersonId,
-    DateTimeOffset? OpenedAt);
+    DateTimeOffset? OpenedAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrSupplierQualityIssueRequest(
     string Title,
@@ -999,7 +1043,9 @@ public sealed record AssurArrSupplierCorrectiveActionRequestResponse(
     DateTimeOffset? ClosedAt,
     Guid? ClosedByPersonId,
     string? ClosureSummary,
-    Guid? OwnerPersonId);
+    Guid? OwnerPersonId,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrSupplierCorrectiveActionRequest(
     string Title,
@@ -1053,7 +1099,9 @@ public sealed record AssurArrCustomerComplaintQualityCaseResponse(
     Guid? OwnerPersonId,
     DateTimeOffset? ReceivedAt,
     Guid? ReceivedByPersonId,
-    DateTimeOffset? CustomerResponseDueAt);
+    DateTimeOffset? CustomerResponseDueAt,
+    Guid CreatedByPersonId,
+    Guid UpdatedByPersonId);
 
 public sealed record CreateAssurArrCustomerComplaintQualityCaseRequest(
     string Title,

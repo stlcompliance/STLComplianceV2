@@ -18,6 +18,7 @@ public sealed class DispatchExceptionService(
     public const string CreateAction = "dispatch_exception.create";
     public const string AssignAction = "dispatch_exception.assign";
     public const string ResolveAction = "dispatch_exception.resolve";
+    public const string CloseAction = "dispatch_exception.close";
     public const string LinkTripAction = "dispatch_exception.link_trip";
     public const string BulkAssignAction = "dispatch_exception.bulk_assign";
     public const string BulkResolveAction = "dispatch_exception.bulk_resolve";
@@ -354,6 +355,42 @@ public sealed class DispatchExceptionService(
         return await MapWithTripAsync(tenantId, entity, cancellationToken);
     }
 
+    public async Task<DispatchExceptionSummaryResponse> CloseAsync(
+        ClaimsPrincipal principal,
+        Guid exceptionId,
+        string? closeReason = null,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
+        EnsureNotTerminal(entity);
+
+        entity.Status = DispatchExceptionStatuses.Closed;
+        entity.IncidentReviewStatus = DispatchIncidentReviewStatuses.Closed;
+        entity.ResolvedByUserId = actorUserId;
+        entity.ResolvedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.ResolutionNotes = string.IsNullOrWhiteSpace(closeReason)
+            ? entity.ResolutionNotes
+            : closeReason.Trim();
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            CloseAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            string.IsNullOrWhiteSpace(closeReason) ? "closed" : closeReason.Trim(),
+            cancellationToken: cancellationToken);
+
+        return await MapWithTripAsync(tenantId, entity, cancellationToken);
+    }
+
     public async Task<DispatchExceptionSummaryResponse> LinkTripAsync(
         ClaimsPrincipal principal,
         Guid exceptionId,
@@ -512,6 +549,26 @@ public sealed class DispatchExceptionService(
             results);
     }
 
+    public async Task<DispatchExceptionSummaryResponse> GetAsync(
+        ClaimsPrincipal principal,
+        Guid exceptionId,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionRead(principal);
+        var tenantId = principal.GetTenantId();
+        var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
+        Trip? trip = null;
+        if (entity.TripId.HasValue)
+        {
+            trip = await db.Trips
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.TripId.Value, cancellationToken);
+        }
+
+        authorization.RequireTripAccess(principal, trip?.CreatedByUserId ?? entity.CreatedByUserId, trip?.AssignedDriverPersonId);
+        return MapSummary(entity, trip);
+    }
+
     private static IReadOnlySet<string> ResolveStatusFilter(string? statusFilter)
     {
         if (string.IsNullOrWhiteSpace(statusFilter)
@@ -525,7 +582,7 @@ public sealed class DispatchExceptionService(
         {
             throw new StlApiException(
                 "dispatch_exception.invalid_status",
-                "Status filter must be open, assigned, resolved, or cancelled.",
+                "Status filter must be open, assigned, resolved, closed, or cancelled.",
                 400);
         }
 

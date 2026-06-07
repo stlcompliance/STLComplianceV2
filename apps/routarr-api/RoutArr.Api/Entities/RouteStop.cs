@@ -78,23 +78,40 @@ public static class RouteStopStatuses
 {
     public const string Pending = "pending";
 
+    public const string Planned = "planned";
+
+    public const string EnRoute = "en_route";
+
     public const string Arrived = "arrived";
+
+    public const string InProgress = "in_progress";
 
     public const string Completed = "completed";
 
     public const string Skipped = "skipped";
 
+    public const string Failed = "failed";
+
+    public const string Canceled = "canceled";
+
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         Pending,
+        Planned,
+        EnRoute,
         Arrived,
+        InProgress,
         Completed,
         Skipped,
+        Failed,
+        Canceled,
     };
 
     public static readonly IReadOnlySet<string> Terminal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         Completed,
         Skipped,
+        Failed,
+        Canceled,
     };
 }

@@ -9,6 +9,9 @@ const PeopleSection = lazy(() =>
 const OrgSection = lazy(() =>
   import('./sections/OrgSection').then((module) => ({ default: module.OrgSection })),
 )
+const LocationsSection = lazy(() =>
+  import('./sections/LocationsSection').then((module) => ({ default: module.LocationsSection })),
+)
 const PermissionsSection = lazy(() =>
   import('./sections/PermissionsSection').then((module) => ({ default: module.PermissionsSection })),
 )
@@ -17,6 +20,9 @@ const ReadinessSection = lazy(() =>
 )
 const IncidentsSection = lazy(() =>
   import('./sections/IncidentsSection').then((module) => ({ default: module.IncidentsSection })),
+)
+const RestrictionsSection = lazy(() =>
+  import('./sections/RestrictionsSection').then((module) => ({ default: module.RestrictionsSection })),
 )
 const TrainingAcknowledgementsSection = lazy(() =>
   import('./sections/TrainingAcknowledgementsSection').then((module) => ({
@@ -33,9 +39,11 @@ const AdminSection = lazy(() =>
 const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnType<typeof useStaffArrWorkspaceState> }>> = {
   people: PeopleSection,
   org: OrgSection,
+  locations: LocationsSection,
   permissions: PermissionsSection,
   readiness: ReadinessSection,
   incidents: IncidentsSection,
+  restrictions: RestrictionsSection,
   'training-acknowledgements': TrainingAcknowledgementsSection,
   certifications: CertificationsSection,
   admin: AdminSection,
@@ -44,9 +52,11 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
 const sectionLabels: Record<WorkspaceSection, string> = {
   people: 'People',
   org: 'Org',
+  locations: 'Locations',
   permissions: 'Permissions',
   readiness: 'Readiness',
   incidents: 'Incidents',
+  restrictions: 'Restrictions',
   'training-acknowledgements': 'Training Acknowledgements',
   certifications: 'Certifications',
   admin: 'Admin',

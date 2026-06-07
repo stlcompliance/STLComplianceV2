@@ -3572,7 +3572,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.RepeatOfNonconformanceRef,
             entity.RootCauseRef,
             entity.BlockerRefs,
-            entity.DueAt);
+            entity.DueAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityHoldResponse ToQualityHoldResponse(AssurArrQualityHold entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -3615,7 +3617,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReleasedByPersonId,
             entity.RejectedAt,
             entity.RejectedByPersonId,
-            entity.ExpiresAt);
+            entity.ExpiresAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrCapaResponse ToCapaResponse(AssurArrCapa entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -3653,7 +3657,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.DueAt,
             entity.RelatedNonconformanceRefs,
             entity.RelatedAuditFindingRefs,
-            entity.EffectivenessVerificationRefs);
+            entity.EffectivenessVerificationRefs,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private async Task<IReadOnlyList<string>> GetEventLogAsync(string subjectType, Guid subjectId, CancellationToken cancellationToken = default) =>
         await db.TimelineEvents
@@ -3694,7 +3700,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.FollowUpRequired,
             entity.ReopenedCapaRef,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrCapaActionResponse ToCapaActionResponse(AssurArrCapaAction entity) =>
         new(
@@ -3721,7 +3729,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.BlockerRefs,
             entity.Notes,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrCapaActionBlockerResponse ToCapaActionBlockerResponse(AssurArrCapaActionBlocker entity) =>
         new(
@@ -3736,7 +3746,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Status,
             entity.CreatedAt,
             entity.ResolvedAt,
-            entity.ResolvedByPersonId);
+            entity.ResolvedByPersonId,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrVerificationPlanResponse ToVerificationPlanResponse(AssurArrVerificationPlan entity) =>
         new(
@@ -3754,7 +3766,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.PlannedVerificationAt,
             entity.Status,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityAuditResponse ToAuditResponse(AssurArrQualityAudit entity) =>
         new(
@@ -3791,7 +3805,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ActualEndAt,
             entity.ChecklistRefs,
             entity.FindingRefs,
-            entity.AuditTrail);
+            entity.AuditTrail,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityAuditChecklistResponse ToChecklistResponse(AssurArrQualityAuditChecklist entity) =>
         new(
@@ -3806,7 +3822,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.UpdatedAt,
             entity.ClosedAt,
             entity.ClosedByPersonId,
-            entity.ClosureSummary);
+            entity.ClosureSummary,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityAuditChecklistItemResponse ToChecklistItemResponse(AssurArrQualityAuditChecklistItem entity) =>
         new(
@@ -3827,7 +3845,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AnsweredAt,
             entity.AnsweredByPersonId,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrAuditFindingResponse ToFindingResponse(AssurArrAuditFinding entity) =>
         new(
@@ -3853,7 +3873,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.AuditRef,
             entity.NonconformanceRef,
             entity.CapaRef,
-            entity.DueAt);
+            entity.DueAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrRootCauseAnalysisResponse ToRootCauseAnalysisResponse(AssurArrRootCauseAnalysis entity) =>
         new(
@@ -3876,7 +3898,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ContributingFactors,
             entity.AnalyzedByPersonId,
             entity.CompletedAt,
-            entity.EvidenceRecordRefs);
+            entity.EvidenceRecordRefs,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityStatusSnapshotResponse ToStatusSnapshotResponse(AssurArrQualityStatusSnapshot entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -3907,7 +3931,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.LastReviewedAt,
             entity.ReviewedByPersonId,
             entity.ExpiresAt,
-            entity.Notes);
+            entity.Notes,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityReviewResponse ToReviewResponse(AssurArrQualityReview entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -3937,7 +3963,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.DecisionReason,
             entity.RequiredEvidenceRefs,
             entity.SubmittedEvidenceRefs,
-            entity.Notes);
+            entity.Notes,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityReleaseResponse ToReleaseResponse(AssurArrQualityRelease entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -3968,7 +3996,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Conditions,
             entity.ExpirationAt,
             entity.EvidenceRecordRefs,
-            entity.Notes);
+            entity.Notes,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private async Task<AssurArrQualityReviewResponse> ToReviewResponseAsync(AssurArrQualityReview entity, CancellationToken cancellationToken = default) =>
         ToReviewResponse(entity, await GetEventLogAsync("review", entity.Id, cancellationToken));
@@ -4005,7 +4035,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.UpdatedAt,
             entity.ClosedAt,
             entity.ClosedByPersonId,
-            entity.ClosureSummary);
+            entity.ClosureSummary,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrDispositionResponse ToDispositionResponse(AssurArrDisposition entity) =>
         new(
@@ -4034,7 +4066,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.UpdatedAt,
             entity.ClosedAt,
             entity.ClosedByPersonId,
-            entity.ClosureSummary);
+            entity.ClosureSummary,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrSupplierQualityIssueResponse ToSupplierQualityIssueResponse(AssurArrSupplierQualityIssue entity) =>
         new(
@@ -4066,7 +4100,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedByPersonId,
             entity.ClosureSummary,
             entity.OwnerPersonId,
-            entity.OpenedAt);
+            entity.OpenedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrSupplierCorrectiveActionRequestResponse ToScarResponse(AssurArrSupplierCorrectiveActionRequest entity) =>
         new(
@@ -4096,7 +4132,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ClosedAt,
             entity.ClosedByPersonId,
             entity.ClosureSummary,
-            entity.OwnerPersonId);
+            entity.OwnerPersonId,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrCustomerComplaintQualityCaseResponse ToCustomerComplaintQualityCaseResponse(AssurArrCustomerComplaintQualityCase entity) =>
         new(
@@ -4135,7 +4173,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.OwnerPersonId,
             entity.ReceivedAt,
             entity.ReceivedByPersonId,
-            entity.CustomerResponseDueAt);
+            entity.CustomerResponseDueAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityScorecardResponse ToScorecardResponse(AssurArrQualityScorecard entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -4167,7 +4207,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.GeneratedBy,
             entity.ReviewedByPersonId,
             entity.ReviewedAt,
-            entity.MetricRefs);
+            entity.MetricRefs,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityMetricResponse ToMetricResponse(AssurArrQualityMetric entity) =>
         new(
@@ -4187,7 +4229,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.Status,
             entity.SourceProductRefs,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private static AssurArrQualityRiskProfileResponse ToRiskProfileResponse(AssurArrQualityRiskProfile entity, IReadOnlyList<string> eventLog) =>
         new(
@@ -4205,7 +4249,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             entity.ReviewedByPersonId,
             eventLog,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.CreatedByPersonId,
+            entity.UpdatedByPersonId);
 
     private async Task<AssurArrQualityStatusSnapshotResponse> ToStatusSnapshotResponseAsync(AssurArrQualityStatusSnapshot entity, CancellationToken cancellationToken = default) =>
         ToStatusSnapshotResponse(entity, await GetEventLogAsync("status", entity.Id, cancellationToken));

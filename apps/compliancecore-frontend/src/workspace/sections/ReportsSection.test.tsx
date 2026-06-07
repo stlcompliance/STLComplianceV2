@@ -21,6 +21,10 @@ vi.mock('../../components/OperatorReportsPanel', () => ({
   OperatorReportsPanel: () => <div data-testid="operator-reports-panel" />,
 }))
 
+vi.mock('../../components/RuleChangeImpactReportPanel', () => ({
+  RuleChangeImpactReportPanel: () => <div data-testid="rule-change-impact-report-panel" />,
+}))
+
 vi.mock('../../components/WaiverReportsPanel', () => ({
   WaiverReportsPanel: () => <div data-testid="waiver-reports-panel" />,
 }))
@@ -91,6 +95,7 @@ describe('ReportsSection', () => {
     expect(screen.getByTestId('citation-review-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('evidence-completeness-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('operator-reports-panel')).toBeTruthy()
+    expect(screen.getByTestId('rule-change-impact-report-panel')).toBeTruthy()
     expect(screen.getByTestId('waiver-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('exception-exemption-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('remediation-queue-reports-panel')).toBeTruthy()

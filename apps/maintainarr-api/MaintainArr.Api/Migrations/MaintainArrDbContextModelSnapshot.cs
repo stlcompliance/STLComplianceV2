@@ -2269,6 +2269,52 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_inspection_run_evidence", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.InspectionRunPauseEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("InspectionRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<DateTimeOffset>("PausedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PausedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ResumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResumedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InspectionRunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "InspectionRunId", "PausedAt");
+
+                    b.ToTable("maintainarr_inspection_run_pause_events", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2282,6 +2328,11 @@ namespace MaintainArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("InspectionType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2832,6 +2883,178 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_notification_dispatches", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePartsKit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AssetTypeApplicabilityJson")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("KitNumber")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PmPlanRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WorkOrderTypeApplicabilityJson")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "KitNumber")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_maintenance_parts_kits", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePartsKitLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ItemDescriptionSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ItemRef")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("MaintenancePartsKitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SubstituteAllowed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UnitOfMeasure")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaintenancePartsKitId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "MaintenancePartsKitId");
+
+                    b.HasIndex("TenantId", "MaintenancePartsKitId", "ItemRef")
+                        .IsUnique()
+                        .HasDatabaseName("IX_maintainarr_maintenance_parts_kit_lines_TenantId_Maintenan~1");
+
+                    b.ToTable("maintainarr_maintenance_parts_kit_lines", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePermitRef", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApprovedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PermitType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RecordRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceObjectRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StatusSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ValidTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("WorkOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("WorkOrderId");
+
+                    b.HasIndex("TenantId", "WorkOrderId", "RecordRef")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_maintenance_permit_refs", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePlatformEventProcessingRun", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3309,8 +3532,10 @@ namespace MaintainArr.Api.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("submitted");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -3521,6 +3746,71 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("maintainarr_reference_cache_entries", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.ReturnToService", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ApprovedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompletedChecksJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid?>("FinalInspectionRef")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FinalReadinessStatus")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RecordRefsJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("RequiredChecksJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("WorkOrderId");
+
+                    b.HasIndex("TenantId", "WorkOrderId")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_return_to_services", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.TenantAssetStatusRollupSettings", b =>
@@ -3832,6 +4122,15 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
+                    b.Property<string>("OriginRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("OriginType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<Guid?>("PmScheduleId")
                         .HasColumnType("uuid");
 
@@ -3840,10 +4139,24 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("QualificationCheckResultsJson")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("RequiredQualificationRefsJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("StaffarrLocationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -3872,6 +4185,11 @@ namespace MaintainArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("WorkOrderType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.HasKey("Id");
 
@@ -4043,6 +4361,11 @@ namespace MaintainArr.Api.Migrations
                     b.Property<string>("FollowUpWorkOrderRefs")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PermitRecordRefsJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<Guid?>("PostRepairInspectionRef")
                         .HasColumnType("uuid");
@@ -4219,6 +4542,13 @@ namespace MaintainArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ApprovedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<decimal>("HoursWorked")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
@@ -4243,6 +4573,18 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -4263,6 +4605,8 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "PersonId", "LoggedAt");
 
                     b.HasIndex("TenantId", "WorkOrderId", "LoggedAt");
+
+                    b.HasIndex("TenantId", "WorkOrderId", "Status");
 
                     b.ToTable("maintainarr_work_order_labor_entries", (string)null);
                 });
@@ -4482,6 +4826,73 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "WorkOrderId", "SortOrder");
 
                     b.ToTable("maintainarr_work_order_task_lines", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrderTechnicianAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AssignedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("AssignmentRole")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("QualificationCheckSnapshotJson")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)")
+                        .HasColumnName("QualificationCheckSnapshotJson");
+
+                    b.Property<string>("RequiredQualificationRefsJson")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("RequiredQualificationRefsJson");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("WorkOrderId");
+
+                    b.HasIndex("TenantId", "WorkOrderId", "AssignedAt");
+
+                    b.HasIndex("TenantId", "WorkOrderId", "PersonId", "AssignmentRole")
+                        .IsUnique()
+                        .HasDatabaseName("IX_maintainarr_work_order_technician_assignments_TenantId_Wor~1");
+
+                    b.ToTable("maintainarr_work_order_technician_assignments", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrderTimelineEvent", b =>
@@ -4757,6 +5168,17 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("InspectionRun");
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.InspectionRunPauseEvent", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.InspectionRun", "InspectionRun")
+                        .WithMany("PauseEvents")
+                        .HasForeignKey("InspectionRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InspectionRun");
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionTemplateAssetType", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.AssetType", "AssetType")
@@ -4806,6 +5228,28 @@ namespace MaintainArr.Api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CreatedDefect");
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePartsKitLine", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.MaintenancePartsKit", "MaintenancePartsKit")
+                        .WithMany("Lines")
+                        .HasForeignKey("MaintenancePartsKitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaintenancePartsKit");
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePermitRef", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.WorkOrder", "WorkOrder")
+                        .WithMany("PermitRefs")
+                        .HasForeignKey("WorkOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkOrder");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceVendorWork", b =>
@@ -4916,6 +5360,17 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("AssetMeter");
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.ReturnToService", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.WorkOrder", "WorkOrder")
+                        .WithMany("ReturnToServices")
+                        .HasForeignKey("WorkOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkOrder");
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrder", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.Asset", "Asset")
@@ -5024,6 +5479,17 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("WorkOrder");
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrderTechnicianAssignment", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.WorkOrder", "WorkOrder")
+                        .WithMany()
+                        .HasForeignKey("WorkOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkOrder");
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrderTimelineEvent", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.WorkOrder", null)
@@ -5048,6 +5514,8 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("Answers");
 
                     b.Navigation("Evidence");
+
+                    b.Navigation("PauseEvents");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionTemplate", b =>
@@ -5062,6 +5530,11 @@ namespace MaintainArr.Api.Migrations
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceHistoryRollup", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenancePartsKit", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.PmProgram", b =>
@@ -5080,6 +5553,10 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("LaborEntries");
 
                     b.Navigation("PartsDemandLines");
+
+                    b.Navigation("PermitRefs");
+
+                    b.Navigation("ReturnToServices");
 
                     b.Navigation("TaskLines");
                 });

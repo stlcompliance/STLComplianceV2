@@ -1,4 +1,22 @@
-import { Radio, Route, Map, UserCheck, Calendar, Settings, Truck, ListCollapse, StickyNote, Globe } from 'lucide-react'
+import {
+  AlertTriangle,
+  Calendar,
+  Clock3,
+  ClipboardList,
+  FileText,
+  Globe,
+  LayoutDashboard,
+  ListCollapse,
+  Map,
+  MapPinned,
+  Radio,
+  Route,
+  Settings,
+  ShieldAlert,
+  StickyNote,
+  Truck,
+  UserCheck,
+} from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -10,7 +28,13 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const routarrNavItems: ProductNavItem[] = [
 
-  { label: 'Dispatch', to: '/dispatch', icon: Radio as NavIcon },
+  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard as NavIcon },
+
+  { label: 'Dispatch board', to: '/dispatch', icon: Radio as NavIcon },
+
+  { label: 'Dispatch plans', to: '/dispatch-plans', icon: ShieldAlert as NavIcon },
+
+  { label: 'Route planner', to: '/route-planner', icon: Map as NavIcon },
 
   { label: 'Driver portal', to: '/driver-portal', icon: Truck as NavIcon },
 
@@ -35,6 +59,18 @@ export const routarrNavItems: ProductNavItem[] = [
       { label: 'Create', to: '/routes/create', icon: StickyNote as NavIcon },
     ],
   },
+
+  { label: 'Stops', to: '/stops', icon: MapPinned as NavIcon },
+
+  { label: 'Exceptions', to: '/exceptions', icon: AlertTriangle as NavIcon },
+
+  { label: 'Proof review', to: '/proof-review', icon: FileText as NavIcon },
+
+  { label: 'Dock appointments', to: '/dock-appointments', icon: Clock3 as NavIcon },
+
+  { label: 'Load visibility', to: '/load-visibility', icon: ClipboardList as NavIcon },
+
+  { label: 'Validation blockers', to: '/validation-blockers', icon: ShieldAlert as NavIcon, sectionBreakBefore: true },
 
   { label: 'Availability', to: '/availability', icon: UserCheck as NavIcon },
 

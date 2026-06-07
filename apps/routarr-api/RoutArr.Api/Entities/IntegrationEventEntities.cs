@@ -95,6 +95,8 @@ public static class RoutArrIntegrationOutboxEventKinds
 
     public const string StopArrived = "routarr.stop.arrived";
 
+    public const string StopEnRoute = "routarr.stop.en_route";
+
     public const string StopCompleted = "routarr.stop.completed";
 
     public const string StopMissed = "routarr.stop.missed";

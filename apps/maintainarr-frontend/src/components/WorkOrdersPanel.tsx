@@ -104,22 +104,55 @@ function formatSource(source: string): string {
   return 'Manual'
 }
 
+const WORK_ORDER_STATUS_FLOW = [
+  'open',
+  'requested',
+  'triage',
+  'rejected',
+  'approved',
+  'planned',
+  'waiting_parts',
+  'waiting_labor',
+  'waiting_vendor',
+  'waiting_approval',
+  'waiting_compliance',
+  'scheduled',
+  'assigned',
+  'in_progress',
+  'paused',
+  'blocked',
+  'completed_pending_review',
+  'completed',
+  'closed',
+  'cancelled',
+  'canceled',
+] as const
+
+function humanizeStatus(status: string): string {
+  const words = status.replaceAll('_', ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+function isTerminalStatus(status: string): boolean {
+  return ['completed', 'closed', 'cancelled', 'canceled'].includes(status)
+}
+
 function statusOptionsFor(currentStatus: string, canClose: boolean): string[] {
-  if (currentStatus === 'open') {
-    const options = ['open', 'in_progress']
-    if (canClose) {
-      options.push('cancelled')
-    }
-    return options
+  if (isTerminalStatus(currentStatus)) {
+    return [currentStatus]
   }
-  if (currentStatus === 'in_progress') {
-    const options = ['in_progress', 'completed']
-    if (canClose) {
-      options.push('cancelled')
-    }
-    return options
+
+  const options = Array.from(new Set([
+    currentStatus,
+    ...WORK_ORDER_STATUS_FLOW.filter((status) => status !== 'rejected'),
+  ]))
+
+  if (canClose) {
+    options.push('closed')
+    options.push('cancelled')
   }
-  return [currentStatus]
+
+  return Array.from(new Set(options))
 }
 
 function assetToOption(asset: AssetResponse): PickerOption {
@@ -250,10 +283,11 @@ export function WorkOrdersPanel({
             onChange={(event) => onStatusFilterChange(event.target.value)}
           >
             <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            {WORK_ORDER_STATUS_FLOW.map((status) => (
+              <option key={status} value={status}>
+                {humanizeStatus(status)}
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -378,7 +412,7 @@ export function WorkOrdersPanel({
                   </td>
                   {canPerform ? (
                     <td className="px-3 py-2">
-                      {workOrder.status === 'open' || workOrder.status === 'in_progress' ? (
+                      {!isTerminalStatus(workOrder.status) ? (
                         <select
                           id={`work-order-status-${workOrder.workOrderId}`}
                           className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
@@ -389,7 +423,7 @@ export function WorkOrdersPanel({
                         >
                           {statusOptionsFor(workOrder.status, canClose).map((status) => (
                             <option key={status} value={status}>
-                              {status}
+                              {humanizeStatus(status)}
                             </option>
                           ))}
                         </select>
@@ -423,6 +457,33 @@ export function WorkOrdersPanel({
                   {selectedWorkOrder.assetTag} — {selectedWorkOrder.assetName}
                 </dd>
               </div>
+              <div>
+                <dt className="text-slate-500">Work type</dt>
+                <dd>{selectedWorkOrder.workOrderType ?? '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Source product</dt>
+                <dd>{selectedWorkOrder.sourceProduct ?? '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Origin</dt>
+                <dd>
+                  {(selectedWorkOrder.originType ?? '—')
+                    + (selectedWorkOrder.originRef ? ` · ${selectedWorkOrder.originRef}` : '')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Source ref</dt>
+                <dd>{selectedWorkOrder.sourceObjectRef ?? '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Location</dt>
+                <dd>{selectedWorkOrder.staffarrLocationId ?? '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Site</dt>
+                <dd>{selectedWorkOrder.staffarrSiteId ?? '—'}</dd>
+              </div>
               <div className="md:col-span-2">
                 <dt className="text-slate-500">Description</dt>
                 <dd>{selectedWorkOrder.description || '—'}</dd>
@@ -444,6 +505,18 @@ export function WorkOrdersPanel({
                 <dd>{selectedWorkOrder.assignedTechnicianPersonId ?? 'Unassigned'}</dd>
               </div>
               <div>
+                <dt className="text-slate-500">Assigned tech IDs</dt>
+                <dd>{selectedWorkOrder.assignedTechnicianPersonIds?.join(', ') || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Required qualifications</dt>
+                <dd>{selectedWorkOrder.requiredQualificationRefs?.join(', ') || '—'}</dd>
+              </div>
+              <div className="md:col-span-2">
+                <dt className="text-slate-500">Vendor work refs</dt>
+                <dd>{selectedWorkOrder.vendorWorkRefs?.join(', ') || '—'}</dd>
+              </div>
+              <div>
                 <dt className="text-slate-500">Updated</dt>
                 <dd>{new Date(selectedWorkOrder.updatedAt).toLocaleString()}</dd>
               </div>
@@ -461,6 +534,7 @@ export function WorkOrdersPanel({
               labor={labor}
               evidence={evidence}
               canPerform={canPerform}
+              canApprove={canClose}
               sessionPersonId={sessionPersonId}
               technicianRefs={technicianRefs}
               taskTitle={taskTitle}

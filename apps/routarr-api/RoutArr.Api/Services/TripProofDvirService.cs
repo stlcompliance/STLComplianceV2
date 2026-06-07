@@ -75,6 +75,40 @@ public sealed class TripProofDvirService(
         return MapProof(entity, []);
     }
 
+    public async Task<TripProofRecordResponse> GetProofAsync(
+        ClaimsPrincipal principal,
+        Guid tripId,
+        Guid proofId,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireTripProofRead(principal);
+        var tenantId = principal.GetTenantId();
+        var trip = await tripService.GetAsync(tenantId, tripId, cancellationToken);
+        EnsureTripProofAccess(principal, trip.AssignedDriverPersonId, write: false);
+
+        var proof = await RequireProofAsync(tenantId, tripId, proofId, cancellationToken);
+        var attachments = await LoadAttachmentLookupAsync(tenantId, tripId, cancellationToken);
+        return MapProof(proof, attachments.ForSubject(TripCaptureAttachmentSubjects.Proof, proof.Id));
+    }
+
+    public async Task<TripProofRecordResponse> GetProofByIdAsync(
+        ClaimsPrincipal principal,
+        Guid proofId,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireTripProofRead(principal);
+        var tenantId = principal.GetTenantId();
+        var proof = await db.TripProofRecords
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == proofId, cancellationToken)
+            ?? throw new StlApiException("trip_proof.not_found", "Trip proof record was not found.", 404);
+
+        var trip = await tripService.GetAsync(tenantId, proof.TripId, cancellationToken);
+        EnsureTripProofAccess(principal, trip.AssignedDriverPersonId, write: false);
+        var attachments = await LoadAttachmentLookupAsync(tenantId, proof.TripId, cancellationToken);
+        return MapProof(proof, attachments.ForSubject(TripCaptureAttachmentSubjects.Proof, proof.Id));
+    }
+
     public async Task<TripProofRecordResponse> RejectProofAsync(
         ClaimsPrincipal principal,
         Guid tripId,

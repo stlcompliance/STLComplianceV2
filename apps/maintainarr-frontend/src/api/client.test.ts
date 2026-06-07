@@ -12,6 +12,10 @@ import {
   getAssetReadinessHistory,
   getAssetReadinessFleet,
   getMaintenanceHistory,
+  getMaintenancePartsKits,
+  createMaintenancePartsKit,
+  getMaintenanceVendorWork,
+  upsertMaintenanceVendorWork,
   getPmPrograms,
   getPmSchedules,
   getMeterReadings,
@@ -23,6 +27,9 @@ import {
   getExecutiveReportSummary,
   MaintainArrApiError,
   updateAssetControlledV1,
+  getWorkOrderLabor,
+  logWorkOrderLabor,
+  updateWorkOrderLaborStatus,
 } from './client'
 
 describe('maintainarr api client', () => {
@@ -543,6 +550,232 @@ describe('maintainarr api client', () => {
     expect(result).toHaveLength(1)
     expect(result[0]?.readinessStatus).toBe('not_ready')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/readiness', expect.any(Object))
+  })
+
+  it('loads parts kits and posts new kits to the v1 endpoint', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                partsKitId: '11111111-1111-1111-1111-111111111111',
+                kitNumber: 'KIT-001',
+                title: 'Brake service kit',
+                description: 'Standard brake materials',
+                assetTypeApplicability: ['truck'],
+                workOrderTypeApplicability: ['corrective'],
+                pmPlanRef: null,
+                status: 'active',
+                lineRefs: [],
+                lines: [],
+                createdAt: '2026-06-06T00:00:00Z',
+                updatedAt: '2026-06-06T00:00:00Z',
+              },
+            ],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            partsKitId: '22222222-2222-2222-2222-222222222222',
+            kitNumber: 'KIT-002',
+            title: 'Filter kit',
+            description: '',
+            assetTypeApplicability: [],
+            workOrderTypeApplicability: [],
+            pmPlanRef: null,
+            status: 'draft',
+            lineRefs: [],
+            lines: [],
+            createdAt: '2026-06-06T00:00:00Z',
+            updatedAt: '2026-06-06T00:00:00Z',
+          }),
+          { status: 201, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+
+    const list = await getMaintenancePartsKits('token-123')
+    const created = await createMaintenancePartsKit('token-123', {
+      kitNumber: 'KIT-002',
+      title: 'Filter kit',
+      description: '',
+    })
+
+    expect(list.items[0]?.kitNumber).toBe('KIT-001')
+    expect(created.kitNumber).toBe('KIT-002')
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/v1/maintenance-parts-kits', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/maintenance-parts-kits', expect.any(Object))
+  })
+
+  it('loads and updates vendor work on the work-order endpoint', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                vendorWorkId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                workOrderId: 'wo-1',
+                supplierRef: 'vendor-01',
+                vendorContactSnapshot: 'Vendor Ops',
+                status: 'scheduled',
+                workDescription: 'Replace drive shaft',
+                quoteRecordRef: 'quote-1',
+                approvalRef: 'approval-1',
+                scheduledAt: '2026-06-06T10:00:00Z',
+                completedAt: null,
+                costEstimateSnapshot: '$1,200',
+                invoiceRecordRef: null,
+                warrantyFlag: true,
+                notes: 'Bring vendor crane',
+                createdAt: '2026-06-06T09:00:00Z',
+                updatedAt: '2026-06-06T09:30:00Z',
+                duplicate: false,
+              },
+            ],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            vendorWorkId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            workOrderId: 'wo-1',
+            supplierRef: 'vendor-01',
+            vendorContactSnapshot: 'Vendor Ops',
+            status: 'completed',
+            workDescription: 'Replace drive shaft',
+            quoteRecordRef: 'quote-1',
+            approvalRef: 'approval-1',
+            scheduledAt: '2026-06-06T10:00:00Z',
+            completedAt: '2026-06-06T18:00:00Z',
+            costEstimateSnapshot: '$1,200',
+            invoiceRecordRef: 'invoice-1',
+            warrantyFlag: true,
+            notes: 'Work completed',
+            createdAt: '2026-06-06T09:00:00Z',
+            updatedAt: '2026-06-06T18:15:00Z',
+            duplicate: true,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+
+    const list = await getMaintenanceVendorWork('token-123', 'wo-1')
+    const updated = await upsertMaintenanceVendorWork('token-123', 'wo-1', {
+      supplierRef: 'vendor-01',
+      vendorContactSnapshot: 'Vendor Ops',
+      status: 'completed',
+      workDescription: 'Replace drive shaft',
+      quoteRecordRef: 'quote-1',
+      approvalRef: 'approval-1',
+      scheduledAt: '2026-06-06T10:00:00Z',
+      completedAt: '2026-06-06T18:00:00Z',
+      costEstimateSnapshot: '$1,200',
+      invoiceRecordRef: 'invoice-1',
+      warrantyFlag: true,
+      notes: 'Work completed',
+    })
+
+    expect(list.items[0]?.supplierRef).toBe('vendor-01')
+    expect(updated.status).toBe('completed')
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/v1/work-orders/wo-1/vendor-work', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/work-orders/wo-1/vendor-work', expect.any(Object))
+  })
+
+  it('loads, logs, and approves labor on the work-order endpoint', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              laborEntryId: 'labor-1',
+              workOrderId: 'wo-1',
+              workOrderTaskLineId: null,
+              personId: 'person-1',
+              hoursWorked: 2.5,
+              laborTypeKey: 'regular',
+              status: 'submitted',
+              notes: 'Checked alignment',
+              submittedAt: '2026-06-06T09:00:00Z',
+              approvedByPersonId: null,
+              approvedAt: null,
+              rejectionReason: null,
+              loggedByUserId: 'user-1',
+              loggedAt: '2026-06-06T09:00:00Z',
+            },
+          ]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            laborEntryId: 'labor-2',
+            workOrderId: 'wo-1',
+            workOrderTaskLineId: null,
+            personId: 'person-2',
+            hoursWorked: 1.25,
+            laborTypeKey: 'overtime',
+            status: 'submitted',
+            notes: null,
+            submittedAt: '2026-06-06T10:00:00Z',
+            approvedByPersonId: null,
+            approvedAt: null,
+            rejectionReason: null,
+            loggedByUserId: 'user-2',
+            loggedAt: '2026-06-06T10:00:00Z',
+          }),
+          { status: 201, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            laborEntryId: 'labor-2',
+            workOrderId: 'wo-1',
+            workOrderTaskLineId: null,
+            personId: 'person-2',
+            hoursWorked: 1.25,
+            laborTypeKey: 'overtime',
+            status: 'approved',
+            notes: null,
+            submittedAt: '2026-06-06T10:00:00Z',
+            approvedByPersonId: 'person-supervisor',
+            approvedAt: '2026-06-06T11:00:00Z',
+            rejectionReason: null,
+            loggedByUserId: 'user-2',
+            loggedAt: '2026-06-06T10:00:00Z',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+
+    const list = await getWorkOrderLabor('token-123', 'wo-1')
+    const created = await logWorkOrderLabor('token-123', 'wo-1', {
+      personId: 'person-2',
+      hoursWorked: 1.25,
+      laborTypeKey: 'overtime',
+      workOrderTaskLineId: null,
+      notes: null,
+    })
+    const approved = await updateWorkOrderLaborStatus('token-123', 'wo-1', 'labor-2', {
+      status: 'approved',
+    })
+
+    expect(list[0]?.status).toBe('submitted')
+    expect(created.status).toBe('submitted')
+    expect(approved.approvedByPersonId).toBe('person-supervisor')
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/work-orders/wo-1/labor', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/work-orders/wo-1/labor', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/work-orders/wo-1/labor/labor-2/status', expect.any(Object))
   })
 
   it('loads asset readiness history', async () => {

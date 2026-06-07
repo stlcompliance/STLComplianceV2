@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
+import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { ProgramsPage } from './pages/programs/ProgramsPage'
 import { AssignmentsPage } from './pages/assignments/AssignmentsPage'
 import { RemediationPage } from './pages/remediation/RemediationPage'
@@ -28,7 +29,8 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
-            <Route index element={<Navigate to="/programs" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/programs" element={<ProgramsPage />} />
             <Route path="/programs/drawer" element={<ProgramsPage />} />
             <Route path="/programs/details" element={<ProgramsPage />} />
@@ -51,7 +53,7 @@ export default function App() {
             <Route path="/qualifications" element={<QualificationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

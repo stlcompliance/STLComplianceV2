@@ -53,6 +53,13 @@ import type {
   TripCaptureAttachmentResponse,
   TripCaptureAttachmentListResponse,
   UploadTripCaptureAttachmentRequest,
+  TripLoadSummaryResponse,
+  TransportationLoadVisibilityResponse,
+  DockAppointmentNotificationResponse,
+  TripPartsDemandLineResponse,
+  CreateTripPartsDemandLineRequest,
+  PublishTripPartsDemandRequest,
+  PublishTripPartsDemandResponse,
   DispatchReportSummaryResponse,
   DispatchReportTripDetailResponse,
   DispatchReportExceptionDetailResponse,
@@ -247,6 +254,17 @@ export async function getTrips(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<TripSummaryResponse[]>(response, 'Failed to load trips')
+}
+
+export async function getDashboard(
+  accessToken: string,
+  scope?: string,
+): Promise<DispatchCommandCenterResponse> {
+  const query = scope ? `?scope=${encodeURIComponent(scope)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/dashboard${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchCommandCenterResponse>(response, 'Failed to load dashboard')
 }
 
 export async function getTrip(accessToken: string, tripId: string): Promise<TripDetailResponse> {
@@ -455,6 +473,16 @@ export async function getRoute(accessToken: string, routeId: string): Promise<Ro
   return parseJsonResponse<RouteDetailResponse>(response, 'Failed to load route')
 }
 
+export async function getRouteStops(
+  accessToken: string,
+  routeId: string,
+): Promise<RouteStopSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/stops?routeId=${encodeURIComponent(routeId)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteStopSummaryResponse[]>(response, 'Failed to load route stops')
+}
+
 export async function createRoute(
   accessToken: string,
   payload: CreateRouteRequest,
@@ -515,6 +543,81 @@ export async function checkRouteStopGeofence(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<RouteStopSummaryResponse>(response, 'Failed to check stop geofence')
+}
+
+export async function getTripLoads(
+  accessToken: string,
+  tripId: string,
+): Promise<TripLoadSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/loads?tripId=${encodeURIComponent(tripId)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripLoadSummaryResponse[]>(response, 'Failed to load trip loads')
+}
+
+export async function getLoadVisibility(
+  accessToken: string,
+  tripId?: string,
+): Promise<TransportationLoadVisibilityResponse[]> {
+  const query = tripId ? `?tripId=${encodeURIComponent(tripId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/load-visibility${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TransportationLoadVisibilityResponse[]>(
+    response,
+    'Failed to load transportation visibility',
+  )
+}
+
+export async function getDockAppointments(
+  accessToken: string,
+  tripId?: string,
+): Promise<DockAppointmentNotificationResponse[]> {
+  const query = tripId ? `?tripId=${encodeURIComponent(tripId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/dock-appointments${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DockAppointmentNotificationResponse[]>(
+    response,
+    'Failed to load dock appointments',
+  )
+}
+
+export async function getTripPartsDemand(
+  accessToken: string,
+  tripId: string,
+): Promise<TripPartsDemandLineResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/trips/${tripId}/parts-demand`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TripPartsDemandLineResponse[]>(response, 'Failed to load trip parts demand')
+}
+
+export async function createTripPartsDemandLine(
+  accessToken: string,
+  tripId: string,
+  payload: CreateTripPartsDemandLineRequest,
+): Promise<TripPartsDemandLineResponse> {
+  const response = await fetch(`${apiBase}/api/trips/${tripId}/parts-demand`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripPartsDemandLineResponse>(response, 'Failed to create trip parts demand line')
+}
+
+export async function publishTripPartsDemand(
+  accessToken: string,
+  tripId: string,
+  payload: PublishTripPartsDemandRequest,
+): Promise<PublishTripPartsDemandResponse> {
+  const response = await fetch(`${apiBase}/api/trips/${tripId}/parts-demand/publish`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PublishTripPartsDemandResponse>(response, 'Failed to publish trip parts demand')
 }
 
 export async function getUnassignedWorkQueue(

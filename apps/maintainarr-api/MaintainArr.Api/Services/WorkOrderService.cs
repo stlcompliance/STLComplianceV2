@@ -80,11 +80,11 @@ public sealed class WorkOrderService(
         CreateWorkOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
+        var asset = await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
         ValidateTitle(request.Title);
         ValidatePriority(request.Priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
-        await EnsureAssignedTechnicianQualifiedAsync(
+        var qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
             tenantId,
             request.AssignedTechnicianPersonId,
             cancellationToken);
@@ -111,6 +111,13 @@ public sealed class WorkOrderService(
             Priority = NormalizePriority(request.Priority),
             Status = WorkOrderStatuses.Open,
             Source = request.PmScheduleId.HasValue ? WorkOrderSources.PmSchedule : WorkOrderSources.Manual,
+            WorkOrderType = request.PmScheduleId.HasValue ? WorkOrderTypes.Preventive : WorkOrderTypes.OperatorRequest,
+            OriginType = request.PmScheduleId.HasValue ? WorkOrderOriginTypes.PmDue : WorkOrderOriginTypes.Manual,
+            OriginRef = request.PmScheduleId?.ToString("D"),
+            StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
+            RequiredQualificationRefsJson = SerializeStringList(
+                qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]),
+            QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot),
             AssignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId),
             CreatedByUserId = actorUserId,
             CreatedAt = now,
@@ -119,6 +126,15 @@ public sealed class WorkOrderService(
 
         db.WorkOrders.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
+
+        await UpsertTechnicianAssignmentAsync(
+            tenantId,
+            actorUserId,
+            entity.Id,
+            entity.AssignedTechnicianPersonId,
+            qualificationSnapshot,
+            now,
+            cancellationToken);
 
         await audit.WriteAsync(
             "work_order.create",
@@ -213,10 +229,12 @@ public sealed class WorkOrderService(
 
         ValidatePriority(priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
-        await EnsureAssignedTechnicianQualifiedAsync(
+        var qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
             tenantId,
             request.AssignedTechnicianPersonId,
             cancellationToken);
+
+        var asset = await EnsureActiveAssetAsync(tenantId, defect.AssetId, cancellationToken);
 
         var title = string.IsNullOrWhiteSpace(request.Title)
             ? $"Repair: {defect.Title}"
@@ -238,6 +256,13 @@ public sealed class WorkOrderService(
             Priority = NormalizePriority(priority),
             Status = WorkOrderStatuses.Open,
             Source = WorkOrderSources.Defect,
+            WorkOrderType = WorkOrderTypes.DefectRepair,
+            OriginType = WorkOrderOriginTypes.Defect,
+            OriginRef = defectId.ToString("D"),
+            StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
+            RequiredQualificationRefsJson = SerializeStringList(
+                qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]),
+            QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot),
             AssignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId),
             CreatedByUserId = actorUserId,
             CreatedAt = now,
@@ -246,6 +271,15 @@ public sealed class WorkOrderService(
 
         db.WorkOrders.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
+
+        await UpsertTechnicianAssignmentAsync(
+            tenantId,
+            actorUserId,
+            entity.Id,
+            entity.AssignedTechnicianPersonId,
+            qualificationSnapshot,
+            now,
+            cancellationToken);
 
         await audit.WriteAsync(
             "work_order.create_from_defect",
@@ -339,7 +373,7 @@ public sealed class WorkOrderService(
             return new PmWorkOrderGenerationResult(existing.Id, existing.WorkOrderNumber, LinkedExisting: true);
         }
 
-        await EnsureActiveAssetAsync(schedule.TenantId, schedule.AssetId, cancellationToken);
+        var asset = await EnsureActiveAssetAsync(schedule.TenantId, schedule.AssetId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var entity = new WorkOrder
@@ -358,6 +392,12 @@ public sealed class WorkOrderService(
             Priority = PmWorkOrderGenerationRules.MapDueStatusToPriority(dueStatus),
             Status = WorkOrderStatuses.Open,
             Source = WorkOrderSources.PmSchedule,
+            WorkOrderType = WorkOrderTypes.Preventive,
+            OriginType = WorkOrderOriginTypes.PmDue,
+            OriginRef = pmScheduleId.ToString("D"),
+            StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
+            RequiredQualificationRefsJson = "[]",
+            QualificationCheckResultsJson = "[]",
             AssignedTechnicianPersonId = null,
             CreatedByUserId = actorUserId,
             CreatedAt = now,
@@ -469,14 +509,18 @@ public sealed class WorkOrderService(
         }
 
         var previousAssignedTechnicianPersonId = workOrder.AssignedTechnicianPersonId;
+        WorkOrderQualificationCheckResultResponse? qualificationSnapshot = null;
         if (request.AssignedTechnicianPersonId is not null)
         {
             ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
-            await EnsureAssignedTechnicianQualifiedAsync(
+            qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
                 tenantId,
                 request.AssignedTechnicianPersonId,
                 cancellationToken);
             workOrder.AssignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId);
+            workOrder.RequiredQualificationRefsJson = SerializeStringList(
+                qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]);
+            workOrder.QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot);
         }
 
         workOrder.UpdatedAt = DateTimeOffset.UtcNow;
@@ -495,6 +539,15 @@ public sealed class WorkOrderService(
             tenantId,
             actorUserId,
             workOrder.AssignedTechnicianPersonId,
+            cancellationToken);
+
+        await UpsertTechnicianAssignmentAsync(
+            tenantId,
+            actorUserId,
+            workOrder.Id,
+            workOrder.AssignedTechnicianPersonId,
+            qualificationSnapshot,
+            workOrder.UpdatedAt,
             cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId)
@@ -544,7 +597,7 @@ public sealed class WorkOrderService(
         {
             throw new StlApiException(
                 "work_order.invalid_status",
-                "Status must be open, in_progress, completed, or cancelled.",
+                "Status must be one of the supported work order lifecycle values.",
                 400);
         }
 
@@ -586,13 +639,16 @@ public sealed class WorkOrderService(
             workOrder.StartedAt ??= now;
         }
 
-        if (string.Equals(normalized, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(normalized, WorkOrderStatuses.CompletedPendingReview, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase))
         {
             workOrder.CompletedAt ??= now;
             workOrder.StartedAt ??= now;
         }
 
-        if (string.Equals(normalized, WorkOrderStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(normalized, WorkOrderStatuses.Cancelled, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, WorkOrderStatuses.Canceled, StringComparison.OrdinalIgnoreCase))
         {
             workOrder.CancelledAt ??= now;
         }
@@ -848,6 +904,9 @@ public sealed class WorkOrderService(
         var evidenceRecordRefs = request.EvidenceRecordRefs is null
             ? DeserializeGuidList(closeout?.EvidenceRecordRefsJson)
             : NormalizeGuidList(request.EvidenceRecordRefs);
+        var permitRecordRefs = request.PermitRecordRefs is null
+            ? DeserializeGuidList(closeout?.PermitRecordRefsJson)
+            : NormalizeGuidList(request.PermitRecordRefs);
         await EnsureCloseoutEvidenceRecordRefsAsync(
             tenantId,
             workOrderId,
@@ -893,12 +952,29 @@ public sealed class WorkOrderService(
         closeout.CustomerImpactSummary = customerImpactSummary;
         closeout.DowntimeSummary = downtimeSummary;
         closeout.FinalAssetReadinessStatus = finalAssetReadinessStatus;
-        closeout.FinalStatus = finalStatus ?? (request.AssetReturnedToService ? "closed" : "review_pending");
+        closeout.FinalStatus = NormalizeCloseoutFinalStatus(
+            finalStatus ?? (request.AssetReturnedToService ? WorkOrderStatuses.Closed : WorkOrderStatuses.CompletedPendingReview));
+        closeout.PermitRecordRefsJson = SerializeGuidList(permitRecordRefs);
         closeout.EvidenceRecordRefsJson = SerializeGuidList(evidenceRecordRefs);
+
+        await UpsertReturnToServiceAsync(
+            tenantId,
+            workOrder,
+            closeout,
+            permitRecordRefs,
+            evidenceRecordRefs,
+            cancellationToken);
+
+        await UpsertPermitRefsAsync(
+            tenantId,
+            workOrder,
+            closeout,
+            permitRecordRefs,
+            cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 
-        if (workOrder.DefectId.HasValue && string.Equals(closeout.FinalStatus, "closed", StringComparison.OrdinalIgnoreCase))
+        if (workOrder.DefectId.HasValue && string.Equals(closeout.FinalStatus, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase))
         {
             await SyncLinkedDefectStatusAsync(
                 tenantId,
@@ -920,7 +996,7 @@ public sealed class WorkOrderService(
         await discussionService.RecordTimelineEventAsync(
             tenantId,
             workOrderId,
-            string.Equals(closeout.FinalStatus, "closed", StringComparison.OrdinalIgnoreCase)
+            string.Equals(closeout.FinalStatus, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase)
                 ? "maintainarr.work_order.closed"
                 : "maintainarr.work_order.closeout_updated",
             now,
@@ -993,8 +1069,19 @@ public sealed class WorkOrderService(
     {
         var eventKind = status switch
         {
+            WorkOrderStatuses.Requested or WorkOrderStatuses.Open => MaintenancePlatformOutboxEventKinds.WorkOrderRequested,
+            WorkOrderStatuses.Triage => MaintenancePlatformOutboxEventKinds.WorkOrderAssigned,
+            WorkOrderStatuses.Approved => MaintenancePlatformOutboxEventKinds.WorkOrderApproved,
+            WorkOrderStatuses.Rejected => MaintenancePlatformOutboxEventKinds.WorkOrderRejected,
+            WorkOrderStatuses.Planned => MaintenancePlatformOutboxEventKinds.WorkOrderPlanned,
+            WorkOrderStatuses.Scheduled => MaintenancePlatformOutboxEventKinds.WorkOrderAssigned,
+            WorkOrderStatuses.Assigned => MaintenancePlatformOutboxEventKinds.WorkOrderAssigned,
             WorkOrderStatuses.InProgress => MaintenancePlatformOutboxEventKinds.WorkOrderStarted,
+            WorkOrderStatuses.Paused => MaintenancePlatformOutboxEventKinds.WorkOrderPaused,
             WorkOrderStatuses.Completed => MaintenancePlatformOutboxEventKinds.WorkOrderCompleted,
+            WorkOrderStatuses.CompletedPendingReview => MaintenancePlatformOutboxEventKinds.WorkOrderCompleted,
+            WorkOrderStatuses.Closed => MaintenancePlatformOutboxEventKinds.WorkOrderClosed,
+            WorkOrderStatuses.Cancelled or WorkOrderStatuses.Canceled => MaintenancePlatformOutboxEventKinds.WorkOrderCanceled,
             _ => null,
         };
 
@@ -1242,7 +1329,9 @@ public sealed class WorkOrderService(
 
     private static bool IsComplianceCoreGatedStatus(string status) =>
         string.Equals(status, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(status, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase);
+        || string.Equals(status, WorkOrderStatuses.CompletedPendingReview, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPermissiveComplianceCoreGateOutcome(string outcome) =>
         string.Equals(outcome, "allow", StringComparison.OrdinalIgnoreCase)
@@ -1261,15 +1350,20 @@ public sealed class WorkOrderService(
             && !string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId)
             && string.Equals(workOrder.AssignedTechnicianPersonId, personId, StringComparison.Ordinal);
 
-        if (string.Equals(toStatus, WorkOrderStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(toStatus, WorkOrderStatuses.Cancelled, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(toStatus, WorkOrderStatuses.Canceled, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(toStatus, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
                 "auth.forbidden",
-                "Only managers can cancel work orders.",
+                "Only managers can close or cancel work orders.",
                 403);
         }
 
-        if (string.Equals(toStatus, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(toStatus, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(toStatus, WorkOrderStatuses.Paused, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(toStatus, WorkOrderStatuses.Blocked, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(toStatus, WorkOrderStatuses.CompletedPendingReview, StringComparison.OrdinalIgnoreCase))
         {
             if (isCreator || isAssignee || string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
             {
@@ -1278,7 +1372,7 @@ public sealed class WorkOrderService(
 
             throw new StlApiException(
                 "auth.forbidden",
-                "You can only start work orders you created, are assigned to, or that are unassigned.",
+                "You can only move work orders into execution states when you created them, are assigned, or are unassigned.",
                 403);
         }
 
@@ -1314,7 +1408,7 @@ public sealed class WorkOrderService(
         return $"WO-{DateTimeOffset.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..24];
     }
 
-    private async Task EnsureActiveAssetAsync(Guid tenantId, Guid assetId, CancellationToken cancellationToken)
+    private async Task<Asset> EnsureActiveAssetAsync(Guid tenantId, Guid assetId, CancellationToken cancellationToken)
     {
         var asset = await db.Assets
             .AsNoTracking()
@@ -1335,7 +1429,7 @@ public sealed class WorkOrderService(
 
         if (string.Equals(assetStatus, "active", StringComparison.OrdinalIgnoreCase))
         {
-            return;
+            return asset;
         }
 
         var lifecycleIsActive = string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase)
@@ -1343,7 +1437,7 @@ public sealed class WorkOrderService(
 
         if (string.IsNullOrWhiteSpace(assetStatus) && lifecycleIsActive)
         {
-            return;
+            return asset;
         }
 
         throw new StlApiException(
@@ -1426,6 +1520,13 @@ public sealed class WorkOrderService(
                     workOrder.Priority,
                     workOrder.Status,
                     workOrder.Source,
+                    "maintainarr",
+                    workOrder.Id.ToString("D"),
+                    workOrder.WorkOrderType,
+                    workOrder.OriginType,
+                    workOrder.OriginRef,
+                    asset?.StaffarrSiteOrgUnitId,
+                    workOrder.StaffarrLocationId,
                     workOrder.AssignedTechnicianPersonId,
                     workOrder.CreatedByUserId,
                     workOrder.CreatedAt,
@@ -1445,6 +1546,9 @@ public sealed class WorkOrderService(
     {
         var summaries = await MapSummariesAsync(tenantId, [workOrder], cancellationToken);
         var summary = summaries[0];
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
 
         string? defectTitle = null;
         if (workOrder.DefectId.HasValue)
@@ -1491,6 +1595,55 @@ public sealed class WorkOrderService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id, cancellationToken);
 
+        var permitRefs = await db.MaintenancePermitRefs
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id)
+            .OrderByDescending(x => x.ValidFrom)
+            .ThenByDescending(x => x.Id)
+            .Select(x => new MaintenancePermitRefResponse(
+                x.Id,
+                x.WorkOrderId,
+                x.PermitType,
+                x.SourceProduct,
+                x.SourceObjectRef,
+                x.RecordRef,
+                x.StatusSnapshot,
+                x.ApprovedByPersonId,
+                x.ValidFrom,
+                x.ValidTo))
+            .ToListAsync(cancellationToken);
+
+        var returnToService = await db.ReturnToServices
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id, cancellationToken);
+
+        var vendorWorkRefs = await db.MaintenanceVendorWorks
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var technicianAssignments = await db.WorkOrderTechnicianAssignments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id)
+            .OrderByDescending(x => x.AssignedAt)
+            .ThenByDescending(x => x.Id)
+            .Select(x => new WorkOrderTechnicianAssignmentResponse(
+                x.Id,
+                x.WorkOrderId,
+                x.PersonId,
+                x.AssignmentRole,
+                x.Status,
+                x.AssignedAt,
+                x.AssignedByPersonId,
+                x.AcceptedAt,
+                x.CompletedAt,
+                DeserializeStringList(x.RequiredQualificationRefsJson),
+                DeserializeQualificationCheckResults(x.QualificationCheckSnapshotJson)))
+            .ToListAsync(cancellationToken);
+
         return new WorkOrderDetailResponse(
             summary.WorkOrderId,
             summary.WorkOrderNumber,
@@ -1507,6 +1660,23 @@ public sealed class WorkOrderService(
             workOrder.Priority,
             workOrder.Status,
             workOrder.Source,
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            workOrder.WorkOrderType,
+            workOrder.OriginType,
+            workOrder.OriginRef,
+            asset.StaffarrSiteOrgUnitId,
+            workOrder.StaffarrLocationId,
+            string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId)
+                ? Array.Empty<string>()
+                : [workOrder.AssignedTechnicianPersonId],
+            null,
+            DeserializeStringList(workOrder.RequiredQualificationRefsJson),
+            DeserializeQualificationCheckResults(workOrder.QualificationCheckResultsJson),
+            technicianAssignments,
+            permitRefs,
+            returnToService is null ? null : MapReturnToServiceResponse(returnToService),
+            vendorWorkRefs,
             workOrder.AssignedTechnicianPersonId,
             workOrder.CreatedByUserId,
             workOrder.CreatedAt,
@@ -1566,9 +1736,25 @@ public sealed class WorkOrderService(
             closeout.DowntimeSummary,
             closeout.FinalAssetReadinessStatus,
             closeout.FinalStatus,
+            DeserializeGuidList(closeout.PermitRecordRefsJson),
             DeserializeGuidList(closeout.EvidenceRecordRefsJson),
             closeout.CreatedAt,
             closeout.CreatedByPersonId);
+
+    private static ReturnToServiceResponse MapReturnToServiceResponse(ReturnToService returnToService) =>
+        new(
+            returnToService.Id,
+            returnToService.WorkOrderId,
+            returnToService.AssetId,
+            returnToService.Status,
+            DeserializeStringList(returnToService.RequiredChecksJson),
+            DeserializeStringList(returnToService.CompletedChecksJson),
+            returnToService.FinalInspectionRef,
+            returnToService.ApprovedByPersonId,
+            returnToService.ApprovedAt,
+            returnToService.RejectionReason,
+            returnToService.FinalReadinessStatus,
+            DeserializeGuidList(returnToService.RecordRefsJson));
 
     private static string SerializeWorkOrderSnapshot(WorkOrder workOrder) =>
         JsonSerializer.Serialize(new
@@ -1584,7 +1770,13 @@ public sealed class WorkOrderService(
             workOrder.Priority,
             workOrder.Status,
             workOrder.Source,
+            workOrder.WorkOrderType,
+            workOrder.OriginType,
+            workOrder.OriginRef,
+            workOrder.StaffarrLocationId,
             workOrder.AssignedTechnicianPersonId,
+            RequiredQualificationRefs = DeserializeStringList(workOrder.RequiredQualificationRefsJson),
+            QualificationCheckResults = DeserializeQualificationCheckResults(workOrder.QualificationCheckResultsJson),
             workOrder.CreatedAt,
             workOrder.UpdatedAt,
             workOrder.StartedAt,
@@ -1642,6 +1834,7 @@ public sealed class WorkOrderService(
             closeout.DowntimeSummary,
             closeout.FinalAssetReadinessStatus,
             closeout.FinalStatus,
+            PermitRecordRefs = DeserializeGuidList(closeout.PermitRecordRefsJson),
             EvidenceRecordRefs = DeserializeGuidList(closeout.EvidenceRecordRefsJson),
         });
 
@@ -1667,6 +1860,164 @@ public sealed class WorkOrderService(
 
     private static string SerializeGuidList(IReadOnlyList<Guid> refs) =>
         JsonSerializer.Serialize(refs);
+
+    private async Task UpsertReturnToServiceAsync(
+        Guid tenantId,
+        WorkOrder workOrder,
+        WorkOrderCloseout closeout,
+        IReadOnlyList<Guid> permitRecordRefs,
+        IReadOnlyList<Guid> evidenceRecordRefs,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.ReturnToServices
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id, cancellationToken);
+
+        if (entity is null)
+        {
+            entity = new ReturnToService
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                WorkOrderId = workOrder.Id,
+                AssetId = workOrder.AssetId,
+            };
+            db.ReturnToServices.Add(entity);
+        }
+
+        entity.AssetId = workOrder.AssetId;
+        entity.Status = DetermineReturnToServiceStatus(closeout);
+        entity.RequiredChecksJson = SerializeStringList(BuildRequiredReturnToServiceChecks(closeout));
+        entity.CompletedChecksJson = SerializeStringList(BuildCompletedReturnToServiceChecks(closeout));
+        entity.FinalInspectionRef = closeout.PostRepairInspectionRef;
+        entity.ApprovedByPersonId = closeout.ReturnToServiceByPersonId;
+        entity.ApprovedAt = closeout.ReturnToServiceAt;
+        entity.RejectionReason = !closeout.AssetReturnedToService && string.Equals(entity.Status, ReturnToServiceStatuses.Rejected, StringComparison.OrdinalIgnoreCase)
+            ? closeout.CompletionSummary
+            : null;
+        entity.FinalReadinessStatus = closeout.FinalAssetReadinessStatus;
+        entity.RecordRefsJson = SerializeGuidList(permitRecordRefs.Concat(evidenceRecordRefs).ToArray());
+    }
+
+    private async Task UpsertPermitRefsAsync(
+        Guid tenantId,
+        WorkOrder workOrder,
+        WorkOrderCloseout closeout,
+        IReadOnlyList<Guid> permitRecordRefs,
+        CancellationToken cancellationToken)
+    {
+        var existing = await db.MaintenancePermitRefs
+            .Where(x => x.TenantId == tenantId && x.WorkOrderId == workOrder.Id)
+            .ToListAsync(cancellationToken);
+
+        var desiredRefs = new HashSet<Guid>(permitRecordRefs);
+        var sourceObjectRef = workOrder.Id.ToString("D");
+        foreach (var permitRef in existing.Where(x =>
+            !string.IsNullOrWhiteSpace(x.RecordRef)
+            && Guid.TryParse(x.RecordRef, out var parsed)
+            && !desiredRefs.Contains(parsed)).ToList())
+        {
+            db.MaintenancePermitRefs.Remove(permitRef);
+        }
+
+        foreach (var permitRecordRef in permitRecordRefs)
+        {
+            var entity = existing.FirstOrDefault(x => string.Equals(x.RecordRef, permitRecordRef.ToString("D"), StringComparison.OrdinalIgnoreCase));
+            if (entity is null)
+            {
+                entity = new MaintenancePermitRef
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    WorkOrderId = workOrder.Id,
+                };
+                db.MaintenancePermitRefs.Add(entity);
+            }
+
+            entity.PermitType = MaintenancePermitTypes.Other;
+            entity.SourceProduct = "maintainarr";
+            entity.SourceObjectRef = sourceObjectRef;
+            entity.RecordRef = permitRecordRef.ToString("D");
+            entity.StatusSnapshot = closeout.FinalStatus;
+            entity.ApprovedByPersonId = closeout.ReturnToServiceByPersonId ?? closeout.SupervisorReviewedByPersonId ?? closeout.ComplianceReviewedByPersonId ?? closeout.QualityReviewedByPersonId;
+            entity.ValidFrom = closeout.ReturnToServiceAt;
+            entity.ValidTo = null;
+        }
+    }
+
+    private static string DetermineReturnToServiceStatus(WorkOrderCloseout closeout)
+    {
+        if (closeout.AssetReturnedToService)
+        {
+            return ReturnToServiceStatuses.Approved;
+        }
+
+        if (string.Equals(closeout.FinalStatus, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+        {
+            return ReturnToServiceStatuses.NotRequired;
+        }
+
+        if (string.Equals(closeout.FinalStatus, WorkOrderStatuses.Rejected, StringComparison.OrdinalIgnoreCase))
+        {
+            return ReturnToServiceStatuses.Rejected;
+        }
+
+        return ReturnToServiceStatuses.Pending;
+    }
+
+    private static IReadOnlyList<string> BuildRequiredReturnToServiceChecks(WorkOrderCloseout closeout)
+    {
+        var checks = new List<string>();
+        if (closeout.PostRepairInspectionRequired)
+        {
+            checks.Add("post_repair_inspection");
+        }
+
+        if (closeout.SupervisorReviewRequired)
+        {
+            checks.Add("supervisor_review");
+        }
+
+        if (closeout.ComplianceReviewRequired)
+        {
+            checks.Add("compliance_review");
+        }
+
+        if (closeout.QualityReviewRequired)
+        {
+            checks.Add("quality_review");
+        }
+
+        return checks;
+    }
+
+    private static IReadOnlyList<string> BuildCompletedReturnToServiceChecks(WorkOrderCloseout closeout)
+    {
+        var checks = new List<string>();
+        if (closeout.PostRepairInspectionRef.HasValue)
+        {
+            checks.Add("post_repair_inspection");
+        }
+
+        if (!string.IsNullOrWhiteSpace(closeout.SupervisorReviewedByPersonId) || closeout.SupervisorReviewedAt.HasValue)
+        {
+            checks.Add("supervisor_review");
+        }
+
+        if (!string.IsNullOrWhiteSpace(closeout.ComplianceReviewedByPersonId) || closeout.ComplianceReviewedAt.HasValue)
+        {
+            checks.Add("compliance_review");
+        }
+
+        if (!string.IsNullOrWhiteSpace(closeout.QualityReviewedByPersonId) || closeout.QualityReviewedAt.HasValue)
+        {
+            checks.Add("quality_review");
+        }
+
+        return checks;
+    }
+
+    private static string SerializeStringList(IReadOnlyList<string> values) =>
+        JsonSerializer.Serialize(values);
 
     private async Task EnsureCloseoutEvidenceRecordRefsAsync(
         Guid tenantId,
@@ -1697,11 +2048,34 @@ public sealed class WorkOrderService(
     private static string GetStatusTimelineEventType(string status) =>
         status.ToLowerInvariant() switch
         {
+            WorkOrderStatuses.Requested or WorkOrderStatuses.Open => "maintainarr.work_order.requested",
+            WorkOrderStatuses.Triage => "maintainarr.work_order.triaged",
+            WorkOrderStatuses.Approved => "maintainarr.work_order.approved",
+            WorkOrderStatuses.Rejected => "maintainarr.work_order.rejected",
+            WorkOrderStatuses.Planned => "maintainarr.work_order.planned",
+            WorkOrderStatuses.Scheduled => "maintainarr.work_order.scheduled",
+            WorkOrderStatuses.Assigned => "maintainarr.work_order.assigned",
             WorkOrderStatuses.InProgress => "maintainarr.work_order.started",
+            WorkOrderStatuses.Paused => "maintainarr.work_order.paused",
+            WorkOrderStatuses.Blocked => "maintainarr.work_order.blocked",
+            WorkOrderStatuses.CompletedPendingReview => "maintainarr.work_order.completed",
             WorkOrderStatuses.Completed => "maintainarr.work_order.completed",
+            WorkOrderStatuses.Closed => "maintainarr.work_order.closed",
             WorkOrderStatuses.Cancelled => "maintainarr.work_order.canceled",
+            WorkOrderStatuses.Canceled => "maintainarr.work_order.canceled",
             _ => "maintainarr.work_order.updated",
         };
+
+    private static string NormalizeCloseoutFinalStatus(string status)
+    {
+        var normalized = status.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "review_pending" => WorkOrderStatuses.CompletedPendingReview,
+            "cancelled" => WorkOrderStatuses.Canceled,
+            _ => normalized,
+        };
+    }
 
     private async Task EnqueueWorkOrderBlockerEventAsync(
         Guid tenantId,
@@ -2052,14 +2426,14 @@ public sealed class WorkOrderService(
         return personId.Trim();
     }
 
-    private async Task EnsureAssignedTechnicianQualifiedAsync(
+    private async Task<WorkOrderQualificationCheckResultResponse?> CheckAssignedTechnicianQualificationAsync(
         Guid tenantId,
         string? assignedTechnicianPersonId,
         CancellationToken cancellationToken)
     {
         if (!trainArrQualificationCheckClient.IsConfigured || string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
         {
-            return;
+            return null;
         }
 
         if (!Guid.TryParse(assignedTechnicianPersonId.Trim(), out var staffarrPersonId))
@@ -2077,7 +2451,15 @@ public sealed class WorkOrderService(
 
         if (check is null || string.Equals(check.Outcome, "allow", StringComparison.OrdinalIgnoreCase))
         {
-            return;
+            return check is null
+                ? null
+                : new WorkOrderQualificationCheckResultResponse(
+                    check.CheckId,
+                    staffarrPersonId.ToString("D"),
+                    check.QualificationKey,
+                    check.Outcome,
+                    check.ReasonCode,
+                    check.Message);
         }
 
         throw new StlApiException(
@@ -2103,6 +2485,101 @@ public sealed class WorkOrderService(
             assignedTechnicianPersonId,
             null,
             cancellationToken);
+    }
+
+    private async Task UpsertTechnicianAssignmentAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid workOrderId,
+        string? personId,
+        WorkOrderQualificationCheckResultResponse? qualificationSnapshot,
+        DateTimeOffset assignedAt,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(personId))
+        {
+            return;
+        }
+
+        var normalizedPersonId = personId.Trim();
+        var assignment = await db.WorkOrderTechnicianAssignments
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId
+                    && x.WorkOrderId == workOrderId
+                    && x.PersonId == normalizedPersonId
+                    && x.AssignmentRole == WorkOrderTechnicianAssignmentRoles.Primary,
+                cancellationToken);
+
+        if (assignment is null)
+        {
+            assignment = new WorkOrderTechnicianAssignment
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                WorkOrderId = workOrderId,
+                PersonId = normalizedPersonId,
+                AssignmentRole = WorkOrderTechnicianAssignmentRoles.Primary,
+                AssignedAt = assignedAt,
+            };
+            db.WorkOrderTechnicianAssignments.Add(assignment);
+        }
+
+        assignment.Status = WorkOrderTechnicianAssignmentStatuses.Assigned;
+        assignment.AssignedAt = assignedAt;
+        assignment.AssignedByPersonId = actorUserId?.ToString("D");
+        assignment.RequiredQualificationRefsJson = SerializeStringList(
+            qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]);
+        assignment.QualificationCheckSnapshotJson = SerializeQualificationCheckResults(qualificationSnapshot);
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string? NormalizeLocationRef(string? locationRef)
+    {
+        if (string.IsNullOrWhiteSpace(locationRef))
+        {
+            return null;
+        }
+
+        return locationRef.Trim();
+    }
+
+    private static IReadOnlyList<string> DeserializeStringList(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json)?.ToArray() ?? Array.Empty<string>();
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Invalid serialized string list.", ex);
+        }
+    }
+
+    private static string SerializeQualificationCheckResults(WorkOrderQualificationCheckResultResponse? snapshot) =>
+        snapshot is null ? "[]" : JsonSerializer.Serialize(new[] { snapshot });
+
+    private static IReadOnlyList<WorkOrderQualificationCheckResultResponse> DeserializeQualificationCheckResults(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return Array.Empty<WorkOrderQualificationCheckResultResponse>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<WorkOrderQualificationCheckResultResponse>>(json)?.ToArray()
+                ?? Array.Empty<WorkOrderQualificationCheckResultResponse>();
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Invalid serialized qualification check results.", ex);
+        }
     }
 
     private static class WorkOrderBlockerTypes

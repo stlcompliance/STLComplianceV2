@@ -82,6 +82,42 @@ public static class InspectionEndpoints
         })
         .WithName($"SubmitInspectionRunAnswers{nameSuffix}");
 
+        group.MapPost("/{inspectionRunId:guid}/pause", async (
+            Guid inspectionRunId,
+            PauseInspectionRunRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionRunService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsExecute(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var existing = await service.GetAsync(tenantId, inspectionRunId, cancellationToken);
+            authorization.RequireInspectionRunAccess(context.User, existing.StartedByUserId);
+            var paused = await service.PauseAsync(tenantId, actorUserId, inspectionRunId, request, cancellationToken);
+            return Results.Ok(paused);
+        })
+        .WithName($"PauseInspectionRun{nameSuffix}");
+
+        group.MapPost("/{inspectionRunId:guid}/resume", async (
+            Guid inspectionRunId,
+            ResumeInspectionRunRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionRunService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsExecute(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var existing = await service.GetAsync(tenantId, inspectionRunId, cancellationToken);
+            authorization.RequireInspectionRunAccess(context.User, existing.StartedByUserId);
+            var resumed = await service.ResumeAsync(tenantId, actorUserId, inspectionRunId, request, cancellationToken);
+            return Results.Ok(resumed);
+        })
+        .WithName($"ResumeInspectionRun{nameSuffix}");
+
         group.MapPost("/{inspectionRunId:guid}/complete", async (
             Guid inspectionRunId,
             HttpContext context,

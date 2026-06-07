@@ -457,6 +457,43 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_pause_and_resume_enqueue_platform_events()
+    {
+        var assetId = await SeedActiveAssetAsync("INSPECT-EVT-PAUSE-001");
+        var checklistItemId = Guid.NewGuid();
+        var templateId = await SeedInspectionTemplateAsync(checklistItemId);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/v1/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var run = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var pauseRequest = Authorized(HttpMethod.Post, $"/api/v1/inspections/{run.InspectionRunId}/pause", token);
+        pauseRequest.Content = JsonContent.Create(new PauseInspectionRunRequest("waiting_parts", "Waiting on filter delivery."));
+        (await _maintainarrClient.SendAsync(pauseRequest)).EnsureSuccessStatusCode();
+
+        var resumeRequest = Authorized(HttpMethod.Post, $"/api/v1/inspections/{run.InspectionRunId}/resume", token);
+        resumeRequest.Content = JsonContent.Create(new ResumeInspectionRunRequest("Filter arrived."));
+        (await _maintainarrClient.SendAsync(resumeRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.InspectionRun
+                && x.RelatedEntityId == run.InspectionRunId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionStarted);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionPaused);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionResumed);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+    }
+
+    [Fact]
     public async Task Component_lifecycle_enqueues_platform_events()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
@@ -589,6 +626,137 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderCompleted);
         Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
         Assert.Contains(outbox, x => x.PayloadJson.Contains("\"targetEntityType\":\"work_order\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Labor_entry_lifecycle_enqueues_platform_events()
+    {
+        await UpsertPlatformEventSettingsAsync();
+        var assetId = await SeedActiveAssetAsync("LABOR-EVT-001");
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var workOrderId = await CreateWorkOrderAsync(token, assetId, "Labor event work order");
+
+        var firstCreateRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/labor", token);
+        firstCreateRequest.Content = JsonContent.Create(new CreateWorkOrderLaborEntryRequest(
+            PlatformSeeder.DemoAdminUserId.ToString("D"),
+            1.5m,
+            "regular",
+            null,
+            "Initial labor entry"));
+        var firstCreateResponse = await _maintainarrClient.SendAsync(firstCreateRequest);
+        firstCreateResponse.EnsureSuccessStatusCode();
+        var firstLabor = (await firstCreateResponse.Content.ReadFromJsonAsync<WorkOrderLaborEntryResponse>())!;
+
+        var firstApproveRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/v1/work-orders/{workOrderId}/labor/{firstLabor.LaborEntryId}/status",
+            token);
+        firstApproveRequest.Content = JsonContent.Create(new UpdateWorkOrderLaborEntryStatusRequest(
+            "approved",
+            null));
+        (await _maintainarrClient.SendAsync(firstApproveRequest)).EnsureSuccessStatusCode();
+
+        var secondCreateRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/labor", token);
+        secondCreateRequest.Content = JsonContent.Create(new CreateWorkOrderLaborEntryRequest(
+            PlatformSeeder.DemoAdminUserId.ToString("D"),
+            0.75m,
+            "diagnostic",
+            null,
+            "Follow-up labor entry"));
+        var secondCreateResponse = await _maintainarrClient.SendAsync(secondCreateRequest);
+        secondCreateResponse.EnsureSuccessStatusCode();
+        var secondLabor = (await secondCreateResponse.Content.ReadFromJsonAsync<WorkOrderLaborEntryResponse>())!;
+
+        var secondRejectRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/v1/work-orders/{workOrderId}/labor/{secondLabor.LaborEntryId}/status",
+            token);
+        secondRejectRequest.Content = JsonContent.Create(new UpdateWorkOrderLaborEntryStatusRequest(
+            "rejected",
+            "Time entry did not match the approved scope."));
+        (await _maintainarrClient.SendAsync(secondRejectRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var firstOutbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.LaborEntry
+                && x.RelatedEntityId == firstLabor.LaborEntryId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+        var secondOutbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.LaborEntry
+                && x.RelatedEntityId == secondLabor.LaborEntryId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(firstOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntryCreated);
+        Assert.Contains(firstOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntrySubmitted);
+        Assert.Contains(firstOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntryApproved);
+        Assert.Contains(secondOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntryCreated);
+        Assert.Contains(secondOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntrySubmitted);
+        Assert.Contains(secondOutbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.LaborEntryRejected);
+        Assert.All(firstOutbox.Concat(secondOutbox), x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+    }
+
+    [Fact]
+    public async Task Vendor_work_lifecycle_enqueues_platform_events()
+    {
+        await UpsertPlatformEventSettingsAsync();
+        var assetId = await SeedActiveAssetAsync("VENDOR-EVT-001");
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var workOrderId = await CreateWorkOrderAsync(token, assetId, "Vendor event work order");
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/vendor-work", token);
+        createRequest.Content = JsonContent.Create(new UpsertMaintenanceVendorWorkRequest(
+            "SUP-100",
+            "Vendor contact snapshot",
+            "requested",
+            "Initial vendor coordination",
+            "quote-ref-100",
+            null,
+            null,
+            null,
+            "cost-estimate-100",
+            null,
+            false,
+            "Vendor work created through the API"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkResponse>())!;
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/vendor-work", token);
+        completeRequest.Content = JsonContent.Create(new UpsertMaintenanceVendorWorkRequest(
+            "SUP-100",
+            "Vendor contact snapshot",
+            "completed",
+            "Initial vendor coordination",
+            "quote-ref-100",
+            "approval-ref-100",
+            DateTimeOffset.UtcNow.AddHours(-2),
+            DateTimeOffset.UtcNow,
+            "cost-estimate-100",
+            "invoice-ref-100",
+            false,
+            "Vendor work completed through the API"));
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkResponse>())!;
+        Assert.Equal(created.VendorWorkId, completed.VendorWorkId);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.VendorWork
+                && x.RelatedEntityId == created.VendorWorkId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkCreated);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkCompleted);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
     }
 
     private async Task UpsertRollupSettingsAsync()
@@ -763,6 +931,22 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         db.Assets.Add(asset);
         await db.SaveChangesAsync();
         return asset.Id;
+    }
+
+    private async Task<Guid> CreateWorkOrderAsync(string token, Guid assetId, string title)
+    {
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/work-orders", token);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            title,
+            "Platform event coverage",
+            "medium",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        return created.WorkOrderId;
     }
 
     private async Task<Guid> SeedInspectionTemplateAsync(Guid checklistItemId)

@@ -1294,6 +1294,29 @@
         }
       }
     },
+    "/api/dock-appointments": {
+      "get": {
+        "tags": [
+          "DockAppointments"
+        ],
+        "operationId": "ListDockAppointments",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/driver-availability": {
       "get": {
         "tags": [
@@ -2496,6 +2519,621 @@
         }
       }
     },
+    "/api/integrations/assignment-validations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateAssignmentValidation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchAssignmentPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dispatch-plans": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListDispatchPlans",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateDispatchPlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/dispatch-plans/{dispatchPlanId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetDispatchPlan",
+        "parameters": [
+          {
+            "name": "dispatchPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/driver-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateDriverReadinessCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverEligibilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/equipment-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateEquipmentReadinessCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetDispatchabilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/eta-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateTripEtaIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripEtaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/eta/{tripId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTripEtaIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exceptions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateExceptionIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetExceptionIntegration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exceptions/{exceptionId}/close": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseExceptionIntegration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/exceptions/{exceptionId}/resolve": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ResolveExceptionIntegration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/load-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadReadinessCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoadReadinessCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/proof-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateProofEventIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProofEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/proof-events/{proofEventId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetProofEventIntegration",
+        "parameters": [
+          {
+            "name": "proofEventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routes": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRoutesIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "routeStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRouteIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRouteIntegration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routes/{routeId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelRouteIntegration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routes/{routeId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseRouteIntegration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateStopIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationRouteStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetStopIntegration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops/{stopId}/arrive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopArriveIntegration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops/{stopId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopCompleteIntegration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops/{stopId}/depart": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopDepartIntegration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/stops/{stopId}/fail": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopFailIntegration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/supplyarr-demand-status": {
       "post": {
         "tags": [
@@ -2535,6 +3173,213 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListTripsIntegration",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateTripIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTripIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}/assign-driver": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AssignTripDriverIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripDriverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}/assign-equipment": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AssignTripEquipmentIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripVehicleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelTripIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteTripIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trips/{tripId}/start": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "StartTripIntegration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2961,6 +3806,29 @@
           "LoadTestJourney"
         ],
         "operationId": "GetRoutArrLoadTestJourneyTrip",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/load-visibility": {
+      "get": {
+        "tags": [
+          "LoadVisibility"
+        ],
+        "operationId": "ListLoadVisibility",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4916,6 +5784,29 @@
         }
       }
     },
+    "/api/v1/dock-appointments": {
+      "get": {
+        "tags": [
+          "DockAppointments"
+        ],
+        "operationId": "ListDockAppointmentsV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/driver-assignments": {
       "get": {
         "tags": [
@@ -5176,6 +6067,621 @@
         }
       }
     },
+    "/api/v1/integrations/assignment-validations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateAssignmentValidationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchAssignmentPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dispatch-plans": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListDispatchPlansV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateDispatchPlanV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/dispatch-plans/{dispatchPlanId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetDispatchPlanV1",
+        "parameters": [
+          {
+            "name": "dispatchPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/driver-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateDriverReadinessCheckV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverEligibilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/equipment-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateEquipmentReadinessCheckV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetDispatchabilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/eta-updates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateTripEtaV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripEtaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/eta/{tripId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTripEtaV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exceptions": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateExceptionV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetExceptionV1Integration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exceptions/{exceptionId}/close": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CloseExceptionV1Integration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/exceptions/{exceptionId}/resolve": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ResolveExceptionV1Integration",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/load-readiness-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateLoadReadinessCheckV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoadReadinessCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/proof-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateProofEventV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProofEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/proof-events/{proofEventId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetProofEventV1Integration",
+        "parameters": [
+          {
+            "name": "proofEventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routes": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRoutesV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "routeStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRouteV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRouteV1Integration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routes/{routeId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelRouteV1Integration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routes/{routeId}/release": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReleaseRouteV1Integration",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateStopV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationRouteStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetStopV1Integration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops/{stopId}/arrive": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopArriveV1Integration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops/{stopId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopCompleteV1Integration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops/{stopId}/depart": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopDepartV1Integration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/stops/{stopId}/fail": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateStopFailV1Integration",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/supplyarr-demand-status": {
       "post": {
         "tags": [
@@ -5215,6 +6721,213 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListTripsV1Integration",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateTripV1Integration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTripV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}/assign-driver": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AssignTripDriverV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripDriverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}/assign-equipment": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AssignTripEquipmentV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripVehicleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}/cancel": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CancelTripV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}/complete": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CompleteTripV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/trips/{tripId}/start": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "StartTripV1Integration",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5273,6 +6986,29 @@
           "Launch"
         ],
         "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/load-visibility": {
+      "get": {
+        "tags": [
+          "LoadVisibility"
+        ],
+        "operationId": "ListLoadVisibilityV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6231,6 +7967,89 @@
           }
         }
       },
+      "CreateDispatchPlanRequest": {
+        "required": [
+          "title",
+          "description",
+          "dispatchDate",
+          "dispatchType",
+          "plannerPersonId",
+          "dispatcherPersonId",
+          "staffarrSiteId",
+          "routeRefs",
+          "tripRefs",
+          "blockerRefs",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dispatchDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dispatchType": {
+            "type": "string"
+          },
+          "plannerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispatcherPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "staffarrSiteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "routeRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "tripRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockerRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateDriverAvailabilityRequest": {
         "required": [
           "personId",
@@ -6337,6 +8156,129 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateIntegrationRouteStopRequest": {
+        "required": [
+          "routeId",
+          "stopKey",
+          "label",
+          "addressLabel",
+          "stopType",
+          "sequenceNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "routeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stopKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "addressLabel": {
+            "type": "string"
+          },
+          "stopType": {
+            "type": "string"
+          },
+          "sequenceNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "geofenceAnchorLatitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceAnchorLongitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "geofenceRadiusMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "scheduledArrivalAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "staffarrSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateProofEventRequest": {
+        "required": [
+          "tripId",
+          "proofType",
+          "vehicleRefKey",
+          "referenceKey",
+          "notes",
+          "capturedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proofType": {
+            "type": "string"
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -6969,6 +8911,18 @@
           }
         }
       },
+      "LoadReadinessCheckRequest": {
+        "required": [
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "ProcessAttachmentRetentionRequest": {
         "required": [
           "tenantId",
@@ -7433,6 +9387,47 @@
           }
         }
       },
+      "UpdateTripEtaRequest": {
+        "required": [
+          "tripId",
+          "eta",
+          "etaSource",
+          "confidence",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eta": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "etaSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UploadTripCaptureAttachmentRequest": {
         "required": [
           "attachmentKind",
@@ -7791,6 +9786,12 @@
     },
     {
       "name": "Integrations"
+    },
+    {
+      "name": "LoadVisibility"
+    },
+    {
+      "name": "DockAppointments"
     },
     {
       "name": "DispatchMessages"

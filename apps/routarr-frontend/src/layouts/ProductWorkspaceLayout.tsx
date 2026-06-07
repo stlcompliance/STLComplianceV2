@@ -83,7 +83,7 @@ export function ProductWorkspaceLayout() {
     <ProductWorkspaceFrame
       productName="RoutArr"
       productKey="routarr"
-      workspaceSubtitle="Routes, trips, and dispatch"
+      workspaceSubtitle="Dashboard, dispatch, routes, trips, and execution"
       navItems={routarrNavItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}

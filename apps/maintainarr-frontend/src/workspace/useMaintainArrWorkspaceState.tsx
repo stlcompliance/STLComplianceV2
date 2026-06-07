@@ -57,6 +57,7 @@ import {
   getInspectionVoiceGuidance,
   getTechnicianRefs,
   normalizeInspectionVoiceNumeric,
+  pauseInspectionRun,
   getAssetReadiness,
   getAssetReadinessHistory,
   getAssetReadinessFleet,
@@ -67,7 +68,9 @@ import {
   replaceInspectionTemplateAssetTypes,
   startInspectionRun,
   submitInspectionRunAnswers,
+  resumeInspectionRun,
   updateDefectStatus,
+  updateWorkOrderLaborStatus,
   updateWorkOrderStatus,
 } from '../api/client'
 import type {
@@ -124,6 +127,7 @@ export function useMaintainArrWorkspaceState() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const handoff = searchParams.get('handoff')
+  const initialWorkOrderId = searchParams.get('workOrderId')?.trim() ?? ''
   const handoffRedirect = handoff
     ? <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
     : null
@@ -166,6 +170,8 @@ export function useMaintainArrWorkspaceState() {
   const [inspectionEvidenceNotes, setInspectionEvidenceNotes] = useState('')
   const [inspectionEvidenceFile, setInspectionEvidenceFile] = useState<File | null>(null)
   const [inspectionEvidenceChecklistItemId, setInspectionEvidenceChecklistItemId] = useState('')
+  const [inspectionPauseReason, setInspectionPauseReason] = useState('interrupted')
+  const [inspectionPauseNotes, setInspectionPauseNotes] = useState('')
   const [workOrderAssetId, setWorkOrderAssetId] = useState('')
   const [workOrderTitle, setWorkOrderTitle] = useState('')
   const [workOrderDescription, setWorkOrderDescription] = useState('')
@@ -212,6 +218,12 @@ export function useMaintainArrWorkspaceState() {
   const [voiceStatusMessage, setVoiceStatusMessage] = useState<string | null>(null)
   const [isVoiceListening, setIsVoiceListening] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (initialWorkOrderId && initialWorkOrderId !== selectedWorkOrderId) {
+      setSelectedWorkOrderId(initialWorkOrderId)
+    }
+  }, [initialWorkOrderId, selectedWorkOrderId])
 
   useEffect(() => {
     setConfirmedMeterKey(null)
@@ -479,6 +491,8 @@ export function useMaintainArrWorkspaceState() {
   const canCloseWorkOrder = meQuery.data
     ? canCloseWorkOrders(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
+
+  const canApproveLabor = canCloseWorkOrder
 
   const viewAllWorkOrders = viewAllRuns
 
@@ -871,6 +885,41 @@ export function useMaintainArrWorkspaceState() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to submit answers'),
   })
 
+  const pauseRunMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedRunId) {
+        throw new Error('No active inspection run selected')
+      }
+
+      return pauseInspectionRun(accessToken, selectedRunId, {
+        reason: inspectionPauseReason || null,
+        notes: inspectionPauseNotes || null,
+      })
+    },
+    onSuccess: async () => {
+      setApiError(null)
+      await invalidateInspectionRuns(selectedRunId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to pause inspection run'),
+  })
+
+  const resumeRunMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedRunId) {
+        throw new Error('No active inspection run selected')
+      }
+
+      return resumeInspectionRun(accessToken, selectedRunId, {
+        notes: inspectionPauseNotes || null,
+      })
+    },
+    onSuccess: async () => {
+      setApiError(null)
+      await invalidateInspectionRuns(selectedRunId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to resume inspection run'),
+  })
+
   const completeRunMutation = useMutation({
     mutationFn: () => completeInspectionRun(accessToken, selectedRunId),
     onSuccess: async () => {
@@ -1038,6 +1087,29 @@ export function useMaintainArrWorkspaceState() {
       await invalidateWorkOrders(selectedWorkOrderId)
     },
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to log labor'),
+  })
+
+  const approveWorkOrderLaborMutation = useMutation({
+    mutationFn: ({ laborEntryId }: { laborEntryId: string }) =>
+      updateWorkOrderLaborStatus(accessToken, selectedWorkOrderId, laborEntryId, { status: 'approved' }),
+    onSuccess: async () => {
+      setApiError(null)
+      await invalidateWorkOrders(selectedWorkOrderId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to approve labor'),
+  })
+
+  const rejectWorkOrderLaborMutation = useMutation({
+    mutationFn: ({ laborEntryId, rejectionReason }: { laborEntryId: string; rejectionReason: string }) =>
+      updateWorkOrderLaborStatus(accessToken, selectedWorkOrderId, laborEntryId, {
+        status: 'rejected',
+        rejectionReason,
+      }),
+    onSuccess: async () => {
+      setApiError(null)
+      await invalidateWorkOrders(selectedWorkOrderId)
+    },
+    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to reject labor'),
   })
 
   const uploadWorkOrderEvidenceMutation = useMutation({
@@ -1329,6 +1401,8 @@ export function useMaintainArrWorkspaceState() {
     runTemplateId,
     selectedRunId,
     answerDrafts,
+    inspectionPauseReason,
+    inspectionPauseNotes,
     voiceGuidanceEnabled,
     voiceGuidanceSupported,
     voiceGuidanceLoading: voiceGuidanceQuery.isLoading,
@@ -1414,6 +1488,8 @@ export function useMaintainArrWorkspaceState() {
     setRunTemplateId,
     setSelectedRunId,
     setAnswerDrafts,
+    setInspectionPauseReason,
+    setInspectionPauseNotes,
     setDefectAssetId,
     setDefectTitle,
     setDefectDescription,
@@ -1517,6 +1593,7 @@ export function useMaintainArrWorkspaceState() {
     canManageDefects,
     canCreateWorkOrder,
     canCloseWorkOrder,
+    canApproveLabor,
     viewAllWorkOrders,
     canExecuteInspections,
     scopedPmSchedules,
@@ -1536,6 +1613,10 @@ export function useMaintainArrWorkspaceState() {
     importTemplateMutation,
     startRunMutation,
     submitAnswersMutation,
+    isPausingRun: pauseRunMutation.isPending,
+    isResumingRun: resumeRunMutation.isPending,
+    pauseRunMutation,
+    resumeRunMutation,
     completeRunMutation,
     createDefectsFromRunMutation,
     createMeterMutation,
@@ -1547,6 +1628,8 @@ export function useMaintainArrWorkspaceState() {
     updateWorkOrderStatusMutation,
     addWorkOrderTaskMutation,
     logWorkOrderLaborMutation,
+    approveWorkOrderLaborMutation,
+    rejectWorkOrderLaborMutation,
     uploadWorkOrderEvidenceMutation,
     addWorkOrderCommentMutation,
     uploadDefectEvidenceMutation,

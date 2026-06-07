@@ -29,6 +29,7 @@ import {
 } from '@stl/shared-ui'
 import { WorkOrderSupplyReadinessPanel } from '../../components/WorkOrderSupplyReadinessPanel'
 import { WorkOrderLaborEvidencePanel } from '../../components/WorkOrderLaborEvidencePanel'
+import { WorkOrderVendorWorkPanel } from '../../components/WorkOrderVendorWorkPanel'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 function humanize(value: string | null | undefined): string {
@@ -521,6 +522,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
               labor={labor}
               evidence={evidence}
               canPerform={s.canExecuteInspections}
+              canApprove={s.canApproveLabor}
               sessionPersonId={s.session.personId}
               technicianRefs={s.technicianRefs}
               taskTitle={s.woTaskTitle}
@@ -542,6 +544,10 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
               onAddTask={() => s.addWorkOrderTaskMutation.mutate()}
               onLogLabor={() => s.logWorkOrderLaborMutation.mutate()}
               onUploadEvidence={() => s.uploadWorkOrderEvidenceMutation.mutate()}
+              onApproveLabor={(laborEntryId) => s.approveWorkOrderLaborMutation.mutate({ laborEntryId })}
+              onRejectLabor={(laborEntryId, rejectionReason) =>
+                s.rejectWorkOrderLaborMutation.mutate({ laborEntryId, rejectionReason })
+              }
               isAddingTask={s.addWorkOrderTaskMutation.isPending}
               isLoggingLabor={s.logWorkOrderLaborMutation.isPending}
               isUploadingEvidence={s.uploadWorkOrderEvidenceMutation.isPending}
@@ -618,6 +624,11 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
               isLoading={s.workOrderSupplyReadinessQuery?.isLoading ?? false}
             />
           </section>
+          <WorkOrderVendorWorkPanel
+            workOrder={order}
+            accessToken={s.accessToken}
+            canPerform={s.canExecuteInspections}
+          />
         </div>
       )}
       decisionTitle="Work order decision"

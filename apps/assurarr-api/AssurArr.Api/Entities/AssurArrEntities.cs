@@ -33,6 +33,8 @@ public sealed class AssurArrNonconformance
     public string[] HoldRefs { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
@@ -91,6 +93,8 @@ public sealed class AssurArrQualityHold
     public DateTimeOffset? RejectedAt { get; set; }
     public Guid? RejectedByPersonId { get; set; }
     public DateTimeOffset? ExpiresAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrCapa
@@ -130,6 +134,8 @@ public sealed class AssurArrCapa
     public string[] RelatedNonconformanceRefs { get; set; } = [];
     public string[] RelatedAuditFindingRefs { get; set; } = [];
     public string[] EffectivenessVerificationRefs { get; set; } = [];
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrCapaAction
@@ -159,6 +165,8 @@ public sealed class AssurArrCapaAction
     public string? Notes { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrCapaActionBlocker
@@ -176,6 +184,8 @@ public sealed class AssurArrCapaActionBlocker
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
     public Guid? ResolvedByPersonId { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrVerificationPlan
@@ -196,6 +206,8 @@ public sealed class AssurArrVerificationPlan
     public string Status { get; set; } = "draft";
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrEffectivenessVerification
@@ -216,6 +228,8 @@ public sealed class AssurArrEffectivenessVerification
     public string? ReopenedCapaRef { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityAudit
@@ -255,6 +269,8 @@ public sealed class AssurArrQualityAudit
     public string[] ChecklistRefs { get; set; } = [];
     public string[] FindingRefs { get; set; } = [];
     public string[] AuditTrail { get; set; } = [];
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityAuditChecklist
@@ -272,6 +288,8 @@ public sealed class AssurArrQualityAuditChecklist
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityAuditChecklistItem
@@ -295,6 +313,8 @@ public sealed class AssurArrQualityAuditChecklistItem
     public Guid? AnsweredByPersonId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrAuditFinding
@@ -323,6 +343,8 @@ public sealed class AssurArrAuditFinding
     public string? NonconformanceRef { get; set; }
     public string? CapaRef { get; set; }
     public DateTimeOffset? DueAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrRootCauseAnalysis
@@ -348,6 +370,8 @@ public sealed class AssurArrRootCauseAnalysis
     public Guid? AnalyzedByPersonId { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public string[] EvidenceRecordRefs { get; set; } = [];
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityStatusSnapshot
@@ -380,6 +404,8 @@ public sealed class AssurArrQualityStatusSnapshot
     public Guid? ReviewedByPersonId { get; set; }
     public DateTimeOffset? ExpiresAt { get; set; }
     public string? Notes { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityScorecard
@@ -413,6 +439,8 @@ public sealed class AssurArrQualityScorecard
     public Guid? ReviewedByPersonId { get; set; }
     public DateTimeOffset? ReviewedAt { get; set; }
     public string[] MetricRefs { get; set; } = [];
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityMetric
@@ -435,6 +463,8 @@ public sealed class AssurArrQualityMetric
     public string[] SourceProductRefs { get; set; } = [];
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityRiskProfile
@@ -454,6 +484,8 @@ public sealed class AssurArrQualityRiskProfile
     public Guid? ReviewedByPersonId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityReview
@@ -485,6 +517,8 @@ public sealed class AssurArrQualityReview
     public string[] RequiredEvidenceRefs { get; set; } = [];
     public string[] SubmittedEvidenceRefs { get; set; } = [];
     public string? Notes { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrQualityRelease
@@ -517,6 +551,8 @@ public sealed class AssurArrQualityRelease
     public DateTimeOffset? ExpirationAt { get; set; }
     public string[] EvidenceRecordRefs { get; set; } = [];
     public string? Notes { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrContainmentAction
@@ -550,6 +586,8 @@ public sealed class AssurArrContainmentAction
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrDisposition
@@ -581,6 +619,8 @@ public sealed class AssurArrDisposition
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrSupplierQualityIssue
@@ -610,6 +650,8 @@ public sealed class AssurArrSupplierQualityIssue
     public string IssueType { get; set; } = "other";
     public Guid? OwnerPersonId { get; set; }
     public DateTimeOffset? OpenedAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrSupplierCorrectiveActionRequest
@@ -642,6 +684,8 @@ public sealed class AssurArrSupplierCorrectiveActionRequest
     public Guid? ClosedByPersonId { get; set; }
     public string? ClosureSummary { get; set; }
     public Guid? OwnerPersonId { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrCustomerComplaintQualityCase
@@ -677,6 +721,8 @@ public sealed class AssurArrCustomerComplaintQualityCase
     public DateTimeOffset? ReceivedAt { get; set; }
     public Guid? ReceivedByPersonId { get; set; }
     public DateTimeOffset? CustomerResponseDueAt { get; set; }
+    public Guid CreatedByPersonId { get; set; }
+    public Guid UpdatedByPersonId { get; set; }
 }
 
 public sealed class AssurArrTimelineEvent

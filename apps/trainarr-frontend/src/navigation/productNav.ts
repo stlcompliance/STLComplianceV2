@@ -1,4 +1,15 @@
-import { GraduationCap, ListChecks, RefreshCw, BookOpen, Package, BadgeCheck, Settings, ListCollapse, StickyNote } from 'lucide-react'
+import {
+  BadgeCheck,
+  BookOpen,
+  GraduationCap,
+  LayoutDashboard,
+  ListChecks,
+  ListCollapse,
+  Package,
+  RefreshCw,
+  Settings,
+  StickyNote,
+} from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -9,6 +20,8 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 
 export const trainarrNavItems: ProductNavItem[] = [
+  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard as NavIcon },
+
   {
     label: 'Programs',
     to: '/programs/drawer',

@@ -518,7 +518,7 @@ public sealed class RouteService(
         {
             throw new StlApiException(
                 "route_stop.invalid_status",
-                "Stop status must be pending, arrived, completed, or skipped.",
+                "Stop status must be pending, planned, en_route, arrived, in_progress, completed, skipped, failed, or canceled.",
                 400);
         }
 
@@ -546,7 +546,7 @@ public sealed class RouteService(
             EnsureDriverCanUpdateStop(stop.Route, actorUserId, actorPersonId);
         }
 
-        if (normalized is RouteStopStatuses.Arrived or RouteStopStatuses.Completed)
+        if (normalized is RouteStopStatuses.Arrived or RouteStopStatuses.InProgress or RouteStopStatuses.Completed)
         {
             await EnsurePriorStopsCompleteAsync(stop, normalized, cancellationToken);
         }
@@ -556,7 +556,23 @@ public sealed class RouteService(
         stop.StopStatus = normalized;
         stop.UpdatedAt = now;
 
+        if (string.Equals(normalized, RouteStopStatuses.EnRoute, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, RouteStopStatuses.Arrived, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, RouteStopStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(stop.Route.RouteStatus, RouteStatuses.Planned, StringComparison.OrdinalIgnoreCase))
+            {
+                stop.Route.RouteStatus = RouteStatuses.Active;
+                stop.Route.ActivatedAt ??= now;
+            }
+        }
+
         if (string.Equals(normalized, RouteStopStatuses.Arrived, StringComparison.OrdinalIgnoreCase))
+        {
+            stop.ArrivedAt ??= now;
+        }
+
+        if (string.Equals(normalized, RouteStopStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
         {
             stop.ArrivedAt ??= now;
         }
@@ -568,13 +584,6 @@ public sealed class RouteService(
         }
 
         stop.Route.UpdatedAt = now;
-
-        if (string.Equals(normalized, RouteStopStatuses.Arrived, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(stop.Route.RouteStatus, RouteStatuses.Planned, StringComparison.OrdinalIgnoreCase))
-        {
-            stop.Route.RouteStatus = RouteStatuses.Active;
-            stop.Route.ActivatedAt ??= now;
-        }
 
         await MaybeCompleteRouteAsync(stop.Route, now, cancellationToken);
 
@@ -595,11 +604,23 @@ public sealed class RouteService(
             {
                 await integrationOutbox.TryEnqueueStopArrivedAsync(stop, cancellationToken);
             }
+            else if (string.Equals(normalized, RouteStopStatuses.EnRoute, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopEnRouteAsync(stop, cancellationToken);
+            }
             else if (string.Equals(normalized, RouteStopStatuses.Completed, StringComparison.OrdinalIgnoreCase))
             {
                 await integrationOutbox.TryEnqueueStopCompletedAsync(stop, cancellationToken);
             }
             else if (string.Equals(normalized, RouteStopStatuses.Skipped, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopMissedAsync(stop, cancellationToken);
+            }
+            else if (string.Equals(normalized, RouteStopStatuses.Failed, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopMissedAsync(stop, cancellationToken);
+            }
+            else if (string.Equals(normalized, RouteStopStatuses.Canceled, StringComparison.OrdinalIgnoreCase))
             {
                 await integrationOutbox.TryEnqueueStopMissedAsync(stop, cancellationToken);
             }
@@ -696,6 +717,45 @@ public sealed class RouteService(
             .OrderBy(x => x.SequenceNumber)
             .Select(MapStop)
             .ToList();
+    }
+
+    public async Task<RouteStopSummaryResponse> GetStopAsync(
+        Guid tenantId,
+        Guid stopId,
+        CancellationToken cancellationToken = default)
+    {
+        var stop = await db.RouteStops
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == stopId, cancellationToken);
+
+        if (stop is null)
+        {
+            throw new StlApiException("route_stop.not_found", "Route stop was not found.", 404);
+        }
+
+        return MapStop(stop);
+    }
+
+    public async Task<RouteAccessContext> GetStopAccessContextAsync(
+        Guid tenantId,
+        Guid stopId,
+        CancellationToken cancellationToken = default)
+    {
+        var stop = await db.RouteStops
+            .AsNoTracking()
+            .Include(x => x.Route)
+            .ThenInclude(x => x!.Trip)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == stopId, cancellationToken);
+
+        if (stop is null)
+        {
+            throw new StlApiException("route_stop.not_found", "Route stop was not found.", 404);
+        }
+
+        return new RouteAccessContext(
+            stop.Route.CreatedByUserId,
+            stop.Route.Trip?.CreatedByUserId,
+            stop.Route.Trip?.AssignedDriverPersonId);
     }
 
     private async Task EnsurePriorStopsCompleteAsync(

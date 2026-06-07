@@ -1,9 +1,11 @@
 export const WORKSPACE_SECTIONS = [
   'people',
   'org',
+  'locations',
   'permissions',
   'readiness',
   'incidents',
+  'restrictions',
   'training-acknowledgements',
   'certifications',
   'admin',
@@ -33,6 +35,10 @@ export const workspaceSectionHeaders: Record<
     title: 'Org structure',
     subtitle: 'Units, assignments, and manager hierarchy',
   },
+  locations: {
+    title: 'Locations',
+    subtitle: 'Sites and internal operational location references',
+  },
   permissions: {
     title: 'Permissions',
     subtitle: 'Role templates, assignments, and projection history',
@@ -44,6 +50,10 @@ export const workspaceSectionHeaders: Record<
   incidents: {
     title: 'Incidents',
     subtitle: 'Personnel incidents and TrainArr routing',
+  },
+  restrictions: {
+    title: 'Restrictions',
+    subtitle: 'Active readiness restrictions and blockers',
   },
   'training-acknowledgements': {
     title: 'Training acknowledgements',

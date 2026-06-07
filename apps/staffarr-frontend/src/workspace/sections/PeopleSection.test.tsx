@@ -166,6 +166,7 @@ function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWo
     permissionCheckMutationError: null,
     profile: null,
     personProfileQuery: { isLoading: false, data: null },
+    personSummaryQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn(), data: null },
     selectedPerson: null,
     assignments: [],
     assignmentQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn() },

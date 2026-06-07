@@ -28,6 +28,8 @@ public sealed class InspectionTemplate : IHasTenant
 
     public string Description { get; set; } = string.Empty;
 
+    public string InspectionType { get; set; } = InspectionTemplateInspectionTypes.Custom;
+
 
 
     public int Version { get; set; } = 1;
@@ -85,6 +87,42 @@ public static class InspectionChecklistItemTypes
     public const string Photo = "photo";
     public const string Signature = "signature";
     public const string MeterReading = "meter_reading";
+}
+
+public static class InspectionTemplateInspectionTypes
+{
+    public const string AnnualDot = "annual_dot";
+    public const string Dvir = "dvir";
+    public const string PreTrip = "pre_trip";
+    public const string PostTrip = "post_trip";
+    public const string PmInspection = "pm_inspection";
+    public const string ShopInspection = "shop_inspection";
+    public const string SafetyInspection = "safety_inspection";
+    public const string AssetIntake = "asset_intake";
+    public const string ReturnToService = "return_to_service";
+    public const string DamageInspection = "damage_inspection";
+    public const string RoadCallInspection = "road_call_inspection";
+    public const string OperatorWalkaround = "operator_walkaround";
+    public const string CalibrationCheck = "calibration_check";
+    public const string Custom = "custom";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        AnnualDot,
+        Dvir,
+        PreTrip,
+        PostTrip,
+        PmInspection,
+        ShopInspection,
+        SafetyInspection,
+        AssetIntake,
+        ReturnToService,
+        DamageInspection,
+        RoadCallInspection,
+        OperatorWalkaround,
+        CalibrationCheck,
+        Custom,
+    };
 }
 
 

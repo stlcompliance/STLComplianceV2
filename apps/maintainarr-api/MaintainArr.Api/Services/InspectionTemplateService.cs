@@ -64,6 +64,8 @@ public sealed class InspectionTemplateService(
 
     };
 
+    private static readonly HashSet<string> AllowedInspectionTypes = new(InspectionTemplateInspectionTypes.All, StringComparer.OrdinalIgnoreCase);
+
 
 
     public async Task<IReadOnlyList<InspectionTemplateSummaryResponse>> ListAsync(
@@ -153,6 +155,8 @@ public sealed class InspectionTemplateService(
                 template.Name,
 
                 template.Description,
+
+                template.InspectionType,
 
                 template.Version,
 
@@ -310,6 +314,8 @@ public sealed class InspectionTemplateService(
 
             template.Description,
 
+            template.InspectionType,
+
             template.Version,
 
             template.Status,
@@ -380,6 +386,8 @@ public sealed class InspectionTemplateService(
 
             Description = NormalizeDescription(request.Description),
 
+            InspectionType = NormalizeInspectionType(request.InspectionType),
+
             Version = 1,
 
             Status = InspectionTemplateStatuses.Draft,
@@ -439,6 +447,11 @@ public sealed class InspectionTemplateService(
         entity.Name = NormalizeName(request.Name);
 
         entity.Description = NormalizeDescription(request.Description);
+
+        if (!string.IsNullOrWhiteSpace(request.InspectionType))
+        {
+            entity.InspectionType = NormalizeInspectionType(request.InspectionType);
+        }
 
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -577,6 +590,7 @@ public sealed class InspectionTemplateService(
             TemplateKey = cloneKey,
             Name = $"{source.Name} Copy",
             Description = source.Description,
+            InspectionType = source.InspectionType,
             Version = 1,
             Status = InspectionTemplateStatuses.Draft,
             CreatedAt = now,
@@ -1380,6 +1394,23 @@ public sealed class InspectionTemplateService(
 
         template.UpdatedAt = DateTimeOffset.UtcNow;
 
+    }
+
+    private static string NormalizeInspectionType(string? inspectionType)
+    {
+        var normalized = string.IsNullOrWhiteSpace(inspectionType)
+            ? InspectionTemplateInspectionTypes.Custom
+            : inspectionType.Trim().ToLowerInvariant();
+
+        if (!AllowedInspectionTypes.Contains(normalized))
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_inspection_type",
+                "Inspection type must be one of the supported values.",
+                400);
+        }
+
+        return normalized;
     }
 
     private async Task<string> GenerateCloneTemplateKeyAsync(

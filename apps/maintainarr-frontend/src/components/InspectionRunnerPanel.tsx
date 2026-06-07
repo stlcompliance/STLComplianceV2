@@ -25,10 +25,14 @@ interface InspectionRunnerPanelProps {
     string,
     { passFailValue?: string; numericValue?: string; textValue?: string; selectedOptions?: string[] }
   >
+  pauseReason: string
+  pauseNotes: string
   isLoading: boolean
   isRunLoading: boolean
   isStarting: boolean
   isSubmitting: boolean
+  isPausing: boolean
+  isResuming: boolean
   isCompleting: boolean
   isCreatingDefects: boolean
   voiceGuidanceEnabled: boolean
@@ -48,8 +52,12 @@ interface InspectionRunnerPanelProps {
     field: 'passFailValue' | 'numericValue' | 'textValue' | 'selectedOptions',
     value: string | string[],
   ) => void
+  onPauseReasonChange: (value: string) => void
+  onPauseNotesChange: (value: string) => void
   onStartRun: () => void
   onSubmitAnswers: () => void
+  onPauseRun: () => void
+  onResumeRun: () => void
   onCompleteRun: () => void
   onCreateDefectsFromRun: () => void
   runEvidence: InspectionRunEvidenceResponse[]
@@ -79,6 +87,14 @@ function formatResult(result: string | null): string {
   return result
 }
 
+function formatPauseReason(reason: string | null): string {
+  if (!reason) {
+    return 'Unspecified'
+  }
+
+  return reason.replaceAll('_', ' ')
+}
+
 export function InspectionRunnerPanel({
   canExecute,
   viewAllRuns,
@@ -90,10 +106,14 @@ export function InspectionRunnerPanel({
   selectedTemplateId,
   selectedRunId,
   answerDrafts,
+  pauseReason,
+  pauseNotes,
   isLoading,
   isRunLoading,
   isStarting,
   isSubmitting,
+  isPausing,
+  isResuming,
   isCompleting,
   isCreatingDefects,
   voiceGuidanceEnabled,
@@ -109,8 +129,12 @@ export function InspectionRunnerPanel({
   onSelectedTemplateIdChange,
   onSelectedRunIdChange,
   onAnswerDraftChange,
+  onPauseReasonChange,
+  onPauseNotesChange,
   onStartRun,
   onSubmitAnswers,
+  onPauseRun,
+  onResumeRun,
   onCompleteRun,
   onCreateDefectsFromRun,
   runEvidence,
@@ -127,7 +151,10 @@ export function InspectionRunnerPanel({
   onUploadEvidence,
 }: InspectionRunnerPanelProps) {
   const inProgressRun = activeRun?.status === 'in_progress'
+  const pausedRun = activeRun?.status === 'paused'
   const failedCompletedRun = activeRun?.status === 'completed' && activeRun?.result === 'failed'
+  const latestPauseEvent =
+    activeRun?.pauseEvents[activeRun.pauseEvents.length - 1] ?? null
   const checklistOptions =
     activeRun?.checklistItems.map((item) => ({
       value: item.checklistItemId,
@@ -254,6 +281,14 @@ export function InspectionRunnerPanel({
                     </button>
                     <button
                       type="button"
+                      className="rounded-lg border border-amber-700 px-3 py-1.5 text-sm text-amber-100 hover:bg-amber-900/40 disabled:opacity-50"
+                      disabled={isPausing}
+                      onClick={onPauseRun}
+                    >
+                      {isPausing ? 'Pausing…' : 'Pause run'}
+                    </button>
+                    <button
+                      type="button"
                       className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
                       disabled={isCompleting}
                       onClick={onCompleteRun}
@@ -261,6 +296,16 @@ export function InspectionRunnerPanel({
                       {isCompleting ? 'Completing…' : 'Complete run'}
                     </button>
                   </div>
+                ) : null}
+                {pausedRun && canExecute ? (
+                  <button
+                    type="button"
+                    className="rounded-lg bg-amber-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                    disabled={isResuming}
+                    onClick={onResumeRun}
+                  >
+                    {isResuming ? 'Resuming…' : 'Resume run'}
+                  </button>
                 ) : null}
                 {failedCompletedRun && canExecute ? (
                   <div className="flex flex-col items-end gap-1">
@@ -276,6 +321,28 @@ export function InspectionRunnerPanel({
                   </div>
                 ) : null}
               </div>
+
+              <dl className="mb-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <dt className="text-slate-500">Inspection type</dt>
+                  <dd>{activeRun.inspectionType ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Source</dt>
+                  <dd>
+                    {(activeRun.sourceProduct ?? 'maintainarr')
+                      + (activeRun.sourceObjectRef ? ` · ${activeRun.sourceObjectRef}` : '')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Location</dt>
+                  <dd>{activeRun.staffarrLocationId ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Break minutes</dt>
+                  <dd>{activeRun.breakDurationMinutes ?? 0}</dd>
+                </div>
+              </dl>
 
               {inProgressRun && canExecute ? (
                 <div className="mb-4 rounded-lg border border-violet-900/60 bg-violet-950/20 p-3">
@@ -333,6 +400,71 @@ export function InspectionRunnerPanel({
                   {voiceStatusMessage ? (
                     <p className="mt-2 text-xs text-emerald-300">{voiceStatusMessage}</p>
                   ) : null}
+                </div>
+              ) : null}
+
+              {pausedRun && canExecute ? (
+                <div className="mb-4 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3">
+                  <p className="text-sm font-medium text-amber-100">This inspection run is paused.</p>
+                  <p className="mt-1 text-xs text-amber-200/80">
+                    Resume the run to continue answering checklist items.
+                  </p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-1 text-sm text-slate-200" htmlFor="inspection-runner-pause-reason">
+                      <span>Pause reason</span>
+                      <select
+                        id="inspection-runner-pause-reason"
+                        className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
+                        value={pauseReason}
+                        onChange={(event) => onPauseReasonChange(event.target.value)}
+                      >
+                        <option value="break">Break</option>
+                        <option value="interrupted">Interrupted</option>
+                        <option value="waiting_asset">Waiting asset</option>
+                        <option value="waiting_supervisor">Waiting supervisor</option>
+                        <option value="waiting_parts">Waiting parts</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-sm text-slate-200" htmlFor="inspection-runner-pause-notes">
+                      <span>Pause notes</span>
+                      <textarea
+                        id="inspection-runner-pause-notes"
+                        className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
+                        rows={2}
+                        value={pauseNotes}
+                        onChange={(event) => onPauseNotesChange(event.target.value)}
+                      />
+                    </label>
+                  </div>
+                  {latestPauseEvent ? (
+                    <p className="mt-2 text-xs text-amber-200/80">
+                      Last paused at {new Date(latestPauseEvent.pausedAt).toLocaleString()}
+                      {latestPauseEvent.reason ? ` for ${formatPauseReason(latestPauseEvent.reason)}` : ''}
+                      {latestPauseEvent.notes ? ` · ${latestPauseEvent.notes}` : ''}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {activeRun.pauseEvents.length > 0 ? (
+                <div className="mb-4 rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Pause history</h4>
+                  <ul className="mt-2 space-y-2 text-sm text-slate-200">
+                    {activeRun.pauseEvents.map((event) => (
+                      <li key={event.pauseEventId} className="rounded border border-slate-800 bg-slate-900/70 p-2">
+                        <p className="font-medium text-slate-100">
+                          {new Date(event.pausedAt).toLocaleString()}
+                          {event.resumedAt ? ` · resumed ${new Date(event.resumedAt).toLocaleString()}` : ' · still paused'}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {formatPauseReason(event.reason)}
+                          {event.durationMinutes != null ? ` · ${event.durationMinutes} min` : ''}
+                          {event.notes ? ` · ${event.notes}` : ''}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
 

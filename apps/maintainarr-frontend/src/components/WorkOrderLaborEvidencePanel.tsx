@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
@@ -8,7 +8,7 @@ import type {
   WorkOrderLaborEntryResponse,
   WorkOrderTaskLineResponse,
 } from '../api/types'
-import { WORK_ORDER_EVIDENCE_TYPE_OPTIONS } from './formOptions'
+import { WORK_ORDER_EVIDENCE_TYPE_OPTIONS, WORK_ORDER_LABOR_TYPE_OPTIONS } from './formOptions'
 
 interface WorkOrderLaborEvidencePanelProps {
   workOrder: WorkOrderDetailResponse | null
@@ -16,6 +16,7 @@ interface WorkOrderLaborEvidencePanelProps {
   labor: WorkOrderLaborEntryResponse[]
   evidence: WorkOrderEvidenceResponse[]
   canPerform: boolean
+  canApprove: boolean
   sessionPersonId: string
   technicianRefs: TechnicianRefResponse[]
   taskTitle: string
@@ -37,6 +38,8 @@ interface WorkOrderLaborEvidencePanelProps {
   onAddTask: () => void
   onLogLabor: () => void
   onUploadEvidence: () => void
+  onApproveLabor?: (laborEntryId: string) => void
+  onRejectLabor?: (laborEntryId: string, rejectionReason: string) => void
   isAddingTask: boolean
   isLoggingLabor: boolean
   isUploadingEvidence: boolean
@@ -58,6 +61,7 @@ export function WorkOrderLaborEvidencePanel({
   labor,
   evidence,
   canPerform,
+  canApprove,
   sessionPersonId,
   technicianRefs,
   taskTitle,
@@ -79,10 +83,14 @@ export function WorkOrderLaborEvidencePanel({
   onAddTask,
   onLogLabor,
   onUploadEvidence,
+  onApproveLabor,
+  onRejectLabor,
   isAddingTask,
   isLoggingLabor,
   isUploadingEvidence,
 }: WorkOrderLaborEvidencePanelProps) {
+  const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({})
+
   if (!workOrder) {
     return (
       <div className="mt-4 rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400">
@@ -124,6 +132,9 @@ export function WorkOrderLaborEvidencePanel({
       (selectedTaskLineId ? { value: selectedTaskLineId, label: selectedTaskLineId } : undefined),
     [selectedTaskLineId, taskOptions],
   )
+  const updateRejectionReason = (laborEntryId: string, value: string) => {
+    setRejectionReasons((current) => ({ ...current, [laborEntryId]: value }))
+  }
 
   return (
     <div
@@ -176,12 +187,58 @@ export function WorkOrderLaborEvidencePanel({
           <ul className="mt-2 space-y-2">
             {labor.map((entry) => (
               <li key={entry.laborEntryId} className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm">
-                <span className="font-medium text-slate-100">{entry.hoursWorked}h</span>
-                <span className="ml-2 text-xs text-slate-500">
-                  {entry.laborTypeKey} · person {entry.personId}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-slate-100">{entry.hoursWorked}h</span>
+                  <span className="text-xs text-slate-500">
+                    {entry.laborTypeKey} · person {entry.personId}
+                  </span>
+                  <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] uppercase tracking-wide text-slate-300">
+                    {entry.status}
+                  </span>
+                </div>
                 <p className="mt-1 text-xs text-slate-400">{new Date(entry.loggedAt).toLocaleString()}</p>
                 {entry.notes ? <p className="mt-1 text-xs text-slate-300">{entry.notes}</p> : null}
+                {entry.submittedAt ? <p className="mt-1 text-xs text-slate-500">Submitted {new Date(entry.submittedAt).toLocaleString()}</p> : null}
+                {entry.status === 'approved' && entry.approvedByPersonId ? (
+                  <p className="mt-1 text-xs text-emerald-300">
+                    Approved by {entry.approvedByPersonId}
+                    {entry.approvedAt ? ` on ${new Date(entry.approvedAt).toLocaleString()}` : ''}
+                  </p>
+                ) : null}
+                {entry.status === 'rejected' && entry.rejectionReason ? (
+                  <p className="mt-1 text-xs text-rose-300">Rejected: {entry.rejectionReason}</p>
+                ) : null}
+                {canApprove && onApproveLabor && onRejectLabor && entry.status !== 'approved' && entry.status !== 'rejected' ? (
+                  <div className="mt-3 space-y-2 rounded border border-slate-800 bg-slate-900/70 p-3">
+                    <label className="block text-xs text-slate-400" htmlFor={`labor-rejection-${entry.laborEntryId}`}>
+                      Rejection reason
+                      <input
+                        id={`labor-rejection-${entry.laborEntryId}`}
+                        className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                        value={rejectionReasons[entry.laborEntryId] ?? ''}
+                        onChange={(event) => updateRejectionReason(entry.laborEntryId, event.target.value)}
+                        placeholder="Explain why this entry was rejected"
+                      />
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="rounded bg-emerald-800 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                        onClick={() => onApproveLabor(entry.laborEntryId)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded bg-rose-800 px-3 py-1 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                        disabled={!rejectionReasons[entry.laborEntryId]?.trim()}
+                        onClick={() => onRejectLabor(entry.laborEntryId, rejectionReasons[entry.laborEntryId] ?? '')}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -218,10 +275,12 @@ export function WorkOrderLaborEvidencePanel({
                 value={laborTypeKey}
                 onChange={(event) => onLaborTypeKeyChange(event.target.value)}
               >
-              <option value="regular">Regular</option>
-              <option value="overtime">Overtime</option>
-              <option value="travel">Travel</option>
-            </select>
+                {WORK_ORDER_LABOR_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <StaticSearchPicker
               id="work-order-labor-task-link"

@@ -83,6 +83,8 @@ public static class DispatchExceptionStatuses
 
     public const string Resolved = "resolved";
 
+    public const string Closed = "closed";
+
     public const string Cancelled = "cancelled";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -90,6 +92,7 @@ public static class DispatchExceptionStatuses
         Open,
         Assigned,
         Resolved,
+        Closed,
         Cancelled,
     };
 
@@ -101,6 +104,7 @@ public static class DispatchExceptionStatuses
 
     public static bool IsTerminal(string status) =>
         string.Equals(status, Resolved, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, Closed, StringComparison.OrdinalIgnoreCase)
         || string.Equals(status, Cancelled, StringComparison.OrdinalIgnoreCase);
 }
 

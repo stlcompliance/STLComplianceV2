@@ -14,6 +14,7 @@ import type {
   CreateTrainingProgramRequest,
   GenerateTrainingProgramDraftRequest,
   HandoffSessionResponse,
+  PersonalTrainingDashboardResponse,
   StaffarrIncidentRemediationResponse,
   TrainArrMeResponse,
   TrainArrSessionBootstrapResponse,
@@ -225,6 +226,18 @@ export async function getSessionBootstrap(
   return parseJsonResponse<TrainArrSessionBootstrapResponse>(
     response,
     'Failed to load session bootstrap',
+  )
+}
+
+export async function getPersonalTrainingDashboard(
+  accessToken: string,
+): Promise<PersonalTrainingDashboardResponse> {
+  const response = await fetch(`${apiBase}/api/me/training`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonalTrainingDashboardResponse>(
+    response,
+    'Failed to load personal training dashboard',
   )
 }
 

@@ -217,6 +217,7 @@ export interface InspectionTemplateSummaryResponse {
   templateKey: string
   name: string
   description: string
+  inspectionType?: string
   version: number
   status: string
   categoryCount: number
@@ -265,6 +266,7 @@ export interface InspectionTemplateDetailResponse {
   templateKey: string
   name: string
   description: string
+  inspectionType?: string
   version: number
   status: string
   categories: InspectionTemplateCategoryResponse[]
@@ -278,6 +280,7 @@ export interface CreateInspectionTemplateRequest {
   templateKey: string
   name: string
   description: string
+  inspectionType?: string | null
 }
 
 export interface CreateInspectionTemplateCategoryRequest {
@@ -307,12 +310,14 @@ export interface InspectionRunSummaryResponse {
   inspectionTemplateId: string
   templateKey: string
   templateName: string
+  inspectionType?: string
   templateVersion: number
   status: string
   result: string | null
   startedByUserId: string
   startedAt: string
   completedAt: string | null
+  staffarrLocationId?: string | null
   answerCount: number
   requiredItemCount: number
 }
@@ -345,6 +350,17 @@ export interface InspectionRunAnswerResponse {
   answeredByUserId: string
 }
 
+export interface InspectionRunPauseEventResponse {
+  pauseEventId: string
+  pausedAt: string
+  resumedAt: string | null
+  durationMinutes: number | null
+  reason: string | null
+  notes: string | null
+  pausedByUserId: string
+  resumedByUserId: string | null
+}
+
 export interface InspectionRunDetailResponse {
   inspectionRunId: string
   assetId: string
@@ -353,6 +369,7 @@ export interface InspectionRunDetailResponse {
   inspectionTemplateId: string
   templateKey: string
   templateName: string
+  inspectionType?: string
   templateVersion: number
   status: string
   result: string | null
@@ -360,13 +377,22 @@ export interface InspectionRunDetailResponse {
   startedAt: string
   completedAt: string | null
   updatedAt: string
+  sourceProduct?: string | null
+  sourceObjectRef?: string | null
+  staffarrLocationId?: string | null
+  breakDurationMinutes?: number
+  longDurationFlag?: boolean
+  generatedWorkOrderRefs?: string[]
   checklistItems: InspectionRunChecklistItemSnapshot[]
   answers: InspectionRunAnswerResponse[]
+  pauseEvents: InspectionRunPauseEventResponse[]
 }
 
 export interface StartInspectionRunRequest {
   assetId: string
   inspectionTemplateId: string
+  sourceProduct?: string | null
+  sourceObjectRef?: string | null
 }
 
 export interface InspectionRunAnswerInput {
@@ -379,6 +405,15 @@ export interface InspectionRunAnswerInput {
 
 export interface SubmitInspectionRunAnswersRequest {
   answers: InspectionRunAnswerInput[]
+}
+
+export interface PauseInspectionRunRequest {
+  reason?: string | null
+  notes?: string | null
+}
+
+export interface ResumeInspectionRunRequest {
+  notes?: string | null
 }
 
 export interface TechnicianRefResponse {
@@ -542,6 +577,13 @@ export interface WorkOrderSummaryResponse {
   priority: string
   status: string
   source: string
+  sourceProduct?: string | null
+  sourceObjectRef?: string | null
+  workOrderType?: string
+  originType?: string
+  originRef?: string | null
+  staffarrSiteId?: string | null
+  staffarrLocationId?: string | null
   assignedTechnicianPersonId: string | null
   createdByUserId: string
   createdAt: string
@@ -566,6 +608,21 @@ export interface WorkOrderDetailResponse {
   priority: string
   status: string
   source: string
+  sourceProduct?: string | null
+  sourceObjectRef?: string | null
+  workOrderType?: string
+  originType?: string
+  originRef?: string | null
+  staffarrSiteId?: string | null
+  staffarrLocationId?: string | null
+  assignedTechnicianPersonIds?: string[]
+  assignedSupervisorPersonId?: string | null
+  requiredQualificationRefs?: string[]
+  qualificationCheckResults?: WorkOrderQualificationCheckResultResponse[]
+  technicianAssignments?: WorkOrderTechnicianAssignmentResponse[]
+  permitRefs?: MaintenancePermitRefResponse[]
+  returnToService?: ReturnToServiceResponse | null
+  vendorWorkRefs?: string[]
   assignedTechnicianPersonId: string | null
   createdByUserId: string
   createdAt: string
@@ -575,6 +632,57 @@ export interface WorkOrderDetailResponse {
   cancelledAt: string | null
   closeout?: WorkOrderCloseoutResponse | null
   downtimeFollowUp?: DowntimeFollowUpResponse | null
+}
+
+export interface WorkOrderQualificationCheckResultResponse {
+  checkId?: string | null
+  staffarrPersonId: string | null
+  qualificationKey: string
+  outcome: string
+  reasonCode: string
+  message: string
+}
+
+export interface WorkOrderTechnicianAssignmentResponse {
+  assignmentId: string
+  workOrderId: string
+  personId: string
+  assignmentRole: string
+  status: string
+  assignedAt: string
+  assignedByPersonId: string | null
+  acceptedAt: string | null
+  completedAt: string | null
+  requiredQualificationRefs: string[]
+  qualificationCheckSnapshot: WorkOrderQualificationCheckResultResponse[]
+}
+
+export interface MaintenancePermitRefResponse {
+  permitRefId: string
+  workOrderId: string
+  permitType: string
+  sourceProduct: string
+  sourceObjectRef: string | null
+  recordRef: string | null
+  statusSnapshot: string | null
+  approvedByPersonId: string | null
+  validFrom: string | null
+  validTo: string | null
+}
+
+export interface ReturnToServiceResponse {
+  returnToServiceId: string
+  workOrderId: string
+  assetId: string
+  status: string
+  requiredChecks: string[]
+  completedChecks: string[]
+  finalInspectionRef: string | null
+  approvedByPersonId: string | null
+  approvedAt: string | null
+  rejectionReason: string | null
+  finalReadinessStatus: string | null
+  recordRefs: string[]
 }
 
 export interface WorkOrderCloseoutResponse {
@@ -635,7 +743,12 @@ export interface WorkOrderLaborEntryResponse {
   personId: string
   hoursWorked: number
   laborTypeKey: string
+  status: string
   notes: string | null
+  submittedAt: string | null
+  approvedByPersonId: string | null
+  approvedAt: string | null
+  rejectionReason: string | null
   loggedByUserId: string
   loggedAt: string
 }
@@ -646,6 +759,11 @@ export interface CreateWorkOrderLaborEntryRequest {
   laborTypeKey: string
   workOrderTaskLineId?: string | null
   notes?: string | null
+}
+
+export interface UpdateWorkOrderLaborEntryStatusRequest {
+  status: string
+  rejectionReason?: string | null
 }
 
 export interface WorkOrderEvidenceResponse {
@@ -755,6 +873,115 @@ export interface WorkOrderPartsDemandStatusEventResponse {
   message: string
   occurredAt: string
   createdAt: string
+}
+
+export interface MaintenancePartsKitLineResponse {
+  partsKitLineId: string
+  partsKitId: string
+  itemRef: string
+  itemDescriptionSnapshot: string
+  quantity: number
+  unitOfMeasure: string
+  required: boolean
+  substituteAllowed: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MaintenancePartsKitResponse {
+  partsKitId: string
+  kitNumber: string
+  title: string
+  description: string
+  assetTypeApplicability: string[]
+  workOrderTypeApplicability: string[]
+  pmPlanRef: string | null
+  status: string
+  lineRefs: string[]
+  lines: MaintenancePartsKitLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MaintenancePartsKitListResponse {
+  items: MaintenancePartsKitResponse[]
+}
+
+export interface MaintenanceVendorWorkResponse {
+  vendorWorkId: string
+  workOrderId: string
+  supplierRef: string
+  vendorContactSnapshot: string | null
+  status: string
+  workDescription: string | null
+  quoteRecordRef: string | null
+  approvalRef: string | null
+  scheduledAt: string | null
+  completedAt: string | null
+  costEstimateSnapshot: string | null
+  invoiceRecordRef: string | null
+  warrantyFlag: boolean
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  duplicate: boolean
+}
+
+export interface MaintenanceVendorWorkListResponse {
+  items: MaintenanceVendorWorkResponse[]
+}
+
+export interface CreateMaintenancePartsKitRequest {
+  kitNumber: string
+  title: string
+  description?: string | null
+  assetTypeApplicability?: string[] | null
+  workOrderTypeApplicability?: string[] | null
+  pmPlanRef?: string | null
+}
+
+export interface UpdateMaintenancePartsKitRequest {
+  title: string
+  description?: string | null
+  assetTypeApplicability?: string[] | null
+  workOrderTypeApplicability?: string[] | null
+  pmPlanRef?: string | null
+}
+
+export interface UpdateMaintenancePartsKitStatusRequest {
+  status: string
+}
+
+export interface CreateMaintenancePartsKitLineRequest {
+  itemRef: string
+  itemDescriptionSnapshot: string
+  quantity: number
+  unitOfMeasure: string
+  required: boolean
+  substituteAllowed: boolean
+}
+
+export interface UpdateMaintenancePartsKitLineRequest {
+  itemDescriptionSnapshot: string
+  quantity: number
+  unitOfMeasure: string
+  required: boolean
+  substituteAllowed: boolean
+}
+
+export interface UpsertMaintenanceVendorWorkRequest {
+  supplierRef: string
+  vendorContactSnapshot?: string | null
+  status: string
+  workDescription?: string | null
+  quoteRecordRef?: string | null
+  approvalRef?: string | null
+  scheduledAt?: string | null
+  completedAt?: string | null
+  costEstimateSnapshot?: string | null
+  invoiceRecordRef?: string | null
+  warrantyFlag: boolean
+  notes?: string | null
 }
 
 export interface WorkOrderSupplyReadinessBlockerResponse {

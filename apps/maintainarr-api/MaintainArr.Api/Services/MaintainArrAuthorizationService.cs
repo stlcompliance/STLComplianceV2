@@ -267,6 +267,12 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireWorkOrdersClose(ClaimsPrincipal principal) => RequireInspectionsManage(principal);
 
+    public void RequireVendorWorkRead(ClaimsPrincipal principal) => RequireWorkOrdersRead(principal);
+
+    public void RequireVendorWorkManage(ClaimsPrincipal principal) => RequireWorkOrdersPerform(principal);
+
+    public void RequireLaborApprove(ClaimsPrincipal principal) => RequireWorkOrdersClose(principal);
+
     public bool CanViewAllWorkOrders(ClaimsPrincipal principal) => CanViewAllDefects(principal);
 
     public bool CanCloseAnyWorkOrder(ClaimsPrincipal principal) => CanViewAllWorkOrders(principal);

@@ -1478,6 +1478,33 @@ export interface RuleChangeMonitoringSummaryResponse {
   generatedAt: string
 }
 
+export interface RuleChangeImpactReportItem {
+  rulePackId: string
+  packKey: string
+  programKey: string
+  latestChangeType: string
+  latestSummary: string
+  changeEventCount: number
+  versionCreatedCount: number
+  statusChangedCount: number
+  contentUpdatedCount: number
+  evaluationRunCount: number
+  findingCount: number
+  waiverCount: number
+  latestChangedAt: string
+}
+
+export interface RuleChangeImpactReportResponse {
+  tenantId: string
+  totalImpactedRulePacks: number
+  totalChangeEvents: number
+  totalEvaluationRuns: number
+  totalFindings: number
+  totalWaivers: number
+  generatedAt: string
+  rulePacks: RuleChangeImpactReportItem[]
+}
+
 export interface M12AnalyticsWorkerSettingsResponse {
   isEnabled: boolean
   defaultScopeKey: string
@@ -1847,6 +1874,78 @@ export interface ComplianceWaiverResponse {
   updatedAt: string
 }
 
+export interface ComplianceExceptionExemptionResponse {
+  exceptionExemptionId: string
+  tenantId: string
+  key: string
+  label: string
+  type: string
+  governingBody: string
+  programKey: string
+  packKey: string
+  citationKey: string
+  applicabilityKey: string
+  appliesToSubjectKind: string
+  appliesToSourceProduct: string
+  appliesToSourceEntity: string
+  effectType: string
+  conditionLogicJson: string
+  requiredEvidenceOptionGroupId: string | null
+  issuingAuthority: string
+  authorizationNumber: string
+  effectiveAt: string | null
+  expiresAt: string | null
+  active: boolean
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateComplianceExceptionExemptionRequest {
+  key: string
+  label: string
+  type: string
+  effectType: string
+  governingBody?: string | null
+  programKey?: string | null
+  packKey?: string | null
+  citationKey?: string | null
+  applicabilityKey?: string | null
+  appliesToSubjectKind?: string | null
+  appliesToSourceProduct?: string | null
+  appliesToSourceEntity?: string | null
+  conditionLogicJson?: string | null
+  requiredEvidenceOptionGroupId?: string | null
+  issuingAuthority?: string | null
+  authorizationNumber?: string | null
+  effectiveAt?: string | null
+  expiresAt?: string | null
+  active?: boolean
+  description?: string | null
+}
+
+export interface UpdateComplianceExceptionExemptionRequest {
+  label?: string | null
+  type?: string | null
+  effectType?: string | null
+  governingBody?: string | null
+  programKey?: string | null
+  packKey?: string | null
+  citationKey?: string | null
+  applicabilityKey?: string | null
+  appliesToSubjectKind?: string | null
+  appliesToSourceProduct?: string | null
+  appliesToSourceEntity?: string | null
+  conditionLogicJson?: string | null
+  requiredEvidenceOptionGroupId?: string | null
+  issuingAuthority?: string | null
+  authorizationNumber?: string | null
+  effectiveAt?: string | null
+  expiresAt?: string | null
+  active?: boolean | null
+  description?: string | null
+}
+
 export interface CreateComplianceWaiverRequest {
   waiverKey: string
   rulePackId: string
@@ -2039,6 +2138,37 @@ export interface TheoreticalEvidenceOptionResponse {
   sourceProduct: string
   sourceEntity: string
   required: boolean
+}
+
+export interface Title49CalculatorItemResponse {
+  factRequirementId: string
+  requirementKey: string
+  factKey: string
+  packKey: string | null
+  citationKey: string | null
+  sourceProduct: string
+  sourceEntity: string
+  valueType: string
+  operator: string
+  expectedValue: string
+  retentionPeriod: string
+  calculatorKind: string
+  parsedNumericThreshold: number | null
+  parsedRetentionDays: number | null
+  isReady: boolean
+  updatedAt: string
+}
+
+export interface Title49CalculatorSummaryResponse {
+  tenantId: string
+  totalRequirements: number
+  numericThresholdCount: number
+  retentionDurationCount: number
+  mixedCalculatorCount: number
+  readyCount: number
+  reviewCount: number
+  generatedAt: string
+  requirements: Title49CalculatorItemResponse[]
 }
 
 export interface CreateTheoreticalSituationRequest {

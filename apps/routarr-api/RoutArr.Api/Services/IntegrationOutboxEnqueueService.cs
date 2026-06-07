@@ -232,6 +232,15 @@ public sealed class IntegrationOutboxEnqueueService(
             "Stop arrived",
             cancellationToken);
 
+    public Task<Guid?> TryEnqueueStopEnRouteAsync(
+        RouteStop stop,
+        CancellationToken cancellationToken = default) =>
+        TryEnqueueStopAsync(
+            stop,
+            RoutArrIntegrationOutboxEventKinds.StopEnRoute,
+            "Stop en route",
+            cancellationToken);
+
     public Task<Guid?> TryEnqueueStopMissedAsync(
         RouteStop stop,
         CancellationToken cancellationToken = default) =>

@@ -34,6 +34,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<InspectionRunAnswer> InspectionRunAnswers => Set<InspectionRunAnswer>();
 
+    public DbSet<InspectionRunPauseEvent> InspectionRunPauseEvents => Set<InspectionRunPauseEvent>();
+
     public DbSet<Defect> Defects => Set<Defect>();
 
     public DbSet<DefectEvidence> DefectEvidence => Set<DefectEvidence>();
@@ -50,6 +52,9 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<WorkOrderLaborEntry> WorkOrderLaborEntries => Set<WorkOrderLaborEntry>();
 
+    public DbSet<WorkOrderTechnicianAssignment> WorkOrderTechnicianAssignments =>
+        Set<WorkOrderTechnicianAssignment>();
+
     public DbSet<WorkOrderEvidence> WorkOrderEvidence => Set<WorkOrderEvidence>();
 
     public DbSet<WorkOrderPartsDemandLine> WorkOrderPartsDemandLines => Set<WorkOrderPartsDemandLine>();
@@ -59,6 +64,10 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<WorkOrderBlocker> WorkOrderBlockers => Set<WorkOrderBlocker>();
 
     public DbSet<WorkOrderCloseout> WorkOrderCloseouts => Set<WorkOrderCloseout>();
+
+    public DbSet<MaintenancePermitRef> MaintenancePermitRefs => Set<MaintenancePermitRef>();
+
+    public DbSet<ReturnToService> ReturnToServices => Set<ReturnToService>();
 
     public DbSet<WorkOrderComment> WorkOrderComments => Set<WorkOrderComment>();
 
@@ -150,6 +159,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<AssetExternalMapping> AssetExternalMappings => Set<AssetExternalMapping>();
     public DbSet<AssetQualityHold> AssetQualityHolds => Set<AssetQualityHold>();
     public DbSet<AssetReadinessCheck> AssetReadinessChecks => Set<AssetReadinessCheck>();
+    public DbSet<MaintenancePartsKit> MaintenancePartsKits => Set<MaintenancePartsKit>();
+    public DbSet<MaintenancePartsKitLine> MaintenancePartsKitLines => Set<MaintenancePartsKitLine>();
     public DbSet<MaintenanceVendorWork> MaintenanceVendorWorks => Set<MaintenanceVendorWork>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -225,7 +236,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
-            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired().HasDefaultValue(WorkOrderLaborStatuses.Submitted);
             entity.Property(x => x.AutoGenerateInspection).HasDefaultValue(false);
             entity.Property(x => x.AutoGenerateWorkOrder).HasDefaultValue(true);
             entity.Property(x => x.DefaultWorkOrderTemplateRef).HasMaxLength(128);
@@ -363,6 +374,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.InspectionType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.TemplateKey }).IsUnique();
@@ -465,6 +477,20 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<InspectionRunPauseEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_inspection_run_pause_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Reason).HasMaxLength(64);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.InspectionRunId, x.PausedAt });
+            entity.HasOne(x => x.InspectionRun)
+                .WithMany(x => x.PauseEvents)
+                .HasForeignKey(x => x.InspectionRunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Defect>(entity =>
         {
             entity.ToTable("maintainarr_defects");
@@ -507,6 +533,12 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Priority).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Source).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WorkOrderType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OriginType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OriginRef).HasMaxLength(128);
+            entity.Property(x => x.StaffarrLocationId).HasMaxLength(128);
+            entity.Property(x => x.RequiredQualificationRefsJson).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.QualificationCheckResultsJson).HasMaxLength(4096).IsRequired();
             entity.Property(x => x.AssignedTechnicianPersonId).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkOrderNumber }).IsUnique();
@@ -551,10 +583,14 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
             entity.Property(x => x.HoursWorked).HasPrecision(8, 2);
             entity.Property(x => x.LaborTypeKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.ApprovedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RejectionReason).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.LoggedAt });
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.LoggedAt });
+            entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.Status });
             entity.HasOne(x => x.WorkOrder)
                 .WithMany(x => x.LaborEntries)
                 .HasForeignKey(x => x.WorkOrderId)
@@ -563,6 +599,25 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany()
                 .HasForeignKey(x => x.WorkOrderTaskLineId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<WorkOrderTechnicianAssignment>(entity =>
+        {
+            entity.ToTable("maintainarr_work_order_technician_assignments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AssignmentRole).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.AssignedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RequiredQualificationRefsJson).HasColumnName("RequiredQualificationRefsJson").HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.QualificationCheckSnapshotJson).HasColumnName("QualificationCheckSnapshotJson").HasMaxLength(4096).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.AssignedAt });
+            entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.PersonId, x.AssignmentRole }).IsUnique();
+            entity.HasOne(x => x.WorkOrder)
+                .WithMany()
+                .HasForeignKey(x => x.WorkOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<WorkOrderEvidence>(entity =>
@@ -699,11 +754,49 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.DowntimeSummary).HasMaxLength(1024);
             entity.Property(x => x.FinalAssetReadinessStatus).HasMaxLength(64);
             entity.Property(x => x.FinalStatus).HasMaxLength(64);
+            entity.Property(x => x.PermitRecordRefsJson).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkOrderId }).IsUnique();
             entity.HasOne(x => x.WorkOrder)
                 .WithMany(x => x.Closeouts)
+                .HasForeignKey(x => x.WorkOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MaintenancePermitRef>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_permit_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PermitType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.RecordRef).HasMaxLength(256);
+            entity.Property(x => x.StatusSnapshot).HasMaxLength(256);
+            entity.Property(x => x.ApprovedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.RecordRef }).IsUnique();
+            entity.HasOne(x => x.WorkOrder)
+                .WithMany(x => x.PermitRefs)
+                .HasForeignKey(x => x.WorkOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReturnToService>(entity =>
+        {
+            entity.ToTable("maintainarr_return_to_services");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RequiredChecksJson).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.CompletedChecksJson).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.ApprovedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RejectionReason).HasMaxLength(1024);
+            entity.Property(x => x.FinalReadinessStatus).HasMaxLength(64);
+            entity.Property(x => x.RecordRefsJson).HasMaxLength(2048).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.WorkOrderId }).IsUnique();
+            entity.HasOne(x => x.WorkOrder)
+                .WithMany(x => x.ReturnToServices)
                 .HasForeignKey(x => x.WorkOrderId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
@@ -1298,6 +1391,37 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ReadinessBasis).HasMaxLength(128).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MaintenancePartsKit>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_parts_kits");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.KitNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.Property(x => x.AssetTypeApplicabilityJson).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.WorkOrderTypeApplicabilityJson).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.PmPlanRef).HasMaxLength(128);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.KitNumber }).IsUnique();
+            entity.HasMany(x => x.Lines)
+                .WithOne(x => x.MaintenancePartsKit)
+                .HasForeignKey(x => x.MaintenancePartsKitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MaintenancePartsKitLine>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_parts_kit_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ItemRef).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ItemDescriptionSnapshot).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.MaintenancePartsKitId });
+            entity.HasIndex(x => new { x.TenantId, x.MaintenancePartsKitId, x.ItemRef }).IsUnique();
         });
 
         modelBuilder.Entity<MaintenanceVendorWork>(entity =>

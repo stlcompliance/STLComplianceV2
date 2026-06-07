@@ -5,7 +5,23 @@ import type {
   WorkOrderTaskLineResponse,
 } from '../api/types'
 
-const LIFECYCLE_STEPS = ['open', 'in_progress', 'completed', 'cancelled'] as const
+const LIFECYCLE_STEPS = [
+  'open',
+  'requested',
+  'triage',
+  'approved',
+  'planned',
+  'scheduled',
+  'assigned',
+  'in_progress',
+  'paused',
+  'blocked',
+  'completed_pending_review',
+  'completed',
+  'closed',
+  'cancelled',
+  'canceled',
+] as const
 
 type LifecycleStep = (typeof LIFECYCLE_STEPS)[number]
 
@@ -18,9 +34,20 @@ interface WorkOrderLifecyclePanelProps {
 }
 
 function stepLabel(step: LifecycleStep): string {
+  if (step === 'requested') return 'Requested'
+  if (step === 'triage') return 'Triage'
+  if (step === 'approved') return 'Approved'
+  if (step === 'planned') return 'Planned'
+  if (step === 'scheduled') return 'Scheduled'
+  if (step === 'assigned') return 'Assigned'
   if (step === 'in_progress') return 'In progress'
+  if (step === 'paused') return 'Paused'
+  if (step === 'blocked') return 'Blocked'
+  if (step === 'completed_pending_review') return 'Pending review'
   if (step === 'open') return 'Open'
   if (step === 'completed') return 'Completed'
+  if (step === 'closed') return 'Closed'
+  if (step === 'canceled') return 'Canceled'
   return 'Cancelled'
 }
 
@@ -92,6 +119,10 @@ export function WorkOrderLifecyclePanel({
   ) ?? []
   const unresolvedDefectRefs = splitReferenceList(closeout?.unresolvedDefectRefs ?? null)
   const followUpWorkOrderRefs = splitReferenceList(closeout?.followUpWorkOrderRefs ?? null)
+  const requiredQualifications = workOrder.requiredQualificationRefs ?? []
+  const qualificationChecks = workOrder.qualificationCheckResults ?? []
+  const technicianAssignments = workOrder.technicianAssignments ?? []
+  const vendorWorkRefs = workOrder.vendorWorkRefs ?? []
 
   return (
     <section
@@ -116,8 +147,8 @@ export function WorkOrderLifecyclePanel({
           >
             {LIFECYCLE_STEPS.map((step, index) => {
               const isCurrent = workOrder.status === step
-              const isPast = index < currentIdx && workOrder.status !== 'cancelled'
-              const isTerminal = workOrder.status === 'cancelled' && step === 'cancelled'
+              const isPast = index < currentIdx && !['cancelled', 'canceled'].includes(workOrder.status)
+              const isTerminal = ['cancelled', 'canceled'].includes(workOrder.status) && (step === 'cancelled' || step === 'canceled')
               const active = isCurrent || isPast || isTerminal
               return (
                 <li
@@ -159,6 +190,39 @@ export function WorkOrderLifecyclePanel({
             </div>
           </dl>
 
+          <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-slate-500">Work type</dt>
+              <dd className="text-slate-200">{workOrder.workOrderType ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Source product</dt>
+              <dd className="text-slate-200">{workOrder.sourceProduct ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Origin</dt>
+              <dd className="text-slate-200">
+                {(workOrder.originType ?? '—') + (workOrder.originRef ? ` · ${workOrder.originRef}` : '')}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Source ref</dt>
+              <dd className="text-slate-200">{workOrder.sourceObjectRef ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Location</dt>
+              <dd className="text-slate-200">{workOrder.staffarrLocationId ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Site</dt>
+              <dd className="text-slate-200">{workOrder.staffarrSiteId ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Vendor refs</dt>
+              <dd className="text-slate-200">{vendorWorkRefs.length > 0 ? vendorWorkRefs.length : '—'}</dd>
+            </div>
+          </dl>
+
           <div data-testid="work-order-completion-signals">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Completion signals
@@ -186,6 +250,25 @@ export function WorkOrderLifecyclePanel({
                 <span className="ml-2 font-medium text-white">{evidence.length}</span>
               </li>
             </ul>
+          </div>
+
+          <div className="grid gap-2 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-slate-500">Required qualifications</dt>
+              <dd className="text-slate-200">{requiredQualifications.length > 0 ? requiredQualifications.join(', ') : '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Qualification checks</dt>
+              <dd className="text-slate-200">{qualificationChecks.length > 0 ? qualificationChecks.map((check) => check.outcome).join(', ') : '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Assigned technicians</dt>
+              <dd className="text-slate-200">{workOrder.assignedTechnicianPersonIds?.join(', ') || '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Assignment history</dt>
+              <dd className="text-slate-200">{technicianAssignments.length > 0 ? technicianAssignments.length : '—'}</dd>
+            </div>
           </div>
 
           {closeout ? (
@@ -275,6 +358,75 @@ export function WorkOrderLifecyclePanel({
                   <dd className="text-slate-200">{closeout.downtimeSummary ?? '—'}</dd>
                 </div>
               </dl>
+              {workOrder.returnToService ? (
+                <div className="mt-3 rounded border border-slate-700 bg-slate-900/60 p-3">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Return to service record
+                  </h5>
+                  <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-slate-500">Status</dt>
+                      <dd className="text-slate-200">{workOrder.returnToService.status}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Approved at</dt>
+                      <dd className="text-slate-200">
+                        {workOrder.returnToService.approvedAt
+                          ? formatTimestamp(workOrder.returnToService.approvedAt)
+                          : '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Required checks</dt>
+                      <dd className="text-slate-200">
+                        {workOrder.returnToService.requiredChecks.length > 0
+                          ? workOrder.returnToService.requiredChecks.join(', ')
+                          : '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Completed checks</dt>
+                      <dd className="text-slate-200">
+                        {workOrder.returnToService.completedChecks.length > 0
+                          ? workOrder.returnToService.completedChecks.join(', ')
+                          : '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Final inspection</dt>
+                      <dd className="text-slate-200">
+                        {workOrder.returnToService.finalInspectionRef ?? '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Record refs</dt>
+                      <dd className="text-slate-200">
+                        {workOrder.returnToService.recordRefs.length > 0
+                          ? workOrder.returnToService.recordRefs.length
+                          : '—'}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : null}
+              {workOrder.permitRefs && workOrder.permitRefs.length > 0 ? (
+                <div className="mt-3 rounded border border-slate-700 bg-slate-900/60 p-3">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Permit references
+                  </h5>
+                  <ul className="mt-2 space-y-2 text-sm text-slate-200">
+                    {workOrder.permitRefs.map((permitRef) => (
+                      <li key={permitRef.permitRefId} className="rounded border border-slate-800 bg-slate-950/60 p-2">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1">
+                          <span>{permitRef.permitType}</span>
+                          <span className="text-slate-500">{permitRef.statusSnapshot ?? '—'}</span>
+                          <span className="text-slate-500">{permitRef.recordRef ?? '—'}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <section data-testid="work-order-closeout-unresolved-defects">
                   <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-400">

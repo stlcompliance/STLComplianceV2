@@ -46,6 +46,7 @@ const baseProps = {
   labor: [],
   evidence: [],
   canPerform: true,
+  canApprove: true,
   sessionPersonId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
   technicianRefs: [],
   taskTitle: '',
@@ -67,6 +68,8 @@ const baseProps = {
   onAddTask: vi.fn(),
   onLogLabor: vi.fn(),
   onUploadEvidence: vi.fn(),
+  onApproveLabor: vi.fn(),
+  onRejectLabor: vi.fn(),
   isAddingTask: false,
   isLoggingLabor: false,
   isUploadingEvidence: false,
@@ -105,6 +108,24 @@ describe('WorkOrderLaborEvidencePanel', () => {
           completedAt: null,
           cancelledAt: null,
         }}
+        labor={[
+          {
+            laborEntryId: 'labor-1',
+            workOrderId: '33333333-3333-3333-3333-333333333333',
+            workOrderTaskLineId: null,
+            personId: 'bbbbb',
+            hoursWorked: 2.5,
+            laborTypeKey: 'regular',
+            status: 'submitted',
+            notes: 'Checked fittings',
+            submittedAt: '2026-05-27T12:05:00Z',
+            approvedByPersonId: null,
+            approvedAt: null,
+            rejectionReason: null,
+            loggedByUserId: '55555555-5555-5555-5555-555555555555',
+            loggedAt: '2026-05-27T12:00:00Z',
+          },
+        ]}
       />,
     )
 
@@ -115,5 +136,7 @@ describe('WorkOrderLaborEvidencePanel', () => {
     expect(screen.getByRole('button', { name: 'Log labor' })).toBeInTheDocument()
     expect(screen.getByLabelText('Technician for labor')).toBeInTheDocument()
     expect(screen.getByLabelText('Linked task line')).toBeInTheDocument()
+    expect(screen.getByText('submitted')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
   })
 })

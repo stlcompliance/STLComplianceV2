@@ -71,7 +71,7 @@ describe('PersonLookupPanel', () => {
       />,
     )
 
-    expect(screen.getByText('No active site/department/team assignments.')).toBeTruthy()
+    expect(screen.getByText('No planned or active site/department/team assignments.')).toBeTruthy()
   })
 
   it('renders retryable error callout when lookup query fails', () => {

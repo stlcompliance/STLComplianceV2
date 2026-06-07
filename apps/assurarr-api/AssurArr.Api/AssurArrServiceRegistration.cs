@@ -16,6 +16,7 @@ public static class AssurArrServiceRegistration
                 options.UseInMemoryDatabase("assurarr"));
         }
 
+        builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
         builder.Services.AddScoped<AssurArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();

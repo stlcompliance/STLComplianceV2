@@ -8,6 +8,7 @@ import { RemediationQueueReportsPanel } from '../../components/RemediationQueueR
 import { ProductIntegrationHealthReportsPanel } from '../../components/ProductIntegrationHealthReportsPanel'
 import { OperatorReportsPanel } from '../../components/OperatorReportsPanel'
 import { WaiverReportsPanel } from '../../components/WaiverReportsPanel'
+import { RuleChangeImpactReportPanel } from '../../components/RuleChangeImpactReportPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
@@ -41,6 +42,11 @@ export function ReportsSection({ state }: Props) {
         canExport={canExport}
       />
       <OperatorReportsPanel
+        accessToken={state.accessToken}
+        canRead={canRead}
+        canExport={canExport}
+      />
+      <RuleChangeImpactReportPanel
         accessToken={state.accessToken}
         canRead={canRead}
         canExport={canExport}

@@ -9,12 +9,14 @@ public sealed record InspectionRunSummaryResponse(
     Guid? PmScheduleId,
     string TemplateKey,
     string TemplateName,
+    string InspectionType,
     int TemplateVersion,
     string Status,
     string? Result,
     Guid StartedByUserId,
     DateTimeOffset StartedAt,
     DateTimeOffset? CompletedAt,
+    string? StaffarrLocationId,
     int AnswerCount,
     int RequiredItemCount);
 
@@ -44,6 +46,16 @@ public sealed record InspectionRunAnswerResponse(
     DateTimeOffset AnsweredAt,
     Guid AnsweredByUserId);
 
+public sealed record InspectionRunPauseEventResponse(
+    Guid PauseEventId,
+    DateTimeOffset PausedAt,
+    DateTimeOffset? ResumedAt,
+    int? DurationMinutes,
+    string? Reason,
+    string? Notes,
+    Guid PausedByUserId,
+    Guid? ResumedByUserId);
+
 public sealed record InspectionRunDetailResponse(
     Guid InspectionRunId,
     Guid AssetId,
@@ -53,6 +65,7 @@ public sealed record InspectionRunDetailResponse(
     Guid? PmScheduleId,
     string TemplateKey,
     string TemplateName,
+    string InspectionType,
     int TemplateVersion,
     string Status,
     string? Result,
@@ -60,15 +73,31 @@ public sealed record InspectionRunDetailResponse(
     DateTimeOffset StartedAt,
     DateTimeOffset? CompletedAt,
     DateTimeOffset UpdatedAt,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string? StaffarrLocationId,
+    int BreakDurationMinutes,
+    bool LongDurationFlag,
+    IReadOnlyList<Guid> GeneratedWorkOrderRefs,
     IReadOnlyList<InspectionRunChecklistItemSnapshot> ChecklistItems,
-    IReadOnlyList<InspectionRunAnswerResponse> Answers);
+    IReadOnlyList<InspectionRunAnswerResponse> Answers,
+    IReadOnlyList<InspectionRunPauseEventResponse> PauseEvents);
 
 public sealed record StartInspectionRunRequest(
     Guid AssetId,
-    Guid InspectionTemplateId);
+    Guid InspectionTemplateId,
+    string? SourceProduct = null,
+    string? SourceObjectRef = null);
 
 public sealed record SubmitInspectionRunAnswersRequest(
     IReadOnlyList<InspectionRunAnswerInput> Answers);
+
+public sealed record PauseInspectionRunRequest(
+    string? Reason,
+    string? Notes);
+
+public sealed record ResumeInspectionRunRequest(
+    string? Notes);
 
 public sealed record InspectionRunAnswerInput(
     Guid ChecklistItemId,

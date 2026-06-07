@@ -205,6 +205,29 @@ public static class WorkOrderLaborEvidenceEndpoints
             return Results.Created($"/api/work-orders/{workOrderId}/labor/{created.LaborEntryId}", created);
         })
         .WithName($"LogWorkOrderLabor{nameSuffix}");
+
+        labor.MapPatch("/{laborEntryId:guid}/status", async (
+            Guid workOrderId,
+            Guid laborEntryId,
+            UpdateWorkOrderLaborEntryStatusRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderLaborEvidenceService laborEvidenceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireLaborApprove(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await laborEvidenceService.UpdateStatusAsync(
+                tenantId,
+                actorUserId,
+                workOrderId,
+                laborEntryId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"UpdateWorkOrderLaborStatus{nameSuffix}");
     }
 
     private static void MapEvidenceRoutes(RouteGroupBuilder evidence, string nameSuffix)

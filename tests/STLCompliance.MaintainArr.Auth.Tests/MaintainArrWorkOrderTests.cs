@@ -418,6 +418,20 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         createResponse.EnsureSuccessStatusCode();
         var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
 
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var assignments = await db.WorkOrderTechnicianAssignments
+                .Where(x => x.WorkOrderId == created.WorkOrderId)
+                .OrderBy(x => x.AssignedAt)
+                .ToListAsync();
+
+            Assert.Single(assignments);
+            Assert.Equal(technicianPersonId, assignments[0].PersonId);
+            Assert.Equal(WorkOrderTechnicianAssignmentRoles.Primary, assignments[0].AssignmentRole);
+            Assert.Equal(WorkOrderTechnicianAssignmentStatuses.Assigned, assignments[0].Status);
+        }
+
         var technicianToken = CreateMaintainArrAccessToken(
             ["maintainarr"],
             "maintainarr_technician",
@@ -641,6 +655,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var evidenceResponse = await _maintainarrClient.SendAsync(evidenceRequest);
         evidenceResponse.EnsureSuccessStatusCode();
         var evidence = (await evidenceResponse.Content.ReadFromJsonAsync<WorkOrderEvidenceResponse>())!;
+        var permitRecordRef = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
 
         var completeRequest = Authorized(HttpMethod.Post, $"/api/v1/integrations/work-orders/{created.WorkOrderId}/status-updates", _maintainarrIntegrationToken);
         completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));
@@ -674,12 +689,14 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             "2.5 hours downtime.",
             "ready",
             "closed",
+            new[] { permitRecordRef },
             new[] { evidence.EvidenceId }));
         var closeoutResponse = await _maintainarrClient.SendAsync(closeoutRequest);
         closeoutResponse.EnsureSuccessStatusCode();
         var closeout = (await closeoutResponse.Content.ReadFromJsonAsync<WorkOrderCloseoutResponse>())!;
         Assert.Equal(created.WorkOrderId, closeout.WorkOrderId);
         Assert.Equal("closed", closeout.FinalStatus);
+        Assert.Contains(permitRecordRef, closeout.PermitRecordRefs);
         Assert.Contains(evidence.EvidenceId, closeout.EvidenceRecordRefs);
 
         var getRequest = Authorized(HttpMethod.Get, $"/api/v1/integrations/work-orders/{created.WorkOrderId}", _maintainarrIntegrationToken);
@@ -689,11 +706,32 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         Assert.Single(fetched.Blockers);
         Assert.NotNull(fetched.Closeout);
         Assert.Equal("closed", fetched.Closeout!.FinalStatus);
+        Assert.Contains(permitRecordRef, fetched.Closeout.PermitRecordRefs);
         Assert.Contains(evidence.EvidenceId, fetched.Closeout.EvidenceRecordRefs);
+        Assert.NotNull(fetched.ReturnToService);
+        Assert.Equal(ReturnToServiceStatuses.Approved, fetched.ReturnToService!.Status);
+        Assert.Contains("post_repair_inspection", fetched.ReturnToService.RequiredChecks);
+        Assert.Contains("supervisor_review", fetched.ReturnToService.CompletedChecks);
+        Assert.Single(fetched.PermitRefs);
+        Assert.Equal(permitRecordRef.ToString("D"), fetched.PermitRefs[0].RecordRef);
 
         using (var scope = _maintainarrFactory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var permitRefs = await db.MaintenancePermitRefs
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.WorkOrderId == created.WorkOrderId)
+                .ToListAsync();
+            Assert.Single(permitRefs);
+            Assert.Equal("other", permitRefs[0].PermitType);
+            Assert.Equal(closeout.FinalStatus, permitRefs[0].StatusSnapshot);
+
+            var returnToService = await db.ReturnToServices
+                .AsNoTracking()
+                .SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId && x.WorkOrderId == created.WorkOrderId);
+            Assert.Equal(ReturnToServiceStatuses.Approved, returnToService.Status);
+            Assert.Contains("post_repair_inspection", JsonSerializer.Deserialize<string[]>(returnToService.RequiredChecksJson)!);
             var timeline = await db.WorkOrderTimelineEvents
                 .AsNoTracking()
                 .Where(x => x.TenantId == PlatformSeeder.DemoTenantId

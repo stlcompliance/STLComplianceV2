@@ -1,4 +1,5 @@
 export const WORKSPACE_SECTIONS = [
+  'dashboard',
   'programs',
   'assignments',
   'remediation',
@@ -27,6 +28,7 @@ export const workspaceSectionHeaders: Record<
   WorkspaceSection,
   { title: string; subtitle: string }
 > = {
+  dashboard: { title: 'Dashboard', subtitle: 'Training readiness and field inbox' },
   programs: { title: 'Training programs', subtitle: 'Program builder and content structure' },
   assignments: { title: 'Assignments', subtitle: 'Assign, evidence, and signoff workflow' },
   remediation: { title: 'Remediation', subtitle: 'Remediation assignments and follow-up' },

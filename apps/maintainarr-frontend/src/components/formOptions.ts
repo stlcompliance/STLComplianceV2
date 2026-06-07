@@ -11,6 +11,21 @@ export const WORK_ORDER_EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
   { value: 'work_order_note', label: 'Work order note' },
 ]
 
+export const WORK_ORDER_LABOR_TYPE_OPTIONS: PickerOption[] = [
+  { value: 'diagnostic', label: 'Diagnostic' },
+  { value: 'repair', label: 'Repair' },
+  { value: 'inspection', label: 'Inspection' },
+  { value: 'testing', label: 'Testing' },
+  { value: 'calibration', label: 'Calibration' },
+  { value: 'cleanup', label: 'Cleanup' },
+  { value: 'admin', label: 'Administrative' },
+  { value: 'travel', label: 'Travel' },
+  { value: 'vendor_coordination', label: 'Vendor coordination (labor)' },
+  { value: 'waiting', label: 'Waiting' },
+  { value: 'overtime', label: 'Overtime (legacy)' },
+  { value: 'regular', label: 'Regular (legacy)' },
+]
+
 export const DEFECT_EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
   { value: 'defect_photo', label: 'Defect photo' },
   { value: 'damage_photo', label: 'Damage photo' },

@@ -92,6 +92,10 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string InspectionStarted = "inspection.started";
 
+    public const string InspectionPaused = "inspection.paused";
+
+    public const string InspectionResumed = "inspection.resumed";
+
     public const string InspectionAnswerSubmitted = "inspection.answer_submitted";
 
     public const string InspectionCompleted = "inspection.completed";
@@ -108,15 +112,43 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string WorkOrderCreated = "work_order.created";
 
+    public const string WorkOrderRequested = "work_order.requested";
+
+    public const string WorkOrderTriaged = "work_order.triaged";
+
+    public const string WorkOrderApproved = "work_order.approved";
+
+    public const string WorkOrderRejected = "work_order.rejected";
+
+    public const string WorkOrderPlanned = "work_order.planned";
+
     public const string WorkOrderAssigned = "work_order.assigned";
 
     public const string WorkOrderStarted = "work_order.started";
+
+    public const string WorkOrderPaused = "work_order.paused";
 
     public const string WorkOrderCompleted = "work_order.completed";
 
     public const string WorkOrderBlocked = "work_order.blocked";
 
     public const string WorkOrderUnblocked = "work_order.unblocked";
+
+    public const string WorkOrderClosed = "work_order.closed";
+
+    public const string WorkOrderCanceled = "work_order.canceled";
+
+    public const string LaborEntryCreated = "labor_entry.created";
+
+    public const string LaborEntrySubmitted = "labor_entry.submitted";
+
+    public const string LaborEntryApproved = "labor_entry.approved";
+
+    public const string LaborEntryRejected = "labor_entry.rejected";
+
+    public const string MaintenanceVendorWorkCreated = "vendor_work.created";
+
+    public const string MaintenanceVendorWorkCompleted = "vendor_work.completed";
 
     public const string PmDue = "pm.due";
 
@@ -166,6 +198,10 @@ public static class MaintenancePlatformEventRelatedEntityTypes
     public const string Defect = "defect";
 
     public const string WorkOrder = "work_order";
+
+    public const string LaborEntry = "labor_entry";
+
+    public const string VendorWork = "vendor_work";
 
     public const string PmSchedule = "pm_schedule";
 

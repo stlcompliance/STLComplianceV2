@@ -88,6 +88,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<WorkOrderPartsDemandStatusIngestionService>();
         builder.Services.AddScoped<AssetQualityHoldService>();
         builder.Services.AddScoped<AssetReadinessCheckService>();
+        builder.Services.AddScoped<MaintenancePartsKitService>();
         builder.Services.AddScoped<MaintenanceVendorWorkService>();
         builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>

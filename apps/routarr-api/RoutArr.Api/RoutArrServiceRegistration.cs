@@ -93,11 +93,15 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchAssignmentService>();
         builder.Services.AddScoped<BulkDispatchService>();
         builder.Services.AddScoped<DispatchCloseoutService>();
+        builder.Services.AddScoped<DispatchPlanService>();
         builder.Services.AddScoped<TripService>();
+        builder.Services.AddScoped<TripEtaService>();
         builder.Services.AddScoped<TripPartsDemandService>();
         builder.Services.AddScoped<TripPartsDemandStatusIngestionService>();
         builder.Services.AddScoped<SupplyArrShipmentIntentService>();
         builder.Services.AddScoped<LoadTestJourneySeedService>();
+        builder.Services.AddScoped<LoadVisibilityService>();
+        builder.Services.AddScoped<DockAppointmentService>();
         builder.Services.AddScoped<RouteService>();
         builder.Services.AddScoped<DispatchBoardService>();
         builder.Services.AddScoped<DispatchBoardStateService>();

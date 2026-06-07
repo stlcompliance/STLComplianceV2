@@ -7,6 +7,7 @@ export const WORKSPACE_SECTIONS = [
   'defects',
   'inspections',
   'inspection-templates',
+  'parts-kits',
   'history',
   'downtime',
   'settings',
@@ -59,6 +60,10 @@ export const workspaceSectionHeaders: Record<
   'inspection-templates': {
     title: 'Inspection templates',
     subtitle: 'Build and activate inspection checklists',
+  },
+  'parts-kits': {
+    title: 'Parts kits',
+    subtitle: 'Reusable maintenance parts kits and line items',
   },
   history: {
     title: 'Maintenance history',

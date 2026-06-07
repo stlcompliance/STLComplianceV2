@@ -645,6 +645,103 @@ export interface CreateRouteRequest {
   stops?: CreateRouteStopRequest[] | null
 }
 
+export interface TripPartsDemandLineResponse {
+  demandLineId: string
+  lineNumber: number
+  supplyarrPartId: string | null
+  partNumber: string
+  description: string
+  quantityRequested: number
+  unitOfMeasure: string
+  notes: string
+  status: string
+  routarrPublicationId: string | null
+  supplyarrDemandRefId: string | null
+  publishedAt: string | null
+  procurementStatus: string
+  supplyarrPurchaseRequestId: string | null
+  supplyarrPurchaseOrderId: string | null
+  quantityReceived: number
+  procurementStatusMessage: string
+  lastProcurementStatusAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TransportationLoadVisibilityResponse {
+  transportationLoadVisibilityId: string
+  loadNumber: string
+  tripId: string | null
+  routeId: string | null
+  sourceProduct: string
+  sourceObjectRef: string | null
+  loadType: string
+  status: string
+  originLocationRef: string | null
+  destinationLocationRef: string | null
+  customerRef: string | null
+  supplierRef: string | null
+  orderRefs: string[]
+  expectedReceiptRefs: string[]
+  itemSummarySnapshot: string
+  handlingRequirements: string[]
+  temperatureRequirement: string | null
+  hazmatFlag: boolean
+  weightSnapshot: number | null
+  volumeSnapshot: number | null
+  sealNumber: string | null
+  documentRefs: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DockAppointmentNotificationResponse {
+  dockAppointmentNotificationId: string
+  notificationNumber: string
+  sourceTripId: string | null
+  sourceRouteId: string | null
+  sourceStopId: string | null
+  appointmentType: string
+  requestedWindowStart: string | null
+  requestedWindowEnd: string | null
+  confirmedWindowStart: string | null
+  confirmedWindowEnd: string | null
+  eta: string | null
+  status: string
+  carrierNameSnapshot: string | null
+  driverSnapshot: string | null
+  vehicleSnapshot: string | null
+  trailerSnapshot: string | null
+  sourceProduct: string
+  sourceObjectRef: string | null
+  rejectionReason: string | null
+  sentAt: string | null
+  acknowledgedAt: string | null
+  confirmedAt: string | null
+  canceledAt: string | null
+}
+
+export interface CreateTripPartsDemandLineRequest {
+  supplyarrPartId?: string | null
+  partNumber?: string | null
+  description?: string | null
+  quantityRequested: number
+  unitOfMeasure?: string | null
+  notes?: string | null
+}
+
+export interface PublishTripPartsDemandRequest {
+  createPurchaseRequestDraft: boolean
+}
+
+export interface PublishTripPartsDemandResponse {
+  publicationId: string
+  demandRefId: string
+  purchaseRequestId: string | null
+  createdPurchaseRequestDraft: boolean
+  lines: TripPartsDemandLineResponse[]
+}
+
 export interface LinkRouteTripRequest {
   tripId: string
 }

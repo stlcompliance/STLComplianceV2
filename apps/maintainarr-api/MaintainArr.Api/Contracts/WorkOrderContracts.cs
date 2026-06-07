@@ -13,6 +13,13 @@ public sealed record WorkOrderSummaryResponse(
     string Priority,
     string Status,
     string Source,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string WorkOrderType,
+    string OriginType,
+    string? OriginRef,
+    Guid? StaffarrSiteId,
+    string? StaffarrLocationId,
     string? AssignedTechnicianPersonId,
     Guid CreatedByUserId,
     DateTimeOffset CreatedAt,
@@ -37,6 +44,21 @@ public sealed record WorkOrderDetailResponse(
     string Priority,
     string Status,
     string Source,
+    string? SourceProduct,
+    string? SourceObjectRef,
+    string WorkOrderType,
+    string OriginType,
+    string? OriginRef,
+    Guid? StaffarrSiteId,
+    string? StaffarrLocationId,
+    IReadOnlyList<string> AssignedTechnicianPersonIds,
+    string? AssignedSupervisorPersonId,
+    IReadOnlyList<string> RequiredQualificationRefs,
+    IReadOnlyList<WorkOrderQualificationCheckResultResponse> QualificationCheckResults,
+    IReadOnlyList<WorkOrderTechnicianAssignmentResponse> TechnicianAssignments,
+    IReadOnlyList<MaintenancePermitRefResponse> PermitRefs,
+    ReturnToServiceResponse? ReturnToService,
+    IReadOnlyList<Guid> VendorWorkRefs,
     string? AssignedTechnicianPersonId,
     Guid CreatedByUserId,
     DateTimeOffset CreatedAt,
@@ -47,6 +69,53 @@ public sealed record WorkOrderDetailResponse(
     DowntimeFollowUpResponse? DowntimeFollowUp = null,
     IReadOnlyList<WorkOrderBlockerResponse> Blockers = null!,
     WorkOrderCloseoutResponse? Closeout = null);
+
+public sealed record WorkOrderQualificationCheckResultResponse(
+    Guid? CheckId,
+    string? StaffarrPersonId,
+    string QualificationKey,
+    string Outcome,
+    string ReasonCode,
+    string Message);
+
+public sealed record WorkOrderTechnicianAssignmentResponse(
+    Guid AssignmentId,
+    Guid WorkOrderId,
+    string PersonId,
+    string AssignmentRole,
+    string Status,
+    DateTimeOffset AssignedAt,
+    string? AssignedByPersonId,
+    DateTimeOffset? AcceptedAt,
+    DateTimeOffset? CompletedAt,
+    IReadOnlyList<string> RequiredQualificationRefs,
+    IReadOnlyList<WorkOrderQualificationCheckResultResponse> QualificationCheckSnapshot);
+
+public sealed record MaintenancePermitRefResponse(
+    Guid PermitRefId,
+    Guid WorkOrderId,
+    string PermitType,
+    string SourceProduct,
+    string? SourceObjectRef,
+    string? RecordRef,
+    string? StatusSnapshot,
+    string? ApprovedByPersonId,
+    DateTimeOffset? ValidFrom,
+    DateTimeOffset? ValidTo);
+
+public sealed record ReturnToServiceResponse(
+    Guid ReturnToServiceId,
+    Guid WorkOrderId,
+    Guid AssetId,
+    string Status,
+    IReadOnlyList<string> RequiredChecks,
+    IReadOnlyList<string> CompletedChecks,
+    Guid? FinalInspectionRef,
+    string? ApprovedByPersonId,
+    DateTimeOffset? ApprovedAt,
+    string? RejectionReason,
+    string? FinalReadinessStatus,
+    IReadOnlyList<Guid> RecordRefs);
 
 public sealed record CreateWorkOrderRequest(
     Guid AssetId,
@@ -124,6 +193,7 @@ public sealed record CreateWorkOrderCloseoutRequest(
     string? DowntimeSummary,
     string? FinalAssetReadinessStatus,
     string? FinalStatus,
+    IReadOnlyList<Guid>? PermitRecordRefs = null,
     IReadOnlyList<Guid>? EvidenceRecordRefs = null);
 
 public sealed record WorkOrderCloseoutResponse(
@@ -154,6 +224,7 @@ public sealed record WorkOrderCloseoutResponse(
     string? DowntimeSummary,
     string? FinalAssetReadinessStatus,
     string? FinalStatus,
+    IReadOnlyList<Guid> PermitRecordRefs,
     IReadOnlyList<Guid> EvidenceRecordRefs,
     DateTimeOffset CreatedAt,
     string? CreatedByPersonId);

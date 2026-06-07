@@ -1,11 +1,16 @@
 using AssurArr.Api.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 
 namespace AssurArr.Api.Data;
 
-public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> options) : PlatformDbContext(options)
+public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> options, IHttpContextAccessor httpContextAccessor) : PlatformDbContext(options)
 {
+    private static readonly Guid SystemPersonId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+    private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
+
     public DbSet<AssurArrNonconformance> Nonconformances => Set<AssurArrNonconformance>();
     public DbSet<AssurArrQualityHold> QualityHolds => Set<AssurArrQualityHold>();
     public DbSet<AssurArrCapa> Capas => Set<AssurArrCapa>();
@@ -30,6 +35,18 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrSupplierCorrectiveActionRequest> SupplierCorrectiveActionRequests => Set<AssurArrSupplierCorrectiveActionRequest>();
     public DbSet<AssurArrCustomerComplaintQualityCase> CustomerComplaintQualityCases => Set<AssurArrCustomerComplaintQualityCase>();
     public DbSet<AssurArrTimelineEvent> TimelineEvents => Set<AssurArrTimelineEvent>();
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampAuditActors();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampAuditActors();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +76,27 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureSupplierQualityIssue(modelBuilder);
         ConfigureSupplierCorrectiveActionRequest(modelBuilder);
         ConfigureCustomerComplaintQualityCase(modelBuilder);
+        ConfigureAuditedEntity<AssurArrNonconformance>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityHold>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrCapa>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrCapaAction>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrCapaActionBlocker>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrVerificationPlan>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrEffectivenessVerification>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityAudit>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityAuditChecklist>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityAuditChecklistItem>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrAuditFinding>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrRootCauseAnalysis>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityMetric>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityRiskProfile>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityReview>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrQualityRelease>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrContainmentAction>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrDisposition>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrSupplierQualityIssue>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrSupplierCorrectiveActionRequest>(modelBuilder);
+        ConfigureAuditedEntity<AssurArrCustomerComplaintQualityCase>(modelBuilder);
 
         modelBuilder.Entity<AssurArrTimelineEvent>(entity =>
         {
@@ -73,6 +111,31 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId });
             entity.HasIndex(x => new { x.TenantId, x.OccurredAt });
         });
+    }
+
+    private void StampAuditActors()
+    {
+        var actorPersonId = httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated == true
+            ? httpContextAccessor.HttpContext.User.GetPersonId()
+            : SystemPersonId;
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified))
+            {
+                continue;
+            }
+
+            if (entry.Metadata.FindProperty("CreatedByPersonId") is not null && entry.State == EntityState.Added)
+            {
+                entry.Property("CreatedByPersonId").CurrentValue = actorPersonId;
+            }
+
+            if (entry.Metadata.FindProperty("UpdatedByPersonId") is not null)
+            {
+                entry.Property("UpdatedByPersonId").CurrentValue = actorPersonId;
+            }
+        }
     }
 
     private static void ConfigureRecord<T>(ModelBuilder modelBuilder, string tableName)
@@ -95,12 +158,24 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.Property<string[]>("RecordRefs").HasColumnType("text[]").IsRequired();
             entity.Property<DateTimeOffset>("CreatedAt");
             entity.Property<DateTimeOffset>("UpdatedAt");
+            entity.Property<Guid>("CreatedByPersonId").IsRequired();
+            entity.Property<Guid>("UpdatedByPersonId").IsRequired();
             entity.Property<DateTimeOffset?>("ClosedAt");
             entity.Property<Guid?>("ClosedByPersonId");
             entity.Property<string?>("ClosureSummary").HasMaxLength(4000);
             entity.HasIndex("TenantId");
             entity.HasIndex("TenantId", "Number").IsUnique();
             entity.HasIndex("TenantId", "Status");
+        });
+    }
+
+    private static void ConfigureAuditedEntity<T>(ModelBuilder modelBuilder)
+        where T : class
+    {
+        modelBuilder.Entity<T>(entity =>
+        {
+            entity.Property<Guid>(nameof(AssurArrNonconformance.CreatedByPersonId)).IsRequired();
+            entity.Property<Guid>(nameof(AssurArrNonconformance.UpdatedByPersonId)).IsRequired();
         });
     }
 

@@ -1,6 +1,7 @@
 import type { WorkspaceSection } from '../lib/workspaceSection'
 import { useTrainArrWorkspaceState } from './useTrainArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
+import { DashboardSection } from './sections/DashboardSection'
 import { ProgramsSection } from './sections/ProgramsSection'
 import { AssignmentsSection } from './sections/AssignmentsSection'
 import { RemediationSection } from './sections/RemediationSection'
@@ -16,6 +17,7 @@ export function TrainArrWorkspacePage({ section }: { section: WorkspaceSection }
 
   return (
     <WorkspaceShell section={section} me={state.me} apiError={state.apiError}>
+      {section === 'dashboard' ? <DashboardSection state={state} /> : null}
       {section === 'programs' ? <ProgramsSection state={state} /> : null}
       {section === 'assignments' ? <AssignmentsSection state={state} /> : null}
       {section === 'remediation' ? <RemediationSection state={state} /> : null}

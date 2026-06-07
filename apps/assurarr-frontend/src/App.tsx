@@ -29,7 +29,7 @@ import {
   useProductWorkspaceLaunch,
   type ProductNavItem,
 } from '@stl/shared-ui'
-import { assurarrApi } from './api'
+import { assurarrApi, type TimelineEvent } from './api'
 import { getSessionBootstrap } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
 import { LaunchPage } from './LaunchPage'
@@ -141,18 +141,133 @@ function joinRefs(value: string): string[] {
     .filter(Boolean)
 }
 
-function toneClass(tone: string): string {
-  switch (tone) {
-    case 'danger':
-      return 'text-rose-200'
-    case 'warning':
-      return 'text-amber-200'
-    case 'info':
-    case 'accent':
-      return 'text-cyan-200'
-    default:
-      return 'text-slate-200'
+function badgeClassForStatus(status: string): string {
+  const normalized = status.toLowerCase()
+  if (['critical', 'blocked', 'rejected', 'failed', 'ineffective', 'expired'].some((value) => normalized.includes(value))) {
+    return 'border-rose-500/40 bg-rose-500/10 text-rose-100'
   }
+  if (['warning', 'watch', 'review', 'pending', 'disputed', 'triage', 'under_review', 'in_review', 'release_pending', 'action_plan', 'implementation', 'verification', 'planned', 'scheduled', 'contains'].some((value) => normalized.includes(value))) {
+    return 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+  }
+  if (['effective', 'approved', 'released', 'closed', 'resolved', 'verified', 'active', 'open', 'complete', 'acceptable', 'good', 'healthy', 'current'].some((value) => normalized.includes(value))) {
+    return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+  }
+  return 'border-slate-500/30 bg-slate-900/80 text-slate-100'
+}
+
+function formatDateTime(value?: string | null) {
+  return value ? new Date(value).toLocaleString() : 'n/a'
+}
+
+function eventSeverityFromType(eventType: string): 'danger' | 'warning' | 'info' | 'accent' | 'neutral' {
+  const normalized = eventType.toLowerCase()
+  if (normalized.includes('rejected') || normalized.includes('closed') || normalized.includes('failed')) return 'danger'
+  if (normalized.includes('hold') || normalized.includes('review') || normalized.includes('pending') || normalized.includes('blocked')) return 'warning'
+  if (normalized.includes('created') || normalized.includes('published') || normalized.includes('executed')) return 'accent'
+  if (normalized.includes('changed') || normalized.includes('updated') || normalized.includes('reviewed')) return 'info'
+  return 'neutral'
+}
+
+function SummaryMetricCard({
+  label,
+  value,
+  note,
+  tone = 'neutral',
+}: {
+  label: string
+  value: string
+  note?: string
+  tone?: 'neutral' | 'danger' | 'warning' | 'info' | 'accent' | 'success'
+}) {
+  const toneClassName =
+    tone === 'danger'
+      ? 'text-rose-200'
+      : tone === 'warning'
+        ? 'text-amber-200'
+        : tone === 'info' || tone === 'accent'
+          ? 'text-cyan-200'
+          : tone === 'success'
+            ? 'text-emerald-200'
+            : 'text-slate-100'
+
+  return (
+    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/75 p-4 shadow-lg shadow-slate-950/20">
+      <p className="assurarr-label">{label}</p>
+      <div className={`mt-2 text-3xl font-semibold ${toneClassName}`}>{value}</div>
+      {note ? <p className="mt-2 text-sm text-slate-400">{note}</p> : null}
+    </div>
+  )
+}
+
+function SectionHeading({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description?: string
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-3 border-b border-slate-700/60 pb-3 md:flex-row md:items-start md:justify-between">
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold text-slate-50">{title}</h2>
+        {description ? <p className="max-w-3xl text-sm text-slate-400">{description}</p> : null}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function SourceField({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3">
+      <div className="assurarr-label">{label}</div>
+      <div className="mt-1 text-sm text-slate-200">{value}</div>
+    </div>
+  )
+}
+
+function EventSection({
+  title,
+  events,
+  emptyLabel,
+}: {
+  title: string
+  events: TimelineEvent[]
+  emptyLabel: string
+}) {
+  return (
+    <div className="assurarr-card">
+      <div className="assurarr-card-inner space-y-3">
+        <SectionHeading title={title} description="Live event stream pulled from AssurArr." />
+        {events.length ? (
+          <div className="space-y-2">
+            {events.map((event) => {
+              const tone = eventSeverityFromType(event.eventType)
+              return (
+                <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-slate-50">{event.eventType}</strong>
+                    <span className={`assurarr-pill ${tone === 'danger' ? 'border-rose-500/40 text-rose-100' : tone === 'warning' ? 'border-amber-500/40 text-amber-100' : tone === 'accent' ? 'border-cyan-500/40 text-cyan-100' : 'border-slate-600/60 text-slate-200'}`}>
+                      {tone}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {event.subjectType} {event.subjectId}
+                    {event.details ? ` - ${event.details}` : ''}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</p>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <EmptyState title={emptyLabel} />
+        )}
+      </div>
+    </div>
+  )
 }
 
 function PageHeader({
@@ -178,72 +293,101 @@ function PageHeader({
 
 function DashboardPage() {
   const query = useDashboard()
+  const attentionEvents = (query.data?.recentEvents ?? []).filter((event) => {
+    const normalized = event.eventType.toLowerCase()
+    return (
+      normalized.includes('hold') ||
+      normalized.includes('blocked') ||
+      normalized.includes('rejected') ||
+      normalized.includes('ineffective') ||
+      normalized.includes('critical') ||
+      normalized.includes('nonconformance') ||
+      normalized.includes('capa') ||
+      normalized.includes('finding')
+    )
+  })
+  const topAttentionEvents = attentionEvents.slice(0, 5)
+  const kpis = query.data?.cards ?? []
+  const criticalCount = kpis.find((card) => card.key === 'critical' || card.key === 'criticalIssues' || card.title.toLowerCase().includes('critical'))?.count ?? 0
+  const holdCount = kpis.find((card) => card.key === 'holds' || card.title.toLowerCase().includes('hold'))?.count ?? 0
+  const openCount = kpis.find((card) => card.key === 'open' || card.title.toLowerCase().includes('open'))?.count ?? 0
 
   return (
     <div className="assurarr-page">
       <PageHeader
         title="Quality control center"
         description="Track nonconformances, holds, CAPA, audits, and the current quality posture that other products consume."
-        action={<span className="assurarr-pill"><CalendarClock className="h-4 w-4" /> Updated {query.data ? new Date(query.data.generatedAt).toLocaleString() : 'recently'}</span>}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="assurarr-pill">
+              <CalendarClock className="h-4 w-4" />
+              Updated {query.data ? new Date(query.data.generatedAt).toLocaleString() : 'recently'}
+            </span>
+            <span className="assurarr-pill">Dashboard scope: AssurArr owns quality cases, holds, CAPA, audits, releases, and score snapshots.</span>
+          </div>
+        }
       />
       {query.isLoading ? <LoadingCard label="Loading dashboard" /> : null}
       {query.data ? (
         <>
-          <div className="assurarr-grid cols-3">
-            {query.data.cards.map((card) => (
-              <div key={card.key} className="assurarr-card">
-                <div className="assurarr-card-inner">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="assurarr-label">{card.title}</p>
-                      <p className="mt-1 text-sm text-slate-300">{card.description}</p>
-                    </div>
-                    <span className={`text-3xl font-semibold ${toneClass(card.tone)}`}>{card.count}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {kpis.map((card) => (
+              <SummaryMetricCard key={card.key} label={card.title} value={String(card.count)} note={card.description} tone={card.tone === 'danger' ? 'danger' : card.tone === 'warning' ? 'warning' : card.tone === 'info' || card.tone === 'accent' ? 'info' : 'neutral'} />
             ))}
           </div>
 
-          <div className="assurarr-grid cols-2">
-            <div className="assurarr-card">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="assurarr-card lg:col-span-2">
               <div className="assurarr-card-inner space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-5 w-5 text-cyan-300" />
-                  <h2 className="text-lg font-semibold text-slate-50">Recent events</h2>
-                </div>
-                <div className="space-y-3">
-                  {query.data.recentEvents.length === 0 ? <EmptyState title="No quality events yet" /> : null}
-                  {query.data.recentEvents.map((event) => (
-                    <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <strong className="text-sm text-slate-100">{event.eventType}</strong>
-                        <time className="text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</time>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-300">
-                        {event.subjectType} {event.subjectId}
-                        {event.details ? ` - ${event.details}` : ''}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <SectionHeading
+                  title="Recent events"
+                  description="The latest quality activity across nonconformances, holds, CAPA, audits, and downstream release signals."
+                />
+                {query.data.recentEvents.length === 0 ? <EmptyState title="No quality events yet." /> : <EventSection title="Recent activity" events={query.data.recentEvents} emptyLabel="No quality events yet." />}
               </div>
             </div>
 
-            <div className="assurarr-card">
-              <div className="assurarr-card-inner space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-cyan-300" />
-                  <h2 className="text-lg font-semibold text-slate-50">Operational posture</h2>
+            <div className="space-y-4">
+              <div className="assurarr-card">
+                <div className="assurarr-card-inner space-y-3">
+                  <SectionHeading title="Operational posture" description="Current quality posture that other products consume as read-only context." />
+                  <div className="grid gap-3">
+                    <SourceField label="Critical issues" value={criticalCount} />
+                    <SourceField label="Active holds" value={holdCount} />
+                    <SourceField label="Open items" value={openCount} />
+                  </div>
+                  <ul className="space-y-2 text-sm text-slate-300">
+                    <li>Nonconformance holds can block release decisions.</li>
+                    <li>CAPA and audit findings are visible in the same workspace.</li>
+                    <li>Quality status snapshots are ready for product consumption.</li>
+                  </ul>
                 </div>
-                <p className="text-sm text-slate-300">
-                  AssurArr is publishing current quality state for downstream products while keeping the underlying issue records editable here.
-                </p>
-                <ul className="space-y-2 text-sm text-slate-300">
-                  <li>Nonconformance holds can block release decisions.</li>
-                  <li>CAPA and audit findings are visible in the same workspace.</li>
-                  <li>Quality status snapshots are ready for product consumption.</li>
-                </ul>
+              </div>
+
+              <div className="assurarr-card">
+                <div className="assurarr-card-inner space-y-3">
+                  <SectionHeading title="Attention / risk" description="Items that need the next operator decision." />
+                  {topAttentionEvents.length ? (
+                    <div className="space-y-2">
+                      {topAttentionEvents.map((event) => (
+                        <div key={event.id} className="rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-semibold text-slate-100">{event.eventType}</span>
+                            <span className={`assurarr-pill ${badgeClassForStatus(event.eventType)}`}>{eventSeverityFromType(event.eventType)}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-slate-300">
+                            {event.subjectType} {event.subjectId}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {event.details ?? 'No additional details provided.'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState title="No active attention items." />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -638,8 +782,28 @@ function NonconformanceDetailPage() {
       <PageHeader
         title={nonconformance ? `${nonconformance.number} · ${nonconformance.title}` : 'Nonconformance detail'}
         description="Source context, holds, containment, disposition, CAPA, evidence, and timeline for the quality case."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(nonconformance.status)}`}>{nonconformance.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={nonconformance.severity} tone={nonconformance.severity === 'critical' ? 'danger' : nonconformance.severity === 'high' ? 'warning' : 'neutral'} note={nonconformance.nonconformanceType} />
+          <SummaryMetricCard label="Open holds" value={String(nonconformance.holdRefs.length)} tone={nonconformance.holdRefs.length > 0 ? 'warning' : 'success'} note="Quality release blockers" />
+          <SummaryMetricCard label="CAPA refs" value={String(nonconformance.capaRefs.length)} tone={nonconformance.capaRefs.length > 0 ? 'info' : 'neutral'} note="Corrective / preventive actions" />
+          <SummaryMetricCard label="Due date" value={nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleDateString() : 'None'} tone={nonconformance.dueAt ? 'warning' : 'neutral'} note={nonconformance.dueAt ? formatDateTime(nonconformance.dueAt) : 'No deadline set'} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical source labels and cross-product references for this quality case." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={nonconformance.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={nonconformance.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Discovered at" value={formatDateTime(nonconformance.discoveredAt)} />
+              <SourceField label="Discovered by" value={nonconformance.discoveredByPersonId ?? 'unassigned'} />
+              <SourceField label="StaffArr site" value={nonconformance.staffArrSiteId ?? 'n/a'} />
+              <SourceField label="StaffArr location" value={nonconformance.staffArrLocationId ?? 'n/a'} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -1093,8 +1257,28 @@ function HoldDetailPage() {
       <PageHeader
         title={`${hold.number} · ${hold.title}`}
         description="Hold detail, release requirements, release evidence, and the downstream records blocked by this quality decision."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(hold.status)}`}>{hold.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={hold.severity} tone={hold.severity === 'critical' ? 'danger' : hold.severity === 'high' ? 'warning' : 'neutral'} note={hold.holdType} />
+          <SummaryMetricCard label="Scope" value={hold.holdScope} tone={hold.holdScope === 'full' ? 'warning' : 'info'} note="Blocking scope" />
+          <SummaryMetricCard label="Release requirements" value={String(hold.releaseRequirements.length)} tone={hold.releaseRequirements.length ? 'warning' : 'neutral'} note="Conditions to remove hold" />
+          <SummaryMetricCard label="Evidence refs" value={String(hold.recordRefs.length)} tone={hold.recordRefs.length ? 'info' : 'neutral'} note="RecordArr attachments" />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical source labels and block references for this quality hold." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={hold.sourceProduct ?? 'manual'} />
+              <SourceField label="Source nonconformance" value={hold.sourceNonconformanceRef ?? 'n/a'} />
+              <SourceField label="Source object" value={hold.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Placed at" value={formatDateTime(hold.placedAt)} />
+              <SourceField label="Released at" value={formatDateTime(hold.releasedAt)} />
+              <SourceField label="Rejected at" value={formatDateTime(hold.rejectedAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -1692,8 +1876,28 @@ function CapaDetailPage() {
       <PageHeader
         title={`${capa.number} · ${capa.title}`}
         description="Root cause, action plan, assigned actions, blockers, verification plans, and the evidence trail for the CAPA."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(capa.status)}`}>{capa.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={capa.severity} tone={capa.severity === 'critical' ? 'danger' : capa.severity === 'high' ? 'warning' : 'neutral'} note={capa.capaType} />
+          <SummaryMetricCard label="Open actions" value={String(actionQuery.data?.length ?? 0)} tone={(actionQuery.data?.length ?? 0) > 0 ? 'info' : 'neutral'} note="Assigned corrective actions" />
+          <SummaryMetricCard label="Blockers" value={String(blockerQuery.data?.length ?? 0)} tone={(blockerQuery.data?.length ?? 0) > 0 ? 'warning' : 'success'} note="Known action blockers" />
+          <SummaryMetricCard label="Verification plans" value={String(verificationQuery.data?.length ?? 0)} tone={(verificationQuery.data?.length ?? 0) > 0 ? 'info' : 'neutral'} note="Effectiveness checks" />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Root cause references and quality planning context for the CAPA." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={capa.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={capa.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Opened at" value={formatDateTime(capa.openedAt)} />
+              <SourceField label="Owner" value={capa.ownerPersonId ?? 'unassigned'} />
+              <SourceField label="Sponsor" value={capa.sponsorPersonId ?? 'n/a'} />
+              <SourceField label="Due at" value={formatDateTime(capa.dueAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -2708,8 +2912,28 @@ function AuditDetailPage() {
       <PageHeader
         title={`${audit.number} · ${audit.title}`}
         description="Audit scope, checklist structure, findings, and the linked evidence trail."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(audit.status)}`}>{audit.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={audit.severity} tone={audit.severity === 'critical' ? 'danger' : audit.severity === 'high' ? 'warning' : 'neutral'} note={audit.auditType} />
+          <SummaryMetricCard label="Checklists" value={String(audit.checklistRefs.length)} tone={audit.checklistRefs.length ? 'info' : 'neutral'} note="Audit structure" />
+          <SummaryMetricCard label="Findings" value={String(audit.findingRefs.length)} tone={audit.findingRefs.length ? 'warning' : 'success'} note="Linked observations" />
+          <SummaryMetricCard label="Evidence refs" value={String(audit.recordRefs.length)} tone={audit.recordRefs.length ? 'info' : 'neutral'} note="RecordArr attachments" />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Audit ownership, scope, and cross-product references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={audit.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={audit.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Planned start" value={formatDateTime(audit.plannedStartAt)} />
+              <SourceField label="Planned end" value={formatDateTime(audit.plannedEndAt)} />
+              <SourceField label="Actual start" value={formatDateTime(audit.actualStartAt)} />
+              <SourceField label="Actual end" value={formatDateTime(audit.actualEndAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -3016,8 +3240,51 @@ function RootCauseAnalysisDetailPage() {
 
   return (
     <div className="assurarr-page">
-      <PageHeader title={`${rootCause.number} · ${rootCause.title}`} description="Root cause method, cause category, evidence, and completion history." />
+      <PageHeader
+        title={`${rootCause.number} · ${rootCause.title}`}
+        description="Root cause method, cause category, evidence, and completion history."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(rootCause.status)}`}>{rootCause.status}</span>}
+      />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard
+            label="Method"
+            value={rootCause.method}
+            tone="info"
+            note={rootCause.primaryCauseCategory}
+          />
+          <SummaryMetricCard
+            label="Contributors"
+            value={String(rootCause.contributingFactors.length)}
+            tone={rootCause.contributingFactors.length ? 'warning' : 'neutral'}
+            note="Contributing factors recorded"
+          />
+          <SummaryMetricCard
+            label="Evidence refs"
+            value={String(rootCause.evidenceRecordRefs.length)}
+            tone={rootCause.evidenceRecordRefs.length ? 'info' : 'neutral'}
+            note="Evidence supporting analysis"
+          />
+          <SummaryMetricCard
+            label="Completed"
+            value={rootCause.completedAt ? new Date(rootCause.completedAt).toLocaleDateString() : 'Open'}
+            tone={rootCause.completedAt ? 'success' : 'warning'}
+            note={rootCause.completedAt ? formatDateTime(rootCause.completedAt) : 'Awaiting completion'}
+          />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical source labels and cross-product references for this analysis." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={rootCause.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={rootCause.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Nonconformance" value={`${nonconformance.number} · ${nonconformance.title}`} />
+              <SourceField label="Owner" value={rootCause.ownerPersonId ?? 'n/a'} />
+              <SourceField label="Analyzed by" value={rootCause.analyzedByPersonId ?? 'n/a'} />
+              <SourceField label="Completed at" value={formatDateTime(rootCause.completedAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -3125,8 +3392,28 @@ function FindingDetailPage() {
       <PageHeader
         title={`${finding.number} · ${finding.title}`}
         description="Audit finding details, linked quality records, evidence, and follow-up action references."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(finding.status)}`}>{finding.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={finding.severity} tone={finding.severity === 'critical' ? 'danger' : finding.severity === 'high' ? 'warning' : 'neutral'} note={finding.findingType} />
+          <SummaryMetricCard label="Evidence refs" value={String(finding.evidenceRecordRefs.length)} tone={finding.evidenceRecordRefs.length ? 'info' : 'neutral'} note="Evidence supporting the finding" />
+          <SummaryMetricCard label="Related records" value={String([finding.auditRef, finding.nonconformanceRef, finding.capaRef].filter(Boolean).length)} tone="info" note="Cross-product links" />
+          <SummaryMetricCard label="Due date" value={finding.dueAt ? new Date(finding.dueAt).toLocaleDateString() : 'None'} tone={finding.dueAt ? 'warning' : 'neutral'} note={finding.dueAt ? formatDateTime(finding.dueAt) : 'No deadline set'} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Audit finding references and linked canonical records." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={finding.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={finding.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Source requirement" value={finding.sourceRequirementRef ?? 'n/a'} />
+              <SourceField label="Audit ref" value={finding.auditRef ?? 'n/a'} />
+              <SourceField label="Nonconformance ref" value={finding.nonconformanceRef ?? 'n/a'} />
+              <SourceField label="CAPA ref" value={finding.capaRef ?? 'n/a'} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -3363,8 +3650,28 @@ function ReviewDetailPage() {
       <PageHeader
         title={`${review.number} · ${review.title}`}
         description="Evidence review, decision state, and closure context for the quality gate."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(review.status)}`}>{review.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={review.severity} tone={review.severity === 'critical' ? 'danger' : review.severity === 'high' ? 'warning' : 'neutral'} note={review.reviewType} />
+          <SummaryMetricCard label="Required refs" value={String(review.requiredEvidenceRefs.length)} tone={review.requiredEvidenceRefs.length ? 'warning' : 'neutral'} note="Evidence needed to close" />
+          <SummaryMetricCard label="Submitted refs" value={String(review.submittedEvidenceRefs.length)} tone={review.submittedEvidenceRefs.length ? 'info' : 'neutral'} note="Evidence on hand" />
+          <SummaryMetricCard label="Decision" value={review.decisionAt ? new Date(review.decisionAt).toLocaleDateString() : 'Pending'} tone={review.decisionAt ? 'success' : 'warning'} note={review.decisionReason ?? 'Awaiting decision'} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical review source labels and evidence references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={review.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={review.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Source review ref" value={review.sourceReviewRef ?? 'n/a'} />
+              <SourceField label="Reviewer" value={review.reviewerPersonId ?? 'unassigned'} />
+              <SourceField label="Requested at" value={formatDateTime(review.requestedAt)} />
+              <SourceField label="Due at" value={formatDateTime(review.dueAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -3594,8 +3901,28 @@ function ReleaseDetailPage() {
       <PageHeader
         title={`${release.number} · ${release.title}`}
         description="Release decision, evidence, and the hold context that this record unblocks."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(release.status)}`}>{release.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={release.severity} tone={release.severity === 'critical' ? 'danger' : release.severity === 'high' ? 'warning' : 'neutral'} note={release.releaseType} />
+          <SummaryMetricCard label="Affected objects" value={String(release.affectedObjectRefs.length)} tone={release.affectedObjectRefs.length ? 'info' : 'neutral'} note="Objects unblocked by release" />
+          <SummaryMetricCard label="Evidence refs" value={String(release.evidenceRecordRefs.length)} tone={release.evidenceRecordRefs.length ? 'info' : 'neutral'} note="Release evidence" />
+          <SummaryMetricCard label="Expiration" value={release.expirationAt ? new Date(release.expirationAt).toLocaleDateString() : 'None'} tone={release.expirationAt ? 'warning' : 'success'} note={formatDateTime(release.expirationAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical release labels, source references, and approval details." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={release.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={release.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Hold ref" value={release.holdRef} />
+              <SourceField label="Requested by" value={release.requestedByPersonId ?? 'n/a'} />
+              <SourceField label="Approved by" value={release.approvedByPersonId ?? 'n/a'} />
+              <SourceField label="Approved at" value={formatDateTime(release.approvedAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -4001,8 +4328,28 @@ function ContainmentDetailPage() {
       <PageHeader
         title={`${action.number} · ${action.title}`}
         description="Containment decisions, affected objects, and the execution trail for the action."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(action.status)}`}>{action.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={action.severity} tone={action.severity === 'critical' ? 'danger' : action.severity === 'high' ? 'warning' : 'neutral'} note={action.actionType} />
+          <SummaryMetricCard label="Affected objects" value={String(action.affectedObjectRefs.length)} tone={action.affectedObjectRefs.length ? 'info' : 'neutral'} note="Contained objects" />
+          <SummaryMetricCard label="Evidence refs" value={String(action.evidenceRecordRefs.length)} tone={action.evidenceRecordRefs.length ? 'info' : 'neutral'} note="Supporting evidence" />
+          <SummaryMetricCard label="Verification" value={action.verificationRequired ? (action.verifiedAt ? 'Verified' : 'Pending') : 'Not required'} tone={action.verificationRequired ? (action.verifiedAt ? 'success' : 'warning') : 'neutral'} note={action.verificationRequired ? formatDateTime(action.verifiedAt) : 'Verification optional'} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical containment labels and blocking references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={action.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={action.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Nonconformance" value={action.nonconformanceRef ?? 'n/a'} />
+              <SourceField label="Assigned person" value={action.assignedPersonId ?? 'n/a'} />
+              <SourceField label="Assigned team" value={action.assignedTeamRef ?? 'n/a'} />
+              <SourceField label="Due at" value={formatDateTime(action.dueAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -4067,8 +4414,28 @@ function DispositionDetailPage() {
       <PageHeader
         title={`${disposition.number} · ${disposition.title}`}
         description="Disposition decision, execution context, evidence, and timeline."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(disposition.status)}`}>{disposition.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={disposition.severity} tone={disposition.severity === 'critical' ? 'danger' : disposition.severity === 'high' ? 'warning' : 'neutral'} note={disposition.dispositionType} />
+          <SummaryMetricCard label="Affected objects" value={String(disposition.affectedObjectRefs.length)} tone={disposition.affectedObjectRefs.length ? 'info' : 'neutral'} note="Objects covered by decision" />
+          <SummaryMetricCard label="Required actions" value={String(disposition.requiredActions.length)} tone={disposition.requiredActions.length ? 'warning' : 'neutral'} note="Actions before closure" />
+          <SummaryMetricCard label="Closed" value={disposition.closedAt ? new Date(disposition.closedAt).toLocaleDateString() : 'Open'} tone={disposition.closedAt ? 'success' : 'warning'} note={formatDateTime(disposition.closedAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical disposition labels and decision references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={disposition.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={disposition.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Nonconformance" value={disposition.nonconformanceRef ?? 'n/a'} />
+              <SourceField label="Decision by" value={disposition.decisionByPersonId ?? 'n/a'} />
+              <SourceField label="Approved by" value={disposition.approvedByPersonId ?? 'n/a'} />
+              <SourceField label="Decision at" value={formatDateTime(disposition.decisionAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -4312,8 +4679,28 @@ function SupplierQualityDetailPage() {
       <PageHeader
         title={`${issue.number} · ${issue.title}`}
         description="Supplier quality issue detail, linked records, and the activity trail for the supplier-facing workflow."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(issue.status)}`}>{issue.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={issue.severity} tone={issue.severity === 'critical' ? 'danger' : issue.severity === 'high' ? 'warning' : 'neutral'} note={issue.issueType} />
+          <SummaryMetricCard label="Receipt refs" value={String(issue.affectedReceiptRefs.length)} tone={issue.affectedReceiptRefs.length ? 'info' : 'neutral'} note="Affected receipts" />
+          <SummaryMetricCard label="Hold refs" value={String(issue.holdRefs.length)} tone={issue.holdRefs.length ? 'warning' : 'success'} note="Held or blocked items" />
+          <SummaryMetricCard label="Opened" value={issue.openedAt ? new Date(issue.openedAt).toLocaleDateString() : 'Open'} tone={issue.openedAt ? 'info' : 'neutral'} note={formatDateTime(issue.openedAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical supplier issue labels and cross-product references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={issue.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={issue.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Supplier ref" value={issue.supplierRef ?? 'unassigned'} />
+              <SourceField label="Nonconformance" value={issue.nonconformanceRef ?? 'n/a'} />
+              <SourceField label="SCAR ref" value={issue.scarRef ?? 'n/a'} />
+              <SourceField label="Opened at" value={formatDateTime(issue.openedAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -4614,8 +5001,28 @@ function ScarDetailPage() {
       <PageHeader
         title={`${scar.number} · ${scar.title}`}
         description="Supplier corrective action request detail, response evidence, and the closure trail for the supplier workflow."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(scar.status)}`}>{scar.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={scar.severity} tone={scar.severity === 'critical' ? 'danger' : scar.severity === 'high' ? 'warning' : 'neutral'} note="Supplier corrective action" />
+          <SummaryMetricCard label="Response refs" value={String(scar.supplierResponseRecordRefs.length)} tone={scar.supplierResponseRecordRefs.length ? 'info' : 'neutral'} note="Supplier responses received" />
+          <SummaryMetricCard label="Affected refs" value={String(scar.affectedObjectRefs.length)} tone={scar.affectedObjectRefs.length ? 'warning' : 'neutral'} note="Impacted supplier objects" />
+          <SummaryMetricCard label="Supplier due" value={scar.supplierDueAt ? new Date(scar.supplierDueAt).toLocaleDateString() : 'None'} tone={scar.supplierDueAt ? 'warning' : 'success'} note={formatDateTime(scar.supplierDueAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical supplier request labels and follow-up references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={scar.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={scar.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Supplier ref" value={scar.supplierRef ?? 'unassigned'} />
+              <SourceField label="Requested by" value={scar.requestedByPersonId ?? 'n/a'} />
+              <SourceField label="Reviewed by" value={scar.reviewPersonId ?? 'n/a'} />
+              <SourceField label="Requested at" value={formatDateTime(scar.requestedAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -4944,8 +5351,28 @@ function CustomerComplaintDetailPage() {
       <PageHeader
         title={`${complaint.number} · ${complaint.title}`}
         description="Complaint detail, linked quality records, and the activity trail for the customer-facing workflow."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(complaint.status)}`}>{complaint.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={complaint.severity} tone={complaint.severity === 'critical' ? 'danger' : complaint.severity === 'high' ? 'warning' : 'neutral'} note={complaint.complaintType} />
+          <SummaryMetricCard label="Orders" value={String(complaint.affectedOrderRefs.length)} tone={complaint.affectedOrderRefs.length ? 'info' : 'neutral'} note="Affected orders" />
+          <SummaryMetricCard label="CAPA refs" value={String(complaint.capaRefs.length)} tone={complaint.capaRefs.length ? 'warning' : 'neutral'} note="Follow-up actions" />
+          <SummaryMetricCard label="Response due" value={complaint.customerResponseDueAt ? new Date(complaint.customerResponseDueAt).toLocaleDateString() : 'None'} tone={complaint.customerResponseDueAt ? 'warning' : 'success'} note={formatDateTime(complaint.customerResponseDueAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical complaint labels and linked customer-facing references." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={complaint.sourceProduct ?? 'manual'} />
+              <SourceField label="Source object" value={complaint.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Customer ref" value={complaint.customerRef ?? 'unassigned'} />
+              <SourceField label="Received by" value={complaint.receivedByPersonId ?? 'n/a'} />
+              <SourceField label="Received at" value={formatDateTime(complaint.receivedAt)} />
+              <SourceField label="Due at" value={formatDateTime(complaint.customerResponseDueAt)} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -5276,9 +5703,29 @@ function RiskProfileDetailPage() {
       <PageHeader
         title={profile.targetRef}
         description={`Risk profile for ${profile.targetType}`}
-        action={<span className="assurarr-pill">{profile.riskLevel}</span>}
+        action={<span className={`assurarr-pill ${badgeClassForStatus(profile.riskLevel)}`}>{profile.riskLevel}</span>}
       />
-      <div className="assurarr-grid cols-2">
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Target type" value={profile.targetType} tone="info" note="Risk profile scope" />
+          <SummaryMetricCard label="Open issues" value={String(profile.openIssueCount)} tone={profile.openIssueCount > 0 ? 'warning' : 'success'} note="Open quality issues" />
+          <SummaryMetricCard label="Critical issues" value={String(profile.criticalIssueCount)} tone={profile.criticalIssueCount > 0 ? 'danger' : 'neutral'} note="Highest severity count" />
+          <SummaryMetricCard label="Reviewed" value={profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleDateString() : 'Pending'} tone={profile.reviewedAt ? 'success' : 'warning'} note={formatDateTime(profile.reviewedAt)} />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Reference context" description="Risk profile scope, review metadata, and canonical identifiers." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Target type" value={profile.targetType} />
+              <SourceField label="Target ref" value={profile.targetRef} />
+              <SourceField label="Reviewed by" value={profile.reviewedByPersonId ?? 'n/a'} />
+              <SourceField label="Last incident" value={formatDateTime(profile.lastIncidentAt)} />
+              <SourceField label="Created at" value={formatDateTime(profile.createdAt)} />
+              <SourceField label="Updated at" value={formatDateTime(profile.updatedAt)} />
+            </div>
+          </div>
+        </div>
+        <div className="assurarr-grid cols-2">
         <div className="assurarr-card">
           <div className="assurarr-card-inner space-y-3">
             <p className="assurarr-label">Overview</p>
@@ -5308,6 +5755,7 @@ function RiskProfileDetailPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
       <SectionCard title="Event log" items={profile.eventLog} emptyLabel="No risk profile event log entries recorded yet." />
@@ -5363,8 +5811,28 @@ function QualityStatusSnapshotDetailPage() {
       <PageHeader
         title={`${snapshot.number} · ${snapshot.title}`}
         description="Published quality status, active blockers, and reference context for downstream products."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(snapshot.status)}`}>{snapshot.qualityStatus}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Severity" value={snapshot.severity} tone={snapshot.severity === 'critical' ? 'danger' : snapshot.severity === 'high' ? 'warning' : 'neutral'} note={snapshot.status} />
+          <SummaryMetricCard label="Active holds" value={String(snapshot.activeHoldRefs.length)} tone={snapshot.activeHoldRefs.length ? 'warning' : 'success'} note="Currently blocking work" />
+          <SummaryMetricCard label="Open nonconformances" value={String(snapshot.openNonconformanceRefs.length)} tone={snapshot.openNonconformanceRefs.length ? 'warning' : 'neutral'} note="Open quality issues" />
+          <SummaryMetricCard label="Open CAPAs" value={String(snapshot.openCapaRefs.length)} tone={snapshot.openCapaRefs.length ? 'info' : 'neutral'} note="Open corrective actions" />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Canonical status snapshot references and owner context." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Source product" value={snapshot.sourceProduct ?? 'n/a'} />
+              <SourceField label="Source object" value={snapshot.sourceObjectRef ?? 'n/a'} />
+              <SourceField label="Target product" value={snapshot.targetProduct} />
+              <SourceField label="Target object" value={snapshot.targetObjectRef} />
+              <SourceField label="Owner" value={snapshot.ownerPersonId ?? 'n/a'} />
+              <SourceField label="Reviewed by" value={snapshot.reviewedByPersonId ?? 'n/a'} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">
@@ -5544,8 +6012,27 @@ function ScorecardDetailPage() {
       <PageHeader
         title={scorecard.number}
         description={scorecard.title}
-        action={<span className="assurarr-pill">{scorecard.qualityStatus} · {scorecard.trend}</span>}
+        action={<span className={`assurarr-pill ${badgeClassForStatus(scorecard.qualityStatus)}`}>{scorecard.qualityStatus} · {scorecard.trend}</span>}
       />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryMetricCard label="Target" value={`${scorecard.targetType} · ${scorecard.targetRef}`} tone="info" note="Scorecard scope" />
+        <SummaryMetricCard label="Overall score" value={String(scorecard.overallScore ?? 'n/a')} tone={scorecard.qualityStatus === 'critical' ? 'danger' : scorecard.qualityStatus === 'warning' ? 'warning' : 'success'} note="Composite quality score" />
+        <SummaryMetricCard label="Metrics" value={String(metrics.length)} tone={metrics.length ? 'info' : 'neutral'} note="Attached quality metrics" />
+        <SummaryMetricCard label="Reviewed" value={scorecard.reviewedAt ? new Date(scorecard.reviewedAt).toLocaleDateString() : 'Pending'} tone={scorecard.reviewedAt ? 'success' : 'warning'} note={formatDateTime(scorecard.reviewedAt)} />
+      </div>
+      <div className="assurarr-card mt-4">
+        <div className="assurarr-card-inner space-y-3">
+          <SectionHeading title="Source context" description="Canonical scorecard scope and source references." />
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <SourceField label="Target type" value={scorecard.targetType} />
+            <SourceField label="Target ref" value={scorecard.targetRef} />
+            <SourceField label="Generated at" value={formatDateTime(scorecard.generatedAt)} />
+            <SourceField label="Reviewed at" value={formatDateTime(scorecard.reviewedAt)} />
+            <SourceField label="Reviewed by" value={scorecard.reviewedByPersonId ?? 'n/a'} />
+            <SourceField label="Metric refs" value={scorecard.metricRefs.length ? scorecard.metricRefs.join(', ') : 'none'} />
+          </div>
+        </div>
+      </div>
       <div className="assurarr-grid cols-2">
         <div className="assurarr-card">
           <div className="assurarr-card-inner space-y-3">
@@ -5698,8 +6185,28 @@ function QualityMetricDetailPage() {
       <PageHeader
         title={`${metric.metricKey} · ${metric.title}`}
         description="Metric thresholds, source refs, and the scorecard context."
+        action={<span className={`assurarr-pill ${badgeClassForStatus(metric.status)}`}>{metric.status}</span>}
       />
       <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetricCard label="Value" value={`${metric.value ?? 'n/a'} ${metric.unit ?? ''}`.trim()} tone={metric.status === 'critical' ? 'danger' : metric.status === 'warning' ? 'warning' : 'success'} note={`Metric ${metric.category}`} />
+          <SummaryMetricCard label="Target" value={String(metric.targetValue ?? 'n/a')} tone="info" note="Desired value" />
+          <SummaryMetricCard label="Thresholds" value={`${metric.warningThreshold ?? 'n/a'} / ${metric.criticalThreshold ?? 'n/a'}`} tone={metric.status === 'critical' ? 'danger' : metric.status === 'warning' ? 'warning' : 'neutral'} note="Warning / critical" />
+          <SummaryMetricCard label="Source refs" value={String(metric.sourceProductRefs.length)} tone={metric.sourceProductRefs.length ? 'info' : 'neutral'} note="Upstream products" />
+        </div>
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-3">
+            <SectionHeading title="Source context" description="Metric provenance and scorecard context." />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <SourceField label="Scorecard" value={`${scorecard.number} · ${scorecard.title}`} />
+              <SourceField label="Category" value={metric.category} />
+              <SourceField label="Created at" value={formatDateTime(metric.createdAt)} />
+              <SourceField label="Updated at" value={formatDateTime(metric.updatedAt)} />
+              <SourceField label="Unit" value={metric.unit ?? 'n/a'} />
+              <SourceField label="Metric key" value={metric.metricKey} />
+            </div>
+          </div>
+        </div>
         <div className="assurarr-grid cols-2">
           <div className="assurarr-card">
             <div className="assurarr-card-inner space-y-3">

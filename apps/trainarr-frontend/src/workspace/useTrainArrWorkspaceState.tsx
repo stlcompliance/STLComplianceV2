@@ -37,6 +37,7 @@ import {
   updateTrainingProgram,
   expireQualificationIssue,
   revokeQualificationIssue,
+  getPersonalTrainingDashboard,
   submitTrainingEvaluation,
   submitTrainingSignoff,
   suspendQualificationIssue,
@@ -182,6 +183,12 @@ export function useTrainArrWorkspaceState() {
     queryFn: () => getMe(session!.accessToken),
     enabled: Boolean(session?.accessToken),
     retry: false,
+  })
+
+  const personalDashboardQuery = useQuery({
+    queryKey: ['trainarr-personal-dashboard', session?.accessToken],
+    queryFn: () => getPersonalTrainingDashboard(session!.accessToken),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
   })
 
   const definitionsQuery = useQuery({
@@ -1186,6 +1193,7 @@ const me = meQuery.data
     rulePackOptions,
     personPickerOptions,
     meQuery,
+    personalDashboardQuery,
     definitionsQuery,
     programsQuery,
     programDetailQuery,

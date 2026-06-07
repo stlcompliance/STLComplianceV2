@@ -39,6 +39,52 @@ export interface TrainArrSessionBootstrapResponse {
   entitlements: string[]
 }
 
+export interface FieldInboxTaskItemResponse {
+  taskKey: string
+  productKey: string
+  taskType: string
+  title: string
+  subtitle: string | null
+  status: string
+  priority: string | null
+  dueAt: string | null
+  sortAt: string | null
+  deepLinkPath: string
+  blockedReason: string | null
+  deepLinkUrl: string | null
+}
+
+export interface FieldInboxSummaryResponse {
+  totalCount: number
+  blockedCount: number
+  countByProduct: Record<string, number>
+}
+
+export interface FieldInboxResponse {
+  summary: FieldInboxSummaryResponse
+  items: FieldInboxTaskItemResponse[]
+}
+
+export interface PersonalTrainingDashboardSummaryResponse {
+  activeAssignmentCount: number
+  completedAssignmentCount: number
+  overdueAssignmentCount: number
+  qualificationCount: number
+  expiringQualificationCount: number
+  fieldInboxCount: number
+  recentHistoryCount: number
+}
+
+export interface PersonalTrainingDashboardResponse {
+  staffarrPersonId: string
+  generatedAt: string
+  summary: PersonalTrainingDashboardSummaryResponse
+  assignedTraining: TrainingAssignmentSummaryResponse[]
+  qualifications: QualificationIssueResponse[]
+  fieldInbox: FieldInboxResponse
+  recentHistory: PersonTrainingHistoryEntryItem[]
+}
+
 export interface TrainingDefinitionResponse {
   trainingDefinitionId: string
   definitionKey: string
@@ -255,6 +301,7 @@ export interface QualificationIssueResponse {
   grantPublicationId: string
   status: string
   issuedAt: string
+  expiresAt: string | null
   statusChangedAt: string | null
   lifecycleReason: string | null
   lifecyclePublicationId: string | null

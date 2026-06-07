@@ -23,6 +23,14 @@ public sealed record CreateTripProofRequest(
     string? Notes,
     DateTimeOffset? CapturedAt);
 
+public sealed record CreateProofEventRequest(
+    Guid TripId,
+    string ProofType,
+    string? VehicleRefKey,
+    string? ReferenceKey,
+    string? Notes,
+    DateTimeOffset? CapturedAt);
+
 public sealed record RejectTripProofRequest(string Reason);
 
 public sealed record CorrectTripProofRequest(

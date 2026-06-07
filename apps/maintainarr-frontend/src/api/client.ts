@@ -85,6 +85,8 @@ import type {
   PmScheduleResponse,
   StartInspectionRunRequest,
   SubmitInspectionRunAnswersRequest,
+  PauseInspectionRunRequest,
+  ResumeInspectionRunRequest,
   TechnicianRefListResponse,
   UpsertTechnicianRefRequest,
   TechnicianRefResponse,
@@ -100,6 +102,7 @@ import type {
   CreateWorkOrderTaskLineRequest,
   WorkOrderLaborEntryResponse,
   CreateWorkOrderLaborEntryRequest,
+  UpdateWorkOrderLaborEntryStatusRequest,
   WorkOrderEvidenceResponse,
   WorkOrderCommentResponse,
   WorkOrderTimelineEventResponse,
@@ -110,6 +113,17 @@ import type {
   PublishWorkOrderPartsDemandRequest,
   PublishWorkOrderPartsDemandResponse,
   WorkOrderPartsDemandStatusEventResponse,
+  MaintenancePartsKitLineResponse,
+  MaintenancePartsKitListResponse,
+  MaintenancePartsKitResponse,
+  CreateMaintenancePartsKitRequest,
+  UpdateMaintenancePartsKitRequest,
+  UpdateMaintenancePartsKitStatusRequest,
+  CreateMaintenancePartsKitLineRequest,
+  UpdateMaintenancePartsKitLineRequest,
+  MaintenanceVendorWorkListResponse,
+  MaintenanceVendorWorkResponse,
+  UpsertMaintenanceVendorWorkRequest,
   WorkOrderSupplyReadinessResponse,
   MaintenanceReportSummaryResponse,
   MaintenanceReportAssetDetailResponse,
@@ -566,6 +580,32 @@ export async function submitInspectionRunAnswers(
   return parseJsonResponse<InspectionRunDetailResponse>(response, 'Failed to submit inspection answers')
 }
 
+export async function pauseInspectionRun(
+  accessToken: string,
+  inspectionRunId: string,
+  payload: PauseInspectionRunRequest,
+): Promise<InspectionRunDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspections/${inspectionRunId}/pause`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionRunDetailResponse>(response, 'Failed to pause inspection run')
+}
+
+export async function resumeInspectionRun(
+  accessToken: string,
+  inspectionRunId: string,
+  payload: ResumeInspectionRunRequest,
+): Promise<InspectionRunDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspections/${inspectionRunId}/resume`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionRunDetailResponse>(response, 'Failed to resume inspection run')
+}
+
 export async function completeInspectionRun(
   accessToken: string,
   inspectionRunId: string,
@@ -896,6 +936,20 @@ export async function logWorkOrderLabor(
   return parseJsonResponse<WorkOrderLaborEntryResponse>(response, 'Failed to log work order labor')
 }
 
+export async function updateWorkOrderLaborStatus(
+  accessToken: string,
+  workOrderId: string,
+  laborEntryId: string,
+  payload: UpdateWorkOrderLaborEntryStatusRequest,
+): Promise<WorkOrderLaborEntryResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/labor/${laborEntryId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<WorkOrderLaborEntryResponse>(response, 'Failed to update work order labor status')
+}
+
 export async function getWorkOrderEvidence(
   accessToken: string,
   workOrderId: string,
@@ -1009,6 +1063,127 @@ export async function getWorkOrderPartsDemandStatusEvents(
     response,
     'Failed to load work order parts demand status events',
   )
+}
+
+export async function getMaintenancePartsKits(
+  accessToken: string,
+): Promise<MaintenancePartsKitListResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitListResponse>(response, 'Failed to load maintenance parts kits')
+}
+
+export async function getMaintenancePartsKit(
+  accessToken: string,
+  partsKitId: string,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to load maintenance parts kit')
+}
+
+export async function createMaintenancePartsKit(
+  accessToken: string,
+  payload: CreateMaintenancePartsKitRequest,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to create maintenance parts kit')
+}
+
+export async function updateMaintenancePartsKit(
+  accessToken: string,
+  partsKitId: string,
+  payload: UpdateMaintenancePartsKitRequest,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to update maintenance parts kit')
+}
+
+export async function updateMaintenancePartsKitStatus(
+  accessToken: string,
+  partsKitId: string,
+  payload: UpdateMaintenancePartsKitStatusRequest,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to update maintenance parts kit status')
+}
+
+export async function createMaintenancePartsKitLine(
+  accessToken: string,
+  partsKitId: string,
+  payload: CreateMaintenancePartsKitLineRequest,
+): Promise<MaintenancePartsKitLineResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/lines`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitLineResponse>(response, 'Failed to create maintenance parts kit line')
+}
+
+export async function updateMaintenancePartsKitLine(
+  accessToken: string,
+  partsKitId: string,
+  lineId: string,
+  payload: UpdateMaintenancePartsKitLineRequest,
+): Promise<MaintenancePartsKitLineResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/lines/${lineId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitLineResponse>(response, 'Failed to update maintenance parts kit line')
+}
+
+export async function deleteMaintenancePartsKitLine(
+  accessToken: string,
+  partsKitId: string,
+  lineId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/lines/${lineId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to delete maintenance parts kit line')
+  }
+}
+
+export async function getMaintenanceVendorWork(
+  accessToken: string,
+  workOrderId: string,
+): Promise<MaintenanceVendorWorkListResponse> {
+  const response = await fetch(`${apiBase}/api/v1/work-orders/${workOrderId}/vendor-work`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceVendorWorkListResponse>(response, 'Failed to load vendor work')
+}
+
+export async function upsertMaintenanceVendorWork(
+  accessToken: string,
+  workOrderId: string,
+  payload: UpsertMaintenanceVendorWorkRequest,
+): Promise<MaintenanceVendorWorkResponse> {
+  const response = await fetch(`${apiBase}/api/v1/work-orders/${workOrderId}/vendor-work`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenanceVendorWorkResponse>(response, 'Failed to save vendor work')
 }
 
 export async function getWorkOrderSupplyReadiness(

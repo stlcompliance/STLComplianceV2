@@ -53,6 +53,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -119,6 +122,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -170,6 +176,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -265,6 +274,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("VerificationPlanRef")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -314,6 +326,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -368,6 +383,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("VerificationRequired")
                         .HasColumnType("boolean");
 
@@ -408,6 +426,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -444,6 +465,9 @@ namespace AssurArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -499,6 +523,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -560,6 +587,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("VerificationRequired")
                         .HasColumnType("boolean");
@@ -627,6 +657,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CustomerContactSnapshot")
                         .HasMaxLength(4000)
@@ -707,6 +740,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -749,6 +785,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("DecisionAt")
                         .HasColumnType("timestamp with time zone");
@@ -828,6 +867,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -853,6 +895,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.PrimitiveCollection<string[]>("EvidenceRecordRefs")
                         .IsRequired()
@@ -897,6 +942,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("VerificationPlanId")
                         .HasColumnType("uuid");
@@ -990,6 +1038,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CustomerImpact")
                         .HasMaxLength(4000)
@@ -1092,6 +1143,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1161,6 +1215,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CustomerRef")
                         .HasMaxLength(256)
@@ -1239,6 +1296,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1273,6 +1333,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -1302,6 +1365,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1334,6 +1400,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.PrimitiveCollection<string[]>("EvidenceRecordRefs")
                         .IsRequired()
@@ -1389,6 +1458,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1433,6 +1505,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1556,6 +1631,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1581,6 +1659,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<decimal?>("CriticalThreshold")
                         .HasPrecision(18, 4)
@@ -1635,6 +1716,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal?>("Value")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
@@ -1684,6 +1768,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1761,6 +1848,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1797,6 +1887,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("DecisionAt")
                         .HasColumnType("timestamp with time zone");
@@ -1881,6 +1974,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -1901,6 +1997,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("CriticalIssueCount")
                         .HasColumnType("integer");
@@ -1949,6 +2048,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId", "RiskLevel");
@@ -1981,6 +2083,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2070,6 +2175,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -2108,6 +2216,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2192,6 +2303,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -2226,6 +2340,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2289,6 +2406,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -2325,6 +2445,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2411,6 +2534,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -2457,6 +2583,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2528,6 +2657,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
@@ -2592,6 +2724,9 @@ namespace AssurArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -2638,6 +2773,9 @@ namespace AssurArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("VerificationType")
                         .IsRequired()

@@ -20,6 +20,8 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<DispatchRoute> Routes => Set<DispatchRoute>();
 
+    public DbSet<DispatchPlan> DispatchPlans => Set<DispatchPlan>();
+
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
 
     public DbSet<DriverAvailability> DriverAvailabilities => Set<DriverAvailability>();
@@ -212,6 +214,26 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
                 .WithMany()
                 .HasForeignKey(x => x.TripId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<DispatchPlan>(entity =>
+        {
+            entity.ToTable("routarr_dispatch_plans");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DispatchNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.DispatchType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.PlannerPersonId).HasMaxLength(128);
+            entity.Property(x => x.DispatcherPersonId).HasMaxLength(128);
+            entity.Property(x => x.Notes).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ReleasedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.CancelReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DispatchNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.DispatchDate });
         });
 
         modelBuilder.Entity<RouteStop>(entity =>

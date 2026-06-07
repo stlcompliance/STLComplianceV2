@@ -83,7 +83,7 @@ export function ProductWorkspaceLayout() {
     <ProductWorkspaceFrame
       productName="StaffArr"
       productKey="staffarr"
-      workspaceSubtitle="People, org, and readiness"
+      workspaceSubtitle="People, org, locations, and readiness"
       navItems={staffarrNavItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}

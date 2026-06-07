@@ -99,9 +99,119 @@ public sealed class WorkOrderCloseout : IHasTenant
 
     public string? FinalStatus { get; set; }
 
+    public string PermitRecordRefsJson { get; set; } = "[]";
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public string? CreatedByPersonId { get; set; }
 
     public WorkOrder WorkOrder { get; set; } = null!;
+}
+
+public sealed class MaintenancePermitRef : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public Guid WorkOrderId { get; set; }
+
+    public string PermitType { get; set; } = MaintenancePermitTypes.Other;
+
+    public string SourceProduct { get; set; } = "maintainarr";
+
+    public string? SourceObjectRef { get; set; }
+
+    public string? RecordRef { get; set; }
+
+    public string? StatusSnapshot { get; set; }
+
+    public string? ApprovedByPersonId { get; set; }
+
+    public DateTimeOffset? ValidFrom { get; set; }
+
+    public DateTimeOffset? ValidTo { get; set; }
+
+    public WorkOrder WorkOrder { get; set; } = null!;
+}
+
+public static class MaintenancePermitTypes
+{
+    public const string LockoutTagout = "lockout_tagout";
+
+    public const string HotWork = "hot_work";
+
+    public const string ConfinedSpace = "confined_space";
+
+    public const string Electrical = "electrical";
+
+    public const string LineBreak = "line_break";
+
+    public const string Excavation = "excavation";
+
+    public const string WorkingAtHeight = "working_at_height";
+
+    public const string Other = "other";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        LockoutTagout,
+        HotWork,
+        ConfinedSpace,
+        Electrical,
+        LineBreak,
+        Excavation,
+        WorkingAtHeight,
+        Other,
+    };
+}
+
+public sealed class ReturnToService : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public Guid WorkOrderId { get; set; }
+
+    public Guid AssetId { get; set; }
+
+    public string Status { get; set; } = ReturnToServiceStatuses.Pending;
+
+    public string RequiredChecksJson { get; set; } = "[]";
+
+    public string CompletedChecksJson { get; set; } = "[]";
+
+    public Guid? FinalInspectionRef { get; set; }
+
+    public string? ApprovedByPersonId { get; set; }
+
+    public DateTimeOffset? ApprovedAt { get; set; }
+
+    public string? RejectionReason { get; set; }
+
+    public string? FinalReadinessStatus { get; set; }
+
+    public string RecordRefsJson { get; set; } = "[]";
+
+    public WorkOrder WorkOrder { get; set; } = null!;
+}
+
+public static class ReturnToServiceStatuses
+{
+    public const string Pending = "pending";
+
+    public const string Approved = "approved";
+
+    public const string Rejected = "rejected";
+
+    public const string NotRequired = "not_required";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        Pending,
+        Approved,
+        Rejected,
+        NotRequired,
+    };
 }

@@ -2716,6 +2716,74 @@
         }
       }
     },
+    "/api/inspections/{inspectionRunId}/pause": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "PauseInspectionRun",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseInspectionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspections/{inspectionRunId}/resume": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "ResumeInspectionRun",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeInspectionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inspections/{inspectionRunId}/voice-guidance": {
       "get": {
         "tags": [
@@ -4178,6 +4246,238 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits": {
+      "get": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ListMaintenancePartsKits",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CreateMaintenancePartsKit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartsKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}": {
+      "get": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "GetMaintenancePartsKit",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKit",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/lines": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CreateMaintenancePartsKitLine",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartsKitLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKitLine",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "DeleteMaintenancePartsKitLine",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/status": {
+      "patch": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKitStatus",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7475,6 +7775,74 @@
         }
       }
     },
+    "/api/v1/inspection-runs/{inspectionRunId}/pause": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "PauseInspectionRunV1InspectionRuns",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseInspectionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-runs/{inspectionRunId}/resume": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "ResumeInspectionRunV1InspectionRuns",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeInspectionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/inspection-runs/{inspectionRunId}/voice-guidance": {
       "get": {
         "tags": [
@@ -8114,6 +8482,74 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateMaintainArrEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspections/{inspectionRunId}/pause": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "PauseInspectionRunV1",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseInspectionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspections/{inspectionRunId}/resume": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "ResumeInspectionRunV1",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeInspectionRunRequest"
               }
             }
           },
@@ -9007,6 +9443,238 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits": {
+      "get": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ListMaintenancePartsKitsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CreateMaintenancePartsKitV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartsKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}": {
+      "get": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "GetMaintenancePartsKitV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKitV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/lines": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CreateMaintenancePartsKitLineV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartsKitLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKitLineV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "DeleteMaintenancePartsKitLineV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/status": {
+      "patch": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "UpdateMaintenancePartsKitStatusV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartsKitStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -10606,6 +11274,49 @@
         }
       }
     },
+    "/api/v1/work-orders/{workOrderId}/labor/{laborEntryId}/status": {
+      "patch": {
+        "tags": [
+          "WorkOrderLabor"
+        ],
+        "operationId": "UpdateWorkOrderLaborStatusV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "laborEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkOrderLaborEntryStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/work-orders/{workOrderId}/parts-demand": {
       "get": {
         "tags": [
@@ -10847,6 +11558,62 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/vendor-work": {
+      "get": {
+        "tags": [
+          "VendorWork"
+        ],
+        "operationId": "ListMaintenanceVendorWorkV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorWork"
+        ],
+        "operationId": "UpsertMaintenanceVendorWorkV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaintenanceVendorWorkRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -11137,6 +11904,49 @@
         }
       }
     },
+    "/api/work-orders/{workOrderId}/labor/{laborEntryId}/status": {
+      "patch": {
+        "tags": [
+          "WorkOrderLabor"
+        ],
+        "operationId": "UpdateWorkOrderLaborStatus",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "laborEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkOrderLaborEntryStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/work-orders/{workOrderId}/parts-demand": {
       "get": {
         "tags": [
@@ -11378,6 +12188,62 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/vendor-work": {
+      "get": {
+        "tags": [
+          "VendorWork"
+        ],
+        "operationId": "ListMaintenanceVendorWork",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorWork"
+        ],
+        "operationId": "UpsertMaintenanceVendorWork",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaintenanceVendorWorkRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -12168,6 +13034,12 @@
           },
           "description": {
             "type": "string"
+          },
+          "inspectionType": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12244,6 +13116,91 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "CreateMaintenancePartsKitLineRequest": {
+        "required": [
+          "itemRef",
+          "itemDescriptionSnapshot",
+          "quantity",
+          "unitOfMeasure",
+          "required",
+          "substituteAllowed"
+        ],
+        "type": "object",
+        "properties": {
+          "itemRef": {
+            "type": "string"
+          },
+          "itemDescriptionSnapshot": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "substituteAllowed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateMaintenancePartsKitRequest": {
+        "required": [
+          "kitNumber",
+          "title",
+          "description",
+          "assetTypeApplicability",
+          "workOrderTypeApplicability",
+          "pmPlanRef"
+        ],
+        "type": "object",
+        "properties": {
+          "kitNumber": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workOrderTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pmPlanRef": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12652,6 +13609,16 @@
               "null",
               "string"
             ]
+          },
+          "permitRecordRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "evidenceRecordRefs": {
             "type": [
@@ -13396,6 +14363,27 @@
           }
         }
       },
+      "PauseInspectionRunRequest": {
+        "required": [
+          "reason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProcessAssetDowntimeSyncRequest": {
         "required": [
           "tenantId",
@@ -13834,6 +14822,20 @@
           }
         }
       },
+      "ResumeInspectionRunRequest": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RoutarrEventPayload": {
         "required": [
           "tenantId",
@@ -14044,6 +15046,18 @@
           "inspectionTemplateId": {
             "type": "string",
             "format": "uuid"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -14500,10 +15514,104 @@
           },
           "description": {
             "type": "string"
+          },
+          "inspectionType": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
       "UpdateInspectionTemplateStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateMaintenancePartsKitLineRequest": {
+        "required": [
+          "itemDescriptionSnapshot",
+          "quantity",
+          "unitOfMeasure",
+          "required",
+          "substituteAllowed"
+        ],
+        "type": "object",
+        "properties": {
+          "itemDescriptionSnapshot": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "substituteAllowed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateMaintenancePartsKitRequest": {
+        "required": [
+          "title",
+          "description",
+          "assetTypeApplicability",
+          "workOrderTypeApplicability",
+          "pmPlanRef"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workOrderTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pmPlanRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateMaintenancePartsKitStatusRequest": {
         "required": [
           "status"
         ],
@@ -14633,6 +15741,24 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateWorkOrderLaborEntryStatusRequest": {
+        "required": [
+          "status",
+          "rejectionReason"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "rejectionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -14932,6 +16058,90 @@
           }
         }
       },
+      "UpsertMaintenanceVendorWorkRequest": {
+        "required": [
+          "supplierRef",
+          "vendorContactSnapshot",
+          "status",
+          "workDescription",
+          "quoteRecordRef",
+          "approvalRef",
+          "scheduledAt",
+          "completedAt",
+          "costEstimateSnapshot",
+          "invoiceRecordRef",
+          "warrantyFlag",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierRef": {
+            "type": "string"
+          },
+          "vendorContactSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "workDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quoteRecordRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approvalRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "costEstimateSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "invoiceRecordRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "warrantyFlag": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpsertPmDueScanSettingsRequest": {
         "required": [
           "isEnabled",
@@ -15105,7 +16315,13 @@
       "name": "WorkOrderPartsDemand"
     },
     {
+      "name": "VendorWork"
+    },
+    {
       "name": "WorkOrderSupplyReadiness"
+    },
+    {
+      "name": "MaintenancePartsKits"
     },
     {
       "name": "Integrations"

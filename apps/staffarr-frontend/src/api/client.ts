@@ -16,6 +16,7 @@ import type {
   RoleTemplateResponse,
   MePortalSummaryResponse,
   MyTeamDashboardResponse,
+  StaffArrPersonIntegrationSummaryResponse,
   PersonnelUpdateRequestResponse,
   PersonnelUpdateRequestReviewResponse,
   StaffArrMeResponse,
@@ -96,6 +97,8 @@ import type {
   EntityExportManifestResponse,
   LaunchHandoffResponse,
   StaffArrIntegrationLocationResponse,
+  StaffArrRestrictionSnapshotResponse,
+  ReadinessOverrideResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -335,6 +338,19 @@ export async function getPerson(accessToken: string, personId: string): Promise<
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to load person profile')
+}
+
+export async function getPersonSummary(
+  accessToken: string,
+  personId: string,
+): Promise<StaffArrPersonIntegrationSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/persons/${personId}/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrPersonIntegrationSummaryResponse>(
+    response,
+    'Failed to load person summary',
+  )
 }
 
 export async function createPerson(
@@ -603,6 +619,65 @@ export async function listSiteLocations(
     response,
     'Failed to load site locations',
   )
+}
+
+export async function getLocation(
+  accessToken: string,
+  locationId: string,
+): Promise<StaffArrIntegrationLocationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/locations/${locationId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrIntegrationLocationResponse>(response, 'Failed to load location')
+}
+
+export async function listLocationChildren(
+  accessToken: string,
+  locationId: string,
+): Promise<StaffArrIntegrationLocationResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/locations/${locationId}/children`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrIntegrationLocationResponse[]>(
+    response,
+    'Failed to load child locations',
+  )
+}
+
+export async function getPersonRestrictions(
+  accessToken: string,
+  personId: string,
+): Promise<StaffArrRestrictionSnapshotResponse> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/persons/${personId}/restrictions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrRestrictionSnapshotResponse>(
+    response,
+    'Failed to load person restrictions',
+  )
+}
+
+export async function createRestriction(
+  accessToken: string,
+  request: { personId: string; reason: string; expiresAt: string | null },
+): Promise<ReadinessOverrideResponse> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/restrictions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ReadinessOverrideResponse>(response, 'Failed to create restriction')
+}
+
+export async function liftRestriction(
+  accessToken: string,
+  restrictionId: string,
+): Promise<ReadinessOverrideResponse> {
+  const response = await fetch(`${apiBase}/api/v1/integrations/restrictions/${restrictionId}/lift`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReadinessOverrideResponse>(response, 'Failed to lift restriction')
 }
 
 export async function createOrgUnit(accessToken: string, request: CreateOrgUnitRequest): Promise<OrgUnitResponse> {

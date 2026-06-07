@@ -131,6 +131,39 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_can_pause_and_resume_with_history()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var pauseRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/pause", token);
+        pauseRequest.Content = JsonContent.Create(new PauseInspectionRunRequest("waiting_parts", "Need a replacement filter."));
+        var pauseResponse = await _maintainarrClient.SendAsync(pauseRequest);
+        pauseResponse.EnsureSuccessStatusCode();
+        var paused = (await pauseResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal("paused", paused.Status);
+        Assert.Single(paused.PauseEvents);
+        Assert.Equal("waiting_parts", paused.PauseEvents[0].Reason);
+        Assert.Equal("Need a replacement filter.", paused.PauseEvents[0].Notes);
+
+        var resumeRequest = Authorized(HttpMethod.Post, $"/api/inspections/{started.InspectionRunId}/resume", token);
+        resumeRequest.Content = JsonContent.Create(new ResumeInspectionRunRequest("Filter available again."));
+        var resumeResponse = await _maintainarrClient.SendAsync(resumeRequest);
+        resumeResponse.EnsureSuccessStatusCode();
+        var resumed = (await resumeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal("in_progress", resumed.Status);
+        Assert.Single(resumed.PauseEvents);
+        Assert.NotNull(resumed.PauseEvents[0].ResumedAt);
+        Assert.Equal("Need a replacement filter.", resumed.PauseEvents[0].Notes);
+    }
+
+    [Fact]
     public async Task Inspection_run_v1_alias_happy_path_passes()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();

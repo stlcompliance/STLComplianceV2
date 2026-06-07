@@ -10,7 +10,8 @@ public sealed class WorkOrderLaborEvidenceService(
     MaintainArrDbContext db,
     MaintainArrEvidenceStorageService storage,
     IMaintainArrAuditService audit,
-    TechnicianRefService technicianRefService)
+    TechnicianRefService technicianRefService,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueueService)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
     private const decimal MaxLaborHours = 24m;
@@ -130,7 +131,9 @@ public sealed class WorkOrderLaborEvidenceService(
             PersonId = personId,
             HoursWorked = hoursWorked,
             LaborTypeKey = laborTypeKey,
+            Status = WorkOrderLaborStatuses.Submitted,
             Notes = notes,
+            SubmittedAt = DateTimeOffset.UtcNow,
             LoggedByUserId = actorUserId,
             LoggedAt = DateTimeOffset.UtcNow,
         };
@@ -155,7 +158,101 @@ public sealed class WorkOrderLaborEvidenceService(
             null,
             cancellationToken);
 
+        await EnqueueLaborLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            entity,
+            "created",
+            cancellationToken);
+
         return MapLaborResponse(entity);
+    }
+
+    public async Task<WorkOrderLaborEntryResponse> UpdateStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        Guid laborEntryId,
+        UpdateWorkOrderLaborEntryStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await db.WorkOrders.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == workOrderId,
+            cancellationToken);
+        if (workOrder is null)
+        {
+            throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
+        }
+
+        var laborEntry = await db.WorkOrderLaborEntries.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.WorkOrderId == workOrderId && x.Id == laborEntryId,
+            cancellationToken);
+
+        if (laborEntry is null)
+        {
+            throw new StlApiException("work_order_labor.not_found", "Work order labor entry was not found.", 404);
+        }
+
+        var previousStatus = laborEntry.Status;
+        var normalizedStatus = NormalizeLaborStatus(request.Status);
+        var now = DateTimeOffset.UtcNow;
+
+        if (string.Equals(laborEntry.Status, normalizedStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            return MapLaborResponse(laborEntry);
+        }
+
+        switch (normalizedStatus)
+        {
+            case WorkOrderLaborStatuses.Approved:
+                laborEntry.Status = WorkOrderLaborStatuses.Approved;
+                laborEntry.ApprovedByPersonId = actorUserId.ToString("D");
+                laborEntry.ApprovedAt = now;
+                laborEntry.RejectionReason = null;
+                break;
+            case WorkOrderLaborStatuses.Rejected:
+                laborEntry.Status = WorkOrderLaborStatuses.Rejected;
+                laborEntry.RejectionReason = NormalizeRejectionReason(request.RejectionReason);
+                laborEntry.ApprovedByPersonId = null;
+                laborEntry.ApprovedAt = null;
+                break;
+            case WorkOrderLaborStatuses.Submitted:
+                laborEntry.Status = WorkOrderLaborStatuses.Submitted;
+                laborEntry.SubmittedAt ??= now;
+                laborEntry.ApprovedByPersonId = null;
+                laborEntry.ApprovedAt = null;
+                laborEntry.RejectionReason = null;
+                break;
+            default:
+                throw new StlApiException(
+                    "work_order_labor.invalid_status",
+                    "Labor status must be submitted, approved, or rejected.",
+                    400);
+        }
+
+        workOrder.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "work_order_labor.status_update",
+            tenantId,
+            actorUserId,
+            "work_order_labor",
+            laborEntry.Id.ToString(),
+            workOrderId.ToString(),
+            cancellationToken: cancellationToken);
+
+        await EnqueueLaborStatusEventAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            laborEntry,
+            previousStatus,
+            normalizedStatus,
+            cancellationToken);
+
+        return MapLaborResponse(laborEntry);
     }
 
     public async Task<IReadOnlyList<WorkOrderEvidenceResponse>> ListEvidenceAsync(
@@ -337,7 +434,12 @@ public sealed class WorkOrderLaborEvidenceService(
             entity.PersonId,
             entity.HoursWorked,
             entity.LaborTypeKey,
+            entity.Status,
             entity.Notes,
+            entity.SubmittedAt,
+            entity.ApprovedByPersonId,
+            entity.ApprovedAt,
+            entity.RejectionReason,
             entity.LoggedByUserId,
             entity.LoggedAt);
 
@@ -352,6 +454,109 @@ public sealed class WorkOrderLaborEvidenceService(
             entity.Notes,
             entity.UploadedByUserId,
             entity.CreatedAt);
+
+    private async Task EnqueueLaborLifecycleEventsAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        WorkOrder workOrder,
+        WorkOrderLaborEntry laborEntry,
+        string transitionLabel,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == workOrder.AssetId,
+                cancellationToken);
+
+        if (asset is null)
+        {
+            return;
+        }
+
+        var summary = $"Labor entry {transitionLabel} for work order {workOrder.WorkOrderNumber}.";
+        await platformOutboxEnqueueService.TryEnqueueLaborEntryEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.LaborEntryCreated,
+            workOrder,
+            asset,
+            laborEntry,
+            actorUserId,
+            laborEntry.LoggedAt,
+            summary,
+            eventResult: WorkOrderLaborStatuses.Submitted,
+            idempotencyDiscriminator: "created",
+            cancellationToken: cancellationToken);
+
+        await platformOutboxEnqueueService.TryEnqueueLaborEntryEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.LaborEntrySubmitted,
+            workOrder,
+            asset,
+            laborEntry,
+            actorUserId,
+            laborEntry.SubmittedAt ?? laborEntry.LoggedAt,
+            $"Labor entry submitted for work order {workOrder.WorkOrderNumber}.",
+            eventResult: WorkOrderLaborStatuses.Submitted,
+            idempotencyDiscriminator: "created->submitted",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task EnqueueLaborStatusEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        WorkOrder workOrder,
+        WorkOrderLaborEntry laborEntry,
+        string previousStatus,
+        string normalizedStatus,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == workOrder.AssetId,
+                cancellationToken);
+
+        if (asset is null)
+        {
+            return;
+        }
+
+        var transition = $"{previousStatus}->{normalizedStatus}";
+        var summary = normalizedStatus switch
+        {
+            WorkOrderLaborStatuses.Approved => $"Labor entry approved for work order {workOrder.WorkOrderNumber}.",
+            WorkOrderLaborStatuses.Rejected => $"Labor entry rejected for work order {workOrder.WorkOrderNumber}.",
+            WorkOrderLaborStatuses.Submitted => $"Labor entry submitted for work order {workOrder.WorkOrderNumber}.",
+            _ => $"Labor entry updated for work order {workOrder.WorkOrderNumber}.",
+        };
+
+        var eventKind = normalizedStatus switch
+        {
+            WorkOrderLaborStatuses.Approved => MaintenancePlatformOutboxEventKinds.LaborEntryApproved,
+            WorkOrderLaborStatuses.Rejected => MaintenancePlatformOutboxEventKinds.LaborEntryRejected,
+            WorkOrderLaborStatuses.Submitted => MaintenancePlatformOutboxEventKinds.LaborEntrySubmitted,
+            _ => null,
+        };
+
+        if (eventKind is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueueService.TryEnqueueLaborEntryEventAsync(
+            tenantId,
+            eventKind,
+            workOrder,
+            asset,
+            laborEntry,
+            actorUserId,
+            DateTimeOffset.UtcNow,
+            summary,
+            eventResult: normalizedStatus,
+            idempotencyDiscriminator: transition,
+            cancellationToken: cancellationToken);
+    }
 
     private static string NormalizeTaskTitle(string title)
     {
@@ -398,11 +603,47 @@ public sealed class WorkOrderLaborEvidenceService(
         {
             throw new StlApiException(
                 "work_order_labor.invalid_type",
-                "Labor type must be regular, overtime, or travel.",
+                "Labor type must be one of diagnostic, repair, inspection, testing, calibration, cleanup, admin, travel, vendor_coordination, waiting, overtime, or regular.",
                 400);
         }
 
         return normalized;
+    }
+
+    private static string NormalizeLaborStatus(string status)
+    {
+        var normalized = status.Trim().ToLowerInvariant();
+        if (!WorkOrderLaborStatuses.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "work_order_labor.invalid_status",
+                "Labor status must be draft, submitted, approved, rejected, or corrected.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeRejectionReason(string? rejectionReason)
+    {
+        if (string.IsNullOrWhiteSpace(rejectionReason))
+        {
+            throw new StlApiException(
+                "work_order_labor.rejection_reason_required",
+                "Rejection reason is required when rejecting labor.",
+                400);
+        }
+
+        var trimmed = rejectionReason.Trim();
+        if (trimmed.Length > 1024)
+        {
+            throw new StlApiException(
+                "work_order_labor.rejection_reason_too_long",
+                "Rejection reason must be 1024 characters or fewer.",
+                400);
+        }
+
+        return trimmed;
     }
 
     private static decimal ValidateHoursWorked(decimal hoursWorked)

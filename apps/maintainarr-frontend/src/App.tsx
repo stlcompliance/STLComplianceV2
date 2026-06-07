@@ -14,6 +14,7 @@ import { HistoryPage } from './pages/history/HistoryPage'
 import { DowntimePage } from './pages/downtime/DowntimePage'
 
 import { InspectionTemplatesPage } from './pages/inspection-templates/InspectionTemplatesPage'
+import { PartsKitsPage } from './pages/parts-kits/PartsKitsPage'
 
 import { InspectionsPage } from './pages/inspections/InspectionsPage'
 
@@ -112,6 +113,8 @@ export default function App() {
             <Route path="/inspection-templates/details" element={<InspectionTemplatesPage />} />
             <Route path="/inspection-templates/create" element={<InspectionTemplatesPage />} />
 
+            <Route path="/parts-kits" element={<PartsKitsPage />} />
+
             <Route path="/history" element={<HistoryPage />} />
 
             <Route path="/reports/*" element={<ReportsPage />} />
@@ -119,6 +122,7 @@ export default function App() {
             <Route path="/downtime" element={<DowntimePage />} />
 
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/*" element={<SettingsPage />} />
 
           </Route>
 

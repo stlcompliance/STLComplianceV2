@@ -1,5 +1,6 @@
 import {
   DetailBadge as Badge,
+  ApiErrorCallout,
   getErrorMessage,
   ProfileDetailsLayout,
   type DetailTabConfig,
@@ -540,6 +541,74 @@ export function PeopleSection({ state }: Props) {
 
     const renderOverviewTab = () => (
       <>
+        {s.personSummaryQuery.isLoading ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-400">
+            Loading integrated person summary…
+          </p>
+        ) : s.personSummaryQuery.isError ? (
+          <ApiErrorCallout
+            title="Integrated person summary unavailable"
+            message={getErrorMessage(s.personSummaryQuery.error, 'Failed to load person summary.')}
+            onRetry={() => void s.personSummaryQuery.refetch()}
+            retryLabel="Retry summary"
+          />
+        ) : s.personSummaryQuery.data ? (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-white">Integrated person summary</h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  StaffArr-owned summary snapshot combining readiness, permissions, training history, and history counts.
+                </p>
+              </div>
+              <Badge
+                label={s.personSummaryQuery.data.readiness.readinessStatus === 'ready' ? 'Ready' : 'Not ready'}
+                tone={s.personSummaryQuery.data.readiness.readinessStatus === 'ready' ? 'good' : 'bad'}
+              />
+            </div>
+            <dl className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Qualifications snapshot</dt>
+                <dd className="mt-2 text-sm text-slate-100">
+                  {s.personSummaryQuery.data.qualificationsSnapshot.totalCount} event
+                  {s.personSummaryQuery.data.qualificationsSnapshot.totalCount === 1 ? '' : 's'}
+                </dd>
+                <p className="mt-2 text-xs text-slate-500">{s.personSummaryQuery.data.qualificationsSnapshot.sourceNote}</p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs uppercase tracking-wide text-slate-500">History summary</dt>
+                <dd className="mt-2 text-sm text-slate-100">
+                  {s.personSummaryQuery.data.historySummary.eventCount} total events
+                </dd>
+                <p className="mt-2 text-xs text-slate-500">
+                  {s.personSummaryQuery.data.historySummary.incidentCount} incidents ·{' '}
+                  {s.personSummaryQuery.data.historySummary.certificationCount} certifications ·{' '}
+                  {s.personSummaryQuery.data.historySummary.permissionCount} permissions
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Active restrictions</dt>
+                <dd className="mt-2 text-sm text-slate-100">
+                  {s.personSummaryQuery.data.activeRestrictions.length} active
+                </dd>
+                <p className="mt-2 text-xs text-slate-500">
+                  {s.personSummaryQuery.data.activeRestrictions.length > 0
+                    ? s.personSummaryQuery.data.activeRestrictions[0]!.reason
+                    : 'No active restriction records.'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Permission projection</dt>
+                <dd className="mt-2 text-sm text-slate-100">
+                  {s.personSummaryQuery.data.permissionProjection.permissions.length} permissions
+                </dd>
+                <p className="mt-2 text-xs text-slate-500">
+                  Last recomputed {new Date(s.personSummaryQuery.data.permissionProjection.computedAt).toLocaleString()}
+                </p>
+              </div>
+            </dl>
+          </section>
+        ) : null}
         {showEditor ? editorPanel : null}
         {trainingLaunchError ? (
           <p className="rounded-xl border border-rose-800 bg-rose-950/20 px-4 py-3 text-sm text-rose-200">

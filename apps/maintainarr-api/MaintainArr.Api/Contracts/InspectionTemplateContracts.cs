@@ -12,6 +12,8 @@ public sealed record InspectionTemplateSummaryResponse(
 
     string Description,
 
+    string InspectionType,
+
     int Version,
 
     string Status,
@@ -100,6 +102,8 @@ public sealed record InspectionTemplateDetailResponse(
 
     string Description,
 
+    string InspectionType,
+
     int Version,
 
     string Status,
@@ -122,7 +126,8 @@ public sealed record CreateInspectionTemplateRequest(
 
     string Name,
 
-    string Description);
+    string Description,
+    string? InspectionType = null);
 
 
 
@@ -130,7 +135,8 @@ public sealed record UpdateInspectionTemplateRequest(
 
     string Name,
 
-    string Description);
+    string Description,
+    string? InspectionType = null);
 
 
 

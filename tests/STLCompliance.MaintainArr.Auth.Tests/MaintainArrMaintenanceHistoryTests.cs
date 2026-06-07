@@ -294,6 +294,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             "2.5 hours downtime.",
             "ready",
             "closed",
+            null,
             new[] { evidence.EvidenceId }));
         await _maintainarrClient.SendAsync(closeoutRequest);
 

@@ -33,6 +33,8 @@ export type ListItem = {
   ownerPersonId: string | null
   createdAt: string
   updatedAt: string
+  createdByPersonId: string
+  updatedByPersonId: string
 }
 
 export type Nonconformance = ListItem & {

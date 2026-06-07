@@ -37,6 +37,33 @@ public sealed class InspectionRun : IHasTenant
     public ICollection<InspectionRunAnswer> Answers { get; set; } = [];
 
     public ICollection<InspectionRunEvidence> Evidence { get; set; } = [];
+
+    public ICollection<InspectionRunPauseEvent> PauseEvents { get; set; } = [];
+}
+
+public sealed class InspectionRunPauseEvent : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public Guid InspectionRunId { get; set; }
+
+    public DateTimeOffset PausedAt { get; set; }
+
+    public DateTimeOffset? ResumedAt { get; set; }
+
+    public int? DurationMinutes { get; set; }
+
+    public string? Reason { get; set; }
+
+    public string? Notes { get; set; }
+
+    public Guid PausedByUserId { get; set; }
+
+    public Guid? ResumedByUserId { get; set; }
+
+    public InspectionRun InspectionRun { get; set; } = null!;
 }
 
 public sealed class InspectionRunAnswer : IHasTenant
@@ -69,6 +96,8 @@ public sealed class InspectionRunAnswer : IHasTenant
 public static class InspectionRunStatuses
 {
     public const string InProgress = "in_progress";
+
+    public const string Paused = "paused";
 
     public const string Completed = "completed";
 }

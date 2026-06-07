@@ -5,13 +5,18 @@ import { AdminPage } from './pages/admin/AdminPage'
 import { CertificationsPage } from './pages/certifications/CertificationsPage'
 import { IncidentCreatePage } from './pages/incidents/IncidentCreatePage'
 import { IncidentsPage } from './pages/incidents/IncidentsPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
+import { LocationsPage } from './pages/locations/LocationsPage'
 import { OrgPage } from './pages/org/OrgPage'
 import { PeoplePage } from './pages/people/PeoplePage'
 import { PermissionsPage } from './pages/permissions/PermissionsPage'
+import { RestrictionsPage } from './pages/restrictions/RestrictionsPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { MePage } from './pages/me/MePage'
 import { MyTeamPage } from './pages/my-team/MyTeamPage'
+import { AuditPackagesPage } from './pages/audit-packages/AuditPackagesPage'
+import { SettingsPage } from './pages/settings/SettingsPage'
 import { LaunchPage } from './pages/LaunchPage'
 
 const queryClient = new QueryClient({
@@ -39,12 +44,17 @@ export default function App() {
             <Route path="/people/details" element={<PeoplePage />} />
             <Route path="/people/create" element={<PeoplePage />} />
             <Route path="/org" element={<OrgPage />} />
+            <Route path="/locations" element={<LocationsPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
+            <Route path="/restrictions" element={<RestrictionsPage />} />
             <Route path="/incidents/create" element={<IncidentCreatePage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/audit-packages" element={<AuditPackagesPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

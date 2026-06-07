@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -156,6 +157,7 @@ describe('WorkOrderProfile', () => {
         ],
       },
       canExecuteInspections: true,
+      canApproveLabor: true,
       session: {
         personId: 'person-1',
       },
@@ -198,6 +200,14 @@ describe('WorkOrderProfile', () => {
         mutate: () => {},
       },
       logWorkOrderLaborMutation: {
+        isPending: false,
+        mutate: () => {},
+      },
+      approveWorkOrderLaborMutation: {
+        isPending: false,
+        mutate: () => {},
+      },
+      rejectWorkOrderLaborMutation: {
         isPending: false,
         mutate: () => {},
       },
@@ -252,13 +262,18 @@ describe('WorkOrderProfile', () => {
       },
     } as any
 
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
     render(
-      <MemoryRouter>
-        <WorkOrderProfile state={state} />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <WorkOrderProfile state={state} />
+        </MemoryRouter>
+      </QueryClientProvider>,
     )
 
     expect(screen.getByText('Supply readiness')).toBeInTheDocument()
+    expect(screen.getByText('Vendor coordination')).toBeInTheDocument()
     expect(screen.getByText('Labor and evidence')).toBeInTheDocument()
     expect(screen.getByText('Closeout')).toBeInTheDocument()
     expect(screen.getByTestId('work-order-supply-readiness-panel')).toBeInTheDocument()

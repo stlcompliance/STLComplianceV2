@@ -129,16 +129,21 @@ describe('InspectionRunnerPanel', () => {
           sortOrder: 10,
         },
       ],
-    answers: [],
-  },
+      answers: [],
+      pauseEvents: [],
+    },
     selectedAssetId: '',
     selectedTemplateId: '',
     selectedRunId: '44444444-4444-4444-4444-444444444444',
     answerDrafts: {},
+    pauseReason: 'interrupted',
+    pauseNotes: '',
     isLoading: false,
     isRunLoading: false,
     isStarting: false,
     isSubmitting: false,
+    isPausing: false,
+    isResuming: false,
     isCompleting: false,
     isCreatingDefects: false,
     voiceGuidanceEnabled: false,
@@ -154,8 +159,12 @@ describe('InspectionRunnerPanel', () => {
     onSelectedTemplateIdChange: vi.fn(),
     onSelectedRunIdChange: vi.fn(),
     onAnswerDraftChange: vi.fn(),
+    onPauseReasonChange: vi.fn(),
+    onPauseNotesChange: vi.fn(),
     onStartRun: vi.fn(),
     onSubmitAnswers: vi.fn(),
+    onPauseRun: vi.fn(),
+    onResumeRun: vi.fn(),
     onCompleteRun: vi.fn(),
     onCreateDefectsFromRun: vi.fn(),
     runEvidence: [],
@@ -178,6 +187,7 @@ describe('InspectionRunnerPanel', () => {
     expect(screen.getByText('Run inspection')).toBeInTheDocument()
     expect(screen.getByText('FL-001')).toBeInTheDocument()
     expect(screen.getAllByText('Brakes operate correctly').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Pause run' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Complete run' })).toBeInTheDocument()
     expect(screen.getByTestId('inspection-run-evidence-panel')).toBeInTheDocument()
     expect(screen.getByLabelText('Asset for inspection')).toBeInTheDocument()
@@ -204,6 +214,34 @@ describe('InspectionRunnerPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Capture defects from run' })).toBeInTheDocument()
+  })
+
+  it('shows resume controls and pause history for paused runs', () => {
+    render(
+      <InspectionRunnerPanel
+        {...baseProps}
+        activeRun={{
+          ...baseProps.activeRun!,
+          status: 'paused',
+          pauseEvents: [
+            {
+              pauseEventId: '88888888-8888-8888-8888-888888888888',
+              pausedAt: '2026-05-27T12:10:00Z',
+              resumedAt: null,
+              durationMinutes: null,
+              reason: 'waiting_parts',
+              notes: 'Waiting on replacement filter.',
+              pausedByUserId: '55555555-5555-5555-5555-555555555555',
+              resumedByUserId: null,
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Resume run' })).toBeInTheDocument()
+    expect(screen.getByText('Pause history')).toBeInTheDocument()
+    expect(screen.getAllByText(/waiting parts/i).length).toBeGreaterThan(0)
   })
 
   it('renders yes/no checklist items with a yes/no control', () => {

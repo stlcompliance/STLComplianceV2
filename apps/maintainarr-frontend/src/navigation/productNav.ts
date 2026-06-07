@@ -1,4 +1,4 @@
-import { LayoutDashboard, Boxes, CalendarClock, Gauge, Wrench, AlertTriangle, ClipboardCheck, FileStack, History, TimerOff, Settings, ListCollapse, StickyNote } from 'lucide-react'
+import { LayoutDashboard, Boxes, CalendarClock, Gauge, Wrench, AlertTriangle, ClipboardCheck, FileStack, History, TimerOff, Settings, ListCollapse, StickyNote, Package } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
 type NavIcon = NonNullable<ProductNavItem['icon']>
@@ -68,6 +68,7 @@ export const maintainarrNavItems: ProductNavItem[] = [
       { label: 'Create', to: '/inspection-templates/create', icon: StickyNote as NavIcon },
     ],
   },
+  { label: 'Parts kits', to: '/parts-kits', icon: Package as NavIcon },
   { label: 'History', to: '/history', icon: History as NavIcon },
   { label: 'Downtime', to: '/downtime', icon: TimerOff as NavIcon },
   {

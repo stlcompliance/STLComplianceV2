@@ -118,7 +118,8 @@ public sealed class InspectionRunService(
             x => x.TenantId == tenantId
                 && x.AssetId == request.AssetId
                 && x.InspectionTemplateId == template.Id
-                && x.Status == InspectionRunStatuses.InProgress,
+                && (x.Status == InspectionRunStatuses.InProgress
+                    || x.Status == InspectionRunStatuses.Paused),
             cancellationToken);
 
         if (inProgressExists)
@@ -298,6 +299,125 @@ public sealed class InspectionRunService(
             now,
             $"Inspection answers submitted for asset {asset.AssetTag}.",
             eventResult: $"{request.Answers.Count}",
+            cancellationToken: cancellationToken);
+
+        return await MapDetailAsync(tenantId, run, cancellationToken);
+    }
+
+    public async Task<InspectionRunDetailResponse> PauseAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid inspectionRunId,
+        PauseInspectionRunRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await GetRunForWriteAsync(tenantId, inspectionRunId, cancellationToken);
+        if (!string.Equals(run.Status, InspectionRunStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "inspection_run.not_in_progress",
+                "Only in-progress inspection runs can be paused.",
+                400);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var pauseEvent = new InspectionRunPauseEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            InspectionRunId = inspectionRunId,
+            PausedAt = now,
+            Reason = NormalizePauseReason(request.Reason),
+            Notes = NormalizeNotes(request.Notes),
+            PausedByUserId = actorUserId,
+        };
+
+        run.Status = InspectionRunStatuses.Paused;
+        run.UpdatedAt = now;
+        db.InspectionRunPauseEvents.Add(pauseEvent);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "inspection_run.pause",
+            tenantId,
+            actorUserId,
+            "inspection_run",
+            run.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        var asset = await assetService.GetAsync(tenantId, run.AssetId, cancellationToken);
+        await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.InspectionPaused,
+            run,
+            asset,
+            actorUserId,
+            now,
+            $"Inspection paused for asset {asset.AssetTag}.",
+            eventResult: pauseEvent.Reason,
+            cancellationToken: cancellationToken);
+
+        return await MapDetailAsync(tenantId, run, cancellationToken);
+    }
+
+    public async Task<InspectionRunDetailResponse> ResumeAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid inspectionRunId,
+        ResumeInspectionRunRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await GetRunForWriteAsync(tenantId, inspectionRunId, cancellationToken);
+        if (!string.Equals(run.Status, InspectionRunStatuses.Paused, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "inspection_run.not_paused",
+                "Only paused inspection runs can be resumed.",
+                400);
+        }
+
+        var pauseEvent = await db.InspectionRunPauseEvents
+            .Where(x => x.TenantId == tenantId && x.InspectionRunId == inspectionRunId && x.ResumedAt == null)
+            .OrderByDescending(x => x.PausedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (pauseEvent is null)
+        {
+            throw new StlApiException(
+                "inspection_run.pause_event_not_found",
+                "A matching pause event was not found for this inspection run.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        pauseEvent.ResumedAt = now;
+        pauseEvent.DurationMinutes = Math.Max(0, (int)Math.Round((now - pauseEvent.PausedAt).TotalMinutes, MidpointRounding.AwayFromZero));
+        pauseEvent.ResumedByUserId = actorUserId;
+
+        run.Status = InspectionRunStatuses.InProgress;
+        run.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "inspection_run.resume",
+            tenantId,
+            actorUserId,
+            "inspection_run",
+            run.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        var asset = await assetService.GetAsync(tenantId, run.AssetId, cancellationToken);
+        await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.InspectionResumed,
+            run,
+            asset,
+            actorUserId,
+            now,
+            $"Inspection resumed for asset {asset.AssetTag}.",
+            eventResult: pauseEvent.Reason,
             cancellationToken: cancellationToken);
 
         return await MapDetailAsync(tenantId, run, cancellationToken);
@@ -534,12 +654,14 @@ public sealed class InspectionRunService(
                     run.PmScheduleId,
                     template?.TemplateKey ?? string.Empty,
                     template?.Name ?? string.Empty,
+                    template?.InspectionType ?? InspectionTemplateInspectionTypes.Custom,
                     run.TemplateVersion,
                     run.Status,
                     run.Result,
                     run.StartedByUserId,
                     run.StartedAt,
                     run.CompletedAt,
+                    asset?.SiteRef,
                     answerCounts.GetValueOrDefault(run.Id),
                     requiredCounts.GetValueOrDefault(run.InspectionTemplateId));
             })
@@ -607,6 +729,27 @@ public sealed class InspectionRunService(
             .OrderBy(x => x.ItemKey)
             .ToList();
 
+        var pauseEvents = await db.InspectionRunPauseEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.InspectionRunId == run.Id)
+            .OrderBy(x => x.PausedAt)
+            .Select(x => new InspectionRunPauseEventResponse(
+                x.Id,
+                x.PausedAt,
+                x.ResumedAt,
+                x.DurationMinutes,
+                x.Reason,
+                x.Notes,
+                x.PausedByUserId,
+                x.ResumedByUserId))
+            .ToListAsync(cancellationToken);
+
+        var breakDurationMinutes = pauseEvents
+            .Where(x => x.DurationMinutes.HasValue)
+            .Sum(x => x.DurationMinutes!.Value);
+
+        var generatedWorkOrderRefs = await GetGeneratedWorkOrderRefsAsync(tenantId, run.Id, cancellationToken);
+
         return new InspectionRunDetailResponse(
             run.Id,
             run.AssetId,
@@ -616,6 +759,7 @@ public sealed class InspectionRunService(
             run.PmScheduleId,
             template.TemplateKey,
             template.Name,
+            template.InspectionType,
             run.TemplateVersion,
             run.Status,
             run.Result,
@@ -623,8 +767,15 @@ public sealed class InspectionRunService(
             run.StartedAt,
             run.CompletedAt,
             run.UpdatedAt,
+            "maintainarr",
+            run.PmScheduleId?.ToString("D"),
+            asset.SiteRef,
+            breakDurationMinutes,
+            CalculateLongDurationFlag(run, breakDurationMinutes),
+            generatedWorkOrderRefs,
             checklistItems,
-            answers);
+            answers,
+            pauseEvents);
     }
 
     private static (string? PassFailValue, decimal? NumericValue, string? TextValue, IReadOnlyList<string> SelectedOptions) NormalizeAnswer(
@@ -821,6 +972,28 @@ public sealed class InspectionRunService(
         string.Equals(itemType, InspectionChecklistItemTypes.Photo, StringComparison.OrdinalIgnoreCase)
         || string.Equals(itemType, InspectionChecklistItemTypes.Signature, StringComparison.OrdinalIgnoreCase);
 
+    private static string? NormalizePauseReason(string? reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            return null;
+        }
+
+        var normalized = reason.Trim();
+        return normalized.Length > 64 ? normalized[..64] : normalized;
+    }
+
+    private static string? NormalizeNotes(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+        {
+            return null;
+        }
+
+        var normalized = notes.Trim();
+        return normalized.Length > 1024 ? normalized[..1024] : normalized;
+    }
+
     private static IReadOnlyList<string> NormalizeSelectedOptions(
         InspectionChecklistItem checklistItem,
         IReadOnlyList<string>? selectedOptions,
@@ -881,6 +1054,38 @@ public sealed class InspectionRunService(
         }
 
         return normalized.Select(option => controlledOptionMap[option]).ToList();
+    }
+
+    private async Task<IReadOnlyList<Guid>> GetGeneratedWorkOrderRefsAsync(
+        Guid tenantId,
+        Guid inspectionRunId,
+        CancellationToken cancellationToken)
+    {
+        var defectIds = await db.Defects
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.InspectionRunId == inspectionRunId)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (defectIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await db.WorkOrders
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.DefectId.HasValue && defectIds.Contains(x.DefectId.Value))
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    private static bool CalculateLongDurationFlag(InspectionRun run, int breakDurationMinutes)
+    {
+        var elapsedMinutes = (int)Math.Max(0, (DateTimeOffset.UtcNow - run.StartedAt).TotalMinutes);
+        var activeMinutes = Math.Max(0, elapsedMinutes - breakDurationMinutes);
+        return activeMinutes >= 480 || elapsedMinutes >= 600;
     }
 
     private static string SerializeStringList(IReadOnlyList<string> values) =>

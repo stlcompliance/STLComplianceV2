@@ -94,6 +94,19 @@ public sealed record AddRouteStopRequest(
 
 public sealed record UpdateRouteStopStatusRequest(string StopStatus);
 
+public sealed record CreateIntegrationRouteStopRequest(
+    Guid RouteId,
+    string StopKey,
+    string Label,
+    string AddressLabel,
+    string StopType,
+    int SequenceNumber,
+    decimal? GeofenceAnchorLatitude = null,
+    decimal? GeofenceAnchorLongitude = null,
+    int? GeofenceRadiusMeters = null,
+    DateTimeOffset? ScheduledArrivalAt = null,
+    Guid? StaffarrSiteOrgUnitId = null);
+
 public sealed record CheckRouteStopGeofenceRequest(
     decimal ReportedLatitude,
     decimal ReportedLongitude);

@@ -85,6 +85,15 @@ export interface MePortalSummaryResponse {
   productAccess: string[]
 }
 
+export interface StaffArrPersonIntegrationSummaryResponse {
+  person: StaffPersonDetailResponse
+  readiness: PersonReadinessResponse
+  permissionProjection: EffectivePermissionProjectionResponse
+  qualificationsSnapshot: TrainarrPersonTrainingHistoryResponse
+  historySummary: PersonnelHistorySummaryResponse
+  activeRestrictions: ReadinessOverrideResponse[]
+}
+
 export interface PersonnelUpdateRequestResponse {
   requestId: string
   personId: string
@@ -561,6 +570,24 @@ export interface StaffArrIntegrationLocationResponse {
   parentPathSnapshot: string
   status: string
   allowedProductUsage: string
+}
+
+export interface ReadinessOverrideResponse {
+  overrideId: string
+  personId: string
+  status: string
+  reason: string
+  grantedAt: string
+  expiresAt: string | null
+  grantedByUserId: string
+  clearedAt: string | null
+  clearedByUserId: string | null
+}
+
+export interface StaffArrRestrictionSnapshotResponse {
+  personId: string
+  activeRestrictions: ReadinessOverrideResponse[]
+  readinessBlockers: ReadinessBlockerResponse[]
 }
 
 export interface CreateOrgUnitRequest {

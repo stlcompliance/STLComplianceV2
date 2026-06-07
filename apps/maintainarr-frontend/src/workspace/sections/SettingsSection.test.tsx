@@ -36,6 +36,10 @@ vi.mock('../../components/AuditPackageExportPanel', () => ({
   AuditPackageExportPanel: () => <div data-testid="maintainarr-audit-export-panel" />,
 }))
 
+vi.mock('../../components/AssetRegistryPanel', () => ({
+  AssetRegistryPanel: () => <div data-testid="asset-registry-panel" />,
+}))
+
 function buildState(
   canManage: boolean,
   canManageNotifications: boolean,
@@ -46,6 +50,10 @@ function buildState(
     canManage,
     canManageNotifications,
     canExportAudit,
+    classesQuery: { data: [], isLoading: false },
+    typesQuery: { data: [], isLoading: false },
+    selectedAssetId: null,
+    setSelectedAssetId: vi.fn(),
     assetsQuery: { refetch: vi.fn() },
   } as unknown as MaintainArrWorkspaceState
 }
@@ -102,5 +110,20 @@ describe('SettingsSection', () => {
 
     expect(screen.queryByTestId('maintainarr-settings-admin-workspace')).not.toBeInTheDocument()
     expect(screen.getByTestId('asset-bulk-import-panel')).toBeInTheDocument()
+  })
+
+  it('renders source data on the source-data subpage', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/settings/source-data']}>
+          <SettingsSection state={buildState(true, true)} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('asset-registry-panel')).toBeInTheDocument()
+    expect(screen.queryByTestId('maintainarr-settings-admin-workspace')).not.toBeInTheDocument()
   })
 })
