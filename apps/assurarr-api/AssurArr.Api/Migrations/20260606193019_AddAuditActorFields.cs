@@ -11,6 +11,107 @@ namespace AssurArr.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                DO $$
+                BEGIN
+                    IF to_regclass('public.assurarr_quality_audit_checklists') IS NULL THEN
+                        CREATE TABLE public.assurarr_quality_audit_checklists
+                        (
+                            "Id" uuid NOT NULL,
+                            "TenantId" uuid NOT NULL,
+                            "Number" character varying(64) NOT NULL,
+                            "AuditId" uuid NOT NULL,
+                            "Title" character varying(256) NOT NULL,
+                            "Description" character varying(4000) NOT NULL,
+                            "Status" character varying(32) NOT NULL,
+                            "ItemRefs" text[] NOT NULL,
+                            "CreatedAt" timestamp with time zone NOT NULL,
+                            "UpdatedAt" timestamp with time zone NOT NULL,
+                            "ClosedAt" timestamp with time zone NULL,
+                            "ClosedByPersonId" uuid NULL,
+                            "ClosureSummary" character varying(4000) NULL,
+                            CONSTRAINT "PK_assurarr_quality_audit_checklists" PRIMARY KEY ("Id")
+                        );
+                    END IF;
+
+                    IF to_regclass('public.assurarr_quality_audit_checklist_items') IS NULL THEN
+                        CREATE TABLE public.assurarr_quality_audit_checklist_items
+                        (
+                            "Id" uuid NOT NULL,
+                            "TenantId" uuid NOT NULL,
+                            "Number" character varying(64) NOT NULL,
+                            "ChecklistId" uuid NOT NULL,
+                            "Sequence" integer NOT NULL,
+                            "Prompt" character varying(4000) NOT NULL,
+                            "HelpText" character varying(4000) NULL,
+                            "RequirementRef" character varying(256) NULL,
+                            "ResponseType" character varying(64) NOT NULL,
+                            "Required" boolean NOT NULL,
+                            "ResponseValue" character varying(4000) NULL,
+                            "Result" character varying(64) NULL,
+                            "FindingCreated" boolean NOT NULL,
+                            "FindingRef" character varying(256) NULL,
+                            "EvidenceRecordRefs" text[] NOT NULL,
+                            "AnsweredAt" timestamp with time zone NULL,
+                            "AnsweredByPersonId" uuid NULL,
+                            "CreatedAt" timestamp with time zone NOT NULL,
+                            "UpdatedAt" timestamp with time zone NOT NULL,
+                            CONSTRAINT "PK_assurarr_quality_audit_checklist_items" PRIMARY KEY ("Id")
+                        );
+                    END IF;
+                END
+                $$;
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklists_TenantId"
+                ON public.assurarr_quality_audit_checklists ("TenantId");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklists_TenantId_AuditId"
+                ON public.assurarr_quality_audit_checklists ("TenantId", "AuditId");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklists_TenantId_Number"
+                ON public.assurarr_quality_audit_checklists ("TenantId", "Number");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklists_TenantId_Status"
+                ON public.assurarr_quality_audit_checklists ("TenantId", "Status");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklist_items_TenantId"
+                ON public.assurarr_quality_audit_checklist_items ("TenantId");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklist_items_TenantId_ChecklistId"
+                ON public.assurarr_quality_audit_checklist_items ("TenantId", "ChecklistId");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklist_items_TenantId_Number"
+                ON public.assurarr_quality_audit_checklist_items ("TenantId", "Number");
+                """);
+
+            migrationBuilder.Sql(
+                """
+                CREATE INDEX IF NOT EXISTS "IX_assurarr_quality_audit_checklist_items_TenantId_Sequence"
+                ON public.assurarr_quality_audit_checklist_items ("TenantId", "Sequence");
+                """);
+
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByPersonId",
                 table: "assurarr_verification_plans",
