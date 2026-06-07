@@ -11,4 +11,15 @@ public interface IMaintainArrAuditService
         string result,
         string? reasonCode = null,
         CancellationToken cancellationToken = default);
+
+    Task<Guid> WriteAsync(
+        string action,
+        Guid tenantId,
+        Guid? actorUserId,
+        string? actorPersonId,
+        string targetType,
+        string? targetId,
+        string result,
+        string? reasonCode = null,
+        CancellationToken cancellationToken = default);
 }

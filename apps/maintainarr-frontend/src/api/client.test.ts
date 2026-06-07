@@ -16,8 +16,13 @@ import {
   createMaintenancePartsKit,
   getMaintenanceVendorWork,
   upsertMaintenanceVendorWork,
+  activatePmProgram,
   getPmPrograms,
   getPmSchedules,
+  previewPmProgramScope,
+  previewPmProgramDue,
+  getSites,
+  getParts,
   getMeterReadings,
   recordMeterReading,
   getInspectionRuns,
@@ -241,7 +246,181 @@ describe('maintainarr api client', () => {
     const result = await getPmPrograms('token-123')
     expect(result).toHaveLength(1)
     expect(result[0]?.programKey).toBe('forklift-pm')
-    expect(fetchMock).toHaveBeenCalledWith('/api/preventive-maintenance/programs', expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/pm-programs', expect.any(Object))
+  })
+
+  it('posts PM program scope previews to the v1 endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          matchedAssetCount: 1,
+          excludedAssetCount: 0,
+          sampleAssets: [
+            {
+              assetId: '11111111-1111-1111-1111-111111111111',
+              assetTag: 'EX-1001',
+              assetName: 'Excavator 1001',
+              assetTypeName: 'Excavator',
+              siteName: 'Sparta Fleet',
+              lifecycleStatus: 'active',
+              readinessStatus: 'ready',
+              dueStatus: 'coming_due',
+              lastPmAt: '2026-05-27T00:00:00Z',
+              lastWorkOrderNumber: 'WO-123',
+            },
+          ],
+          warnings: ['Scope includes only one asset.'],
+          canActivate: true,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const payload = {
+      programKey: 'forklift-pm',
+      name: 'Forklift PM',
+      description: 'desc',
+      scopeType: 'custom',
+      assetTypeId: null,
+      assetId: null,
+    }
+
+    const result = await previewPmProgramScope('token-123', payload)
+    expect(result.matchedAssetCount).toBe(1)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/pm-programs/preview-scope',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('posts PM program due previews to the v1 endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          dueLogic: 'any',
+          items: [
+            {
+              assetId: '11111111-1111-1111-1111-111111111111',
+              assetTag: 'EX-1001',
+              assetName: 'Excavator 1001',
+              triggerSummary: 'Calendar trigger every 12 months',
+              estimatedNextDueDate: '2027-05-27',
+              estimatedNextDueReading: null,
+              dueState: 'coming_due',
+            },
+          ],
+          warnings: ['One trigger is only estimated.'],
+          requiresExplicitConfirmation: false,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const payload = {
+      programKey: 'forklift-pm',
+      name: 'Forklift PM',
+      description: 'desc',
+      scopeType: 'custom',
+      assetTypeId: null,
+      assetId: null,
+    }
+
+    const result = await previewPmProgramDue('token-123', payload)
+    expect(result.dueLogic).toBe('any')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/pm-programs/preview-due',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('activates PM programs with confirmation payloads', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          pmProgramId: '11111111-1111-1111-1111-111111111111',
+          programKey: 'forklift-pm',
+          name: 'Forklift PM',
+          description: 'desc',
+          scopeType: 'custom',
+          assetTypeId: null,
+          assetTypeKey: null,
+          assetTypeName: null,
+          assetId: null,
+          assetTag: null,
+          assetName: null,
+          status: 'active',
+          autoGenerateWorkOrder: true,
+          defaultWorkOrderTemplateRef: null,
+          autoGenerateInspection: false,
+          inspectionTemplateId: null,
+          inspectionTemplateKey: null,
+          inspectionTemplateName: null,
+          schedules: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await activatePmProgram('token-123', '11111111-1111-1111-1111-111111111111', {
+      confirmZeroMatch: true,
+      confirmComplianceImpact: true,
+      confirmReadinessImpact: true,
+    })
+
+    expect(result.status).toBe('active')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/pm-programs/11111111-1111-1111-1111-111111111111/activate',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('loads site and parts references from the v1 reference endpoints', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              key: 'sparta-fleet',
+              id: '11111111-1111-1111-1111-111111111111',
+              label: 'Sparta Fleet',
+              source: 'StaffArr',
+              sourceOfTruth: 'StaffArr',
+              storedValue: 'sparta-fleet',
+              displayValue: 'Sparta Fleet',
+              isActive: true,
+            },
+          ]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              key: 'filter-001',
+              id: '22222222-2222-2222-2222-222222222222',
+              label: 'Filter element',
+              source: 'SupplyArr',
+              sourceOfTruth: 'SupplyArr',
+              storedValue: 'filter-001',
+              displayValue: 'Filter element',
+              isActive: true,
+            },
+          ]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+
+    const sites = await getSites('token-123')
+    const parts = await getParts('token-123')
+
+    expect(sites[0]?.label).toBe('Sparta Fleet')
+    expect(parts[0]?.label).toBe('Filter element')
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/v1/references/sites', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/references/parts', expect.any(Object))
   })
 
   it('loads PM schedules successfully', async () => {

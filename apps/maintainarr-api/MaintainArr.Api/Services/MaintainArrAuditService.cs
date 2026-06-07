@@ -17,6 +17,27 @@ public sealed class MaintainArrAuditService(
         string result,
         string? reasonCode = null,
         CancellationToken cancellationToken = default)
+        => await WriteAsync(
+            action,
+            tenantId,
+            actorUserId,
+            actorPersonId: null,
+            targetType,
+            targetId,
+            result,
+            reasonCode,
+            cancellationToken);
+
+    public async Task<Guid> WriteAsync(
+        string action,
+        Guid tenantId,
+        Guid? actorUserId,
+        string? actorPersonId,
+        string targetType,
+        string? targetId,
+        string result,
+        string? reasonCode = null,
+        CancellationToken cancellationToken = default)
     {
         var auditEventId = Guid.NewGuid();
         db.AuditEvents.Add(new MaintainArrAuditEvent
@@ -24,6 +45,7 @@ public sealed class MaintainArrAuditService(
             Id = auditEventId,
             TenantId = tenantId,
             ActorUserId = actorUserId,
+            ActorPersonId = string.IsNullOrWhiteSpace(actorPersonId) ? null : actorPersonId.Trim(),
             Action = action,
             TargetType = targetType,
             TargetId = targetId,

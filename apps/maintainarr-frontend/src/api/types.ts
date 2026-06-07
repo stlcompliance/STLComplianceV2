@@ -120,6 +120,17 @@ export interface CatalogResponse {
   options: CatalogOptionResponse[]
 }
 
+export interface ReferenceOptionResponse {
+  key: string
+  id: string | null
+  label: string
+  source: string
+  sourceOfTruth: string
+  storedValue: string
+  displayValue: string
+  isActive: boolean
+}
+
 export interface FieldMetadataResponse {
   key: string
   label: string
@@ -1151,15 +1162,41 @@ export interface PmProgramSummaryResponse {
   pmProgramId: string
   programKey: string
   name: string
+  description?: string | null
   scopeType: string
   assetTypeId: string | null
   assetTypeName: string | null
   assetId: string | null
   assetTag: string | null
   status: string
+  autoGenerateWorkOrder?: boolean
+  defaultWorkOrderTemplateRef?: string | null
+  autoGenerateInspection?: boolean
+  inspectionTemplateId?: string | null
+  inspectionTemplateKey?: string | null
+  inspectionTemplateName?: string | null
   scheduleCount: number
   createdAt: string
   updatedAt: string
+  categoryKey?: string | null
+  workTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  owningDepartmentRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  activatedAt?: string | null
+  pausedAt?: string | null
+  retiredAt?: string | null
+  matchedAssetCount?: number | null
+  scopeSummary?: string | null
+  dueSummary?: string | null
+  workPackageSummary?: string | null
+  inspectionSummary?: string | null
+  complianceSummary?: string | null
+  automationSummary?: string | null
 }
 
 export interface PmProgramScheduleLinkResponse {
@@ -1186,9 +1223,37 @@ export interface PmProgramDetailResponse {
   assetTag: string | null
   assetName: string | null
   status: string
+  autoGenerateWorkOrder: boolean
+  defaultWorkOrderTemplateRef: string | null
+  autoGenerateInspection: boolean
+  inspectionTemplateId: string | null
+  inspectionTemplateKey: string | null
+  inspectionTemplateName: string | null
   schedules: PmProgramScheduleLinkResponse[]
   createdAt: string
   updatedAt: string
+  categoryKey?: string | null
+  workTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  owningDepartmentRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  activatedAt?: string | null
+  activatedByPersonId?: string | null
+  pausedAt?: string | null
+  pausedByPersonId?: string | null
+  retiredAt?: string | null
+  retiredByPersonId?: string | null
+  matchedAssetCount?: number | null
+  scopeSummary?: string | null
+  dueSummary?: string | null
+  workPackageSummary?: string | null
+  inspectionSummary?: string | null
+  complianceSummary?: string | null
+  automationSummary?: string | null
 }
 
 export interface CreatePmProgramRequest {
@@ -1199,6 +1264,218 @@ export interface CreatePmProgramRequest {
   assetTypeId: string | null
   assetId: string | null
   pmScheduleIds?: string[] | null
+  autoGenerateWorkOrder?: boolean
+  defaultWorkOrderTemplateRef?: string | null
+  autoGenerateInspection?: boolean
+  inspectionTemplateId?: string | null
+  categoryKey?: string | null
+  workTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  owningDepartmentRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  scopeDefinition?: PmProgramScopeDefinitionRequest | null
+  dueDefinition?: PmProgramDueDefinitionRequest | null
+  workPackageDefinition?: PmProgramWorkPackageDefinitionRequest | null
+  inspectionDefinition?: PmProgramInspectionDefinitionRequest | null
+  complianceDefinition?: PmProgramComplianceDefinitionRequest | null
+  automationDefinition?: PmProgramAutomationDefinitionRequest | null
+}
+
+export interface UpdatePmProgramRequest {
+  name: string
+  description: string
+  status: string
+  autoGenerateWorkOrder?: boolean
+  defaultWorkOrderTemplateRef?: string | null
+  autoGenerateInspection?: boolean
+  inspectionTemplateId?: string | null
+  categoryKey?: string | null
+  workTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  owningDepartmentRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  scopeDefinition?: PmProgramScopeDefinitionRequest | null
+  dueDefinition?: PmProgramDueDefinitionRequest | null
+  workPackageDefinition?: PmProgramWorkPackageDefinitionRequest | null
+  inspectionDefinition?: PmProgramInspectionDefinitionRequest | null
+  complianceDefinition?: PmProgramComplianceDefinitionRequest | null
+  automationDefinition?: PmProgramAutomationDefinitionRequest | null
+}
+
+export interface UpdatePmProgramStatusRequest {
+  status: string
+}
+
+export interface ActivatePmProgramRequest {
+  confirmReadinessImpact?: boolean
+  confirmComplianceImpact?: boolean
+  confirmZeroMatch?: boolean
+}
+
+export interface PmProgramScopeDefinitionRequest {
+  assetClassKeys?: string[] | null
+  assetTypeIds?: string[] | null
+  assetCategoryKeys?: string[] | null
+  assetStatusKeys?: string[] | null
+  readinessStateKeys?: string[] | null
+  siteRefs?: string[] | null
+  departmentRefs?: string[] | null
+  locationRefs?: string[] | null
+  makeKeys?: string[] | null
+  modelKeys?: string[] | null
+  yearFrom?: number | null
+  yearTo?: number | null
+  fuelTypeKeys?: string[] | null
+  tags?: string[] | null
+  includedAssetIds?: string[] | null
+  excludedAssetIds?: string[] | null
+}
+
+export interface PmProgramCalendarTriggerRequest {
+  intervalValue: number
+  intervalUnit: string
+  anchorDate?: string | null
+  firstDueDate?: string | null
+  calendarBehavior?: string
+  earlyWindowDays?: number
+  gracePeriodDays?: number
+  pastDueBehavior?: string
+}
+
+export interface PmProgramMeterTriggerRequest {
+  intervalValue: number
+  intervalUnit: string
+  anchorReading?: number | null
+  firstDueReading?: number | null
+  currentReadingSource?: string
+  earlyThreshold?: number | null
+  graceThreshold?: number | null
+  rollingFromCompletion?: boolean
+  missingDataBehavior?: string
+}
+
+export interface PmProgramOneTimeTriggerRequest {
+  dueDate: string
+}
+
+export interface PmProgramDueTriggerRequest {
+  triggerType: string
+  calendar?: PmProgramCalendarTriggerRequest | null
+  meter?: PmProgramMeterTriggerRequest | null
+  oneTime?: PmProgramOneTimeTriggerRequest | null
+  manualOnly?: boolean | null
+}
+
+export interface PmProgramDueDefinitionRequest {
+  matchLogic: string
+  triggers: PmProgramDueTriggerRequest[]
+  warnWhenAnyApproaching?: boolean
+  markDueBasedOnMostUrgent?: boolean
+}
+
+export interface PmProgramWorkPackagePartDemandRequest {
+  itemRef: string
+  description: string
+  quantity: number
+  unitOfMeasure: string
+}
+
+export interface PmProgramChecklistTaskRequest {
+  taskKey: string
+  title: string
+  description?: string | null
+  sortOrder?: number
+}
+
+export interface PmProgramWorkPackageDefinitionRequest {
+  generateWorkOrder: boolean
+  workOrderTitleTemplate?: string | null
+  workOrderDescription?: string | null
+  defaultPriority?: string | null
+  defaultWorkType?: string | null
+  estimatedLaborHours?: number | null
+  requiredSkills?: string[] | null
+  safetyNotes?: string[] | null
+  technicianNotes?: string[] | null
+  requiredAttachments?: string[] | null
+  partsDemand?: PmProgramWorkPackagePartDemandRequest[] | null
+  checklistTasks?: PmProgramChecklistTaskRequest[] | null
+}
+
+export interface PmProgramInspectionDefinitionRequest {
+  attachInspectionTemplate: boolean
+  inspectionTemplateId?: string | null
+  inspectionRequiredBeforeWorkOrderCompletion?: boolean
+  inspectionResultBehavior?: string
+  resumeBehaviorRespectsEngineRules?: boolean
+  voiceCompatible?: boolean
+}
+
+export interface PmProgramComplianceDefinitionRequest {
+  isComplianceRelated: boolean
+  governingBodyCatalogKey?: string | null
+  citationReferences?: string[] | null
+  readinessImpact?: string
+  certificateRequirements?: string[] | null
+}
+
+export interface PmProgramAutomationDefinitionRequest {
+  leadTimeDays?: number
+  leadThresholdValue?: number | null
+  leadThresholdUnit?: string | null
+  duplicatePreventionWindowDays?: number
+  assignmentBehavior?: string
+  assignmentRef?: string | null
+  notificationTargets?: string[] | null
+  escalationTargets?: string[] | null
+  blackoutWindows?: string[] | null
+  maxOpenGeneratedItemsPerAsset?: number | null
+}
+
+export interface PmProgramPreviewAssetResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  assetTypeName: string
+  siteName: string
+  lifecycleStatus: string
+  readinessStatus?: string | null
+  dueStatus?: string | null
+  lastPmAt?: string | null
+  lastWorkOrderNumber?: string | null
+}
+
+export interface PmProgramScopePreviewResponse {
+  matchedAssetCount: number
+  excludedAssetCount: number
+  sampleAssets: PmProgramPreviewAssetResponse[]
+  warnings: string[]
+  canActivate: boolean
+}
+
+export interface PmProgramDuePreviewItemResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  triggerSummary: string
+  estimatedNextDueDate?: string | null
+  estimatedNextDueReading?: string | null
+  dueState: string
+}
+
+export interface PmProgramDuePreviewResponse {
+  dueLogic: string
+  items: PmProgramDuePreviewItemResponse[]
+  warnings: string[]
+  requiresExplicitConfirmation: boolean
 }
 
 export interface ReplacePmProgramSchedulesRequest {

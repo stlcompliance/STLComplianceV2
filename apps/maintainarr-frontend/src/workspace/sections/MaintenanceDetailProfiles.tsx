@@ -19,7 +19,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   DetailBadge,
   DetailEmptyState,
@@ -111,6 +111,7 @@ function noSelection(title: string, text: string, to: string) {
 }
 
 export function PmProgramProfile({ state: s }: { state: MaintainArrWorkspaceState }) {
+  const [searchParams] = useSearchParams()
   const programs = s.pmProgramsQuery?.data ?? []
   const detail = s.pmProgramDetailQuery?.data ?? null
   const summary = programs.find((program) => program.pmProgramId === s.selectedProgramId) ?? programs[0] ?? null
@@ -118,6 +119,7 @@ export function PmProgramProfile({ state: s }: { state: MaintainArrWorkspaceStat
   if (!program) {
     return noSelection('No PM program selected', 'Create or select a PM program to view its detail profile.', '/pm-programs/drawer')
   }
+  const createdBanner = searchParams.get('created') === '1'
 
   const schedules = detail?.schedules ?? []
   const scheduleCount = detail?.schedules.length ?? summary?.scheduleCount ?? 0
@@ -158,7 +160,17 @@ export function PmProgramProfile({ state: s }: { state: MaintainArrWorkspaceStat
   ]
 
   return (
-    <ProfileDetailsLayout
+    <div className="space-y-4">
+      {createdBanner ? (
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/25 p-4 text-sm text-emerald-100">
+          <div className="font-semibold">PM program created</div>
+          <div className="mt-1">
+            {program.name} is now {humanize(program.status)}. Open the detail sections below to review scope, automation, and readiness impact.
+          </div>
+        </div>
+      ) : null}
+
+      <ProfileDetailsLayout
       testId="maintainarr-pm-program-profile"
       backLabel="PM programs"
       backTo="/pm-programs/drawer"
@@ -222,7 +234,8 @@ export function PmProgramProfile({ state: s }: { state: MaintainArrWorkspaceStat
       allowedChecks={[program.status === 'active', schedules.length > 0, dueSchedules.length === 0].filter(Boolean).length}
       blockedChecks={[program.status !== 'active', dueSchedules.length > 0].filter(Boolean).length}
       railSections={rails}
-    />
+      />
+    </div>
   )
 }
 

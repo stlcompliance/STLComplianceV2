@@ -134,3 +134,46 @@ export function canCreateWorkOrders(tenantRoleKey: string, isPlatformAdmin: bool
 export function canCloseWorkOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canManageAssets(tenantRoleKey, isPlatformAdmin)
 }
+
+function hasPmProgramManageRole(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
+function hasPmProgramActivationRole(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin'].includes(tenantRoleKey.toLowerCase())
+}
+
+export function canReadPmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canPreviewPmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreatePmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canUpdatePmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canActivatePmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramActivationRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canPauseRetirePmPrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPmProgramActivationRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canManagePmProgramAutomation(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return hasPmProgramActivationRole(tenantRoleKey, isPlatformAdmin)
+}

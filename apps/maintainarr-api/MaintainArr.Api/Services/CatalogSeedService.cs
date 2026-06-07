@@ -577,6 +577,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new CatalogSeed("meterRolloverBehavior", "Meter Rollover Behavior", ["none", "rollover_supported", "correction_required", "replace_meter", "unknown"]),
 
             new CatalogSeed("PMProgram", "PM Program", ["standard_fleet", "regulated", "custom"]),
+            new CatalogSeed("PMProgramStatus", "PM Program Status", ["draft", "active", "paused", "retired", "inactive"]),
             new CatalogSeed("PMTemplate", "PM Template", ["a_service", "b_service", "annual_service", "custom"]),
             new CatalogSeed("PMType", "PM Type", ["preventive", "scheduled_service", "mileage_based", "hour_based", "calendar_based", "seasonal", "regulatory", "lubrication", "filter_service", "inspection_based", "custom"]),
             new CatalogSeed("PMIntervalType", "PM Interval Type", ["calendar_days", "mileage", "engine_hours", "cycles", "mixed_first_due", "mixed_all_due"]),

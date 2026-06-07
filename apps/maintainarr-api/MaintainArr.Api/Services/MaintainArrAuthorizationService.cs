@@ -119,6 +119,83 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequirePmProgramsRead(ClaimsPrincipal principal) => RequirePmRead(principal);
+
+    public void RequirePmProgramsPreview(ClaimsPrincipal principal) => RequirePmRead(principal);
+
+    public void RequirePmProgramsCreate(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Preventive maintenance program creation requires maintainarr.pmPrograms.create scope.",
+            403);
+    }
+
+    public void RequirePmProgramsUpdate(ClaimsPrincipal principal) => RequirePmProgramsCreate(principal);
+
+    public void RequirePmProgramsActivate(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Preventive maintenance program activation requires maintainarr.pmPrograms.activate scope.",
+            403);
+    }
+
+    public void RequirePmProgramsManageAutomation(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Preventive maintenance automation settings require maintainarr.pmPrograms.manageAutomation scope.",
+            403);
+    }
+
+    public void RequirePmProgramsPause(ClaimsPrincipal principal) => RequirePmProgramsActivate(principal);
+
+    public void RequirePmProgramsRetire(ClaimsPrincipal principal) => RequirePmProgramsActivate(principal);
+
     public void RequirePmSkip(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);

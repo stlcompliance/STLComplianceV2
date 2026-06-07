@@ -8,6 +8,8 @@ public sealed class MaintainArrAuditEvent
 
     public Guid? ActorUserId { get; set; }
 
+    public string? ActorPersonId { get; set; }
+
     public string Action { get; set; } = string.Empty;
 
     public string TargetType { get; set; } = string.Empty;

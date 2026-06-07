@@ -8,6 +8,7 @@ import type {
   AssetFieldContextResponse,
   AssetInstalledComponentResponse,
   CatalogResponse,
+  ReferenceOptionResponse,
   FieldsetResponse,
   CreateAssetTypeRequest,
   CreateInspectionChecklistItemRequest,
@@ -81,6 +82,10 @@ import type {
   PmProgramDetailResponse,
   PmProgramSummaryResponse,
   CreatePmProgramRequest,
+  UpdatePmProgramRequest,
+  ActivatePmProgramRequest,
+  PmProgramScopePreviewResponse,
+  PmProgramDuePreviewResponse,
   ReplacePmProgramSchedulesRequest,
   PmScheduleResponse,
   StartInspectionRunRequest,
@@ -384,7 +389,7 @@ export async function getPmSchedules(accessToken: string): Promise<PmScheduleRes
 }
 
 export async function getPmPrograms(accessToken: string): Promise<PmProgramSummaryResponse[]> {
-  const response = await fetch(`${apiBase}/api/preventive-maintenance/programs`, {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PmProgramSummaryResponse[]>(response, 'Failed to load PM programs')
@@ -394,7 +399,7 @@ export async function getPmProgram(
   accessToken: string,
   pmProgramId: string,
 ): Promise<PmProgramDetailResponse> {
-  const response = await fetch(`${apiBase}/api/preventive-maintenance/programs/${pmProgramId}`, {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/${pmProgramId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PmProgramDetailResponse>(response, 'Failed to load PM program')
@@ -404,7 +409,7 @@ export async function createPmProgram(
   accessToken: string,
   payload: CreatePmProgramRequest,
 ): Promise<PmProgramDetailResponse> {
-  const response = await fetch(`${apiBase}/api/preventive-maintenance/programs`, {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -412,12 +417,25 @@ export async function createPmProgram(
   return parseJsonResponse<PmProgramDetailResponse>(response, 'Failed to create PM program')
 }
 
+export async function updatePmProgram(
+  accessToken: string,
+  pmProgramId: string,
+  payload: UpdatePmProgramRequest,
+): Promise<PmProgramDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/${pmProgramId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PmProgramDetailResponse>(response, 'Failed to update PM program')
+}
+
 export async function replacePmProgramSchedules(
   accessToken: string,
   pmProgramId: string,
   payload: ReplacePmProgramSchedulesRequest,
 ): Promise<PmProgramDetailResponse> {
-  const response = await fetch(`${apiBase}/api/preventive-maintenance/programs/${pmProgramId}/schedules`, {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/${pmProgramId}/schedules`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -428,13 +446,75 @@ export async function replacePmProgramSchedules(
 export async function activatePmProgram(
   accessToken: string,
   pmProgramId: string,
+  payload: ActivatePmProgramRequest = {},
 ): Promise<PmProgramDetailResponse> {
-  const response = await fetch(`${apiBase}/api/preventive-maintenance/programs/${pmProgramId}/status`, {
-    method: 'PATCH',
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/${pmProgramId}/activate`, {
+    method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify({ status: 'active' }),
+    body: JSON.stringify(payload),
   })
   return parseJsonResponse<PmProgramDetailResponse>(response, 'Failed to activate PM program')
+}
+
+export async function previewPmProgramScope(
+  accessToken: string,
+  payload: CreatePmProgramRequest,
+): Promise<PmProgramScopePreviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/preview-scope`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PmProgramScopePreviewResponse>(response, 'Failed to preview PM program scope')
+}
+
+export async function previewPmProgramDue(
+  accessToken: string,
+  payload: CreatePmProgramRequest,
+): Promise<PmProgramDuePreviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/pm-programs/preview-due`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PmProgramDuePreviewResponse>(response, 'Failed to preview PM program due logic')
+}
+
+async function getReferenceOptions(
+  accessToken: string,
+  path: string,
+): Promise<ReferenceOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/references/${path}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReferenceOptionResponse[]>(response, `Failed to load ${path} references`)
+}
+
+export async function getSites(accessToken: string): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, 'sites')
+}
+
+export async function getDepartments(accessToken: string): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, 'departments')
+}
+
+export async function getTeams(accessToken: string): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, 'teams')
+}
+
+export async function getPeople(accessToken: string): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, 'people')
+}
+
+export async function getParts(accessToken: string): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, 'parts')
+}
+
+export async function getComplianceCoreCatalogOptions(
+  accessToken: string,
+  catalogKey: string,
+): Promise<ReferenceOptionResponse[]> {
+  return getReferenceOptions(accessToken, `compliance-core/catalogs/${encodeURIComponent(catalogKey)}`)
 }
 
 export async function getInspectionTemplates(

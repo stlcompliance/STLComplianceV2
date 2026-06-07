@@ -135,6 +135,7 @@ export function useMaintainArrWorkspaceState() {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
+  const initialProgramId = searchParams.get('programId')?.trim() ?? ''
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState('')
   const [templateName, setTemplateName] = useState('')
@@ -224,6 +225,12 @@ export function useMaintainArrWorkspaceState() {
       setSelectedWorkOrderId(initialWorkOrderId)
     }
   }, [initialWorkOrderId, selectedWorkOrderId])
+
+  useEffect(() => {
+    if (initialProgramId && initialProgramId !== selectedProgramId) {
+      setSelectedProgramId(initialProgramId)
+    }
+  }, [initialProgramId, selectedProgramId])
 
   useEffect(() => {
     setConfirmedMeterKey(null)

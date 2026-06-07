@@ -71,6 +71,12 @@ describe('PmProgramBuilderPanel', () => {
       assetTag: null,
       assetName: null,
       status: 'draft',
+      autoGenerateWorkOrder: true,
+      defaultWorkOrderTemplateRef: null,
+      autoGenerateInspection: false,
+      inspectionTemplateId: null,
+      inspectionTemplateKey: null,
+      inspectionTemplateName: null,
       schedules: [
         {
           pmScheduleId: '33333333-3333-3333-3333-333333333333',
@@ -85,6 +91,18 @@ describe('PmProgramBuilderPanel', () => {
       ],
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-05-27T12:00:00Z',
+      categoryKey: null,
+      workTypeKey: null,
+      priorityKey: null,
+      owningSiteRef: null,
+      owningTeamRef: null,
+      owningDepartmentRef: null,
+      ownerPersonId: null,
+      ownerRoleKey: null,
+      tags: null,
+      activatedAt: null,
+      pausedAt: null,
+      retiredAt: null,
     },
     assetTypes: [
       {
