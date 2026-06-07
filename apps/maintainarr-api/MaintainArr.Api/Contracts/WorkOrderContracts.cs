@@ -66,6 +66,9 @@ public sealed record WorkOrderDetailResponse(
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
     DateTimeOffset? CancelledAt,
+    string? DraftPlanJson = null,
+    DateTimeOffset? PlannedStartAt = null,
+    DateTimeOffset? PlannedDueAt = null,
     DowntimeFollowUpResponse? DowntimeFollowUp = null,
     IReadOnlyList<WorkOrderBlockerResponse> Blockers = null!,
     WorkOrderCloseoutResponse? Closeout = null);
@@ -123,21 +126,63 @@ public sealed record CreateWorkOrderRequest(
     string Description,
     string Priority,
     string? AssignedTechnicianPersonId,
-    Guid? PmScheduleId);
+    Guid? PmScheduleId,
+    Guid? DefectId = null,
+    string? DraftPlanJson = null,
+    DateTimeOffset? PlannedStartAt = null,
+    DateTimeOffset? PlannedDueAt = null);
 
 public sealed record CreateWorkOrderFromDefectRequest(
     string? Title,
     string? Description,
     string? Priority,
-    string? AssignedTechnicianPersonId);
+    string? AssignedTechnicianPersonId,
+    string? DraftPlanJson = null,
+    DateTimeOffset? PlannedStartAt = null,
+    DateTimeOffset? PlannedDueAt = null);
 
 public sealed record UpdateWorkOrderRequest(
     string? Title,
     string? Description,
     string? Priority,
-    string? AssignedTechnicianPersonId);
+    string? AssignedTechnicianPersonId,
+    string? DraftPlanJson = null,
+    DateTimeOffset? PlannedStartAt = null,
+    DateTimeOffset? PlannedDueAt = null);
 
 public sealed record UpdateWorkOrderStatusRequest(string Status);
+
+public sealed record WorkOrderFindingResponse(
+    string Category,
+    string Severity,
+    string Code,
+    string Message,
+    string? FieldKey = null,
+    string? SectionKey = null,
+    string? Source = null);
+
+public sealed record WorkOrderDuplicateMatchResponse(
+    Guid WorkOrderId,
+    string WorkOrderNumber,
+    string Title,
+    string Status,
+    string AssetTag,
+    string AssetName,
+    string MatchReason,
+    int SimilarityScore);
+
+public sealed record WorkOrderValidationResponse(
+    bool IsValid,
+    IReadOnlyList<WorkOrderFindingResponse> Findings);
+
+public sealed record WorkOrderPreviewResponse(
+    WorkOrderDetailResponse WorkOrder,
+    IReadOnlyList<WorkOrderFindingResponse> Findings,
+    IReadOnlyList<WorkOrderDuplicateMatchResponse> DuplicateMatches,
+    AssetReadinessResponse? AssetReadiness,
+    bool CanOpen,
+    bool CanSchedule,
+    bool CanStart);
 
 public sealed record CreateWorkOrderBlockerRequest(
     string BlockerType,

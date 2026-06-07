@@ -99,6 +99,9 @@ import type {
   NormalizeVoiceNumericResponse,
   UpdateDefectStatusRequest,
   WorkOrderDetailResponse,
+  WorkOrderDuplicateMatchResponse,
+  WorkOrderPreviewResponse,
+  WorkOrderValidationResponse,
   WorkOrderSummaryResponse,
   CreateWorkOrderRequest,
   CreateWorkOrderFromDefectRequest,
@@ -364,6 +367,13 @@ export async function getAssetEditFieldset(accessToken: string, assetId: string)
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<FieldsetResponse>(response, 'Failed to load asset edit fieldset')
+}
+
+export async function getWorkOrderCreateFieldset(accessToken: string): Promise<FieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/work-orders/create`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldsetResponse>(response, 'Failed to load work order create fieldset')
 }
 
 export async function getCatalogs(accessToken: string, keys?: string[]): Promise<CatalogResponse[]> {
@@ -942,6 +952,97 @@ export async function createWorkOrder(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to create work order')
+}
+
+export async function createWorkOrderDraft(
+  accessToken: string,
+  payload: CreateWorkOrderRequest,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/drafts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to create work order draft')
+}
+
+export async function updateWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+  payload: CreateWorkOrderRequest,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/draft`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to update work order draft')
+}
+
+export async function validateWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderValidationResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderValidationResponse>(response, 'Failed to validate work order draft')
+}
+
+export async function previewWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderPreviewResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/preview`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderPreviewResponse>(response, 'Failed to preview work order draft')
+}
+
+export async function checkDuplicateWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderDuplicateMatchResponse[]> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/duplicates`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderDuplicateMatchResponse[]>(response, 'Failed to check work order duplicates')
+}
+
+export async function openWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/open`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to open work order draft')
+}
+
+export async function scheduleWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/schedule`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to schedule work order draft')
+}
+
+export async function startWorkOrderDraft(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/start`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to start work order draft')
 }
 
 export async function createWorkOrderFromDefect(

@@ -52,7 +52,7 @@ function formatBytes(sizeBytes: number): string {
 }
 
 function workOrderEditable(status: string): boolean {
-  return status === 'open' || status === 'in_progress'
+  return status === 'draft' || status === 'open' || status === 'in_progress'
 }
 
 export function WorkOrderLaborEvidencePanel({

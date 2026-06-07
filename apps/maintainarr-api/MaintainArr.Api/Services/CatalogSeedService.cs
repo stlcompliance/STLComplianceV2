@@ -9,6 +9,7 @@ namespace MaintainArr.Api.Services;
 public sealed class CatalogSeedService(MaintainArrDbContext db)
 {
     private const string AssetsFieldsetKey = "assets";
+    private const string WorkOrdersFieldsetKey = "work-orders";
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> TenantSeedLocks = new();
     private static readonly ConcurrentDictionary<Guid, byte> TenantSeedReady = new();
 
@@ -62,6 +63,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
 
         await EnsureDependencySeedsAsync(tenantId, catalogIds, cancellationToken);
         await EnsureAssetFieldsetsAsync(tenantId, cancellationToken);
+        await EnsureWorkOrderFieldsetsAsync(tenantId, cancellationToken);
         await EnsureReferenceFallbackSeedsAsync(tenantId, cancellationToken);
     }
 
@@ -81,32 +83,47 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             return false;
         }
 
-        var purposes = new[] { "default", "create", "edit" };
-        var definitions = await db.FieldsetDefinitions.AsNoTracking()
-            .Where(x => x.TenantId == tenantId
-                && x.Key == AssetsFieldsetKey
-                && x.IsActive
-                && purposes.Contains(x.Purpose))
-            .Select(x => new { x.Id, x.Purpose })
-            .ToListAsync(cancellationToken);
-        var definitionPurposes = definitions.Select(x => x.Purpose).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (purposes.Any(x => !definitionPurposes.Contains(x)))
+        var expectedFieldSets = new[]
         {
-            return false;
+            new { Key = AssetsFieldsetKey, Purposes = new[] { "default", "create", "edit" }, ExpectedFieldCount = GetFieldSeeds().Count() },
+            new { Key = WorkOrdersFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetWorkOrderFieldSeeds().Count() },
+        };
+
+        foreach (var expectedFieldSet in expectedFieldSets)
+        {
+            var definitions = await db.FieldsetDefinitions.AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.Key == expectedFieldSet.Key
+                    && x.IsActive
+                    && expectedFieldSet.Purposes.Contains(x.Purpose))
+                .Select(x => new { x.Id, x.Purpose })
+                .ToListAsync(cancellationToken);
+
+            var definitionPurposes = definitions.Select(x => x.Purpose).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (expectedFieldSet.Purposes.Any(x => !definitionPurposes.Contains(x)))
+            {
+                return false;
+            }
+
+            var fieldsetIds = definitions.Select(x => x.Id).ToArray();
+            var fieldCounts = await db.FieldsetFields.AsNoTracking()
+                .Where(x => x.TenantId == tenantId && fieldsetIds.Contains(x.FieldsetId))
+                .GroupBy(x => x.FieldsetId)
+                .Select(x => new { FieldsetId = x.Key, Count = x.Count() })
+                .ToListAsync(cancellationToken);
+
+            var hasMinimumFieldCoverage = expectedFieldSet.Purposes.All(purpose =>
+                definitions
+                    .Where(x => string.Equals(x.Purpose, purpose, StringComparison.OrdinalIgnoreCase))
+                    .Any(definition => fieldCounts.Any(x => x.FieldsetId == definition.Id && x.Count >= expectedFieldSet.ExpectedFieldCount)));
+
+            if (!hasMinimumFieldCoverage)
+            {
+                return false;
+            }
         }
 
-        var expectedFieldCount = GetFieldSeeds().Count();
-        var fieldsetIds = definitions.Select(x => x.Id).ToArray();
-        var fieldCounts = await db.FieldsetFields.AsNoTracking()
-            .Where(x => x.TenantId == tenantId && fieldsetIds.Contains(x.FieldsetId))
-            .GroupBy(x => x.FieldsetId)
-            .Select(x => new { FieldsetId = x.Key, Count = x.Count() })
-            .ToListAsync(cancellationToken);
-
-        return purposes.All(purpose =>
-            definitions
-                .Where(x => string.Equals(x.Purpose, purpose, StringComparison.OrdinalIgnoreCase))
-                .Any(definition => fieldCounts.Any(x => x.FieldsetId == definition.Id && x.Count >= expectedFieldCount)));
+        return true;
     }
 
     private async Task<IReadOnlyList<Guid>> ResolveKnownTenantIdsAsync(CancellationToken cancellationToken)
@@ -386,6 +403,93 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         }
     }
 
+    private async Task EnsureWorkOrderFieldsetsAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var seeds = GetWorkOrderFieldSeeds().ToList();
+        foreach (var purpose in new[] { "create" })
+        {
+            var definition = await db.FieldsetDefinitions
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Key == WorkOrdersFieldsetKey && x.Purpose == purpose,
+                    cancellationToken);
+
+            if (definition is null)
+            {
+                definition = new FieldsetDefinition
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Key = WorkOrdersFieldsetKey,
+                    Label = "Work Orders",
+                    EntityType = "work_order",
+                    Purpose = purpose,
+                    Description = $"Work order {purpose} fieldset",
+                    IsActive = true,
+                };
+                db.FieldsetDefinitions.Add(definition);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                definition.IsActive = true;
+                definition.Description = $"Work order {purpose} fieldset";
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            var existing = await db.FieldsetFields
+                .Where(x => x.TenantId == tenantId && x.FieldsetId == definition.Id)
+                .ToListAsync(cancellationToken);
+
+            var expectedKeys = new HashSet<string>(seeds.Select(x => x.Key), StringComparer.OrdinalIgnoreCase);
+            foreach (var item in seeds.Select((seed, index) => new { seed, index }))
+            {
+                var field = existing.FirstOrDefault(x => string.Equals(x.Key, item.seed.Key, StringComparison.OrdinalIgnoreCase));
+                if (field is null)
+                {
+                    field = new FieldsetField
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = tenantId,
+                        FieldsetId = definition.Id,
+                        Key = item.seed.Key,
+                    };
+                    db.FieldsetFields.Add(field);
+                }
+
+                field.Label = item.seed.Label;
+                field.Description = item.seed.Description;
+                field.DataType = item.seed.DataType;
+                field.ControlType = item.seed.ControlType;
+                field.Required = item.seed.Required;
+                field.CatalogKey = item.seed.CatalogKey;
+                field.ReferenceKey = item.seed.ReferenceKey;
+                field.SourceType = item.seed.SourceType;
+                field.SourceOfTruth = item.seed.SourceOfTruth;
+                field.SortOrder = item.index;
+                field.SectionKey = item.seed.SectionKey;
+                field.DependencyJson = JsonSerializer.Serialize(item.seed.DependsOn);
+                field.ValidationJson = JsonSerializer.Serialize(item.seed.Validation);
+                field.DefaultValueJson = item.seed.DefaultValueJson;
+                field.VisibilityJson = JsonSerializer.Serialize(item.seed.Visibility);
+                field.AllowCustom = item.seed.AllowCustom;
+                field.CustomRequiresApproval = item.seed.CustomRequiresApproval;
+                field.DrivesLogic = item.seed.DrivesLogic;
+                field.DrivesInspectionBranching = item.seed.DrivesInspectionBranching;
+                field.DrivesPMApplicability = item.seed.DrivesPMApplicability;
+                field.DrivesCompliance = item.seed.DrivesCompliance;
+                field.DrivesReporting = item.seed.DrivesReporting;
+                field.DrivesReadiness = item.seed.DrivesReadiness;
+            }
+
+            foreach (var field in existing.Where(x => !expectedKeys.Contains(x.Key)))
+            {
+                db.FieldsetFields.Remove(field);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     private async Task EnsureReferenceFallbackSeedsAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         await EnsureReferenceOptionsAsync(tenantId, "Compliance Core", "governingBody", ["FMCSA", "OSHA", "MSHA", "EPA"], cancellationToken);
@@ -605,8 +709,8 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new CatalogSeed("rootCause", "Root Cause", ["wear", "impact_damage", "operator_damage", "improper_installation", "lack_of_maintenance", "contamination", "corrosion", "manufacturing_defect", "abuse", "unknown"]),
             new CatalogSeed("correctiveActionType", "Corrective Action Type", ["repaired", "replaced", "adjusted", "cleaned", "lubricated", "tightened", "calibrated", "inspected_no_fault_found", "deferred", "vendor_repair", "warranty_repair"]),
 
-            new CatalogSeed("workOrderType", "Work Order Type", ["corrective", "preventive", "inspection_generated", "defect_generated", "campaign", "recall", "warranty", "road_call", "emergency", "calibration", "fabrication", "install", "removal"]),
-            new CatalogSeed("workOrderPriority", "Work Order Priority", ["low", "normal", "high", "urgent", "emergency"]),
+            new CatalogSeed("workOrderType", "Work Order Type", ["corrective", "preventive", "inspection_followup", "defect_repair", "emergency", "project", "compliance", "recall", "warranty", "calibration", "installation", "removal", "operator_request", "vendor_work"]),
+            new CatalogSeed("workOrderPriority", "Work Order Priority", ["low", "medium", "high", "urgent"]),
             new CatalogSeed("maintenanceType", "Maintenance Type", ["PM", "inspection", "repair", "diagnostic", "replacement", "adjustment", "calibration", "cleaning", "lubrication", "rebuild"]),
             new CatalogSeed("repairType", "Repair Type", ["repair", "replace", "adjust", "diagnose", "custom"]),
             new CatalogSeed("laborCategory", "Labor Category", ["mechanic", "electrician", "inspector", "vendor"]),
@@ -719,6 +823,29 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         yield return FieldSeed.FreeText("serialNumber", "Serial Number", "Serial number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 64 }, visibility: equipmentOrTool);
         yield return FieldSeed.FreeText("licensePlate", "License Plate", "Plate number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 32 }, visibility: vehicleOrTrailer);
         yield return FieldSeed.FreeText("fleetNumber", "Fleet Number", "Fleet number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 64 });
+    }
+
+    private static IEnumerable<FieldSeed> GetWorkOrderFieldSeeds()
+    {
+        yield return FieldSeed.Catalog("workOrderType", "Work Order Type", "Work order type", required: true, catalogKey: "workOrderType", sectionKey: "basics", drivesLogic: true);
+        yield return FieldSeed.Catalog("priority", "Priority", "Work order priority", required: true, catalogKey: "workOrderPriority", sectionKey: "basics", drivesLogic: true, defaultValueJson: "\"medium\"");
+        yield return FieldSeed.FreeText("scopeSummary", "Scope Summary", "Short description of the planned work", sectionKey: "scope", required: false, validation: new Dictionary<string, object?> { ["maxLength"] = 1024 });
+        yield return FieldSeed.Catalog("failureMode", "Failure Mode", "Observed failure mode", required: false, catalogKey: "failureMode", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("severity", "Severity", "Work order severity", required: false, catalogKey: "severity", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("repairDisposition", "Repair Disposition", "Planned repair disposition", required: false, catalogKey: "repairDisposition", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("rootCause", "Root Cause", "Suspected root cause", required: false, catalogKey: "rootCause", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Reference("assignedTechnicianPersonId", "Assigned Technician", "Assigned person", required: false, "people", "staffarr_reference", "StaffArr", "assignment", true);
+        yield return FieldSeed.Reference("siteId", "Site", "StaffArr site reference", required: false, "sites", "staffarr_reference", "StaffArr", "assignment", true);
+        yield return FieldSeed.Reference("departmentId", "Department", "StaffArr department reference", required: false, "departments", "staffarr_reference", "StaffArr", "assignment", true);
+        yield return FieldSeed.Reference("teamId", "Team", "StaffArr team reference", required: false, "teams", "staffarr_reference", "StaffArr", "assignment", true);
+        yield return FieldSeed.Reference("governingBodyKey", "Governing Body", "Compliance Core governing body", required: false, "governingBody", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Reference("rulepackApplicabilityKeys", "Rulepack Applicability", "Compliance Core rulepack applicability", required: false, "rulepackApplicabilityKeys", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Reference("complianceCategory", "Compliance Category", "Compliance Core compliance category", required: false, "complianceCategory", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Reference("requiredEvidenceType", "Required Evidence Type", "Compliance Core required evidence type", required: false, "requiredEvidenceType", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Reference("documentRequirementType", "Document Requirement Type", "Compliance Core document requirement type", required: false, "documentRequirementType", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Reference("inspectionRequirementType", "Inspection Requirement Type", "Compliance Core inspection requirement type", required: false, "inspectionRequirementType", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
+        yield return FieldSeed.Catalog("documentType", "Document Type", "Document or evidence type", required: false, catalogKey: "documentType", sectionKey: "documents", drivesLogic: true, multi: true);
+        yield return FieldSeed.FreeText("notes", "Notes", "Draft notes and handoff context", sectionKey: "documents", required: false, validation: new Dictionary<string, object?> { ["maxLength"] = 2048 });
     }
 
     private static IReadOnlyDictionary<string, object?> VisibleWhen(string key, params string[] values) =>

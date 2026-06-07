@@ -31,7 +31,7 @@ interface WorkOrderPartsDemandPanelProps {
 }
 
 function workOrderEditable(status: string): boolean {
-  return status === 'open' || status === 'in_progress'
+  return status === 'draft' || status === 'open' || status === 'in_progress'
 }
 
 function procurementBadgeClass(status: string): string {

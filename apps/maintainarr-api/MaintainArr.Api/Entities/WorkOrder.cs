@@ -40,6 +40,12 @@ public sealed class WorkOrder : IHasTenant
 
     public string QualificationCheckResultsJson { get; set; } = "[]";
 
+    public string? DraftPlanJson { get; set; }
+
+    public DateTimeOffset? PlannedStartAt { get; set; }
+
+    public DateTimeOffset? PlannedDueAt { get; set; }
+
     public string? AssignedTechnicianPersonId { get; set; }
 
     public Guid CreatedByUserId { get; set; }
@@ -79,6 +85,8 @@ public sealed class WorkOrder : IHasTenant
 
 public static class WorkOrderStatuses
 {
+    public const string Draft = "draft";
+
     public const string Open = "open";
 
     public const string Requested = "requested";
@@ -123,6 +131,7 @@ public static class WorkOrderStatuses
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
+        Draft,
         Open,
         Requested,
         Triage,

@@ -8,7 +8,6 @@ import {
   completeInspectionRun,
   createDefect,
   createDefectsFromInspectionRun,
-  createWorkOrder,
   createWorkOrderFromDefect,
   createWorkOrderTask,
   createWorkOrderComment,
@@ -173,11 +172,6 @@ export function useMaintainArrWorkspaceState() {
   const [inspectionEvidenceChecklistItemId, setInspectionEvidenceChecklistItemId] = useState('')
   const [inspectionPauseReason, setInspectionPauseReason] = useState('interrupted')
   const [inspectionPauseNotes, setInspectionPauseNotes] = useState('')
-  const [workOrderAssetId, setWorkOrderAssetId] = useState('')
-  const [workOrderTitle, setWorkOrderTitle] = useState('')
-  const [workOrderDescription, setWorkOrderDescription] = useState('')
-  const [workOrderPriority, setWorkOrderPriority] = useState('medium')
-  const [assignedPersonId, setAssignedPersonId] = useState('')
   const [workOrderStatusFilter, setWorkOrderStatusFilter] = useState('')
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState('')
   const [creatingWorkOrderDefectId, setCreatingWorkOrderDefectId] = useState<string | null>(null)
@@ -1015,26 +1009,6 @@ export function useMaintainArrWorkspaceState() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to update defect status'),
   })
 
-  const createWorkOrderMutation = useMutation({
-    mutationFn: () =>
-      createWorkOrder(accessToken, {
-        assetId: workOrderAssetId,
-        title: workOrderTitle,
-        description: workOrderDescription,
-        priority: workOrderPriority,
-        assignedTechnicianPersonId: assignedPersonId.trim() || null,
-        pmScheduleId: null,
-      }),
-    onSuccess: async (created) => {
-      setWorkOrderTitle('')
-      setWorkOrderDescription('')
-      setSelectedWorkOrderId(created.workOrderId)
-      setApiError(null)
-      await invalidateWorkOrders(created.workOrderId)
-    },
-    onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create work order'),
-  })
-
   const createWorkOrderFromDefectMutation = useMutation({
     mutationFn: (defectId: string) => {
       setCreatingWorkOrderDefectId(defectId)
@@ -1433,11 +1407,6 @@ export function useMaintainArrWorkspaceState() {
     inspectionEvidenceNotes,
     inspectionEvidenceFile,
     inspectionEvidenceChecklistItemId,
-    workOrderAssetId,
-    workOrderTitle,
-    workOrderDescription,
-    workOrderPriority,
-    assignedPersonId,
     workOrderStatusFilter,
     selectedWorkOrderId,
     creatingWorkOrderDefectId,
@@ -1510,11 +1479,6 @@ export function useMaintainArrWorkspaceState() {
     setInspectionEvidenceNotes,
     setInspectionEvidenceFile,
     setInspectionEvidenceChecklistItemId,
-    setWorkOrderAssetId,
-    setWorkOrderTitle,
-    setWorkOrderDescription,
-    setWorkOrderPriority,
-    setAssignedPersonId,
     setWorkOrderStatusFilter,
     setSelectedWorkOrderId,
     setCreatingWorkOrderDefectId,
@@ -1630,7 +1594,6 @@ export function useMaintainArrWorkspaceState() {
     recordMeterReadingMutation,
     createDefectMutation,
     updateDefectStatusMutation,
-    createWorkOrderMutation,
     createWorkOrderFromDefectMutation,
     updateWorkOrderStatusMutation,
     addWorkOrderTaskMutation,

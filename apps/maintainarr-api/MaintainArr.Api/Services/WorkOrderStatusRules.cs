@@ -16,6 +16,12 @@ public static class WorkOrderStatusRules
 
         return from switch
         {
+            WorkOrderStatuses.Draft => to is
+                WorkOrderStatuses.Open or
+                WorkOrderStatuses.Scheduled or
+                WorkOrderStatuses.InProgress or
+                WorkOrderStatuses.Cancelled or
+                WorkOrderStatuses.Canceled,
             WorkOrderStatuses.Open or WorkOrderStatuses.Requested => to is
                 WorkOrderStatuses.Triage or
                 WorkOrderStatuses.Rejected or

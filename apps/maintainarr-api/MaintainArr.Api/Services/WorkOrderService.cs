@@ -14,6 +14,7 @@ public sealed class WorkOrderService(
     TechnicianRefService technicianRefService,
     PmOccurrenceService pmOccurrences,
     AssetDowntimeService assetDowntimeService,
+    AssetReadinessService assetReadinessService,
     WorkOrderDiscussionService discussionService,
     TrainArrQualificationCheckClient trainArrQualificationCheckClient,
     ComplianceCoreWorkOrderGateClient complianceCoreWorkOrderGateClient,
@@ -80,6 +81,31 @@ public sealed class WorkOrderService(
         CreateWorkOrderRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (request.DefectId.HasValue && request.PmScheduleId.HasValue)
+        {
+            throw new StlApiException(
+                "work_order.multiple_sources",
+                "Choose either a defect or a PM schedule as the work order source, not both.",
+                400);
+        }
+
+        if (request.DefectId.HasValue)
+        {
+            return await CreateFromDefectAsync(
+                tenantId,
+                actorUserId,
+                request.DefectId.Value,
+                new CreateWorkOrderFromDefectRequest(
+                    request.Title,
+                    request.Description,
+                    request.Priority,
+                    request.AssignedTechnicianPersonId,
+                    request.DraftPlanJson,
+                    request.PlannedStartAt,
+                    request.PlannedDueAt),
+                cancellationToken);
+        }
+
         var asset = await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
         ValidateTitle(request.Title);
         ValidatePriority(request.Priority);
@@ -115,6 +141,9 @@ public sealed class WorkOrderService(
             OriginType = request.PmScheduleId.HasValue ? WorkOrderOriginTypes.PmDue : WorkOrderOriginTypes.Manual,
             OriginRef = request.PmScheduleId?.ToString("D"),
             StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
+            DraftPlanJson = NormalizeDraftPlanJson(request.DraftPlanJson),
+            PlannedStartAt = request.PlannedStartAt,
+            PlannedDueAt = request.PlannedDueAt,
             RequiredQualificationRefsJson = SerializeStringList(
                 qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]),
             QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot),
@@ -183,6 +212,257 @@ public sealed class WorkOrderService(
             cancellationToken);
 
         return await MapDetailAsync(tenantId, entity, cancellationToken);
+    }
+
+    public async Task<WorkOrderDetailResponse> CreateDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        CreateWorkOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await UpsertDraftAsync(tenantId, actorUserId, null, request, cancellationToken);
+    }
+
+    public async Task<WorkOrderDetailResponse> UpdateDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        CreateWorkOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await UpsertDraftAsync(tenantId, actorUserId, workOrderId, request, cancellationToken);
+    }
+
+    public async Task<WorkOrderValidationResponse> ValidateDraftAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        return await ValidateDraftEntityAsync(tenantId, workOrder, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WorkOrderDuplicateMatchResponse>> CheckDuplicateDraftAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        return await CheckDuplicateDraftAsync(tenantId, workOrder, cancellationToken);
+    }
+
+    public async Task<WorkOrderPreviewResponse> PreviewDraftAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        string? actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        var validation = await ValidateDraftEntityAsync(tenantId, workOrder, cancellationToken);
+        var duplicates = await CheckDuplicateDraftAsync(tenantId, workOrder, cancellationToken);
+        var assetReadiness = await assetReadinessService.GetAsync(tenantId, workOrder.AssetId, cancellationToken);
+        var complianceFindings = await CheckComplianceGateFindingsAsync(
+            workOrder,
+            WorkOrderStatuses.Draft,
+            "work_order_preview",
+            actorPersonId,
+            cancellationToken);
+        var findings = validation.Findings.Concat(complianceFindings).ToList();
+        var hasBlockers = findings.Any(x => string.Equals(x.Severity, "blocker", StringComparison.OrdinalIgnoreCase))
+            || assetReadiness.Blockers.Count > 0;
+
+        foreach (var blocker in assetReadiness.Blockers)
+        {
+            findings.Add(new WorkOrderFindingResponse(
+                "readiness",
+                "warning",
+                blocker.BlockerType,
+                blocker.Message,
+                Source: blocker.SourceEntityType));
+        }
+
+        return new WorkOrderPreviewResponse(
+            await MapDetailAsync(tenantId, workOrder, cancellationToken),
+            findings,
+            duplicates,
+            assetReadiness,
+            !hasBlockers,
+            !hasBlockers,
+            !hasBlockers);
+    }
+
+    public async Task<WorkOrderDetailResponse> OpenDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        string? actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        await EnsureOpenableDraftAsync(workOrder, actorPersonId, WorkOrderStatuses.Open, cancellationToken);
+
+        var updated = await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            workOrderId,
+            new UpdateWorkOrderStatusRequest(WorkOrderStatuses.Open),
+            canCloseAny: false,
+            actorPersonId,
+            cancellationToken);
+        workOrder.Status = updated.Status;
+        workOrder.UpdatedAt = updated.UpdatedAt;
+        workOrder.StartedAt = updated.StartedAt;
+        workOrder.CompletedAt = updated.CompletedAt;
+        workOrder.CancelledAt = updated.CancelledAt;
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            workOrder.AssetId,
+            "work_order",
+            workOrder.Id,
+            cancellationToken);
+
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            DateTimeOffset.UtcNow,
+            emitCreated: true,
+            emitAssigned: !string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId),
+            cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrder.Id,
+            "maintainarr.work_order.created",
+            DateTimeOffset.UtcNow,
+            null,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} was opened from draft.",
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(workOrder),
+            cancellationToken);
+
+        return updated;
+    }
+
+    public async Task<WorkOrderDetailResponse> ScheduleDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        string? actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        await EnsureOpenableDraftAsync(workOrder, actorPersonId, WorkOrderStatuses.Scheduled, cancellationToken);
+
+        var updated = await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            workOrderId,
+            new UpdateWorkOrderStatusRequest(WorkOrderStatuses.Scheduled),
+            canCloseAny: false,
+            actorPersonId,
+            cancellationToken);
+        workOrder.Status = updated.Status;
+        workOrder.UpdatedAt = updated.UpdatedAt;
+        workOrder.StartedAt = updated.StartedAt;
+        workOrder.CompletedAt = updated.CompletedAt;
+        workOrder.CancelledAt = updated.CancelledAt;
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            workOrder.AssetId,
+            "work_order",
+            workOrder.Id,
+            cancellationToken);
+
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            DateTimeOffset.UtcNow,
+            emitCreated: true,
+            emitAssigned: !string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId),
+            cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrder.Id,
+            "maintainarr.work_order.scheduled",
+            DateTimeOffset.UtcNow,
+            null,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} was scheduled from draft.",
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(workOrder),
+            cancellationToken);
+
+        return updated;
+    }
+
+    public async Task<WorkOrderDetailResponse> StartDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        string? actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var workOrder = await GetDraftWorkOrderAsync(tenantId, workOrderId, cancellationToken);
+        await EnsureOpenableDraftAsync(workOrder, actorPersonId, WorkOrderStatuses.InProgress, cancellationToken);
+
+        var updated = await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            workOrderId,
+            new UpdateWorkOrderStatusRequest(WorkOrderStatuses.InProgress),
+            canCloseAny: false,
+            actorPersonId,
+            cancellationToken);
+        workOrder.Status = updated.Status;
+        workOrder.UpdatedAt = updated.UpdatedAt;
+        workOrder.StartedAt = updated.StartedAt;
+        workOrder.CompletedAt = updated.CompletedAt;
+        workOrder.CancelledAt = updated.CancelledAt;
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            workOrder.AssetId,
+            "work_order",
+            workOrder.Id,
+            cancellationToken);
+
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            DateTimeOffset.UtcNow,
+            emitCreated: true,
+            emitAssigned: !string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId),
+            cancellationToken);
+
+        await discussionService.RecordTimelineEventAsync(
+            tenantId,
+            workOrder.Id,
+            "maintainarr.work_order.started",
+            DateTimeOffset.UtcNow,
+            null,
+            null,
+            $"Work order {workOrder.WorkOrderNumber} was started from draft.",
+            "maintainarr",
+            workOrder.Id.ToString("D"),
+            null,
+            SerializeWorkOrderSnapshot(workOrder),
+            cancellationToken);
+
+        return updated;
     }
 
     public async Task<WorkOrderDetailResponse> CreateFromDefectAsync(
@@ -260,6 +540,9 @@ public sealed class WorkOrderService(
             OriginType = WorkOrderOriginTypes.Defect,
             OriginRef = defectId.ToString("D"),
             StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
+            DraftPlanJson = NormalizeDraftPlanJson(request.DraftPlanJson),
+            PlannedStartAt = request.PlannedStartAt,
+            PlannedDueAt = request.PlannedDueAt,
             RequiredQualificationRefsJson = SerializeStringList(
                 qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]),
             QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot),
@@ -483,11 +766,12 @@ public sealed class WorkOrderService(
             throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
         }
 
-        if (!WorkOrderStatuses.Active.Contains(workOrder.Status))
+        if (!WorkOrderStatuses.Active.Contains(workOrder.Status)
+            && !string.Equals(workOrder.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
                 "work_order.not_editable",
-                "Only open or in-progress work orders can be updated.",
+                "Only draft, open, or in-progress work orders can be updated.",
                 400);
         }
 
@@ -521,6 +805,21 @@ public sealed class WorkOrderService(
             workOrder.RequiredQualificationRefsJson = SerializeStringList(
                 qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]);
             workOrder.QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot);
+        }
+
+        if (request.DraftPlanJson is not null)
+        {
+            workOrder.DraftPlanJson = request.DraftPlanJson.Trim();
+        }
+
+        if (request.PlannedStartAt.HasValue)
+        {
+            workOrder.PlannedStartAt = request.PlannedStartAt;
+        }
+
+        if (request.PlannedDueAt.HasValue)
+        {
+            workOrder.PlannedDueAt = request.PlannedDueAt;
         }
 
         workOrder.UpdatedAt = DateTimeOffset.UtcNow;
@@ -1684,6 +1983,9 @@ public sealed class WorkOrderService(
             workOrder.StartedAt,
             workOrder.CompletedAt,
             workOrder.CancelledAt,
+            workOrder.DraftPlanJson,
+            workOrder.PlannedStartAt,
+            workOrder.PlannedDueAt,
             downtimeFollowUp,
             blockers,
             closeout is null ? null : MapCloseoutResponse(closeout));
@@ -2221,7 +2523,8 @@ public sealed class WorkOrderService(
 
     private static void ValidatePriority(string priority)
     {
-        if (!WorkOrderPriorities.All.Contains(priority))
+        var normalized = NormalizePriority(priority);
+        if (!WorkOrderPriorities.All.Contains(normalized))
         {
             throw new StlApiException(
                 "work_order.invalid_priority",
@@ -2251,7 +2554,16 @@ public sealed class WorkOrderService(
         }
     }
 
-    private static string NormalizePriority(string priority) => priority.Trim().ToLowerInvariant();
+    private static string NormalizePriority(string priority)
+    {
+        var normalized = priority.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "normal" => WorkOrderPriorities.Medium,
+            "emergency" => WorkOrderPriorities.Urgent,
+            _ => normalized,
+        };
+    }
 
     private static string NormalizeRequiredValue(string? value, string code)
     {
@@ -2431,6 +2743,27 @@ public sealed class WorkOrderService(
         string? assignedTechnicianPersonId,
         CancellationToken cancellationToken)
     {
+        var check = await GetAssignedTechnicianQualificationCheckResultAsync(
+            tenantId,
+            assignedTechnicianPersonId,
+            cancellationToken);
+
+        if (check is null || IsPermissiveQualificationOutcome(check.Outcome))
+        {
+            return check;
+        }
+
+        throw new StlApiException(
+            "work_order.technician_qualification_blocked",
+            $"TrainArr technician qualification check returned {check.Outcome}: {check.Message}",
+            409);
+    }
+
+    private async Task<WorkOrderQualificationCheckResultResponse?> GetAssignedTechnicianQualificationCheckResultAsync(
+        Guid tenantId,
+        string? assignedTechnicianPersonId,
+        CancellationToken cancellationToken)
+    {
         if (!trainArrQualificationCheckClient.IsConfigured || string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
         {
             return null;
@@ -2438,10 +2771,13 @@ public sealed class WorkOrderService(
 
         if (!Guid.TryParse(assignedTechnicianPersonId.Trim(), out var staffarrPersonId))
         {
-            throw new StlApiException(
-                "work_order.technician_person_id_invalid",
-                "Assigned technician person id must be a StaffArr person GUID when TrainArr qualification checks are enabled.",
-                400);
+            return new WorkOrderQualificationCheckResultResponse(
+                null,
+                assignedTechnicianPersonId.Trim(),
+                trainArrQualificationCheckClient.TechnicianQualificationKey,
+                "invalid",
+                "invalid_person_id",
+                "Assigned technician person id must be a StaffArr person GUID when TrainArr qualification checks are enabled.");
         }
 
         var check = await trainArrQualificationCheckClient.CheckTechnicianAsync(
@@ -2449,23 +2785,892 @@ public sealed class WorkOrderService(
             staffarrPersonId,
             cancellationToken);
 
-        if (check is null || string.Equals(check.Outcome, "allow", StringComparison.OrdinalIgnoreCase))
+        return check is null
+            ? null
+            : new WorkOrderQualificationCheckResultResponse(
+                check.CheckId,
+                staffarrPersonId.ToString("D"),
+                check.QualificationKey,
+                check.Outcome,
+                check.ReasonCode,
+                check.Message);
+    }
+
+    private async Task<WorkOrderDetailResponse> UpsertDraftAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid? workOrderId,
+        CreateWorkOrderRequest request,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var asset = await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
+        var draftPlanJson = NormalizeDraftPlanJson(request.DraftPlanJson);
+        var assignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId);
+        var title = request.Title?.Trim() ?? string.Empty;
+        var description = request.Description?.Trim() ?? string.Empty;
+        var priority = string.IsNullOrWhiteSpace(request.Priority) ? string.Empty : NormalizePriority(request.Priority);
+
+        if (request.DefectId.HasValue && request.PmScheduleId.HasValue)
         {
-            return check is null
-                ? null
-                : new WorkOrderQualificationCheckResultResponse(
-                    check.CheckId,
-                    staffarrPersonId.ToString("D"),
-                    check.QualificationKey,
-                    check.Outcome,
-                    check.ReasonCode,
-                    check.Message);
+            throw new StlApiException(
+                "work_order.multiple_sources",
+                "Choose either a defect or a PM schedule as the work order source, not both.",
+                400);
         }
 
-        throw new StlApiException(
-            "work_order.technician_qualification_blocked",
-            $"TrainArr technician qualification check returned {check.Outcome}: {check.Message}",
-            409);
+        if (request.DefectId.HasValue)
+        {
+            var defect = await db.Defects
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == request.DefectId.Value,
+                    cancellationToken);
+
+            if (defect is null)
+            {
+                throw new StlApiException("defect.not_found", "Defect was not found.", 404);
+            }
+
+            if (defect.AssetId != request.AssetId)
+            {
+                throw new StlApiException(
+                    "work_order.defect_asset_mismatch",
+                    "Defect does not belong to the selected asset.",
+                    400);
+            }
+
+            if (string.Equals(defect.Status, DefectStatuses.Closed, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(defect.Status, DefectStatuses.Resolved, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException(
+                    "work_order.defect_closed",
+                    "Work orders cannot be created from resolved or closed defects.",
+                    400);
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                title = $"Repair: {defect.Title}";
+            }
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                description = defect.Description;
+            }
+
+            if (string.IsNullOrWhiteSpace(priority))
+            {
+                priority = MapDefectSeverityToPriority(defect.Severity);
+            }
+        }
+        else if (request.PmScheduleId.HasValue)
+        {
+            var schedule = await db.PmSchedules
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == request.PmScheduleId.Value,
+                    cancellationToken);
+
+            if (schedule is null)
+            {
+                throw new StlApiException("pm_schedule.not_found", "PM schedule was not found.", 404);
+            }
+
+            if (schedule.AssetId != request.AssetId)
+            {
+                throw new StlApiException(
+                    "work_order.pm_schedule_asset_mismatch",
+                    "PM schedule does not belong to the selected asset.",
+                    400);
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                title = PmWorkOrderGenerationRules.BuildTitle(schedule.Name);
+            }
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                description = PmWorkOrderGenerationRules.BuildDescription(
+                    schedule.Name,
+                    schedule.Description,
+                    schedule.NextDueAt);
+            }
+
+            if (string.IsNullOrWhiteSpace(priority))
+            {
+                priority = PmWorkOrderGenerationRules.MapDueStatusToPriority(schedule.DueStatus);
+            }
+        }
+
+        var workOrderType = DetermineDraftWorkOrderType(draftPlanJson, request.DefectId, request.PmScheduleId);
+        var source = DetermineDraftSource(request.DefectId, request.PmScheduleId);
+        var originType = DetermineDraftOriginType(request.DefectId, request.PmScheduleId);
+        var originRef = DetermineDraftOriginRef(request.DefectId, request.PmScheduleId);
+        var qualificationSnapshot = await GetAssignedTechnicianQualificationCheckResultAsync(
+            tenantId,
+            assignedTechnicianPersonId,
+            cancellationToken);
+
+        WorkOrder workOrder;
+        if (workOrderId.HasValue)
+        {
+            workOrder = await db.WorkOrders
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == workOrderId.Value,
+                    cancellationToken)
+                ?? throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
+
+            if (!string.Equals(workOrder.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException(
+                    "work_order.not_draft",
+                    "Only draft work orders can be updated in the create wizard.",
+                    409);
+            }
+        }
+        else
+        {
+            workOrder = new WorkOrder
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                WorkOrderNumber = await GenerateWorkOrderNumberAsync(tenantId, cancellationToken),
+                CreatedByUserId = actorUserId,
+                CreatedAt = now,
+                Status = WorkOrderStatuses.Draft,
+                RequiredQualificationRefsJson = "[]",
+                QualificationCheckResultsJson = "[]",
+            };
+            db.WorkOrders.Add(workOrder);
+        }
+
+        workOrder.AssetId = request.AssetId;
+        workOrder.DefectId = request.DefectId;
+        workOrder.PmScheduleId = request.PmScheduleId;
+        workOrder.Title = title;
+        workOrder.Description = description;
+        workOrder.Priority = priority;
+        workOrder.Source = source;
+        workOrder.WorkOrderType = workOrderType;
+        workOrder.OriginType = originType;
+        workOrder.OriginRef = originRef;
+        workOrder.StaffarrLocationId = NormalizeLocationRef(asset.SiteRef);
+        workOrder.DraftPlanJson = draftPlanJson;
+        workOrder.PlannedStartAt = request.PlannedStartAt;
+        workOrder.PlannedDueAt = request.PlannedDueAt;
+        workOrder.AssignedTechnicianPersonId = assignedTechnicianPersonId;
+        workOrder.RequiredQualificationRefsJson = SerializeStringList(
+            qualificationSnapshot is null ? [] : [qualificationSnapshot.QualificationKey]);
+        workOrder.QualificationCheckResultsJson = SerializeQualificationCheckResults(qualificationSnapshot);
+        workOrder.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            await MirrorAssignedTechnicianAsync(
+                tenantId,
+                actorUserId,
+                workOrder.AssignedTechnicianPersonId,
+                cancellationToken);
+
+            await UpsertTechnicianAssignmentAsync(
+                tenantId,
+                actorUserId,
+                workOrder.Id,
+                workOrder.AssignedTechnicianPersonId,
+                qualificationSnapshot,
+                now,
+                cancellationToken);
+        }
+
+        return await MapDetailAsync(tenantId, workOrder, cancellationToken);
+    }
+
+    private async Task<WorkOrder> GetDraftWorkOrderAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        CancellationToken cancellationToken)
+    {
+        var workOrder = await db.WorkOrders
+            .AsNoTracking()
+            .Include(x => x.Asset)
+                .ThenInclude(x => x.AssetType)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrderId, cancellationToken);
+
+        if (workOrder is null)
+        {
+            throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
+        }
+
+        if (!string.Equals(workOrder.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "work_order.not_draft",
+                "Only draft work orders can be edited in the create wizard.",
+                409);
+        }
+
+        return workOrder;
+    }
+
+    private async Task<WorkOrderValidationResponse> ValidateDraftEntityAsync(
+        Guid tenantId,
+        WorkOrder workOrder,
+        CancellationToken cancellationToken)
+    {
+        var findings = new List<WorkOrderFindingResponse>();
+
+        ValidateTitleIfNeeded(findings, workOrder.Title);
+        ValidatePriorityIfNeeded(findings, workOrder.Priority);
+
+        if (string.IsNullOrWhiteSpace(GetDraftPlanValue(workOrder.DraftPlanJson, "workOrderType")))
+        {
+            AddValidationFindingAsync(
+                findings,
+                "basics",
+                "blocker",
+                "work_order.type_required",
+                "Work order type is required.",
+                fieldKey: "workOrderType",
+                sectionKey: "basics",
+                source: "maintainarr");
+        }
+
+        var scopeSummary = GetDraftPlanValue(workOrder.DraftPlanJson, "scopeSummary");
+        if (!string.IsNullOrWhiteSpace(scopeSummary) && scopeSummary.Length > 1024)
+        {
+            AddValidationFindingAsync(
+                findings,
+                "scope",
+                "blocker",
+                "work_order.scope_summary_too_long",
+                "Scope summary must be 1024 characters or fewer.",
+                fieldKey: "scopeSummary",
+                sectionKey: "scope",
+                source: "maintainarr");
+        }
+
+        var notes = GetDraftPlanValue(workOrder.DraftPlanJson, "notes");
+        if (!string.IsNullOrWhiteSpace(notes) && notes.Length > 2048)
+        {
+            AddValidationFindingAsync(
+                findings,
+                "documents",
+                "blocker",
+                "work_order.notes_too_long",
+                "Notes must be 2048 characters or fewer.",
+                fieldKey: "notes",
+                sectionKey: "documents",
+                source: "maintainarr");
+        }
+
+        if (workOrder.PlannedStartAt.HasValue
+            && workOrder.PlannedDueAt.HasValue
+            && workOrder.PlannedDueAt.Value < workOrder.PlannedStartAt.Value)
+        {
+            AddValidationFindingAsync(
+                findings,
+                "scheduling",
+                "blocker",
+                "work_order.planned_due_before_start",
+                "Planned due date must be on or after the planned start date.",
+                fieldKey: "plannedDueAt",
+                sectionKey: "scheduling",
+                source: "maintainarr");
+        }
+
+        if (workOrder.DefectId.HasValue)
+        {
+            var defect = await db.Defects
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == workOrder.DefectId.Value,
+                    cancellationToken);
+
+            if (defect is null)
+            {
+                AddValidationFindingAsync(
+                    findings,
+                    "source",
+                    "blocker",
+                    "defect.not_found",
+                    "Linked defect was not found.",
+                    fieldKey: "defectId",
+                    sectionKey: "source",
+                    source: "maintainarr");
+            }
+            else
+            {
+                if (string.Equals(defect.Status, DefectStatuses.Closed, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(defect.Status, DefectStatuses.Resolved, StringComparison.OrdinalIgnoreCase))
+                {
+                    AddValidationFindingAsync(
+                        findings,
+                        "source",
+                        "blocker",
+                        "work_order.defect_closed",
+                        "Work orders cannot be opened from resolved or closed defects.",
+                        fieldKey: "defectId",
+                        sectionKey: "source",
+                        source: "maintainarr");
+                }
+
+                if (defect.AssetId != workOrder.AssetId)
+                {
+                    AddValidationFindingAsync(
+                        findings,
+                        "source",
+                        "blocker",
+                        "work_order.defect_asset_mismatch",
+                        "Linked defect does not belong to the selected asset.",
+                        fieldKey: "defectId",
+                        sectionKey: "source",
+                        source: "maintainarr");
+                }
+            }
+        }
+
+        if (workOrder.DefectId.HasValue && workOrder.PmScheduleId.HasValue)
+        {
+            AddValidationFindingAsync(
+                findings,
+                "source",
+                "blocker",
+                "work_order.multiple_sources",
+                "Choose either a defect or a PM schedule as the source, not both.",
+                fieldKey: "defectId",
+                sectionKey: "source",
+                source: "maintainarr");
+        }
+
+        if (workOrder.PmScheduleId.HasValue)
+        {
+            var schedule = await db.PmSchedules
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == workOrder.PmScheduleId.Value,
+                    cancellationToken);
+
+            if (schedule is null)
+            {
+                AddValidationFindingAsync(
+                    findings,
+                    "source",
+                    "blocker",
+                    "pm_schedule.not_found",
+                    "Linked PM schedule was not found.",
+                    fieldKey: "pmScheduleId",
+                    sectionKey: "source",
+                    source: "maintainarr");
+            }
+            else if (schedule.AssetId != workOrder.AssetId)
+            {
+                AddValidationFindingAsync(
+                    findings,
+                    "source",
+                    "blocker",
+                    "work_order.pm_schedule_asset_mismatch",
+                    "Linked PM schedule does not belong to the selected asset.",
+                    fieldKey: "pmScheduleId",
+                    sectionKey: "source",
+                    source: "maintainarr");
+            }
+        }
+
+        var qualificationFinding = await TryBuildTechnicianQualificationFindingAsync(
+            tenantId,
+            workOrder,
+            cancellationToken);
+        if (qualificationFinding is not null)
+        {
+            findings.Add(qualificationFinding);
+        }
+
+        return new WorkOrderValidationResponse(
+            findings.All(f => !string.Equals(f.Severity, "blocker", StringComparison.OrdinalIgnoreCase)),
+            findings);
+    }
+
+    private async Task<IReadOnlyList<WorkOrderDuplicateMatchResponse>> CheckDuplicateDraftAsync(
+        Guid tenantId,
+        WorkOrder workOrder,
+        CancellationToken cancellationToken)
+    {
+        var asset = workOrder.Asset
+            ?? await db.Assets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
+
+        if (asset is null)
+        {
+            return [];
+        }
+
+        var normalizedTitle = NormalizeComparisonKey(workOrder.Title);
+        var candidates = await db.WorkOrders
+            .AsNoTracking()
+            .Include(x => x.Asset)
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.Id != workOrder.Id
+                && (string.Equals(x.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase)
+                    || WorkOrderStatuses.Active.Contains(x.Status)))
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        var matches = new List<WorkOrderDuplicateMatchResponse>();
+        foreach (var candidate in candidates)
+        {
+            var sameAsset = candidate.AssetId == workOrder.AssetId;
+            var sameDefect = workOrder.DefectId.HasValue
+                && candidate.DefectId.HasValue
+                && candidate.DefectId == workOrder.DefectId;
+            var samePmSchedule = workOrder.PmScheduleId.HasValue
+                && candidate.PmScheduleId.HasValue
+                && candidate.PmScheduleId == workOrder.PmScheduleId;
+            var candidateTitle = NormalizeComparisonKey(candidate.Title);
+
+            var similarityScore = 0;
+            var matchReason = string.Empty;
+
+            if (sameDefect)
+            {
+                similarityScore = 100;
+                matchReason = "Same defect";
+            }
+            else if (samePmSchedule)
+            {
+                similarityScore = 100;
+                matchReason = "Same PM schedule";
+            }
+            else if (sameAsset && !string.IsNullOrWhiteSpace(normalizedTitle) && string.Equals(candidateTitle, normalizedTitle, StringComparison.Ordinal))
+            {
+                similarityScore = 95;
+                matchReason = "Same asset and identical title";
+            }
+            else if (sameAsset && !string.IsNullOrWhiteSpace(normalizedTitle) && candidateTitle.Contains(normalizedTitle, StringComparison.Ordinal))
+            {
+                similarityScore = 80;
+                matchReason = "Same asset and similar title";
+            }
+
+            if (similarityScore == 0)
+            {
+                continue;
+            }
+
+            matches.Add(new WorkOrderDuplicateMatchResponse(
+                candidate.Id,
+                candidate.WorkOrderNumber,
+                candidate.Title,
+                candidate.Status,
+                candidate.Asset?.AssetTag ?? string.Empty,
+                candidate.Asset?.Name ?? string.Empty,
+                matchReason,
+                similarityScore));
+        }
+
+        return matches
+            .OrderByDescending(x => x.SimilarityScore)
+            .ThenBy(x => x.WorkOrderNumber)
+            .Take(5)
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<WorkOrderFindingResponse>> CheckComplianceGateFindingsAsync(
+        WorkOrder workOrder,
+        string toStatus,
+        string? actionKey,
+        string? actorPersonId,
+        CancellationToken cancellationToken)
+    {
+        if (!complianceCoreWorkOrderGateClient.IsConfigured)
+        {
+            return [];
+        }
+
+        var asset = workOrder.Asset
+            ?? await db.Assets
+                .AsNoTracking()
+                .Include(x => x.AssetType)
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == workOrder.TenantId && x.Id == workOrder.AssetId,
+                    cancellationToken);
+
+        if (asset is null)
+        {
+                return
+                [
+                    new WorkOrderFindingResponse(
+                        "compliance",
+                        "blocker",
+                        "work_order.asset_not_found",
+                        "Work order asset was not found.",
+                        Source: "compliancecore")
+                ];
+        }
+
+        var assetTypeKey = asset.AssetType?.TypeKey ?? string.Empty;
+        var context = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["product"] = "maintainarr",
+            ["action"] = string.IsNullOrWhiteSpace(actionKey) ? "work_order_preview" : actionKey.Trim().ToLowerInvariant(),
+            ["fromStatus"] = workOrder.Status,
+            ["from_status"] = workOrder.Status,
+            ["toStatus"] = toStatus,
+            ["to_status"] = toStatus,
+            ["workOrderId"] = workOrder.Id.ToString("D"),
+            ["work_order_id"] = workOrder.Id.ToString("D"),
+            ["workOrderNumber"] = workOrder.WorkOrderNumber,
+            ["work_order_number"] = workOrder.WorkOrderNumber,
+            ["workOrderPriority"] = workOrder.Priority,
+            ["work_order_priority"] = workOrder.Priority,
+            ["workOrderSource"] = workOrder.Source,
+            ["work_order_source"] = workOrder.Source,
+            ["assetId"] = workOrder.AssetId.ToString("D"),
+            ["asset_id"] = workOrder.AssetId.ToString("D"),
+            ["assetTag"] = asset.AssetTag,
+            ["asset_tag"] = asset.AssetTag,
+            ["assetTypeKey"] = assetTypeKey,
+            ["asset_type_key"] = assetTypeKey,
+        };
+
+        if (!string.IsNullOrWhiteSpace(actorPersonId))
+        {
+            context["actorPersonId"] = actorPersonId.Trim();
+            context["actor_person_id"] = actorPersonId.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            context["assignedTechnicianPersonId"] = workOrder.AssignedTechnicianPersonId;
+            context["assigned_technician_person_id"] = workOrder.AssignedTechnicianPersonId;
+        }
+
+        if (workOrder.DefectId.HasValue)
+        {
+            context["defectId"] = workOrder.DefectId.Value.ToString("D");
+            context["defect_id"] = workOrder.DefectId.Value.ToString("D");
+        }
+
+        if (workOrder.PmScheduleId.HasValue)
+        {
+            context["pmScheduleId"] = workOrder.PmScheduleId.Value.ToString("D");
+            context["pm_schedule_id"] = workOrder.PmScheduleId.Value.ToString("D");
+        }
+
+        var result = await complianceCoreWorkOrderGateClient.CheckWorkOrderAsync(
+            workOrder.TenantId,
+            workOrder.Id,
+            workOrder.AssetId,
+            asset.AssetTag,
+            context,
+            cancellationToken);
+
+        if (result is null || IsPermissiveComplianceCoreGateOutcome(result.Outcome))
+        {
+            if (result is not null && string.Equals(result.Outcome, "warn", StringComparison.OrdinalIgnoreCase))
+            {
+                return
+                [
+                    new WorkOrderFindingResponse(
+                        "compliance",
+                        "warning",
+                        result.ReasonCode,
+                        result.Message,
+                        Source: "compliancecore")
+                ];
+            }
+
+            return [];
+        }
+
+        return
+        [
+            new WorkOrderFindingResponse(
+                "compliance",
+                "blocker",
+                result.ReasonCode,
+                result.Message,
+                Source: "compliancecore")
+        ];
+    }
+
+    private async Task EnsureOpenableDraftAsync(
+        WorkOrder workOrder,
+        string? actorPersonId,
+        string targetStatus,
+        CancellationToken cancellationToken)
+    {
+        var validation = await ValidateDraftEntityAsync(workOrder.TenantId, workOrder, cancellationToken);
+        var readiness = await assetReadinessService.GetAsync(workOrder.TenantId, workOrder.AssetId, cancellationToken);
+        var complianceFindings = await CheckComplianceGateFindingsAsync(
+            workOrder,
+            targetStatus,
+            "work_order_draft_action",
+            actorPersonId,
+            cancellationToken);
+
+        if (validation.Findings.Any(x => string.Equals(x.Severity, "blocker", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new StlApiException(
+                "work_order.draft_not_ready",
+                "Draft work order still has validation blockers.",
+                409,
+                new Dictionary<string, object?>
+                {
+                    ["findings"] = validation.Findings,
+                });
+        }
+
+        if (readiness.Blockers.Count > 0)
+        {
+            throw new StlApiException(
+                "work_order.readiness_blocked",
+                "Asset readiness still has blockers.",
+                409,
+                new Dictionary<string, object?>
+                {
+                    ["findings"] = readiness.Blockers,
+                });
+        }
+
+        if (complianceFindings.Any(x => string.Equals(x.Severity, "blocker", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new StlApiException(
+                "work_order.compliance_blocked",
+                "Compliance Core blocked the requested action.",
+                409,
+                new Dictionary<string, object?>
+                {
+                    ["findings"] = complianceFindings,
+                });
+        }
+    }
+
+    private static string? NormalizeDraftPlanJson(string? draftPlanJson)
+    {
+        if (string.IsNullOrWhiteSpace(draftPlanJson))
+        {
+            return null;
+        }
+
+        return draftPlanJson.Trim();
+    }
+
+    private static string? GetDraftPlanValue(string? draftPlanJson, string propertyName)
+    {
+        if (string.IsNullOrWhiteSpace(draftPlanJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(draftPlanJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            if (!document.RootElement.TryGetProperty(propertyName, out var property))
+            {
+                return null;
+            }
+
+            return property.ValueKind switch
+            {
+                JsonValueKind.Null or JsonValueKind.Undefined => null,
+                JsonValueKind.String => NormalizeOptionalValue(property.GetString()),
+                _ => NormalizeOptionalValue(property.ToString()),
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string DetermineDraftSource(Guid? defectId, Guid? pmScheduleId) =>
+        defectId.HasValue
+            ? WorkOrderSources.Defect
+            : pmScheduleId.HasValue
+                ? WorkOrderSources.PmSchedule
+                : WorkOrderSources.Manual;
+
+    private static string DetermineDraftOriginType(Guid? defectId, Guid? pmScheduleId) =>
+        defectId.HasValue
+            ? WorkOrderOriginTypes.Defect
+            : pmScheduleId.HasValue
+                ? WorkOrderOriginTypes.PmDue
+                : WorkOrderOriginTypes.Manual;
+
+    private static string? DetermineDraftOriginRef(Guid? defectId, Guid? pmScheduleId) =>
+        defectId.HasValue
+            ? defectId.Value.ToString("D")
+            : pmScheduleId.HasValue
+                ? pmScheduleId.Value.ToString("D")
+                : null;
+
+    private static string DetermineDraftWorkOrderType(
+        string? draftPlanJson,
+        Guid? defectId,
+        Guid? pmScheduleId)
+    {
+        var explicitType = GetDraftPlanValue(draftPlanJson, "workOrderType");
+        if (!string.IsNullOrWhiteSpace(explicitType))
+        {
+            return explicitType;
+        }
+
+        if (defectId.HasValue)
+        {
+            return WorkOrderTypes.DefectRepair;
+        }
+
+        if (pmScheduleId.HasValue)
+        {
+            return WorkOrderTypes.Preventive;
+        }
+
+        return WorkOrderTypes.Corrective;
+    }
+
+    private async Task<WorkOrderFindingResponse?> TryBuildTechnicianQualificationFindingAsync(
+        Guid tenantId,
+        WorkOrder workOrder,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            return null;
+        }
+
+        var snapshot = DeserializeQualificationCheckResults(workOrder.QualificationCheckResultsJson).FirstOrDefault();
+        snapshot ??= await GetAssignedTechnicianQualificationCheckResultAsync(
+            tenantId,
+            workOrder.AssignedTechnicianPersonId,
+            cancellationToken);
+
+        if (snapshot is null || IsPermissiveQualificationOutcome(snapshot.Outcome))
+        {
+            if (snapshot is not null && string.Equals(snapshot.Outcome, "warn", StringComparison.OrdinalIgnoreCase))
+            {
+                return new WorkOrderFindingResponse(
+                    "qualification",
+                    "warning",
+                    snapshot.ReasonCode,
+                    snapshot.Message,
+                    FieldKey: "assignedTechnicianPersonId",
+                    SectionKey: "assignment",
+                    Source: "trainarr");
+            }
+
+            return null;
+        }
+
+        return new WorkOrderFindingResponse(
+            "qualification",
+            "blocker",
+            snapshot.ReasonCode,
+            snapshot.Message,
+            FieldKey: "assignedTechnicianPersonId",
+            SectionKey: "assignment",
+            Source: "trainarr");
+    }
+
+    private static bool IsPermissiveQualificationOutcome(string outcome) =>
+        string.Equals(outcome, "allow", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "warn", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "waived", StringComparison.OrdinalIgnoreCase);
+
+    private static string NormalizeComparisonKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant()
+            .Replace('_', ' ')
+            .Replace('-', ' ');
+        return string.Join(' ', normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private static void AddValidationFindingAsync(
+        ICollection<WorkOrderFindingResponse> findings,
+        string category,
+        string severity,
+        string code,
+        string message,
+        string? fieldKey = null,
+        string? sectionKey = null,
+        string? source = null)
+    {
+        findings.Add(new WorkOrderFindingResponse(category, severity, code, message, fieldKey, sectionKey, source));
+    }
+
+    private static void ValidateTitleIfNeeded(ICollection<WorkOrderFindingResponse> findings, string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            AddValidationFindingAsync(
+                findings,
+                "basics",
+                "blocker",
+                "work_order.title_required",
+                "Work order title is required.",
+                fieldKey: "title",
+                sectionKey: "basics",
+                source: "maintainarr");
+            return;
+        }
+
+        if (title.Trim().Length > 256)
+        {
+            AddValidationFindingAsync(
+                findings,
+                "basics",
+                "blocker",
+                "work_order.title_too_long",
+                "Work order title must be 256 characters or fewer.",
+                fieldKey: "title",
+                sectionKey: "basics",
+                source: "maintainarr");
+        }
+    }
+
+    private static void ValidatePriorityIfNeeded(ICollection<WorkOrderFindingResponse> findings, string priority)
+    {
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            AddValidationFindingAsync(
+                findings,
+                "basics",
+                "blocker",
+                "work_order.priority_required",
+                "Priority is required.",
+                fieldKey: "priority",
+                sectionKey: "basics",
+                source: "maintainarr");
+            return;
+        }
+
+        if (!WorkOrderPriorities.All.Contains(NormalizePriority(priority)))
+        {
+            AddValidationFindingAsync(
+                findings,
+                "basics",
+                "blocker",
+                "work_order.invalid_priority",
+                "Priority must be low, medium, high, or urgent.",
+                fieldKey: "priority",
+                sectionKey: "basics",
+                source: "maintainarr");
+        }
     }
 
     private async Task MirrorAssignedTechnicianAsync(

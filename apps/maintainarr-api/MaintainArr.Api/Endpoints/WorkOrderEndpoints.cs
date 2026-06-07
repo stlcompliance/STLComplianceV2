@@ -61,6 +61,160 @@ public static class WorkOrderEndpoints
         })
         .WithName($"GetWorkOrder{nameSuffix}");
 
+        group.MapPost("/drafts", async (
+            CreateWorkOrderRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateDraftAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"{workOrderRoutePrefix}/{created.WorkOrderId}", created);
+        })
+        .WithName($"CreateWorkOrderDraft{nameSuffix}");
+
+        group.MapPatch("/{workOrderId:guid}/draft", async (
+            Guid workOrderId,
+            CreateWorkOrderRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            var updated = await service.UpdateDraftAsync(tenantId, actorUserId, workOrderId, request, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"UpdateWorkOrderDraft{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/validate", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            return Results.Ok(await service.ValidateDraftAsync(tenantId, workOrderId, cancellationToken));
+        })
+        .WithName($"ValidateWorkOrderDraft{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/preview", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorPersonId = context.User.GetPersonId().ToString();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            return Results.Ok(await service.PreviewDraftAsync(tenantId, workOrderId, actorPersonId, cancellationToken));
+        })
+        .WithName($"PreviewWorkOrderDraft{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/duplicates", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            return Results.Ok(await service.CheckDuplicateDraftAsync(tenantId, workOrderId, cancellationToken));
+        })
+        .WithName($"CheckWorkOrderDraftDuplicates{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/open", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            var updated = await service.OpenDraftAsync(tenantId, actorUserId, workOrderId, actorPersonId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"OpenWorkOrderDraft{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/schedule", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            var updated = await service.ScheduleDraftAsync(tenantId, actorUserId, workOrderId, actorPersonId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"ScheduleWorkOrderDraft{nameSuffix}");
+
+        group.MapPost("/{workOrderId:guid}/start", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString();
+            var existing = await service.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                existing.CreatedByUserId,
+                existing.AssignedTechnicianPersonId);
+            var updated = await service.StartDraftAsync(tenantId, actorUserId, workOrderId, actorPersonId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"StartWorkOrderDraft{nameSuffix}");
+
         group.MapPost("/", async (
             CreateWorkOrderRequest request,
             HttpContext context,

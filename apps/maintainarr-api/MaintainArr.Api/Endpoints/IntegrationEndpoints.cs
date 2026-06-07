@@ -246,6 +246,202 @@ public static class IntegrationEndpoints
             })
             .WithName($"CreateMaintainArrIntegrationWorkOrder{nameSuffix}");
 
+            integrations.MapPost("/work-orders/drafts", async (
+                CreateWorkOrderRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                var created = await workOrderService.CreateDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"/api/v1/integrations/work-orders/{created.WorkOrderId}", created);
+            })
+            .WithName($"CreateMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPatch("/work-orders/{workOrderId}/draft", async (
+                string workOrderId,
+                CreateWorkOrderRequest request,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                var updated = await workOrderService.UpdateDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(updated);
+            })
+            .WithName($"UpdateMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/validate", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.ValidateDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedWorkOrderId,
+                    cancellationToken));
+            })
+            .WithName($"ValidateMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/preview", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.PreviewDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedWorkOrderId,
+                    token.TokenId.ToString("D"),
+                    cancellationToken));
+            })
+            .WithName($"PreviewMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/duplicates", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.CheckDuplicateDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    parsedWorkOrderId,
+                    cancellationToken));
+            })
+            .WithName($"CheckMaintainArrIntegrationWorkOrderDraftDuplicates{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/open", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.OpenDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    token.TokenId.ToString("D"),
+                    cancellationToken));
+            })
+            .WithName($"OpenMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/schedule", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.ScheduleDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    token.TokenId.ToString("D"),
+                    cancellationToken));
+            })
+            .WithName($"ScheduleMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
+            integrations.MapPost("/work-orders/{workOrderId}/start", async (
+                string workOrderId,
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator,
+                WorkOrderService workOrderService,
+                CancellationToken cancellationToken) =>
+            {
+                var token = ValidateIntegrationTokenPreview(context, tokenValidator);
+                if (!Guid.TryParse(workOrderId, out var parsedWorkOrderId))
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "integration.validation",
+                        message = "workOrderId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await workOrderService.StartDraftAsync(
+                    token.TenantScope ?? Guid.Empty,
+                    token.TokenId,
+                    parsedWorkOrderId,
+                    token.TokenId.ToString("D"),
+                    cancellationToken));
+            })
+            .WithName($"StartMaintainArrIntegrationWorkOrderDraft{nameSuffix}");
+
             integrations.MapPost("/work-orders/{workOrderId}/status-updates", async (
                 string workOrderId,
                 UpdateWorkOrderStatusRequest request,

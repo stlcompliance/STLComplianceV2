@@ -21,28 +21,15 @@ export function WorkOrdersSection({ state }: Props) {
         viewAllWorkOrders={s.viewAllWorkOrders}
         sessionPersonId={s.session.personId}
         technicianRefs={s.technicianRefs}
-        assets={s.assetsQuery.data ?? []}
         workOrders={s.workOrdersQuery.data ?? []}
         selectedWorkOrder={s.workOrderDetailQuery.data ?? null}
         selectedWorkOrderId={s.selectedWorkOrderId}
-        selectedAssetId={s.workOrderAssetId}
-        workOrderTitle={s.workOrderTitle}
-        workOrderDescription={s.workOrderDescription}
-        workOrderPriority={s.workOrderPriority}
-        assignedPersonId={s.assignedPersonId}
         statusFilter={s.workOrderStatusFilter}
         isLoading={s.workOrdersQuery.isLoading}
         isDetailLoading={s.workOrderDetailQuery.isLoading}
-        isCreating={s.createWorkOrderMutation.isPending}
         isUpdatingStatus={s.updateWorkOrderStatusMutation.isPending}
         onSelectedWorkOrderIdChange={s.setSelectedWorkOrderId}
-        onSelectedAssetIdChange={s.setWorkOrderAssetId}
-        onWorkOrderTitleChange={s.setWorkOrderTitle}
-        onWorkOrderDescriptionChange={s.setWorkOrderDescription}
-        onWorkOrderPriorityChange={s.setWorkOrderPriority}
-        onAssignedPersonIdChange={s.setAssignedPersonId}
         onStatusFilterChange={s.setWorkOrderStatusFilter}
-        onCreateWorkOrder={() => s.createWorkOrderMutation.mutate()}
         onUpdateStatus={(workOrderId, status) =>
           s.updateWorkOrderStatusMutation.mutate({ workOrderId, status })
         }

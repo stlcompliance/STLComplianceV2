@@ -641,6 +641,10 @@ export interface WorkOrderDetailResponse {
   startedAt: string | null
   completedAt: string | null
   cancelledAt: string | null
+  draftPlanJson?: string | null
+  plannedStartAt?: string | null
+  plannedDueAt?: string | null
+  blockers?: WorkOrderBlockerResponse[]
   closeout?: WorkOrderCloseoutResponse | null
   downtimeFollowUp?: DowntimeFollowUpResponse | null
 }
@@ -652,6 +656,42 @@ export interface WorkOrderQualificationCheckResultResponse {
   outcome: string
   reasonCode: string
   message: string
+}
+
+export interface WorkOrderFindingResponse {
+  category: string
+  severity: string
+  code: string
+  message: string
+  fieldKey?: string | null
+  sectionKey?: string | null
+  source?: string | null
+}
+
+export interface WorkOrderDuplicateMatchResponse {
+  workOrderId: string
+  workOrderNumber: string
+  title: string
+  status: string
+  assetTag: string
+  assetName: string
+  matchReason: string
+  similarityScore: number
+}
+
+export interface WorkOrderValidationResponse {
+  isValid: boolean
+  findings: WorkOrderFindingResponse[]
+}
+
+export interface WorkOrderPreviewResponse {
+  workOrder: WorkOrderDetailResponse
+  findings: WorkOrderFindingResponse[]
+  duplicateMatches: WorkOrderDuplicateMatchResponse[]
+  assetReadiness: AssetReadinessResponse | null
+  canOpen: boolean
+  canSchedule: boolean
+  canStart: boolean
 }
 
 export interface WorkOrderTechnicianAssignmentResponse {
@@ -666,6 +706,24 @@ export interface WorkOrderTechnicianAssignmentResponse {
   completedAt: string | null
   requiredQualificationRefs: string[]
   qualificationCheckSnapshot: WorkOrderQualificationCheckResultResponse[]
+}
+
+export interface WorkOrderBlockerResponse {
+  blockerId: string
+  workOrderId: string
+  blockerType: string
+  sourceProduct: string
+  sourceObjectRef: string | null
+  title: string
+  description: string
+  severity: string
+  status: string
+  requiredAction: string | null
+  createdAt: string
+  createdByPersonId: string | null
+  resolvedAt: string | null
+  resolvedByPersonId: string | null
+  overrideReason: string | null
 }
 
 export interface MaintenancePermitRefResponse {
@@ -1038,6 +1096,10 @@ export interface CreateWorkOrderRequest {
   priority: string
   assignedTechnicianPersonId?: string | null
   pmScheduleId?: string | null
+  defectId?: string | null
+  draftPlanJson?: string | null
+  plannedStartAt?: string | null
+  plannedDueAt?: string | null
 }
 
 export interface CreateWorkOrderFromDefectRequest {
@@ -1045,6 +1107,9 @@ export interface CreateWorkOrderFromDefectRequest {
   description?: string | null
   priority?: string | null
   assignedTechnicianPersonId?: string | null
+  draftPlanJson?: string | null
+  plannedStartAt?: string | null
+  plannedDueAt?: string | null
 }
 
 export interface UpdateWorkOrderRequest {
@@ -1052,6 +1117,9 @@ export interface UpdateWorkOrderRequest {
   description?: string | null
   priority?: string | null
   assignedTechnicianPersonId?: string | null
+  draftPlanJson?: string | null
+  plannedStartAt?: string | null
+  plannedDueAt?: string | null
 }
 
 export interface UpdateWorkOrderStatusRequest {

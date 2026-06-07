@@ -30,6 +30,7 @@ import { ReportsPage } from './pages/reports/ReportsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 
 import { WorkOrdersPage } from './pages/work-orders/WorkOrdersPage'
+import { WorkOrderCreatePage } from './pages/work-orders/WorkOrderCreatePage'
 
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -95,7 +96,7 @@ export default function App() {
             <Route path="/work-orders" element={<WorkOrdersPage />} />
             <Route path="/work-orders/drawer" element={<WorkOrdersPage />} />
             <Route path="/work-orders/details" element={<WorkOrdersPage />} />
-            <Route path="/work-orders/create" element={<WorkOrdersPage />} />
+            <Route path="/work-orders/create" element={<WorkOrderCreatePage />} />
 
             <Route path="/work-orders/:workOrderId" element={<WorkOrderWorkspacePage />} />
 

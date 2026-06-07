@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
-import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { CirclePlus } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type {
-  AssetResponse,
   TechnicianRefResponse,
   WorkOrderDetailResponse,
   WorkOrderEvidenceResponse,
@@ -24,28 +23,15 @@ interface WorkOrdersPanelProps {
   viewAllWorkOrders: boolean
   sessionPersonId: string
   technicianRefs: TechnicianRefResponse[]
-  assets: AssetResponse[]
   workOrders: WorkOrderSummaryResponse[]
   selectedWorkOrder: WorkOrderDetailResponse | null
   selectedWorkOrderId: string
-  selectedAssetId: string
-  workOrderTitle: string
-  workOrderDescription: string
-  workOrderPriority: string
-  assignedPersonId: string
   statusFilter: string
   isLoading: boolean
   isDetailLoading: boolean
-  isCreating: boolean
   isUpdatingStatus: boolean
   onSelectedWorkOrderIdChange: (value: string) => void
-  onSelectedAssetIdChange: (value: string) => void
-  onWorkOrderTitleChange: (value: string) => void
-  onWorkOrderDescriptionChange: (value: string) => void
-  onWorkOrderPriorityChange: (value: string) => void
-  onAssignedPersonIdChange: (value: string) => void
   onStatusFilterChange: (value: string) => void
-  onCreateWorkOrder: () => void
   onUpdateStatus: (workOrderId: string, status: string) => void
   tasks: WorkOrderTaskLineResponse[]
   labor: WorkOrderLaborEntryResponse[]
@@ -105,6 +91,7 @@ function formatSource(source: string): string {
 }
 
 const WORK_ORDER_STATUS_FLOW = [
+  'draft',
   'open',
   'requested',
   'triage',
@@ -155,22 +142,6 @@ function statusOptionsFor(currentStatus: string, canClose: boolean): string[] {
   return Array.from(new Set(options))
 }
 
-function assetToOption(asset: AssetResponse): PickerOption {
-  return {
-    value: asset.assetId,
-    label: `${asset.assetTag} — ${asset.name}`,
-  }
-}
-
-function technicianToOption(ref: TechnicianRefResponse): PickerOption {
-  const statusLabel = ref.activeStatus ? ` · ${ref.activeStatus}` : ''
-  const siteLabel = ref.primarySite ? ` · ${ref.primarySite}` : ''
-  return {
-    value: ref.personId,
-    label: `${ref.displayName}${statusLabel}${siteLabel}`,
-  }
-}
-
 export function WorkOrdersPanel({
   canCreate,
   canPerform,
@@ -178,28 +149,15 @@ export function WorkOrdersPanel({
   viewAllWorkOrders,
   sessionPersonId,
   technicianRefs,
-  assets,
   workOrders,
   selectedWorkOrder,
   selectedWorkOrderId,
-  selectedAssetId,
-  workOrderTitle,
-  workOrderDescription,
-  workOrderPriority,
-  assignedPersonId,
   statusFilter,
   isLoading,
   isDetailLoading,
-  isCreating,
   isUpdatingStatus,
   onSelectedWorkOrderIdChange,
-  onSelectedAssetIdChange,
-  onWorkOrderTitleChange,
-  onWorkOrderDescriptionChange,
-  onWorkOrderPriorityChange,
-  onAssignedPersonIdChange,
   onStatusFilterChange,
-  onCreateWorkOrder,
   onUpdateStatus,
   tasks,
   labor,
@@ -247,17 +205,6 @@ export function WorkOrdersPanel({
   supplyReadiness,
   isSupplyReadinessLoading,
 }: WorkOrdersPanelProps) {
-  const assetOptions = useMemo(() => assets.map(assetToOption), [assets])
-  const selectedAssetOption = useMemo(
-    () => assetOptions.find((option) => option.value === selectedAssetId),
-    [assetOptions, selectedAssetId],
-  )
-  const technicianOptions = useMemo(() => technicianRefs.map(technicianToOption), [technicianRefs])
-  const selectedTechnicianOption = useMemo(
-    () => technicianOptions.find((option) => option.value === assignedPersonId),
-    [assignedPersonId, technicianOptions],
-  )
-
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-6"
@@ -293,79 +240,20 @@ export function WorkOrdersPanel({
       </div>
 
       {canCreate ? (
-        <div className="mb-6 grid gap-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4 md:grid-cols-2">
-          <StaticSearchPicker
-            id="work-order-create-asset"
-            label="Asset for work order"
-            value={selectedAssetId}
-            onChange={onSelectedAssetIdChange}
-            options={assetOptions}
-            placeholder="Search assets…"
-            testId="work-order-create-asset-picker"
-            selectedOption={selectedAssetOption}
-          />
-
-          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-title">
-            <span className="text-slate-300">Work order title</span>
-            <input
-              id="work-order-create-title"
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              value={workOrderTitle}
-              onChange={(event) => onWorkOrderTitleChange(event.target.value)}
-            />
-          </label>
-
-          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-description">
-            <span className="text-slate-300">Work order description</span>
-            <textarea
-              id="work-order-create-description"
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              rows={2}
-              value={workOrderDescription}
-              onChange={(event) => onWorkOrderDescriptionChange(event.target.value)}
-            />
-          </label>
-
-          <label className="block text-sm" htmlFor="work-order-create-priority">
-            <span className="text-slate-300">Work order priority</span>
-            <select
-              id="work-order-create-priority"
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              value={workOrderPriority}
-              onChange={(event) => onWorkOrderPriorityChange(event.target.value)}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </label>
-
-          <StaticSearchPicker
-            id="work-order-create-assigned-technician"
-            label="Assigned technician"
-            value={assignedPersonId}
-            onChange={onAssignedPersonIdChange}
-            options={[
-              { value: '', label: 'Unassigned' },
-              { value: sessionPersonId, label: `Me (${sessionPersonId})` },
-              ...technicianOptions.filter((option) => option.value !== sessionPersonId),
-            ]}
-            placeholder="Search technicians…"
-            testId="work-order-create-assigned-technician-picker"
-            selectedOption={selectedTechnicianOption}
-          />
-
-          <div className="flex items-end md:col-span-2">
-            <button
-              type="button"
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
-              disabled={!selectedAssetId || !workOrderTitle.trim() || isCreating}
-              onClick={onCreateWorkOrder}
-            >
-              {isCreating ? 'Creating…' : 'Create work order'}
-            </button>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Create work order</h3>
+            <p className="mt-1 text-xs text-slate-400">
+              The guided create wizard now lives on its own page so draft planning, preview, and final actions stay in one flow.
+            </p>
           </div>
+          <Link
+            to="/work-orders/create"
+            className="inline-flex items-center gap-2 rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+          >
+            <CirclePlus className="h-4 w-4" />
+            Open create wizard
+          </Link>
         </div>
       ) : null}
 

@@ -374,11 +374,12 @@ public sealed class WorkOrderLaborEvidenceService(
             throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
         }
 
-        if (!WorkOrderStatuses.Active.Contains(workOrder.Status))
+        if (!WorkOrderStatuses.Active.Contains(workOrder.Status)
+            && !string.Equals(workOrder.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
                 "work_order.not_editable",
-                "Tasks, labor, and evidence can only be added to open or in-progress work orders.",
+                "Tasks, labor, and evidence can only be added to draft, open, or in-progress work orders.",
                 409);
         }
 

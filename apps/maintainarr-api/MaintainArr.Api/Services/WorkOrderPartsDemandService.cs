@@ -248,11 +248,12 @@ public sealed class WorkOrderPartsDemandService(
             cancellationToken)
             ?? throw new StlApiException("work_orders.not_found", "Work order was not found.", 404);
 
-        if (!WorkOrderStatuses.Active.Contains(workOrder.Status))
+        if (!WorkOrderStatuses.Active.Contains(workOrder.Status)
+            && !string.Equals(workOrder.Status, WorkOrderStatuses.Draft, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
                 "work_order_parts_demand.work_order_not_editable",
-                "Parts demand can only be added while the work order is open or in progress.",
+                "Parts demand can only be added while the work order is draft, open, or in progress.",
                 409);
         }
 

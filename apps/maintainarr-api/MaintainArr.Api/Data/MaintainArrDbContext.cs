@@ -560,6 +560,9 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.StaffarrLocationId).HasMaxLength(128);
             entity.Property(x => x.RequiredQualificationRefsJson).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.QualificationCheckResultsJson).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.DraftPlanJson).HasColumnType("text");
+            entity.Property(x => x.PlannedStartAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.PlannedDueAt).HasColumnType("timestamp with time zone");
             entity.Property(x => x.AssignedTechnicianPersonId).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkOrderNumber }).IsUnique();
