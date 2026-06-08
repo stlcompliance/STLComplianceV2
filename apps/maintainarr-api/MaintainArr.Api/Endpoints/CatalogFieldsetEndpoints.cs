@@ -75,5 +75,11 @@ public static class CatalogFieldsetEndpoints
             authorization.RequireDefectsCreate(context.User);
             return Results.Ok(await service.GetDefectsFieldsetAsync(context.User.GetTenantId(), "create", cancellationToken));
         });
+
+        group.MapGet("/inspection-templates/create", async (HttpContext context, MaintainArrAuthorizationService authorization, FieldsetService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            return Results.Ok(await service.GetInspectionTemplatesFieldsetAsync(context.User.GetTenantId(), "create", cancellationToken));
+        });
     }
 }

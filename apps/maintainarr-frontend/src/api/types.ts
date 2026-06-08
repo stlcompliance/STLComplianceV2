@@ -249,6 +249,10 @@ export interface InspectionTemplateSummaryResponse {
   templateKey: string
   name: string
   description: string
+  templateCategoryKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
   inspectionType?: string
   version: number
   status: string
@@ -257,13 +261,21 @@ export interface InspectionTemplateSummaryResponse {
   linkedAssetTypeCount: number
   createdAt: string
   updatedAt: string
+  publishedAt?: string | null
+  retiredAt?: string | null
 }
 
 export interface InspectionTemplateCategoryResponse {
   categoryId: string
   categoryKey: string
   name: string
+  description?: string | null
+  isRequired?: boolean
+  canBeSkipped?: boolean
+  skipReasonRequired?: boolean
+  timingTracked?: boolean
   sortOrder: number
+  settings?: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -274,6 +286,7 @@ export interface InspectionChecklistItemResponse {
   categoryKey: string | null
   itemKey: string
   prompt: string
+  helpText?: string
   itemType: string
   controlledOptions: string[]
   acceptableRangeMin?: number | null
@@ -281,6 +294,7 @@ export interface InspectionChecklistItemResponse {
   unitOfMeasure?: string | null
   isRequired: boolean
   sortOrder: number
+  settings?: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -298,6 +312,14 @@ export interface InspectionTemplateDetailResponse {
   templateKey: string
   name: string
   description: string
+  templateCategoryKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  estimatedDurationMinutes?: number | null
+  tags?: string[]
+  settings?: Record<string, unknown>
   inspectionType?: string
   version: number
   status: string
@@ -306,6 +328,12 @@ export interface InspectionTemplateDetailResponse {
   linkedAssetTypes: InspectionTemplateAssetTypeLinkResponse[]
   createdAt: string
   updatedAt: string
+  publishedAt?: string | null
+  retiredAt?: string | null
+  createdByPersonId?: string | null
+  updatedByPersonId?: string | null
+  publishedByPersonId?: string | null
+  retiredByPersonId?: string | null
 }
 
 export interface CreateInspectionTemplateRequest {
@@ -313,17 +341,57 @@ export interface CreateInspectionTemplateRequest {
   name: string
   description: string
   inspectionType?: string | null
+  templateCategoryKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  estimatedDurationMinutes?: number | null
+  tags?: string[] | null
+  settings?: Record<string, unknown> | null
+}
+
+export interface UpdateInspectionTemplateRequest {
+  name: string
+  description: string
+  inspectionType?: string | null
+  templateCategoryKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  estimatedDurationMinutes?: number | null
+  tags?: string[] | null
+  settings?: Record<string, unknown> | null
 }
 
 export interface CreateInspectionTemplateCategoryRequest {
   categoryKey: string
   name: string
+  description?: string | null
+  isRequired?: boolean
+  canBeSkipped?: boolean
+  skipReasonRequired?: boolean
+  timingTracked?: boolean
   sortOrder: number
+  settings?: Record<string, unknown> | null
+}
+
+export interface UpdateInspectionTemplateCategoryRequest {
+  name: string
+  description?: string | null
+  isRequired?: boolean
+  canBeSkipped?: boolean
+  skipReasonRequired?: boolean
+  timingTracked?: boolean
+  sortOrder: number
+  settings?: Record<string, unknown> | null
 }
 
 export interface CreateInspectionChecklistItemRequest {
   itemKey: string
   prompt: string
+  helpText?: string | null
   itemType: string
   isRequired: boolean
   sortOrder: number
@@ -332,6 +400,64 @@ export interface CreateInspectionChecklistItemRequest {
   acceptableRangeMin?: number | null
   acceptableRangeMax?: number | null
   unitOfMeasure?: string | null
+  settings?: Record<string, unknown> | null
+}
+
+export interface UpdateInspectionChecklistItemRequest {
+  prompt: string
+  helpText?: string | null
+  itemType: string
+  isRequired: boolean
+  sortOrder: number
+  categoryId: string | null
+  controlledOptions?: string[] | null
+  acceptableRangeMin?: number | null
+  acceptableRangeMax?: number | null
+  unitOfMeasure?: string | null
+  settings?: Record<string, unknown> | null
+}
+
+export interface UpdateInspectionTemplateStatusRequest {
+  status: string
+}
+
+export interface PublishInspectionTemplateRequest {
+  confirmComplianceRelated: boolean
+  confirmReadinessImpact: boolean
+  confirmFailureAutomation: boolean
+  confirmSupervisorRelease: boolean
+}
+
+export interface RetireInspectionTemplateRequest {
+  reason?: string | null
+}
+
+export interface InspectionTemplateValidationIssueResponse {
+  code: string
+  message: string
+  section: string
+  isBlocking: boolean
+}
+
+export interface InspectionTemplateValidationResponse {
+  isValid: boolean
+  issues: InspectionTemplateValidationIssueResponse[]
+  sectionCount: number
+  checklistItemCount: number
+  compatibleAssetCount: number
+}
+
+export interface CompatibleAssetPreviewResponse {
+  compatibleCount: number
+  sampleAssets: AssetSearchResponse[]
+  excludedAssets: AssetSearchResponse[]
+}
+
+export interface InspectionTemplatePreviewResponse {
+  template: InspectionTemplateDetailResponse
+  validation: InspectionTemplateValidationResponse
+  assets: CompatibleAssetPreviewResponse
+  summary: string
 }
 
 export interface InspectionRunSummaryResponse {

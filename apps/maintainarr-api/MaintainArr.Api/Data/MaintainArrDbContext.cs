@@ -395,6 +395,18 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.TemplateCategoryKey).HasMaxLength(128);
+            entity.Property(x => x.OwningSiteRef).HasMaxLength(128);
+            entity.Property(x => x.OwningTeamRef).HasMaxLength(128);
+            entity.Property(x => x.OwnerPersonId).HasMaxLength(128);
+            entity.Property(x => x.OwnerRoleKey).HasMaxLength(128);
+            entity.Property(x => x.EstimatedDurationMinutes);
+            entity.Property(x => x.TagsJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.SettingsJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.PublishedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RetiredByPersonId).HasMaxLength(128);
             entity.Property(x => x.InspectionType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
@@ -408,6 +420,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasKey(x => x.Id);
             entity.Property(x => x.CategoryKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.SettingsJson).HasColumnType("text").IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.InspectionTemplateId, x.CategoryKey }).IsUnique();
             entity.HasOne(x => x.InspectionTemplate)
@@ -422,7 +436,9 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasKey(x => x.Id);
             entity.Property(x => x.ItemKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Prompt).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.HelpText).HasMaxLength(1024);
             entity.Property(x => x.ItemType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SettingsJson).HasColumnType("text").IsRequired();
             entity.Property(x => x.ControlledOptionsJson).HasColumnName("ControlledOptionsJson").HasMaxLength(2048).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.InspectionTemplateId, x.ItemKey }).IsUnique();

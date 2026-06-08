@@ -49,7 +49,8 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var created = await service.CreateAsync(tenantId, actorUserId, actorPersonId, request, cancellationToken);
             return Results.Created($"/api/inspection-templates/{created.InspectionTemplateId}", created);
         })
         .WithName($"CreateInspectionTemplate{nameSuffix}");
@@ -65,10 +66,83 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateAsync(tenantId, actorUserId, inspectionTemplateId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.UpdateAsync(tenantId, actorUserId, actorPersonId, inspectionTemplateId, request, cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateInspectionTemplate{nameSuffix}");
+
+        group.MapGet("/{inspectionTemplateId:guid}/validate", async (
+            Guid inspectionTemplateId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionTemplateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ValidateAsync(tenantId, inspectionTemplateId, cancellationToken));
+        })
+        .WithName($"ValidateInspectionTemplate{nameSuffix}");
+
+        group.MapGet("/{inspectionTemplateId:guid}/preview", async (
+            Guid inspectionTemplateId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionTemplateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.PreviewAsync(tenantId, inspectionTemplateId, cancellationToken));
+        })
+        .WithName($"PreviewInspectionTemplate{nameSuffix}");
+
+        group.MapPost("/{inspectionTemplateId:guid}/publish", async (
+            Guid inspectionTemplateId,
+            PublishInspectionTemplateRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionTemplateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var published = await service.PublishAsync(
+                tenantId,
+                actorUserId,
+                actorPersonId,
+                inspectionTemplateId,
+                request,
+                cancellationToken);
+            return Results.Ok(published);
+        })
+        .WithName($"PublishInspectionTemplate{nameSuffix}");
+
+        group.MapPost("/{inspectionTemplateId:guid}/retire", async (
+            Guid inspectionTemplateId,
+            RetireInspectionTemplateRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionTemplateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var retired = await service.RetireAsync(
+                tenantId,
+                actorUserId,
+                actorPersonId,
+                inspectionTemplateId,
+                request,
+                cancellationToken);
+            return Results.Ok(retired);
+        })
+        .WithName($"RetireInspectionTemplate{nameSuffix}");
 
         group.MapPatch("/{inspectionTemplateId:guid}/status", async (
             Guid inspectionTemplateId,
@@ -81,12 +155,14 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var updated = await service.UpdateStatusAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 request,
-                cancellationToken);
+                cancellationToken: cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateInspectionTemplateStatus{nameSuffix}");
@@ -101,9 +177,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var cloned = await service.CloneAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 cancellationToken);
             return Results.Created($"/api/inspection-templates/{cloned.InspectionTemplateId}", cloned);
@@ -121,9 +199,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var created = await service.CreateCategoryAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 request,
                 cancellationToken);
@@ -145,9 +225,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var updated = await service.UpdateCategoryAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 categoryId,
                 request,
@@ -167,7 +249,8 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            await service.DeleteCategoryAsync(tenantId, actorUserId, inspectionTemplateId, categoryId, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            await service.DeleteCategoryAsync(tenantId, actorUserId, actorPersonId, inspectionTemplateId, categoryId, cancellationToken);
             return Results.NoContent();
         })
         .WithName($"DeleteInspectionTemplateCategory{nameSuffix}");
@@ -183,9 +266,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var created = await service.CreateChecklistItemAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 request,
                 cancellationToken);
@@ -207,9 +292,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var updated = await service.UpdateChecklistItemAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 checklistItemId,
                 request,
@@ -229,9 +316,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             await service.DeleteChecklistItemAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 checklistItemId,
                 cancellationToken);
@@ -250,9 +339,11 @@ public static class InspectionTemplateEndpoints
             authorization.RequireInspectionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
             var updated = await service.ReplaceAssetTypesAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 inspectionTemplateId,
                 request,
                 cancellationToken);

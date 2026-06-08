@@ -132,6 +132,41 @@ export function canManageDefectReadiness(tenantRoleKey: string, isPlatformAdmin:
   return canManageAssets(tenantRoleKey, isPlatformAdmin)
 }
 
+export function canManageInspectionTemplates(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageAssets(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canPreviewInspectionTemplates(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreateInspectionTemplates(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canPublishInspectionTemplates(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canRetireInspectionTemplates(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canCreateWorkOrderFromDefect(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,

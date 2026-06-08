@@ -25,6 +25,9 @@ public sealed class FieldsetService(
     public Task<FieldsetResponse> GetWorkOrdersFieldsetAsync(Guid tenantId, string purpose, CancellationToken cancellationToken) =>
         GetFieldsetAsync(tenantId, "work-orders", purpose, cancellationToken);
 
+    public Task<FieldsetResponse> GetInspectionTemplatesFieldsetAsync(Guid tenantId, string purpose, CancellationToken cancellationToken) =>
+        GetFieldsetAsync(tenantId, "inspection-templates", purpose, cancellationToken);
+
     public async Task<FieldsetResponse> GetFieldsetAsync(Guid tenantId, string key, string purpose, CancellationToken cancellationToken)
     {
         await catalogSeedService.EnsureSeededForTenantAsync(tenantId, cancellationToken);

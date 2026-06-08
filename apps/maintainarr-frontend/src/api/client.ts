@@ -15,6 +15,8 @@ import type {
   CreateInspectionChecklistItemRequest,
   CreateInspectionTemplateCategoryRequest,
   CreateInspectionTemplateRequest,
+  InspectionTemplatePreviewResponse,
+  InspectionTemplateValidationResponse,
   HandoffSessionResponse,
   InspectionRunDetailResponse,
   InspectionRunEvidenceResponse,
@@ -37,6 +39,7 @@ import type {
   InspectionRunSummaryResponse,
   InspectionTemplateDetailResponse,
   InspectionTemplateSummaryResponse,
+  PublishInspectionTemplateRequest,
   MaintainArrMeResponse,
   MaintainArrSessionBootstrapResponse,
   AssetReadinessResponse,
@@ -105,6 +108,11 @@ import type {
   UpdateDefectStatusRequest,
   UpsertDefectDraftRequest,
   SubmitDefectRequest,
+  UpdateInspectionChecklistItemRequest,
+  UpdateInspectionTemplateCategoryRequest,
+  UpdateInspectionTemplateRequest,
+  UpdateInspectionTemplateStatusRequest,
+  RetireInspectionTemplateRequest,
   WorkOrderDetailResponse,
   WorkOrderDuplicateMatchResponse,
   WorkOrderPreviewResponse,
@@ -406,6 +414,13 @@ export async function getDefectCreateFieldset(accessToken: string): Promise<Fiel
   return parseJsonResponse<FieldsetResponse>(response, 'Failed to load defect create fieldset')
 }
 
+export async function getInspectionTemplateCreateFieldset(accessToken: string): Promise<FieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/inspection-templates/create`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldsetResponse>(response, 'Failed to load inspection template create fieldset')
+}
+
 export async function getCatalogs(accessToken: string, keys?: string[]): Promise<CatalogResponse[]> {
   const query = keys && keys.length > 0 ? `?keys=${encodeURIComponent(keys.join(','))}` : ''
   const response = await fetch(`${apiBase}/api/v1/catalogs${query}`, {
@@ -576,6 +591,19 @@ export async function getInspectionTemplate(
   return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to load inspection template')
 }
 
+export async function updateInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+  payload: UpdateInspectionTemplateRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to update inspection template')
+}
+
 export async function createInspectionTemplate(
   accessToken: string,
   payload: CreateInspectionTemplateRequest,
@@ -586,6 +614,65 @@ export async function createInspectionTemplate(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to create inspection template')
+}
+
+export async function validateInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+): Promise<InspectionTemplateValidationResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/validate`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InspectionTemplateValidationResponse>(response, 'Failed to validate inspection template')
+}
+
+export async function previewInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+): Promise<InspectionTemplatePreviewResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/preview`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InspectionTemplatePreviewResponse>(response, 'Failed to preview inspection template')
+}
+
+export async function publishInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+  payload: PublishInspectionTemplateRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/publish`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to publish inspection template')
+}
+
+export async function retireInspectionTemplate(
+  accessToken: string,
+  inspectionTemplateId: string,
+  payload: RetireInspectionTemplateRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/retire`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to retire inspection template')
+}
+
+export async function updateInspectionTemplateStatus(
+  accessToken: string,
+  inspectionTemplateId: string,
+  payload: UpdateInspectionTemplateStatusRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to update inspection template status')
 }
 
 export async function createInspectionTemplateCategory(
@@ -600,6 +687,24 @@ export async function createInspectionTemplateCategory(
   })
   if (!response.ok) {
     throw await toApiError(response, 'Failed to create category')
+  }
+  await response.json()
+  return getInspectionTemplate(accessToken, inspectionTemplateId)
+}
+
+export async function updateInspectionTemplateCategory(
+  accessToken: string,
+  inspectionTemplateId: string,
+  categoryId: string,
+  payload: UpdateInspectionTemplateCategoryRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/categories/${categoryId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to update category')
   }
   await response.json()
   return getInspectionTemplate(accessToken, inspectionTemplateId)
@@ -622,6 +727,24 @@ export async function createInspectionChecklistItem(
   return getInspectionTemplate(accessToken, inspectionTemplateId)
 }
 
+export async function updateInspectionChecklistItem(
+  accessToken: string,
+  inspectionTemplateId: string,
+  checklistItemId: string,
+  payload: UpdateInspectionChecklistItemRequest,
+): Promise<InspectionTemplateDetailResponse> {
+  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/checklist-items/${checklistItemId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to update checklist item')
+  }
+  await response.json()
+  return getInspectionTemplate(accessToken, inspectionTemplateId)
+}
+
 export async function replaceInspectionTemplateAssetTypes(
   accessToken: string,
   inspectionTemplateId: string,
@@ -639,12 +762,7 @@ export async function activateInspectionTemplate(
   accessToken: string,
   inspectionTemplateId: string,
 ): Promise<InspectionTemplateDetailResponse> {
-  const response = await fetch(`${apiBase}/api/inspection-templates/${inspectionTemplateId}/status`, {
-    method: 'PATCH',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify({ status: 'active' }),
-  })
-  return parseJsonResponse<InspectionTemplateDetailResponse>(response, 'Failed to activate inspection template')
+  return updateInspectionTemplateStatus(accessToken, inspectionTemplateId, { status: 'active' })
 }
 
 export async function cloneInspectionTemplate(

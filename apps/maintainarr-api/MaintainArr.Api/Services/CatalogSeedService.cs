@@ -11,6 +11,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
     private const string AssetsFieldsetKey = "assets";
     private const string DefectsFieldsetKey = "defects";
     private const string WorkOrdersFieldsetKey = "work-orders";
+    private const string InspectionTemplatesFieldsetKey = "inspection-templates";
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> TenantSeedLocks = new();
     private static readonly ConcurrentDictionary<Guid, byte> TenantSeedReady = new();
 
@@ -66,6 +67,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         await EnsureAssetFieldsetsAsync(tenantId, cancellationToken);
         await EnsureDefectFieldsetsAsync(tenantId, cancellationToken);
         await EnsureWorkOrderFieldsetsAsync(tenantId, cancellationToken);
+        await EnsureInspectionTemplateFieldsetsAsync(tenantId, cancellationToken);
         await EnsureReferenceFallbackSeedsAsync(tenantId, cancellationToken);
     }
 
@@ -90,6 +92,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new { Key = AssetsFieldsetKey, Purposes = new[] { "default", "create", "edit" }, ExpectedFieldCount = GetFieldSeeds().Count() },
             new { Key = DefectsFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetDefectFieldSeeds().Count() },
             new { Key = WorkOrdersFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetWorkOrderFieldSeeds().Count() },
+            new { Key = InspectionTemplatesFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetInspectionTemplateFieldSeeds().Count() },
         };
 
         foreach (var expectedFieldSet in expectedFieldSets)
@@ -580,6 +583,93 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         }
     }
 
+    private async Task EnsureInspectionTemplateFieldsetsAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var seeds = GetInspectionTemplateFieldSeeds().ToList();
+        foreach (var purpose in new[] { "create" })
+        {
+            var definition = await db.FieldsetDefinitions
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Key == InspectionTemplatesFieldsetKey && x.Purpose == purpose,
+                    cancellationToken);
+
+            if (definition is null)
+            {
+                definition = new FieldsetDefinition
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Key = InspectionTemplatesFieldsetKey,
+                    Label = "Inspection Templates",
+                    EntityType = "inspection_template",
+                    Purpose = purpose,
+                    Description = $"Inspection template {purpose} fieldset",
+                    IsActive = true,
+                };
+                db.FieldsetDefinitions.Add(definition);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                definition.IsActive = true;
+                definition.Description = $"Inspection template {purpose} fieldset";
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            var existing = await db.FieldsetFields
+                .Where(x => x.TenantId == tenantId && x.FieldsetId == definition.Id)
+                .ToListAsync(cancellationToken);
+
+            var expectedKeys = new HashSet<string>(seeds.Select(x => x.Key), StringComparer.OrdinalIgnoreCase);
+            foreach (var item in seeds.Select((seed, index) => new { seed, index }))
+            {
+                var field = existing.FirstOrDefault(x => string.Equals(x.Key, item.seed.Key, StringComparison.OrdinalIgnoreCase));
+                if (field is null)
+                {
+                    field = new FieldsetField
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = tenantId,
+                        FieldsetId = definition.Id,
+                        Key = item.seed.Key,
+                    };
+                    db.FieldsetFields.Add(field);
+                }
+
+                field.Label = item.seed.Label;
+                field.Description = item.seed.Description;
+                field.DataType = item.seed.DataType;
+                field.ControlType = item.seed.ControlType;
+                field.Required = item.seed.Required;
+                field.CatalogKey = item.seed.CatalogKey;
+                field.ReferenceKey = item.seed.ReferenceKey;
+                field.SourceType = item.seed.SourceType;
+                field.SourceOfTruth = item.seed.SourceOfTruth;
+                field.SortOrder = item.index;
+                field.SectionKey = item.seed.SectionKey;
+                field.DependencyJson = JsonSerializer.Serialize(item.seed.DependsOn);
+                field.ValidationJson = JsonSerializer.Serialize(item.seed.Validation);
+                field.DefaultValueJson = item.seed.DefaultValueJson;
+                field.VisibilityJson = JsonSerializer.Serialize(item.seed.Visibility);
+                field.AllowCustom = item.seed.AllowCustom;
+                field.CustomRequiresApproval = item.seed.CustomRequiresApproval;
+                field.DrivesLogic = item.seed.DrivesLogic;
+                field.DrivesInspectionBranching = item.seed.DrivesInspectionBranching;
+                field.DrivesPMApplicability = item.seed.DrivesPMApplicability;
+                field.DrivesCompliance = item.seed.DrivesCompliance;
+                field.DrivesReporting = item.seed.DrivesReporting;
+                field.DrivesReadiness = item.seed.DrivesReadiness;
+            }
+
+            foreach (var field in existing.Where(x => !expectedKeys.Contains(x.Key)))
+            {
+                db.FieldsetFields.Remove(field);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     private async Task EnsureReferenceFallbackSeedsAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         await EnsureReferenceOptionsAsync(tenantId, "Compliance Core", "governingBody", ["FMCSA", "OSHA", "MSHA", "EPA"], cancellationToken);
@@ -775,6 +865,11 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new CatalogSeed("PMTemplate", "PM Template", ["a_service", "b_service", "annual_service", "custom"]),
             new CatalogSeed("PMType", "PM Type", ["preventive", "scheduled_service", "mileage_based", "hour_based", "calendar_based", "seasonal", "regulatory", "lubrication", "filter_service", "inspection_based", "custom"]),
             new CatalogSeed("PMIntervalType", "PM Interval Type", ["calendar_days", "mileage", "engine_hours", "cycles", "mixed_first_due", "mixed_all_due"]),
+            new CatalogSeed("inspectionTemplateCategory", "Inspection Template Category", ["safety", "compliance", "preventive_maintenance", "defect_follow_up", "asset_onboarding", "asset_retirement", "quality", "custom"]),
+            new CatalogSeed("inspectionTemplateOwnerRole", "Inspection Template Owner Role", ["maintainarr_manager", "maintainarr_technician", "tenant_admin", "tenant_member", "fleet_manager", "shop_manager"]),
+            new CatalogSeed("inspectionExecutionMode", "Inspection Execution Mode", ["manual", "assisted", "automated", "hybrid"]),
+            new CatalogSeed("inspectionResultMode", "Inspection Result Mode", ["pass_fail", "scored", "rated", "mixed"]),
+            new CatalogSeed("inspectionReadinessImpact", "Inspection Readiness Impact", ["none", "advisory", "limited_use", "out_of_service", "blocked"]),
             new CatalogSeed("inspectionTemplate", "Inspection Template", ["annual_dot", "dvir", "shop_inspection", "custom"]),
             new CatalogSeed("inspectionType", "Inspection Type", ["annual_dot", "dvir", "pre_trip", "post_trip", "pm_inspection", "shop_inspection", "safety_inspection", "asset_intake", "return_to_service", "damage_inspection", "road_call_inspection", "operator_walkaround", "calibration_check", "custom"]),
             new CatalogSeed("requiredInspectionTypes", "Required Inspection Types", ["annual_dot", "dvir", "pre_trip", "post_trip"]),
@@ -966,6 +1061,52 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         yield return FieldSeed.Reference("inspectionRequirementType", "Inspection Requirement Type", "Compliance Core inspection requirement type", required: false, "inspectionRequirementType", "compliancecore_reference", "Compliance Core", "readiness", true, multi: true, drivesCompliance: true);
         yield return FieldSeed.Catalog("documentType", "Document Type", "Document or evidence type", required: false, catalogKey: "documentType", sectionKey: "documents", drivesLogic: true, multi: true);
         yield return FieldSeed.FreeText("notes", "Notes", "Draft notes and handoff context", sectionKey: "documents", required: false, validation: new Dictionary<string, object?> { ["maxLength"] = 2048 });
+    }
+
+    private static IEnumerable<FieldSeed> GetInspectionTemplateFieldSeeds()
+    {
+        yield return FieldSeed.FreeText(
+            "templateKey",
+            "Template Key",
+            "Stable template key",
+            sectionKey: "identity",
+            required: true,
+            validation: new Dictionary<string, object?> { ["maxLength"] = 128, ["pattern"] = "^[a-z0-9._-]+$" });
+        yield return FieldSeed.FreeText(
+            "name",
+            "Name",
+            "Template name",
+            sectionKey: "identity",
+            required: true,
+            validation: new Dictionary<string, object?> { ["maxLength"] = 128 });
+        yield return FieldSeed.FreeText(
+            "description",
+            "Description",
+            "Template description",
+            sectionKey: "basics",
+            validation: new Dictionary<string, object?> { ["maxLength"] = 512 });
+        yield return FieldSeed.Catalog("templateCategoryKey", "Template Category", "Template category", required: false, catalogKey: "inspectionTemplateCategory", sectionKey: "basics", drivesLogic: true);
+        yield return FieldSeed.Catalog("inspectionType", "Inspection Type", "Inspection type", required: true, catalogKey: "inspectionType", sectionKey: "basics", drivesLogic: true);
+        yield return FieldSeed.Reference("owningSiteRef", "Owning Site", "Owning site reference", required: false, "sites", "staffarr_reference", "StaffArr", "ownership", true);
+        yield return FieldSeed.Reference("owningTeamRef", "Owning Team", "Owning team reference", required: false, "teams", "staffarr_reference", "StaffArr", "ownership", true);
+        yield return FieldSeed.Reference("ownerPersonId", "Owner Person", "Owner person", required: false, "people", "staffarr_reference", "StaffArr", "ownership", true);
+        yield return FieldSeed.Catalog("ownerRoleKey", "Owner Role", "Owner role", required: false, catalogKey: "inspectionTemplateOwnerRole", sectionKey: "ownership", drivesLogic: true);
+        yield return FieldSeed.FreeText(
+            "estimatedDurationMinutes",
+            "Estimated Duration Minutes",
+            "Estimated duration in minutes",
+            sectionKey: "basics",
+            validation: new Dictionary<string, object?> { ["maxLength"] = 4, ["pattern"] = "^[0-9]{1,4}$" });
+        yield return FieldSeed.Catalog("assetTypeIds", "Asset Types", "Asset types this template applies to", required: false, catalogKey: "assetType", sectionKey: "scope", drivesLogic: true, multi: true);
+        yield return FieldSeed.Catalog("executionMode", "Execution Mode", "How the template is executed", required: false, catalogKey: "inspectionExecutionMode", sectionKey: "settings", drivesLogic: true);
+        yield return FieldSeed.Catalog("resultMode", "Result Mode", "How results are captured", required: false, catalogKey: "inspectionResultMode", sectionKey: "settings", drivesLogic: true);
+        yield return FieldSeed.Catalog("readinessImpact", "Readiness Impact", "Readiness impact when active", required: false, catalogKey: "inspectionReadinessImpact", sectionKey: "settings", drivesLogic: true);
+        yield return FieldSeed.FreeText(
+            "tags",
+            "Tags",
+            "Comma-separated tags",
+            sectionKey: "settings",
+            validation: new Dictionary<string, object?> { ["maxLength"] = 512 });
     }
 
     private static IReadOnlyDictionary<string, object?> VisibleWhen(string key, params string[] values) =>

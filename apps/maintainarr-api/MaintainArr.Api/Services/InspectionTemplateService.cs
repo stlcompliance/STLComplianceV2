@@ -34,6 +34,10 @@ public sealed class InspectionTemplateService(
 
         InspectionTemplateStatuses.Active,
 
+        InspectionTemplateStatuses.Retired,
+
+        InspectionTemplateStatuses.Archived,
+
         InspectionTemplateStatuses.Inactive
 
     };
@@ -46,11 +50,17 @@ public sealed class InspectionTemplateService(
 
         InspectionChecklistItemTypes.PassFail,
 
+        InspectionChecklistItemTypes.PassFailNa,
+
         InspectionChecklistItemTypes.YesNo,
+
+        InspectionChecklistItemTypes.YesNoNa,
 
         InspectionChecklistItemTypes.Numeric,
 
         InspectionChecklistItemTypes.Text,
+
+        InspectionChecklistItemTypes.DateTime,
 
         InspectionChecklistItemTypes.Select,
 
@@ -60,7 +70,17 @@ public sealed class InspectionTemplateService(
 
         InspectionChecklistItemTypes.Signature,
 
-        InspectionChecklistItemTypes.MeterReading
+        InspectionChecklistItemTypes.MeterReading,
+
+        InspectionChecklistItemTypes.OdometerMileage,
+
+        InspectionChecklistItemTypes.EngineHours,
+
+        InspectionChecklistItemTypes.ChecklistAcknowledgment,
+
+        InspectionChecklistItemTypes.BarcodeQrScan,
+
+        InspectionChecklistItemTypes.VinSerialVerification
 
     };
 
@@ -156,6 +176,14 @@ public sealed class InspectionTemplateService(
 
                 template.Description,
 
+                template.TemplateCategoryKey ?? string.Empty,
+
+                template.OwningSiteRef ?? string.Empty,
+
+                template.OwningTeamRef ?? string.Empty,
+
+                template.OwnerPersonId ?? string.Empty,
+
                 template.InspectionType,
 
                 template.Version,
@@ -170,7 +198,11 @@ public sealed class InspectionTemplateService(
 
                 template.CreatedAt,
 
-                template.UpdatedAt))
+                template.UpdatedAt,
+
+                template.PublishedAt,
+
+                template.RetiredAt))
 
             .ToList();
 
@@ -204,7 +236,7 @@ public sealed class InspectionTemplateService(
 
 
 
-        var categories = await db.InspectionTemplateCategories
+        var categoryEntities = await db.InspectionTemplateCategories
 
             .AsNoTracking()
 
@@ -214,21 +246,11 @@ public sealed class InspectionTemplateService(
 
             .ThenBy(x => x.Name)
 
-            .Select(x => new InspectionTemplateCategoryResponse(
-
-                x.Id,
-
-                x.CategoryKey,
-
-                x.Name,
-
-                x.SortOrder,
-
-                x.CreatedAt,
-
-                x.UpdatedAt))
-
             .ToListAsync(cancellationToken);
+
+        var categories = categoryEntities
+            .Select(MapCategory)
+            .ToList();
 
 
 
@@ -314,6 +336,22 @@ public sealed class InspectionTemplateService(
 
             template.Description,
 
+            template.TemplateCategoryKey ?? string.Empty,
+
+            template.OwningSiteRef,
+
+            template.OwningTeamRef,
+
+            template.OwnerPersonId,
+
+            template.OwnerRoleKey,
+
+            template.EstimatedDurationMinutes,
+
+            DeserializeStringList(template.TagsJson),
+
+            DeserializeObjectDict(template.SettingsJson),
+
             template.InspectionType,
 
             template.Version,
@@ -328,7 +366,19 @@ public sealed class InspectionTemplateService(
 
             template.CreatedAt,
 
-            template.UpdatedAt);
+            template.UpdatedAt,
+
+            template.PublishedAt,
+
+            template.RetiredAt,
+
+            template.CreatedByPersonId,
+
+            template.UpdatedByPersonId,
+
+            template.PublishedByPersonId,
+
+            template.RetiredByPersonId);
 
     }
 
@@ -339,6 +389,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         CreateInspectionTemplateRequest request,
 
@@ -386,6 +438,26 @@ public sealed class InspectionTemplateService(
 
             Description = NormalizeDescription(request.Description),
 
+            TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey),
+
+            OwningSiteRef = NormalizeOptionalReference(request.OwningSiteRef),
+
+            OwningTeamRef = NormalizeOptionalReference(request.OwningTeamRef),
+
+            OwnerPersonId = NormalizeOptionalReference(request.OwnerPersonId),
+
+            OwnerRoleKey = NormalizeOptionalReference(request.OwnerRoleKey),
+
+            EstimatedDurationMinutes = NormalizeOptionalDurationMinutes(request.EstimatedDurationMinutes),
+
+            TagsJson = SerializeStringList(request.Tags),
+
+            SettingsJson = SerializeSettings(request.Settings),
+
+            CreatedByPersonId = actorPersonId,
+
+            UpdatedByPersonId = actorPersonId,
+
             InspectionType = NormalizeInspectionType(request.InspectionType),
 
             Version = 1,
@@ -411,6 +483,7 @@ public sealed class InspectionTemplateService(
             tenantId,
 
             actorUserId,
+            actorPersonId,
 
             "inspection_template",
 
@@ -434,6 +507,8 @@ public sealed class InspectionTemplateService(
 
         Guid actorUserId,
 
+        string actorPersonId,
+
         Guid inspectionTemplateId,
 
         UpdateInspectionTemplateRequest request,
@@ -448,12 +523,53 @@ public sealed class InspectionTemplateService(
 
         entity.Description = NormalizeDescription(request.Description);
 
+        if (request.TemplateCategoryKey is not null)
+        {
+            entity.TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey);
+        }
+
+        if (request.OwningSiteRef is not null)
+        {
+            entity.OwningSiteRef = NormalizeOptionalReference(request.OwningSiteRef);
+        }
+
+        if (request.OwningTeamRef is not null)
+        {
+            entity.OwningTeamRef = NormalizeOptionalReference(request.OwningTeamRef);
+        }
+
+        if (request.OwnerPersonId is not null)
+        {
+            entity.OwnerPersonId = NormalizeOptionalReference(request.OwnerPersonId);
+        }
+
+        if (request.OwnerRoleKey is not null)
+        {
+            entity.OwnerRoleKey = NormalizeOptionalReference(request.OwnerRoleKey);
+        }
+
+        if (request.EstimatedDurationMinutes.HasValue)
+        {
+            entity.EstimatedDurationMinutes = NormalizeOptionalDurationMinutes(request.EstimatedDurationMinutes);
+        }
+
         if (!string.IsNullOrWhiteSpace(request.InspectionType))
         {
             entity.InspectionType = NormalizeInspectionType(request.InspectionType);
         }
 
+        if (request.Tags is not null)
+        {
+            entity.TagsJson = SerializeStringList(request.Tags);
+        }
+
+        if (request.Settings is not null)
+        {
+            entity.SettingsJson = SerializeSettings(request.Settings);
+        }
+
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedByPersonId = actorPersonId;
 
 
 
@@ -466,6 +582,7 @@ public sealed class InspectionTemplateService(
             tenantId,
 
             actorUserId,
+            actorPersonId,
 
             "inspection_template",
 
@@ -489,15 +606,19 @@ public sealed class InspectionTemplateService(
 
         Guid actorUserId,
 
+        string actorPersonId,
+
         Guid inspectionTemplateId,
 
         UpdateInspectionTemplateStatusRequest request,
+
+        string? reasonCode = null,
 
         CancellationToken cancellationToken = default)
 
     {
 
-        var status = request.Status.Trim().ToLowerInvariant();
+        var status = NormalizeTemplateStatus(request.Status);
 
         if (!AllowedTemplateStatuses.Contains(status))
 
@@ -507,7 +628,7 @@ public sealed class InspectionTemplateService(
 
                 "inspection_template.invalid_status",
 
-                "Template status must be draft, active, or inactive.",
+                "Template status must be draft, active, retired, or archived.",
 
                 400);
 
@@ -546,8 +667,28 @@ public sealed class InspectionTemplateService(
 
 
         entity.Status = status;
+        if (status == InspectionTemplateStatuses.Active)
+        {
+            entity.PublishedAt ??= DateTimeOffset.UtcNow;
+            entity.PublishedByPersonId ??= actorPersonId;
+            entity.RetiredAt = null;
+            entity.RetiredByPersonId = null;
+        }
+        else if (status == InspectionTemplateStatuses.Retired || status == InspectionTemplateStatuses.Archived)
+        {
+            entity.RetiredAt ??= DateTimeOffset.UtcNow;
+            entity.RetiredByPersonId ??= actorPersonId;
+        }
+        else
+        {
+            entity.PublishedAt = null;
+            entity.PublishedByPersonId = null;
+            entity.RetiredAt = null;
+            entity.RetiredByPersonId = null;
+        }
 
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedByPersonId = actorPersonId;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -559,11 +700,15 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_template",
 
             entity.Id.ToString(),
 
             "Succeeded",
+
+            reasonCode,
 
             cancellationToken: cancellationToken);
 
@@ -573,9 +718,75 @@ public sealed class InspectionTemplateService(
 
     }
 
+    public async Task<InspectionTemplateValidationResponse> ValidateAsync(
+        Guid tenantId,
+        Guid inspectionTemplateId,
+        CancellationToken cancellationToken = default)
+    {
+        var template = await GetAsync(tenantId, inspectionTemplateId, cancellationToken);
+        var issues = await BuildValidationIssuesAsync(tenantId, template, cancellationToken);
+        var preview = await BuildCompatibleAssetPreviewAsync(tenantId, template, cancellationToken);
+        var blocking = issues.Any(x => x.IsBlocking);
+        return new InspectionTemplateValidationResponse(
+            !blocking,
+            issues,
+            template.Categories.Count,
+            template.ChecklistItems.Count,
+            preview.CompatibleCount);
+    }
+
+    public async Task<InspectionTemplatePreviewResponse> PreviewAsync(
+        Guid tenantId,
+        Guid inspectionTemplateId,
+        CancellationToken cancellationToken = default)
+    {
+        var template = await GetAsync(tenantId, inspectionTemplateId, cancellationToken);
+        var validation = await ValidateAsync(tenantId, inspectionTemplateId, cancellationToken);
+        var assets = await BuildCompatibleAssetPreviewAsync(tenantId, template, cancellationToken);
+        var summary = BuildPreviewSummary(template, validation, assets);
+        return new InspectionTemplatePreviewResponse(template, validation, assets, summary);
+    }
+
+    public async Task<InspectionTemplateDetailResponse> PublishAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string actorPersonId,
+        Guid inspectionTemplateId,
+        PublishInspectionTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsurePublishConfirmations(request);
+        return await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            inspectionTemplateId,
+            new UpdateInspectionTemplateStatusRequest(InspectionTemplateStatuses.Active),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<InspectionTemplateDetailResponse> RetireAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string actorPersonId,
+        Guid inspectionTemplateId,
+        RetireInspectionTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            inspectionTemplateId,
+            new UpdateInspectionTemplateStatusRequest(InspectionTemplateStatuses.Retired),
+            NormalizeReasonCode(request.Reason),
+            cancellationToken);
+    }
+
     public async Task<InspectionTemplateDetailResponse> CloneAsync(
         Guid tenantId,
         Guid actorUserId,
+        string actorPersonId,
         Guid inspectionTemplateId,
         CancellationToken cancellationToken = default)
     {
@@ -590,11 +801,21 @@ public sealed class InspectionTemplateService(
             TemplateKey = cloneKey,
             Name = $"{source.Name} Copy",
             Description = source.Description,
+            TemplateCategoryKey = source.TemplateCategoryKey,
+            OwningSiteRef = source.OwningSiteRef,
+            OwningTeamRef = source.OwningTeamRef,
+            OwnerPersonId = source.OwnerPersonId,
+            OwnerRoleKey = source.OwnerRoleKey,
+            EstimatedDurationMinutes = source.EstimatedDurationMinutes,
+            TagsJson = SerializeStringList(source.Tags),
+            SettingsJson = SerializeSettings(source.Settings),
             InspectionType = source.InspectionType,
             Version = 1,
             Status = InspectionTemplateStatuses.Draft,
             CreatedAt = now,
-            UpdatedAt = now
+            UpdatedAt = now,
+            CreatedByPersonId = actorPersonId,
+            UpdatedByPersonId = actorPersonId
         };
 
         db.InspectionTemplates.Add(clone);
@@ -610,6 +831,12 @@ public sealed class InspectionTemplateService(
                 InspectionTemplateId = clone.Id,
                 CategoryKey = category.CategoryKey,
                 Name = category.Name,
+                Description = category.Description,
+                IsRequired = category.IsRequired,
+                CanBeSkipped = category.CanBeSkipped,
+                SkipReasonRequired = category.SkipReasonRequired,
+                TimingTracked = category.TimingTracked,
+                SettingsJson = SerializeSettings(category.Settings),
                 SortOrder = category.SortOrder,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -630,7 +857,13 @@ public sealed class InspectionTemplateService(
                     : null,
                 ItemKey = item.ItemKey,
                 Prompt = item.Prompt,
+                HelpText = item.HelpText,
                 ItemType = item.ItemType,
+                SettingsJson = SerializeSettings(item.Settings),
+                ControlledOptionsJson = SerializeStringList(item.ControlledOptions),
+                AcceptableRangeMin = item.AcceptableRangeMin,
+                AcceptableRangeMax = item.AcceptableRangeMax,
+                UnitOfMeasure = item.UnitOfMeasure,
                 IsRequired = item.IsRequired,
                 SortOrder = item.SortOrder,
                 CreatedAt = now,
@@ -656,6 +889,7 @@ public sealed class InspectionTemplateService(
             "inspection_template.clone",
             tenantId,
             actorUserId,
+            actorPersonId,
             "inspection_template",
             clone.Id.ToString(),
             "Succeeded",
@@ -671,6 +905,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -726,6 +962,18 @@ public sealed class InspectionTemplateService(
 
             Name = NormalizeCategoryName(request.Name),
 
+            Description = NormalizeOptionalText(request.Description, 512),
+
+            IsRequired = request.IsRequired,
+
+            CanBeSkipped = request.CanBeSkipped,
+
+            SkipReasonRequired = request.SkipReasonRequired,
+
+            TimingTracked = request.TimingTracked,
+
+            SettingsJson = SerializeSettings(request.Settings),
+
             SortOrder = NormalizeSortOrder(request.SortOrder),
 
             CreatedAt = now,
@@ -750,6 +998,8 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_template_category",
 
             entity.Id.ToString(),
@@ -772,6 +1022,8 @@ public sealed class InspectionTemplateService(
 
         Guid actorUserId,
 
+        string actorPersonId,
+
         Guid inspectionTemplateId,
 
         Guid categoryId,
@@ -785,6 +1037,18 @@ public sealed class InspectionTemplateService(
         var entity = await GetCategoryForWriteAsync(tenantId, inspectionTemplateId, categoryId, cancellationToken);
 
         entity.Name = NormalizeCategoryName(request.Name);
+
+        entity.Description = NormalizeOptionalText(request.Description, 512);
+
+        entity.IsRequired = request.IsRequired;
+
+        entity.CanBeSkipped = request.CanBeSkipped;
+
+        entity.SkipReasonRequired = request.SkipReasonRequired;
+
+        entity.TimingTracked = request.TimingTracked;
+
+        entity.SettingsJson = SerializeSettings(request.Settings);
 
         entity.SortOrder = NormalizeSortOrder(request.SortOrder);
 
@@ -803,6 +1067,8 @@ public sealed class InspectionTemplateService(
             tenantId,
 
             actorUserId,
+
+            actorPersonId,
 
             "inspection_template_category",
 
@@ -825,6 +1091,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -868,6 +1136,8 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_template_category",
 
             entity.Id.ToString(),
@@ -885,6 +1155,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -954,7 +1226,11 @@ public sealed class InspectionTemplateService(
 
             Prompt = NormalizePrompt(request.Prompt),
 
+            HelpText = NormalizeOptionalText(request.HelpText, 1024),
+
             ItemType = NormalizeItemType(request.ItemType),
+
+            SettingsJson = SerializeSettings(request.Settings),
 
             ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions)),
 
@@ -992,6 +1268,8 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_checklist_item",
 
             entity.Id.ToString(),
@@ -1013,6 +1291,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -1048,7 +1328,11 @@ public sealed class InspectionTemplateService(
 
         entity.Prompt = NormalizePrompt(request.Prompt);
 
+        entity.HelpText = NormalizeOptionalText(request.HelpText, 1024);
+
         entity.ItemType = NormalizeItemType(request.ItemType);
+
+        entity.SettingsJson = SerializeSettings(request.Settings);
 
         entity.ControlledOptionsJson = SerializeControlledOptions(NormalizeControlledOptions(request.ItemType, request.ControlledOptions));
 
@@ -1082,6 +1366,8 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_checklist_item",
 
             entity.Id.ToString(),
@@ -1103,6 +1389,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -1138,6 +1426,8 @@ public sealed class InspectionTemplateService(
 
             actorUserId,
 
+            actorPersonId,
+
             "inspection_checklist_item",
 
             entity.Id.ToString(),
@@ -1155,6 +1445,8 @@ public sealed class InspectionTemplateService(
         Guid tenantId,
 
         Guid actorUserId,
+
+        string actorPersonId,
 
         Guid inspectionTemplateId,
 
@@ -1225,6 +1517,8 @@ public sealed class InspectionTemplateService(
             tenantId,
 
             actorUserId,
+
+            actorPersonId,
 
             "inspection_template",
 
@@ -1396,6 +1690,269 @@ public sealed class InspectionTemplateService(
 
     }
 
+    private async Task<IReadOnlyList<InspectionTemplateValidationIssueResponse>> BuildValidationIssuesAsync(
+        Guid tenantId,
+        InspectionTemplateDetailResponse template,
+        CancellationToken cancellationToken)
+    {
+        var issues = new List<InspectionTemplateValidationIssueResponse>();
+
+        if (string.IsNullOrWhiteSpace(template.TemplateCategoryKey))
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.category_missing",
+                "Assign a template category before publishing.",
+                "basics",
+                false));
+        }
+
+        if (string.IsNullOrWhiteSpace(template.OwningSiteRef))
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.site_missing",
+                "Choose an owning site to make the template easier to route.",
+                "ownership",
+                false));
+        }
+
+        if (string.IsNullOrWhiteSpace(template.OwningTeamRef))
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.team_missing",
+                "Choose an owning team to clarify responsibility.",
+                "ownership",
+                false));
+        }
+
+        if (string.IsNullOrWhiteSpace(template.OwnerPersonId))
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.owner_missing",
+                "Choose an owner person for this template.",
+                "ownership",
+                false));
+        }
+
+        if (template.EstimatedDurationMinutes is null)
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.duration_missing",
+                "Add an estimated duration to help planners and technicians.",
+                "basics",
+                false));
+        }
+
+        if (template.Categories.Count == 0)
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.categoryless_template",
+                "Add at least one category to structure the checklist.",
+                "categories",
+                false));
+        }
+
+        if (template.ChecklistItems.Count == 0)
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.checklist_missing",
+                "Add at least one checklist item before publishing.",
+                "checklist",
+                true));
+        }
+
+        if (template.LinkedAssetTypes.Count == 0)
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.asset_coverage_missing",
+                "Link at least one asset type so the template has a target audience.",
+                "coverage",
+                false));
+        }
+
+        if (string.IsNullOrWhiteSpace(template.Settings.TryGetValue("executionMode", out var executionMode) ? executionMode?.ToString() : null))
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.execution_mode_missing",
+                "Set an execution mode in the template settings.",
+                "review",
+                false));
+        }
+
+        var compatibleAssetCount = await CountCompatibleAssetsAsync(
+            tenantId,
+            template.LinkedAssetTypes.Select(x => x.AssetTypeId).ToArray(),
+            cancellationToken);
+
+        if (compatibleAssetCount == 0)
+        {
+            issues.Add(new InspectionTemplateValidationIssueResponse(
+                "inspection_template.no_compatible_assets",
+                "No compatible assets were found for the linked asset types.",
+                "coverage",
+                false));
+        }
+
+        return issues;
+    }
+
+    private async Task<CompatibleAssetPreviewResponse> BuildCompatibleAssetPreviewAsync(
+        Guid tenantId,
+        InspectionTemplateDetailResponse template,
+        CancellationToken cancellationToken)
+    {
+        var linkedAssetTypeIds = template.LinkedAssetTypes.Select(x => x.AssetTypeId).Distinct().ToArray();
+        var compatibleCount = await CountCompatibleAssetsAsync(tenantId, linkedAssetTypeIds, cancellationToken);
+        var sampleAssets = await LoadAssetPreviewAssetsAsync(tenantId, linkedAssetTypeIds, true, 8, cancellationToken);
+        var excludedAssets = await LoadAssetPreviewAssetsAsync(tenantId, linkedAssetTypeIds, false, 8, cancellationToken);
+
+        return new CompatibleAssetPreviewResponse(
+            compatibleCount,
+            sampleAssets,
+            excludedAssets);
+    }
+
+    private async Task<int> CountCompatibleAssetsAsync(
+        Guid tenantId,
+        IReadOnlyCollection<Guid> linkedAssetTypeIds,
+        CancellationToken cancellationToken)
+    {
+        if (linkedAssetTypeIds.Count == 0)
+        {
+            return 0;
+        }
+
+        return await db.Assets.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && linkedAssetTypeIds.Contains(x.AssetTypeId))
+            .CountAsync(cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<AssetSearchResponse>> LoadAssetPreviewAssetsAsync(
+        Guid tenantId,
+        IReadOnlyCollection<Guid> linkedAssetTypeIds,
+        bool compatible,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var query = db.Assets
+            .AsNoTracking()
+            .Include(x => x.AssetType)
+            .ThenInclude(x => x.AssetClass)
+            .Where(x => x.TenantId == tenantId);
+
+        if (compatible)
+        {
+            query = query.Where(x => linkedAssetTypeIds.Contains(x.AssetTypeId));
+        }
+        else if (linkedAssetTypeIds.Count > 0)
+        {
+            query = query.Where(x => !linkedAssetTypeIds.Contains(x.AssetTypeId));
+        }
+
+        var assets = await query
+            .OrderBy(x => x.AssetTag)
+            .ThenBy(x => x.Name)
+            .Take(Math.Clamp(take, 1, 50))
+            .ToListAsync(cancellationToken);
+
+        if (assets.Count == 0)
+        {
+            return [];
+        }
+
+        var assetIds = assets.Select(x => x.Id).ToArray();
+        var openDefectCounts = await db.Defects
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && assetIds.Contains(x.AssetId)
+                && (x.Status == DefectStatuses.Open
+                    || x.Status == DefectStatuses.Acknowledged
+                    || x.Status == DefectStatuses.InRepair))
+            .GroupBy(x => x.AssetId)
+            .Select(x => new { AssetId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.AssetId, x => x.Count, cancellationToken);
+
+        var openWorkOrderCounts = await db.WorkOrders
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && assetIds.Contains(x.AssetId)
+                && WorkOrderStatuses.Active.Contains(x.Status))
+            .GroupBy(x => x.AssetId)
+            .Select(x => new { AssetId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.AssetId, x => x.Count, cancellationToken);
+
+        var readinessByAssetId = await db.AssetReadinessStates
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && assetIds.Contains(x.AssetId))
+            .ToDictionaryAsync(x => x.AssetId, x => x.ReadinessStatusKey, cancellationToken);
+
+        return assets
+            .Select(asset => new AssetSearchResponse(
+                asset.Id,
+                asset.AssetTypeId,
+                asset.AssetType.TypeKey,
+                asset.AssetType.Name,
+                asset.AssetType.AssetClass.ClassKey,
+                asset.AssetType.AssetClass.Name,
+                asset.AssetTag,
+                asset.Name,
+                asset.Description,
+                asset.LifecycleStatus,
+                asset.SiteRef,
+                asset.StaffarrSiteOrgUnitId,
+                asset.StaffarrSiteNameSnapshot,
+                openDefectCounts.GetValueOrDefault(asset.Id, 0),
+                openWorkOrderCounts.GetValueOrDefault(asset.Id, 0),
+                readinessByAssetId.GetValueOrDefault(asset.Id, "unknown"),
+                asset.CreatedAt,
+                asset.UpdatedAt))
+            .ToList();
+    }
+
+    private static void EnsurePublishConfirmations(PublishInspectionTemplateRequest request)
+    {
+        var missing = new List<string>();
+
+        if (!request.ConfirmComplianceRelated)
+        {
+            missing.Add("confirmComplianceRelated");
+        }
+
+        if (!request.ConfirmReadinessImpact)
+        {
+            missing.Add("confirmReadinessImpact");
+        }
+
+        if (!request.ConfirmFailureAutomation)
+        {
+            missing.Add("confirmFailureAutomation");
+        }
+
+        if (!request.ConfirmSupervisorRelease)
+        {
+            missing.Add("confirmSupervisorRelease");
+        }
+
+        if (missing.Count > 0)
+        {
+            throw new StlApiException(
+                "inspection_template.publish_confirmation_required",
+                "Confirm the publish checklist before activating the template.",
+                400,
+                new Dictionary<string, object?>
+                {
+                    ["missingConfirmations"] = missing,
+                });
+        }
+    }
+
+    private static string BuildPreviewSummary(
+        InspectionTemplateDetailResponse template,
+        InspectionTemplateValidationResponse validation,
+        CompatibleAssetPreviewResponse assets)
+    {
+        return $"{template.Name}: {validation.ChecklistItemCount} checklist items, {validation.SectionCount} sections, {assets.CompatibleCount} compatible assets";
+    }
+
     private static string NormalizeInspectionType(string? inspectionType)
     {
         var normalized = string.IsNullOrWhiteSpace(inspectionType)
@@ -1411,6 +1968,109 @@ public sealed class InspectionTemplateService(
         }
 
         return normalized;
+    }
+
+    private static string NormalizeTemplateStatus(string status)
+    {
+        var normalized = status.Trim().ToLowerInvariant();
+
+        if (!AllowedTemplateStatuses.Contains(normalized))
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_status",
+                "Template status must be draft, active, retired, or archived.",
+                400);
+        }
+
+        return string.Equals(normalized, InspectionTemplateStatuses.Inactive, StringComparison.OrdinalIgnoreCase)
+            ? InspectionTemplateStatuses.Retired
+            : normalized;
+    }
+
+    private static string? NormalizeOptionalKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length is < 2 or > 128)
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_reference",
+                "Reference keys must be between 2 and 128 characters.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptionalReference(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length is < 1 or > 128)
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_reference",
+                "Reference values must be between 1 and 128 characters.",
+                400);
+        }
+
+        return trimmed;
+    }
+
+    private static int? NormalizeOptionalDurationMinutes(int? durationMinutes)
+    {
+        if (!durationMinutes.HasValue)
+        {
+            return null;
+        }
+
+        if (durationMinutes.Value is < 1 or > 24 * 60)
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_duration",
+                "Estimated duration must be between 1 and 1,440 minutes.",
+                400);
+        }
+
+        return durationMinutes.Value;
+    }
+
+    private static string NormalizeOptionalText(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length > maxLength)
+        {
+            throw new StlApiException(
+                "inspection_template.invalid_text",
+                $"Text must be {maxLength} characters or fewer.",
+                400);
+        }
+
+        return trimmed;
+    }
+
+    private static string? NormalizeReasonCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant().Replace(' ', '_').Replace('-', '_');
+        return normalized.Length <= 64 ? normalized : normalized[..64];
     }
 
     private async Task<string> GenerateCloneTemplateKeyAsync(
@@ -1467,7 +2127,19 @@ public sealed class InspectionTemplateService(
 
             entity.Name,
 
+            entity.Description,
+
+            entity.IsRequired,
+
+            entity.CanBeSkipped,
+
+            entity.SkipReasonRequired,
+
+            entity.TimingTracked,
+
             entity.SortOrder,
+
+            DeserializeObjectDict(entity.SettingsJson),
 
             entity.CreatedAt,
 
@@ -1493,6 +2165,8 @@ public sealed class InspectionTemplateService(
 
             entity.Prompt,
 
+            entity.HelpText,
+
             entity.ItemType,
 
             DeserializeStringList(entity.ControlledOptionsJson),
@@ -1506,6 +2180,8 @@ public sealed class InspectionTemplateService(
             entity.IsRequired,
 
             entity.SortOrder,
+
+            DeserializeObjectDict(entity.SettingsJson),
 
             entity.CreatedAt,
 
@@ -1572,6 +2248,36 @@ public sealed class InspectionTemplateService(
     private static string NormalizeDescription(string description) =>
 
         description.Trim().Length <= 512 ? description.Trim() : description.Trim()[..512];
+
+    private static string SerializeStringList(IReadOnlyList<string>? values) =>
+        JsonSerializer.Serialize((values ?? [])
+            .Select(value => value.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList());
+
+    private static string SerializeSettings(IReadOnlyDictionary<string, object?>? settings) =>
+        JsonSerializer.Serialize(settings ?? new Dictionary<string, object?>());
+
+    private static IReadOnlyDictionary<string, object?> DeserializeObjectDict(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new Dictionary<string, object?>();
+        }
+
+        try
+        {
+            var data = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
+            return data is null
+                ? new Dictionary<string, object?>()
+                : new Dictionary<string, object?>(data, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<string, object?>();
+        }
+    }
 
 
 
@@ -1815,7 +2521,19 @@ public sealed class InspectionTemplateService(
     private static IReadOnlyList<string> DeserializeStringList(string json) =>
         string.IsNullOrWhiteSpace(json)
             ? []
-            : JsonSerializer.Deserialize<string[]>(json) ?? [];
+            : DeserializeStringArray(json);
+
+    private static IReadOnlyList<string> DeserializeStringArray(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(json) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
 
 
