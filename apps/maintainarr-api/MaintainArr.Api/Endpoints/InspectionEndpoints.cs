@@ -128,9 +128,10 @@ public static class InspectionEndpoints
             authorization.RequireInspectionsExecute(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString();
             var existing = await service.GetAsync(tenantId, inspectionRunId, cancellationToken);
             authorization.RequireInspectionRunAccess(context.User, existing.StartedByUserId);
-            var completed = await service.CompleteAsync(tenantId, actorUserId, inspectionRunId, cancellationToken);
+            var completed = await service.CompleteAsync(tenantId, actorUserId, inspectionRunId, cancellationToken, actorPersonId);
             return Results.Ok(completed);
         })
         .WithName($"CompleteInspectionRun{nameSuffix}");

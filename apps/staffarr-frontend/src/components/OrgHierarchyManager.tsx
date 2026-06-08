@@ -36,6 +36,7 @@ interface OrgNode extends OrgUnitResponse {
 type OrgUnitDraft = {
   unitType: OrgUnitType
   name: string
+  code: string
   parentOrgUnitId: string
   status: OrgUnitStatus
   description: string
@@ -186,6 +187,7 @@ function emptyDraft(unitType: OrgUnitType = 'site'): OrgUnitDraft {
   return {
     unitType,
     name: '',
+    code: '',
     parentOrgUnitId: '',
     status: 'planned',
     description: '',
@@ -210,6 +212,7 @@ function hydrateDraft(orgUnit: OrgUnitResponse): OrgUnitDraft {
   return {
     unitType: orgUnit.unitType,
     name: orgUnit.name,
+    code: orgUnit.code ?? '',
     parentOrgUnitId: orgUnit.parentOrgUnitId ?? '',
     status: orgUnit.status,
     description: orgUnit.description ?? '',
@@ -242,6 +245,7 @@ function serializeDraft(draft: OrgUnitDraft): CreateOrgUnitRequest {
   return {
     unitType: draft.unitType,
     name: draft.name.trim(),
+    code: draft.code.trim() || null,
     parentOrgUnitId: draft.parentOrgUnitId || null,
     description: draft.description.trim() || null,
     managerPersonId: draft.managerPersonId || null,
@@ -337,6 +341,18 @@ function OrgUnitFormFields({
           className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
           disabled={disabled}
           required
+        />
+      </label>
+
+      <label htmlFor={`${prefix}-code`} className="block text-sm text-slate-300">
+        Code
+        <input
+          id={`${prefix}-code`}
+          value={draft.code}
+          onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))}
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+          disabled={disabled}
+          placeholder="Optional. Auto-generated if blank."
         />
       </label>
 

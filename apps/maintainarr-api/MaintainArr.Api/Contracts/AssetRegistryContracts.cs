@@ -59,6 +59,26 @@ public sealed record AssetResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+public sealed record AssetSearchResponse(
+    Guid AssetId,
+    Guid AssetTypeId,
+    string TypeKey,
+    string TypeName,
+    string ClassKey,
+    string ClassName,
+    string AssetTag,
+    string Name,
+    string Description,
+    string LifecycleStatus,
+    string? SiteRef,
+    Guid? StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
+    int OpenDefectCount,
+    int OpenWorkOrderCount,
+    string ReadinessStatus,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
 public sealed record CreateAssetRequest(
     Guid AssetTypeId,
     string AssetTag,

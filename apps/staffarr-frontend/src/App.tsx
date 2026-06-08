@@ -7,8 +7,7 @@ import { IncidentCreatePage } from './pages/incidents/IncidentCreatePage'
 import { IncidentsPage } from './pages/incidents/IncidentsPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
-import { LocationsPage } from './pages/locations/LocationsPage'
-import { OrgPage } from './pages/org/OrgPage'
+import { OrganizationStructurePage } from './pages/organization-structure/OrganizationStructurePage'
 import { PeoplePage } from './pages/people/PeoplePage'
 import { PermissionsPage } from './pages/permissions/PermissionsPage'
 import { RestrictionsPage } from './pages/restrictions/RestrictionsPage'
@@ -43,8 +42,10 @@ export default function App() {
             <Route path="/people/drawer" element={<PeoplePage />} />
             <Route path="/people/details" element={<PeoplePage />} />
             <Route path="/people/create" element={<PeoplePage />} />
-            <Route path="/org" element={<OrgPage />} />
-            <Route path="/locations" element={<LocationsPage />} />
+            <Route path="/organization-structure" element={<OrganizationStructurePage />} />
+            <Route path="/org" element={<Navigate to="/organization-structure?tab=organization" replace />} />
+            <Route path="/locations" element={<Navigate to="/organization-structure?tab=locations" replace />} />
+            <Route path="/setup/organization" element={<Navigate to="/organization-structure?tab=organization" replace />} />
             <Route path="/permissions" element={<PermissionsPage />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />

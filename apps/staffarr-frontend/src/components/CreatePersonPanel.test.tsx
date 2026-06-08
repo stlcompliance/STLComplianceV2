@@ -4,11 +4,12 @@ import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 const mocked = vi.hoisted(() => ({
-  listSiteLocations: vi.fn(async () => []),
+  listLocations: vi.fn(async () => []),
 }))
 
 vi.mock('../api/client', () => ({
-  listSiteLocations: mocked.listSiteLocations,
+  listLocations: mocked.listLocations,
+  listSiteLocations: mocked.listLocations,
 }))
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {

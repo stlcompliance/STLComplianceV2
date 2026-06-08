@@ -55,6 +55,31 @@ public static class AssetEndpoints
 
         if (nameSuffix == "V1")
         {
+            group.MapGet("/search", async (
+                string? query,
+                string? status,
+                string? siteRef,
+                int? limit,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                AssetService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetsRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.SearchAsync(
+                    tenantId,
+                    query,
+                    status,
+                    siteRef,
+                    limit ?? 25,
+                    cancellationToken));
+            })
+            .WithName("SearchAssetsV1");
+        }
+
+        if (nameSuffix == "V1")
+        {
             group.MapPost("/", async (
                 AssetUpsertV1Request request,
                 HttpContext context,

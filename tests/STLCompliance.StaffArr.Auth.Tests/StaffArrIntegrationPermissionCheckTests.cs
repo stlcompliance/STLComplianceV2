@@ -14,6 +14,7 @@ using StaffArr.Api.Data;
 using StaffArr.Api.Endpoints;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
+using STLCompliance.Shared.Operations;
 using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -27,6 +28,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
     private string _maintainarrPermissionCheckToken = null!;
     private string _maintainarrPermissionCatalogSyncToken = null!;
     private string _maintainarrSitesReadToken = null!;
+    private string _loadarrPermissionCatalogSyncToken = null!;
     private Guid _personId;
     private Guid _inactivePersonId;
     private Guid _activeSiteOrgUnitId;
@@ -71,6 +73,11 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             "maintainarr",
             ["staffarr"],
             IntegrationEndpoints.SitesReadActionScope);
+        _loadarrPermissionCatalogSyncToken = await IssueServiceTokenAsync(
+            adminToken,
+            "loadarr",
+            ["staffarr"],
+            IntegrationEndpoints.ProductPermissionCatalogSyncActionScope);
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -254,6 +261,47 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             && x.ProductKey == "maintainarr"
             && x.Sensitivity == "critical"
             && x.LastSyncedAt is not null);
+    }
+
+    [Fact]
+    public async Task Product_permission_catalog_sync_upserts_loadarr_permissions()
+    {
+        var syncRequest = Authorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/product-permission-catalog",
+            _loadarrPermissionCatalogSyncToken);
+        syncRequest.Content = JsonContent.Create(new SyncProductPermissionCatalogRequest(
+            PlatformSeeder.DemoTenantId,
+            "loadarr",
+            StlLoadArrPermissionCatalog.All.Select(item => new ProductPermissionCatalogItemRequest(
+                item.PermissionKey,
+                item.Label,
+                item.Description,
+                item.Scope,
+                item.Sensitivity,
+                item.Status)).ToList()));
+
+        var syncResponse = await _staffarrClient.SendAsync(syncRequest);
+        syncResponse.EnsureSuccessStatusCode();
+        var synced = (await syncResponse.Content.ReadFromJsonAsync<SyncProductPermissionCatalogResponse>())!;
+        Assert.Equal("loadarr", synced.ProductKey);
+        Assert.Equal(StlLoadArrPermissionCatalog.All.Count, synced.UpsertedCount);
+        Assert.Contains(synced.Permissions, item =>
+            item.PermissionKey == "loadarr.dashboard.read"
+            && item.ProductKey == "loadarr"
+            && item.Scope == "product");
+
+        var adminToken = CreateStaffArrAccessToken(_personId, "tenant_admin");
+        var listResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/permissions/product-catalog?productKey=loadarr",
+            adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var catalog = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
+        Assert.Contains(catalog, item =>
+            item.PermissionKey == "loadarr.permissions.manage"
+            && item.Scope == "tenant"
+            && item.Sensitivity == "critical");
     }
 
     [Fact]

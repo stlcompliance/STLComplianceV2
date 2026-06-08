@@ -515,10 +515,103 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_incident_trainarr_routings", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.InternalLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AllowedProductUsage")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ArchiveReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ArchivedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("LocationNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LocationType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("ParentLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SiteOrgUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArchivedByUserId");
+
+                    b.HasIndex("ParentLocationId");
+
+                    b.HasIndex("SiteOrgUnitId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LocationNumber")
+                        .IsUnique()
+                        .HasFilter("\"ParentLocationId\" IS NULL");
+
+                    b.HasIndex("TenantId", "ParentLocationId", "LocationNumber")
+                        .IsUnique()
+                        .HasFilter("\"ParentLocationId\" IS NOT NULL");
+
+                    b.ToTable("staffarr_internal_locations", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ArchiveReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ArchivedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("CanApprove")
@@ -530,6 +623,10 @@ namespace StaffArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<bool>("ComplianceSensitive")
                         .ValueGeneratedOnAdd()
@@ -610,6 +707,8 @@ namespace StaffArr.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ArchivedByUserId");
+
                     b.HasIndex("DefaultSiteOrgUnitId");
 
                     b.HasIndex("ManagerPersonId");
@@ -617,6 +716,14 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("ParentOrgUnitId");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"Code\" IS NOT NULL AND \"ParentOrgUnitId\" IS NULL");
+
+                    b.HasIndex("TenantId", "ParentOrgUnitId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"Code\" IS NOT NULL AND \"ParentOrgUnitId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "UnitType", "Name")
                         .IsUnique();
@@ -2623,8 +2730,33 @@ namespace StaffArr.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.InternalLocation", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", "ArchivedByUser")
+                        .WithMany()
+                        .HasForeignKey("ArchivedByUserId");
+
+                    b.HasOne("StaffArr.Api.Entities.InternalLocation", "ParentLocation")
+                        .WithMany()
+                        .HasForeignKey("ParentLocationId");
+
+                    b.HasOne("StaffArr.Api.Entities.OrgUnit", "SiteOrgUnit")
+                        .WithMany()
+                        .HasForeignKey("SiteOrgUnitId");
+
+                    b.Navigation("ArchivedByUser");
+
+                    b.Navigation("ParentLocation");
+
+                    b.Navigation("SiteOrgUnit");
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", "ArchivedByUser")
+                        .WithMany()
+                        .HasForeignKey("ArchivedByUserId");
+
                     b.HasOne("StaffArr.Api.Entities.OrgUnit", "DefaultSiteOrgUnit")
                         .WithMany()
                         .HasForeignKey("DefaultSiteOrgUnitId");
@@ -2636,6 +2768,8 @@ namespace StaffArr.Api.Migrations
                     b.HasOne("StaffArr.Api.Entities.OrgUnit", "ParentOrgUnit")
                         .WithMany()
                         .HasForeignKey("ParentOrgUnitId");
+
+                    b.Navigation("ArchivedByUser");
 
                     b.Navigation("DefaultSiteOrgUnit");
 
@@ -2899,7 +3033,7 @@ namespace StaffArr.Api.Migrations
 
             modelBuilder.Entity("StaffArr.Api.Entities.StaffPerson", b =>
                 {
-                    b.HasOne("StaffArr.Api.Entities.OrgUnit", "HomeBaseLocation")
+                    b.HasOne("StaffArr.Api.Entities.InternalLocation", "HomeBaseLocation")
                         .WithMany()
                         .HasForeignKey("HomeBaseLocationId");
 

@@ -308,12 +308,21 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireDefectsCreate(ClaimsPrincipal principal) => RequireInspectionsExecute(principal);
 
+    public void RequireDefectsSubmit(ClaimsPrincipal principal) => RequireDefectsCreate(principal);
+
     public bool CanViewAllDefects(ClaimsPrincipal principal) => CanViewAllInspectionRuns(principal);
 
-    public void RequireDefectAccess(ClaimsPrincipal principal, Guid reportedByUserId)
+    public void RequireDefectAccess(ClaimsPrincipal principal, string? reportedByPersonId, Guid reportedByUserId)
     {
         RequireDefectsRead(principal);
         if (CanViewAllDefects(principal))
+        {
+            return;
+        }
+
+        var actorPersonId = principal.GetPersonId().ToString();
+        if (!string.IsNullOrWhiteSpace(reportedByPersonId)
+            && string.Equals(reportedByPersonId, actorPersonId, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -328,7 +337,14 @@ public sealed class MaintainArrAuthorizationService
         }
     }
 
+    public void RequireDefectAccess(ClaimsPrincipal principal, Guid reportedByUserId) =>
+        RequireDefectAccess(principal, null, reportedByUserId);
+
     public void RequireDefectsStatusManage(ClaimsPrincipal principal) => RequireInspectionsManage(principal);
+
+    public void RequireDefectReadinessManage(ClaimsPrincipal principal) => RequireAssetsManage(principal);
+
+    public void RequireDefectWorkOrderHandoff(ClaimsPrincipal principal) => RequireWorkOrdersCreate(principal);
 
     public void RequireMetersRead(ClaimsPrincipal principal) => RequirePmRead(principal);
 

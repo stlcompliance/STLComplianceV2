@@ -427,7 +427,8 @@ public sealed class InspectionRunService(
         Guid tenantId,
         Guid actorUserId,
         Guid inspectionRunId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? actorPersonId = null)
     {
         var run = await GetRunForWriteAsync(tenantId, inspectionRunId, cancellationToken);
         if (!string.Equals(run.Status, InspectionRunStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
@@ -523,7 +524,8 @@ public sealed class InspectionRunService(
                 tenantId,
                 actorUserId,
                 inspectionRunId,
-                cancellationToken);
+                cancellationToken,
+                actorPersonId);
         }
 
         return await MapDetailAsync(tenantId, run, cancellationToken);

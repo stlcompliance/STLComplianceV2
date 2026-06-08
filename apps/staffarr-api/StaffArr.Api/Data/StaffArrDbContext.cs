@@ -10,6 +10,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<OrgUnit> OrgUnits => Set<OrgUnit>();
 
+    public DbSet<InternalLocation> InternalLocations => Set<InternalLocation>();
+
     public DbSet<OrgUnitAssignment> OrgUnitAssignments => Set<OrgUnitAssignment>();
 
     public DbSet<RoleTemplate> RoleTemplates => Set<RoleTemplate>();
@@ -91,6 +93,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasKey(x => x.Id);
             entity.Property(x => x.UnitType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(64);
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SiteType).HasMaxLength(32);
@@ -103,11 +106,45 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.SafetySensitive).HasDefaultValue(false);
             entity.Property(x => x.CanSupervise).HasDefaultValue(false);
             entity.Property(x => x.CanApprove).HasDefaultValue(false);
+            entity.Property(x => x.ArchiveReason).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.UnitType, x.Name }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Code })
+                .HasFilter("\"Code\" IS NOT NULL AND \"ParentOrgUnitId\" IS NULL")
+                .IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ParentOrgUnitId, x.Code })
+                .HasFilter("\"Code\" IS NOT NULL AND \"ParentOrgUnitId\" IS NOT NULL")
+                .IsUnique();
             entity.HasOne(x => x.ParentOrgUnit).WithMany().HasForeignKey(x => x.ParentOrgUnitId);
             entity.HasOne(x => x.ManagerPerson).WithMany().HasForeignKey(x => x.ManagerPersonId);
             entity.HasOne(x => x.DefaultSiteOrgUnit).WithMany().HasForeignKey(x => x.DefaultSiteOrgUnitId);
+            entity.HasOne(x => x.ArchivedByUser).WithMany().HasForeignKey(x => x.ArchivedByUserId);
+        });
+
+        modelBuilder.Entity<InternalLocation>(entity =>
+        {
+            entity.ToTable("staffarr_internal_locations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LocationNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.LocationType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.AllowedProductUsage).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ArchiveReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.SiteOrgUnitId);
+            entity.HasIndex(x => x.ParentLocationId);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => new { x.TenantId, x.LocationNumber })
+                .HasFilter("\"ParentLocationId\" IS NULL")
+                .IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ParentLocationId, x.LocationNumber })
+                .HasFilter("\"ParentLocationId\" IS NOT NULL")
+                .IsUnique();
+            entity.HasOne(x => x.ParentLocation).WithMany().HasForeignKey(x => x.ParentLocationId);
+            entity.HasOne(x => x.SiteOrgUnit).WithMany().HasForeignKey(x => x.SiteOrgUnitId);
+            entity.HasOne(x => x.ArchivedByUser).WithMany().HasForeignKey(x => x.ArchivedByUserId);
         });
 
         modelBuilder.Entity<StaffPerson>(entity =>

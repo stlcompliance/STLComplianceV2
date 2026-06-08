@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   LoadArrApiError,
+  getLoadArrExpectedReceipts,
+  getLoadArrPermissionCatalog,
+  getLoadArrRouteSurfaceRecord,
   getSessionBootstrap,
   loadArrFetch,
   redeemHandoff,
@@ -65,5 +68,131 @@ describe('loadarr api client', () => {
     expect(init?.credentials).toBeUndefined()
     expect(headers.get('Accept')).toBe('application/json')
     expect(headers.get('Authorization')).toBe('Bearer token-123')
+  })
+
+  it('loads the permission catalog with authorized requests', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          permissions: [
+            {
+              productKey: 'loadarr',
+              permissionKey: 'loadarr.dashboard.read',
+              label: 'Read Dashboard',
+              description: 'View the LoadArr operational dashboard.',
+              scope: 'product',
+              sensitivity: 'standard',
+              status: 'active',
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    const response = await getLoadArrPermissionCatalog('token-456')
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/admin/permissions',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    )
+
+    const [, init] = fetchSpy.mock.calls[0]!
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Authorization')).toBe('Bearer token-456')
+    expect(response.permissions).toHaveLength(1)
+    expect(response.permissions[0]).toMatchObject({
+      productKey: 'loadarr',
+      permissionKey: 'loadarr.dashboard.read',
+    })
+  })
+
+  it('loads route surface collections with query filters and bearer auth', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [
+            {
+              id: 'task-receive-24018',
+              expectedReceiptNumber: 'EXP-PO-10492',
+              status: 'ready_to_receive',
+              sourceProductKey: 'supplyarr',
+              sourceObjectType: 'purchase_order',
+              sourceObjectId: 'PO-10492',
+              supplierNameSnapshot: 'Midwest Fleet Supply',
+              staffarrSiteOrgUnitId: 'staff-site-stl-north',
+              staffarrSiteNameSnapshot: 'STL North Yard',
+              warehouseLocationId: 'loc-dock-01',
+              locationNameSnapshot: 'Receiving Dock 1',
+              supplyarrItemId: 'SUP-VALVE-KIT-A',
+              itemNameSnapshot: 'Valve repair kit A',
+              expectedQuantity: 38,
+              receivedQuantity: 0,
+              unitOfMeasure: 'each',
+              expectedAtUtc: '2026-06-03T15:00:00Z',
+              lastUpdatedAtUtc: '2026-06-02T20:10:00Z',
+              receivingSessionId: 'recv-24018',
+              signals: ['purchase_receipt'],
+            },
+          ],
+          total: 1,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    const response = await getLoadArrExpectedReceipts('token-789', {
+      status: 'ready_to_receive',
+      locationId: 'loc-dock-01',
+      includeEmpty: false,
+      ignored: undefined,
+    })
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/loadarr/expected-receipts?status=ready_to_receive&locationId=loc-dock-01&includeEmpty=false',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    )
+
+    const [, init] = fetchSpy.mock.calls[0]!
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Authorization')).toBe('Bearer token-789')
+    expect(response.total).toBe(1)
+    expect(response.items[0]).toMatchObject({
+      id: 'task-receive-24018',
+      expectedReceiptNumber: 'EXP-PO-10492',
+    })
+  })
+
+  it('loads route surface detail records from canonical collection paths', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 'handoff-rt-7781', status: 'ready' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const response = await getLoadArrRouteSurfaceRecord<{ id: string; status: string }>(
+      'token-000',
+      'shipping',
+      'handoff-rt-7781',
+    )
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/loadarr/shipping/handoff-rt-7781',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    )
+    expect(response).toEqual({ id: 'handoff-rt-7781', status: 'ready' })
   })
 })

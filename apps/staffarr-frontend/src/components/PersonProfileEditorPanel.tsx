@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { listSiteLocations } from '../api/client'
+import { listLocations } from '../api/client'
 import type { OrgUnitResponse, StaffPersonDetailResponse } from '../api/types'
 
 const WRITER_ROLES = new Set(['tenant_admin', 'staffarr_admin', 'hr_admin'])
@@ -156,7 +156,7 @@ export function PersonProfileEditorPanel({
 
   const locationQuery = useQuery({
     queryKey: ['staffarr-site-locations', accessToken, siteContextOrgUnitId],
-    queryFn: () => listSiteLocations(accessToken, siteContextOrgUnitId!),
+    queryFn: () => listLocations(accessToken, { siteOrgUnitId: siteContextOrgUnitId! }),
     enabled: Boolean(accessToken && siteContextOrgUnitId),
   })
 
@@ -408,7 +408,7 @@ export function PersonProfileEditorPanel({
               disabled={!siteContextOrgUnitId || locationQuery.isLoading}
             />
             {locationQuery.isLoading ? (
-              <p className="mt-1 text-xs text-slate-500">Loading site locations...</p>
+              <p className="mt-1 text-xs text-slate-500">Loading locations...</p>
             ) : null}
           </label>
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">

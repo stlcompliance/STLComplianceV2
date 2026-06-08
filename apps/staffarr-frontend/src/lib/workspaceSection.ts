@@ -9,6 +9,7 @@ export const WORKSPACE_SECTIONS = [
   'training-acknowledgements',
   'certifications',
   'admin',
+  'organization-structure',
 ] as const
 
 export type WorkspaceSection = (typeof WORKSPACE_SECTIONS)[number]
@@ -66,5 +67,9 @@ export const workspaceSectionHeaders: Record<
   admin: {
     title: 'Admin',
     subtitle: 'Bulk import, export, and audit packages',
+  },
+  'organization-structure': {
+    title: 'Organization structure',
+    subtitle: 'Canonical org units and internal locations',
   },
 }

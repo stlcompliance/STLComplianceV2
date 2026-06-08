@@ -223,6 +223,27 @@ export interface AssetInstalledComponentResponse {
   updatedAt: string
 }
 
+export interface AssetSearchResponse {
+  assetId: string
+  assetTypeId: string
+  typeKey: string
+  typeName: string
+  classKey: string
+  className: string
+  assetTag: string
+  name: string
+  description: string
+  lifecycleStatus: string
+  siteRef: string | null
+  staffarrSiteOrgUnitId: string | null
+  staffarrSiteNameSnapshot: string
+  openDefectCount: number
+  openWorkOrderCount: number
+  readinessStatus: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface InspectionTemplateSummaryResponse {
   inspectionTemplateId: string
   templateKey: string
@@ -489,6 +510,29 @@ export interface DefectSummaryResponse {
   updatedAt: string
   resolvedAt: string | null
   evidenceCount: number
+  downtimeFollowUp?: DowntimeFollowUpResponse | null
+  priority?: string | null
+  defectType?: string | null
+  reportSource?: string | null
+  reportedByPersonId?: string | null
+  discoveredByPersonId?: string | null
+  createdByPersonId?: string | null
+  updatedByPersonId?: string | null
+  reportedAt?: string | null
+  discoveredAt?: string | null
+  isSafetyCritical?: boolean | null
+  isComplianceImpacting?: boolean | null
+  isOperabilityImpacting?: boolean | null
+  failureMode?: string | null
+  systemKey?: string | null
+  componentKey?: string | null
+  symptom?: string | null
+  sidePosition?: string | null
+  operatingCondition?: string | null
+  deferralCode?: string | null
+  sourceType?: string | null
+  sourceReferenceId?: string | null
+  incidentReferenceId?: string | null
 }
 
 export interface DowntimeFollowUpResponse {
@@ -519,6 +563,30 @@ export interface DefectDetailResponse {
   resolvedAt: string | null
   evidenceCount: number
   downtimeFollowUp?: DowntimeFollowUpResponse | null
+  priority?: string | null
+  defectType?: string | null
+  reportSource?: string | null
+  reportedByPersonId?: string | null
+  discoveredByPersonId?: string | null
+  createdByPersonId?: string | null
+  updatedByPersonId?: string | null
+  reportedAt?: string | null
+  discoveredAt?: string | null
+  isSafetyCritical?: boolean | null
+  isComplianceImpacting?: boolean | null
+  isOperabilityImpacting?: boolean | null
+  failureMode?: string | null
+  systemKey?: string | null
+  componentKey?: string | null
+  symptom?: string | null
+  sidePosition?: string | null
+  operatingCondition?: string | null
+  deferralCode?: string | null
+  sourceType?: string | null
+  sourceReferenceId?: string | null
+  incidentReferenceId?: string | null
+  readinessNotes?: string | null
+  correctiveAction?: string | null
 }
 
 export interface CreateDefectRequest {
@@ -526,6 +594,96 @@ export interface CreateDefectRequest {
   title: string
   description: string
   severity: string
+}
+
+export interface DefectValidationFindingResponse {
+  category: string
+  severity: string
+  code: string
+  message: string
+  fieldKey?: string | null
+  sectionKey?: string | null
+  source?: string | null
+}
+
+export interface DefectValidationResponse {
+  isValid: boolean
+  findings: DefectValidationFindingResponse[]
+}
+
+export interface DefectDuplicateMatchResponse {
+  defectId: string
+  title: string
+  status: string
+  severity: string
+  assetTag: string
+  assetName: string
+  matchReason: string
+  similarityScore: number
+}
+
+export interface DefectDraftPreviewResponse {
+  defect: DefectDetailResponse
+  findings: DefectValidationFindingResponse[]
+  duplicateMatches: DefectDuplicateMatchResponse[]
+  assetReadiness: AssetReadinessResponse | null
+  canSubmit: boolean
+  canCreateWorkOrder: boolean
+  canMarkAssetNotReady: boolean
+}
+
+export interface UpsertDefectDraftRequest {
+  assetId: string
+  title?: string | null
+  description?: string | null
+  severity?: string | null
+  priority?: string | null
+  defectType?: string | null
+  reportSource?: string | null
+  reportedAt?: string | null
+  discoveredAt?: string | null
+  reportedByPersonId?: string | null
+  discoveredByPersonId?: string | null
+  failureMode?: string | null
+  systemKey?: string | null
+  componentKey?: string | null
+  symptom?: string | null
+  sidePosition?: string | null
+  operatingCondition?: string | null
+  deferralCode?: string | null
+  isSafetyCritical?: boolean | null
+  isComplianceImpacting?: boolean | null
+  isOperabilityImpacting?: boolean | null
+  readinessNotes?: string | null
+  correctiveAction?: string | null
+  sourceType?: string | null
+  sourceReferenceId?: string | null
+  incidentReferenceId?: string | null
+}
+
+export interface SubmitDefectRequest {
+  createWorkOrder: boolean
+  markAssetNotReady: boolean
+  workOrderTitle?: string | null
+  workOrderDescription?: string | null
+  workOrderPriority?: string | null
+  workOrderAssignedTechnicianPersonId?: string | null
+  workOrderDraftPlanJson?: string | null
+  workOrderPlannedStartAt?: string | null
+  workOrderPlannedDueAt?: string | null
+  holdType?: string | null
+  holdTitle?: string | null
+  holdDescription?: string | null
+  holdSeverity?: string | null
+  holdSourceProduct?: string | null
+  holdSourceObjectRef?: string | null
+  holdCreatedByPersonId?: string | null
+}
+
+export interface DefectSubmissionResponse {
+  defect: DefectDetailResponse
+  workOrder: WorkOrderDetailResponse | null
+  assetQualityHold: AssetQualityHoldResponse | null
 }
 
 export interface CreateDefectsFromInspectionRunRequest {
@@ -540,6 +698,23 @@ export interface CreateDefectsFromInspectionRunResponse {
 
 export interface UpdateDefectStatusRequest {
   status: string
+}
+
+export interface AssetQualityHoldResponse {
+  holdId: string
+  assetId: string
+  holdType: string
+  sourceProduct: string
+  sourceObjectRef: string | null
+  title: string
+  description: string
+  severity: string
+  status: string
+  createdAt: string
+  createdByPersonId: string | null
+  releasedAt: string | null
+  releasedByPersonId: string | null
+  releaseReason: string | null
 }
 
 export interface CreateMaintainArrEvidenceRequest {

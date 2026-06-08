@@ -15,33 +15,94 @@ public sealed class OrgUnitService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        return await db.OrgUnits
+        return await ListAsync(
+            tenantId,
+            includeArchived: true,
+            search: null,
+            type: null,
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<OrgUnitResponse>> ListAsync(
+        Guid tenantId,
+        bool includeArchived,
+        string? search,
+        string? type,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.OrgUnits.AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != "archived");
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLowerInvariant();
+            query = query.Where(x =>
+                x.Name.ToLower().Contains(term)
+                || (x.Code != null && x.Code.ToLower().Contains(term))
+                || (x.Description != null && x.Description.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            var normalizedType = type.Trim().ToLowerInvariant();
+            query = query.Where(x => x.UnitType == normalizedType);
+        }
+
+        var units = await query.ToListAsync(cancellationToken);
+        return await ProjectAsync(tenantId, units, treeOrder: false, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<OrgUnitResponse>> ListTreeAsync(
+        Guid tenantId,
+        bool includeArchived,
+        string? search,
+        string? type,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.OrgUnits.AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != "archived");
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLowerInvariant();
+            query = query.Where(x =>
+                x.Name.ToLower().Contains(term)
+                || (x.Code != null && x.Code.ToLower().Contains(term))
+                || (x.Description != null && x.Description.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            var normalizedType = type.Trim().ToLowerInvariant();
+            query = query.Where(x => x.UnitType == normalizedType);
+        }
+
+        var units = await query.ToListAsync(cancellationToken);
+        return await ProjectAsync(tenantId, units, treeOrder: true, cancellationToken);
+    }
+
+    public async Task<OrgUnitResponse> GetAsync(
+        Guid tenantId,
+        Guid orgUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var orgUnit = await db.OrgUnits
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId)
-            .OrderBy(x => x.UnitType)
-            .ThenBy(x => x.Name)
-            .Select(x => new OrgUnitResponse(
-                x.Id,
-                x.UnitType,
-                x.Name,
-                x.ParentOrgUnitId,
-                x.Status,
-                x.Description,
-                x.ManagerPersonId,
-                x.EffectiveStartDate,
-                x.EffectiveEndDate,
-                x.SiteType,
-                x.Timezone,
-                x.Phone,
-                x.EmergencyContact,
-                x.TeamType,
-                x.PositionCode,
-                x.DefaultSiteOrgUnitId,
-                x.ComplianceSensitive,
-                x.SafetySensitive,
-                x.CanSupervise,
-                x.CanApprove))
-            .ToListAsync(cancellationToken);
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == orgUnitId, cancellationToken);
+
+        return orgUnit is null
+            ? throw new StlApiException("org_unit.not_found", "Org unit was not found.", 404)
+            : await ProjectOneAsync(tenantId, orgUnit, cancellationToken);
     }
 
     public async Task<IReadOnlyList<StaffArrSiteLookupResponse>> ListActiveSitesAsync(
@@ -88,6 +149,130 @@ public sealed class OrgUnitService(
             404);
     }
 
+    private async Task<IReadOnlyList<OrgUnitResponse>> ProjectAsync(
+        Guid tenantId,
+        IReadOnlyList<OrgUnit> orgUnits,
+        bool treeOrder,
+        CancellationToken cancellationToken)
+    {
+        if (orgUnits.Count == 0)
+        {
+            return [];
+        }
+
+        var people = await db.People.AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .Select(x => new { x.PrimaryOrgUnitId })
+            .ToListAsync(cancellationToken);
+        var assignments = await db.OrgUnitAssignments.AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .Select(x => new
+            {
+                x.SiteOrgUnitId,
+                x.DepartmentOrgUnitId,
+                x.TeamOrgUnitId,
+                x.PositionOrgUnitId
+            })
+            .ToListAsync(cancellationToken);
+
+        var byId = orgUnits.ToDictionary(x => x.Id);
+        var childrenByParent = new Dictionary<Guid, List<OrgUnit>>();
+        foreach (var group in orgUnits.GroupBy(x => x.ParentOrgUnitId))
+        {
+            if (group.Key is Guid parentId)
+            {
+                childrenByParent[parentId] = group
+                    .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+        }
+        var descendantCounts = new Dictionary<Guid, int>();
+
+        int CountDescendants(Guid orgUnitId)
+        {
+            if (descendantCounts.TryGetValue(orgUnitId, out var cached))
+            {
+                return cached;
+            }
+
+            var total = 0;
+            if (childrenByParent.TryGetValue(orgUnitId, out var children))
+            {
+                foreach (var child in children)
+                {
+                    total += 1 + CountDescendants(child.Id);
+                }
+            }
+
+            descendantCounts[orgUnitId] = total;
+            return total;
+        }
+
+        int CountAssignments(Guid orgUnitId) =>
+            assignments.Count(x =>
+                x.SiteOrgUnitId == orgUnitId
+                || x.DepartmentOrgUnitId == orgUnitId
+                || x.TeamOrgUnitId == orgUnitId
+                || x.PositionOrgUnitId == orgUnitId)
+            + people.Count(x => x.PrimaryOrgUnitId == orgUnitId);
+
+        OrgUnitResponse Project(OrgUnit orgUnit) =>
+            ToResponse(
+                orgUnit,
+                CountDescendants(orgUnit.Id),
+                CountAssignments(orgUnit.Id));
+
+        IEnumerable<OrgUnit> orderedUnits;
+        if (treeOrder)
+        {
+            var roots = orgUnits
+                .Where(x => x.ParentOrgUnitId is null || !byId.ContainsKey(x.ParentOrgUnitId.Value))
+                .OrderBy(x => x.UnitType)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var ordered = new List<OrgUnit>();
+
+            void Visit(OrgUnit current)
+            {
+                ordered.Add(current);
+                if (!childrenByParent.TryGetValue(current.Id, out var children))
+                {
+                    return;
+                }
+
+                foreach (var child in children)
+                {
+                    Visit(child);
+                }
+            }
+
+            foreach (var root in roots)
+            {
+                Visit(root);
+            }
+
+            orderedUnits = ordered;
+        }
+        else
+        {
+            orderedUnits = orgUnits
+                .OrderBy(x => x.UnitType)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        return orderedUnits.Select(Project).ToList();
+    }
+
+    private async Task<OrgUnitResponse> ProjectOneAsync(
+        Guid tenantId,
+        OrgUnit orgUnit,
+        CancellationToken cancellationToken)
+    {
+        var projected = await ProjectAsync(tenantId, [orgUnit], treeOrder: false, cancellationToken);
+        return projected[0]!;
+    }
+
     public async Task<OrgUnitResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,
@@ -100,6 +285,7 @@ public sealed class OrgUnitService(
             request.UnitType,
             request.Name,
             request.ParentOrgUnitId,
+            request.Code,
             request.Description,
             request.ManagerPersonId,
             request.EffectiveStartDate,
@@ -119,15 +305,25 @@ public sealed class OrgUnitService(
             allowTypeChange: true,
             cancellationToken);
 
-        await EnsureNoDuplicateAsync(tenantId, normalized.UnitType, normalized.Name, null, cancellationToken);
+        var orgUnitId = Guid.NewGuid();
+        var normalizedCode = NormalizeOrGenerateCode(normalized.UnitType, normalized.Code, orgUnitId);
+        await EnsureNoDuplicateAsync(
+            tenantId,
+            normalized.UnitType,
+            normalized.Name,
+            normalizedCode,
+            normalized.ParentOrgUnitId,
+            null,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var orgUnit = new OrgUnit
         {
-            Id = Guid.NewGuid(),
+            Id = orgUnitId,
             TenantId = tenantId,
             UnitType = normalized.UnitType,
             Name = normalized.Name,
+            Code = normalizedCode,
             Description = normalized.Description,
             ParentOrgUnitId = normalized.ParentOrgUnitId,
             ManagerPersonId = normalized.ManagerPersonId,
@@ -145,6 +341,9 @@ public sealed class OrgUnitService(
             SafetySensitive = normalized.SafetySensitive,
             CanSupervise = normalized.CanSupervise,
             CanApprove = normalized.CanApprove,
+            ArchivedAt = null,
+            ArchivedByUserId = null,
+            ArchiveReason = null,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -160,7 +359,7 @@ public sealed class OrgUnitService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return ToResponse(orgUnit);
+        return await GetAsync(tenantId, orgUnit.Id, cancellationToken);
     }
 
     public async Task<OrgUnitResponse> UpdateAsync(
@@ -184,6 +383,7 @@ public sealed class OrgUnitService(
             request.UnitType,
             request.Name,
             request.ParentOrgUnitId,
+            request.Code,
             request.Description,
             request.ManagerPersonId,
             request.EffectiveStartDate,
@@ -208,7 +408,15 @@ public sealed class OrgUnitService(
             await EnsureTypeChangeIsSafeAsync(tenantId, orgUnitId, cancellationToken);
         }
 
-        await EnsureNoDuplicateAsync(tenantId, normalized.UnitType, normalized.Name, orgUnitId, cancellationToken);
+        var normalizedCode = NormalizeOrGenerateCode(normalized.UnitType, normalized.Code, orgUnit.Id, orgUnit.Code);
+        await EnsureNoDuplicateAsync(
+            tenantId,
+            normalized.UnitType,
+            normalized.Name,
+            normalizedCode,
+            normalized.ParentOrgUnitId,
+            orgUnitId,
+            cancellationToken);
 
         if (normalized.Status is not null && normalized.Status != orgUnit.Status)
         {
@@ -217,6 +425,7 @@ public sealed class OrgUnitService(
 
         orgUnit.UnitType = normalized.UnitType;
         orgUnit.Name = normalized.Name;
+        orgUnit.Code = normalizedCode;
         orgUnit.Description = normalized.Description;
         orgUnit.ParentOrgUnitId = normalized.ParentOrgUnitId;
         orgUnit.ManagerPersonId = normalized.ManagerPersonId;
@@ -246,7 +455,7 @@ public sealed class OrgUnitService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return ToResponse(orgUnit);
+        return await GetAsync(tenantId, orgUnit.Id, cancellationToken);
     }
 
     public async Task<OrgUnitResponse> UpdateStatusAsync(
@@ -261,6 +470,24 @@ public sealed class OrgUnitService(
             OrgStructureCatalog.OrgUnitStatuses,
             "org_unit.validation",
             "Status is required and must be planned, active, inactive, or archived.");
+
+        if (normalizedStatus == "archived")
+        {
+            if (string.IsNullOrWhiteSpace(request.Reason))
+            {
+                throw new StlApiException(
+                    "org_unit.validation",
+                    "Archive reason is required when archiving an org unit.",
+                    400);
+            }
+
+            return await ArchiveAsync(
+                tenantId,
+                actorUserId,
+                orgUnitId,
+                new ArchiveOrgUnitRequest(request.Reason),
+                cancellationToken);
+        }
 
         var orgUnit = await db.OrgUnits.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == orgUnitId,
@@ -285,10 +512,52 @@ public sealed class OrgUnitService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return ToResponse(orgUnit);
+        return await GetAsync(tenantId, orgUnit.Id, cancellationToken);
     }
 
-    private static OrgUnitResponse ToResponse(OrgUnit orgUnit) =>
+    public async Task<OrgUnitResponse> ArchiveAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid orgUnitId,
+        ArchiveOrgUnitRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var reason = NormalizeRequiredText(request.Reason, 512, "Archive reason");
+
+        var orgUnit = await db.OrgUnits.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == orgUnitId,
+            cancellationToken);
+        if (orgUnit is null)
+        {
+            throw new StlApiException("org_unit.not_found", "Org unit was not found.", 404);
+        }
+
+        await EnsureStatusTransitionValidAsync(tenantId, orgUnitId, "archived", cancellationToken);
+
+        orgUnit.Status = "archived";
+        orgUnit.ArchivedAt = DateTimeOffset.UtcNow;
+        orgUnit.ArchivedByUserId = actorUserId;
+        orgUnit.ArchiveReason = reason;
+        orgUnit.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "org_unit.archive",
+            tenantId,
+            actorUserId,
+            "org_unit",
+            orgUnit.Id.ToString(),
+            "Succeeded",
+            reasonCode: reason,
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, orgUnit.Id, cancellationToken);
+    }
+
+    private static OrgUnitResponse ToResponse(
+        OrgUnit orgUnit,
+        int descendantCount = 0,
+        int assignmentCount = 0) =>
         new(
             orgUnit.Id,
             orgUnit.UnitType,
@@ -309,7 +578,13 @@ public sealed class OrgUnitService(
             orgUnit.ComplianceSensitive,
             orgUnit.SafetySensitive,
             orgUnit.CanSupervise,
-            orgUnit.CanApprove);
+            orgUnit.CanApprove,
+            orgUnit.Code,
+            orgUnit.ArchivedAt,
+            orgUnit.ArchivedByUserId,
+            orgUnit.ArchiveReason,
+            descendantCount,
+            assignmentCount);
 
     private async Task<NormalizedOrgUnitRequest> NormalizeRequestAsync(
         Guid tenantId,
@@ -317,6 +592,7 @@ public sealed class OrgUnitService(
         string unitType,
         string name,
         Guid? parentOrgUnitId,
+        string? code,
         string? description,
         Guid? managerPersonId,
         DateTimeOffset? effectiveStartDate,
@@ -350,6 +626,13 @@ public sealed class OrgUnitService(
                 OrgStructureCatalog.OrgUnitStatuses,
                 "org_unit.validation",
                 "Status must be planned, active, inactive, or archived.");
+        if (string.Equals(normalizedStatus, "archived", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "org_unit.validation",
+                "Use the archive endpoint to archive org units.",
+                400);
+        }
 
         ValidateEffectiveDates(effectiveStartDate, effectiveEndDate);
         ValidateTypedFieldUsage(
@@ -377,6 +660,7 @@ public sealed class OrgUnitService(
         return new NormalizedOrgUnitRequest(
             normalizedUnitType,
             normalizedName,
+            code is null ? null : NormalizeCodeValue(code),
             normalizedDescription,
             parentOrgUnitId,
             managerPersonId,
@@ -591,12 +875,14 @@ public sealed class OrgUnitService(
         Guid tenantId,
         string unitType,
         string name,
+        string code,
+        Guid? parentOrgUnitId,
         Guid? excludedOrgUnitId,
         CancellationToken cancellationToken)
     {
         var normalizedName = name.Trim().ToLowerInvariant();
 
-        var duplicateExists = await db.OrgUnits.AnyAsync(
+        var duplicateNameExists = await db.OrgUnits.AnyAsync(
             x =>
                 x.TenantId == tenantId
                 && (excludedOrgUnitId == null || x.Id != excludedOrgUnitId.Value)
@@ -604,10 +890,54 @@ public sealed class OrgUnitService(
                 && x.Name.ToLower() == normalizedName,
             cancellationToken);
 
-        if (duplicateExists)
+        if (duplicateNameExists)
         {
-            throw new StlApiException("org_unit.name_conflict", "An org unit with that type and name already exists in this tenant.", 409);
+            throw new StlApiException(
+                "org_unit.name_conflict",
+                "An org unit with that type and name already exists in this tenant.",
+                409);
         }
+
+        var duplicateCodeExists = await db.OrgUnits.AnyAsync(
+            x =>
+                x.TenantId == tenantId
+                && (excludedOrgUnitId == null || x.Id != excludedOrgUnitId.Value)
+                && x.Code == code
+                && (parentOrgUnitId.HasValue
+                    ? x.ParentOrgUnitId == parentOrgUnitId
+                    : x.ParentOrgUnitId == null),
+            cancellationToken);
+
+        if (duplicateCodeExists)
+        {
+            throw new StlApiException(
+                "org_unit.code_conflict",
+                "An org unit with that code already exists under the same parent.",
+                409);
+        }
+    }
+
+    private static string NormalizeCodeValue(string code) =>
+        OrgStructureCatalog.NormalizeCode(code);
+
+    private static string NormalizeOrGenerateCode(
+        string unitType,
+        string? requestedCode,
+        Guid orgUnitId,
+        string? existingCode = null)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedCode))
+        {
+            return NormalizeCodeValue(requestedCode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(existingCode))
+        {
+            return existingCode;
+        }
+
+        var prefix = unitType == "site" ? "SITE" : "OU";
+        return OrgStructureCatalog.BuildStableCode(prefix, orgUnitId);
     }
 
     private async Task EnsureParentIsValidAsync(
@@ -756,6 +1086,7 @@ public sealed class OrgUnitService(
     private sealed record NormalizedOrgUnitRequest(
         string UnitType,
         string Name,
+        string? Code,
         string? Description,
         Guid? ParentOrgUnitId,
         Guid? ManagerPersonId,

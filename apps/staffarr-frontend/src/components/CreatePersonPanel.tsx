@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { listSiteLocations } from '../api/client'
+import { listLocations } from '../api/client'
 import type {
   CreatePersonRoleAssignmentRequest,
   OrgUnitResponse,
@@ -241,7 +241,7 @@ export function CreatePersonPanel({
 
   const locationQuery = useQuery({
     queryKey: ['staffarr-site-locations', accessToken, siteOrgUnitId],
-    queryFn: () => listSiteLocations(accessToken, siteOrgUnitId),
+    queryFn: () => listLocations(accessToken, { siteOrgUnitId }),
     enabled: Boolean(accessToken && siteOrgUnitId),
   })
 
@@ -619,7 +619,7 @@ export function CreatePersonPanel({
                 />
               </div>
               {locationQuery.isLoading ? (
-                <p className="mt-1 text-xs text-slate-500">Loading site locations...</p>
+                <p className="mt-1 text-xs text-slate-500">Loading locations...</p>
               ) : null}
             </label>
           </div>

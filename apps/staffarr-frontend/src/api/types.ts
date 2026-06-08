@@ -262,6 +262,53 @@ export type OrgUnitType =
 
 export type OrgUnitStatus = 'planned' | 'active' | 'inactive' | 'archived'
 
+export type LocationStatus = 'planned' | 'active' | 'inactive' | 'restricted' | 'archived'
+
+export type LocationAllowedProductUsage =
+  | 'maintainarr'
+  | 'loadarr'
+  | 'routarr'
+  | 'trainarr'
+  | 'staffarr'
+  | 'compliancecore'
+  | 'all'
+
+export type LocationType =
+  | 'site'
+  | 'building'
+  | 'warehouse'
+  | 'dock'
+  | 'room'
+  | 'yard'
+  | 'parts_room'
+  | 'staging_area'
+  | 'quarantine_area'
+  | 'inspection_hold'
+  | 'receiving_staging'
+  | 'putaway_queue'
+  | 'maintenance_handoff'
+  | 'service_counter'
+  | 'technician_pickup'
+  | 'service_truck'
+  | 'shelf'
+  | 'bin'
+  | 'parking_area'
+  | 'work_cell'
+  | 'production_line'
+  | 'office'
+  | 'training_room'
+  | 'break_room'
+  | 'restricted_area'
+  | 'company'
+  | 'division'
+  | 'region'
+  | 'business_unit'
+  | 'cost_center'
+  | 'department'
+  | 'team'
+  | 'position'
+  | 'other'
+
 export type OrgUnitSiteType =
   | 'office'
   | 'warehouse'
@@ -541,6 +588,7 @@ export interface OrgUnitResponse {
   name: string
   parentOrgUnitId: string | null
   status: OrgUnitStatus
+  code?: string | null
   description?: string | null
   managerPersonId?: string | null
   effectiveStartDate?: string | null
@@ -556,6 +604,11 @@ export interface OrgUnitResponse {
   safetySensitive?: boolean
   canSupervise?: boolean
   canApprove?: boolean
+  archivedAt?: string | null
+  archivedByUserId?: string | null
+  archiveReason?: string | null
+  descendantCount?: number
+  assignmentCount?: number
 }
 
 export interface StaffArrIntegrationLocationResponse {
@@ -570,6 +623,31 @@ export interface StaffArrIntegrationLocationResponse {
   parentPathSnapshot: string
   status: string
   allowedProductUsage: string
+  description?: string | null
+  archivedAt?: string | null
+  archivedByUserId?: string | null
+  archiveReason?: string | null
+}
+
+export interface InternalLocationResponse {
+  locationId: string
+  tenantId: string
+  locationNumber: string
+  name: string
+  locationType: LocationType
+  parentLocationId: string | null
+  siteOrgUnitId: string | null
+  siteNameSnapshot: string
+  parentPathSnapshot: string
+  status: LocationStatus
+  allowedProductUsage: LocationAllowedProductUsage
+  code?: string | null
+  description?: string | null
+  archivedAt?: string | null
+  archivedByUserId?: string | null
+  archiveReason?: string | null
+  descendantCount?: number
+  assignmentCount?: number
 }
 
 export interface ReadinessOverrideResponse {
@@ -594,6 +672,7 @@ export interface CreateOrgUnitRequest {
   unitType: OrgUnitType
   name: string
   parentOrgUnitId: string | null
+  code?: string | null
   description?: string | null
   managerPersonId?: string | null
   effectiveStartDate?: string | null
@@ -616,6 +695,7 @@ export interface UpdateOrgUnitRequest {
   unitType: OrgUnitType
   name: string
   parentOrgUnitId: string | null
+  code?: string | null
   description?: string | null
   managerPersonId?: string | null
   effectiveStartDate?: string | null
@@ -636,6 +716,33 @@ export interface UpdateOrgUnitRequest {
 
 export interface UpdateOrgUnitStatusRequest {
   status: OrgUnitStatus
+  reason?: string | null
+}
+
+export interface CreateInternalLocationRequest {
+  name: string
+  locationType: LocationType
+  parentLocationId: string | null
+  siteOrgUnitId: string | null
+  code?: string | null
+  description?: string | null
+  status?: LocationStatus
+  allowedProductUsage?: LocationAllowedProductUsage
+}
+
+export interface UpdateInternalLocationRequest {
+  name: string
+  locationType: LocationType
+  parentLocationId: string | null
+  siteOrgUnitId: string | null
+  code?: string | null
+  description?: string | null
+  status?: LocationStatus
+  allowedProductUsage?: LocationAllowedProductUsage
+}
+
+export interface ArchiveInternalLocationRequest {
+  reason: string
 }
 
 export interface OrgUnitAssignmentResponse {

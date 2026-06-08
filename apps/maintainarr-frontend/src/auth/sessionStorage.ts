@@ -120,6 +120,29 @@ export function canManageDefectStatus(tenantRoleKey: string, isPlatformAdmin: bo
   return canManageAssets(tenantRoleKey, isPlatformAdmin)
 }
 
+export function canCreateDefects(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadMaintenanceReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canSubmitDefects(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canCreateDefects(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canManageDefectReadiness(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssets(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreateWorkOrderFromDefect(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canCreateWorkOrders(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canViewAllDefects(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canViewAllInspectionRuns(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canCreateWorkOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return [

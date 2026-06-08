@@ -1,14 +1,20 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using NexArr.Api.Services;
 using StaffArr.Api.Contracts;
+using StaffArr.Api.Endpoints;
 using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
+using STLCompliance.Shared.Auth;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -28,6 +34,7 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
+            builder.UseSetting("ServiceToken:SigningKey", signingKey);
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<StaffArrDbContext>(services);
@@ -53,27 +60,31 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
     public async Task Integration_aliases_are_served_for_staffarr_surface()
     {
         var token = CreateStaffArrToken();
+        var locationsToken = CreateServiceToken(
+            "maintainarr",
+            $"{IntegrationEndpoints.SitesReadActionScope},{IntegrationEndpoints.LocationsReadActionScope}");
         var personId = await SeedPersonOnlyAsync();
 
-        var routes = new[]
+        var routes = new (string Route, string Token)[]
         {
-            "/api/v1/integrations/persons",
-            "/api/v1/integrations/org-units",
-            "/api/v1/integrations/locations",
-            $"/api/v1/integrations/persons/{personId}",
-            $"/api/v1/integrations/persons/{personId}/readiness",
-            $"/api/v1/integrations/persons/{personId}/permissions",
-            $"/api/v1/integrations/persons/{personId}/history",
-            $"/api/v1/integrations/persons/{personId}/restrictions",
-            $"/api/v1/integrations/incidents",
-            "/api/v1/integrations/audit-packages"
+            ("/api/v1/integrations/persons", token),
+            ("/api/v1/integrations/org-units", token),
+            ($"/api/v1/integrations/sites?tenantId={PlatformSeeder.DemoTenantId}", locationsToken),
+            ($"/api/v1/integrations/locations?tenantId={PlatformSeeder.DemoTenantId}", locationsToken),
+            ($"/api/v1/integrations/persons/{personId}", token),
+            ($"/api/v1/integrations/persons/{personId}/readiness", token),
+            ($"/api/v1/integrations/persons/{personId}/permissions", token),
+            ($"/api/v1/integrations/persons/{personId}/history", token),
+            ($"/api/v1/integrations/persons/{personId}/restrictions", token),
+            ("/api/v1/integrations/incidents", token),
+            ("/api/v1/integrations/audit-packages", token)
         };
 
-        foreach (var route in routes)
+        foreach (var (route, routeToken) in routes)
         {
             using var request = string.Equals(route, "/api/v1/integrations/audit-packages", StringComparison.Ordinal)
-                ? Authorized(HttpMethod.Post, route, token)
-                : Authorized(HttpMethod.Get, route, token);
+                ? Authorized(HttpMethod.Post, route, routeToken)
+                : Authorized(HttpMethod.Get, route, routeToken);
 
             if (string.Equals(route, "/api/v1/integrations/audit-packages", StringComparison.Ordinal))
             {
@@ -84,9 +95,10 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             }
 
             var response = await _client.SendAsync(request);
+            var body = await response.Content.ReadAsStringAsync();
             Assert.True(
                 response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.Created,
-                $"{route} returned {(int)response.StatusCode} {response.StatusCode}");
+                $"{route} returned {(int)response.StatusCode} {response.StatusCode}: {body}");
         }
     }
 
@@ -189,6 +201,37 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             ["staffarr"],
             isPlatformAdmin: false);
         return token;
+    }
+
+    private string CreateServiceToken(string sourceProduct, string actionScope)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var options = new StlServiceTokenOptions();
+        var credentials = StlServiceTokenKeyMaterial.CreateSigningCredentials(configuration, options);
+        var issuer = StlServiceTokenKeyMaterial.ResolveIssuer(configuration, options);
+        var audience = StlServiceTokenKeyMaterial.ResolveAudience(configuration, options);
+        var tokenId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Jti, tokenId.ToString()),
+            new(StlServiceTokenClaimTypes.TokenType, StlServiceTokenClaimTypes.ServiceTokenTypeValue),
+            new(StlServiceTokenClaimTypes.ServiceClientId, Guid.NewGuid().ToString()),
+            new(StlServiceTokenClaimTypes.SourceProduct, sourceProduct),
+            new(StlServiceTokenClaimTypes.AllowedProducts, "staffarr"),
+            new(StlServiceTokenClaimTypes.TokenId, tokenId.ToString()),
+            new(StlServiceTokenClaimTypes.TenantScope, PlatformSeeder.DemoTenantId.ToString()),
+            new(StlServiceTokenClaimTypes.ActionScope, actionScope)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTimeOffset.UtcNow.AddHours(1).UtcDateTime,
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)

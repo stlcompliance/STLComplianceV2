@@ -517,7 +517,7 @@ public sealed class PeopleService(
             return;
         }
 
-        var locationExists = await db.OrgUnits.AnyAsync(
+        var locationExists = await db.InternalLocations.AnyAsync(
             x => x.TenantId == tenantId && x.Id == requestedLocationId,
             cancellationToken);
         if (!locationExists)
@@ -532,7 +532,11 @@ public sealed class PeopleService(
             return;
         }
 
-        var locationSiteId = await ResolveSiteOrgUnitIdForOrgUnitAsync(tenantId, requestedLocationId, cancellationToken);
+        var locationSiteId = await db.InternalLocations
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == requestedLocationId)
+            .Select(x => x.SiteOrgUnitId)
+            .FirstOrDefaultAsync(cancellationToken);
         if (locationSiteId is not Guid resolvedLocationSiteId || resolvedLocationSiteId != resolvedSiteId)
         {
             throw new StlApiException(

@@ -238,11 +238,11 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
   }, [filters.itemId, filters.locationId, filters.query, filters.sinceUtc, filters.state, filters.untilUtc, summary.unexplainedInventory])
 
   return (
-    <section className="reports-layout" aria-label="History and operations">
+    <section className="reports-layout" aria-label="Records and operations">
       <article className="workflow-panel">
         <div className="section-heading">
           <BarChart3 aria-hidden="true" />
-          <h2>History and operations</h2>
+          <h2>Records and operations</h2>
         </div>
 
         <div className="form-grid">
@@ -276,7 +276,7 @@ export function ReportsPanel({ summary, counts, adjustments }: ReportsPanelProps
           <FormField label="Search" className={fieldClassName} labelClassName={fieldLabelClassName}>
             <label className="search-field compact">
               <Search aria-hidden="true" />
-              <span className="sr-only">Search history and operations</span>
+              <span className="sr-only">Search records and operations</span>
               <input
                 className={fieldControlClassName}
                 value={filters.query}

@@ -28,7 +28,7 @@ public static class DefectEvidenceEndpoints
             authorization.RequireDefectsRead(context.User);
             var tenantId = context.User.GetTenantId();
             var detail = await defectService.GetAsync(tenantId, defectId, cancellationToken);
-            authorization.RequireDefectAccess(context.User, detail.ReportedByUserId);
+            authorization.RequireDefectAccess(context.User, detail.ReportedByPersonId, detail.ReportedByUserId);
             return Results.Ok(await evidenceService.ListDefectEvidenceAsync(tenantId, defectId, cancellationToken));
         })
         .WithName($"ListDefectEvidence{nameSuffix}");
@@ -46,7 +46,7 @@ public static class DefectEvidenceEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var detail = await defectService.GetAsync(tenantId, defectId, cancellationToken);
-            authorization.RequireDefectAccess(context.User, detail.ReportedByUserId);
+            authorization.RequireDefectAccess(context.User, detail.ReportedByPersonId, detail.ReportedByUserId);
             var created = await evidenceService.UploadDefectEvidenceAsync(
                 tenantId,
                 actorUserId,

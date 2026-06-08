@@ -38,6 +38,7 @@ public static class IntegrationEndpoints
     public const string ReadinessRollupReadActionScope = "staffarr.readiness_rollups.read";
     public const string EventFeedReadActionScope = StaffArrEventFeedService.IntegrationReadActionScope;
     public const string SitesReadActionScope = StaffArrSiteIntegrationScopes.SitesRead;
+    public const string LocationsReadActionScope = "staffarr.locations.read";
 
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
@@ -831,6 +832,166 @@ public static class IntegrationEndpoints
         })
         .WithName("IntegrationGetSiteV1");
 
+        integrations.MapGet("/locations", async (
+            Guid tenantId,
+            Guid? siteOrgUnitId,
+            string? search,
+            string? type,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                includeArchived,
+                search,
+                type,
+                siteOrgUnitId,
+                cancellationToken));
+        })
+        .WithName("IntegrationListLocations");
+
+        integrationsV1.MapGet("/locations", async (
+            Guid tenantId,
+            Guid? siteOrgUnitId,
+            string? search,
+            string? type,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                includeArchived,
+                search,
+                type,
+                siteOrgUnitId,
+                cancellationToken));
+        })
+        .WithName("IntegrationListLocationsV1");
+
+        integrations.MapGet("/locations/{locationId:guid}", async (
+            Guid tenantId,
+            Guid locationId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetAsync(tenantId, locationId, cancellationToken));
+        })
+        .WithName("IntegrationGetLocation");
+
+        integrationsV1.MapGet("/locations/{locationId:guid}", async (
+            Guid tenantId,
+            Guid locationId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetAsync(tenantId, locationId, cancellationToken));
+        })
+        .WithName("IntegrationGetLocationV1");
+
+        integrations.MapGet("/sites/{siteOrgUnitId:guid}/locations", async (
+            Guid tenantId,
+            Guid siteOrgUnitId,
+            string? search,
+            string? type,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                includeArchived,
+                search,
+                type,
+                siteOrgUnitId,
+                cancellationToken));
+        })
+        .WithName("IntegrationListSiteLocations");
+
+        integrationsV1.MapGet("/sites/{siteOrgUnitId:guid}/locations", async (
+            Guid tenantId,
+            Guid siteOrgUnitId,
+            string? search,
+            string? type,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                includeArchived,
+                search,
+                type,
+                siteOrgUnitId,
+                cancellationToken));
+        })
+        .WithName("IntegrationListSiteLocationsV1");
+
+        integrations.MapGet("/locations/{locationId:guid}/children", async (
+            Guid tenantId,
+            Guid locationId,
+            Guid? siteOrgUnitId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            var children = (await service.ListAsync(
+                tenantId,
+                includeArchived: false,
+                search: null,
+                type: null,
+                siteOrgUnitId,
+                cancellationToken))
+                .Where(x => x.ParentLocationId == locationId)
+                .ToList();
+            return Results.Ok(children);
+        })
+        .WithName("IntegrationListLocationChildren");
+
+        integrationsV1.MapGet("/locations/{locationId:guid}/children", async (
+            Guid tenantId,
+            Guid locationId,
+            Guid? siteOrgUnitId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            InternalLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            var children = (await service.ListAsync(
+                tenantId,
+                includeArchived: false,
+                search: null,
+                type: null,
+                siteOrgUnitId,
+                cancellationToken))
+                .Where(x => x.ParentLocationId == locationId)
+                .ToList();
+            return Results.Ok(children);
+        })
+        .WithName("IntegrationListLocationChildrenV1");
+
         integrations.MapGet("/readiness-rollups/teams", async (
             Guid tenantId,
             Guid? siteOrgUnitId,
@@ -1007,7 +1168,7 @@ public static class IntegrationEndpoints
 
         var tokenSource = preview.SourceProductKey?.Trim().ToLowerInvariant();
         var requestSource = (request.SourceProduct ?? string.Empty).Trim().ToLowerInvariant();
-        if (tokenSource is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        if (tokenSource is not "loadarr" and not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
         {
             throw new StlApiException(
                 "auth.service_token_scope",
@@ -1049,7 +1210,7 @@ public static class IntegrationEndpoints
 
         var tokenSource = preview.SourceProductKey?.Trim().ToLowerInvariant();
         var requestSource = (request.ProductKey ?? string.Empty).Trim().ToLowerInvariant();
-        if (tokenSource is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        if (tokenSource is not "loadarr" and not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
         {
             throw new StlApiException(
                 "auth.service_token_scope",
@@ -1210,6 +1371,44 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "staffarr",
                 TenantId = tenantId,
                 RequiredActionScope = SitesReadActionScope
+            });
+    }
+
+    private static void ValidateLocationReadServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr"
+            and not "routarr"
+            and not "supplyarr"
+            and not "trainarr"
+            and not "compliancecore"
+            and not "loadarr")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for StaffArr location reads.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "staffarr",
+                TenantId = tenantId,
+                RequiredActionScope = LocationsReadActionScope
             });
     }
 }

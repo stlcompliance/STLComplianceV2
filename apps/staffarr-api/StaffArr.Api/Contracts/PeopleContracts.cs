@@ -158,12 +158,19 @@ public sealed record OrgUnitResponse(
     bool ComplianceSensitive = false,
     bool SafetySensitive = false,
     bool CanSupervise = false,
-    bool CanApprove = false);
+    bool CanApprove = false,
+    string? Code = null,
+    DateTimeOffset? ArchivedAt = null,
+    Guid? ArchivedByUserId = null,
+    string? ArchiveReason = null,
+    int DescendantCount = 0,
+    int AssignmentCount = 0);
 
 public sealed record CreateOrgUnitRequest(
     string UnitType,
     string Name,
     Guid? ParentOrgUnitId,
+    string? Code = null,
     string? Description = null,
     Guid? ManagerPersonId = null,
     DateTimeOffset? EffectiveStartDate = null,
@@ -185,6 +192,7 @@ public sealed record UpdateOrgUnitRequest(
     string UnitType,
     string Name,
     Guid? ParentOrgUnitId,
+    string? Code = null,
     string? Description = null,
     Guid? ManagerPersonId = null,
     DateTimeOffset? EffectiveStartDate = null,
@@ -203,7 +211,54 @@ public sealed record UpdateOrgUnitRequest(
     string? Status = null);
 
 public sealed record UpdateOrgUnitStatusRequest(
-    string Status);
+    string Status,
+    string? Reason = null);
+
+public sealed record ArchiveOrgUnitRequest(
+    string Reason);
+
+public sealed record InternalLocationResponse(
+    Guid LocationId,
+    Guid TenantId,
+    string LocationNumber,
+    string Name,
+    string LocationType,
+    Guid? ParentLocationId,
+    Guid? SiteOrgUnitId,
+    string SiteNameSnapshot,
+    string ParentPathSnapshot,
+    string Status,
+    string AllowedProductUsage = "all",
+    string? Code = null,
+    string? Description = null,
+    DateTimeOffset? ArchivedAt = null,
+    Guid? ArchivedByUserId = null,
+    string? ArchiveReason = null,
+    int DescendantCount = 0,
+    int AssignmentCount = 0);
+
+public sealed record CreateInternalLocationRequest(
+    string Name,
+    string LocationType,
+    Guid? ParentLocationId,
+    Guid? SiteOrgUnitId,
+    string? Code = null,
+    string? Description = null,
+    string Status = "planned",
+    string AllowedProductUsage = "all");
+
+public sealed record UpdateInternalLocationRequest(
+    string Name,
+    string LocationType,
+    Guid? ParentLocationId,
+    Guid? SiteOrgUnitId,
+    string? Code = null,
+    string? Description = null,
+    string Status = "planned",
+    string AllowedProductUsage = "all");
+
+public sealed record ArchiveInternalLocationRequest(
+    string Reason);
 
 public sealed record OrgUnitAssignmentResponse(
     Guid AssignmentId,

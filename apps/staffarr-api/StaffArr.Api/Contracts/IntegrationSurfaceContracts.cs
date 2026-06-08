@@ -54,4 +54,8 @@ public sealed record StaffArrIntegrationLocationResponse(
     string SiteNameSnapshot,
     string ParentPathSnapshot,
     string Status,
-    string AllowedProductUsage = "all");
+    string AllowedProductUsage = "all",
+    string? Description = null,
+    DateTimeOffset? ArchivedAt = null,
+    Guid? ArchivedByUserId = null,
+    string? ArchiveReason = null);

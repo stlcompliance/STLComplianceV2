@@ -135,6 +135,7 @@ export function useMaintainArrWorkspaceState() {
   const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
   const initialProgramId = searchParams.get('programId')?.trim() ?? ''
+  const initialDefectId = searchParams.get('defectId')?.trim() ?? ''
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState('')
   const [templateName, setTemplateName] = useState('')
@@ -213,6 +214,12 @@ export function useMaintainArrWorkspaceState() {
   const [voiceStatusMessage, setVoiceStatusMessage] = useState<string | null>(null)
   const [isVoiceListening, setIsVoiceListening] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (initialDefectId && initialDefectId !== selectedDefectId) {
+      setSelectedDefectId(initialDefectId)
+    }
+  }, [initialDefectId, selectedDefectId])
 
   useEffect(() => {
     if (initialWorkOrderId && initialWorkOrderId !== selectedWorkOrderId) {

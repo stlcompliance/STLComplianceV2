@@ -240,8 +240,16 @@ staffarr.people.status_change
 staffarr.people.terminate
 staffarr.people.archive
 
-staffarr.org.read
-staffarr.org.manage
+staffarr.organization.read
+staffarr.organization.create
+staffarr.organization.update
+staffarr.organization.archive
+
+staffarr.sites.read
+staffarr.sites.create
+staffarr.sites.update
+staffarr.sites.archive
+
 staffarr.locations.read
 staffarr.locations.create
 staffarr.locations.update
@@ -404,7 +412,8 @@ reportarr.reports.manage
 ```text
 Staff Viewer
 - staffarr.people.read
-- staffarr.org.read
+- staffarr.organization.read
+- staffarr.sites.read
 - staffarr.locations.read
 - staffarr.readiness.read
 
@@ -415,8 +424,18 @@ People Admin
 - staffarr.people.status_change
 
 Org Admin
-- staffarr.org.manage
-- staffarr.locations.manage
+- staffarr.organization.read
+- staffarr.organization.create
+- staffarr.organization.update
+- staffarr.organization.archive
+- staffarr.sites.read
+- staffarr.sites.create
+- staffarr.sites.update
+- staffarr.sites.archive
+- staffarr.locations.read
+- staffarr.locations.create
+- staffarr.locations.update
+- staffarr.locations.archive
 - staffarr.people.update
 
 Permission Admin

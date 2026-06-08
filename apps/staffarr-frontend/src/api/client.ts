@@ -4,10 +4,12 @@ import type {
   CreateOrgUnitAssignmentRequest,
   CreateRoleTemplateRequest,
   CreateOrgUnitRequest,
+  CreateInternalLocationRequest,
   HandoffSessionResponse,
   ManagerChainEntryResponse,
   OrgUnitAssignmentResponse,
   OrgUnitResponse,
+  InternalLocationResponse,
   PermissionHistoryTimelineEntryResponse,
   PermissionTemplateSummaryResponse,
   ProductPermissionCatalogItemResponse,
@@ -35,6 +37,8 @@ import type {
   UpdateRoleTemplateRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
+  UpdateInternalLocationRequest,
+  ArchiveInternalLocationRequest,
   CertificationDefinitionResponse,
   PersonCertificationResponse,
   GrantReadinessOverrideRequest,
@@ -96,7 +100,6 @@ import type {
   CertificationReportSummaryResponse,
   EntityExportManifestResponse,
   LaunchHandoffResponse,
-  StaffArrIntegrationLocationResponse,
   StaffArrRestrictionSnapshotResponse,
   ReadinessOverrideResponse,
 } from './types'
@@ -718,49 +721,126 @@ export async function getStaffArrWorkerRuns(
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {
-  const response = await fetch(`${apiBase}/api/org-units`, {
+  const response = await fetch(`${apiBase}/api/v1/org-units`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OrgUnitResponse[]>(response, 'Failed to load org units')
 }
 
-export async function listSiteLocations(
+function buildLocationQueryString(params: {
+  includeArchived?: boolean
+  search?: string | null
+  type?: string | null
+  siteOrgUnitId?: string | null
+} = {}): string {
+  const query = new URLSearchParams()
+  if (params.includeArchived) {
+    query.set('includeArchived', 'true')
+  }
+  if (params.search?.trim()) {
+    query.set('search', params.search.trim())
+  }
+  if (params.type?.trim()) {
+    query.set('type', params.type.trim())
+  }
+  if (params.siteOrgUnitId?.trim()) {
+    query.set('siteOrgUnitId', params.siteOrgUnitId.trim())
+  }
+  const suffix = query.toString()
+  return suffix ? `?${suffix}` : ''
+}
+
+export async function listLocations(
   accessToken: string,
-  siteOrgUnitId: string,
-): Promise<StaffArrIntegrationLocationResponse[]> {
-  const response = await fetch(
-    `${apiBase}/api/v1/integrations/sites/${siteOrgUnitId}/locations`,
-    {
-      headers: authHeaders(accessToken),
-    },
-  )
-  return parseJsonResponse<StaffArrIntegrationLocationResponse[]>(
-    response,
-    'Failed to load site locations',
-  )
+  params: {
+    includeArchived?: boolean
+    search?: string | null
+    type?: string | null
+    siteOrgUnitId?: string | null
+  } = {},
+): Promise<InternalLocationResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/locations${buildLocationQueryString(params)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InternalLocationResponse[]>(response, 'Failed to load locations')
+}
+
+export async function listLocationTree(
+  accessToken: string,
+  params: {
+    includeArchived?: boolean
+    search?: string | null
+    type?: string | null
+    siteOrgUnitId?: string | null
+  } = {},
+): Promise<InternalLocationResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/locations/tree${buildLocationQueryString(params)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InternalLocationResponse[]>(response, 'Failed to load locations tree')
 }
 
 export async function getLocation(
   accessToken: string,
   locationId: string,
-): Promise<StaffArrIntegrationLocationResponse> {
-  const response = await fetch(`${apiBase}/api/v1/integrations/locations/${locationId}`, {
+): Promise<InternalLocationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/locations/${locationId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<StaffArrIntegrationLocationResponse>(response, 'Failed to load location')
+  return parseJsonResponse<InternalLocationResponse>(response, 'Failed to load location')
+}
+
+export async function createLocation(
+  accessToken: string,
+  request: CreateInternalLocationRequest,
+): Promise<InternalLocationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/locations`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<InternalLocationResponse>(response, 'Failed to create location')
+}
+
+export async function updateLocation(
+  accessToken: string,
+  locationId: string,
+  request: UpdateInternalLocationRequest,
+): Promise<InternalLocationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/locations/${locationId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<InternalLocationResponse>(response, 'Failed to update location')
+}
+
+export async function archiveLocation(
+  accessToken: string,
+  locationId: string,
+  request: ArchiveInternalLocationRequest,
+): Promise<InternalLocationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/locations/${locationId}/archive`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<InternalLocationResponse>(response, 'Failed to archive location')
+}
+
+export async function listSiteLocations(
+  accessToken: string,
+  siteOrgUnitId: string,
+): Promise<InternalLocationResponse[]> {
+  return listLocations(accessToken, { siteOrgUnitId })
 }
 
 export async function listLocationChildren(
   accessToken: string,
   locationId: string,
-): Promise<StaffArrIntegrationLocationResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/integrations/locations/${locationId}/children`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<StaffArrIntegrationLocationResponse[]>(
-    response,
-    'Failed to load child locations',
-  )
+): Promise<InternalLocationResponse[]> {
+  const allLocations = await listLocations(accessToken)
+  return allLocations.filter((location) => location.parentLocationId === locationId)
 }
 
 export async function getPersonRestrictions(
@@ -800,7 +880,7 @@ export async function liftRestriction(
 }
 
 export async function createOrgUnit(accessToken: string, request: CreateOrgUnitRequest): Promise<OrgUnitResponse> {
-  const response = await fetch(`${apiBase}/api/org-units`, {
+  const response = await fetch(`${apiBase}/api/v1/org-units`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -813,7 +893,7 @@ export async function updateOrgUnit(
   orgUnitId: string,
   request: UpdateOrgUnitRequest,
 ): Promise<OrgUnitResponse> {
-  const response = await fetch(`${apiBase}/api/org-units/${orgUnitId}`, {
+  const response = await fetch(`${apiBase}/api/v1/org-units/${orgUnitId}`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -826,7 +906,7 @@ export async function updateOrgUnitStatus(
   orgUnitId: string,
   request: UpdateOrgUnitStatusRequest,
 ): Promise<OrgUnitResponse> {
-  const response = await fetch(`${apiBase}/api/org-units/${orgUnitId}/status`, {
+  const response = await fetch(`${apiBase}/api/v1/org-units/${orgUnitId}/status`, {
     method: 'PATCH',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),

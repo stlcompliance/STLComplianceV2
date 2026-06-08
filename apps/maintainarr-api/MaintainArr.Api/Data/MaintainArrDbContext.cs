@@ -519,13 +519,31 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1024);
             entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Priority).HasMaxLength(32).IsRequired().HasDefaultValue("medium");
+            entity.Property(x => x.DefectType).HasMaxLength(128);
+            entity.Property(x => x.ReportSource).HasMaxLength(64);
+            entity.Property(x => x.SourceType).HasMaxLength(64);
+            entity.Property(x => x.SourceReferenceId).HasMaxLength(128);
+            entity.Property(x => x.IncidentReferenceId).HasMaxLength(128);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Source).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FailureMode).HasMaxLength(128);
+            entity.Property(x => x.SystemKey).HasMaxLength(128);
+            entity.Property(x => x.ComponentKey).HasMaxLength(128);
+            entity.Property(x => x.Symptom).HasMaxLength(256);
+            entity.Property(x => x.SidePosition).HasMaxLength(64);
+            entity.Property(x => x.OperatingCondition).HasMaxLength(128);
+            entity.Property(x => x.DeferralCode).HasMaxLength(64);
+            entity.Property(x => x.ReadinessNotes).HasMaxLength(1024);
+            entity.Property(x => x.CorrectiveAction).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.InspectionRunId });
             entity.HasIndex(x => new { x.TenantId, x.ReportedByUserId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ReportedByPersonId, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.DefectType, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.ReportSource, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.InspectionRunId, x.ChecklistItemId })
                 .IsUnique()
                 .HasFilter("\"ChecklistItemId\" IS NOT NULL");

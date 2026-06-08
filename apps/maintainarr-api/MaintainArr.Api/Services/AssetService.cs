@@ -278,6 +278,124 @@ public sealed class AssetService(
         return new AssetFieldContextResponse(assetId, entries);
     }
 
+    public async Task<IReadOnlyList<AssetSearchResponse>> SearchAsync(
+        Guid tenantId,
+        string? query,
+        string? status,
+        string? siteRef,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedQuery = string.IsNullOrWhiteSpace(query) ? null : query.Trim().ToLowerInvariant();
+        var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToLowerInvariant();
+        var normalizedSiteRef = string.IsNullOrWhiteSpace(siteRef) ? null : siteRef.Trim().ToLowerInvariant();
+        var take = Math.Clamp(limit, 1, 50);
+
+        var assetQuery = db.Assets
+            .AsNoTracking()
+            .Include(x => x.AssetType)
+            .ThenInclude(x => x.AssetClass)
+            .Where(x => x.TenantId == tenantId);
+
+        if (!string.IsNullOrWhiteSpace(normalizedStatus))
+        {
+            assetQuery = assetQuery.Where(x => x.LifecycleStatus == normalizedStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedSiteRef))
+        {
+            assetQuery = assetQuery.Where(x =>
+                (x.SiteRef != null && x.SiteRef.ToLower().Contains(normalizedSiteRef))
+                || x.StaffarrSiteNameSnapshot.ToLower().Contains(normalizedSiteRef));
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            var needle = normalizedQuery;
+            assetQuery = assetQuery.Where(x =>
+                x.AssetTag.ToLower().Contains(needle)
+                || x.Name.ToLower().Contains(needle)
+                || x.Description.ToLower().Contains(needle)
+                || x.LifecycleStatus.ToLower().Contains(needle)
+                || x.StaffarrSiteNameSnapshot.ToLower().Contains(needle)
+                || x.AssetType.TypeKey.ToLower().Contains(needle)
+                || x.AssetType.Name.ToLower().Contains(needle)
+                || x.AssetType.AssetClass.ClassKey.ToLower().Contains(needle)
+                || x.AssetType.AssetClass.Name.ToLower().Contains(needle)
+                || db.AssetCustomFieldValues.Any(field =>
+                    field.TenantId == tenantId
+                    && field.AssetId == x.Id
+                    && field.ValueJson.ToLower().Contains(needle))
+                || db.AssetSpecs.Any(field =>
+                    field.TenantId == tenantId
+                    && field.AssetId == x.Id
+                    && field.ValueJson.ToLower().Contains(needle))
+                || db.AssetComponents.Any(field =>
+                    field.TenantId == tenantId
+                    && field.AssetId == x.Id
+                    && field.ValueJson.ToLower().Contains(needle)));
+        }
+
+        var assets = await assetQuery
+            .OrderBy(x => x.AssetTag)
+            .ThenBy(x => x.Name)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        if (assets.Count == 0)
+        {
+            return [];
+        }
+
+        var assetIds = assets.Select(x => x.Id).ToArray();
+        var openDefectCounts = await db.Defects
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && assetIds.Contains(x.AssetId)
+                && (x.Status == DefectStatuses.Open
+                    || x.Status == DefectStatuses.Acknowledged
+                    || x.Status == DefectStatuses.InRepair))
+            .GroupBy(x => x.AssetId)
+            .Select(x => new { AssetId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.AssetId, x => x.Count, cancellationToken);
+
+        var openWorkOrderCounts = await db.WorkOrders
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && assetIds.Contains(x.AssetId)
+                && WorkOrderStatuses.Active.Contains(x.Status))
+            .GroupBy(x => x.AssetId)
+            .Select(x => new { AssetId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.AssetId, x => x.Count, cancellationToken);
+
+        var readinessByAssetId = await db.AssetReadinessStates
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && assetIds.Contains(x.AssetId))
+            .ToDictionaryAsync(x => x.AssetId, x => x.ReadinessStatusKey, cancellationToken);
+
+        return assets
+            .Select(asset => new AssetSearchResponse(
+                asset.Id,
+                asset.AssetTypeId,
+                asset.AssetType.TypeKey,
+                asset.AssetType.Name,
+                asset.AssetType.AssetClass.ClassKey,
+                asset.AssetType.AssetClass.Name,
+                asset.AssetTag,
+                asset.Name,
+                asset.Description,
+                asset.LifecycleStatus,
+                asset.SiteRef,
+                asset.StaffarrSiteOrgUnitId,
+                asset.StaffarrSiteNameSnapshot,
+                openDefectCounts.GetValueOrDefault(asset.Id, 0),
+                openWorkOrderCounts.GetValueOrDefault(asset.Id, 0),
+                readinessByAssetId.GetValueOrDefault(asset.Id, "unknown"),
+                asset.CreatedAt,
+                asset.UpdatedAt))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<AssetResponse>> ListAsync(
         Guid tenantId,
         CancellationToken cancellationToken = default)
@@ -469,6 +587,33 @@ public sealed class AssetService(
             entity.SiteRef,
             entity.StaffarrSiteOrgUnitId,
             entity.StaffarrSiteNameSnapshot,
+            entity.CreatedAt,
+            entity.UpdatedAt);
+
+    private static AssetSearchResponse MapSearch(
+        Asset entity,
+        AssetType assetType,
+        AssetClass assetClass,
+        int openDefectCount,
+        int openWorkOrderCount,
+        string readinessStatus) =>
+        new(
+            entity.Id,
+            entity.AssetTypeId,
+            assetType.TypeKey,
+            assetType.Name,
+            assetClass.ClassKey,
+            assetClass.Name,
+            entity.AssetTag,
+            entity.Name,
+            entity.Description,
+            entity.LifecycleStatus,
+            entity.SiteRef,
+            entity.StaffarrSiteOrgUnitId,
+            entity.StaffarrSiteNameSnapshot,
+            openDefectCount,
+            openWorkOrderCount,
+            readinessStatus,
             entity.CreatedAt,
             entity.UpdatedAt);
 

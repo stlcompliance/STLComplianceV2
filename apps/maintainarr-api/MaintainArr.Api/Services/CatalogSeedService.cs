@@ -9,6 +9,7 @@ namespace MaintainArr.Api.Services;
 public sealed class CatalogSeedService(MaintainArrDbContext db)
 {
     private const string AssetsFieldsetKey = "assets";
+    private const string DefectsFieldsetKey = "defects";
     private const string WorkOrdersFieldsetKey = "work-orders";
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> TenantSeedLocks = new();
     private static readonly ConcurrentDictionary<Guid, byte> TenantSeedReady = new();
@@ -63,6 +64,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
 
         await EnsureDependencySeedsAsync(tenantId, catalogIds, cancellationToken);
         await EnsureAssetFieldsetsAsync(tenantId, cancellationToken);
+        await EnsureDefectFieldsetsAsync(tenantId, cancellationToken);
         await EnsureWorkOrderFieldsetsAsync(tenantId, cancellationToken);
         await EnsureReferenceFallbackSeedsAsync(tenantId, cancellationToken);
     }
@@ -86,6 +88,7 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         var expectedFieldSets = new[]
         {
             new { Key = AssetsFieldsetKey, Purposes = new[] { "default", "create", "edit" }, ExpectedFieldCount = GetFieldSeeds().Count() },
+            new { Key = DefectsFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetDefectFieldSeeds().Count() },
             new { Key = WorkOrdersFieldsetKey, Purposes = new[] { "create" }, ExpectedFieldCount = GetWorkOrderFieldSeeds().Count() },
         };
 
@@ -346,6 +349,93 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             {
                 definition.IsActive = true;
                 definition.Description = $"Asset {purpose} fieldset";
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            var existing = await db.FieldsetFields
+                .Where(x => x.TenantId == tenantId && x.FieldsetId == definition.Id)
+                .ToListAsync(cancellationToken);
+
+            var expectedKeys = new HashSet<string>(seeds.Select(x => x.Key), StringComparer.OrdinalIgnoreCase);
+            foreach (var item in seeds.Select((seed, index) => new { seed, index }))
+            {
+                var field = existing.FirstOrDefault(x => string.Equals(x.Key, item.seed.Key, StringComparison.OrdinalIgnoreCase));
+                if (field is null)
+                {
+                    field = new FieldsetField
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = tenantId,
+                        FieldsetId = definition.Id,
+                        Key = item.seed.Key,
+                    };
+                    db.FieldsetFields.Add(field);
+                }
+
+                field.Label = item.seed.Label;
+                field.Description = item.seed.Description;
+                field.DataType = item.seed.DataType;
+                field.ControlType = item.seed.ControlType;
+                field.Required = item.seed.Required;
+                field.CatalogKey = item.seed.CatalogKey;
+                field.ReferenceKey = item.seed.ReferenceKey;
+                field.SourceType = item.seed.SourceType;
+                field.SourceOfTruth = item.seed.SourceOfTruth;
+                field.SortOrder = item.index;
+                field.SectionKey = item.seed.SectionKey;
+                field.DependencyJson = JsonSerializer.Serialize(item.seed.DependsOn);
+                field.ValidationJson = JsonSerializer.Serialize(item.seed.Validation);
+                field.DefaultValueJson = item.seed.DefaultValueJson;
+                field.VisibilityJson = JsonSerializer.Serialize(item.seed.Visibility);
+                field.AllowCustom = item.seed.AllowCustom;
+                field.CustomRequiresApproval = item.seed.CustomRequiresApproval;
+                field.DrivesLogic = item.seed.DrivesLogic;
+                field.DrivesInspectionBranching = item.seed.DrivesInspectionBranching;
+                field.DrivesPMApplicability = item.seed.DrivesPMApplicability;
+                field.DrivesCompliance = item.seed.DrivesCompliance;
+                field.DrivesReporting = item.seed.DrivesReporting;
+                field.DrivesReadiness = item.seed.DrivesReadiness;
+            }
+
+            foreach (var field in existing.Where(x => !expectedKeys.Contains(x.Key)))
+            {
+                db.FieldsetFields.Remove(field);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task EnsureDefectFieldsetsAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var seeds = GetDefectFieldSeeds().ToList();
+        foreach (var purpose in new[] { "create" })
+        {
+            var definition = await db.FieldsetDefinitions
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Key == DefectsFieldsetKey && x.Purpose == purpose,
+                    cancellationToken);
+
+            if (definition is null)
+            {
+                definition = new FieldsetDefinition
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Key = DefectsFieldsetKey,
+                    Label = "Defects",
+                    EntityType = "defect",
+                    Purpose = purpose,
+                    Description = $"Defect {purpose} fieldset",
+                    IsActive = true,
+                };
+                db.FieldsetDefinitions.Add(definition);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                definition.IsActive = true;
+                definition.Description = $"Defect {purpose} fieldset";
                 await db.SaveChangesAsync(cancellationToken);
             }
 
@@ -697,14 +787,20 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             new CatalogSeed("postTripRequired", "Post Trip Required", ["true", "false"]),
             new CatalogSeed("shopInspectionRequired", "Shop Inspection Required", ["true", "false"]),
 
+            new CatalogSeed("defectType", "Defect Type", ["safety", "compliance", "mechanical", "electrical", "body", "cosmetic", "operational", "documentation", "fluid_leak", "tire_wheel", "brake", "lighting", "steering", "suspension"]),
             new CatalogSeed("defectCategory", "Defect Category", ["safety", "compliance", "mechanical", "electrical", "body", "cosmetic", "operational", "documentation", "fluid_leak", "tire_wheel", "brake", "lighting", "steering", "suspension"]),
             new CatalogSeed("defectSystem", "Defect System", ["brakes", "steering", "suspension", "tires_wheels", "lights", "electrical", "engine", "transmission", "aftertreatment", "body", "frame", "coupling", "hydraulic", "pneumatic", "fuel", "cooling", "HVAC", "safety_equipment", "documentation"]),
             new CatalogSeed("defectComponent", "Defect Component", ["brake_chamber", "slack_adjuster", "tire", "wheel", "lamp", "mirror", "custom"]),
+            new CatalogSeed("reportSource", "Report Source", ["manual", "inspection", "pm_program", "work_order", "routarr", "incident", "readiness", "compliance"]),
+            new CatalogSeed("symptom", "Symptom", ["noise", "leak", "vibration", "smell", "smoke", "no_start", "no_power", "warning_light", "dim_light", "abnormal_reading", "intermittent", "damaged", "missing", "blocked", "overheating", "other"]),
             new CatalogSeed("failureMode", "Failure Mode", ["leaking", "cracked", "broken", "missing", "loose", "worn", "out_of_adjustment", "inoperative", "intermittent", "contaminated", "overheating", "abnormal_noise", "abnormal_vibration", "low_pressure", "high_pressure", "out_of_spec", "expired", "unreadable", "damaged", "corroded"]),
             new CatalogSeed("severity", "Severity", ["informational", "minor", "moderate", "major", "critical"]),
             new CatalogSeed("priority", "Priority", ["low", "normal", "high", "urgent", "emergency"]),
             new CatalogSeed("safetyCritical", "Safety Critical", ["true", "false"]),
             new CatalogSeed("operatingRestriction", "Operating Restriction", ["none", "monitor", "limited_use", "shop_only", "yard_only", "no_dispatch", "out_of_service"]),
+            new CatalogSeed("operatingCondition", "Operating Condition", ["idle", "moving", "loaded", "unloaded", "started", "cold", "hot", "wet", "dry", "night", "day", "rain", "snow", "highway", "yard", "shop"]),
+            new CatalogSeed("sidePosition", "Side Position", ["left", "right", "front", "rear", "center", "top", "bottom", "inside", "outside", "upper", "lower"]),
+            new CatalogSeed("deferralCode", "Deferral Code", ["safe_to_operate", "monitor", "schedule_repair", "parts_wait", "vendor_wait", "compliance_hold", "no_deferral", "immediate"]),
             new CatalogSeed("repairDisposition", "Repair Disposition", ["defer", "monitor", "repair_now", "repair_before_dispatch", "replace", "adjust", "clean", "lubricate", "diagnose", "vendor_repair", "warranty_claim"]),
             new CatalogSeed("rootCause", "Root Cause", ["wear", "impact_damage", "operator_damage", "improper_installation", "lack_of_maintenance", "contamination", "corrosion", "manufacturing_defect", "abuse", "unknown"]),
             new CatalogSeed("correctiveActionType", "Corrective Action Type", ["repaired", "replaced", "adjusted", "cleaned", "lubricated", "tightened", "calibrated", "inspected_no_fault_found", "deferred", "vendor_repair", "warranty_repair"]),
@@ -823,6 +919,30 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
         yield return FieldSeed.FreeText("serialNumber", "Serial Number", "Serial number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 64 }, visibility: equipmentOrTool);
         yield return FieldSeed.FreeText("licensePlate", "License Plate", "Plate number", sectionKey: "classification", validation: new Dictionary<string, object?> { ["maxLength"] = 32 }, visibility: vehicleOrTrailer);
         yield return FieldSeed.FreeText("fleetNumber", "Fleet Number", "Fleet number", sectionKey: "identity", validation: new Dictionary<string, object?> { ["maxLength"] = 64 });
+    }
+
+    private static IEnumerable<FieldSeed> GetDefectFieldSeeds()
+    {
+        yield return FieldSeed.Catalog("reportSource", "Report Source", "How this defect was reported", required: true, catalogKey: "reportSource", sectionKey: "reporting", drivesLogic: true, defaultValueJson: "\"manual\"");
+        yield return FieldSeed.Reference("reportedByPersonId", "Reported By", "StaffArr person who reported the defect", required: false, "people", "staffarr_reference", "StaffArr", "reporting", true);
+        yield return FieldSeed.Reference("discoveredByPersonId", "Discovered By", "StaffArr person who discovered the defect", required: false, "people", "staffarr_reference", "StaffArr", "reporting", true);
+        yield return FieldSeed.Catalog("priority", "Priority", "Defect priority", required: true, catalogKey: "priority", sectionKey: "basics", drivesLogic: true, defaultValueJson: "\"medium\"");
+        yield return FieldSeed.Catalog("defectType", "Defect Type", "Primary defect type", required: true, catalogKey: "defectType", sectionKey: "basics", drivesLogic: true);
+        yield return FieldSeed.Catalog("severity", "Severity", "Defect severity", required: true, catalogKey: "severity", sectionKey: "safety", drivesLogic: true, defaultValueJson: "\"moderate\"");
+        yield return FieldSeed.Catalog("systemKey", "System", "Defect system", required: false, catalogKey: "defectSystem", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("componentKey", "Component", "Defect component", required: false, catalogKey: "defectComponent", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("failureMode", "Failure Mode", "Observed failure mode", required: false, catalogKey: "failureMode", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("symptom", "Symptom", "Observed symptom", required: false, catalogKey: "symptom", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("sidePosition", "Side / Position", "Location on the asset", required: false, catalogKey: "sidePosition", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("operatingCondition", "Operating Condition", "Condition when observed", required: false, catalogKey: "operatingCondition", sectionKey: "classification", drivesLogic: true);
+        yield return FieldSeed.Catalog("safetyCritical", "Safety Critical", "Safety-critical indicator", required: false, catalogKey: "safetyCritical", sectionKey: "safety", drivesLogic: true, defaultValueJson: "\"false\"");
+        yield return FieldSeed.Catalog("operatingRestriction", "Operating Restriction", "Operating restriction", required: false, catalogKey: "operatingRestriction", sectionKey: "safety", drivesLogic: true);
+        yield return FieldSeed.Catalog("deferralCode", "Deferral Code", "Deferral / deferment code", required: false, catalogKey: "deferralCode", sectionKey: "readiness", drivesLogic: true);
+        yield return FieldSeed.FreeText("readinessNotes", "Readiness Notes", "Why this defect affects readiness", sectionKey: "readiness", validation: new Dictionary<string, object?> { ["maxLength"] = 1024 });
+        yield return FieldSeed.Catalog("repairDisposition", "Repair Disposition", "Planned repair disposition", required: false, catalogKey: "repairDisposition", sectionKey: "corrective", drivesLogic: true);
+        yield return FieldSeed.Catalog("rootCause", "Root Cause", "Suspected root cause", required: false, catalogKey: "rootCause", sectionKey: "corrective", drivesLogic: true);
+        yield return FieldSeed.FreeText("correctiveAction", "Corrective Action", "Suggested corrective action", sectionKey: "corrective", validation: new Dictionary<string, object?> { ["maxLength"] = 1024 });
+        yield return FieldSeed.FreeText("notes", "Notes", "Defect notes and evidence context", sectionKey: "documents", validation: new Dictionary<string, object?> { ["maxLength"] = 2048 });
     }
 
     private static IEnumerable<FieldSeed> GetWorkOrderFieldSeeds()

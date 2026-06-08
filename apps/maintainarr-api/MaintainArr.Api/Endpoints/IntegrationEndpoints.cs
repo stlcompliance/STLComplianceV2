@@ -559,6 +559,7 @@ public static class IntegrationEndpoints
                     token.TenantScope ?? Guid.Empty,
                     true,
                     null,
+                    null,
                     assetId,
                     inspectionRunId,
                     status,

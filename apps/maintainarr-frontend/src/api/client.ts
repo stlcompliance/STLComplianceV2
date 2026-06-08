@@ -1,6 +1,7 @@
 import type {
   AssetClassResponse,
   AssetResponse,
+  AssetSearchResponse,
   AssetTypeResponse,
   CreateAssetClassRequest,
   CreateAssetRequest,
@@ -23,9 +24,13 @@ import type {
   CreateDefectsFromInspectionRunRequest,
   CreateDefectsFromInspectionRunResponse,
   CreateMaintainArrEvidenceRequest,
+  DefectDraftPreviewResponse,
   DefectDetailResponse,
+  DefectDuplicateMatchResponse,
   DefectEvidenceResponse,
   DefectSummaryResponse,
+  DefectSubmissionResponse,
+  DefectValidationResponse,
   MeterPmForecastResponse,
   MeterReadingResponse,
   RecordMeterReadingRequest,
@@ -98,6 +103,8 @@ import type {
   InspectionVoiceGuidanceResponse,
   NormalizeVoiceNumericResponse,
   UpdateDefectStatusRequest,
+  UpsertDefectDraftRequest,
+  SubmitDefectRequest,
   WorkOrderDetailResponse,
   WorkOrderDuplicateMatchResponse,
   WorkOrderPreviewResponse,
@@ -308,6 +315,22 @@ export async function getAsset(accessToken: string, assetId: string): Promise<As
   return parseJsonResponse<AssetResponse>(response, 'Failed to load asset')
 }
 
+export async function searchAssets(
+  accessToken: string,
+  query?: string,
+  limit = 25,
+): Promise<AssetSearchResponse[]> {
+  const search = new URLSearchParams()
+  if (query && query.trim()) {
+    search.set('query', query.trim())
+  }
+  search.set('limit', String(limit))
+  const response = await fetch(`${apiBase}/api/v1/assets/search?${search.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetSearchResponse[]>(response, 'Failed to search assets')
+}
+
 export async function createAsset(accessToken: string, payload: CreateAssetRequest): Promise<AssetResponse> {
   const response = await fetch(`${apiBase}/api/assets`, {
     method: 'POST',
@@ -374,6 +397,13 @@ export async function getWorkOrderCreateFieldset(accessToken: string): Promise<F
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<FieldsetResponse>(response, 'Failed to load work order create fieldset')
+}
+
+export async function getDefectCreateFieldset(accessToken: string): Promise<FieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/defects/create`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldsetResponse>(response, 'Failed to load defect create fieldset')
 }
 
 export async function getCatalogs(accessToken: string, keys?: string[]): Promise<CatalogResponse[]> {
@@ -774,6 +804,77 @@ export async function getDefect(accessToken: string, defectId: string): Promise<
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DefectDetailResponse>(response, 'Failed to load defect')
+}
+
+export async function createDefectDraft(
+  accessToken: string,
+  payload: UpsertDefectDraftRequest,
+): Promise<DefectDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/defects/drafts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DefectDetailResponse>(response, 'Failed to create defect draft')
+}
+
+export async function updateDefectDraft(
+  accessToken: string,
+  defectId: string,
+  payload: UpsertDefectDraftRequest,
+): Promise<DefectDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/defects/${defectId}/draft`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DefectDetailResponse>(response, 'Failed to update defect draft')
+}
+
+export async function validateDefectDraft(
+  accessToken: string,
+  defectId: string,
+): Promise<DefectValidationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/defects/${defectId}/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectValidationResponse>(response, 'Failed to validate defect draft')
+}
+
+export async function checkDuplicateDefectDraft(
+  accessToken: string,
+  defectId: string,
+): Promise<DefectDuplicateMatchResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/defects/${defectId}/duplicates`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectDuplicateMatchResponse[]>(response, 'Failed to check defect duplicates')
+}
+
+export async function previewDefectDraft(
+  accessToken: string,
+  defectId: string,
+): Promise<DefectDraftPreviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/defects/${defectId}/preview`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectDraftPreviewResponse>(response, 'Failed to preview defect draft')
+}
+
+export async function submitDefectDraft(
+  accessToken: string,
+  defectId: string,
+  payload: SubmitDefectRequest,
+): Promise<DefectSubmissionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/defects/${defectId}/submit`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DefectSubmissionResponse>(response, 'Failed to submit defect draft')
 }
 
 export async function createDefect(

@@ -353,7 +353,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
             $"RUN-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Inspection Test Asset",
             string.Empty,
-            "yard-a"));
+            null));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using StaffArr.Api.Contracts;
 using StaffArr.Api.Entities;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
@@ -114,6 +115,143 @@ public sealed class StaffArrAuthorizationService
     }
 
     public void RequireWorkerAdminSettingsManage(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
+
+    public void RequireOrganizationRead(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: true,
+            failureMessage: "Organization structure read access requires staffarr.organization.read scope.",
+            "staffarr.organization.read",
+            "staffarr.organization.manage",
+            "staffarr.org.read",
+            "staffarr.org.manage");
+    }
+
+    public void RequireOrganizationCreate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Organization structure create access requires staffarr.organization.create scope.",
+            "staffarr.organization.create",
+            "staffarr.organization.manage",
+            "staffarr.org.manage");
+    }
+
+    public void RequireOrganizationUpdate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Organization structure update access requires staffarr.organization.update scope.",
+            "staffarr.organization.update",
+            "staffarr.organization.manage",
+            "staffarr.org.manage");
+    }
+
+    public void RequireOrganizationArchive(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Organization structure archive access requires staffarr.organization.archive scope.",
+            "staffarr.organization.archive",
+            "staffarr.organization.manage",
+            "staffarr.org.manage");
+    }
+
+    public void RequireSiteRead(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: true,
+            failureMessage: "Site access requires staffarr.sites.read scope.",
+            "staffarr.sites.read",
+            "staffarr.sites.manage");
+    }
+
+    public void RequireSiteCreate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Site create access requires staffarr.sites.create scope.",
+            "staffarr.sites.create",
+            "staffarr.sites.manage");
+    }
+
+    public void RequireSiteUpdate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Site update access requires staffarr.sites.update scope.",
+            "staffarr.sites.update",
+            "staffarr.sites.manage");
+    }
+
+    public void RequireSiteArchive(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Site archive access requires staffarr.sites.archive scope.",
+            "staffarr.sites.archive",
+            "staffarr.sites.manage");
+    }
+
+    public void RequireLocationRead(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: true,
+            failureMessage: "Location access requires staffarr.locations.read scope.",
+            "staffarr.locations.read",
+            "staffarr.locations.manage");
+    }
+
+    public void RequireLocationCreate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Location create access requires staffarr.locations.create scope.",
+            "staffarr.locations.create",
+            "staffarr.locations.manage");
+    }
+
+    public void RequireLocationUpdate(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Location update access requires staffarr.locations.update scope.",
+            "staffarr.locations.update",
+            "staffarr.locations.manage");
+    }
+
+    public void RequireLocationArchive(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
+    {
+        RequireScopedPermission(
+            principal,
+            projection,
+            allowSupervisor: false,
+            failureMessage: "Location archive access requires staffarr.locations.archive scope.",
+            "staffarr.locations.archive",
+            "staffarr.locations.manage");
+    }
 
     public bool CanReadByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin", "supervisor");
@@ -525,6 +663,53 @@ public sealed class StaffArrAuthorizationService
             "auth.forbidden",
             "Personnel document upload requires staffarr.documents.manage scope.",
             403);
+    }
+
+    private void RequireScopedPermission(
+        ClaimsPrincipal principal,
+        EffectivePermissionProjectionResponse? projection,
+        bool allowSupervisor,
+        string failureMessage,
+        params string[] permissionKeys)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (HasAnyPermission(projection, permissionKeys))
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (allowSupervisor)
+        {
+            if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+            {
+                return;
+            }
+        }
+        else if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", failureMessage, 403);
+    }
+
+    private static bool HasAnyPermission(
+        EffectivePermissionProjectionResponse? projection,
+        IReadOnlyCollection<string> permissionKeys)
+    {
+        if (projection is null || projection.Permissions.Count == 0)
+        {
+            return false;
+        }
+
+        return projection.Permissions.Any(permission =>
+            permissionKeys.Any(key => string.Equals(permission.PermissionKey, key, StringComparison.OrdinalIgnoreCase)));
     }
 
     public async Task RequirePersonnelUpdateRequestReviewAsync(

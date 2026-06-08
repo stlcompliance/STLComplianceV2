@@ -131,6 +131,9 @@ public sealed class RoutarrEventIngestionService(
             cancellationToken);
 
         var severity = MapSeverity(payload);
+        var incidentReferenceId = payload.ExceptionId?.ToString("D")
+            ?? (IncidentEventKinds.Contains(request.EventKind) ? request.RelatedEntityId.ToString("D") : null);
+        var personId = NormalizeOptional(payload.DriverPersonId);
         var defect = new Defect
         {
             Id = Guid.NewGuid(),
@@ -139,9 +142,20 @@ public sealed class RoutarrEventIngestionService(
             Title = BuildTitle(request),
             Description = BuildDescription(request),
             Severity = severity,
+            Priority = MapSeverityToPriority(severity),
+            ReportSource = DefectSources.RoutArr,
+            SourceType = "routarr_event",
+            SourceReferenceId = request.SourceEventId.ToString("D"),
+            IncidentReferenceId = incidentReferenceId,
             Status = DefectStatuses.Open,
             Source = DefectSources.RoutArr,
             ReportedByUserId = RoutarrEventActorUserId,
+            ReportedByPersonId = personId,
+            DiscoveredByPersonId = personId,
+            CreatedByPersonId = personId,
+            UpdatedByPersonId = personId,
+            ReportedAt = now,
+            DiscoveredAt = now,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -261,6 +275,15 @@ public sealed class RoutarrEventIngestionService(
             _ => DefectSeverities.Medium,
         };
     }
+
+    private static string MapSeverityToPriority(string severity) =>
+        severity.Trim().ToLowerInvariant() switch
+        {
+            DefectSeverities.Critical => WorkOrderPriorities.Urgent,
+            DefectSeverities.High => WorkOrderPriorities.High,
+            DefectSeverities.Low => WorkOrderPriorities.Low,
+            _ => WorkOrderPriorities.Medium,
+        };
 
     private static void ValidateRequest(IngestRoutarrEventRequest request)
     {

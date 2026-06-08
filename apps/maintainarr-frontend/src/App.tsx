@@ -9,6 +9,7 @@ import { AssetCreatePage } from './pages/assets/AssetCreatePage'
 import { AssetProfilePage } from './pages/assets/AssetProfilePage'
 
 import { DefectsPage } from './pages/defects/DefectsPage'
+import { DefectCreatePage } from './pages/defects/DefectCreatePage'
 
 import { HistoryPage } from './pages/history/HistoryPage'
 import { DowntimePage } from './pages/downtime/DowntimePage'
@@ -103,7 +104,7 @@ export default function App() {
             <Route path="/defects" element={<DefectsPage />} />
             <Route path="/defects/drawer" element={<DefectsPage />} />
             <Route path="/defects/details" element={<DefectsPage />} />
-            <Route path="/defects/create" element={<DefectsPage />} />
+            <Route path="/defects/create" element={<DefectCreatePage />} />
 
             <Route path="/inspections" element={<InspectionsPage />} />
             <Route path="/inspections/drawer" element={<InspectionsPage />} />

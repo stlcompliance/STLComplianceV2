@@ -14,7 +14,7 @@ namespace MaintainArr.Api.Services;
 
 
 
-public sealed class DefectService(
+public sealed partial class DefectService(
 
     MaintainArrDbContext db,
 
@@ -24,7 +24,13 @@ public sealed class DefectService(
 
     AssetDowntimeService assetDowntimeService,
 
-    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue,
+
+    WorkOrderService workOrderService,
+
+    AssetQualityHoldService assetQualityHoldService,
+
+    AssetReadinessService assetReadinessService)
 
 {
 
@@ -35,6 +41,7 @@ public sealed class DefectService(
         bool viewAll,
 
         Guid? actorUserId,
+        string? actorPersonId = null,
 
         Guid? assetId = null,
 
@@ -58,7 +65,12 @@ public sealed class DefectService(
 
         {
 
-            query = query.Where(x => x.ReportedByUserId == actorUserId.Value);
+            var personId = actorPersonId?.Trim();
+            query = query.Where(x =>
+                x.ReportedByUserId == actorUserId.Value
+                || (personId != null
+                    && x.ReportedByPersonId != null
+                    && x.ReportedByPersonId == personId));
 
         }
 
@@ -134,7 +146,8 @@ public sealed class DefectService(
 
         CreateDefectRequest request,
 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? actorPersonId = null)
 
     {
 
@@ -164,11 +177,33 @@ public sealed class DefectService(
 
             Severity = NormalizeSeverity(request.Severity),
 
+            Priority = MapSeverityToPriority(request.Severity),
+
+            ReportSource = DefectSources.Manual,
+
+            SourceType = DefectSources.Manual,
+
+            SourceReferenceId = null,
+
+            IncidentReferenceId = null,
+
             Status = DefectStatuses.Open,
 
             Source = DefectSources.Manual,
 
             ReportedByUserId = actorUserId,
+
+            ReportedByPersonId = actorPersonId,
+
+            DiscoveredByPersonId = actorPersonId,
+
+            CreatedByPersonId = actorPersonId,
+
+            UpdatedByPersonId = actorPersonId,
+
+            ReportedAt = now,
+
+            DiscoveredAt = now,
 
             CreatedAt = now,
 
@@ -258,7 +293,8 @@ public sealed class DefectService(
 
         string source,
 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? actorPersonId = null)
 
     {
 
@@ -324,7 +360,8 @@ public sealed class DefectService(
 
                 source,
 
-                cancellationToken);
+                cancellationToken,
+                actorPersonId);
 
 
 
@@ -362,7 +399,8 @@ public sealed class DefectService(
 
         Guid inspectionRunId,
 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? actorPersonId = null)
 
     {
 
@@ -402,7 +440,8 @@ public sealed class DefectService(
 
                 DefectSources.InspectionAuto,
 
-                cancellationToken);
+                cancellationToken,
+                actorPersonId);
 
         }
 
@@ -420,7 +459,8 @@ public sealed class DefectService(
 
         UpdateDefectStatusRequest request,
 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? actorPersonId = null)
 
     {
 
@@ -465,6 +505,7 @@ public sealed class DefectService(
         defect.Status = status.ToLowerInvariant();
 
         defect.UpdatedAt = now;
+        defect.UpdatedByPersonId = actorPersonId;
 
 
 
@@ -555,7 +596,8 @@ public sealed class DefectService(
 
         string source,
 
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? actorPersonId = null)
 
     {
 
@@ -631,11 +673,33 @@ public sealed class DefectService(
 
             Severity = DefectSeverities.Medium,
 
+            Priority = MapSeverityToPriority(DefectSeverities.Medium),
+
+            ReportSource = source,
+
+            SourceType = "inspection_run",
+
+            SourceReferenceId = run.Id.ToString("D"),
+
+            IncidentReferenceId = null,
+
             Status = DefectStatuses.Open,
 
             Source = source,
 
             ReportedByUserId = actorUserId,
+
+            ReportedByPersonId = actorPersonId,
+
+            DiscoveredByPersonId = actorPersonId,
+
+            CreatedByPersonId = actorPersonId,
+
+            UpdatedByPersonId = actorPersonId,
+
+            ReportedAt = now,
+
+            DiscoveredAt = now,
 
             CreatedAt = now,
 
@@ -1020,7 +1084,30 @@ public sealed class DefectService(
 
                     defect.ResolvedAt,
 
-                    evidenceCounts.GetValueOrDefault(defect.Id, 0));
+                    evidenceCounts.GetValueOrDefault(defect.Id, 0),
+                    null,
+                    defect.Priority,
+                    defect.DefectType,
+                    defect.ReportSource,
+                    defect.ReportedByPersonId,
+                    defect.DiscoveredByPersonId,
+                    defect.CreatedByPersonId,
+                    defect.UpdatedByPersonId,
+                    defect.ReportedAt,
+                    defect.DiscoveredAt,
+                    defect.IsSafetyCritical,
+                    defect.IsComplianceImpacting,
+                    defect.IsOperabilityImpacting,
+                    defect.FailureMode,
+                    defect.SystemKey,
+                    defect.ComponentKey,
+                    defect.Symptom,
+                    defect.SidePosition,
+                    defect.OperatingCondition,
+                    defect.DeferralCode,
+                    defect.SourceType,
+                    defect.SourceReferenceId,
+                    defect.IncidentReferenceId);
 
             })
 
@@ -1105,8 +1192,31 @@ public sealed class DefectService(
             defect.ResolvedAt,
 
             summary.EvidenceCount,
-
-            downtimeFollowUp);
+            downtimeFollowUp,
+            defect.Priority,
+            defect.DefectType,
+            defect.ReportSource,
+            defect.ReportedByPersonId,
+            defect.DiscoveredByPersonId,
+            defect.CreatedByPersonId,
+            defect.UpdatedByPersonId,
+            defect.ReportedAt,
+            defect.DiscoveredAt,
+            defect.IsSafetyCritical,
+            defect.IsComplianceImpacting,
+            defect.IsOperabilityImpacting,
+            defect.FailureMode,
+            defect.SystemKey,
+            defect.ComponentKey,
+            defect.Symptom,
+            defect.SidePosition,
+            defect.OperatingCondition,
+            defect.DeferralCode,
+            defect.SourceType,
+            defect.SourceReferenceId,
+            defect.IncidentReferenceId,
+            defect.ReadinessNotes,
+            defect.CorrectiveAction);
 
     }
 

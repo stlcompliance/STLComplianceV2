@@ -116,7 +116,13 @@ public static class StlIntegrationTokenCatalog
         Profile("compliancecore-staffarr", "compliancecore-api", "StaffArr__ServiceToken", "compliancecore", ["staffarr"], "staffarr.sites.read"),
 
         Profile("handoff-loadarr", "loadarr-api", "Handoff__ServiceToken", "loadarr", ["loadarr"], "launch.redeem"),
-        Profile("loadarr-staffarr", "loadarr-api", "StaffArr__ServiceToken", "loadarr", ["staffarr"], "staffarr.sites.read"),
+        Profile(
+            "loadarr-staffarr",
+            "loadarr-api",
+            "StaffArr__ServiceToken",
+            "loadarr",
+            ["staffarr"],
+            "staffarr.sites.read,staffarr.permissions.project"),
 
         Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
         Profile("handoff-reportarr", "reportarr-api", "Handoff__ServiceToken", "reportarr", ["reportarr"], "launch.redeem"),

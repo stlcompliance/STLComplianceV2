@@ -139,6 +139,7 @@ describe('OrgHierarchyManager', () => {
     expect(onCreate).toHaveBeenCalledWith({
       unitType: 'department',
       name: 'Safety',
+      code: null,
       parentOrgUnitId: '00000000-0000-0000-0000-000000000000',
       description: null,
       managerPersonId: null,
@@ -170,6 +171,7 @@ describe('OrgHierarchyManager', () => {
     expect(onUpdate).toHaveBeenCalledWith('22222222-2222-2222-2222-222222222222', {
       unitType: 'team',
       name: 'Field Ops',
+      code: null,
       parentOrgUnitId: '11111111-1111-1111-1111-111111111111',
       description: null,
       managerPersonId: null,

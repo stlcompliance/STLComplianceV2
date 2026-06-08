@@ -1599,22 +1599,88 @@ namespace MaintainArr.Api.Migrations
                     b.Property<Guid?>("ChecklistItemId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ComponentKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CorrectiveAction")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DefectType")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DeferralCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
+                    b.Property<DateTimeOffset?>("DiscoveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscoveredByPersonId")
+                        .HasColumnType("text");
+
                     b.Property<int>("EscalationCount")
                         .HasColumnType("integer");
+
+                    b.Property<string>("FailureMode")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("IncidentReferenceId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<Guid?>("InspectionRunId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("IsComplianceImpacting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOperabilityImpacting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSafetyCritical")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("LastEscalatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OperatingCondition")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasDefaultValue("medium")
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ReadinessNotes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ReportSource")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ReportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReportedByPersonId")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("ReportedByUserId")
                         .HasColumnType("uuid");
@@ -1627,15 +1693,35 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("SidePosition")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("SourceReferenceId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Symptom")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SystemKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -1647,6 +1733,9 @@ namespace MaintainArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByPersonId")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1662,9 +1751,15 @@ namespace MaintainArr.Api.Migrations
 
                     b.HasIndex("TenantId", "AssetId", "Status");
 
+                    b.HasIndex("TenantId", "DefectType", "Status");
+
                     b.HasIndex("TenantId", "InspectionRunId", "ChecklistItemId")
                         .IsUnique()
                         .HasFilter("\"ChecklistItemId\" IS NOT NULL");
+
+                    b.HasIndex("TenantId", "ReportSource", "Status");
+
+                    b.HasIndex("TenantId", "ReportedByPersonId", "CreatedAt");
 
                     b.HasIndex("TenantId", "ReportedByUserId", "CreatedAt");
 

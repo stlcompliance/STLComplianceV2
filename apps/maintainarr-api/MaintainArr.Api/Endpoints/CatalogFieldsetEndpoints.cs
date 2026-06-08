@@ -69,5 +69,11 @@ public static class CatalogFieldsetEndpoints
             authorization.RequireWorkOrdersCreate(context.User);
             return Results.Ok(await service.GetWorkOrdersFieldsetAsync(context.User.GetTenantId(), "create", cancellationToken));
         });
+
+        group.MapGet("/defects/create", async (HttpContext context, MaintainArrAuthorizationService authorization, FieldsetService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDefectsCreate(context.User);
+            return Results.Ok(await service.GetDefectsFieldsetAsync(context.User.GetTenantId(), "create", cancellationToken));
+        });
     }
 }

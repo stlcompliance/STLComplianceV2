@@ -22,6 +22,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrWorkerAdminEndpoints();
         app.MapStaffArrManagerHierarchyEndpoints();
         app.MapStaffArrOrgUnitEndpoints();
+        app.MapStaffArrLocationEndpoints();
         app.MapStaffArrOrgUnitAssignmentEndpoints();
         app.MapStaffArrRoleTemplateEndpoints();
         app.MapStaffArrCertificationEndpoints();

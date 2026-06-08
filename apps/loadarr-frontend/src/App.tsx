@@ -19,7 +19,7 @@ import {
   Truck,
   Warehouse,
 } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { generatePath, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import {
   ControlledSelect,
   FormField,
@@ -33,7 +33,7 @@ import {
   type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
-import { getSessionBootstrap, loadArrFetch } from './api/client'
+import { getLoadArrPermissionCatalog, getSessionBootstrap, loadArrFetch } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
 import { ReportsPanel } from './components/ReportsPanel'
 
@@ -457,6 +457,71 @@ type LoadArrTransferCompletion = {
   transferTask: LoadArrTask
 }
 
+type LoadArrReceivingSession = {
+  id: string
+  receivingNumber: string
+  receivingType: string
+  status: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  sourceProductKey: string
+  sourceObjectType: string
+  sourceObjectId: string
+  supplierNameSnapshot: string
+  startedByPersonId: string
+  completedByPersonId: string | null
+  startedAtUtc: string
+  completedAtUtc: string | null
+  lines: LoadArrReceivingLine[]
+}
+
+type LoadArrReceivingLine = {
+  id: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  expectedQuantity: number
+  receivedQuantity: number
+  unitOfMeasure: string
+  warehouseLocationId: string
+  locationNameSnapshot: string
+  lotCode: string | null
+  serialCode: string | null
+  condition: string
+  status: string
+  discrepancyReasonCode: string | null
+  evidenceSummary: string | null
+}
+
+type LoadArrTransferOrder = {
+  id: string
+  transferNumber: string
+  status: string
+  transferType: string
+  staffarrSiteOrgUnitId: string
+  staffarrSiteNameSnapshot: string
+  fromLocationId: string
+  fromLocationNameSnapshot: string
+  toLocationId: string
+  toLocationNameSnapshot: string
+  requestedByPersonId: string
+  completedByPersonId: string | null
+  reasonCode: string
+  createdAtUtc: string
+  completedAtUtc: string | null
+  lines: LoadArrTransferLine[]
+}
+
+type LoadArrTransferLine = {
+  id: string
+  supplyarrItemId: string
+  itemNameSnapshot: string
+  quantity: number
+  unitOfMeasure: string
+  lotCode: string | null
+  serialCode: string | null
+  status: string
+}
+
 type LoadArrHoldMutation = {
   hold: {
     holdNumber: string
@@ -635,69 +700,275 @@ type ViewKey =
   | 'holds'
   | 'unexplained'
   | 'handoffs'
+  | 'permissions'
   | 'settings'
 
-type LoadArrRoute = {
+type LoadArrRouteKind = 'section' | 'create' | 'detail' | 'filter'
+
+type LoadArrRouteRegistration = {
   key: ViewKey
-  label: string
   path: string
-  icon: NonNullable<ProductNavItem['icon']>
-  sectionBreakBefore?: boolean
-  showInSidebar?: boolean
+  kind?: LoadArrRouteKind
+  aliases?: string[]
+}
+
+type LoadArrRouteMatch = LoadArrRouteRegistration & {
+  canonicalPath: string
+  params: Record<string, string>
 }
 
 type NavIcon = NonNullable<ProductNavItem['icon']>
 
-const loadarrRoutes: LoadArrRoute[] = [
-  { key: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: BarChart3 as NavIcon },
-  { key: 'inventory', label: 'Inventory', path: '/inventory', icon: Boxes as NavIcon },
-  { key: 'balances', label: 'Balances', path: '/balances', icon: PackageCheck as NavIcon, sectionBreakBefore: true },
-  { key: 'expected-receipts', label: 'Expected Receipts', path: '/expected-receipts', icon: PackagePlus as NavIcon },
-  { key: 'receiving', label: 'Receiving', path: '/receiving', icon: PackagePlus as NavIcon },
-  { key: 'putaway', label: 'Putaway', path: '/putaway', icon: PackagePlus as NavIcon },
-  { key: 'reservations', label: 'Reservations', path: '/reservations', icon: ClipboardCheck as NavIcon },
-  { key: 'picks', label: 'Picks', path: '/picks', icon: ClipboardList as NavIcon },
-  { key: 'issues', label: 'Issues', path: '/issues', icon: AlertTriangle as NavIcon },
-  { key: 'returns', label: 'Returns', path: '/returns', icon: Route as NavIcon },
-  { key: 'transfers', label: 'Transfers', path: '/transfers', icon: Route as NavIcon },
-  { key: 'truckstock', label: 'Truck Stock', path: '/truck-stock', icon: Truck as NavIcon },
-  { key: 'locations', label: 'Locations', path: '/locations', icon: MapPin as NavIcon },
-  { key: 'counts', label: 'Counts', path: '/counts', icon: Activity as NavIcon },
-  { key: 'adjustments', label: 'Adjustments', path: '/adjustments', icon: ClipboardCheck as NavIcon },
-  { key: 'ledger', label: 'Stock Ledger', path: '/ledger', icon: DatabaseZap as NavIcon, sectionBreakBefore: true },
-  { key: 'discrepancies', label: 'Discrepancies', path: '/discrepancies', icon: AlertTriangle as NavIcon },
-  { key: 'replenishment', label: 'Replenishment', path: '/replenishment', icon: Truck as NavIcon },
-  { key: 'history', label: 'History', path: '/history', icon: BarChart3 as NavIcon },
+const loadarrRoutes: LoadArrRouteRegistration[] = [
+  { key: 'dashboard', path: '/work/dashboard', aliases: ['/dashboard', '/work'] },
+  { key: 'inventory', path: '/work/inventory', aliases: ['/inventory'] },
+  { key: 'inventory', path: '/work/inventory/items/:itemRefId', kind: 'detail', aliases: ['/inventory/items/:itemRefId'] },
   {
-    key: 'tasks',
-    label: 'Tasks',
-    path: '/tasks',
-    icon: ClipboardList as NavIcon,
-    sectionBreakBefore: true,
+    key: 'locations',
+    path: '/work/inventory/locations/:locationProfileId',
+    kind: 'detail',
+    aliases: ['/inventory/locations/:locationProfileId', '/setup/warehouses-areas/:locationProfileId'],
   },
-  { key: 'holds', label: 'Holds', path: '/holds', icon: ShieldCheck as NavIcon },
-  { key: 'unexplained', label: 'Unexplained', path: '/unexplained', icon: AlertTriangle as NavIcon },
-  { key: 'handoffs', label: 'Handoffs', path: '/handoffs', icon: Route as NavIcon },
-  { key: 'settings', label: 'Settings', path: '/settings', icon: Warehouse as NavIcon, sectionBreakBefore: true },
   {
-    key: 'kits',
-    label: 'Kits',
-    path: '/kits',
-    icon: Boxes as NavIcon,
-    showInSidebar: false,
+    key: 'balances',
+    path: '/work/balances',
+    aliases: ['/balances', '/setup/item-references'],
+  },
+  { key: 'balances', path: '/setup/item-references' },
+  {
+    key: 'expected-receipts',
+    path: '/work/expected-receipts',
+    aliases: ['/expected-receipts', '/supply/purchase-order-receipts'],
+  },
+  {
+    key: 'expected-receipts',
+    path: '/work/expected-receipts/:expectedReceiptId',
+    kind: 'detail',
+    aliases: ['/expected-receipts/:expectedReceiptId'],
+  },
+  { key: 'expected-receipts', path: '/supply/purchase-order-receipts' },
+  { key: 'receiving', path: '/work/receiving', aliases: ['/receiving'] },
+  { key: 'receiving', path: '/work/receiving/new', kind: 'create', aliases: ['/receiving/new'] },
+  {
+    key: 'receiving',
+    path: '/work/receiving/:receivingSessionId',
+    kind: 'detail',
+    aliases: ['/receiving/:receivingSessionId'],
+  },
+  { key: 'tasks', path: '/work/dock-schedule', aliases: ['/tasks'] },
+  { key: 'putaway', path: '/work/putaway', aliases: ['/putaway'] },
+  { key: 'putaway', path: '/work/putaway/:putawayTaskId', kind: 'detail', aliases: ['/putaway/:putawayTaskId'] },
+  { key: 'reservations', path: '/work/reservations', aliases: ['/reservations'] },
+  { key: 'reservations', path: '/work/reservations/new', kind: 'create', aliases: ['/reservations/new'] },
+  {
+    key: 'reservations',
+    path: '/work/reservations/:reservationId',
+    kind: 'detail',
+    aliases: ['/reservations/:reservationId'],
+  },
+  { key: 'picks', path: '/work/picking', aliases: ['/picking', '/picks'] },
+  { key: 'picks', path: '/work/picking/:pickTaskId', kind: 'detail', aliases: ['/picking/:pickTaskId'] },
+  { key: 'transfers', path: '/work/transfers', aliases: ['/transfers'] },
+  { key: 'transfers', path: '/work/transfers/new', kind: 'create', aliases: ['/transfers/new'] },
+  { key: 'transfers', path: '/work/transfers/:transferId', kind: 'detail', aliases: ['/transfers/:transferId'] },
+  { key: 'holds', path: '/work/holds', aliases: ['/holds'] },
+  { key: 'holds', path: '/work/holds/:holdId', kind: 'detail', aliases: ['/holds/:holdId'] },
+  { key: 'truckstock', path: '/work/staging', aliases: ['/staging', '/truck-stock'] },
+  {
+    key: 'truckstock',
+    path: '/work/staging/:stagingAssignmentId',
+    kind: 'detail',
+    aliases: ['/staging/:stagingAssignmentId', '/truck-stock/:stagingAssignmentId'],
+  },
+  { key: 'handoffs', path: '/work/shipping', aliases: ['/shipping'] },
+  { key: 'handoffs', path: '/work/shipping/:loadoutId', kind: 'detail', aliases: ['/shipping/:loadoutId'] },
+  {
+    key: 'counts',
+    path: '/work/cycle-counts',
+    aliases: ['/cycle-counts', '/records/count-history', '/counts'],
+  },
+  { key: 'counts', path: '/work/cycle-counts/new', kind: 'create', aliases: ['/cycle-counts/new', '/counts/new'] },
+  {
+    key: 'counts',
+    path: '/work/cycle-counts/:countSessionId',
+    kind: 'detail',
+    aliases: ['/cycle-counts/:countSessionId', '/records/count-history/:countSessionId', '/counts/:countSessionId'],
+  },
+  { key: 'discrepancies', path: '/work/exceptions', aliases: ['/exceptions', '/work/issues'] },
+  { key: 'discrepancies', path: '/work/exceptions/receiving', kind: 'filter', aliases: ['/exceptions/receiving'] },
+  {
+    key: 'discrepancies',
+    path: '/work/exceptions/inventory-holds',
+    kind: 'filter',
+    aliases: ['/exceptions/inventory-holds'],
+  },
+  { key: 'discrepancies', path: '/work/exceptions/quarantine', kind: 'filter', aliases: ['/exceptions/quarantine'] },
+  {
+    key: 'discrepancies',
+    path: '/work/exceptions/pending-quality-review',
+    kind: 'filter',
+    aliases: ['/exceptions/pending-quality-review'],
+  },
+  { key: 'discrepancies', path: '/work/exceptions/:exceptionId', kind: 'detail', aliases: ['/exceptions/:exceptionId'] },
+  { key: 'returns', path: '/supply/vendor-returns', aliases: ['/returns', '/work/returns'] },
+  { key: 'returns', path: '/work/returns' },
+  {
+    key: 'returns',
+    path: '/supply/vendor-returns/:returnId',
+    kind: 'detail',
+    aliases: ['/returns/:returnId', '/work/returns/:returnId'],
+  },
+  { key: 'issues', path: '/supply/backorders', aliases: ['/issues', '/work/backorders'] },
+  {
+    key: 'issues',
+    path: '/work/backorders/:issueId',
+    kind: 'detail',
+    aliases: ['/issues/:issueId'],
+  },
+  { key: 'issues', path: '/work/backorders' },
+  { key: 'issues', path: '/supply/backorders' },
+  { key: 'replenishment', path: '/supply', aliases: ['/supply/reorder-signals', '/replenishment'] },
+  { key: 'replenishment', path: '/supply/reorder-signals' },
+  { key: 'locations', path: '/setup/warehouses-areas', aliases: ['/locations', '/setup'] },
+  { key: 'locations', path: '/setup', aliases: ['/setup/warehouses-areas'] },
+  { key: 'adjustments', path: '/records/adjustment-history', aliases: ['/adjustments'] },
+  {
+    key: 'adjustments',
+    path: '/records/adjustment-history/:adjustmentId',
+    kind: 'detail',
+    aliases: ['/adjustments/:adjustmentId'],
+  },
+  { key: 'ledger', path: '/records/stock-ledger', aliases: ['/ledger'] },
+  {
+    key: 'history',
+    path: '/records',
+    aliases: ['/history', '/records/receiving-history', '/records/movement-history'],
+  },
+  { key: 'history', path: '/records/receiving-history' },
+  { key: 'history', path: '/records/movement-history' },
+  {
+    key: 'settings',
+    path: '/admin/settings',
+    aliases: ['/settings', '/admin', '/setup/location-rules', '/setup/inventory-policies', '/setup/devices-labels'],
+  },
+  { key: 'settings', path: '/setup/location-rules' },
+  { key: 'settings', path: '/setup/inventory-policies' },
+  { key: 'settings', path: '/setup/devices-labels' },
+  { key: 'permissions', path: '/admin/permissions' },
+  { key: 'handoffs', path: '/admin/integrations', aliases: ['/handoffs'] },
+  { key: 'unexplained', path: '/work/unexplained', aliases: ['/unexplained'] },
+  { key: 'unexplained', path: '/work/unexplained/:recordId', kind: 'detail', aliases: ['/unexplained/:recordId'] },
+  { key: 'kits', path: '/work/kits', aliases: ['/kits'] },
+  { key: 'kits', path: '/work/kits/:kitId', kind: 'detail', aliases: ['/kits/:kitId'] },
+]
+
+const productNavItems: ProductNavItem[] = [
+  {
+    label: 'Work',
+    to: '/work',
+    icon: Warehouse as NavIcon,
+    children: [
+      { label: 'Dashboard', to: '/work/dashboard', icon: BarChart3 as NavIcon },
+      { label: 'Expected Receipts', to: '/work/expected-receipts', icon: PackagePlus as NavIcon },
+      { label: 'Receiving', to: '/work/receiving', icon: PackagePlus as NavIcon },
+      { label: 'Dock Schedule', to: '/work/dock-schedule', icon: ClipboardList as NavIcon },
+      { label: 'Putaway', to: '/work/putaway', icon: PackagePlus as NavIcon },
+      { label: 'Inventory', to: '/work/inventory', icon: Boxes as NavIcon },
+      { label: 'Transfers', to: '/work/transfers', icon: Route as NavIcon },
+      { label: 'Reservations', to: '/work/reservations', icon: ClipboardCheck as NavIcon },
+      { label: 'Picking', to: '/work/picking', icon: ClipboardList as NavIcon },
+      { label: 'Staging', to: '/work/staging', icon: Truck as NavIcon },
+      { label: 'Shipping / Loadout', to: '/work/shipping', icon: Route as NavIcon },
+      { label: 'Cycle Counts', to: '/work/cycle-counts', icon: Activity as NavIcon },
+      { label: 'Exceptions', to: '/work/exceptions', icon: AlertTriangle as NavIcon },
+      { label: 'Holds', to: '/work/holds', icon: ShieldCheck as NavIcon },
+      { label: 'Unexplained', to: '/work/unexplained', icon: AlertTriangle as NavIcon },
+    ],
+  },
+  {
+    label: 'Supply Coordination',
+    to: '/supply',
+    icon: PackagePlus as NavIcon,
+    sectionBreakBefore: true,
+    children: [
+      { label: 'Purchase Order Receipts', to: '/supply/purchase-order-receipts', icon: PackagePlus as NavIcon },
+      { label: 'Vendor Returns', to: '/supply/vendor-returns', icon: Route as NavIcon },
+      { label: 'Backorders', to: '/supply/backorders', icon: AlertTriangle as NavIcon },
+      { label: 'Reorder Signals', to: '/supply/reorder-signals', icon: Truck as NavIcon },
+    ],
+  },
+  {
+    label: 'Setup',
+    to: '/setup',
+    icon: MapPin as NavIcon,
+    sectionBreakBefore: true,
+    children: [
+      { label: 'Warehouses & Areas', to: '/setup/warehouses-areas', icon: Warehouse as NavIcon },
+      { label: 'Location Rules', to: '/setup/location-rules', icon: ShieldCheck as NavIcon },
+      { label: 'Item / Part References', to: '/setup/item-references', icon: Boxes as NavIcon },
+      { label: 'Inventory Policies', to: '/setup/inventory-policies', icon: CheckCircle2 as NavIcon },
+      { label: 'Devices & Labels', to: '/setup/devices-labels', icon: FileCheck2 as NavIcon },
+    ],
+  },
+  {
+    label: 'Records',
+    to: '/records',
+    icon: DatabaseZap as NavIcon,
+    sectionBreakBefore: true,
+    children: [
+      { label: 'Stock Ledger', to: '/records/stock-ledger', icon: DatabaseZap as NavIcon },
+      { label: 'Receiving History', to: '/records/receiving-history', icon: PackagePlus as NavIcon },
+      { label: 'Movement History', to: '/records/movement-history', icon: Route as NavIcon },
+      { label: 'Count History', to: '/records/count-history', icon: Activity as NavIcon },
+      { label: 'Adjustment History', to: '/records/adjustment-history', icon: ClipboardCheck as NavIcon },
+    ],
+  },
+  {
+    label: 'Admin',
+    to: '/admin',
+    icon: ShieldCheck as NavIcon,
+    sectionBreakBefore: true,
+    children: [
+      { label: 'LoadArr Settings', to: '/admin/settings', icon: Warehouse as NavIcon },
+      { label: 'Integrations', to: '/admin/integrations', icon: FileCheck2 as NavIcon },
+      { label: 'Permissions', to: '/admin/permissions', icon: ShieldCheck as NavIcon },
+    ],
   },
 ]
 
-const productNavItems: ProductNavItem[] = loadarrRoutes
-  .filter((route) => route.showInSidebar !== false)
-  .map((route) => ({
-    label: route.label,
-    to: route.path,
-    icon: route.icon,
-    sectionBreakBefore: route.sectionBreakBefore,
-  }))
+function findLoadArrRoute(pathname: string): LoadArrRouteMatch | null {
+  for (const route of loadarrRoutes) {
+    for (const candidate of [route.path, ...(route.aliases ?? [])]) {
+      const match = matchPath({ path: candidate, end: true }, pathname)
+      if (!match) {
+        continue
+      }
 
-const loadarrRouteByPath = new Map(loadarrRoutes.map((route) => [route.path, route.key]))
+      return {
+        ...route,
+        canonicalPath: generatePath(route.path, match.params),
+        params: match.params as Record<string, string>,
+      }
+    }
+  }
+
+  return null
+}
+
+function selectLoadArrRouteRecord<T extends { id: string }>(
+  records: T[],
+  routeId: string | undefined,
+  fallback: T | undefined,
+): T | undefined {
+  if (routeId) {
+    const match = records.find((record) => record.id === routeId)
+    if (match) {
+      return match
+    }
+  }
+
+  return fallback
+}
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
@@ -979,6 +1250,138 @@ const fallbackSummary: LoadArrWorkspaceSummary = {
     },
   ],
 }
+
+const fallbackReceivingSessions: LoadArrReceivingSession[] = [
+  {
+    id: 'recv-24018',
+    receivingNumber: 'RCV-24018',
+    receivingType: 'purchase_order',
+    status: 'open',
+    staffarrSiteOrgUnitId: 'staff-site-stl-north',
+    staffarrSiteNameSnapshot: 'STL North Yard',
+    sourceProductKey: 'supplyarr',
+    sourceObjectType: 'purchase_order',
+    sourceObjectId: 'PO-10492',
+    supplierNameSnapshot: 'Midwest Fleet Supply',
+    startedByPersonId: 'person-inventory-clerk',
+    completedByPersonId: null,
+    startedAtUtc: '2026-06-02T20:10:00Z',
+    completedAtUtc: null,
+    lines: [
+      {
+        id: 'line-24018-1',
+        supplyarrItemId: 'SUP-VALVE-KIT-A',
+        itemNameSnapshot: 'Valve repair kit A',
+        expectedQuantity: 38,
+        receivedQuantity: 38,
+        unitOfMeasure: 'each',
+        warehouseLocationId: 'loc-dock-01',
+        locationNameSnapshot: 'Receiving Dock 1',
+        lotCode: 'L2405-77',
+        serialCode: null,
+        condition: 'new',
+        status: 'ready_to_complete',
+        discrepancyReasonCode: null,
+        evidenceSummary: 'Dock receipt photo attached',
+      },
+    ],
+  },
+  {
+    id: 'recv-8834',
+    receivingNumber: 'RCV-8834',
+    receivingType: 'vendor_consignment',
+    status: 'inspection_required',
+    staffarrSiteOrgUnitId: 'staff-site-stl-north',
+    staffarrSiteNameSnapshot: 'STL North Yard',
+    sourceProductKey: 'supplyarr',
+    sourceObjectType: 'asn',
+    sourceObjectId: 'ASN-8834',
+    supplierNameSnapshot: 'Applied Chemical Partners',
+    startedByPersonId: 'person-hazmat-reviewer',
+    completedByPersonId: null,
+    startedAtUtc: '2026-06-02T21:05:00Z',
+    completedAtUtc: null,
+    lines: [
+      {
+        id: 'line-8834-1',
+        supplyarrItemId: 'SUP-ADH-49',
+        itemNameSnapshot: 'Regulated adhesive cartridge',
+        expectedQuantity: 14,
+        receivedQuantity: 14,
+        unitOfMeasure: 'case',
+        warehouseLocationId: 'loc-haz-01',
+        locationNameSnapshot: 'Hazmat Cage A',
+        lotCode: 'ADH-991',
+        serialCode: null,
+        condition: 'pending_inspection',
+        status: 'blocked_by_compliance',
+        discrepancyReasonCode: 'label_mismatch',
+        evidenceSummary: 'SDS and label check opened',
+      },
+    ],
+  },
+]
+
+const fallbackTransferOrders: LoadArrTransferOrder[] = [
+  {
+    id: 'xfer-24018-putaway',
+    transferNumber: 'TRF-24018',
+    status: 'ready',
+    transferType: 'bin_to_bin',
+    staffarrSiteOrgUnitId: 'staff-site-stl-north',
+    staffarrSiteNameSnapshot: 'STL North Yard',
+    fromLocationId: 'loc-dock-01',
+    fromLocationNameSnapshot: 'Receiving Dock 1',
+    toLocationId: 'loc-quarantine-01',
+    toLocationNameSnapshot: 'Quarantine Bay',
+    requestedByPersonId: 'person-inventory-clerk',
+    completedByPersonId: null,
+    reasonCode: 'quality_inspection',
+    createdAtUtc: '2026-06-03T14:15:00Z',
+    completedAtUtc: null,
+    lines: [
+      {
+        id: 'xfer-line-24018',
+        supplyarrItemId: 'SUP-VALVE-KIT-A',
+        itemNameSnapshot: 'Valve repair kit A',
+        quantity: 4,
+        unitOfMeasure: 'each',
+        lotCode: 'L2405-77',
+        serialCode: null,
+        status: 'ready',
+      },
+    ],
+  },
+  {
+    id: 'xfer-truck-17',
+    transferNumber: 'TRF-TRUCK-17',
+    status: 'completed',
+    transferType: 'warehouse_to_truck',
+    staffarrSiteOrgUnitId: 'staff-site-south-depot',
+    staffarrSiteNameSnapshot: 'South Service Depot',
+    fromLocationId: 'loc-truck-17',
+    fromLocationNameSnapshot: 'Truck Stock 17',
+    toLocationId: 'loc-dock-01',
+    toLocationNameSnapshot: 'Receiving Dock 1',
+    requestedByPersonId: 'person-route-stock-lead',
+    completedByPersonId: 'person-route-stock-lead',
+    reasonCode: 'route_replenishment',
+    createdAtUtc: '2026-06-02T18:00:00Z',
+    completedAtUtc: '2026-06-02T18:35:00Z',
+    lines: [
+      {
+        id: 'xfer-line-truck-17',
+        supplyarrItemId: 'SUP-BR-ROTOR-22',
+        itemNameSnapshot: 'Brake rotor assembly',
+        quantity: 2,
+        unitOfMeasure: 'each',
+        lotCode: null,
+        serialCode: 'BR-SN-7781',
+        status: 'completed',
+      },
+    ],
+  },
+]
 
 const fallbackCounts: LoadArrCount[] = [
   {
@@ -1462,6 +1865,8 @@ export function App() {
   const [transferForm, setTransferForm] = useState<TransferFormState>(initialTransferForm)
   const [transferStatus, setTransferStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [transferCompletion, setTransferCompletion] = useState<LoadArrTransferCompletion | null>(null)
+  const [receivingSessions, setReceivingSessions] = useState<LoadArrReceivingSession[]>(fallbackReceivingSessions)
+  const [transferOrders, setTransferOrders] = useState<LoadArrTransferOrder[]>(fallbackTransferOrders)
   const [holdForm, setHoldForm] = useState<HoldFormState>(initialHoldForm)
   const [holdStatus, setHoldStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [holdMutation, setHoldMutation] = useState<LoadArrHoldMutation | null>(null)
@@ -1520,24 +1925,112 @@ export function App() {
     return pathname
   })()
 
-  const activeView = useMemo<ViewKey>(() => {
-    if (normalizedPathname === '/') {
-      return 'dashboard'
-    }
+  const permissionsQuery = useQuery({
+    queryKey: ['loadarr-permission-catalog', accessToken, normalizedPathname],
+    queryFn: () => getLoadArrPermissionCatalog(accessToken!),
+    enabled: Boolean(accessToken) && normalizedPathname === '/admin/permissions',
+    retry: false,
+  })
 
-    return loadarrRouteByPath.get(normalizedPathname) ?? 'dashboard'
+  const activeRoute = useMemo(() => {
+    return findLoadArrRoute(normalizedPathname === '/' ? '/work' : normalizedPathname)
   }, [normalizedPathname])
 
+  const activeView = activeRoute?.key ?? 'dashboard'
   useEffect(() => {
     if (normalizedPathname === '/') {
-      navigate('/dashboard', { replace: true })
+      navigate('/work', { replace: true })
       return
     }
 
-    if (!loadarrRouteByPath.has(normalizedPathname)) {
-      navigate('/dashboard', { replace: true })
+    if (!activeRoute) {
+      navigate('/work', { replace: true })
+      return
     }
-  }, [navigate, normalizedPathname])
+
+    if (normalizedPathname !== activeRoute.canonicalPath) {
+      navigate(activeRoute.canonicalPath, { replace: true })
+    }
+  }, [activeRoute, navigate, normalizedPathname])
+
+  useEffect(() => {
+    const routeLocationId = activeRoute?.params.locationProfileId
+    if (!routeLocationId) {
+      return
+    }
+
+    if (summary.locations.some((location) => location.id === routeLocationId)) {
+      setSelectedLocationId(routeLocationId)
+    }
+  }, [activeRoute?.params.locationProfileId, summary.locations])
+
+  useEffect(() => {
+    const routeTruckStockId = activeRoute?.params.stagingAssignmentId
+    if (!routeTruckStockId) {
+      return
+    }
+
+    const record = truckStockRecords.find((candidate) => candidate.id === routeTruckStockId)
+    if (record) {
+      setTruckStockForm((current) =>
+        current.truckStockId === record.id && current.personId === record.assignedPersonId
+          ? current
+          : {
+              ...current,
+              truckStockId: record.id,
+              personId: record.assignedPersonId,
+            },
+      )
+    }
+  }, [activeRoute?.params.stagingAssignmentId, truckStockRecords])
+
+  useEffect(() => {
+    const routeKitId = activeRoute?.params.kitId
+    if (!routeKitId) {
+      return
+    }
+
+    const record = kitRecords.find((candidate) => candidate.id === routeKitId)
+    if (record) {
+      setKitForm((current) =>
+        current.kitId === record.id && current.personId === record.assignedPersonId
+          ? current
+          : {
+              ...current,
+              kitId: record.id,
+              personId: record.assignedPersonId,
+              targetPersonId: record.assignedPersonId,
+              targetLocationId: record.locationId,
+            },
+      )
+    }
+  }, [activeRoute?.params.kitId, kitRecords])
+
+  useEffect(() => {
+    const routeHoldId = activeRoute?.params.holdId
+    if (!routeHoldId) {
+      return
+    }
+
+    const record = summary.holds.find((candidate) => candidate.id === routeHoldId)
+    if (record) {
+      setHoldReleaseForm((current) => (current.holdId === record.id ? current : { ...current, holdId: record.id }))
+    }
+  }, [activeRoute?.params.holdId, summary.holds])
+
+  useEffect(() => {
+    const routeRecordId = activeRoute?.params.recordId
+    if (!routeRecordId) {
+      return
+    }
+
+    const record = summary.unexplainedInventory.find((candidate) => candidate.id === routeRecordId)
+    if (record) {
+      setUnexplainedResolutionForm((current) =>
+        current.recordId === record.id ? current : { ...current, recordId: record.id },
+      )
+    }
+  }, [activeRoute?.params.recordId, summary.unexplainedInventory])
 
   useEffect(() => {
     if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
@@ -1601,6 +2094,62 @@ export function App() {
       .catch(() => {
         if (!controller.signal.aborted) {
           setCounts(fallbackCounts)
+        }
+      })
+
+    return () => controller.abort()
+  }, [accessToken])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    loadArrFetch('/api/v1/receiving', accessToken, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Receiving request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<{ items: LoadArrReceivingSession[] }>
+      })
+      .then((data) => {
+        if (data.items.length > 0) {
+          setReceivingSessions(data.items)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setReceivingSessions(fallbackReceivingSessions)
+        }
+      })
+
+    return () => controller.abort()
+  }, [accessToken])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    loadArrFetch('/api/v1/transfers', accessToken, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Transfer request failed: ${response.status}`)
+        }
+
+        return response.json() as Promise<{ items: LoadArrTransferOrder[] }>
+      })
+      .then((data) => {
+        if (data.items.length > 0) {
+          setTransferOrders(data.items)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setTransferOrders(fallbackTransferOrders)
         }
       })
 
@@ -2063,19 +2612,70 @@ export function App() {
     [summary.unexplainedInventory, unexplainedResolutionForm.recordId],
   )
 
+  const selectedReceivingSession = useMemo(
+    () =>
+      receivingSessions.find((session) => session.id === activeRoute?.params.receivingSessionId) ??
+      receivingSessions[0],
+    [activeRoute?.params.receivingSessionId, receivingSessions],
+  )
+
+  const selectedTransferOrder = useMemo(
+    () =>
+      transferOrders.find((order) => order.id === activeRoute?.params.transferId) ??
+      transferOrders[0],
+    [activeRoute?.params.transferId, transferOrders],
+  )
+
   const selectedCount = useMemo(
-    () => counts.find((count) => count.id === countResult?.count.id) ?? counts[0],
-    [countResult?.count.id, counts],
+    () =>
+      counts.find((count) => count.id === countResult?.count.id) ??
+      counts.find((count) => count.id === activeRoute?.params.countSessionId) ??
+      counts[0],
+    [activeRoute?.params.countSessionId, countResult?.count.id, counts],
   )
 
   const selectedAdjustment = useMemo(
-    () => adjustments.find((adjustment) => adjustment.id === adjustmentResult?.adjustment.id) ?? adjustments[0],
-    [adjustmentResult?.adjustment.id, adjustments],
+    () =>
+      adjustments.find((adjustment) => adjustment.id === adjustmentResult?.adjustment.id) ??
+      adjustments.find((adjustment) => adjustment.id === activeRoute?.params.adjustmentId) ??
+      adjustments[0],
+    [activeRoute?.params.adjustmentId, adjustmentResult?.adjustment.id, adjustments],
   )
 
+  const selectedCountRecord = countResult?.count ?? selectedCount ?? null
+  const selectedAdjustmentRecord = adjustmentResult?.adjustment ?? selectedAdjustment ?? null
+
   const selectedInventoryItem = useMemo(
-    () => filteredInventory[0] ?? summary.inventory[0] ?? null,
-    [filteredInventory, summary.inventory],
+    () => {
+      const routeItemRefId = activeRoute?.params.itemRefId
+      if (routeItemRefId) {
+        return (
+          filteredInventory.find((item) => item.supplyarrItemId === routeItemRefId) ??
+          summary.inventory.find((item) => item.supplyarrItemId === routeItemRefId) ??
+          filteredInventory[0] ??
+          summary.inventory[0] ??
+          null
+        )
+      }
+
+      return filteredInventory[0] ?? summary.inventory[0] ?? null
+    },
+    [activeRoute?.params.itemRefId, filteredInventory, summary.inventory],
+  )
+
+  const selectedPutawayTask = useMemo(
+    () => selectLoadArrRouteRecord(filteredPutawayTasks, activeRoute?.params.putawayTaskId, filteredPutawayTasks[0]),
+    [activeRoute?.params.putawayTaskId, filteredPutawayTasks],
+  )
+
+  const selectedHandoff = useMemo(
+    () => selectLoadArrRouteRecord(summary.routeHandoffs, activeRoute?.params.loadoutId, summary.routeHandoffs[0]),
+    [activeRoute?.params.loadoutId, summary.routeHandoffs],
+  )
+
+  const selectedHoldRecord = useMemo(
+    () => selectLoadArrRouteRecord(summary.holds, activeRoute?.params.holdId, summary.holds[0]),
+    [activeRoute?.params.holdId, summary.holds],
   )
 
   const inventoryBalancesByItem = useMemo<LoadArrBalanceRollup[]>(
@@ -2231,6 +2831,16 @@ export function App() {
     [summary.generatedAt, summary.inventory],
   )
 
+  const selectedIssue = useMemo(
+    () => selectLoadArrRouteRecord(issueRows, activeRoute?.params.issueId, issueRows[0]),
+    [activeRoute?.params.issueId, issueRows],
+  )
+
+  const selectedReturn = useMemo(
+    () => selectLoadArrRouteRecord(returnRows, activeRoute?.params.returnId, returnRows[0]),
+    [activeRoute?.params.returnId, returnRows],
+  )
+
   const discrepancyRows = useMemo<LoadArrDiscrepancyRecord[]>(
     () =>
       summary.unexplainedInventory.map((record) => ({
@@ -2246,6 +2856,62 @@ export function App() {
         notes: record.evidenceSummary,
       })),
     [summary.unexplainedInventory],
+  )
+
+  const selectedExpectedReceipt = useMemo(
+    () =>
+      selectLoadArrRouteRecord(expectedReceiptRows, activeRoute?.params.expectedReceiptId, expectedReceiptRows[0]),
+    [activeRoute?.params.expectedReceiptId, expectedReceiptRows],
+  )
+
+  const selectedReservation = useMemo(
+    () => selectLoadArrRouteRecord(reservationRows, activeRoute?.params.reservationId, reservationRows[0]),
+    [activeRoute?.params.reservationId, reservationRows],
+  )
+
+  const selectedPick = useMemo(
+    () => selectLoadArrRouteRecord(pickRows, activeRoute?.params.pickTaskId, pickRows[0]),
+    [activeRoute?.params.pickTaskId, pickRows],
+  )
+
+  const exceptionRows = useMemo<LoadArrDiscrepancyRecord[]>(() => {
+    const routePath = activeRoute?.canonicalPath
+    if (!routePath || routePath === '/work/exceptions') {
+      return discrepancyRows
+    }
+
+    const matches = (record: LoadArrDiscrepancyRecord, needle: string) => {
+      const haystacks = [
+        record.sourceType,
+        record.status,
+        record.reasonCode,
+        record.locationNameSnapshot,
+        record.itemNameSnapshot,
+        record.notes,
+      ].map((value) => value.toLowerCase())
+
+      return haystacks.some((value) => value.includes(needle))
+    }
+
+    switch (routePath) {
+      case '/work/exceptions/receiving':
+        return discrepancyRows.filter((record) => matches(record, 'receiv') || matches(record, 'receipt'))
+      case '/work/exceptions/inventory-holds':
+        return discrepancyRows.filter(
+          (record) => matches(record, 'hold') || matches(record, 'variance') || matches(record, 'trust'),
+        )
+      case '/work/exceptions/quarantine':
+        return discrepancyRows.filter((record) => matches(record, 'quarantine'))
+      case '/work/exceptions/pending-quality-review':
+        return discrepancyRows.filter((record) => matches(record, 'review') || matches(record, 'quality'))
+      default:
+        return discrepancyRows
+    }
+  }, [activeRoute?.canonicalPath, discrepancyRows])
+
+  const selectedException = useMemo(
+    () => selectLoadArrRouteRecord(exceptionRows, activeRoute?.params.exceptionId, exceptionRows[0]),
+    [activeRoute?.params.exceptionId, exceptionRows],
   )
 
   const ledgerRows = useMemo<LoadArrLedgerEntry[]>(
@@ -2398,6 +3064,10 @@ export function App() {
 
       const data = (await response.json()) as LoadArrReceivingCompletion
       setReceivingCompletion(data)
+      setReceivingSessions((current) => [
+        createLocalReceivingSessionRecord(receivingForm, selectedReceivingLocation, selectedSupplyArrItem, data),
+        ...current.filter((record) => record.receivingNumber !== data.session.receivingNumber),
+      ])
       setReceivingStatus('completed')
     } catch {
       const fallback = createLocalReceivingCompletion(
@@ -2406,6 +3076,10 @@ export function App() {
         selectedSupplyArrItem,
       )
       setReceivingCompletion(fallback)
+      setReceivingSessions((current) => [
+        createLocalReceivingSessionRecord(receivingForm, selectedReceivingLocation, selectedSupplyArrItem, fallback),
+        ...current.filter((record) => record.receivingNumber !== fallback.session.receivingNumber),
+      ])
       setReceivingStatus('completed')
     }
   }
@@ -2430,6 +3104,16 @@ export function App() {
 
       const data = (await response.json()) as LoadArrTransferCompletion
       setTransferCompletion(data)
+      setTransferOrders((current) => [
+        createLocalTransferOrderRecord(
+          transferForm,
+          selectedTransferSourceLocation,
+          selectedTransferDestinationLocation,
+          selectedTransferItem,
+          data,
+        ),
+        ...current.filter((record) => record.transferNumber !== data.transfer.transferNumber),
+      ])
       setTransferStatus('completed')
     } catch {
       const fallback = createLocalTransferCompletion(
@@ -2440,6 +3124,16 @@ export function App() {
         selectedTransferSourceBalance,
       )
       setTransferCompletion(fallback)
+      setTransferOrders((current) => [
+        createLocalTransferOrderRecord(
+          transferForm,
+          selectedTransferSourceLocation,
+          selectedTransferDestinationLocation,
+          selectedTransferItem,
+          fallback,
+        ),
+        ...current.filter((record) => record.transferNumber !== fallback.transfer.transferNumber),
+      ])
       setTransferStatus('completed')
     }
   }
@@ -3180,6 +3874,26 @@ export function App() {
                     value={`${receivingCompletion.putawayTask.title} · ${receivingCompletion.putawayTask.status}`}
                   />
                 </div>
+              ) : selectedReceivingSession ? (
+                <div className="completion-stack">
+                  <AuditFact
+                    label="Receiving"
+                    value={`${selectedReceivingSession.receivingNumber} · ${selectedReceivingSession.status}`}
+                  />
+                  <AuditFact
+                    label="Source"
+                    value={`${selectedReceivingSession.sourceProductKey} · ${selectedReceivingSession.sourceObjectType} · ${selectedReceivingSession.sourceObjectId}`}
+                  />
+                  <AuditFact
+                    label="Location"
+                    value={`${selectedReceivingSession.staffarrSiteNameSnapshot} · ${selectedReceivingSession.lines[0]?.locationNameSnapshot ?? 'Unknown location'}`}
+                  />
+                  <AuditFact
+                    label="Lines"
+                    value={`${selectedReceivingSession.lines.length} line(s) · ${selectedReceivingSession.lines[0]?.itemNameSnapshot ?? 'No lines available'}`}
+                  />
+                  <AuditFact label="Started" value={formatDate(selectedReceivingSession.startedAtUtc)} />
+                </div>
               ) : (
                 <div className="empty-state">
                   <strong>Awaiting completion</strong>
@@ -3271,16 +3985,16 @@ export function App() {
                 <FileCheck2 aria-hidden="true" />
                 <h2>Receipt detail</h2>
               </div>
-              {expectedReceiptRows[0] ? (
+              {selectedExpectedReceipt ? (
                 <div className="completion-stack">
-                  <AuditFact label="Receipt" value={expectedReceiptRows[0].expectedReceiptNumber} />
-                  <AuditFact label="Source" value={`${expectedReceiptRows[0].sourceProductKey} · ${expectedReceiptRows[0].sourceObjectRef}`} />
-                  <AuditFact label="Location" value={expectedReceiptRows[0].locationNameSnapshot} />
+                  <AuditFact label="Receipt" value={selectedExpectedReceipt.expectedReceiptNumber} />
+                  <AuditFact label="Source" value={`${selectedExpectedReceipt.sourceProductKey} · ${selectedExpectedReceipt.sourceObjectRef}`} />
+                  <AuditFact label="Location" value={selectedExpectedReceipt.locationNameSnapshot} />
                   <AuditFact
                     label="Quantity"
-                    value={`${formatNumber.format(expectedReceiptRows[0].expectedQuantity)} expected, ${formatNumber.format(expectedReceiptRows[0].receivedQuantity)} received`}
+                    value={`${formatNumber.format(selectedExpectedReceipt.expectedQuantity)} expected, ${formatNumber.format(selectedExpectedReceipt.receivedQuantity)} received`}
                   />
-                  <AuditFact label="Due" value={formatDate(expectedReceiptRows[0].dueAtUtc)} />
+                  <AuditFact label="Due" value={formatDate(selectedExpectedReceipt.dueAtUtc)} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3326,13 +4040,13 @@ export function App() {
                 <ClipboardCheck aria-hidden="true" />
                 <h2>Reservation detail</h2>
               </div>
-              {reservationRows[0] ? (
+              {selectedReservation ? (
                 <div className="completion-stack">
-                  <AuditFact label="Reservation" value={reservationRows[0].reservationNumber} />
-                  <AuditFact label="Demand" value={reservationRows[0].demandReference} />
-                  <AuditFact label="Item" value={reservationRows[0].itemNameSnapshot} />
-                  <AuditFact label="Quantity" value={formatNumber.format(reservationRows[0].quantity)} />
-                  <AuditFact label="Status" value={reservationRows[0].status} />
+                  <AuditFact label="Reservation" value={selectedReservation.reservationNumber} />
+                  <AuditFact label="Demand" value={selectedReservation.demandReference} />
+                  <AuditFact label="Item" value={selectedReservation.itemNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedReservation.quantity)} />
+                  <AuditFact label="Status" value={selectedReservation.status} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3345,11 +4059,11 @@ export function App() {
         )}
 
         {activeView === 'picks' && (
-          <section className="receiving-layout" aria-label="Pick tasks">
+          <section className="receiving-layout" aria-label="Picking">
             <article className="workflow-panel">
               <div className="section-heading">
                 <ClipboardList aria-hidden="true" />
-                <h2>Pick task list</h2>
+                <h2>Picking</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -3372,18 +4086,18 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Pick detail">
+            <aside className="side-panel" aria-label="Picking detail">
               <div className="section-heading">
                 <ClipboardCheck aria-hidden="true" />
-                <h2>Pick detail</h2>
+                <h2>Picking detail</h2>
               </div>
-              {pickRows[0] ? (
+              {selectedPick ? (
                 <div className="completion-stack">
-                  <AuditFact label="Pick" value={pickRows[0].recordNumber} />
-                  <AuditFact label="Subject" value={pickRows[0].subject} />
-                  <AuditFact label="Quantity" value={formatNumber.format(pickRows[0].quantity)} />
-                  <AuditFact label="Location" value={pickRows[0].locationNameSnapshot} />
-                  <AuditFact label="Status" value={pickRows[0].status} />
+                  <AuditFact label="Pick" value={selectedPick.recordNumber} />
+                  <AuditFact label="Subject" value={selectedPick.subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedPick.quantity)} />
+                  <AuditFact label="Location" value={selectedPick.locationNameSnapshot} />
+                  <AuditFact label="Status" value={selectedPick.status} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3396,11 +4110,11 @@ export function App() {
         )}
 
         {activeView === 'issues' && (
-          <section className="receiving-layout" aria-label="Issues">
+          <section className="receiving-layout" aria-label="Backorders and issues">
             <article className="workflow-panel">
               <div className="section-heading">
                 <AlertTriangle aria-hidden="true" />
-                <h2>Issue queue</h2>
+                <h2>Backorders</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -3423,18 +4137,18 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Issue detail">
+            <aside className="side-panel" aria-label="Backorder detail">
               <div className="section-heading">
                 <Truck aria-hidden="true" />
-                <h2>Issue detail</h2>
+                <h2>Backorder detail</h2>
               </div>
-              {issueRows[0] ? (
+              {selectedIssue ? (
                 <div className="completion-stack">
-                  <AuditFact label="Issue" value={issueRows[0].recordNumber} />
-                  <AuditFact label="Item" value={issueRows[0].subject} />
-                  <AuditFact label="Quantity" value={formatNumber.format(issueRows[0].quantity)} />
-                  <AuditFact label="Location" value={issueRows[0].locationNameSnapshot} />
-                  <AuditFact label="Status" value={issueRows[0].status} />
+                  <AuditFact label="Issue" value={selectedIssue.recordNumber} />
+                  <AuditFact label="Item" value={selectedIssue.subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedIssue.quantity)} />
+                  <AuditFact label="Location" value={selectedIssue.locationNameSnapshot} />
+                  <AuditFact label="Status" value={selectedIssue.status} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3447,11 +4161,11 @@ export function App() {
         )}
 
         {activeView === 'returns' && (
-          <section className="receiving-layout" aria-label="Returns">
+          <section className="receiving-layout" aria-label="Vendor returns">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Route aria-hidden="true" />
-                <h2>Return queue</h2>
+                <h2>Vendor returns</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -3474,18 +4188,18 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Return detail">
+            <aside className="side-panel" aria-label="Vendor return detail">
               <div className="section-heading">
                 <Route aria-hidden="true" />
-                <h2>Return detail</h2>
+                <h2>Vendor return detail</h2>
               </div>
-              {returnRows[0] ? (
+              {selectedReturn ? (
                 <div className="completion-stack">
-                  <AuditFact label="Return" value={returnRows[0].recordNumber} />
-                  <AuditFact label="Item" value={returnRows[0].subject} />
-                  <AuditFact label="Quantity" value={formatNumber.format(returnRows[0].quantity)} />
-                  <AuditFact label="Location" value={returnRows[0].locationNameSnapshot} />
-                  <AuditFact label="Reference" value={returnRows[0].notes} />
+                  <AuditFact label="Return" value={selectedReturn.recordNumber} />
+                  <AuditFact label="Item" value={selectedReturn.subject} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedReturn.quantity)} />
+                  <AuditFact label="Location" value={selectedReturn.locationNameSnapshot} />
+                  <AuditFact label="Reference" value={selectedReturn.notes} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3542,15 +4256,15 @@ export function App() {
         )}
 
         {activeView === 'discrepancies' && (
-          <section className="receiving-layout" aria-label="Discrepancies">
+          <section className="receiving-layout" aria-label="Warehouse exceptions">
             <article className="workflow-panel">
               <div className="section-heading">
                 <AlertTriangle aria-hidden="true" />
-                <h2>Discrepancy queue</h2>
+                <h2>Exceptions</h2>
               </div>
 
               <div className="queue compact-queue">
-                {discrepancyRows.map((discrepancy) => (
+                {exceptionRows.map((discrepancy) => (
                   <article className="queue-row" key={discrepancy.id}>
                     <AlertTriangle aria-hidden="true" />
                     <div>
@@ -3570,18 +4284,18 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Discrepancy detail">
+            <aside className="side-panel" aria-label="Exception detail">
               <div className="section-heading">
                 <ShieldCheck aria-hidden="true" />
-                <h2>Discrepancy detail</h2>
+                <h2>Exception detail</h2>
               </div>
-              {discrepancyRows[0] ? (
+              {selectedException ? (
                 <div className="completion-stack">
-                  <AuditFact label="Discrepancy" value={discrepancyRows[0].discrepancyNumber} />
-                  <AuditFact label="Item" value={discrepancyRows[0].itemNameSnapshot} />
-                  <AuditFact label="Variance" value={formatNumber.format(discrepancyRows[0].quantity)} />
-                  <AuditFact label="Status" value={discrepancyRows[0].status} />
-                  <AuditFact label="Notes" value={discrepancyRows[0].notes} />
+                  <AuditFact label="Discrepancy" value={selectedException.discrepancyNumber} />
+                  <AuditFact label="Item" value={selectedException.itemNameSnapshot} />
+                  <AuditFact label="Variance" value={formatNumber.format(selectedException.quantity)} />
+                  <AuditFact label="Status" value={selectedException.status} />
+                  <AuditFact label="Notes" value={selectedException.notes} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3594,11 +4308,11 @@ export function App() {
         )}
 
         {activeView === 'settings' && (
-          <section className="receiving-layout" aria-label="LoadArr settings">
+          <section className="receiving-layout" aria-label="LoadArr admin settings">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Warehouse aria-hidden="true" />
-                <h2>Workspace settings</h2>
+                <h2>Admin settings</h2>
               </div>
 
               <div className="data-grid inventory-grid">
@@ -3628,6 +4342,74 @@ export function App() {
                 <AuditFact label="Suite home" value={suiteHomeUrl} />
                 <AuditFact label="Site source" value="StaffArr-owned locations" />
               </div>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'permissions' && (
+          <section className="receiving-layout" aria-label="LoadArr permissions">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ShieldCheck aria-hidden="true" />
+                <h2>Permission catalog</h2>
+              </div>
+
+              {permissionsQuery.isLoading ? (
+                <div className="empty-state">
+                  <strong>Loading permission catalog</strong>
+                  <span>Fetching the canonical LoadArr permission keys from the API.</span>
+                </div>
+              ) : permissionsQuery.isError ? (
+                <div className="empty-state">
+                  <strong>Permission catalog unavailable</strong>
+                  <span>
+                    {permissionsQuery.error instanceof Error
+                      ? permissionsQuery.error.message
+                      : 'Unable to load the LoadArr permission catalog.'}
+                  </span>
+                </div>
+              ) : (permissionsQuery.data?.permissions.length ?? 0) > 0 ? (
+                <div className="data-grid inventory-grid">
+                  {permissionsQuery.data!.permissions.map((permission) => (
+                    <article className="panel" key={permission.permissionKey}>
+                      <div className="panel-title-row">
+                        <div>
+                          <span className="kicker">{permission.scope} · {permission.sensitivity}</span>
+                          <h2>{permission.permissionKey}</h2>
+                        </div>
+                        <StatusChip value={permission.status} />
+                      </div>
+                      <p className="notes">{permission.label}</p>
+                      {permission.description ? <p className="notes">{permission.description}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No permissions published</strong>
+                  <span>The LoadArr permission catalog is empty.</span>
+                </div>
+              )}
+            </article>
+
+            <aside className="side-panel" aria-label="Permission mapping summary">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Role mapping</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Catalog source" value="LoadArr API" />
+                <AuditFact label="Role authority" value="StaffArr" />
+                <AuditFact label="Launch URL" value={productLaunchUrls.staffarr ?? suiteHomeUrl} />
+              </div>
+              <div className="empty-state">
+                <strong>Read-only surface</strong>
+                <span>Permission editing and role assignment remain in StaffArr. Use the link above for role mapping.</span>
+              </div>
+              <a className="secondary-action" href={productLaunchUrls.staffarr ?? suiteHomeUrl} rel="noreferrer" target="_blank">
+                <ShieldCheck aria-hidden="true" />
+                <span>Open StaffArr</span>
+              </a>
             </aside>
           </section>
         )}
@@ -3672,6 +4454,14 @@ export function App() {
                   <AuditFact label="Status" value={receivingCompletion.putawayTask.status} />
                   <AuditFact label="Location" value={receivingCompletion.putawayTask.locationNameSnapshot} />
                   <AuditFact label="Signals" value={receivingCompletion.putawayTask.requiredSignals.join(' · ')} />
+                </div>
+              ) : selectedPutawayTask ? (
+                <div className="completion-stack">
+                  <AuditFact label="Task" value={selectedPutawayTask.title} />
+                  <AuditFact label="Status" value={selectedPutawayTask.status} />
+                  <AuditFact label="Location" value={selectedPutawayTask.locationNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedPutawayTask.quantity)} />
+                  <AuditFact label="Signals" value={selectedPutawayTask.requiredSignals.join(' · ')} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -3839,6 +4629,10 @@ export function App() {
               {transferCompletion ? (
                 <div className="completion-stack">
                   <AuditFact
+                    label="Transfer"
+                    value={`${transferCompletion.transfer.transferNumber} · ${transferCompletion.transfer.status}`}
+                  />
+                  <AuditFact
                     label="Movement"
                     value={`${transferCompletion.movement.movementType} · ${transferCompletion.movement.reasonCode}`}
                   />
@@ -3855,6 +4649,20 @@ export function App() {
                     value={`${transferCompletion.transferTask.title} · ${transferCompletion.transferTask.status}`}
                   />
                 </div>
+              ) : selectedTransferOrder ? (
+                <div className="completion-stack">
+                  <AuditFact label="Transfer" value={`${selectedTransferOrder.transferNumber} · ${selectedTransferOrder.status}`} />
+                  <AuditFact
+                    label="Route"
+                    value={`${selectedTransferOrder.fromLocationNameSnapshot} → ${selectedTransferOrder.toLocationNameSnapshot}`}
+                  />
+                  <AuditFact label="Type" value={selectedTransferOrder.transferType} />
+                  <AuditFact
+                    label="Lines"
+                    value={`${selectedTransferOrder.lines.length} line(s) · ${selectedTransferOrder.lines[0]?.itemNameSnapshot ?? 'No lines available'}`}
+                  />
+                  <AuditFact label="Created" value={formatDate(selectedTransferOrder.createdAtUtc)} />
+                </div>
               ) : (
                 <div className="empty-state">
                   <strong>Awaiting transfer</strong>
@@ -3869,11 +4677,11 @@ export function App() {
         )}
 
         {activeView === 'truckstock' && (
-          <section className="receiving-layout" aria-label="Truck stock workflow">
+          <section className="receiving-layout" aria-label="Staging and truck stock workflow">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Truck aria-hidden="true" />
-                <h2>Truck stock operations</h2>
+                <h2>Staging</h2>
               </div>
 
               <div className="form-grid">
@@ -3956,10 +4764,10 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Truck stock audit">
+            <aside className="side-panel" aria-label="Staging audit">
               <div className="section-heading">
                 <ClipboardCheck aria-hidden="true" />
-                <h2>Truck stock audit</h2>
+                <h2>Staging audit</h2>
               </div>
 
               {truckStockResult ? (
@@ -4191,11 +4999,11 @@ export function App() {
         )}
 
         {activeView === 'locations' && (
-          <section className="receiving-layout" aria-label="StaffArr locations used by LoadArr">
+          <section className="receiving-layout" aria-label="Warehouses and areas">
             <article className="workflow-panel">
               <div className="section-heading">
                 <MapPin aria-hidden="true" />
-                <h2>Location list</h2>
+                <h2>Warehouses &amp; areas</h2>
               </div>
 
               <div className="form-grid single-column">
@@ -4296,11 +5104,11 @@ export function App() {
         )}
 
         {activeView === 'counts' && (
-          <section className="receiving-layout" aria-label="Inventory count and adjustment workflow">
+          <section className="receiving-layout" aria-label="Cycle counts and adjustments">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Activity aria-hidden="true" />
-                <h2>Count list</h2>
+                <h2>Cycle counts</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -4433,27 +5241,33 @@ export function App() {
                 <h2>Variance review</h2>
               </div>
 
-              {countResult ? (
+              {countResult || selectedCountRecord ? (
                 <div className="completion-stack">
                   <AuditFact
                     label="Count"
-                    value={`${countResult.count.countNumber} · ${countResult.count.status}`}
+                    value={`${(countResult?.count ?? selectedCountRecord).countNumber} · ${(countResult?.count ?? selectedCountRecord).status}`}
                   />
                   <AuditFact
                     label="Variance"
-                    value={`${formatNumber.format(countResult.count.varianceQuantity)} ${countResult.count.unitOfMeasure}`}
+                    value={`${formatNumber.format((countResult?.count ?? selectedCountRecord).varianceQuantity)} ${(countResult?.count ?? selectedCountRecord).unitOfMeasure}`}
                   />
                   <AuditFact
                     label="Location"
-                    value={countResult.count.locationNameSnapshot}
+                    value={(countResult?.count ?? selectedCountRecord).locationNameSnapshot}
                   />
                   <AuditFact
                     label="Adjustment"
-                    value={countResult.adjustment ? `${countResult.adjustment.adjustmentNumber} · ${countResult.adjustment.status}` : 'No adjustment yet'}
+                    value={
+                      countResult?.adjustment
+                        ? `${countResult.adjustment.adjustmentNumber} · ${countResult.adjustment.status}`
+                        : selectedAdjustmentRecord
+                          ? `${selectedAdjustmentRecord.adjustmentNumber} · ${selectedAdjustmentRecord.status}`
+                          : 'No adjustment yet'
+                    }
                   />
                   <AuditFact
                     label="Movement"
-                    value={countResult.movement ? `${countResult.movement.movementType} · ${countResult.movement.reasonCode}` : 'No movement yet'}
+                    value={countResult?.movement ? `${countResult.movement.movementType} · ${countResult.movement.reasonCode}` : 'No movement yet'}
                   />
                 </div>
               ) : (
@@ -4619,11 +5433,11 @@ export function App() {
         )}
 
         {activeView === 'adjustments' && (
-          <section className="receiving-layout" aria-label="Adjustments">
+          <section className="receiving-layout" aria-label="Adjustment history">
             <article className="workflow-panel">
               <div className="section-heading">
                 <ClipboardCheck aria-hidden="true" />
-                <h2>Adjustment queue</h2>
+                <h2>Adjustment history</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -4652,13 +5466,13 @@ export function App() {
                 <FileCheck2 aria-hidden="true" />
                 <h2>Adjustment detail</h2>
               </div>
-              {adjustments[0] ? (
+              {selectedAdjustmentRecord ? (
                 <div className="completion-stack">
-                  <AuditFact label="Adjustment" value={adjustments[0].adjustmentNumber} />
-                  <AuditFact label="Item" value={adjustments[0].itemNameSnapshot} />
-                  <AuditFact label="Quantity" value={formatNumber.format(adjustments[0].quantityDelta)} />
-                  <AuditFact label="Status" value={adjustments[0].status} />
-                  <AuditFact label="Reason" value={adjustments[0].reasonCode} />
+                  <AuditFact label="Adjustment" value={selectedAdjustmentRecord.adjustmentNumber} />
+                  <AuditFact label="Item" value={selectedAdjustmentRecord.itemNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedAdjustmentRecord.quantityDelta)} />
+                  <AuditFact label="Status" value={selectedAdjustmentRecord.status} />
+                  <AuditFact label="Reason" value={selectedAdjustmentRecord.reasonCode} />
                 </div>
               ) : (
                 <div className="empty-state">
@@ -4671,11 +5485,11 @@ export function App() {
         )}
 
         {activeView === 'replenishment' && (
-          <section className="receiving-layout" aria-label="Replenishment">
+          <section className="receiving-layout" aria-label="Supply coordination">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Truck aria-hidden="true" />
-                <h2>Replenishment signals</h2>
+                <h2>Supply coordination</h2>
               </div>
 
               <div className="queue compact-queue">
@@ -4718,10 +5532,10 @@ export function App() {
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Replenishment detail">
+            <aside className="side-panel" aria-label="Supply coordination detail">
               <div className="section-heading">
                 <PackagePlus aria-hidden="true" />
-                <h2>Replenishment summary</h2>
+                <h2>Supply coordination summary</h2>
               </div>
               <div className="completion-stack">
                 <AuditFact label="Truck stock rows" value={truckStockRecords.filter((record) => record.quantityOnHand < record.minimumQuantity).length.toString()} />
@@ -4737,7 +5551,11 @@ export function App() {
         )}
 
         {activeView === 'tasks' && (
-          <section className="queue" aria-label="Warehouse tasks">
+          <section className="queue" aria-label="Dock schedule and warehouse tasks">
+            <div className="section-heading">
+              <ClipboardList aria-hidden="true" />
+              <h2>Dock schedule</h2>
+            </div>
             {filteredTasks.map((task) => (
               <article className="queue-row" key={task.id}>
                 <ClipboardList aria-hidden="true" />
@@ -4780,6 +5598,15 @@ export function App() {
                 <ShieldCheck aria-hidden="true" />
                 <h2>Create hold</h2>
               </div>
+              {selectedHoldRecord ? (
+                <div className="completion-stack">
+                  <AuditFact label="Hold" value={selectedHoldRecord.holdType} />
+                  <AuditFact label="Item" value={selectedHoldRecord.supplyarrItemId} />
+                  <AuditFact label="Location" value={selectedHoldRecord.locationNameSnapshot} />
+                  <AuditFact label="Status" value={selectedHoldRecord.status} />
+                  <AuditFact label="Reason" value={selectedHoldRecord.reason} />
+                </div>
+              ) : null}
               <div className="form-grid single-column">
                 <FormField label="Hold type" className={fieldClassName} labelClassName={fieldLabelClassName}>
                   <ControlledSelect
@@ -5233,26 +6060,56 @@ export function App() {
         )}
 
         {activeView === 'handoffs' && (
-          <section className="data-grid handoff-grid" aria-label="Route and product handoffs">
-            {filteredHandoffs.map((handoff) => (
-              <article className="panel" key={handoff.id}>
-                <div className="panel-title-row">
-                  <div>
-                    <span className="kicker">{handoff.targetProduct}</span>
-                    <h2>{handoff.targetReference}</h2>
-                  </div>
-                  <StatusChip value={handoff.status} />
+          <section className="receiving-layout" aria-label="Route and product handoffs">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <Route aria-hidden="true" />
+                <h2>Route and product handoffs</h2>
+              </div>
+
+              <div className="data-grid handoff-grid">
+                {filteredHandoffs.map((handoff) => (
+                  <article className="panel" key={handoff.id}>
+                    <div className="panel-title-row">
+                      <div>
+                        <span className="kicker">{handoff.targetProduct}</span>
+                        <h2>{handoff.targetReference}</h2>
+                      </div>
+                      <StatusChip value={handoff.status} />
+                    </div>
+                    <div className="handoff-route">
+                      <Route aria-hidden="true" />
+                      <span>{handoff.locationNameSnapshot}</span>
+                    </div>
+                    <dl className="quantity-grid compact">
+                      <Quantity label="Quantity" value={handoff.quantity} />
+                    </dl>
+                    <p className="notes">{handoff.notes}</p>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Handoff detail">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Handoff detail</h2>
+              </div>
+              {selectedHandoff ? (
+                <div className="completion-stack">
+                  <AuditFact label="Target" value={`${selectedHandoff.targetProduct} · ${selectedHandoff.targetReference}`} />
+                  <AuditFact label="Location" value={selectedHandoff.locationNameSnapshot} />
+                  <AuditFact label="Quantity" value={formatNumber.format(selectedHandoff.quantity)} />
+                  <AuditFact label="Status" value={selectedHandoff.status} />
+                  <AuditFact label="Notes" value={selectedHandoff.notes} />
                 </div>
-                <div className="handoff-route">
-                  <Route aria-hidden="true" />
-                  <span>{handoff.locationNameSnapshot}</span>
+              ) : (
+                <div className="empty-state">
+                  <strong>No handoffs</strong>
+                  <span>Route handoffs show transfers between LoadArr and RoutArr or SupplyArr follow-up paths.</span>
                 </div>
-                <dl className="quantity-grid compact">
-                  <Quantity label="Quantity" value={handoff.quantity} />
-                </dl>
-                <p className="notes">{handoff.notes}</p>
-              </article>
-            ))}
+              )}
+            </aside>
           </section>
         )}
 
@@ -5597,6 +6454,98 @@ function createLocalTransferCompletion(
       dueAtUtc: new Date().toISOString(),
       requiredSignals: ['source_scan_required', 'destination_scan_required', 'movement_recorded'],
     },
+  }
+}
+
+function createLocalReceivingSessionRecord(
+  form: ReceivingFormState,
+  location: LoadArrLocation | undefined,
+  item: SupplyArrItemReference | undefined,
+  completion: LoadArrReceivingCompletion,
+): LoadArrReceivingSession {
+  const now = Date.now().toString(36)
+  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
+  const locationSnapshot = location ?? fallbackSummary.locations[0]
+  const quantity = toPositiveNumber(form.receivedQuantity) || completion.balance.quantityOnHand
+  const timestamp = new Date().toISOString()
+
+  return {
+    id: `recv-${now}`,
+    receivingNumber: completion.session.receivingNumber,
+    receivingType: form.receivingType,
+    status: completion.session.status,
+    staffarrSiteOrgUnitId: locationSnapshot.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: locationSnapshot.staffarrSiteNameSnapshot,
+    sourceProductKey: form.sourceProductKey,
+    sourceObjectType: form.sourceObjectType,
+    sourceObjectId: form.sourceObjectId,
+    supplierNameSnapshot: form.supplierNameSnapshot,
+    startedByPersonId: form.completedByPersonId,
+    completedByPersonId: form.completedByPersonId,
+    startedAtUtc: timestamp,
+    completedAtUtc: timestamp,
+    lines: [
+      {
+        id: `line-${now}`,
+        supplyarrItemId: itemSnapshot.supplyarrItemId,
+        itemNameSnapshot: itemSnapshot.itemNameSnapshot,
+        expectedQuantity: toNonNegativeNumber(form.expectedQuantity) || quantity,
+        receivedQuantity: quantity,
+        unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
+        warehouseLocationId: form.warehouseLocationId,
+        locationNameSnapshot: locationSnapshot.name,
+        lotCode: form.lotCode || null,
+        serialCode: form.serialCode || null,
+        condition: form.condition,
+        status: completion.putawayTask.status,
+        discrepancyReasonCode: form.discrepancyReasonCode || null,
+        evidenceSummary: form.evidenceSummary || null,
+      },
+    ],
+  }
+}
+
+function createLocalTransferOrderRecord(
+  form: TransferFormState,
+  fromLocation: LoadArrLocation | undefined,
+  toLocation: LoadArrLocation | undefined,
+  item: SupplyArrItemReference | undefined,
+  completion: LoadArrTransferCompletion,
+): LoadArrTransferOrder {
+  const now = Date.now().toString(36)
+  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
+  const fromLocationSnapshot = fromLocation ?? fallbackSummary.locations[0]
+  const toLocationSnapshot = toLocation ?? fallbackSummary.locations[1] ?? fallbackSummary.locations[0]
+  const timestamp = new Date().toISOString()
+
+  return {
+    id: `xfer-${now}`,
+    transferNumber: completion.transfer.transferNumber,
+    status: completion.transfer.status,
+    transferType: form.transferType,
+    staffarrSiteOrgUnitId: fromLocationSnapshot.staffarrSiteOrgUnitId,
+    staffarrSiteNameSnapshot: fromLocationSnapshot.staffarrSiteNameSnapshot,
+    fromLocationId: form.fromLocationId,
+    fromLocationNameSnapshot: fromLocationSnapshot.name,
+    toLocationId: form.toLocationId,
+    toLocationNameSnapshot: toLocationSnapshot.name,
+    requestedByPersonId: form.completedByPersonId,
+    completedByPersonId: form.completedByPersonId,
+    reasonCode: form.reasonCode,
+    createdAtUtc: timestamp,
+    completedAtUtc: timestamp,
+    lines: [
+      {
+        id: `xfer-line-${now}`,
+        supplyarrItemId: itemSnapshot.supplyarrItemId,
+        itemNameSnapshot: itemSnapshot.itemNameSnapshot,
+        quantity: toPositiveNumber(form.quantity) || completion.destinationBalance.quantityOnHand,
+        unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
+        lotCode: form.lotCode || null,
+        serialCode: form.serialCode || null,
+        status: completion.transferTask.status,
+      },
+    ],
   }
 }
 

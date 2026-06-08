@@ -64,7 +64,7 @@ public sealed class StaffPerson : IHasTenant
 
     public OrgUnit? PrimaryOrgUnit { get; set; }
 
-    public OrgUnit? HomeBaseLocation { get; set; }
+    public InternalLocation? HomeBaseLocation { get; set; }
 
     public StaffPerson? Manager { get; set; }
 }

@@ -303,7 +303,7 @@ public static class WorkOrderEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var defect = await defectService.GetAsync(tenantId, defectId, cancellationToken);
-            authorization.RequireDefectAccess(context.User, defect.ReportedByUserId);
+            authorization.RequireDefectAccess(context.User, defect.ReportedByPersonId, defect.ReportedByUserId);
             var created = await workOrderService.CreateFromDefectAsync(
                 tenantId,
                 actorUserId,

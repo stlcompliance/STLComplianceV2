@@ -21,6 +21,29 @@
         }
       }
     },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "LoadArrRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/adjustments": {
       "post": {
         "tags": [
@@ -1109,6 +1132,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ApproveLoadArrAdjustmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "LoadArrRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
               }
             }
           },
@@ -2735,6 +2781,1243 @@
           "Launch"
         ],
         "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/dashboard": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrRouteSurfaceDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/dock-appointments": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrDockAppointments",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dockLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/dock-appointments/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrDockAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrWarehouseExceptions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "exceptionType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "queue",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions/inventory-holds": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrInventoryHoldExceptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions/pending-quality-review": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrPendingQualityReviewExceptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions/quarantine": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrQuarantineExceptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions/receiving": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrReceivingExceptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/exceptions/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrWarehouseException",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/expected-receipts": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrExpectedReceipts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceObjectId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/expected-receipts/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrExpectedReceipt",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/loadouts": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrLoadoutAliases",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/loadouts/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrLoadoutAlias",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/picking": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrPickTasks",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/picking/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrPickTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/putaway-tasks": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrPutawayTasks",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/putaway-tasks/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrPutawayTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/adjustment-history": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "ListLoadArrAdjustmentHistoryRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "adjustmentType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/adjustment-history/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "GetLoadArrAdjustmentHistoryRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/count-history": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "ListLoadArrCountHistoryRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "countType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/count-history/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "GetLoadArrCountHistoryRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/movement-history": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "ListLoadArrMovementHistoryRecords",
+        "parameters": [
+          {
+            "name": "movementType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/movement-history/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "GetLoadArrMovementHistoryRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/receiving-history": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "ListLoadArrReceivingHistoryRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceObjectId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/receiving-history/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "GetLoadArrReceivingHistoryRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/stock-ledger": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "ListLoadArrStockLedgerEntries",
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entryType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/records/stock-ledger/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Records"
+        ],
+        "operationId": "GetLoadArrStockLedgerEntry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/reservations": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrReservations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "demandProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/reservations/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/devices-labels": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "ListLoadArrDeviceLabelProfiles",
+        "parameters": [
+          {
+            "name": "profileType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/devices-labels/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "GetLoadArrDeviceLabelProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/inventory-policies": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "ListLoadArrInventoryPolicies",
+        "parameters": [
+          {
+            "name": "policyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/inventory-policies/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "GetLoadArrInventoryPolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/item-references": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "ListLoadArrItemReferenceSetupRecords",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hazardous",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/item-references/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "GetLoadArrItemReferenceSetupRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/location-rules": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "ListLoadArrLocationRules",
+        "parameters": [
+          {
+            "name": "locationType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/setup/location-rules/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Setup"
+        ],
+        "operationId": "GetLoadArrLocationRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/shipping": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrLoadouts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/shipping/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrLoadout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/staging": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "ListLoadArrStagingAssignments",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/staging/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Route Surface"
+        ],
+        "operationId": "GetLoadArrStagingAssignment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/backorders": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "ListLoadArrBackorderRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "demandProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/backorders/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "GetLoadArrBackorderRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/po-receipts": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "ListLoadArrPoReceiptCoordinationRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/po-receipts/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "GetLoadArrPoReceiptCoordinationRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/reorder-signals": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "ListLoadArrReorderSignals",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/reorder-signals/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "GetLoadArrReorderSignal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/vendor-returns": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "ListLoadArrVendorReturnRecords",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/loadarr/supply-coordination/vendor-returns/{id}": {
+      "get": {
+        "tags": [
+          "LoadArr Supply Coordination"
+        ],
+        "operationId": "GetLoadArrVendorReturnRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4713,6 +5996,17 @@
           }
         }
       },
+      "RedeemHandoffRequest": {
+        "required": [
+          "handoffCode"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
       "ReleaseLoadArrInventoryHoldRequest": {
         "required": [
           "releasedByPersonId",
@@ -4889,6 +6183,9 @@
       "name": "LoadArr.Api"
     },
     {
+      "name": "Auth"
+    },
+    {
       "name": "Session"
     },
     {
@@ -4923,6 +6220,18 @@
     },
     {
       "name": "Kits"
+    },
+    {
+      "name": "LoadArr Route Surface"
+    },
+    {
+      "name": "LoadArr Supply Coordination"
+    },
+    {
+      "name": "LoadArr Setup"
+    },
+    {
+      "name": "LoadArr Records"
     },
     {
       "name": "Integrations"

@@ -39,7 +39,7 @@ public static class DocumentEndpoints
             {
                 authorization.RequireDefectsRead(context.User);
                 var detail = await defectService.GetAsync(tenantId, defectId.Value, cancellationToken);
-                authorization.RequireDefectAccess(context.User, detail.ReportedByUserId);
+                authorization.RequireDefectAccess(context.User, detail.ReportedByPersonId, detail.ReportedByUserId);
                 var items = await defectEvidenceService.ListDefectEvidenceAsync(tenantId, defectId.Value, cancellationToken);
                 return Results.Ok(items.Select(MapDefect).ToList());
             }
@@ -144,7 +144,7 @@ public static class DocumentEndpoints
             {
                 authorization.RequireDefectsCreate(context.User);
                 var detail = await defectService.GetAsync(tenantId, request.TargetId, cancellationToken);
-                authorization.RequireDefectAccess(context.User, detail.ReportedByUserId);
+                authorization.RequireDefectAccess(context.User, detail.ReportedByPersonId, detail.ReportedByUserId);
                 var created = await defectEvidenceService.UploadDefectEvidenceAsync(
                     tenantId,
                     actorUserId,
