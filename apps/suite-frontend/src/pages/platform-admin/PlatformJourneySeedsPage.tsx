@@ -88,7 +88,7 @@ export function PlatformJourneySeedsPage() {
         ...current,
         [result.datasetId]: result,
       }))
-      pushToast({ message: 'Dataset import queued.', variant: 'success' })
+      pushToast({ message: 'Dataset values imported.', variant: 'success' })
     },
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
@@ -114,7 +114,7 @@ export function PlatformJourneySeedsPage() {
       <header>
         <h4 className="text-lg font-semibold text-stl-navy">Dataset inputs</h4>
         <p className="mt-1 text-sm text-slate-600">
-          Pick a product-owned dataset, then add one value or import several values in a single pass.
+          Pick a product-owned dataset, then add one value or import several values directly.
         </p>
       </header>
 
@@ -223,7 +223,7 @@ export function PlatformJourneySeedsPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h5 className="font-semibold text-stl-navy">Import values</h5>
           <p className="mt-1 text-sm text-slate-600">
-            Paste one value per line to queue a bulk import.
+            Paste one value per line to import them immediately.
           </p>
 
           <div className="mt-4 space-y-3">

@@ -211,10 +211,11 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         db.IngestionJobs.Add(job);
         await db.SaveChangesAsync(cancellationToken);
 
+        var stagingRecords = new List<StagingRecord>(rawValues.Count);
         foreach (var (value, index) in rawValues.Select((value, index) => (value, index)))
         {
             var normalizedValue = value.Trim();
-            db.StagingRecords.Add(new StagingRecord
+            var staging = new StagingRecord
             {
                 Id = Guid.NewGuid(),
                 JobId = job.Id,
@@ -233,12 +234,30 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
                 ProposedEntityType = dataset.Category,
                 ProposedCanonicalKey = NormalizeKey(normalizedValue),
                 Confidence = 1.0m,
-                Status = ReferenceStagingStatuses.NeedsReview,
+                Status = ReferenceStagingStatuses.Approved,
                 CreatedAt = now,
                 UpdatedAt = now,
-            });
+                ReviewerPersonId = principal.GetUserId(),
+                ReviewedAt = now,
+            };
+
+            db.StagingRecords.Add(staging);
+            stagingRecords.Add(staging);
         }
 
+        await db.SaveChangesAsync(cancellationToken);
+        foreach (var staging in stagingRecords)
+        {
+            var reviewed = await UpsertEntityFromStagingAsync(
+                staging,
+                new ReviewDecisionRequest(null, null, null, null, null, null),
+                cancellationToken);
+            staging.ReferenceEntityId = reviewed.Id;
+        }
+
+        job.Status = ReferenceImportStatuses.Completed;
+        job.CompletedAt = now;
+        job.UpdatedAt = now;
         await db.SaveChangesAsync(cancellationToken);
         await WriteAuditAsync(
             principal,

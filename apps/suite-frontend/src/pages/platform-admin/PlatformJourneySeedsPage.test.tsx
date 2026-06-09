@@ -89,18 +89,18 @@ describe('PlatformJourneySeedsPage', () => {
       sourceName: 'Platform admin input',
       tenantId: null,
       requestedByPersonId: null,
-      status: 'in_progress',
+      status: 'completed',
       rawObjectKey: null,
       fileName: null,
       startedAt: '2026-06-08T15:01:00Z',
-      completedAt: null,
+      completedAt: '2026-06-08T15:01:05Z',
       errorSummary: null,
       stagingRecordCount: 1,
-      pendingReviewCount: 1,
-      approvedCount: 0,
+      pendingReviewCount: 0,
+      approvedCount: 1,
       rejectedCount: 0,
       createdAt: '2026-06-08T15:01:00Z',
-      updatedAt: '2026-06-08T15:01:00Z',
+      updatedAt: '2026-06-08T15:01:05Z',
     })
 
     renderPage()
