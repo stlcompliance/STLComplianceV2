@@ -47,7 +47,7 @@ export function AppRoutes() {
                 <Route path="users" element={<PlatformUsersPage />} />
                 <Route path="products" element={<ProductOverviewPage />} />
                 <Route path="reference-data" element={<ReferenceDataPage />} />
-                <Route path="journey-seeds" element={<PlatformJourneySeedsPage />} />
+                <Route path="dataset-inputs" element={<PlatformJourneySeedsPage />} />
                 <Route path="callback-allowlist" element={<CallbackAllowlistPage />} />
                 <Route path="status" element={<PlatformStatusPage />} />
                 <Route path="data-plane" element={<HybridDataPlanePage />} />

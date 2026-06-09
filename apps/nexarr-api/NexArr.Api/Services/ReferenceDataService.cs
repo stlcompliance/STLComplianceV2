@@ -172,6 +172,86 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             source.UpdatedAt);
     }
 
+    public async Task<ReferenceImportResponse> CreateDatasetInputAsync(
+        ClaimsPrincipal principal,
+        Guid datasetId,
+        CreateReferenceDatasetInputRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var dataset = await db.ReferenceDatasets.FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
+            ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
+
+        var rawValues = BuildInputValues(request);
+        if (rawValues.Count == 0)
+        {
+            throw new StlApiException(
+                "reference.dataset_input_empty",
+                "Provide a value or a list of values to import.",
+                400);
+        }
+
+        var source = await EnsurePlatformInputSourceAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var job = new IngestionJob
+        {
+            Id = Guid.NewGuid(),
+            DatasetId = dataset.Id,
+            SourceId = source.Id,
+            TenantId = null,
+            RequestedByPersonId = principal.GetUserId(),
+            Status = ReferenceImportStatuses.InProgress,
+            RawObjectKey = request.RawObjectKey?.Trim(),
+            FileName = request.FileName?.Trim(),
+            StartedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.IngestionJobs.Add(job);
+        await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var (value, index) in rawValues.Select((value, index) => (value, index)))
+        {
+            var normalizedValue = value.Trim();
+            db.StagingRecords.Add(new StagingRecord
+            {
+                Id = Guid.NewGuid(),
+                JobId = job.Id,
+                RowNumber = index + 1,
+                RawPayloadJson = JsonSerializer.Serialize(new
+                {
+                    dataset = dataset.Key,
+                    value = normalizedValue,
+                }),
+                NormalizedPayloadJson = JsonSerializer.Serialize(new
+                {
+                    dataset = dataset.Key,
+                    value = normalizedValue,
+                    source = source.Key,
+                }),
+                ProposedEntityType = dataset.Category,
+                ProposedCanonicalKey = NormalizeKey(normalizedValue),
+                Confidence = 1.0m,
+                Status = ReferenceStagingStatuses.NeedsReview,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.dataset_input.created",
+            "ingestion_job",
+            job.Id,
+            null,
+            Serialize(job),
+            cancellationToken);
+
+        return await GetImportAsync(principal, job.Id, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ReferenceImportResponse>> ListImportsAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
@@ -798,6 +878,55 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             staging.Count(x => x.Status == ReferenceStagingStatuses.Rejected),
             job.CreatedAt,
             job.UpdatedAt);
+    }
+
+    private async Task<ReferenceSource> EnsurePlatformInputSourceAsync(CancellationToken cancellationToken)
+    {
+        const string sourceKey = "platform-admin-input";
+        var now = DateTimeOffset.UtcNow;
+        var source = await db.ReferenceSources.FirstOrDefaultAsync(x => x.Key == sourceKey, cancellationToken);
+        if (source is not null)
+        {
+            return source;
+        }
+
+        source = new ReferenceSource
+        {
+            Id = Guid.NewGuid(),
+            Key = sourceKey,
+            Name = "Platform admin input",
+            SourceType = "manual",
+            ConnectorType = "platform_admin_input",
+            AuthorityRank = 1000,
+            RefreshCadence = "on_demand",
+            TermsNotes = "Curated via NexArr platform admin dataset input.",
+            Enabled = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.ReferenceSources.Add(source);
+        await db.SaveChangesAsync(cancellationToken);
+        return source;
+    }
+
+    private static List<string> BuildInputValues(CreateReferenceDatasetInputRequest request)
+    {
+        var values = new List<string>();
+        if (!string.IsNullOrWhiteSpace(request.Value))
+        {
+            values.Add(request.Value.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ValuesText))
+        {
+            values.AddRange(
+                request.ValuesText
+                    .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(value => !string.IsNullOrWhiteSpace(value)));
+        }
+
+        return values;
     }
 
     private async Task<ReferenceDatasetResponse> ToDatasetResponseAsync(Guid datasetId, CancellationToken cancellationToken)

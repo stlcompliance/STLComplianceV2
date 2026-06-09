@@ -294,6 +294,13 @@ export interface CreateReferenceSourceRequest {
   enabled: boolean
 }
 
+export interface CreateReferenceDatasetInputRequest {
+  rawObjectKey?: string | null
+  fileName?: string | null
+  value?: string | null
+  valuesText?: string | null
+}
+
 export interface CreateReferenceImportRequest {
   datasetId: string
   sourceId: string

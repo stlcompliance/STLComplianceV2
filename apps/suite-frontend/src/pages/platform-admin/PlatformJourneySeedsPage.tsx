@@ -1,144 +1,217 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
-import type { JourneySeedResultResponse } from '../../api/types'
+import type { ReferenceDatasetResponse, ReferenceImportResponse } from '../../api/types'
 import { useToast } from '../../feedback'
+
+function formatDatasetLabel(dataset: ReferenceDatasetResponse): string {
+  return `${dataset.ownerService} - ${dataset.name}`
+}
 
 export function PlatformJourneySeedsPage() {
   const { pushToast } = useToast()
-  const [resultsByProduct, setResultsByProduct] = useState<Record<string, JourneySeedResultResponse>>({})
+  const [selectedDatasetId, setSelectedDatasetId] = useState('')
+  const [singleValue, setSingleValue] = useState('')
+  const [valuesText, setValuesText] = useState('')
+  const [resultsByDataset, setResultsByDataset] = useState<Record<string, ReferenceImportResponse>>({})
 
-  const targetsQuery = useQuery({
-    queryKey: ['platform-admin-journey-seed-targets'],
-    queryFn: () => nexarr.getPlatformJourneySeedTargets(),
+  const datasetsQuery = useQuery({
+    queryKey: ['platform-admin-reference-data-datasets'],
+    queryFn: () => nexarr.listReferenceDatasets(),
   })
 
-  const seedMutation = useMutation({
-    mutationFn: (productKey: string) => nexarr.seedPlatformJourney(productKey),
+  const datasetOptions = useMemo(
+    () =>
+      (datasetsQuery.data ?? []).map((dataset) => ({
+        value: dataset.id,
+        label: formatDatasetLabel(dataset),
+        helper: dataset.key,
+      })),
+    [datasetsQuery.data],
+  )
+
+  useEffect(() => {
+    if (!selectedDatasetId && datasetOptions.length > 0) {
+      setSelectedDatasetId(datasetOptions[0].value)
+    }
+  }, [datasetOptions, selectedDatasetId])
+
+  const selectedDataset = (datasetsQuery.data ?? []).find((dataset) => dataset.id === selectedDatasetId) ?? null
+  const selectedResult = selectedDatasetId ? resultsByDataset[selectedDatasetId] ?? null : null
+
+  const addValueMutation = useMutation({
+    mutationFn: () =>
+      nexarr.createReferenceDatasetInput(selectedDatasetId, {
+        value: singleValue.trim(),
+      }),
     onSuccess: (result) => {
-      setResultsByProduct((current) => ({
+      setSingleValue('')
+      setResultsByDataset((current) => ({
         ...current,
-        [result.productKey]: result,
+        [result.datasetId]: result,
       }))
-      pushToast({
-        message: `${result.displayName} journey seed ${result.succeeded ? 'completed' : 'returned an error'}.`,
-        variant: result.succeeded ? 'success' : 'info',
-      })
+      pushToast({ message: 'Dataset value added.', variant: 'success' })
     },
-    onError: (error: Error) => {
-      pushToast({ message: error.message, variant: 'error' })
-    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
 
-  const targets = targetsQuery.data ?? []
+  const importValuesMutation = useMutation({
+    mutationFn: () =>
+      nexarr.createReferenceDatasetInput(selectedDatasetId, {
+        valuesText: valuesText.trim(),
+      }),
+    onSuccess: (result) => {
+      setValuesText('')
+      setResultsByDataset((current) => ({
+        ...current,
+        [result.datasetId]: result,
+      }))
+      pushToast({ message: 'Dataset import queued.', variant: 'success' })
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const isLoading = datasetsQuery.isLoading
+
+  if (isLoading) {
+    return <p className="text-sm text-slate-500">Loading datasets…</p>
+  }
+
+  if (datasetsQuery.isError) {
+    return (
+      <ApiErrorCallout
+        message={getErrorMessage(datasetsQuery.error, 'Failed to load datasets.')}
+        onRetry={() => void datasetsQuery.refetch()}
+        retryLabel="Retry datasets"
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
       <header>
-        <h4 className="text-lg font-semibold text-stl-navy">Journey seeds</h4>
+        <h4 className="text-lg font-semibold text-stl-navy">Dataset inputs</h4>
         <p className="mt-1 text-sm text-slate-600">
-          Trigger the non-tenant load-test business seeds from NexArr so product-specific setup stays in one place.
+          Pick a product-owned dataset, then add one value or import several values in a single pass.
         </p>
       </header>
 
-      {targetsQuery.isError ? (
-        <ApiErrorCallout
-          message={getErrorMessage(targetsQuery.error, 'Failed to load journey seed targets.')}
-          onRetry={() => void targetsQuery.refetch()}
-          retryLabel="Retry targets"
-        />
-      ) : null}
-
       <section className="rounded-xl border border-slate-200 bg-white p-5">
-        {targetsQuery.isLoading ? (
-          <p className="text-sm text-slate-500">Loading journey seed targets…</p>
-        ) : targets.length === 0 ? (
-          <p className="text-sm text-slate-500">No journey seed targets are configured.</p>
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {targets.map((target) => {
-              const result = resultsByProduct[target.productKey]
-              const isRunning = seedMutation.isPending && seedMutation.variables === target.productKey
-              return (
-                <article
-                  key={target.productKey}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                  data-testid={`journey-seed-target-${target.productKey}`}
-                >
-                  <div className="flex flex-wrap items-start gap-3">
-                    <div>
-                      <h5 className="font-semibold text-stl-navy">{target.displayName}</h5>
-                      <p className="mt-1 text-sm text-slate-600">{target.description}</p>
-                    </div>
-                    <span
-                      className={[
-                        'ml-auto rounded-full px-2 py-0.5 text-xs font-medium',
-                        target.isConfigured
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-700',
-                      ].join(' ')}
-                    >
-                      {target.isConfigured ? 'Configured' : 'Missing URL'}
-                    </span>
-                  </div>
-
-                  <dl className="mt-4 space-y-1 text-sm text-slate-700">
-                    <div className="flex flex-wrap justify-between gap-3">
-                      <dt>Seed path</dt>
-                      <dd className="font-mono text-xs text-slate-500">{target.seedPath}</dd>
-                    </div>
-                    <div className="flex flex-wrap justify-between gap-3">
-                      <dt>Base URL</dt>
-                      <dd className="font-mono text-xs text-slate-500">{target.baseUrl ?? '—'}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      disabled={!target.isConfigured || isRunning || seedMutation.isPending}
-                      onClick={() => seedMutation.mutate(target.productKey)}
-                      className="rounded-md bg-stl-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
-                    >
-                      {isRunning ? 'Seeding…' : 'Seed journey'}
-                    </button>
-                    <span className="text-xs text-slate-500">
-                      {result
-                        ? `${result.succeeded ? 'Last run succeeded' : 'Last run returned an error'} at ${new Date(result.requestedAt).toLocaleString()}`
-                        : 'No run yet'}
-                    </span>
-                  </div>
-
-                  {result ? (
-                    <div
-                      className={[
-                        'mt-4 rounded-md border p-3 text-xs',
-                        result.succeeded
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                          : 'border-amber-200 bg-amber-50 text-amber-950',
-                      ].join(' ')}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">Upstream response</span>
-                        <span className="ml-auto font-mono">HTTP {result.statusCode}</span>
-                      </div>
-                      {result.responseBody ? (
-                        <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-5">
-                          {result.responseBody}
-                        </pre>
-                      ) : (
-                        <p className="mt-2 text-xs text-slate-500">No response body was returned.</p>
-                      )}
-                    </div>
-                  ) : null}
-                </article>
-              )
-            })}
+        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+          <label className="block text-sm text-slate-700">
+            Dataset
+            <select
+              value={selectedDatasetId}
+              onChange={(event) => setSelectedDatasetId(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              {datasetOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            <p className="font-medium text-stl-navy">Selected dataset</p>
+            <p className="mt-1">{selectedDataset ? formatDatasetLabel(selectedDataset) : '—'}</p>
+            <p className="mt-1 font-mono text-xs text-slate-500">{selectedDataset?.key ?? '—'}</p>
           </div>
-        )}
+        </div>
       </section>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <h5 className="font-semibold text-stl-navy">Add value</h5>
+          <p className="mt-1 text-sm text-slate-600">
+            Add a single value to the selected dataset.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm text-slate-700">
+              Value
+              <input
+                value={singleValue}
+                onChange={(event) => setSingleValue(event.target.value)}
+                placeholder="Asset Class A"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <button
+              type="button"
+              disabled={!selectedDatasetId || !singleValue.trim() || addValueMutation.isPending}
+              onClick={() => addValueMutation.mutate()}
+              className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+            >
+              {addValueMutation.isPending ? 'Saving…' : 'Add value'}
+            </button>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <h5 className="font-semibold text-stl-navy">Import values</h5>
+          <p className="mt-1 text-sm text-slate-600">
+            Paste one value per line to queue a bulk import.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm text-slate-700">
+              Values
+              <textarea
+                value={valuesText}
+                onChange={(event) => setValuesText(event.target.value)}
+                rows={8}
+                placeholder={`Asset Class A\nAsset Class B\nAsset Class C`}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <button
+              type="button"
+              disabled={!selectedDatasetId || !valuesText.trim() || importValuesMutation.isPending}
+              onClick={() => importValuesMutation.mutate()}
+              className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+            >
+              {importValuesMutation.isPending ? 'Importing…' : 'Import values'}
+            </button>
+          </div>
+        </section>
+      </div>
+
+      {selectedResult ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <div>
+              <h5 className="font-semibold text-stl-navy">Latest dataset input</h5>
+              <p className="text-sm text-slate-600">
+                {selectedResult.datasetName} · {selectedResult.status}
+              </p>
+            </div>
+            <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+              {selectedResult.stagingRecordCount} records
+            </span>
+          </div>
+
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Detail label="Dataset" value={selectedResult.datasetName} />
+            <Detail label="Source" value={selectedResult.sourceName} />
+            <Detail label="Pending review" value={String(selectedResult.pendingReviewCount)} />
+            <Detail label="Approved" value={String(selectedResult.approvedCount)} />
+          </dl>
+        </section>
+      ) : null}
+    </div>
+  )
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-stl-navy">{value}</p>
     </div>
   )
 }

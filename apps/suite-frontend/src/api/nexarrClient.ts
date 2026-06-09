@@ -30,6 +30,7 @@ import type {
   JourneySeedTargetResponse,
   ReferenceDataDashboardResponse,
   ReferenceDatasetResponse,
+  CreateReferenceDatasetInputRequest,
   ReferenceSourceResponse,
   ReferenceImportResponse,
   ReferenceStagingRecordResponse,
@@ -479,6 +480,22 @@ export async function createReferenceSource(
     throw await parseError(response)
   }
   return (await response.json()) as ReferenceSourceResponse
+}
+
+export async function createReferenceDatasetInput(
+  datasetId: string,
+  request: CreateReferenceDatasetInputRequest,
+): Promise<ReferenceImportResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/${datasetId}/input`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceImportResponse
 }
 
 export async function listReferenceImports(): Promise<ReferenceImportResponse[]> {

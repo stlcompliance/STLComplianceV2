@@ -59,6 +59,17 @@ public static class ReferenceDataEndpoints
         })
         .WithName("ReferenceDataCreateSource");
 
+        admin.MapPost("/datasets/{datasetId:guid}/input", async (
+            Guid datasetId,
+            CreateReferenceDatasetInputRequest request,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.CreateDatasetInputAsync(context.User, datasetId, request, cancellationToken));
+        })
+        .WithName("ReferenceDataCreateDatasetInput");
+
         admin.MapGet("/imports", async (
             HttpContext context,
             ReferenceDataService service,

@@ -247,3 +247,8 @@ public sealed record CreateReferenceSourceRequest(
     string? TermsNotes,
     bool Enabled);
 
+public sealed record CreateReferenceDatasetInputRequest(
+    string? RawObjectKey,
+    string? FileName,
+    string? Value,
+    string? ValuesText);
