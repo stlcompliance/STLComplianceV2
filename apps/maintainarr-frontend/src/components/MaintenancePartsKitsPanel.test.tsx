@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../api/client', () => ({
@@ -22,9 +23,11 @@ function renderPanel() {
   })
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MaintenancePartsKitsPanel accessToken="token" canManage />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MaintenancePartsKitsPanel accessToken="token" canManage />
+      </QueryClientProvider>
+    </MemoryRouter>,
   )
 }
 

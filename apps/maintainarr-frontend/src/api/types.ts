@@ -1254,8 +1254,199 @@ export interface MaintenancePartsKitLineResponse {
   unitOfMeasure: string
   required: boolean
   substituteAllowed: boolean
+  sortOrder?: number
+  supplyarrPartId?: string | null
+  partNumberSnapshot?: string | null
+  manufacturerPartNumberSnapshot?: string | null
+  vendorPartNumberSnapshot?: string | null
+  criticality?: string
+  consumable?: boolean
+  serialized?: boolean
+  coreReturnExpected?: boolean
+  hazardous?: boolean
+  warrantySensitive?: boolean
+  requiredByTask?: string | null
+  notes?: string | null
+  tags?: string[]
+  preferredSubstituteRefs?: string[]
+  isPlaceholder?: boolean
   createdAt: string
   updatedAt: string
+}
+
+export interface MaintenancePartsKitAssetScopeResponse {
+  assetClassKeys: string[]
+  assetTypeKeys: string[]
+  assetCategoryKeys: string[]
+  assetStatusKeys: string[]
+  siteRefs: string[]
+  departmentRefs: string[]
+  makeKeys: string[]
+  modelKeys: string[]
+  yearFrom?: string | null
+  yearTo?: string | null
+  fuelTypeKeys: string[]
+  bodyTypeKeys: string[]
+  configurationKeys: string[]
+  variantFlags: string[]
+  requiredAttributes: string[]
+  excludedAttributes: string[]
+  includedAssetIds: string[]
+  excludedAssetIds: string[]
+}
+
+export interface MaintenancePartsKitItemResponse {
+  itemRef: string
+  supplyarrPartId?: string | null
+  itemDescriptionSnapshot: string
+  partNumberSnapshot?: string | null
+  manufacturerPartNumberSnapshot?: string | null
+  vendorPartNumberSnapshot?: string | null
+  quantity: number
+  unitOfMeasure: string
+  required: boolean
+  criticality: string
+  substituteAllowed: boolean
+  preferredSubstituteRefs: string[]
+  consumable: boolean
+  serialized: boolean
+  coreReturnExpected: boolean
+  hazardous: boolean
+  warrantySensitive: boolean
+  requiredByTask?: string | null
+  notes?: string | null
+  tags: string[]
+  isPlaceholder: boolean
+}
+
+export interface MaintenancePartsKitQuantityRuleResponse {
+  ruleId: string
+  ruleType: string
+  appliesToItemRef: string
+  assetConditionSummary?: string | null
+  workConditionSummary?: string | null
+  conditionSummary?: string | null
+  baseQuantity: number
+  multiplier: number
+  minimumQuantity?: number | null
+  maximumQuantity?: number | null
+  roundingBehavior: string
+  plainLanguageSummary: string
+}
+
+export interface MaintenancePartsKitAvailabilityResponse {
+  enabled: boolean
+  preferredFulfillmentSource?: string | null
+  showSiteAvailability: boolean
+  showNearbyAvailability: boolean
+  showOnOrder: boolean
+  showEstimatedLeadTime: boolean
+  requestReservation: boolean
+  notes?: string | null
+}
+
+export interface MaintenancePartsKitWorkOrderBehaviorResponse {
+  canBeManuallyAdded: boolean
+  autoSuggestOnMatchingWorkOrder: boolean
+  autoAddToMatchingWorkOrder: boolean
+  autoAddToPmGeneratedWorkOrder: boolean
+  autoAddAfterFailedInspectionQuestion: boolean
+  autoAddAfterMatchingDefectType: boolean
+  requireSupervisorApprovalBeforeAdding: boolean
+  requirePartsReviewBeforeWorkCanStart: boolean
+  requireAvailabilityCheckBeforeScheduling: boolean
+  allowTechnicianAdjustQuantities: boolean
+  requireAdjustmentReason: boolean
+  allowTechnicianRemoveOptionalItems: boolean
+  allowTechnicianRemoveRequiredItems: boolean
+  requireReasonToRemoveRequiredItem: boolean
+  snapshotKitItemsOntoWorkOrder: boolean
+  keepLiveReferenceAfterWorkOrderCreation: boolean
+}
+
+export interface MaintenancePartsKitComplianceResponse {
+  complianceRelated: boolean
+  governingBodyKeys: string[]
+  citationRefs: string[]
+  safetyCritical: boolean
+  readinessSensitive: boolean
+  missingRequiredPartsBlockWorkStart: boolean
+  missingRequiredPartsBlockWorkCompletion: boolean
+  requireSupervisorApprovalForSubstitution: boolean
+  requireDocumentationForSubstitution: boolean
+  requireFinalInspectionAfterUse: boolean
+  linkedInspectionTemplateId?: string | null
+}
+
+export interface MaintenancePartsKitApprovalResponse {
+  requiresApprovalBeforeActivation: boolean
+  approverRoleKey?: string | null
+  approverPersonId?: string | null
+  retireReplacedKitAfterActivation: boolean
+  notesForApprover?: string | null
+}
+
+export interface MaintenancePartsKitDefinitionResponse {
+  applicabilityWorkOrderTypes: string[]
+  applicabilityPmProgramRefs: string[]
+  applicabilityInspectionTemplateRefs: string[]
+  applicabilityDefectTypes: string[]
+  applicabilityTaskTemplateRefs: string[]
+  applicabilityRepairCategories: string[]
+  workSourceCompatibilities: string[]
+  assetScope: MaintenancePartsKitAssetScopeResponse
+  items: MaintenancePartsKitItemResponse[]
+  quantityRules: MaintenancePartsKitQuantityRuleResponse[]
+  availability: MaintenancePartsKitAvailabilityResponse
+  workOrderBehavior: MaintenancePartsKitWorkOrderBehaviorResponse
+  compliance: MaintenancePartsKitComplianceResponse
+  approval: MaintenancePartsKitApprovalResponse
+  changeReason?: string | null
+  versionLabel?: string | null
+}
+
+export interface MaintenancePartsKitValidationResponse {
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
+  compatibleAssetCount: number
+  sampleAssetCount: number
+  requiredItemCount: number
+  optionalItemCount: number
+  criticalItemCount: number
+  summary: string
+  canDraftSave: boolean
+  canActivate: boolean
+  canApprove: boolean
+}
+
+export interface MaintenancePartsKitPreviewItemResponse {
+  itemRef: string
+  itemDescriptionSnapshot: string
+  baseQuantity: number
+  calculatedQuantity: number
+  unitOfMeasure: string
+  criticality: string
+  availabilityStatus: string
+  availabilityMessage: string
+  supplyarrPartId?: string | null
+  partNumberSnapshot?: string | null
+  required: boolean
+  substituteAllowed: boolean
+  isPlaceholder: boolean
+}
+
+export interface MaintenancePartsKitPreviewResponse {
+  validation: MaintenancePartsKitValidationResponse
+  sampleAssets: AssetSearchResponse[]
+  items: MaintenancePartsKitPreviewItemResponse[]
+  warnings: string[]
+  blockers: string[]
+  assetScopeSummary: string
+  workOrderBehaviorSummary: string
+  complianceSummary: string
+  approvalSummary: string
+  availabilitySummary: string
 }
 
 export interface MaintenancePartsKitResponse {
@@ -1263,12 +1454,33 @@ export interface MaintenancePartsKitResponse {
   kitNumber: string
   title: string
   description: string
+  kitCategoryKey?: string | null
+  kitTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[]
   assetTypeApplicability: string[]
   workOrderTypeApplicability: string[]
   pmPlanRef: string | null
+  definition?: MaintenancePartsKitDefinitionResponse | null
   status: string
+  version?: number
   lineRefs: string[]
   lines: MaintenancePartsKitLineResponse[]
+  effectiveAt?: string | null
+  expiresAt?: string | null
+  activatedAt?: string | null
+  approvedAt?: string | null
+  retiredAt?: string | null
+  cloneSourcePartsKitId?: string | null
+  createdByPersonId?: string | null
+  updatedByPersonId?: string | null
+  activatedByPersonId?: string | null
+  approvedByPersonId?: string | null
+  retiredByPersonId?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -1308,6 +1520,18 @@ export interface CreateMaintenancePartsKitRequest {
   assetTypeApplicability?: string[] | null
   workOrderTypeApplicability?: string[] | null
   pmPlanRef?: string | null
+  kitCategoryKey?: string | null
+  kitTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  definition?: MaintenancePartsKitDefinitionRequest | null
+  effectiveAt?: string | null
+  expiresAt?: string | null
+  cloneSourcePartsKitId?: string | null
 }
 
 export interface UpdateMaintenancePartsKitRequest {
@@ -1316,10 +1540,174 @@ export interface UpdateMaintenancePartsKitRequest {
   assetTypeApplicability?: string[] | null
   workOrderTypeApplicability?: string[] | null
   pmPlanRef?: string | null
+  kitCategoryKey?: string | null
+  kitTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  definition?: MaintenancePartsKitDefinitionRequest | null
+  effectiveAt?: string | null
+  expiresAt?: string | null
 }
 
 export interface UpdateMaintenancePartsKitStatusRequest {
   status: string
+}
+
+export interface MaintenancePartsKitPreviewRequest {
+  kitNumber: string
+  title: string
+  description?: string | null
+  assetTypeApplicability?: string[] | null
+  workOrderTypeApplicability?: string[] | null
+  pmPlanRef?: string | null
+  kitCategoryKey?: string | null
+  kitTypeKey?: string | null
+  priorityKey?: string | null
+  owningSiteRef?: string | null
+  owningTeamRef?: string | null
+  ownerPersonId?: string | null
+  ownerRoleKey?: string | null
+  tags?: string[] | null
+  definition?: MaintenancePartsKitDefinitionRequest | null
+  effectiveAt?: string | null
+  expiresAt?: string | null
+  cloneSourcePartsKitId?: string | null
+  selectedAssetId?: string | null
+}
+
+export interface MaintenancePartsKitAssetScopeRequest {
+  assetClassKeys?: string[] | null
+  assetTypeKeys?: string[] | null
+  assetCategoryKeys?: string[] | null
+  assetStatusKeys?: string[] | null
+  siteRefs?: string[] | null
+  departmentRefs?: string[] | null
+  makeKeys?: string[] | null
+  modelKeys?: string[] | null
+  yearFrom?: string | null
+  yearTo?: string | null
+  fuelTypeKeys?: string[] | null
+  bodyTypeKeys?: string[] | null
+  configurationKeys?: string[] | null
+  variantFlags?: string[] | null
+  requiredAttributes?: string[] | null
+  excludedAttributes?: string[] | null
+  includedAssetIds?: string[] | null
+  excludedAssetIds?: string[] | null
+}
+
+export interface MaintenancePartsKitItemRequest {
+  itemRef: string
+  supplyarrPartId?: string | null
+  itemDescriptionSnapshot: string
+  partNumberSnapshot?: string | null
+  manufacturerPartNumberSnapshot?: string | null
+  vendorPartNumberSnapshot?: string | null
+  quantity: number
+  unitOfMeasure: string
+  required: boolean
+  criticality: string
+  substituteAllowed: boolean
+  preferredSubstituteRefs?: string[] | null
+  consumable: boolean
+  serialized: boolean
+  coreReturnExpected: boolean
+  hazardous: boolean
+  warrantySensitive: boolean
+  requiredByTask?: string | null
+  notes?: string | null
+  tags?: string[] | null
+  isPlaceholder: boolean
+}
+
+export interface MaintenancePartsKitQuantityRuleRequest {
+  ruleId: string
+  ruleType: string
+  appliesToItemRef: string
+  assetConditionSummary?: string | null
+  workConditionSummary?: string | null
+  conditionSummary?: string | null
+  baseQuantity: number
+  multiplier: number
+  minimumQuantity?: number | null
+  maximumQuantity?: number | null
+  roundingBehavior: string
+  plainLanguageSummary: string
+}
+
+export interface MaintenancePartsKitAvailabilityRequest {
+  enabled: boolean
+  preferredFulfillmentSource?: string | null
+  showSiteAvailability: boolean
+  showNearbyAvailability: boolean
+  showOnOrder: boolean
+  showEstimatedLeadTime: boolean
+  requestReservation: boolean
+  notes?: string | null
+}
+
+export interface MaintenancePartsKitWorkOrderBehaviorRequest {
+  canBeManuallyAdded: boolean
+  autoSuggestOnMatchingWorkOrder: boolean
+  autoAddToMatchingWorkOrder: boolean
+  autoAddToPmGeneratedWorkOrder: boolean
+  autoAddAfterFailedInspectionQuestion: boolean
+  autoAddAfterMatchingDefectType: boolean
+  requireSupervisorApprovalBeforeAdding: boolean
+  requirePartsReviewBeforeWorkCanStart: boolean
+  requireAvailabilityCheckBeforeScheduling: boolean
+  allowTechnicianAdjustQuantities: boolean
+  requireAdjustmentReason: boolean
+  allowTechnicianRemoveOptionalItems: boolean
+  allowTechnicianRemoveRequiredItems: boolean
+  requireReasonToRemoveRequiredItem: boolean
+  snapshotKitItemsOntoWorkOrder: boolean
+  keepLiveReferenceAfterWorkOrderCreation: boolean
+}
+
+export interface MaintenancePartsKitComplianceRequest {
+  complianceRelated: boolean
+  governingBodyKeys?: string[] | null
+  citationRefs?: string[] | null
+  safetyCritical: boolean
+  readinessSensitive: boolean
+  missingRequiredPartsBlockWorkStart: boolean
+  missingRequiredPartsBlockWorkCompletion: boolean
+  requireSupervisorApprovalForSubstitution: boolean
+  requireDocumentationForSubstitution: boolean
+  requireFinalInspectionAfterUse: boolean
+  linkedInspectionTemplateId?: string | null
+}
+
+export interface MaintenancePartsKitApprovalRequest {
+  requiresApprovalBeforeActivation: boolean
+  approverRoleKey?: string | null
+  approverPersonId?: string | null
+  retireReplacedKitAfterActivation: boolean
+  notesForApprover?: string | null
+}
+
+export interface MaintenancePartsKitDefinitionRequest {
+  applicabilityWorkOrderTypes?: string[] | null
+  applicabilityPmProgramRefs?: string[] | null
+  applicabilityInspectionTemplateRefs?: string[] | null
+  applicabilityDefectTypes?: string[] | null
+  applicabilityTaskTemplateRefs?: string[] | null
+  applicabilityRepairCategories?: string[] | null
+  workSourceCompatibilities?: string[] | null
+  assetScope?: MaintenancePartsKitAssetScopeRequest | null
+  items?: MaintenancePartsKitItemRequest[] | null
+  quantityRules?: MaintenancePartsKitQuantityRuleRequest[] | null
+  availability?: MaintenancePartsKitAvailabilityRequest | null
+  workOrderBehavior?: MaintenancePartsKitWorkOrderBehaviorRequest | null
+  compliance?: MaintenancePartsKitComplianceRequest | null
+  approval?: MaintenancePartsKitApprovalRequest | null
+  changeReason?: string | null
+  versionLabel?: string | null
 }
 
 export interface CreateMaintenancePartsKitLineRequest {
@@ -1959,6 +2347,173 @@ export interface AssetTelematicsIngestionResponse {
   ignoredCount: number
   defectCount: number
   items: AssetTelematicsIngestionEventResponse[]
+}
+
+export interface ExternalIntelligenceProviderSummaryResponse {
+  providerKey: string
+  displayName: string
+  description: string
+  sourceOfTruth: string
+  status: string
+  supportsVinDecode: boolean
+  supportsRecallLookup: boolean
+  supportsComplaintLookup: boolean
+  supportsReferenceLookups: boolean
+  supportsEquipmentReferences: boolean
+  lastCheckedAt: string | null
+  lastSuccessfulAt: string | null
+  lastError: string | null
+}
+
+export interface ExternalProviderHealthResponse {
+  providerKey: string
+  status: string
+  message: string
+  checkedAt: string
+  latencyMs: number | null
+}
+
+export interface ExternalAssetIdentifierResponse {
+  identifierId: string
+  assetId: string
+  sourceSystem: string
+  identifierType: string
+  identifierValue: string
+  normalizedValue: string
+  isPrimary: boolean
+  isVerified: boolean
+  metadata: Record<string, string | null> | null
+  observedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssetEnrichmentSnapshotResponse {
+  snapshotId: string
+  assetId: string
+  providerKey: string
+  snapshotType: string
+  sourceObjectRef: string | null
+  summary: string
+  details: Record<string, string | null> | null
+  capturedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssetEnrichmentSuggestionResponse {
+  suggestionId: string
+  assetId: string
+  snapshotId: string | null
+  providerKey: string
+  fieldKey: string
+  fieldLabel: string
+  currentValue: string | null
+  proposedValue: string | null
+  reason: string
+  confidence: number
+  status: string
+  reviewedByPersonId: string | null
+  reviewedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssetRecallSnapshotResponse {
+  recallId: string
+  assetId: string
+  providerKey: string
+  campaignNumber: string
+  actionNumber: string | null
+  manufacturer: string
+  component: string
+  summary: string
+  consequence: string
+  remedy: string
+  notes: string
+  modelYear: string | null
+  make: string | null
+  model: string | null
+  reportReceivedDate: string | null
+  status: string
+  qualityHoldId: string | null
+  capturedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssetComplaintSignalResponse {
+  odiNumber: string
+  manufacturer: string | null
+  crash: boolean
+  fire: boolean
+  numberOfInjuries: number | null
+  numberOfDeaths: number | null
+  dateOfIncident: string | null
+  dateComplaintFiled: string | null
+  vin: string | null
+  components: string[]
+  summary: string
+}
+
+export interface AssetExternalIntelligenceSummaryResponse {
+  identifierCount: number
+  snapshotCount: number
+  suggestionCount: number
+  activeRecallCount: number
+  complaintCount: number
+  lastRefreshedAt: string | null
+}
+
+export interface AssetExternalIntelligenceOverviewResponse {
+  assetId: string
+  vin: string | null
+  providers: ExternalIntelligenceProviderSummaryResponse[]
+  summary: AssetExternalIntelligenceSummaryResponse
+  identifiers: ExternalAssetIdentifierResponse[]
+  snapshots: AssetEnrichmentSnapshotResponse[]
+  suggestions: AssetEnrichmentSuggestionResponse[]
+  recalls: AssetRecallSnapshotResponse[]
+  complaints: AssetComplaintSignalResponse[]
+}
+
+export interface ExternalVinDecodeRequest {
+  vin: string
+  modelYear: number | null
+}
+
+export interface ExternalVinDecodeBatchItemRequest {
+  vin: string
+  modelYear: number | null
+}
+
+export interface ExternalVinDecodeBatchRequest {
+  items: ExternalVinDecodeBatchItemRequest[]
+}
+
+export interface ExternalVinDecodeResponse {
+  providerKey: string
+  vin: string
+  normalizedVin: string
+  modelYear: number | null
+  isPartial: boolean
+  searchCriteria: string | null
+  message: string | null
+  errorCode: string | null
+  errorText: string | null
+  additionalErrorText: string | null
+  decodedFields: Record<string, string | null>
+  suggestions: AssetEnrichmentSuggestionResponse[]
+  identifiers: ExternalAssetIdentifierResponse[]
+  snapshotId: string | null
+  capturedAt: string | null
+}
+
+export interface ExternalVinDecodeBatchItemResponse {
+  vin: string
+  modelYear: number | null
+  result: ExternalVinDecodeResponse | null
+  error: string | null
 }
 
 export interface MaintenanceNotificationSettingsResponse {

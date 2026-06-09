@@ -25,6 +25,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrCatalogEndpoints();
         app.MapMaintainArrFieldsetEndpoints();
         app.MapMaintainArrReferenceEndpoints();
+        app.MapMaintainArrExternalIntelligenceEndpoints();
         app.MapMaintainArrPreventiveMaintenanceEndpoints();
         app.MapMaintainArrPmProgramEndpoints();
         app.MapMaintainArrInspectionTemplateEndpoints();

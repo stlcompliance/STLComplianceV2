@@ -46,6 +46,18 @@ import type {
   AssetReadinessSummaryResponse,
   AssetReadinessHistoryResponse,
   AssetTelematicsIngestionResponse,
+  AssetExternalIntelligenceOverviewResponse,
+  AssetEnrichmentSnapshotResponse,
+  AssetEnrichmentSuggestionResponse,
+  AssetRecallSnapshotResponse,
+  AssetComplaintSignalResponse,
+  ExternalAssetIdentifierResponse,
+  ExternalIntelligenceProviderSummaryResponse,
+  ExternalProviderHealthResponse,
+  ExternalVinDecodeBatchRequest,
+  ExternalVinDecodeBatchItemResponse,
+  ExternalVinDecodeRequest,
+  ExternalVinDecodeResponse,
   AuditPackageExportResponse,
   AuditPackageGenerationJobResponse,
   AuditPackageManifestResponse,
@@ -138,6 +150,9 @@ import type {
   WorkOrderPartsDemandStatusEventResponse,
   MaintenancePartsKitLineResponse,
   MaintenancePartsKitListResponse,
+  MaintenancePartsKitPreviewRequest,
+  MaintenancePartsKitPreviewResponse,
+  MaintenancePartsKitValidationResponse,
   MaintenancePartsKitResponse,
   CreateMaintenancePartsKitRequest,
   UpdateMaintenancePartsKitRequest,
@@ -1484,6 +1499,36 @@ export async function getMaintenancePartsKit(
   return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to load maintenance parts kit')
 }
 
+export async function validateMaintenancePartsKit(
+  accessToken: string,
+  payload: MaintenancePartsKitPreviewRequest,
+): Promise<MaintenancePartsKitValidationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitValidationResponse>(
+    response,
+    'Failed to validate maintenance parts kit',
+  )
+}
+
+export async function previewMaintenancePartsKit(
+  accessToken: string,
+  payload: MaintenancePartsKitPreviewRequest,
+): Promise<MaintenancePartsKitPreviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/preview`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePartsKitPreviewResponse>(
+    response,
+    'Failed to preview maintenance parts kit',
+  )
+}
+
 export async function createMaintenancePartsKit(
   accessToken: string,
   payload: CreateMaintenancePartsKitRequest,
@@ -1520,6 +1565,59 @@ export async function updateMaintenancePartsKitStatus(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to update maintenance parts kit status')
+}
+
+export async function submitMaintenancePartsKitForApproval(
+  accessToken: string,
+  partsKitId: string,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/submit-approval`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(
+    response,
+    'Failed to submit maintenance parts kit for approval',
+  )
+}
+
+export async function activateMaintenancePartsKit(
+  accessToken: string,
+  partsKitId: string,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/activate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(
+    response,
+    'Failed to activate maintenance parts kit',
+  )
+}
+
+export async function retireMaintenancePartsKit(
+  accessToken: string,
+  partsKitId: string,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/retire`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(
+    response,
+    'Failed to retire maintenance parts kit',
+  )
+}
+
+export async function cloneMaintenancePartsKit(
+  accessToken: string,
+  partsKitId: string,
+): Promise<MaintenancePartsKitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/maintenance-parts-kits/${partsKitId}/clone`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePartsKitResponse>(response, 'Failed to clone maintenance parts kit')
 }
 
 export async function createMaintenancePartsKitLine(
@@ -1690,6 +1788,320 @@ export async function getAssetTelematicsIngestion(
   return parseJsonResponse<AssetTelematicsIngestionResponse>(
     response,
     'Failed to load asset telematics ingestion history',
+  )
+}
+
+export async function getAssetExternalIntelligenceOverview(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetExternalIntelligenceOverviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/external-intelligence`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetExternalIntelligenceOverviewResponse>(
+    response,
+    'Failed to load asset external intelligence',
+  )
+}
+
+export async function getAssetExternalIntelligenceIdentifiers(
+  accessToken: string,
+  assetId: string,
+): Promise<ExternalAssetIdentifierResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/external-intelligence/identifiers`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalAssetIdentifierResponse[]>(
+    response,
+    'Failed to load asset external intelligence identifiers',
+  )
+}
+
+export async function getAssetExternalIntelligenceSnapshots(
+  accessToken: string,
+  assetId: string,
+  snapshotType?: string | null,
+): Promise<AssetEnrichmentSnapshotResponse[]> {
+  const search = new URLSearchParams()
+  if (snapshotType && snapshotType.trim()) {
+    search.set('snapshotType', snapshotType.trim())
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/snapshots${query}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AssetEnrichmentSnapshotResponse[]>(
+    response,
+    'Failed to load asset external intelligence snapshots',
+  )
+}
+
+export async function getAssetExternalIntelligenceSuggestions(
+  accessToken: string,
+  assetId: string,
+  status?: string | null,
+): Promise<AssetEnrichmentSuggestionResponse[]> {
+  const search = new URLSearchParams()
+  if (status && status.trim()) {
+    search.set('status', status.trim())
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/suggestions${query}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AssetEnrichmentSuggestionResponse[]>(
+    response,
+    'Failed to load asset external intelligence suggestions',
+  )
+}
+
+export async function getAssetExternalIntelligenceRecalls(
+  accessToken: string,
+  assetId: string,
+  status?: string | null,
+): Promise<AssetRecallSnapshotResponse[]> {
+  const search = new URLSearchParams()
+  if (status && status.trim()) {
+    search.set('status', status.trim())
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/recalls${query}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AssetRecallSnapshotResponse[]>(
+    response,
+    'Failed to load asset external intelligence recalls',
+  )
+}
+
+export async function getAssetExternalIntelligenceComplaints(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetComplaintSignalResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/external-intelligence/complaints`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetComplaintSignalResponse[]>(
+    response,
+    'Failed to load asset external intelligence complaints',
+  )
+}
+
+export async function refreshAssetExternalIntelligence(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetExternalIntelligenceOverviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/external-intelligence/refresh`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetExternalIntelligenceOverviewResponse>(
+    response,
+    'Failed to refresh asset external intelligence',
+  )
+}
+
+export async function acceptAssetExternalIntelligenceSuggestion(
+  accessToken: string,
+  assetId: string,
+  suggestionId: string,
+): Promise<AssetEnrichmentSuggestionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/suggestions/${suggestionId}/accept`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AssetEnrichmentSuggestionResponse>(
+    response,
+    'Failed to accept external intelligence suggestion',
+  )
+}
+
+export async function rejectAssetExternalIntelligenceSuggestion(
+  accessToken: string,
+  assetId: string,
+  suggestionId: string,
+): Promise<AssetEnrichmentSuggestionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/suggestions/${suggestionId}/reject`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AssetEnrichmentSuggestionResponse>(
+    response,
+    'Failed to reject external intelligence suggestion',
+  )
+}
+
+export async function createAssetRecallWorkOrder(
+  accessToken: string,
+  assetId: string,
+  recallId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/external-intelligence/recalls/${recallId}/work-order`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to create recall work order')
+}
+
+export async function getExternalIntelligenceProviders(
+  accessToken: string,
+): Promise<ExternalIntelligenceProviderSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/external-intelligence/providers`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalIntelligenceProviderSummaryResponse[]>(
+    response,
+    'Failed to load external intelligence providers',
+  )
+}
+
+export async function getExternalIntelligenceProviderHealth(
+  accessToken: string,
+): Promise<ExternalProviderHealthResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/external-intelligence/providers/health`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalProviderHealthResponse[]>(
+    response,
+    'Failed to load external intelligence provider health',
+  )
+}
+
+export async function decodeVin(
+  accessToken: string,
+  payload: ExternalVinDecodeRequest,
+  assetId?: string | null,
+  persist = false,
+): Promise<ExternalVinDecodeResponse> {
+  const search = new URLSearchParams()
+  if (assetId && assetId.trim()) {
+    search.set('assetId', assetId.trim())
+  }
+  if (persist) {
+    search.set('persist', 'true')
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/external-intelligence/vin/decode${query}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ExternalVinDecodeResponse>(response, 'Failed to decode VIN')
+}
+
+export async function decodeVinBatch(
+  accessToken: string,
+  payload: ExternalVinDecodeBatchRequest,
+): Promise<ExternalVinDecodeBatchItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/external-intelligence/vin/batch-decode`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ExternalVinDecodeBatchItemResponse[]>(
+    response,
+    'Failed to decode VIN batch',
+  )
+}
+
+export async function getExternalIntelligenceMakes(
+  accessToken: string,
+): Promise<ReferenceOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/external-intelligence/references/makes`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReferenceOptionResponse[]>(
+    response,
+    'Failed to load external intelligence makes',
+  )
+}
+
+export async function getExternalIntelligenceManufacturers(
+  accessToken: string,
+  manufacturerType?: string | null,
+  page = 1,
+): Promise<ReferenceOptionResponse[]> {
+  const search = new URLSearchParams({ page: String(page) })
+  if (manufacturerType && manufacturerType.trim()) {
+    search.set('manufacturerType', manufacturerType.trim())
+  }
+  const response = await fetch(
+    `${apiBase}/api/v1/external-intelligence/references/manufacturers?${search.toString()}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ReferenceOptionResponse[]>(
+    response,
+    'Failed to load external intelligence manufacturers',
+  )
+}
+
+export async function getExternalIntelligenceModels(
+  accessToken: string,
+  make: string,
+  modelYear?: number | null,
+  vehicleType?: string | null,
+): Promise<ReferenceOptionResponse[]> {
+  const search = new URLSearchParams({ make })
+  if (modelYear != null) {
+    search.set('modelYear', String(modelYear))
+  }
+  if (vehicleType && vehicleType.trim()) {
+    search.set('vehicleType', vehicleType.trim())
+  }
+  const response = await fetch(
+    `${apiBase}/api/v1/external-intelligence/references/models?${search.toString()}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ReferenceOptionResponse[]>(
+    response,
+    'Failed to load external intelligence models',
+  )
+}
+
+export async function getExternalIntelligenceEquipmentPlantCodes(
+  accessToken: string,
+  year: number,
+  equipmentType?: string | null,
+  reportType?: string | null,
+): Promise<ReferenceOptionResponse[]> {
+  const search = new URLSearchParams({ year: String(year) })
+  if (equipmentType && equipmentType.trim()) {
+    search.set('equipmentType', equipmentType.trim())
+  }
+  if (reportType && reportType.trim()) {
+    search.set('reportType', reportType.trim())
+  }
+  const response = await fetch(
+    `${apiBase}/api/v1/external-intelligence/references/equipment-plant-codes?${search.toString()}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ReferenceOptionResponse[]>(
+    response,
+    'Failed to load external intelligence equipment plant codes',
   )
 }
 

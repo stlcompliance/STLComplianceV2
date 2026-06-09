@@ -1448,12 +1448,93 @@
         }
       }
     },
+    "/api/defects/drafts": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "CreateDefectDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDefectDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/defects/{defectId}": {
       "get": {
         "tags": [
           "Defects"
         ],
         "operationId": "GetDefect",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defects/{defectId}/draft": {
+      "patch": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "UpdateDefectDraft",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDefectDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defects/{defectId}/duplicates": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "CheckDefectDraftDuplicates",
         "parameters": [
           {
             "name": "defectId",
@@ -1528,6 +1609,30 @@
         }
       }
     },
+    "/api/defects/{defectId}/preview": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "PreviewDefectDraft",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/defects/{defectId}/status": {
       "patch": {
         "tags": [
@@ -1555,6 +1660,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defects/{defectId}/submit": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "SubmitDefect",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDefectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defects/{defectId}/validate": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "ValidateDefectDraft",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2453,6 +2616,98 @@
         }
       }
     },
+    "/api/inspection-templates/{inspectionTemplateId}/preview": {
+      "get": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "PreviewInspectionTemplate",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspection-templates/{inspectionTemplateId}/publish": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "PublishInspectionTemplate",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishInspectionTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspection-templates/{inspectionTemplateId}/retire": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "RetireInspectionTemplate",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetireInspectionTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inspection-templates/{inspectionTemplateId}/status": {
       "patch": {
         "tags": [
@@ -2480,6 +2735,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspection-templates/{inspectionTemplateId}/validate": {
+      "get": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "ValidateInspectionTemplate",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3305,6 +3584,29 @@
         }
       }
     },
+    "/api/integrations/work-orders/drafts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrderDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/work-orders/{workOrderId}": {
       "get": {
         "tags": [
@@ -3394,6 +3696,154 @@
         }
       }
     },
+    "/api/integrations/work-orders/{workOrderId}/draft": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/duplicates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CheckMaintainArrIntegrationWorkOrderDraftDuplicates",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/open": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "OpenMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/preview": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PreviewMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/schedule": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ScheduleMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/start": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "StartMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/work-orders/{workOrderId}/status-updates": {
       "post": {
         "tags": [
@@ -3420,6 +3870,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/work-orders/{workOrderId}/validate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ValidateMaintainArrIntegrationWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4287,6 +4760,52 @@
         }
       }
     },
+    "/api/maintenance-parts-kits/preview": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "PreviewMaintenancePartsKit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenancePartsKitPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/validate": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ValidateMaintenancePartsKit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenancePartsKitPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/maintenance-parts-kits/{partsKitId}": {
       "get": {
         "tags": [
@@ -4336,6 +4855,54 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/activate": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ActivateMaintenancePartsKit",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/clone": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CloneMaintenancePartsKit",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4451,6 +5018,30 @@
         }
       }
     },
+    "/api/maintenance-parts-kits/{partsKitId}/retire": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "RetireMaintenancePartsKit",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/maintenance-parts-kits/{partsKitId}/status": {
       "patch": {
         "tags": [
@@ -4478,6 +5069,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-parts-kits/{partsKitId}/submit-approval": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "SubmitMaintenancePartsKitForApproval",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4980,6 +5595,50 @@
         }
       }
     },
+    "/api/preventive-maintenance/programs/preview-due": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/preventive-maintenance/programs/preview-scope": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/preventive-maintenance/programs/{pmProgramId}": {
       "get": {
         "tags": [
@@ -5022,6 +5681,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/preventive-maintenance/programs/{pmProgramId}/activate": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "parameters": [
+          {
+            "name": "pmProgramId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePmProgramRequest"
               }
             }
           },
@@ -5735,6 +6427,54 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/search": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "SearchAssetsV1",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "siteRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6833,12 +7573,93 @@
         }
       }
     },
+    "/api/v1/defects/drafts": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "CreateDefectDraftV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDefectDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/defects/{defectId}": {
       "get": {
         "tags": [
           "Defects"
         ],
         "operationId": "GetDefectV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/defects/{defectId}/draft": {
+      "patch": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "UpdateDefectDraftV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDefectDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/defects/{defectId}/duplicates": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "CheckDefectDraftDuplicatesV1",
         "parameters": [
           {
             "name": "defectId",
@@ -6913,6 +7734,30 @@
         }
       }
     },
+    "/api/v1/defects/{defectId}/preview": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "PreviewDefectDraftV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/defects/{defectId}/status": {
       "patch": {
         "tags": [
@@ -6940,6 +7785,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/defects/{defectId}/submit": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "SubmitDefectV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDefectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/defects/{defectId}/validate": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "operationId": "ValidateDefectDraftV1",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7544,6 +8447,42 @@
               "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/defects/create": {
+      "get": {
+        "tags": [
+          "Fieldsets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/inspection-templates/create": {
+      "get": {
+        "tags": [
+          "Fieldsets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/work-orders/create": {
+      "get": {
+        "tags": [
+          "Fieldsets"
         ],
         "responses": {
           "200": {
@@ -8231,6 +9170,98 @@
         }
       }
     },
+    "/api/v1/inspection-templates/{inspectionTemplateId}/preview": {
+      "get": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "PreviewInspectionTemplateV1",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-templates/{inspectionTemplateId}/publish": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "PublishInspectionTemplateV1",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishInspectionTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-templates/{inspectionTemplateId}/retire": {
+      "post": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "RetireInspectionTemplateV1",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetireInspectionTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/inspection-templates/{inspectionTemplateId}/status": {
       "patch": {
         "tags": [
@@ -8258,6 +9289,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-templates/{inspectionTemplateId}/validate": {
+      "get": {
+        "tags": [
+          "InspectionTemplates"
+        ],
+        "operationId": "ValidateInspectionTemplateV1",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -9083,6 +10138,29 @@
         }
       }
     },
+    "/api/v1/integrations/work-orders/drafts": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateMaintainArrIntegrationWorkOrderDraftV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/work-orders/{workOrderId}": {
       "get": {
         "tags": [
@@ -9172,6 +10250,154 @@
         }
       }
     },
+    "/api/v1/integrations/work-orders/{workOrderId}/draft": {
+      "patch": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "UpdateMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/duplicates": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CheckMaintainArrIntegrationWorkOrderDraftDuplicatesV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/open": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "OpenMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/preview": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "PreviewMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/schedule": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ScheduleMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/start": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "StartMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/work-orders/{workOrderId}/status-updates": {
       "post": {
         "tags": [
@@ -9198,6 +10424,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/work-orders/{workOrderId}/validate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ValidateMaintainArrIntegrationWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -9484,6 +10733,52 @@
         }
       }
     },
+    "/api/v1/maintenance-parts-kits/preview": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "PreviewMaintenancePartsKitV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenancePartsKitPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/validate": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ValidateMaintenancePartsKitV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenancePartsKitPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/maintenance-parts-kits/{partsKitId}": {
       "get": {
         "tags": [
@@ -9533,6 +10828,54 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/activate": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "ActivateMaintenancePartsKitV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/clone": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "CloneMaintenancePartsKitV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -9648,6 +10991,30 @@
         }
       }
     },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/retire": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "RetireMaintenancePartsKitV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/maintenance-parts-kits/{partsKitId}/status": {
       "patch": {
         "tags": [
@@ -9675,6 +11042,30 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/maintenance-parts-kits/{partsKitId}/submit-approval": {
+      "post": {
+        "tags": [
+          "MaintenancePartsKits"
+        ],
+        "operationId": "SubmitMaintenancePartsKitForApprovalV1",
+        "parameters": [
+          {
+            "name": "partsKitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -10220,6 +11611,50 @@
         }
       }
     },
+    "/api/v1/pm-programs/preview-due": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/pm-programs/preview-scope": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/pm-programs/{pmProgramId}": {
       "get": {
         "tags": [
@@ -10262,6 +11697,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/pm-programs/{pmProgramId}/activate": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "parameters": [
+          {
+            "name": "pmProgramId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePmProgramRequest"
               }
             }
           },
@@ -10385,6 +11853,50 @@
         }
       }
     },
+    "/api/v1/preventive-maintenance/programs/preview-due": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/preventive-maintenance/programs/preview-scope": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/preventive-maintenance/programs/{pmProgramId}": {
       "get": {
         "tags": [
@@ -10427,6 +11939,39 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdatePmProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/preventive-maintenance/programs/{pmProgramId}/activate": {
+      "post": {
+        "tags": [
+          "PmPrograms"
+        ],
+        "parameters": [
+          {
+            "name": "pmProgramId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePmProgramRequest"
               }
             }
           },
@@ -11050,6 +12595,29 @@
         }
       }
     },
+    "/api/v1/work-orders/drafts": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "CreateWorkOrderDraftV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/work-orders/{workOrderId}": {
       "get": {
         "tags": [
@@ -11155,6 +12723,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/draft": {
+      "patch": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "UpdateWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/duplicates": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "CheckWorkOrderDraftDuplicatesV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -11317,6 +12943,30 @@
         }
       }
     },
+    "/api/v1/work-orders/{workOrderId}/open": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "OpenWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/work-orders/{workOrderId}/parts-demand": {
       "get": {
         "tags": [
@@ -11409,6 +13059,78 @@
         "tags": [
           "WorkOrderPartsDemand"
         ],
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/preview": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "PreviewWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/schedule": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "ScheduleWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/start": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "StartWorkOrderDraftV1",
         "parameters": [
           {
             "name": "workOrderId",
@@ -11565,6 +13287,30 @@
         }
       }
     },
+    "/api/v1/work-orders/{workOrderId}/validate": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "ValidateWorkOrderDraftV1",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/work-orders/{workOrderId}/vendor-work": {
       "get": {
         "tags": [
@@ -11663,6 +13409,29 @@
           "WorkOrders"
         ],
         "operationId": "CreateWorkOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/drafts": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "CreateWorkOrderDraft",
         "requestBody": {
           "content": {
             "application/json": {
@@ -11785,6 +13554,64 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/draft": {
+      "patch": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "UpdateWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/duplicates": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "CheckWorkOrderDraftDuplicates",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -11947,6 +13774,30 @@
         }
       }
     },
+    "/api/work-orders/{workOrderId}/open": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "OpenWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/work-orders/{workOrderId}/parts-demand": {
       "get": {
         "tags": [
@@ -12039,6 +13890,78 @@
         "tags": [
           "WorkOrderPartsDemand"
         ],
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/preview": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "PreviewWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/schedule": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "ScheduleWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/work-orders/{workOrderId}/start": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "StartWorkOrderDraft",
         "parameters": [
           {
             "name": "workOrderId",
@@ -12195,6 +14118,30 @@
         }
       }
     },
+    "/api/work-orders/{workOrderId}/validate": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "operationId": "ValidateWorkOrderDraft",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/work-orders/{workOrderId}/vendor-work": {
       "get": {
         "tags": [
@@ -12280,6 +14227,23 @@
   },
   "components": {
     "schemas": {
+      "ActivatePmProgramRequest": {
+        "type": "object",
+        "properties": {
+          "confirmReadinessImpact": {
+            "type": "boolean",
+            "default": false
+          },
+          "confirmComplianceImpact": {
+            "type": "boolean",
+            "default": false
+          },
+          "confirmZeroMatch": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "AssetBulkImportRequest": {
         "required": [
           "assets"
@@ -12925,6 +14889,7 @@
         "required": [
           "itemKey",
           "prompt",
+          "helpText",
           "itemType",
           "isRequired",
           "sortOrder",
@@ -12937,6 +14902,12 @@
           },
           "prompt": {
             "type": "string"
+          },
+          "helpText": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "itemType": {
             "type": "string"
@@ -12991,14 +14962,19 @@
               "null",
               "string"
             ]
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
+            ]
           }
         }
       },
       "CreateInspectionTemplateCategoryRequest": {
         "required": [
           "categoryKey",
-          "name",
-          "sortOrder"
+          "name"
         ],
         "type": "object",
         "properties": {
@@ -13008,13 +14984,42 @@
           "name": {
             "type": "string"
           },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "canBeSkipped": {
+            "type": "boolean",
+            "default": false
+          },
+          "skipReasonRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "timingTracked": {
+            "type": "boolean",
+            "default": false
+          },
           "sortOrder": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
               "string"
             ],
-            "format": "int32"
+            "format": "int32",
+            "default": 0
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
+            ]
           }
         }
       },
@@ -13039,6 +15044,60 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "templateCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estimatedDurationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
             ]
           }
         }
@@ -13162,7 +15221,19 @@
           "description",
           "assetTypeApplicability",
           "workOrderTypeApplicability",
-          "pmPlanRef"
+          "pmPlanRef",
+          "kitCategoryKey",
+          "kitTypeKey",
+          "priorityKey",
+          "owningSiteRef",
+          "owningTeamRef",
+          "ownerPersonId",
+          "ownerRoleKey",
+          "tags",
+          "definition",
+          "effectiveAt",
+          "expiresAt",
+          "cloneSourcePartsKitId"
         ],
         "type": "object",
         "properties": {
@@ -13197,6 +15268,87 @@
             }
           },
           "pmPlanRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kitCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kitTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitDefinitionRequest"
+              }
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cloneSourcePartsKitId": {
             "type": [
               "null",
               "string"
@@ -13319,6 +15471,123 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "categoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningDepartmentRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopeDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramScopeDefinitionRequest"
+              }
+            ]
+          },
+          "dueDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramDueDefinitionRequest"
+              }
+            ]
+          },
+          "workPackageDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramWorkPackageDefinitionRequest"
+              }
+            ]
+          },
+          "inspectionDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramInspectionDefinitionRequest"
+              }
+            ]
+          },
+          "complianceDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramComplianceDefinitionRequest"
+              }
+            ]
+          },
+          "automationDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramAutomationDefinitionRequest"
+              }
+            ]
           }
         }
       },
@@ -13719,6 +15988,26 @@
               "null",
               "string"
             ]
+          },
+          "draftPlanJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "plannedStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "plannedDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -13950,6 +16239,33 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "defectId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "draftPlanJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "plannedStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "plannedDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -14352,6 +16668,932 @@
           }
         }
       },
+      "MaintenancePartsKitApprovalRequest": {
+        "required": [
+          "requiresApprovalBeforeActivation",
+          "approverRoleKey",
+          "approverPersonId",
+          "retireReplacedKitAfterActivation",
+          "notesForApprover"
+        ],
+        "type": "object",
+        "properties": {
+          "requiresApprovalBeforeActivation": {
+            "type": "boolean"
+          },
+          "approverRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "retireReplacedKitAfterActivation": {
+            "type": "boolean"
+          },
+          "notesForApprover": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MaintenancePartsKitAssetScopeRequest": {
+        "required": [
+          "assetClassKeys",
+          "assetTypeKeys",
+          "assetCategoryKeys",
+          "assetStatusKeys",
+          "siteRefs",
+          "departmentRefs",
+          "makeKeys",
+          "modelKeys",
+          "yearFrom",
+          "yearTo",
+          "fuelTypeKeys",
+          "bodyTypeKeys",
+          "configurationKeys",
+          "variantFlags",
+          "requiredAttributes",
+          "excludedAttributes",
+          "includedAssetIds",
+          "excludedAssetIds"
+        ],
+        "type": "object",
+        "properties": {
+          "assetClassKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetTypeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetCategoryKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetStatusKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "siteRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "departmentRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "makeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "modelKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "yearFrom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "yearTo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fuelTypeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "bodyTypeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "configurationKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "variantFlags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredAttributes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludedAttributes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "includedAssetIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludedAssetIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MaintenancePartsKitAvailabilityRequest": {
+        "required": [
+          "enabled",
+          "preferredFulfillmentSource",
+          "showSiteAvailability",
+          "showNearbyAvailability",
+          "showOnOrder",
+          "showEstimatedLeadTime",
+          "requestReservation",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "preferredFulfillmentSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "showSiteAvailability": {
+            "type": "boolean"
+          },
+          "showNearbyAvailability": {
+            "type": "boolean"
+          },
+          "showOnOrder": {
+            "type": "boolean"
+          },
+          "showEstimatedLeadTime": {
+            "type": "boolean"
+          },
+          "requestReservation": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MaintenancePartsKitComplianceRequest": {
+        "required": [
+          "complianceRelated",
+          "governingBodyKeys",
+          "citationRefs",
+          "safetyCritical",
+          "readinessSensitive",
+          "missingRequiredPartsBlockWorkStart",
+          "missingRequiredPartsBlockWorkCompletion",
+          "requireSupervisorApprovalForSubstitution",
+          "requireDocumentationForSubstitution",
+          "requireFinalInspectionAfterUse",
+          "linkedInspectionTemplateId"
+        ],
+        "type": "object",
+        "properties": {
+          "complianceRelated": {
+            "type": "boolean"
+          },
+          "governingBodyKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "citationRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyCritical": {
+            "type": "boolean"
+          },
+          "readinessSensitive": {
+            "type": "boolean"
+          },
+          "missingRequiredPartsBlockWorkStart": {
+            "type": "boolean"
+          },
+          "missingRequiredPartsBlockWorkCompletion": {
+            "type": "boolean"
+          },
+          "requireSupervisorApprovalForSubstitution": {
+            "type": "boolean"
+          },
+          "requireDocumentationForSubstitution": {
+            "type": "boolean"
+          },
+          "requireFinalInspectionAfterUse": {
+            "type": "boolean"
+          },
+          "linkedInspectionTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MaintenancePartsKitDefinitionRequest": {
+        "required": [
+          "applicabilityWorkOrderTypes",
+          "applicabilityPmProgramRefs",
+          "applicabilityInspectionTemplateRefs",
+          "applicabilityDefectTypes",
+          "applicabilityTaskTemplateRefs",
+          "applicabilityRepairCategories",
+          "workSourceCompatibilities",
+          "assetScope",
+          "items",
+          "quantityRules",
+          "availability",
+          "workOrderBehavior",
+          "compliance",
+          "approval",
+          "changeReason",
+          "versionLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "applicabilityWorkOrderTypes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicabilityPmProgramRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicabilityInspectionTemplateRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicabilityDefectTypes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicabilityTaskTemplateRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicabilityRepairCategories": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workSourceCompatibilities": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetScope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitAssetScopeRequest"
+              }
+            ]
+          },
+          "items": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MaintenancePartsKitItemRequest"
+            }
+          },
+          "quantityRules": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MaintenancePartsKitQuantityRuleRequest"
+            }
+          },
+          "availability": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitAvailabilityRequest"
+              }
+            ]
+          },
+          "workOrderBehavior": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitWorkOrderBehaviorRequest"
+              }
+            ]
+          },
+          "compliance": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitComplianceRequest"
+              }
+            ]
+          },
+          "approval": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitApprovalRequest"
+              }
+            ]
+          },
+          "changeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "versionLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MaintenancePartsKitItemRequest": {
+        "required": [
+          "itemRef",
+          "supplyarrPartId",
+          "itemDescriptionSnapshot",
+          "partNumberSnapshot",
+          "manufacturerPartNumberSnapshot",
+          "vendorPartNumberSnapshot",
+          "quantity",
+          "unitOfMeasure",
+          "required",
+          "criticality",
+          "substituteAllowed",
+          "preferredSubstituteRefs",
+          "consumable",
+          "serialized",
+          "coreReturnExpected",
+          "hazardous",
+          "warrantySensitive",
+          "requiredByTask",
+          "notes",
+          "tags",
+          "isPlaceholder"
+        ],
+        "type": "object",
+        "properties": {
+          "itemRef": {
+            "type": "string"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemDescriptionSnapshot": {
+            "type": "string"
+          },
+          "partNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturerPartNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vendorPartNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "criticality": {
+            "type": "string"
+          },
+          "substituteAllowed": {
+            "type": "boolean"
+          },
+          "preferredSubstituteRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "consumable": {
+            "type": "boolean"
+          },
+          "serialized": {
+            "type": "boolean"
+          },
+          "coreReturnExpected": {
+            "type": "boolean"
+          },
+          "hazardous": {
+            "type": "boolean"
+          },
+          "warrantySensitive": {
+            "type": "boolean"
+          },
+          "requiredByTask": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPlaceholder": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintenancePartsKitPreviewRequest": {
+        "required": [
+          "kitNumber",
+          "title",
+          "description",
+          "assetTypeApplicability",
+          "workOrderTypeApplicability",
+          "pmPlanRef",
+          "kitCategoryKey",
+          "kitTypeKey",
+          "priorityKey",
+          "owningSiteRef",
+          "owningTeamRef",
+          "ownerPersonId",
+          "ownerRoleKey",
+          "tags",
+          "definition",
+          "effectiveAt",
+          "expiresAt",
+          "cloneSourcePartsKitId",
+          "selectedAssetId"
+        ],
+        "type": "object",
+        "properties": {
+          "kitNumber": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workOrderTypeApplicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pmPlanRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kitCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kitTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitDefinitionRequest"
+              }
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cloneSourcePartsKitId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "selectedAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MaintenancePartsKitQuantityRuleRequest": {
+        "required": [
+          "ruleId",
+          "ruleType",
+          "appliesToItemRef",
+          "assetConditionSummary",
+          "workConditionSummary",
+          "conditionSummary",
+          "baseQuantity",
+          "multiplier",
+          "minimumQuantity",
+          "maximumQuantity",
+          "roundingBehavior",
+          "plainLanguageSummary"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "ruleType": {
+            "type": "string"
+          },
+          "appliesToItemRef": {
+            "type": "string"
+          },
+          "assetConditionSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workConditionSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conditionSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "baseQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "multiplier": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minimumQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "maximumQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "roundingBehavior": {
+            "type": "string"
+          },
+          "plainLanguageSummary": {
+            "type": "string"
+          }
+        }
+      },
+      "MaintenancePartsKitWorkOrderBehaviorRequest": {
+        "required": [
+          "canBeManuallyAdded",
+          "autoSuggestOnMatchingWorkOrder",
+          "autoAddToMatchingWorkOrder",
+          "autoAddToPmGeneratedWorkOrder",
+          "autoAddAfterFailedInspectionQuestion",
+          "autoAddAfterMatchingDefectType",
+          "requireSupervisorApprovalBeforeAdding",
+          "requirePartsReviewBeforeWorkCanStart",
+          "requireAvailabilityCheckBeforeScheduling",
+          "allowTechnicianAdjustQuantities",
+          "requireAdjustmentReason",
+          "allowTechnicianRemoveOptionalItems",
+          "allowTechnicianRemoveRequiredItems",
+          "requireReasonToRemoveRequiredItem",
+          "snapshotKitItemsOntoWorkOrder",
+          "keepLiveReferenceAfterWorkOrderCreation"
+        ],
+        "type": "object",
+        "properties": {
+          "canBeManuallyAdded": {
+            "type": "boolean"
+          },
+          "autoSuggestOnMatchingWorkOrder": {
+            "type": "boolean"
+          },
+          "autoAddToMatchingWorkOrder": {
+            "type": "boolean"
+          },
+          "autoAddToPmGeneratedWorkOrder": {
+            "type": "boolean"
+          },
+          "autoAddAfterFailedInspectionQuestion": {
+            "type": "boolean"
+          },
+          "autoAddAfterMatchingDefectType": {
+            "type": "boolean"
+          },
+          "requireSupervisorApprovalBeforeAdding": {
+            "type": "boolean"
+          },
+          "requirePartsReviewBeforeWorkCanStart": {
+            "type": "boolean"
+          },
+          "requireAvailabilityCheckBeforeScheduling": {
+            "type": "boolean"
+          },
+          "allowTechnicianAdjustQuantities": {
+            "type": "boolean"
+          },
+          "requireAdjustmentReason": {
+            "type": "boolean"
+          },
+          "allowTechnicianRemoveOptionalItems": {
+            "type": "boolean"
+          },
+          "allowTechnicianRemoveRequiredItems": {
+            "type": "boolean"
+          },
+          "requireReasonToRemoveRequiredItem": {
+            "type": "boolean"
+          },
+          "snapshotKitItemsOntoWorkOrder": {
+            "type": "boolean"
+          },
+          "keepLiveReferenceAfterWorkOrderCreation": {
+            "type": "boolean"
+          }
+        }
+      },
       "NormalizeVoiceNumericRequest": {
         "required": [
           "transcript"
@@ -14381,6 +17623,684 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PmProgramAutomationDefinitionRequest": {
+        "type": "object",
+        "properties": {
+          "leadTimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "leadThresholdValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "leadThresholdUnit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "duplicatePreventionWindowDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 1
+          },
+          "assignmentBehavior": {
+            "type": "string",
+            "default": "unassigned"
+          },
+          "assignmentRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notificationTargets": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "escalationTargets": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "blackoutWindows": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "maxOpenGeneratedItemsPerAsset": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PmProgramCalendarTriggerRequest": {
+        "required": [
+          "intervalValue",
+          "intervalUnit"
+        ],
+        "type": "object",
+        "properties": {
+          "intervalValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "intervalUnit": {
+            "type": "string"
+          },
+          "anchorDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "firstDueDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "calendarBehavior": {
+            "type": "string",
+            "default": "fixed"
+          },
+          "earlyWindowDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "gracePeriodDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "pastDueBehavior": {
+            "type": "string",
+            "default": "warn"
+          }
+        }
+      },
+      "PmProgramChecklistTaskRequest": {
+        "required": [
+          "taskKey",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          }
+        }
+      },
+      "PmProgramComplianceDefinitionRequest": {
+        "required": [
+          "isComplianceRelated"
+        ],
+        "type": "object",
+        "properties": {
+          "isComplianceRelated": {
+            "type": "boolean"
+          },
+          "governingBodyCatalogKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "citationReferences": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "readinessImpact": {
+            "type": "string",
+            "default": "no_impact"
+          },
+          "certificateRequirements": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PmProgramDueDefinitionRequest": {
+        "required": [
+          "matchLogic",
+          "triggers"
+        ],
+        "type": "object",
+        "properties": {
+          "matchLogic": {
+            "type": "string"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PmProgramDueTriggerRequest"
+            }
+          },
+          "warnWhenAnyApproaching": {
+            "type": "boolean",
+            "default": false
+          },
+          "markDueBasedOnMostUrgent": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "PmProgramDueTriggerRequest": {
+        "required": [
+          "triggerType"
+        ],
+        "type": "object",
+        "properties": {
+          "triggerType": {
+            "type": "string"
+          },
+          "calendar": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramCalendarTriggerRequest"
+              }
+            ]
+          },
+          "meter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramMeterTriggerRequest"
+              }
+            ]
+          },
+          "oneTime": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramOneTimeTriggerRequest"
+              }
+            ]
+          },
+          "manualOnly": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "PmProgramInspectionDefinitionRequest": {
+        "required": [
+          "attachInspectionTemplate"
+        ],
+        "type": "object",
+        "properties": {
+          "attachInspectionTemplate": {
+            "type": "boolean"
+          },
+          "inspectionTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "inspectionRequiredBeforeWorkOrderCompletion": {
+            "type": "boolean",
+            "default": false
+          },
+          "inspectionResultBehavior": {
+            "type": "string",
+            "default": "pass_completes"
+          },
+          "resumeBehaviorRespectsEngineRules": {
+            "type": "boolean",
+            "default": true
+          },
+          "voiceCompatible": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "PmProgramMeterTriggerRequest": {
+        "required": [
+          "intervalValue",
+          "intervalUnit"
+        ],
+        "type": "object",
+        "properties": {
+          "intervalValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "intervalUnit": {
+            "type": "string"
+          },
+          "anchorReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "firstDueReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currentReadingSource": {
+            "type": "string",
+            "default": "asset_meter"
+          },
+          "earlyThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "graceThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "rollingFromCompletion": {
+            "type": "boolean",
+            "default": false
+          },
+          "missingDataBehavior": {
+            "type": "string",
+            "default": "warn"
+          }
+        }
+      },
+      "PmProgramOneTimeTriggerRequest": {
+        "required": [
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "PmProgramScopeDefinitionRequest": {
+        "type": "object",
+        "properties": {
+          "assetClassKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetTypeIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "assetCategoryKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetStatusKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "readinessStateKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "siteRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "departmentRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "locationRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "makeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "modelKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "yearFrom": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "yearTo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fuelTypeKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "includedAssetIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "excludedAssetIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "PmProgramWorkPackageDefinitionRequest": {
+        "required": [
+          "generateWorkOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "generateWorkOrder": {
+            "type": "boolean"
+          },
+          "workOrderTitleTemplate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultPriority": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultWorkType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estimatedLaborHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "requiredSkills": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyNotes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "technicianNotes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredAttachments": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "partsDemand": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PmProgramWorkPackagePartDemandRequest"
+            }
+          },
+          "checklistTasks": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PmProgramChecklistTaskRequest"
+            }
+          }
+        }
+      },
+      "PmProgramWorkPackagePartDemandRequest": {
+        "required": [
+          "itemRef",
+          "description",
+          "quantity",
+          "unitOfMeasure"
+        ],
+        "type": "object",
+        "properties": {
+          "itemRef": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": "string"
           }
         }
       },
@@ -14714,6 +18634,27 @@
           }
         }
       },
+      "PublishInspectionTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "confirmComplianceRelated": {
+            "type": "boolean",
+            "default": false
+          },
+          "confirmReadinessImpact": {
+            "type": "boolean",
+            "default": false
+          },
+          "confirmFailureAutomation": {
+            "type": "boolean",
+            "default": false
+          },
+          "confirmSupervisorRelease": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "PublishWorkOrderPartsDemandRequest": {
         "type": "object",
         "properties": {
@@ -14829,6 +18770,17 @@
         "type": "object",
         "properties": {
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RetireInspectionTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
             "type": [
               "null",
               "string"
@@ -15054,6 +19006,121 @@
             ]
           },
           "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitDefectRequest": {
+        "required": [
+          "createWorkOrder",
+          "markAssetNotReady",
+          "workOrderTitle",
+          "workOrderDescription",
+          "workOrderPriority",
+          "workOrderAssignedTechnicianPersonId",
+          "workOrderDraftPlanJson",
+          "workOrderPlannedStartAt",
+          "workOrderPlannedDueAt",
+          "holdType",
+          "holdTitle",
+          "holdDescription",
+          "holdSeverity",
+          "holdSourceProduct",
+          "holdSourceObjectRef",
+          "holdCreatedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "createWorkOrder": {
+            "type": "boolean"
+          },
+          "markAssetNotReady": {
+            "type": "boolean"
+          },
+          "workOrderTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderPriority": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderAssignedTechnicianPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderDraftPlanJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderPlannedStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "workOrderPlannedDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "holdType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdSourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdSourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "holdCreatedByPersonId": {
             "type": [
               "null",
               "string"
@@ -15416,6 +19483,7 @@
       "UpdateInspectionChecklistItemRequest": {
         "required": [
           "prompt",
+          "helpText",
           "itemType",
           "isRequired",
           "sortOrder",
@@ -15425,6 +19493,12 @@
         "properties": {
           "prompt": {
             "type": "string"
+          },
+          "helpText": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "itemType": {
             "type": "string"
@@ -15479,18 +19553,45 @@
               "null",
               "string"
             ]
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
+            ]
           }
         }
       },
       "UpdateInspectionTemplateCategoryRequest": {
         "required": [
-          "name",
-          "sortOrder"
+          "name"
         ],
         "type": "object",
         "properties": {
           "name": {
             "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "canBeSkipped": {
+            "type": "boolean",
+            "default": false
+          },
+          "skipReasonRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "timingTracked": {
+            "type": "boolean",
+            "default": false
           },
           "sortOrder": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -15498,7 +19599,14 @@
               "integer",
               "string"
             ],
-            "format": "int32"
+            "format": "int32",
+            "default": 0
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
+            ]
           }
         }
       },
@@ -15519,6 +19627,60 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "templateCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estimatedDurationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "settings": {
+            "type": [
+              "null",
+              "object"
             ]
           }
         }
@@ -15572,7 +19734,18 @@
           "description",
           "assetTypeApplicability",
           "workOrderTypeApplicability",
-          "pmPlanRef"
+          "pmPlanRef",
+          "kitCategoryKey",
+          "kitTypeKey",
+          "priorityKey",
+          "owningSiteRef",
+          "owningTeamRef",
+          "ownerPersonId",
+          "ownerRoleKey",
+          "tags",
+          "definition",
+          "effectiveAt",
+          "expiresAt"
         ],
         "type": "object",
         "properties": {
@@ -15608,6 +19781,81 @@
               "null",
               "string"
             ]
+          },
+          "kitCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kitTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenancePartsKitDefinitionRequest"
+              }
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -15659,6 +19907,123 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "categoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningSiteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningTeamRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningDepartmentRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopeDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramScopeDefinitionRequest"
+              }
+            ]
+          },
+          "dueDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramDueDefinitionRequest"
+              }
+            ]
+          },
+          "workPackageDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramWorkPackageDefinitionRequest"
+              }
+            ]
+          },
+          "inspectionDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramInspectionDefinitionRequest"
+              }
+            ]
+          },
+          "complianceDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramComplianceDefinitionRequest"
+              }
+            ]
+          },
+          "automationDefinition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PmProgramAutomationDefinitionRequest"
+              }
+            ]
           }
         }
       },
@@ -15794,6 +20159,26 @@
               "null",
               "string"
             ]
+          },
+          "draftPlanJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "plannedStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "plannedDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -15880,6 +20265,195 @@
             "type": [
               "null",
               "object"
+            ]
+          }
+        }
+      },
+      "UpsertDefectDraftRequest": {
+        "required": [
+          "assetId",
+          "title",
+          "description",
+          "severity",
+          "priority",
+          "defectType",
+          "reportSource",
+          "reportedAt",
+          "discoveredAt",
+          "reportedByPersonId",
+          "discoveredByPersonId",
+          "failureMode",
+          "systemKey",
+          "componentKey",
+          "symptom",
+          "sidePosition",
+          "operatingCondition",
+          "deferralCode",
+          "isSafetyCritical",
+          "isComplianceImpacting",
+          "isOperabilityImpacting",
+          "readinessNotes",
+          "correctiveAction",
+          "sourceType",
+          "sourceReferenceId",
+          "incidentReferenceId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "severity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priority": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defectType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "discoveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reportedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discoveredByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failureMode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "systemKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "componentKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "symptom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sidePosition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "operatingCondition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deferralCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isSafetyCritical": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isComplianceImpacting": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isOperabilityImpacting": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "readinessNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correctiveAction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceReferenceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentReferenceId": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }

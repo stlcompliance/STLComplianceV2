@@ -3,6 +3,7 @@ using System;
 using MaintainArr.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MaintainArr.Api.Migrations
 {
     [DbContext(typeof(MaintainArrDbContext))]
-    partial class MaintainArrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608224402_ExpandMaintenancePartsKitSchema")]
+    partial class ExpandMaintenancePartsKitSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -499,210 +502,6 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "CreatedAt");
 
                     b.ToTable("maintainarr_asset_downtime_sync_runs", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetEnrichmentSnapshot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CapturedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("SnapshotType")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("SourceObjectRef")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("Summary")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "AssetId");
-
-                    b.HasIndex("TenantId", "AssetId", "ProviderKey", "SnapshotType", "CapturedAt");
-
-                    b.ToTable("maintainarr_asset_enrichment_snapshots", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetEnrichmentSuggestion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<double>("Confidence")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CurrentValue")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("FieldKey")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("FieldLabel")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("ProposedValue")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<DateTimeOffset?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ReviewedByPersonId")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<Guid?>("SnapshotId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.HasIndex("SnapshotId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "AssetId");
-
-                    b.HasIndex("TenantId", "AssetId", "Status");
-
-                    b.HasIndex("TenantId", "AssetId", "ProviderKey", "FieldKey")
-                        .IsUnique();
-
-                    b.ToTable("maintainarr_asset_enrichment_suggestions", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetExternalIdentifier", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("IdentifierType")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("IdentifierValue")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("MetadataJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("NormalizedValue")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<DateTimeOffset>("ObservedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("SourceSystem")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "AssetId");
-
-                    b.HasIndex("TenantId", "AssetId", "SourceSystem", "IdentifierType", "NormalizedValue")
-                        .IsUnique();
-
-                    b.ToTable("maintainarr_asset_external_identifiers", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetExternalMapping", b =>
@@ -1211,111 +1010,6 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("maintainarr_asset_readiness_state", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetRecallSnapshot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ActionNumber")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CampaignNumber")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<DateTimeOffset>("CapturedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Component")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("Consequence")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Make")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("Manufacturer")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("Model")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("ModelYear")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid?>("QualityHoldId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Remedy")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<string>("ReportReceivedDate")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("Summary")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "AssetId");
-
-                    b.HasIndex("TenantId", "AssetId", "CampaignNumber")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId", "AssetId", "Status");
-
-                    b.ToTable("maintainarr_asset_recall_snapshots", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetSpec", b =>
@@ -2211,122 +1905,6 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "DefectId", "CreatedAt");
 
                     b.ToTable("maintainarr_defect_evidence", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.ExternalProviderAuditLogEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CacheKey")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DurationMs")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<string>("OperationKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ResultStatus")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "ProviderKey", "CreatedAt");
-
-                    b.ToTable("maintainarr_external_provider_audit_log_entries", (string)null);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.ExternalProviderCacheEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CacheKey")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("LastFetchedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("OperationKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("RequestJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ResponseJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("StatusCode")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("TenantId", "ProviderKey", "CacheKey")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId", "ProviderKey", "ExpiresAt")
-                        .HasDatabaseName("IX_maintainarr_external_provider_cache_entries_TenantId_Provi~1");
-
-                    b.ToTable("maintainarr_external_provider_cache_entries", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.FieldsetDefinition", b =>
@@ -5799,38 +5377,6 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("AssetType");
                 });
 
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetEnrichmentSnapshot", b =>
-                {
-                    b.HasOne("MaintainArr.Api.Entities.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetEnrichmentSuggestion", b =>
-                {
-                    b.HasOne("MaintainArr.Api.Entities.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MaintainArr.Api.Entities.AssetEnrichmentSnapshot", null)
-                        .WithMany()
-                        .HasForeignKey("SnapshotId")
-                        .OnDelete(DeleteBehavior.SetNull);
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetExternalIdentifier", b =>
-                {
-                    b.HasOne("MaintainArr.Api.Entities.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetInstalledComponent", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.Asset", "ParentAsset")
@@ -5854,15 +5400,6 @@ namespace MaintainArr.Api.Migrations
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.AssetQualityHold", b =>
-                {
-                    b.HasOne("MaintainArr.Api.Entities.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("MaintainArr.Api.Entities.AssetRecallSnapshot", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.Asset", null)
                         .WithMany()

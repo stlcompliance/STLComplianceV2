@@ -167,6 +167,52 @@ export function canRetireInspectionTemplates(
   return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
 }
 
+function hasPartsKitManageRole(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
+export function canReadPartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadMaintenanceReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canPreviewPartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadPartsKits(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canValidatePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canPreviewPartsKits(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreatePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canUpdatePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canClonePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canSubmitPartsKitsForApproval(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canActivatePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canRetirePartsKits(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsKitManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canCreateWorkOrderFromDefect(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,

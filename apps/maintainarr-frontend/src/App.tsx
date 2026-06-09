@@ -16,6 +16,7 @@ import { DowntimePage } from './pages/downtime/DowntimePage'
 
 import { InspectionTemplatesPage } from './pages/inspection-templates/InspectionTemplatesPage'
 import { InspectionTemplateCreatePage } from './pages/inspection-templates/InspectionTemplateCreatePage'
+import { PartsKitCreatePage } from './pages/parts-kits/PartsKitCreatePage'
 import { PartsKitsPage } from './pages/parts-kits/PartsKitsPage'
 
 import { InspectionsPage } from './pages/inspections/InspectionsPage'
@@ -118,6 +119,7 @@ export default function App() {
             <Route path="/inspection-templates/create" element={<InspectionTemplateCreatePage />} />
 
             <Route path="/parts-kits" element={<PartsKitsPage />} />
+            <Route path="/parts-kits/create" element={<PartsKitCreatePage />} />
 
             <Route path="/history" element={<HistoryPage />} />
 

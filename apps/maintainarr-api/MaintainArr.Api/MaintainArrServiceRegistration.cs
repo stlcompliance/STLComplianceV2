@@ -1,5 +1,6 @@
 using MaintainArr.Api.Options;
 using MaintainArr.Api.Services;
+using MaintainArr.Api.Services.ExternalIntelligence;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 
@@ -11,6 +12,7 @@ public static class MaintainArrServiceRegistration
     {
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
+        builder.Services.Configure<ExternalIntelligenceOptions>(builder.Configuration.GetSection(ExternalIntelligenceOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -134,6 +136,14 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<EntityBulkExportService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
+        builder.Services.AddScoped<ExternalProviderCacheService>();
+        builder.Services.AddHttpClient<NhtsaExternalIntelligenceClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ExternalIntelligenceOptions>>().Value;
+            client.BaseAddress = new Uri(options.NhtsaVehicleApiBaseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        builder.Services.AddScoped<ExternalIntelligenceService>();
         builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

@@ -21,6 +21,9 @@ import {
   getAsset,
   getAssetEditFieldset,
   getAssetFieldContext,
+  acceptAssetExternalIntelligenceSuggestion,
+  createAssetRecallWorkOrder,
+  getAssetExternalIntelligenceOverview,
   getAssetMeters,
   getAssetReadiness,
   getAssetTelematicsIngestion,
@@ -28,6 +31,8 @@ import {
   getMe,
   getPmSchedules,
   getWorkOrders,
+  refreshAssetExternalIntelligence,
+  rejectAssetExternalIntelligenceSuggestion,
   updateAssetControlledV1,
 } from '../../api/client'
 import type {
@@ -38,6 +43,7 @@ import type {
   AssetTelematicsIngestionResponse,
 } from '../../api/types'
 import { canCreateWorkOrders, canManageAssets, loadSession } from '../../auth/sessionStorage'
+import { AssetExternalIntelligencePanel } from '../../components/AssetExternalIntelligencePanel'
 import {
   AssetSectionList,
   buildAssetUpsertPayload,
@@ -225,6 +231,12 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
     enabled: Boolean(session?.accessToken && assetId),
   })
 
+  const externalIntelligenceQuery = useQuery({
+    queryKey: ['maintainarr-asset-external-intelligence', assetId],
+    queryFn: () => getAssetExternalIntelligenceOverview(session!.accessToken, assetId!),
+    enabled: Boolean(session?.accessToken && assetId),
+  })
+
   const readinessQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-detail', assetId],
     queryFn: () => getAssetReadiness(session!.accessToken, assetId!),
@@ -315,6 +327,72 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
     },
     onError: (error) => {
       setServerError(error instanceof Error ? error.message : 'Failed to update asset')
+    },
+  })
+
+  const refreshIntelligenceMutation = useMutation({
+    mutationFn: () => refreshAssetExternalIntelligence(session!.accessToken, assetId!),
+    onSuccess: async () => {
+      setServerError(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-external-intelligence', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-field-context', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-readiness-detail', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-readiness-history', assetId] }),
+      ])
+    },
+    onError: (error) => {
+      setServerError(error instanceof Error ? error.message : 'Failed to refresh external intelligence')
+    },
+  })
+
+  const acceptSuggestionMutation = useMutation({
+    mutationFn: (suggestionId: string) =>
+      acceptAssetExternalIntelligenceSuggestion(session!.accessToken, assetId!, suggestionId),
+    onSuccess: async () => {
+      setServerError(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-external-intelligence', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-field-context', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-readiness-detail', assetId] }),
+      ])
+    },
+    onError: (error) => {
+      setServerError(error instanceof Error ? error.message : 'Failed to accept external intelligence suggestion')
+    },
+  })
+
+  const rejectSuggestionMutation = useMutation({
+    mutationFn: (suggestionId: string) =>
+      rejectAssetExternalIntelligenceSuggestion(session!.accessToken, assetId!, suggestionId),
+    onSuccess: async () => {
+      setServerError(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-external-intelligence', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-field-context', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-readiness-detail', assetId] }),
+      ])
+    },
+    onError: (error) => {
+      setServerError(error instanceof Error ? error.message : 'Failed to reject external intelligence suggestion')
+    },
+  })
+
+  const createRecallWorkOrderMutation = useMutation({
+    mutationFn: (recallId: string) => createAssetRecallWorkOrder(session!.accessToken, assetId!, recallId),
+    onSuccess: async (created) => {
+      setServerError(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-external-intelligence', assetId] }),
+        queryClient.invalidateQueries({ queryKey: ['maintainarr-asset-readiness-detail', assetId] }),
+      ])
+      navigate(`/work-orders/${created.workOrderId}`)
+    },
+    onError: (error) => {
+      setServerError(error instanceof Error ? error.message : 'Failed to create recall work order')
     },
   })
 
@@ -736,6 +814,21 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
           allowedChecks={compliantSignalCount}
           blockedChecks={blockedSignalCount}
           railSections={[
+            {
+              title: 'External intelligence',
+              icon: <Radar className="h-5 w-5" />,
+              content: (
+                <AssetExternalIntelligencePanel
+                  overview={externalIntelligenceQuery.data ?? null}
+                  isLoading={externalIntelligenceQuery.isLoading}
+                  isRefreshing={refreshIntelligenceMutation.isPending}
+                  onRefresh={() => refreshIntelligenceMutation.mutate()}
+                  onAcceptSuggestion={(suggestionId) => acceptSuggestionMutation.mutate(suggestionId)}
+                  onRejectSuggestion={(suggestionId) => rejectSuggestionMutation.mutate(suggestionId)}
+                  onCreateRecallWorkOrder={(recallId) => createRecallWorkOrderMutation.mutate(recallId)}
+                />
+              ),
+            },
             {
               title: 'Compliance links',
               icon: <ShieldCheck className="h-5 w-5" />,

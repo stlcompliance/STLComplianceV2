@@ -119,6 +119,64 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequirePartsKitsRead(ClaimsPrincipal principal) => RequirePmRead(principal);
+
+    public void RequirePartsKitsPreview(ClaimsPrincipal principal) => RequirePartsKitsRead(principal);
+
+    public void RequirePartsKitsValidate(ClaimsPrincipal principal) => RequirePartsKitsRead(principal);
+
+    public void RequirePartsKitsManage(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Parts kit management requires MaintainArr manager or administrator access.",
+            403);
+    }
+
+    public void RequirePartsKitsClone(ClaimsPrincipal principal) => RequirePartsKitsManage(principal);
+
+    public void RequirePartsKitsApprove(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Parts kit approval requires MaintainArr manager or administrator access.",
+            403);
+    }
+
+    public void RequirePartsKitsActivate(ClaimsPrincipal principal) => RequirePartsKitsApprove(principal);
+
+    public void RequirePartsKitsRetire(ClaimsPrincipal principal) => RequirePartsKitsApprove(principal);
+
     public void RequirePmProgramsRead(ClaimsPrincipal principal) => RequirePmRead(principal);
 
     public void RequirePmProgramsPreview(ClaimsPrincipal principal) => RequirePmRead(principal);

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -73,9 +74,14 @@ describe('AssetsSection', () => {
   })
 
   it('renders asset details picker when the details route has no selected asset', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
     render(
       <MemoryRouter initialEntries={['/assets/details/missing']}>
-        <AssetsSection state={state} />
+        <QueryClientProvider client={queryClient}>
+          <AssetsSection state={state} />
+        </QueryClientProvider>
       </MemoryRouter>,
     )
 

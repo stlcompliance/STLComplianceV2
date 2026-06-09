@@ -1,8 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
 import { AssetReadinessDetailPanel } from '../../components/AssetReadinessDetailPanel'
 import { AssetDetailsPage } from '../../components/AssetDetailsPage'
 import { AssetRegistryPanel } from '../../components/AssetRegistryPanel'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { getAssetExternalIntelligenceOverview } from '../../api/client'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
@@ -16,6 +18,11 @@ export function AssetsSection({ state }: Props) {
       ? 'details'
       : 'drawer'
   const selectedAsset = (s.assetsQuery.data ?? []).find((item) => item.assetId === s.selectedAssetId)
+  const externalIntelligenceQuery = useQuery({
+    queryKey: ['maintainarr-asset-external-intelligence', s.selectedAssetId],
+    queryFn: () => getAssetExternalIntelligenceOverview(s.accessToken, s.selectedAssetId!),
+    enabled: Boolean(s.accessToken && s.selectedAssetId),
+  })
   const assetOptions = (s.assetsQuery.data ?? []).map((item) => ({
     value: item.assetId,
     label: `${item.assetTag} · ${item.name}`,
@@ -62,6 +69,8 @@ export function AssetsSection({ state }: Props) {
             isReadinessHistoryLoading={s.assetReadinessHistoryQuery.isLoading}
             fieldContext={s.assetFieldContextQuery.data ?? null}
             installedComponents={s.assetInstalledComponentsQuery.data ?? null}
+            externalIntelligenceOverview={externalIntelligenceQuery.data ?? null}
+            isExternalIntelligenceLoading={externalIntelligenceQuery.isLoading}
           />
         ) : (
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">

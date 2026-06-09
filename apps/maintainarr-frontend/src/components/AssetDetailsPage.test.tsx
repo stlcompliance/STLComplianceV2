@@ -23,6 +23,8 @@ describe('AssetDetailsPage', () => {
             createdAt: '2026-06-01T00:00:00Z',
             updatedAt: '2026-06-02T00:00:00Z',
           }}
+          externalIntelligenceOverview={null}
+          isExternalIntelligenceLoading={false}
           readiness={{
             assetId: '11111111-1111-1111-1111-111111111111',
             assetTag: 'TRK-01',

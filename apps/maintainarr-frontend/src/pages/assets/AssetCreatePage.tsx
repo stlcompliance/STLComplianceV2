@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Navigate, Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { PageHeader } from '@stl/shared-ui'
 import {
   createAssetControlledV1,
+  decodeVin,
   getAssetCreateFieldset,
   getMe,
 } from '../../api/client'
@@ -21,6 +22,7 @@ import {
   validateAssetValues,
   type AssetFieldValues,
 } from '../../components/AssetFieldsetWorkflow'
+import { AssetVinDecodePanel } from '../../components/AssetVinDecodePanel'
 
 function clearInvalidDependentValues(
   fieldset: FieldsetResponse,
@@ -85,6 +87,23 @@ export function AssetCreatePage() {
   }, [fieldsetQuery.data])
 
   const fieldset = fieldsetQuery.data
+  const currentVinValue = useMemo(() => {
+    const candidate = values.VIN ?? values.vin
+    return typeof candidate === 'string' ? candidate.trim() : String(candidate ?? '').trim()
+  }, [values])
+  const currentModelYear = useMemo(() => {
+    const candidate = values.modelYear ?? values.ModelYear
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+      return candidate
+    }
+    if (typeof candidate === 'string' && candidate.trim()) {
+      const parsed = Number(candidate.trim())
+      return Number.isFinite(parsed) ? parsed : null
+    }
+    return null
+  }, [values])
+  const deferredVinValue = useDeferredValue(currentVinValue)
+  const deferredModelYear = useDeferredValue(currentModelYear)
   const baselineComplete = fieldset ? isCreateBaselineComplete(fieldset, values) : false
   const allSteps = useMemo(
     () => (fieldset ? getCreateWorkflowSteps(fieldset, values) : []),
@@ -113,6 +132,13 @@ export function AssetCreatePage() {
     onError: (error) => {
       setServerError(error instanceof Error ? error.message : 'Failed to create asset')
     },
+  })
+
+  const vinDecodeQuery = useQuery({
+    queryKey: ['maintainarr-vin-decode', deferredVinValue, deferredModelYear],
+    queryFn: () => decodeVin(session!.accessToken, { vin: deferredVinValue, modelYear: deferredModelYear }),
+    enabled: Boolean(session?.accessToken && deferredVinValue.length >= 3),
+    retry: false,
   })
 
   if (!session) {
@@ -233,6 +259,14 @@ export function AssetCreatePage() {
               />
             )}
           </section>
+
+          <AssetVinDecodePanel
+            vin={deferredVinValue}
+            modelYear={deferredModelYear}
+            result={vinDecodeQuery.data ?? null}
+            isLoading={vinDecodeQuery.isFetching}
+            error={vinDecodeQuery.error instanceof Error ? vinDecodeQuery.error.message : null}
+          />
 
           <div className="sticky bottom-0 z-10 rounded-xl border border-slate-800 bg-slate-950/95 p-4 shadow-2xl">
             <div className="flex flex-wrap items-center justify-between gap-3">

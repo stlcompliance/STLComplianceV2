@@ -20,7 +20,7 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmRead(context.User);
+            authorization.RequirePartsKitsRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
@@ -33,11 +33,37 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmRead(context.User);
+            authorization.RequirePartsKitsRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, partsKitId, cancellationToken));
         })
         .WithName($"GetMaintenancePartsKit{nameSuffix}");
+
+        group.MapPost("/validate", async (
+            MaintenancePartsKitPreviewRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsValidate(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ValidateAsync(tenantId, request, cancellationToken));
+        })
+        .WithName($"ValidateMaintenancePartsKit{nameSuffix}");
+
+        group.MapPost("/preview", async (
+            MaintenancePartsKitPreviewRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsPreview(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.PreviewAsync(tenantId, request, cancellationToken));
+        })
+        .WithName($"PreviewMaintenancePartsKit{nameSuffix}");
 
         group.MapPost("/", async (
             CreateMaintenancePartsKitRequest request,
@@ -46,10 +72,11 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var created = await service.CreateAsync(tenantId, actorUserId, actorPersonId, request, cancellationToken);
             return Results.Created($"/api/v1/maintenance-parts-kits/{created.PartsKitId}", created);
         })
         .WithName($"CreateMaintenancePartsKit{nameSuffix}");
@@ -62,10 +89,11 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateAsync(tenantId, actorUserId, partsKitId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.UpdateAsync(tenantId, actorUserId, actorPersonId, partsKitId, request, cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateMaintenancePartsKit{nameSuffix}");
@@ -78,13 +106,78 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateStatusAsync(tenantId, actorUserId, partsKitId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.UpdateStatusAsync(tenantId, actorUserId, actorPersonId, partsKitId, request, cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateMaintenancePartsKitStatus{nameSuffix}");
+
+        group.MapPost("/{partsKitId:guid}/submit-approval", async (
+            Guid partsKitId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.SubmitForApprovalAsync(tenantId, actorUserId, actorPersonId, partsKitId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"SubmitMaintenancePartsKitForApproval{nameSuffix}");
+
+        group.MapPost("/{partsKitId:guid}/activate", async (
+            Guid partsKitId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsActivate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.ActivateAsync(tenantId, actorUserId, actorPersonId, partsKitId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"ActivateMaintenancePartsKit{nameSuffix}");
+
+        group.MapPost("/{partsKitId:guid}/retire", async (
+            Guid partsKitId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsRetire(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.RetireAsync(tenantId, actorUserId, actorPersonId, partsKitId, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName($"RetireMaintenancePartsKit{nameSuffix}");
+
+        group.MapPost("/{partsKitId:guid}/clone", async (
+            Guid partsKitId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenancePartsKitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsKitsClone(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var created = await service.CloneAsync(tenantId, actorUserId, actorPersonId, partsKitId, cancellationToken);
+            return Results.Created($"/api/v1/maintenance-parts-kits/{created.PartsKitId}", created);
+        })
+        .WithName($"CloneMaintenancePartsKit{nameSuffix}");
 
         group.MapPost("/{partsKitId:guid}/lines", async (
             Guid partsKitId,
@@ -94,10 +187,11 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var created = await service.AddLineAsync(tenantId, actorUserId, partsKitId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var created = await service.AddLineAsync(tenantId, actorUserId, actorPersonId, partsKitId, request, cancellationToken);
             return Results.Created($"/api/v1/maintenance-parts-kits/{partsKitId}/lines/{created.PartsKitLineId}", created);
         })
         .WithName($"CreateMaintenancePartsKitLine{nameSuffix}");
@@ -111,10 +205,11 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateLineAsync(tenantId, actorUserId, partsKitId, lineId, request, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            var updated = await service.UpdateLineAsync(tenantId, actorUserId, actorPersonId, partsKitId, lineId, request, cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateMaintenancePartsKitLine{nameSuffix}");
@@ -127,10 +222,11 @@ public static class MaintenancePartsKitEndpoints
             MaintenancePartsKitService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePmManage(context.User);
+            authorization.RequirePartsKitsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            await service.DeleteLineAsync(tenantId, actorUserId, partsKitId, lineId, cancellationToken);
+            var actorPersonId = context.User.GetPersonId().ToString("D");
+            await service.DeleteLineAsync(tenantId, actorUserId, actorPersonId, partsKitId, lineId, cancellationToken);
             return Results.NoContent();
         })
         .WithName($"DeleteMaintenancePartsKitLine{nameSuffix}");

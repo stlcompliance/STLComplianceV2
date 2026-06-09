@@ -157,6 +157,12 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<AssetAssignmentHistory> AssetAssignmentHistory => Set<AssetAssignmentHistory>();
     public DbSet<AssetReadinessState> AssetReadinessStates => Set<AssetReadinessState>();
     public DbSet<AssetExternalMapping> AssetExternalMappings => Set<AssetExternalMapping>();
+    public DbSet<AssetExternalIdentifier> AssetExternalIdentifiers => Set<AssetExternalIdentifier>();
+    public DbSet<AssetEnrichmentSnapshot> AssetEnrichmentSnapshots => Set<AssetEnrichmentSnapshot>();
+    public DbSet<AssetEnrichmentSuggestion> AssetEnrichmentSuggestions => Set<AssetEnrichmentSuggestion>();
+    public DbSet<AssetRecallSnapshot> AssetRecallSnapshots => Set<AssetRecallSnapshot>();
+    public DbSet<ExternalProviderCacheEntry> ExternalProviderCacheEntries => Set<ExternalProviderCacheEntry>();
+    public DbSet<ExternalProviderAuditLogEntry> ExternalProviderAuditLogEntries => Set<ExternalProviderAuditLogEntry>();
     public DbSet<AssetQualityHold> AssetQualityHolds => Set<AssetQualityHold>();
     public DbSet<AssetReadinessCheck> AssetReadinessChecks => Set<AssetReadinessCheck>();
     public DbSet<MaintenancePartsKit> MaintenancePartsKits => Set<MaintenancePartsKit>();
@@ -1413,6 +1419,124 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasIndex(x => new { x.TenantId, x.AssetId });
         });
 
+        modelBuilder.Entity<AssetExternalIdentifier>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_external_identifiers");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceSystem).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdentifierType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdentifierValue).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.NormalizedValue).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.MetadataJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.SourceSystem, x.IdentifierType, x.NormalizedValue }).IsUnique();
+            entity.HasOne<Asset>()
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AssetEnrichmentSnapshot>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_enrichment_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SnapshotType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.PayloadJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.ProviderKey, x.SnapshotType, x.CapturedAt });
+            entity.HasOne<Asset>()
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AssetEnrichmentSuggestion>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_enrichment_suggestions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FieldKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.FieldLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CurrentValue).HasMaxLength(512);
+            entity.Property(x => x.ProposedValue).HasMaxLength(512);
+            entity.Property(x => x.Reason).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.ProviderKey, x.FieldKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.Status });
+            entity.HasOne<Asset>()
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<AssetEnrichmentSnapshot>()
+                .WithMany()
+                .HasForeignKey(x => x.SnapshotId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AssetRecallSnapshot>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_recall_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CampaignNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ActionNumber).HasMaxLength(64);
+            entity.Property(x => x.Manufacturer).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Component).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Consequence).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Remedy).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ModelYear).HasMaxLength(16);
+            entity.Property(x => x.Make).HasMaxLength(128);
+            entity.Property(x => x.Model).HasMaxLength(128);
+            entity.Property(x => x.ReportReceivedDate).HasMaxLength(64);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.CampaignNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.Status });
+            entity.HasOne<Asset>()
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ExternalProviderCacheEntry>(entity =>
+        {
+            entity.ToTable("maintainarr_external_provider_cache_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CacheKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.OperationKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RequestJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.ResponseJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.CacheKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.ExpiresAt });
+        });
+
+        modelBuilder.Entity<ExternalProviderAuditLogEntry>(entity =>
+        {
+            entity.ToTable("maintainarr_external_provider_audit_log_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OperationKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CacheKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ResultStatus).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.CreatedAt });
+        });
+
         modelBuilder.Entity<AssetQualityHold>(entity =>
         {
             entity.ToTable("maintainarr_asset_quality_holds");
@@ -1458,9 +1582,25 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.KitNumber).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.Property(x => x.KitCategoryKey).HasMaxLength(128);
+            entity.Property(x => x.KitTypeKey).HasMaxLength(128);
+            entity.Property(x => x.PriorityKey).HasMaxLength(128);
+            entity.Property(x => x.OwningSiteRef).HasMaxLength(128);
+            entity.Property(x => x.OwningTeamRef).HasMaxLength(128);
+            entity.Property(x => x.OwnerPersonId).HasMaxLength(128);
+            entity.Property(x => x.OwnerRoleKey).HasMaxLength(128);
+            entity.Property(x => x.TagsJson).HasColumnType("text").IsRequired();
             entity.Property(x => x.AssetTypeApplicabilityJson).HasMaxLength(4096).IsRequired();
             entity.Property(x => x.WorkOrderTypeApplicabilityJson).HasMaxLength(4096).IsRequired();
             entity.Property(x => x.PmPlanRef).HasMaxLength(128);
+            entity.Property(x => x.DefinitionJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.Version).HasDefaultValue(1);
+            entity.Property(x => x.CloneSourcePartsKitId).HasMaxLength(128);
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.ActivatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.ApprovedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RetiredByPersonId).HasMaxLength(128);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.KitNumber }).IsUnique();
@@ -1477,6 +1617,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ItemRef).HasMaxLength(128).IsRequired();
             entity.Property(x => x.ItemDescriptionSnapshot).HasMaxLength(512).IsRequired();
             entity.Property(x => x.UnitOfMeasure).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SortOrder).HasDefaultValue(0);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.MaintenancePartsKitId });
             entity.HasIndex(x => new { x.TenantId, x.MaintenancePartsKitId, x.ItemRef }).IsUnique();

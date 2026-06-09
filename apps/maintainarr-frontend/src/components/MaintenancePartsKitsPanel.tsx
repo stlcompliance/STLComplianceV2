@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import {
   createMaintenancePartsKit,
   createMaintenancePartsKitLine,
@@ -271,6 +272,12 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
           <div className="text-xs text-slate-500">
             {kitsQuery.data?.items.length ?? 0} kit(s) · {selectedKit?.lines.length ?? 0} line(s)
           </div>
+          <Link
+            to="/parts-kits/create"
+            className="rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 text-xs font-medium text-sky-100 hover:bg-sky-500/20"
+          >
+            Guided create
+          </Link>
         </div>
       </header>
 

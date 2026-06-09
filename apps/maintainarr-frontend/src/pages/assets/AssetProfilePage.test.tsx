@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import type { AssetExternalIntelligenceOverviewResponse } from '../../api/types'
 import { AssetProfilePage } from './AssetProfilePage'
 
 const session = {
@@ -153,6 +154,124 @@ const editFieldset = {
   ],
 }
 
+const externalIntelligenceOverview = {
+  assetId: 'asset-1',
+  vin: '1FTFW1E58MFA00001',
+  providers: [
+    {
+      providerKey: 'nhtsa',
+      displayName: 'NHTSA',
+      description: 'Federal safety data',
+      sourceOfTruth: 'NHTSA',
+      status: 'healthy',
+      supportsVinDecode: true,
+      supportsRecallLookup: true,
+      supportsComplaintLookup: true,
+      supportsReferenceLookups: true,
+      supportsEquipmentReferences: false,
+      lastCheckedAt: '2026-06-01T00:00:00Z',
+      lastSuccessfulAt: '2026-06-01T00:00:00Z',
+      lastError: null,
+    },
+  ],
+  summary: {
+    identifierCount: 1,
+    snapshotCount: 1,
+    suggestionCount: 1,
+    activeRecallCount: 1,
+    complaintCount: 1,
+    lastRefreshedAt: '2026-06-02T00:00:00Z',
+  },
+  identifiers: [
+    {
+      identifierId: 'identifier-1',
+      assetId: 'asset-1',
+      sourceSystem: 'nhtsa',
+      identifierType: 'vin',
+      identifierValue: '1FTFW1E58MFA00001',
+      normalizedValue: '1FTFW1E58MFA00001',
+      isPrimary: true,
+      isVerified: true,
+      metadata: { make: 'Ford' },
+      observedAt: '2026-06-01T00:00:00Z',
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    },
+  ],
+  snapshots: [
+    {
+      snapshotId: 'snapshot-1',
+      assetId: 'asset-1',
+      providerKey: 'nhtsa',
+      snapshotType: 'vin_decode',
+      sourceObjectRef: '1FTFW1E58MFA00001',
+      summary: 'VIN decode snapshot',
+      details: { Make: 'Ford', Model: 'F-150' },
+      capturedAt: '2026-06-01T00:00:00Z',
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    },
+  ],
+  suggestions: [
+    {
+      suggestionId: 'suggestion-1',
+      assetId: 'asset-1',
+      snapshotId: 'snapshot-1',
+      providerKey: 'nhtsa',
+      fieldKey: 'make',
+      fieldLabel: 'Make',
+      currentValue: 'Unknown',
+      proposedValue: 'Ford',
+      reason: 'VIN decode identified the manufacturer.',
+      confidence: 0.94,
+      status: 'pending',
+      reviewedByPersonId: null,
+      reviewedAt: null,
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    },
+  ],
+  recalls: [
+    {
+      recallId: 'recall-1',
+      assetId: 'asset-1',
+      providerKey: 'nhtsa',
+      campaignNumber: '24V-123',
+      actionNumber: null,
+      manufacturer: 'Ford',
+      component: 'Air bags',
+      summary: 'Air bag recall',
+      consequence: 'Deployment may fail.',
+      remedy: 'Replace inflator module.',
+      notes: '',
+      modelYear: '2021',
+      make: 'Ford',
+      model: 'F-150',
+      reportReceivedDate: '2026-05-01T00:00:00Z',
+      status: 'active',
+      qualityHoldId: null,
+      capturedAt: '2026-06-01T00:00:00Z',
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    },
+  ],
+  complaints: [
+    {
+      odiNumber: 'ODI-1',
+      manufacturer: 'Ford',
+      crash: false,
+      fire: true,
+      numberOfInjuries: null,
+      numberOfDeaths: null,
+      dateOfIncident: null,
+      dateComplaintFiled: '2026-05-15T00:00:00Z',
+      vin: '1FTFW1E58MFA00001',
+      components: ['air bags'],
+      summary: 'Complaint summary',
+    },
+  ],
+} satisfies AssetExternalIntelligenceOverviewResponse
+
 function mockProfileFetches() {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
     const url = String(input)
@@ -170,6 +289,12 @@ function mockProfileFetches() {
     }
     if (url === '/api/v1/assets/asset-1/field-context') {
       return new Response(JSON.stringify({ assetId: 'asset-1', fields: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    if (url === '/api/v1/assets/asset-1/external-intelligence') {
+      return new Response(JSON.stringify(externalIntelligenceOverview), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
     if (url === '/api/v1/readiness?assetId=asset-1') {
       return new Response(JSON.stringify({
@@ -290,6 +415,8 @@ describe('AssetProfilePage', () => {
     expect(screen.getByText('Telematics / diagnostics ingestion')).toBeInTheDocument()
     expect(screen.getByText('1 processed')).toBeInTheDocument()
     expect(screen.getByText('Driver-reported defect · Trip TRIP-100 · Vehicle TRK-100 · DVIR fail')).toBeInTheDocument()
+    expect(screen.getByText('External intelligence')).toBeInTheDocument()
+    expect(screen.getByText('VIN: 1FTFW1E58MFA00001')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /edit asset/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /save asset/i })).not.toBeInTheDocument()
 

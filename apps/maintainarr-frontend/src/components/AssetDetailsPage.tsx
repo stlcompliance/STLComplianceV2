@@ -2,12 +2,14 @@ import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, Gauge, History, 
 import { ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
 
 import type {
+  AssetExternalIntelligenceOverviewResponse,
   AssetFieldContextResponse,
   AssetInstalledComponentResponse,
   AssetReadinessHistoryResponse,
   AssetReadinessResponse,
   AssetResponse,
 } from '../api/types'
+import { AssetExternalIntelligencePanel } from './AssetExternalIntelligencePanel'
 
 interface AssetDetailsPageProps {
   asset: AssetResponse
@@ -17,6 +19,8 @@ interface AssetDetailsPageProps {
   isReadinessHistoryLoading: boolean
   fieldContext: AssetFieldContextResponse | null
   installedComponents: AssetInstalledComponentResponse[] | null
+  externalIntelligenceOverview: AssetExternalIntelligenceOverviewResponse | null
+  isExternalIntelligenceLoading: boolean
 }
 
 function humanize(value: string | null | undefined): string {
@@ -51,6 +55,8 @@ export function AssetDetailsPage({
   isReadinessHistoryLoading,
   fieldContext,
   installedComponents,
+  externalIntelligenceOverview,
+  isExternalIntelligenceLoading,
 }: AssetDetailsPageProps) {
   const blockers = readiness?.blockers ?? []
   const isReady = readiness?.readinessStatus === 'ready' && blockers.length === 0
@@ -152,6 +158,16 @@ export function AssetDetailsPage({
       allowedChecks={allowedChecks}
       blockedChecks={blockedChecks}
       railSections={[
+        {
+          title: 'External intelligence',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          content: (
+            <AssetExternalIntelligencePanel
+              overview={externalIntelligenceOverview}
+              isLoading={isExternalIntelligenceLoading}
+            />
+          ),
+        },
         {
           title: 'Activity',
           icon: <History className="h-5 w-5" />,
