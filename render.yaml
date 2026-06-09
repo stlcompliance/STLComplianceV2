@@ -135,7 +135,7 @@ envVarGroups:
       - key: SUPPLYARR_PUBLIC_API_URL
         value: https://supplyarr-api-ytp0.onrender.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
-        value: https://compliancecore-api-b6fs.onrender.com
+        value: https://compliancecore-api-pqyl.onrender.com
       - key: LOADARR_PUBLIC_API_URL
         value: https://loadarr-api.onrender.com
       - key: ASSURARR_PUBLIC_API_URL
