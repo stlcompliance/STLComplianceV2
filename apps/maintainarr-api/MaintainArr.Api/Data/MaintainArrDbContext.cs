@@ -57,6 +57,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<WorkOrderEvidence> WorkOrderEvidence => Set<WorkOrderEvidence>();
 
+    public DbSet<MaintenancePart> MaintenanceParts => Set<MaintenancePart>();
+
     public DbSet<WorkOrderPartsDemandLine> WorkOrderPartsDemandLines => Set<WorkOrderPartsDemandLine>();
 
     public DbSet<WorkOrderPartsDemandStatusEvent> WorkOrderPartsDemandStatusEvents => Set<WorkOrderPartsDemandStatusEvent>();
@@ -1699,6 +1701,33 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ReadinessBasis).HasMaxLength(128).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MaintenancePart>(entity =>
+        {
+            entity.ToTable("maintainarr_parts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.NormalizedPartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.CategoryKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ManufacturerName).HasMaxLength(256);
+            entity.Property(x => x.ManufacturerPartNumber).HasMaxLength(128);
+            entity.Property(x => x.SdsDocumentId).HasMaxLength(128);
+            entity.Property(x => x.ComplianceCoreMaterialKey).HasMaxLength(128);
+            entity.Property(x => x.ComplianceCoreHazardKeysJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.NormalizedPartNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.SupplyArrPartId });
         });
 
         modelBuilder.Entity<MaintenancePartsKit>(entity =>

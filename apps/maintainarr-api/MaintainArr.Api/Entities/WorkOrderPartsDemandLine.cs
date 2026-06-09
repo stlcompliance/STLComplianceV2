@@ -12,6 +12,8 @@ public sealed class WorkOrderPartsDemandLine : IHasTenant
 
     public int LineNumber { get; set; }
 
+    public Guid? MaintenancePartId { get; set; }
+
     public Guid? SupplyarrPartId { get; set; }
 
     public string PartNumber { get; set; } = string.Empty;
@@ -51,6 +53,8 @@ public sealed class WorkOrderPartsDemandLine : IHasTenant
     public DateTimeOffset UpdatedAt { get; set; }
 
     public WorkOrder WorkOrder { get; set; } = null!;
+
+    public MaintenancePart? MaintenancePart { get; set; }
 }
 
 public static class WorkOrderPartsDemandStatuses

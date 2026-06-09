@@ -3254,3 +3254,82 @@ export async function getMaintenancePlatformEventProcessingRuns(
     'Failed to load platform event processing runs',
   )
 }
+
+export async function getMaintenanceParts(
+  accessToken: string,
+  options?: { search?: string; status?: string },
+): Promise<import('./types').MaintenancePartResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.search) {
+    params.set('search', options.search)
+  }
+  if (options?.status) {
+    params.set('status', options.status)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/parts${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<import('./types').MaintenancePartResponse[]>(
+    response,
+    'Failed to load maintenance part profiles',
+  )
+}
+
+export async function getMaintenancePart(
+  accessToken: string,
+  partId: string,
+): Promise<import('./types').MaintenancePartResponse> {
+  const response = await fetch(`${apiBase}/api/v1/parts/${partId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<import('./types').MaintenancePartResponse>(
+    response,
+    'Failed to load maintenance part profile',
+  )
+}
+
+export async function createMaintenancePart(
+  accessToken: string,
+  payload: import('./types').CreateMaintenancePartRequest,
+): Promise<import('./types').MaintenancePartResponse> {
+  const response = await fetch(`${apiBase}/api/v1/parts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<import('./types').MaintenancePartResponse>(
+    response,
+    'Failed to create maintenance part profile',
+  )
+}
+
+export async function updateMaintenancePart(
+  accessToken: string,
+  partId: string,
+  payload: import('./types').UpdateMaintenancePartRequest,
+): Promise<import('./types').MaintenancePartResponse> {
+  const response = await fetch(`${apiBase}/api/v1/parts/${partId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<import('./types').MaintenancePartResponse>(
+    response,
+    'Failed to update maintenance part profile',
+  )
+}
+
+export async function archiveMaintenancePart(
+  accessToken: string,
+  partId: string,
+): Promise<import('./types').MaintenancePartResponse> {
+  const response = await fetch(`${apiBase}/api/v1/parts/${partId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<import('./types').MaintenancePartResponse>(
+    response,
+    'Failed to archive maintenance part profile',
+  )
+}

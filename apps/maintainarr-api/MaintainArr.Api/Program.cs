@@ -39,6 +39,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrWorkOrderDiscussionEndpoints();
         app.MapMaintainArrWorkOrderLaborEvidenceEndpoints();
         app.MapMaintainArrWorkOrderPartsDemandEndpoints();
+        app.MapMaintainArrMaintenancePartEndpoints();
         app.MapMaintainArrMaintenanceVendorWorkEndpoints();
         app.MapMaintainArrWorkOrderSupplyReadinessEndpoints();
         app.MapMaintainArrMaintenancePartsKitEndpoints();

@@ -19,7 +19,8 @@ public sealed record WorkOrderPartsDemandLineResponse(
     decimal QuantityReceived,
     string ProcurementStatusMessage,
     DateTimeOffset? LastProcurementStatusAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Guid? MaintenancePartId = null);
 
 public sealed record CreateWorkOrderPartsDemandLineRequest(
     Guid? SupplyarrPartId,
@@ -27,7 +28,8 @@ public sealed record CreateWorkOrderPartsDemandLineRequest(
     string? Description,
     decimal QuantityRequested,
     string? UnitOfMeasure,
-    string? Notes);
+    string? Notes,
+    Guid? MaintenancePartId = null);
 
 public sealed record CreateWorkOrderPartsUsageAliasRequest(
     Guid WorkOrderId,
@@ -36,7 +38,8 @@ public sealed record CreateWorkOrderPartsUsageAliasRequest(
     string? Description,
     decimal QuantityRequested,
     string? UnitOfMeasure,
-    string? Notes);
+    string? Notes,
+    Guid? MaintenancePartId = null);
 
 public sealed record PublishWorkOrderPartsDemandRequest(
     bool CreatePurchaseRequestDraft = false);

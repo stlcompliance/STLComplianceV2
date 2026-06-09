@@ -1,0 +1,55 @@
+namespace MaintainArr.Api.Contracts;
+
+public sealed record MaintenancePartResponse(
+    Guid PartId,
+    string PartNumber,
+    string DisplayName,
+    string Description,
+    string CategoryKey,
+    string UnitOfMeasure,
+    string Status,
+    string SourceType,
+    string SourceLabel,
+    Guid? SupplyArrPartId,
+    string? ManufacturerName,
+    string? ManufacturerPartNumber,
+    string? SdsDocumentId,
+    string? ComplianceCoreMaterialKey,
+    IReadOnlyList<string> ComplianceCoreHazardKeys,
+    string? Notes,
+    string? CreatedByPersonId,
+    string? UpdatedByPersonId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateMaintenancePartRequest(
+    string PartNumber,
+    string DisplayName,
+    string? Description,
+    string? CategoryKey,
+    string? UnitOfMeasure,
+    string? Status,
+    string? SourceType,
+    Guid? SupplyArrPartId,
+    string? ManufacturerName,
+    string? ManufacturerPartNumber,
+    string? SdsDocumentId,
+    string? ComplianceCoreMaterialKey,
+    IReadOnlyList<string>? ComplianceCoreHazardKeys,
+    string? Notes);
+
+public sealed record UpdateMaintenancePartRequest(
+    string PartNumber,
+    string DisplayName,
+    string? Description,
+    string? CategoryKey,
+    string? UnitOfMeasure,
+    string? Status,
+    string? SourceType,
+    Guid? SupplyArrPartId,
+    string? ManufacturerName,
+    string? ManufacturerPartNumber,
+    string? SdsDocumentId,
+    string? ComplianceCoreMaterialKey,
+    IReadOnlyList<string>? ComplianceCoreHazardKeys,
+    string? Notes);

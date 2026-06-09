@@ -230,6 +230,133 @@ public static class PlatformSeeder
         "Data Sync Status"
     ];
 
+    private static readonly string[] StaffArrReferenceDatasetNames =
+    [
+        "Person Status",
+        "Employment Status",
+        "Work Relationship Type",
+        "Org Unit Type",
+        "Site Type",
+        "Location Type",
+        "Position Type",
+        "Team Type",
+        "Permission Template",
+        "Role Template",
+        "Restriction Type",
+        "Delegation Type",
+        "Incident Type",
+        "Readiness Status"
+    ];
+
+    private static readonly string[] TrainArrReferenceDatasetNames =
+    [
+        "Program Type",
+        "Program Status",
+        "Module Status",
+        "Step Status",
+        "Assignment Status",
+        "Qualification Status",
+        "Certificate Status",
+        "Evaluation Type",
+        "Signoff Role",
+        "Remediation Type",
+        "Expiration Reason",
+        "Training Requirement Type",
+        "Evidence Type"
+    ];
+
+    private static readonly string[] RoutArrReferenceDatasetNames =
+    [
+        "Dispatch Status",
+        "Route Status",
+        "Trip Status",
+        "Stop Status",
+        "Assignment Status",
+        "Equipment Type",
+        "Proof Type",
+        "Exception Type",
+        "ETA Status",
+        "Delivery Status",
+        "Dock Appointment Status",
+        "Readiness Status"
+    ];
+
+    private static readonly string[] LoadArrReferenceDatasetNames =
+    [
+        "Location Behavior",
+        "Receipt Status",
+        "Putaway Status",
+        "Reservation Status",
+        "Pick Status",
+        "Issue Status",
+        "Return Status",
+        "Transfer Status",
+        "Count Status",
+        "Adjustment Reason",
+        "Discrepancy Type",
+        "Inventory Status",
+        "Hold Reason"
+    ];
+
+    private static readonly string[] AssurArrReferenceDatasetNames =
+    [
+        "Nonconformance Type",
+        "Severity Level",
+        "Hold Type",
+        "Containment Type",
+        "Disposition Type",
+        "CAPA Type",
+        "Audit Type",
+        "Finding Type",
+        "Release Status",
+        "Complaint Type",
+        "Supplier Quality Issue Type",
+        "Verification Status"
+    ];
+
+    private static readonly string[] RecordArrReferenceDatasetNames =
+    [
+        "Document Type",
+        "Record Status",
+        "Retention Policy",
+        "Classification",
+        "Evidence Type",
+        "Package Type",
+        "Access Policy",
+        "Legal Hold Reason",
+        "OCR Template",
+        "Approval Status",
+        "Sharing Scope",
+        "Scan Type"
+    ];
+
+    private static readonly string[] ReportArrReferenceDatasetNames =
+    [
+        "Dataset Type",
+        "Dashboard Type",
+        "Metric Type",
+        "Schedule Frequency",
+        "Export Format",
+        "Freshness Status",
+        "Alert Type",
+        "Drilldown Type",
+        "Access Policy",
+        "Delivery Channel",
+        "Widget Type",
+        "Report Run Status"
+    ];
+
+    private static readonly string[] FieldCompanionReferenceDatasetNames =
+    [
+        "Task Type",
+        "Capture Type",
+        "Offline Action Type",
+        "Sync Status",
+        "Form Type",
+        "Scan Mode",
+        "Upload Mode"
+    ];
+
     private static readonly string[] ComplianceCoreReferenceDatasetNames =
     [
         "Governing Bodies",
@@ -940,6 +1067,78 @@ public static class PlatformSeeder
                 "Compliance Core");
         }
 
+        foreach (var datasetName in StaffArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"StaffArr {datasetName}"),
+                datasetName,
+                ResolveStaffArrReferenceDatasetCategory(datasetName),
+                "StaffArr");
+        }
+
+        foreach (var datasetName in TrainArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"TrainArr {datasetName}"),
+                datasetName,
+                ResolveTrainArrReferenceDatasetCategory(datasetName),
+                "TrainArr");
+        }
+
+        foreach (var datasetName in RoutArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"RoutArr {datasetName}"),
+                datasetName,
+                ResolveRoutArrReferenceDatasetCategory(datasetName),
+                "RoutArr");
+        }
+
+        foreach (var datasetName in LoadArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"LoadArr {datasetName}"),
+                datasetName,
+                ResolveLoadArrReferenceDatasetCategory(datasetName),
+                "LoadArr");
+        }
+
+        foreach (var datasetName in AssurArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"AssurArr {datasetName}"),
+                datasetName,
+                ResolveAssurArrReferenceDatasetCategory(datasetName),
+                "AssurArr");
+        }
+
+        foreach (var datasetName in RecordArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"RecordArr {datasetName}"),
+                datasetName,
+                ResolveRecordArrReferenceDatasetCategory(datasetName),
+                "RecordArr");
+        }
+
+        foreach (var datasetName in ReportArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"ReportArr {datasetName}"),
+                datasetName,
+                ResolveReportArrReferenceDatasetCategory(datasetName),
+                "ReportArr");
+        }
+
+        foreach (var datasetName in FieldCompanionReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"Field Companion {datasetName}"),
+                datasetName,
+                ResolveFieldCompanionReferenceDatasetCategory(datasetName),
+                "Field Companion");
+        }
+
         foreach (var dataset in SupplyArrReferenceDatasetNames)
         {
             yield return new ReferenceDatasetSeed(
@@ -949,6 +1148,113 @@ public static class PlatformSeeder
                 "SupplyArr");
         }
     }
+
+    private static string ResolveStaffArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Person Status" or "Employment Status" or "Readiness Status" => "people",
+            "Work Relationship Type" or "Org Unit Type" or "Position Type" or "Team Type" => "organization",
+            "Site Type" or "Location Type" => "location",
+            "Permission Template" or "Role Template" or "Restriction Type" or "Delegation Type" => "permission",
+            "Incident Type" => "incident",
+            _ => "reference"
+        };
+
+    private static string ResolveTrainArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Program Type" or "Program Status" or "Module Status" or "Step Status" => "training",
+            "Assignment Status" => "assignment",
+            "Qualification Status" or "Certificate Status" => "qualification",
+            "Evaluation Type" or "Signoff Role" => "evaluation",
+            "Remediation Type" or "Expiration Reason" => "remediation",
+            "Training Requirement Type" => "requirement",
+            "Evidence Type" => "evidence",
+            _ => "reference"
+        };
+
+    private static string ResolveRoutArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Dispatch Status" or "Route Status" or "Trip Status" or "Stop Status" or "Delivery Status" => "transportation",
+            "Assignment Status" => "assignment",
+            "Equipment Type" or "Readiness Status" => "equipment",
+            "Proof Type" => "proof",
+            "Exception Type" => "exception",
+            "ETA Status" => "eta",
+            "Dock Appointment Status" => "dock",
+            _ => "reference"
+        };
+
+    private static string ResolveLoadArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Location Behavior" => "warehouse",
+            "Receipt Status" => "receiving",
+            "Putaway Status" => "putaway",
+            "Reservation Status" or "Pick Status" or "Issue Status" or "Transfer Status" => "movement",
+            "Return Status" => "returns",
+            "Count Status" => "count",
+            "Adjustment Reason" or "Discrepancy Type" => "adjustment",
+            "Inventory Status" => "inventory",
+            "Hold Reason" => "hold",
+            _ => "reference"
+        };
+
+    private static string ResolveAssurArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Nonconformance Type" or "Complaint Type" or "Supplier Quality Issue Type" => "quality",
+            "Severity Level" => "severity",
+            "Hold Type" => "hold",
+            "Containment Type" => "containment",
+            "Disposition Type" => "disposition",
+            "CAPA Type" => "capa",
+            "Audit Type" or "Finding Type" => "audit",
+            "Release Status" => "release",
+            "Verification Status" => "verification",
+            _ => "reference"
+        };
+
+    private static string ResolveRecordArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Document Type" or "Classification" or "OCR Template" => "document",
+            "Record Status" or "Approval Status" => "record",
+            "Retention Policy" or "Legal Hold Reason" => "retention",
+            "Evidence Type" or "Package Type" => "evidence",
+            "Access Policy" or "Sharing Scope" => "access",
+            "Scan Type" => "scan",
+            _ => "reference"
+        };
+
+    private static string ResolveReportArrReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Dataset Type" or "Dashboard Type" or "Widget Type" => "dashboard",
+            "Metric Type" => "metric",
+            "Schedule Frequency" => "schedule",
+            "Export Format" => "export",
+            "Freshness Status" => "freshness",
+            "Alert Type" => "alert",
+            "Drilldown Type" => "drilldown",
+            "Access Policy" => "access",
+            "Delivery Channel" => "delivery",
+            "Report Run Status" => "run",
+            _ => "reference"
+        };
+
+    private static string ResolveFieldCompanionReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "Task Type" => "task",
+            "Capture Type" or "Scan Mode" => "capture",
+            "Offline Action Type" => "offline",
+            "Sync Status" => "sync",
+            "Form Type" => "form",
+            "Upload Mode" => "upload",
+            _ => "reference"
+        };
 
     private static string ResolveMaintainArrReferenceDatasetCategory(string datasetName) =>
         datasetName switch

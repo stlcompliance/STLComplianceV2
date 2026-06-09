@@ -23,27 +23,31 @@ public sealed class PlatformSeederTests
             .Select(x => new { x.Key, x.Name, x.OwnerService, x.Status })
             .ToListAsync();
 
-        Assert.True(datasets.Count > 200);
-        Assert.Contains(datasets, dataset =>
-            dataset.Key == "maintainarr-asset-class"
-            && dataset.Name == "Asset Class"
-            && dataset.OwnerService == "MaintainArr"
-            && dataset.Status == ReferenceDatasetStatuses.Ready);
-        Assert.Contains(datasets, dataset =>
-            dataset.Key == "compliancecore-governing-bodies"
-            && dataset.Name == "Governing Bodies"
-            && dataset.OwnerService == "Compliance Core"
-            && dataset.Status == ReferenceDatasetStatuses.Ready);
-        Assert.Contains(datasets, dataset =>
-            dataset.Key == "supplyarr-party"
-            && dataset.Name == "Party"
-            && dataset.OwnerService == "SupplyArr"
-            && dataset.Status == ReferenceDatasetStatuses.Ready);
-        Assert.Contains(datasets, dataset =>
-            dataset.Key == "compliancecore-governing-bodies"
-            && dataset.Name == "Governing Bodies"
-            && dataset.OwnerService == "Compliance Core"
-            && dataset.Status == ReferenceDatasetStatuses.Ready);
+        Assert.True(datasets.Count > 250);
+
+        var expectedDatasets = new[]
+        {
+            ("maintainarr-asset-class", "Asset Class", "MaintainArr"),
+            ("compliancecore-governing-bodies", "Governing Bodies", "Compliance Core"),
+            ("staffarr-person-status", "Person Status", "StaffArr"),
+            ("trainarr-program-type", "Program Type", "TrainArr"),
+            ("routarr-dispatch-status", "Dispatch Status", "RoutArr"),
+            ("loadarr-receipt-status", "Receipt Status", "LoadArr"),
+            ("assurarr-nonconformance-type", "Nonconformance Type", "AssurArr"),
+            ("recordarr-document-type", "Document Type", "RecordArr"),
+            ("reportarr-dataset-type", "Dataset Type", "ReportArr"),
+            ("field-companion-task-type", "Task Type", "Field Companion"),
+            ("supplyarr-party", "Party", "SupplyArr"),
+        };
+
+        foreach (var (key, name, ownerService) in expectedDatasets)
+        {
+            Assert.Contains(datasets, dataset =>
+                dataset.Key == key
+                && dataset.Name == name
+                && dataset.OwnerService == ownerService
+                && dataset.Status == ReferenceDatasetStatuses.Ready);
+        }
 
         var countAfterFirstSeed = datasets.Count;
         await PlatformSeeder.SeedInfrastructureAsync(db);

@@ -167,6 +167,29 @@ export function canRetireInspectionTemplates(
   return canManageInspectionTemplates(tenantRoleKey, isPlatformAdmin)
 }
 
+function hasPartsManageRole(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
+export function canReadParts(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadMaintenanceReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreateParts(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canUpdateParts(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canArchiveParts(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return hasPartsManageRole(tenantRoleKey, isPlatformAdmin)
+}
+
 function hasPartsKitManageRole(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(

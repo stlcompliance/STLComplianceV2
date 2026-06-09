@@ -3664,3 +3664,45 @@ export interface MaintenancePlatformEventProcessingRunItem {
 export interface MaintenancePlatformEventProcessingRunsResponse {
   items: MaintenancePlatformEventProcessingRunItem[]
 }
+
+export interface MaintenancePartResponse {
+  partId: string
+  partNumber: string
+  displayName: string
+  description: string
+  categoryKey: string
+  unitOfMeasure: string
+  status: string
+  sourceType: string
+  sourceLabel: string
+  supplyArrPartId: string | null
+  manufacturerName: string | null
+  manufacturerPartNumber: string | null
+  sdsDocumentId: string | null
+  complianceCoreMaterialKey: string | null
+  complianceCoreHazardKeys: string[]
+  notes: string | null
+  createdByPersonId: string | null
+  updatedByPersonId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateMaintenancePartRequest {
+  partNumber: string
+  displayName: string
+  description?: string | null
+  categoryKey?: string | null
+  unitOfMeasure?: string | null
+  status?: string | null
+  sourceType?: string | null
+  supplyArrPartId?: string | null
+  manufacturerName?: string | null
+  manufacturerPartNumber?: string | null
+  sdsDocumentId?: string | null
+  complianceCoreMaterialKey?: string | null
+  complianceCoreHazardKeys?: string[] | null
+  notes?: string | null
+}
+
+export interface UpdateMaintenancePartRequest extends CreateMaintenancePartRequest {}

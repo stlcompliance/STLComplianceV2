@@ -69,6 +69,15 @@ export const maintainarrNavItems: ProductNavItem[] = [
       { label: 'Create', to: '/inspection-templates/create', icon: StickyNote as NavIcon },
     ],
   },
+  {
+    label: 'Parts',
+    to: '/parts',
+    icon: Package as NavIcon,
+    children: [
+      { label: 'Details', to: '/parts', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/parts/create', icon: StickyNote as NavIcon },
+    ],
+  },
   { label: 'Parts kits', to: '/parts-kits', icon: Package as NavIcon },
   { label: 'History', to: '/history', icon: History as NavIcon },
   { label: 'Downtime', to: '/downtime', icon: TimerOff as NavIcon },

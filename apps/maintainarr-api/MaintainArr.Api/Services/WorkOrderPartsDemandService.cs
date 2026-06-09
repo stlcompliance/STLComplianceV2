@@ -77,6 +77,21 @@ public sealed class WorkOrderPartsDemandService(
     {
         var workOrder = await GetEditableWorkOrderAsync(tenantId, workOrderId, cancellationToken);
         ValidateLineRequest(request);
+        var maintenancePart = request.MaintenancePartId.HasValue
+            ? await db.MaintenanceParts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == request.MaintenancePartId.Value,
+                    cancellationToken)
+            : null;
+
+        if (request.MaintenancePartId.HasValue && maintenancePart is null)
+        {
+            throw new StlApiException(
+                "work_order_parts_demand.maintenance_part_not_found",
+                "The selected maintenance part profile was not found.",
+                404);
+        }
 
         var now = DateTimeOffset.UtcNow;
         var entity = new WorkOrderPartsDemandLine
@@ -85,11 +100,14 @@ public sealed class WorkOrderPartsDemandService(
             TenantId = tenantId,
             WorkOrderId = workOrderId,
             LineNumber = await GetNextLineNumberAsync(tenantId, workOrderId, cancellationToken),
-            SupplyarrPartId = request.SupplyarrPartId,
-            PartNumber = NormalizePartNumber(request.PartNumber, request.SupplyarrPartId),
-            Description = request.Description?.Trim() ?? string.Empty,
+            MaintenancePartId = maintenancePart?.Id,
+            SupplyarrPartId = maintenancePart?.SupplyArrPartId ?? request.SupplyarrPartId,
+            PartNumber = maintenancePart?.PartNumber ?? NormalizePartNumber(request.PartNumber, request.SupplyarrPartId),
+            Description = ResolveLineDescription(request.Description, maintenancePart),
             QuantityRequested = request.QuantityRequested,
-            UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure),
+            UnitOfMeasure = maintenancePart is null
+                ? NormalizeUnitOfMeasure(request.UnitOfMeasure)
+                : NormalizeUnitOfMeasure(string.IsNullOrWhiteSpace(request.UnitOfMeasure) ? maintenancePart.UnitOfMeasure : request.UnitOfMeasure),
             Notes = request.Notes?.Trim() ?? string.Empty,
             Status = WorkOrderPartsDemandStatuses.Pending,
             CreatedByUserId = actorUserId,
@@ -222,7 +240,8 @@ public sealed class WorkOrderPartsDemandService(
             entity.QuantityReceived,
             entity.ProcurementStatusMessage,
             entity.LastProcurementStatusAt,
-            entity.CreatedAt);
+            entity.CreatedAt,
+            entity.MaintenancePartId);
 
     private async Task EnsureWorkOrderExistsAsync(
         Guid tenantId,
@@ -281,11 +300,13 @@ public sealed class WorkOrderPartsDemandService(
                 400);
         }
 
-        if (!request.SupplyarrPartId.HasValue && string.IsNullOrWhiteSpace(request.PartNumber))
+        if (!request.MaintenancePartId.HasValue
+            && !request.SupplyarrPartId.HasValue
+            && string.IsNullOrWhiteSpace(request.PartNumber))
         {
             throw new StlApiException(
                 "work_order_parts_demand.part_required",
-                "Either a SupplyArr part id or part number is required.",
+                "A maintenance part profile, SupplyArr part id, or part number is required.",
                 400);
         }
     }
@@ -321,6 +342,28 @@ public sealed class WorkOrderPartsDemandService(
         }
 
         return normalized;
+    }
+
+    private static string ResolveLineDescription(
+        string? requestDescription,
+        MaintenancePart? maintenancePart)
+    {
+        if (!string.IsNullOrWhiteSpace(requestDescription))
+        {
+            return requestDescription.Trim();
+        }
+
+        if (maintenancePart is null)
+        {
+            return string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(maintenancePart.Description))
+        {
+            return maintenancePart.Description;
+        }
+
+        return maintenancePart.DisplayName;
     }
 
     public async Task<IngestPartIssueEventResponse> RecordIssueAsync(

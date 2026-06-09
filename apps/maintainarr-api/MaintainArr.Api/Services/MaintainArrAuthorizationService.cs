@@ -119,6 +119,35 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequirePartsRead(ClaimsPrincipal principal) => RequireWorkOrdersRead(principal);
+
+    public void RequirePartsCreate(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Maintenance part profile creation requires MaintainArr manager or administrator access.",
+            403);
+    }
+
+    public void RequirePartsUpdate(ClaimsPrincipal principal) => RequirePartsCreate(principal);
+
+    public void RequirePartsArchive(ClaimsPrincipal principal) => RequirePartsCreate(principal);
+
     public void RequirePartsKitsRead(ClaimsPrincipal principal) => RequirePmRead(principal);
 
     public void RequirePartsKitsPreview(ClaimsPrincipal principal) => RequirePartsKitsRead(principal);
