@@ -61,6 +61,39 @@ function countCompletedFields(fields: FieldMetadataResponse[], values: AssetFiel
   }).length
 }
 
+const vinPreviewAllowedCharacters = /^[A-HJ-NPR-Z0-9]+$/
+
+function getVinPreviewState(vin: string): { normalizedVin: string; validationMessage: string | null } {
+  const normalizedVin = vin.trim().toUpperCase().replace(/\s+/g, '')
+  if (!normalizedVin) {
+    return { normalizedVin, validationMessage: null }
+  }
+
+  if (normalizedVin.length < 3) {
+    return {
+      normalizedVin,
+      validationMessage: 'Enter at least 3 VIN characters to start the preview.',
+    }
+  }
+
+  if (normalizedVin.length > 17) {
+    return {
+      normalizedVin,
+      validationMessage: 'VIN preview supports up to 17 characters.',
+    }
+  }
+
+  if (!vinPreviewAllowedCharacters.test(normalizedVin)) {
+    return {
+      normalizedVin,
+      validationMessage:
+        'VIN preview supports letters and numbers only. Remove separators or unsupported characters to run the decode.',
+    }
+  }
+
+  return { normalizedVin, validationMessage: null }
+}
+
 export function AssetCreatePage() {
   const session = loadSession()
   const navigate = useNavigate()
@@ -104,6 +137,7 @@ export function AssetCreatePage() {
   }, [values])
   const deferredVinValue = useDeferredValue(currentVinValue)
   const deferredModelYear = useDeferredValue(currentModelYear)
+  const deferredVinPreview = useMemo(() => getVinPreviewState(deferredVinValue), [deferredVinValue])
   const baselineComplete = fieldset ? isCreateBaselineComplete(fieldset, values) : false
   const allSteps = useMemo(
     () => (fieldset ? getCreateWorkflowSteps(fieldset, values) : []),
@@ -135,9 +169,13 @@ export function AssetCreatePage() {
   })
 
   const vinDecodeQuery = useQuery({
-    queryKey: ['maintainarr-vin-decode', deferredVinValue, deferredModelYear],
-    queryFn: () => decodeVin(session!.accessToken, { vin: deferredVinValue, modelYear: deferredModelYear }),
-    enabled: Boolean(session?.accessToken && deferredVinValue.length >= 3),
+    queryKey: ['maintainarr-vin-decode', deferredVinPreview.normalizedVin, deferredModelYear],
+    queryFn: () =>
+      decodeVin(session!.accessToken, {
+        vin: deferredVinPreview.normalizedVin,
+        modelYear: deferredModelYear,
+      }),
+    enabled: Boolean(session?.accessToken && !deferredVinPreview.validationMessage && deferredVinPreview.normalizedVin),
     retry: false,
   })
 
@@ -263,9 +301,12 @@ export function AssetCreatePage() {
           <AssetVinDecodePanel
             vin={deferredVinValue}
             modelYear={deferredModelYear}
-            result={vinDecodeQuery.data ?? null}
-            isLoading={vinDecodeQuery.isFetching}
-            error={vinDecodeQuery.error instanceof Error ? vinDecodeQuery.error.message : null}
+            result={deferredVinPreview.validationMessage ? null : vinDecodeQuery.data ?? null}
+            isLoading={deferredVinPreview.validationMessage ? false : vinDecodeQuery.isFetching}
+            error={
+              deferredVinPreview.validationMessage
+              ?? (vinDecodeQuery.error instanceof Error ? vinDecodeQuery.error.message : null)
+            }
           />
 
           <div className="sticky bottom-0 z-10 rounded-xl border border-slate-800 bg-slate-950/95 p-4 shadow-2xl">

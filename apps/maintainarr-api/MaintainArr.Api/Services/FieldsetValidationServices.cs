@@ -11,7 +11,6 @@ namespace MaintainArr.Api.Services;
 public sealed class FieldsetService(
     MaintainArrDbContext db,
     CatalogService catalogService,
-    CatalogSeedService catalogSeedService,
     IEnumerable<IExternalReferenceAdapter> adapters)
 {
     private readonly Dictionary<string, IExternalReferenceAdapter> _adapters = adapters.ToDictionary(x => x.SourceType, StringComparer.OrdinalIgnoreCase);
@@ -30,8 +29,6 @@ public sealed class FieldsetService(
 
     public async Task<FieldsetResponse> GetFieldsetAsync(Guid tenantId, string key, string purpose, CancellationToken cancellationToken)
     {
-        await catalogSeedService.EnsureSeededForTenantAsync(tenantId, cancellationToken);
-
         var definition = await db.FieldsetDefinitions.AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Key == key && x.Purpose == purpose && x.IsActive, cancellationToken)
             ?? throw new StlApiException("fieldset.not_found", $"Fieldset '{key}:{purpose}' was not found.", 404);

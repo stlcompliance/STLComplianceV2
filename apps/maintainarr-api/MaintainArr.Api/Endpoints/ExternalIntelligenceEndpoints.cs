@@ -192,7 +192,7 @@ public static class ExternalIntelligenceEndpoints
         group.MapPost("/vin/decode", async (
             ExternalVinDecodeRequest request,
             Guid? assetId,
-            bool persist,
+            bool? persist,
             HttpContext context,
             MaintainArrAuthorizationService authorization,
             ExternalIntelligenceService service,
@@ -200,7 +200,13 @@ public static class ExternalIntelligenceEndpoints
         {
             authorization.RequireAssetsManage(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.DecodeVinAsync(tenantId, request.Vin, request.ModelYear, assetId, persist, cancellationToken));
+            return Results.Ok(await service.DecodeVinAsync(
+                tenantId,
+                request.Vin,
+                request.ModelYear,
+                assetId,
+                persist ?? false,
+                cancellationToken));
         })
         .WithName($"DecodeVin{nameSuffix}");
 

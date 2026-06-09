@@ -578,16 +578,15 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
     }
 
     private static CatalogService BuildCatalogService(MaintainArrDbContext db, CatalogSeedService seed) =>
-        new(db, seed);
+        new(db);
 
     private static FieldsetService BuildFieldsetService(
         MaintainArrDbContext db,
         CatalogService catalogService,
-        CatalogSeedService seed,
         string staffArrServiceToken = "maintainarr-to-staffarr-sites")
     {
         var adapters = BuildAdapters(db, staffArrServiceToken);
-        return new FieldsetService(db, catalogService, seed, adapters);
+        return new FieldsetService(db, catalogService, adapters);
     }
 
     private static ControlledValueValidationService BuildValidator(

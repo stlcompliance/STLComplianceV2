@@ -162,13 +162,10 @@ public sealed class SupplyArrReferenceAdapter(MaintainArrDbContext db) : IExtern
 }
 
 public sealed class CatalogService(
-    MaintainArrDbContext db,
-    CatalogSeedService catalogSeedService)
+    MaintainArrDbContext db)
 {
     public async Task<IReadOnlyList<CatalogResponse>> ListAsync(Guid tenantId, string[]? keys, CancellationToken cancellationToken)
     {
-        await catalogSeedService.EnsureSeededForTenantAsync(tenantId, cancellationToken);
-
         var query = db.CatalogDefinitions.AsNoTracking().Where(x => x.TenantId == tenantId && x.IsActive);
         if (keys is { Length: > 0 })
         {
@@ -217,7 +214,6 @@ public sealed class CatalogService(
 
     public async Task<CatalogResponse> GetAsync(Guid tenantId, string key, CancellationToken cancellationToken)
     {
-        await catalogSeedService.EnsureSeededForTenantAsync(tenantId, cancellationToken);
         var catalog = (await ListAsync(tenantId, [key], cancellationToken)).FirstOrDefault();
         return catalog ?? throw new StlApiException("catalog.not_found", $"Catalog '{key}' was not found.", 404);
     }

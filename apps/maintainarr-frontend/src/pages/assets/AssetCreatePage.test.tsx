@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AssetCreatePage } from './AssetCreatePage'
@@ -243,6 +243,7 @@ function renderCreatePage() {
 
 describe('AssetCreatePage', () => {
   afterEach(() => {
+    cleanup()
     sessionStorage.clear()
     vi.restoreAllMocks()
   })
@@ -310,5 +311,96 @@ describe('AssetCreatePage', () => {
     expect(await screen.findByText('Created detail route')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/fieldsets/assets/create', expect.any(Object))
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/assets', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('shows a local validation hint instead of calling VIN decode for unsupported characters', async () => {
+    sessionStorage.setItem('stl.maintainarr.session', JSON.stringify(session))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url === '/api/me') {
+        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrEntitlement: true, entitlements: ['maintainarr'] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      if (url === '/api/v1/fieldsets/assets/create') {
+        return new Response(JSON.stringify(createFieldset), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } })
+    })
+
+    renderCreatePage()
+
+    fireEvent.change(await screen.findByLabelText('Unit / Asset Number *'), { target: { value: 'TRK-100' } })
+    fireEvent.change(screen.getByLabelText('Asset Class *'), { target: { value: 'vehicle' } })
+    fireEvent.change(screen.getByLabelText('Asset Type *'), { target: { value: 'pickup' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /next/i })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    fireEvent.change(await screen.findByLabelText('VIN'), { target: { value: '1FT-ABC' } })
+
+    expect(await screen.findByText('VIN preview supports letters and numbers only. Remove separators or unsupported characters to run the decode.')).toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input).startsWith('/api/v1/external-intelligence/vin/decode')),
+    ).toBe(false)
+  })
+
+  it('normalizes supported VIN preview input before calling decode', async () => {
+    sessionStorage.setItem('stl.maintainarr.session', JSON.stringify(session))
+    let decodeBody: { vin: string; modelYear: number | null } | null = null
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      if (url === '/api/me') {
+        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrEntitlement: true, entitlements: ['maintainarr'] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      if (url === '/api/v1/fieldsets/assets/create') {
+        return new Response(JSON.stringify(createFieldset), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      if (url === '/api/v1/external-intelligence/vin/decode' && init?.method === 'POST') {
+        decodeBody = JSON.parse(String(init.body))
+        return new Response(JSON.stringify({
+          providerKey: 'nhtsa',
+          vin: '1FTFW1E58',
+          normalizedVin: '1FTFW1E58',
+          modelYear: null,
+          isPartial: true,
+          searchCriteria: 'VIN:1FTFW1E58',
+          message: 'Decode completed with partial reference coverage.',
+          errorCode: null,
+          errorText: null,
+          additionalErrorText: null,
+          decodedFields: { Make: 'Ford', Model: 'F-150' },
+          suggestions: [],
+          identifiers: [],
+          snapshotId: null,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } })
+    })
+
+    renderCreatePage()
+
+    fireEvent.change(await screen.findByLabelText('Unit / Asset Number *'), { target: { value: 'TRK-100' } })
+    fireEvent.change(screen.getByLabelText('Asset Class *'), { target: { value: 'vehicle' } })
+    fireEvent.change(screen.getByLabelText('Asset Type *'), { target: { value: 'pickup' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /next/i })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    fireEvent.change(await screen.findByLabelText('VIN'), { target: { value: '1ft fw1e58' } })
+
+    await screen.findByText('Search criteria: VIN:1FTFW1E58')
+    expect(decodeBody).toEqual({ vin: '1FTFW1E58', modelYear: null })
   })
 })

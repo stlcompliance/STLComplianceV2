@@ -1,10 +1,49 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
+import { downloadBlob } from '../../components/platform-admin/audit-export/utils'
 import { useToast } from '../../feedback'
 
 const MASTER_CSV_DATASET_KEY = 'master-reference-intake'
+const MASTER_CSV_TEMPLATE_FILE_NAME = 'nexarr-reference-data-master-import-template.csv'
+const MASTER_CSV_TEMPLATE_HEADERS = [
+  'dataset_key',
+  'entity_type',
+  'canonical_key',
+  'display_name',
+  'source_system',
+  'source_key',
+  'confidence',
+  'external_id',
+  'external_name',
+  'notes',
+] as const
+const MASTER_CSV_TEMPLATE_SAMPLE_ROW = [
+  'vehicle-taxonomy',
+  'vehicle',
+  'fleet-truck-001',
+  'Fleet Truck 001',
+  'legacy-catalog',
+  'truck-001',
+  '0.95',
+  'VIN-12345',
+  'Ford F-450',
+  'Replace or remove this sample row before upload.',
+] as const
+
+function buildCsvRow(values: readonly string[]) {
+  return values
+    .map((value) => {
+      const escaped = value.replaceAll('"', '""')
+      return /[",\n]/.test(value) ? `"${escaped}"` : escaped
+    })
+    .join(',')
+}
+
+function buildMasterCsvTemplate() {
+  return [MASTER_CSV_TEMPLATE_HEADERS, MASTER_CSV_TEMPLATE_SAMPLE_ROW].map(buildCsvRow).join('\n')
+}
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
@@ -101,6 +140,13 @@ export function ReferenceDataPage() {
   const [publishDatasetId, setPublishDatasetId] = useState('')
   const [publishSummary, setPublishSummary] = useState('')
 
+  const downloadMasterCsvTemplate = () => {
+    downloadBlob(
+      new Blob([buildMasterCsvTemplate()], { type: 'text/csv;charset=utf-8' }),
+      MASTER_CSV_TEMPLATE_FILE_NAME,
+    )
+  }
+
   const dashboardQuery = useQuery({
     queryKey: ['platform-admin-reference-data-dashboard'],
     queryFn: () => nexarr.getReferenceDataDashboard(),
@@ -131,10 +177,17 @@ export function ReferenceDataPage() {
     queryFn: () => nexarr.listReferencePublishHistory(),
   })
 
+  const resolvedImportDatasetId =
+    importDatasetId || datasetsQuery.data?.find((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)?.id || ''
+  const resolvedImportSourceId = importSourceId || sourcesQuery.data?.[0]?.id || ''
+  const resolvedPublishDatasetId =
+    publishDatasetId || datasetsQuery.data?.find((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)?.id || ''
+  const resolvedSelectedImportId = selectedImportId || importsQuery.data?.[0]?.id || ''
+
   const stagingRecordsQuery = useQuery({
-    queryKey: ['platform-admin-reference-data-staging-records', selectedImportId],
-    queryFn: () => nexarr.listReferenceStagingRecords(selectedImportId),
-    enabled: Boolean(selectedImportId),
+    queryKey: ['platform-admin-reference-data-staging-records', resolvedSelectedImportId],
+    queryFn: () => nexarr.listReferenceStagingRecords(resolvedSelectedImportId),
+    enabled: Boolean(resolvedSelectedImportId),
   })
 
   const datasetOptions = useMemo(
@@ -156,30 +209,6 @@ export function ReferenceDataPage() {
       })),
     [sourcesQuery.data],
   )
-
-  useEffect(() => {
-    if (!importDatasetId && datasetOptions.length > 0) {
-      setImportDatasetId(datasetOptions[0].value)
-    }
-  }, [datasetOptions, importDatasetId])
-
-  useEffect(() => {
-    if (!importSourceId && sourceOptions.length > 0) {
-      setImportSourceId(sourceOptions[0].value)
-    }
-  }, [sourceOptions, importSourceId])
-
-  useEffect(() => {
-    if (!publishDatasetId && datasetOptions.length > 0) {
-      setPublishDatasetId(datasetOptions[0].value)
-    }
-  }, [datasetOptions, publishDatasetId])
-
-  useEffect(() => {
-    if (!selectedImportId && importsQuery.data?.length) {
-      setSelectedImportId(importsQuery.data[0].id)
-    }
-  }, [importsQuery.data, selectedImportId])
 
   const refreshAll = async () => {
     await Promise.all([
@@ -244,8 +273,8 @@ export function ReferenceDataPage() {
   const createImportMutation = useMutation({
     mutationFn: () =>
       nexarr.createReferenceImport({
-        datasetId: importDatasetId,
-        sourceId: importSourceId,
+        datasetId: resolvedImportDatasetId,
+        sourceId: resolvedImportSourceId,
         tenantId: null,
         requestedByPersonId: null,
         rawObjectKey: importObjectKey.trim() || null,
@@ -334,7 +363,7 @@ export function ReferenceDataPage() {
   const crosswalks = crosswalksQuery.data ?? []
   const publishHistory = publishHistoryQuery.data ?? []
   const stagingRecords = stagingRecordsQuery.data ?? []
-  const selectedImport = imports.find((item) => item.id === selectedImportId) ?? null
+  const selectedImport = imports.find((item) => item.id === resolvedSelectedImportId) ?? null
   const selectedImportIsMasterCsv = selectedImport?.datasetKey === MASTER_CSV_DATASET_KEY
 
   const resolveRowTargetDatasetId = (record: (typeof stagingRecords)[number]) =>
@@ -546,7 +575,7 @@ export function ReferenceDataPage() {
             <div className="mt-3 space-y-3">
               <Field label="Dataset">
                 <select
-                  value={importDatasetId}
+                  value={resolvedImportDatasetId}
                   onChange={(event) => setImportDatasetId(event.target.value)}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 >
@@ -559,7 +588,7 @@ export function ReferenceDataPage() {
               </Field>
               <Field label="Source">
                 <select
-                  value={importSourceId}
+                  value={resolvedImportSourceId}
                   onChange={(event) => setImportSourceId(event.target.value)}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 >
@@ -589,7 +618,7 @@ export function ReferenceDataPage() {
               <button
                 type="button"
                 disabled={
-                  createImportMutation.isPending || !importDatasetId || !importSourceId
+                  createImportMutation.isPending || !resolvedImportDatasetId || !resolvedImportSourceId
                 }
                 onClick={() => createImportMutation.mutate()}
                 className="w-full rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
@@ -608,7 +637,7 @@ export function ReferenceDataPage() {
                 </Field>
                 <div className="mt-3 flex gap-2">
                   <select
-                    value={publishDatasetId}
+                    value={resolvedPublishDatasetId}
                     onChange={(event) => setPublishDatasetId(event.target.value)}
                     className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
                   >
@@ -620,10 +649,10 @@ export function ReferenceDataPage() {
                   </select>
                   <button
                     type="button"
-                    disabled={publishMutation.isPending || !publishDatasetId}
+                    disabled={publishMutation.isPending || !resolvedPublishDatasetId}
                     onClick={() =>
                       publishMutation.mutate({
-                        datasetId: publishDatasetId,
+                        datasetId: resolvedPublishDatasetId,
                         summary: publishSummary || 'Published from platform admin',
                       })
                     }
@@ -664,23 +693,35 @@ export function ReferenceDataPage() {
               <p className="text-xs text-slate-500">
                 Selected file: {masterCsvFile?.name ?? 'No file selected'}
               </p>
-              <button
-                type="button"
-                disabled={createMasterCsvImportMutation.isPending || !masterCsvFile}
-                onClick={() => createMasterCsvImportMutation.mutate()}
-                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
-              >
-                {createMasterCsvImportMutation.isPending ? 'Uploading…' : 'Upload master CSV'}
-              </button>
+              <p className="text-xs text-slate-500">
+                Download the template to start with the recommended columns and a removable sample row.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={downloadMasterCsvTemplate}
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Download template CSV
+                </button>
+                <button
+                  type="button"
+                  disabled={createMasterCsvImportMutation.isPending || !masterCsvFile}
+                  onClick={() => createMasterCsvImportMutation.mutate()}
+                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                >
+                  {createMasterCsvImportMutation.isPending ? 'Uploading…' : 'Upload master CSV'}
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <h4 className="text-sm font-semibold text-stl-navy">Expected columns</h4>
+            <h4 className="text-sm font-semibold text-stl-navy">Template and accepted columns</h4>
             <ul className="mt-3 space-y-2">
-              <li><span className="font-medium text-slate-700">Routing:</span> product, dataset, dataset_key, or product + dataset</li>
+              <li><span className="font-medium text-slate-700">Routing:</span> template uses dataset_key; product + dataset aliases also work</li>
               <li><span className="font-medium text-slate-700">Identity:</span> entity_type, canonical_key, display_name</li>
-              <li><span className="font-medium text-slate-700">Optional:</span> source_system, source_key, confidence, fields_json</li>
+              <li><span className="font-medium text-slate-700">Optional:</span> source_system, source_key, confidence, plus any extra columns you want reviewers to see</li>
               <li><span className="font-medium text-slate-700">Review:</span> imported rows are staged first, then approved row by row</li>
             </ul>
           </div>
@@ -807,7 +848,7 @@ export function ReferenceDataPage() {
                   type="button"
                   onClick={() => setSelectedImportId(entry.id)}
                   className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                    selectedImportId === entry.id
+                    resolvedSelectedImportId === entry.id
                       ? 'border-stl-teal bg-white shadow-sm'
                       : 'border-slate-200 bg-white hover:bg-slate-100'
                   }`}
