@@ -16,6 +16,7 @@ vi.mock('../../api/nexarrClient', () => ({
   createReferenceDataset: vi.fn(),
   createReferenceSource: vi.fn(),
   createReferenceImport: vi.fn(),
+  createReferenceMasterCsvImport: vi.fn(),
   publishReferenceDataset: vi.fn(),
   approveReferenceStagingRecord: vi.fn(),
   rejectReferenceStagingRecord: vi.fn(),
@@ -59,7 +60,7 @@ describe('ReferenceDataPage', () => {
         key: 'vehicle-taxonomy',
         name: 'Vehicle Taxonomy',
         category: 'vehicle',
-        ownerService: 'ReferenceDataCore',
+        ownerService: 'MaintainArr',
         status: 'published',
         currentPublishedVersion: 'v1',
         sourceCount: 1,
@@ -122,6 +123,10 @@ describe('ReferenceDataPage', () => {
         datasetKey: 'vehicle-taxonomy',
         sourceId: 'source-1',
         sourceKey: 'nhtsa-vpic',
+        targetDatasetId: 'dataset-1',
+        targetDatasetKey: 'vehicle-taxonomy',
+        targetDatasetName: 'Vehicle Taxonomy',
+        targetOwnerService: 'MaintainArr',
         rowNumber: 1,
         rawPayloadJson: '{}',
         normalizedPayloadJson: '{}',
@@ -146,6 +151,7 @@ describe('ReferenceDataPage', () => {
     expect(await screen.findByText('Reference data')).toBeTruthy()
     expect(screen.getAllByText('Vehicle Taxonomy').length).toBeGreaterThan(0)
     expect(screen.getAllByText('NHTSA vPIC').length).toBeGreaterThan(0)
+    expect(await screen.findByText('Upload master CSV')).toBeTruthy()
     expect(await screen.findByRole('button', { name: 'Approve' })).toBeTruthy()
   })
 })

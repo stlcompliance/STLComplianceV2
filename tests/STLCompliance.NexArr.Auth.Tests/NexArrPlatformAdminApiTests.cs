@@ -126,6 +126,110 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_can_upload_master_csv_and_assign_rows_before_upsert()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var csv = string.Join('\n', new[]
+        {
+            "product,dataset,entity_type,canonical_key,display_name",
+            "MaintainArr,Asset Class,asset_class,asset-class,Asset Class",
+            "Party,,,,Vendor A",
+        });
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/platform-admin/reference-data/imports/master-csv", token);
+        createRequest.Content = JsonContent.Create(new CreateReferenceMasterCsvImportRequest(
+            csv,
+            "master-reference.csv",
+            "seed/reference/master-reference.csv"));
+
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ReferenceImportResponse>())!;
+        Assert.Equal(ReferenceImportStatuses.ReviewRequired, created.Status);
+        Assert.Equal(2, created.StagingRecordCount);
+        Assert.Equal(2, created.PendingReviewCount);
+
+        var stagingResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/platform-admin/reference-data/imports/{created.Id}/staging-records", token));
+        stagingResponse.EnsureSuccessStatusCode();
+        var staged = (await stagingResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReferenceStagingRecordResponse>>())!;
+        Assert.Equal(2, staged.Count);
+
+        var resolvedRow = Assert.Single(staged, row => row.TargetDatasetKey == "maintainarr-asset-class");
+        Assert.Equal("MaintainArr", resolvedRow.TargetOwnerService);
+
+        var unresolvedRow = Assert.Single(staged, row => row.TargetDatasetId is null);
+
+        var resolvedApprove = Authorized(
+            HttpMethod.Post,
+            $"/api/platform-admin/reference-data/staging-records/{resolvedRow.Id}/approve",
+            token);
+        resolvedApprove.Content = JsonContent.Create(new ReviewDecisionRequest(
+            "Auto-assigned from CSV",
+            null,
+            null,
+            null,
+            null,
+            null,
+            resolvedRow.TargetDatasetId));
+        var resolvedApproveResponse = await _client.SendAsync(resolvedApprove);
+        resolvedApproveResponse.EnsureSuccessStatusCode();
+
+        var unresolvedApprove = Authorized(
+            HttpMethod.Post,
+            $"/api/platform-admin/reference-data/staging-records/{unresolvedRow.Id}/approve",
+            token);
+        unresolvedApprove.Content = JsonContent.Create(new ReviewDecisionRequest(
+            "Assign the row manually",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var unresolvedApproveResponse = await _client.SendAsync(unresolvedApprove);
+        Assert.Equal(HttpStatusCode.BadRequest, unresolvedApproveResponse.StatusCode);
+
+        Guid partyDatasetId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            partyDatasetId = await db.ReferenceDatasets
+                .Where(x => x.Key == "supplyarr-party")
+                .Select(x => x.Id)
+                .SingleAsync();
+        }
+
+        var resolveAndApprove = Authorized(
+            HttpMethod.Post,
+            $"/api/platform-admin/reference-data/staging-records/{unresolvedRow.Id}/approve",
+            token);
+        resolveAndApprove.Content = JsonContent.Create(new ReviewDecisionRequest(
+            "Assign the row manually",
+            "Vendor A",
+            "vendor-a",
+            null,
+            null,
+            null,
+            partyDatasetId));
+        var resolveAndApproveResponse = await _client.SendAsync(resolveAndApprove);
+        resolveAndApproveResponse.EnsureSuccessStatusCode();
+        var approved = (await resolveAndApproveResponse.Content.ReadFromJsonAsync<ReferenceStagingRecordResponse>())!;
+        Assert.Equal(partyDatasetId, approved.TargetDatasetId);
+        Assert.Equal("supplyarr-party", approved.TargetDatasetKey);
+
+        var importAfterReview = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/platform-admin/reference-data/imports/{created.Id}", token));
+        importAfterReview.EnsureSuccessStatusCode();
+        var reviewed = (await importAfterReview.Content.ReadFromJsonAsync<ReferenceImportResponse>())!;
+        Assert.Equal(ReferenceImportStatuses.Completed, reviewed.Status);
+        Assert.Equal(0, reviewed.PendingReviewCount);
+        Assert.Equal(2, reviewed.ApprovedCount);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_read_launch_diagnostics()
     {
         await SeedDatabaseAsync();

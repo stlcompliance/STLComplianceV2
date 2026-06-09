@@ -506,6 +506,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
         {
             entity.ToTable("staging_records");
             entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TargetDatasetId);
             entity.Property(x => x.RawPayloadJson).HasColumnType("jsonb").IsRequired();
             entity.Property(x => x.NormalizedPayloadJson).HasColumnType("jsonb").IsRequired();
             entity.Property(x => x.ProposedEntityType).HasMaxLength(64).IsRequired();
@@ -515,6 +516,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => x.JobId);
             entity.HasIndex(x => new { x.Status, x.Confidence });
             entity.HasOne(x => x.Job).WithMany().HasForeignKey(x => x.JobId);
+            entity.HasOne(x => x.TargetDataset).WithMany().HasForeignKey(x => x.TargetDatasetId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.ReviewerPersonId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId).OnDelete(DeleteBehavior.SetNull);
         });

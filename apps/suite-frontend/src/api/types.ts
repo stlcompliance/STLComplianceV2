@@ -224,6 +224,10 @@ export interface ReferenceStagingRecordResponse {
   datasetKey: string
   sourceId: string
   sourceKey: string
+  targetDatasetId: string | null
+  targetDatasetKey: string | null
+  targetDatasetName: string | null
+  targetOwnerService: string | null
   rowNumber: number | null
   rawPayloadJson: string
   normalizedPayloadJson: string
@@ -246,6 +250,7 @@ export interface ReviewDecisionRequest {
   normalizedFieldsJson: string | null
   sourceEvidenceJson: string | null
   effectiveDate: string | null
+  targetDatasetId: string | null
 }
 
 export interface ReferenceCrosswalkResponse {
@@ -299,6 +304,12 @@ export interface CreateReferenceDatasetInputRequest {
   fileName?: string | null
   value?: string | null
   valuesText?: string | null
+}
+
+export interface CreateReferenceMasterCsvImportRequest {
+  csvText: string
+  fileName?: string | null
+  rawObjectKey?: string | null
 }
 
 export interface CreateReferenceImportRequest {

@@ -76,6 +76,10 @@ public sealed record ReferenceStagingRecordResponse(
     string DatasetKey,
     Guid SourceId,
     string SourceKey,
+    Guid? TargetDatasetId,
+    string? TargetDatasetKey,
+    string? TargetDatasetName,
+    string? TargetOwnerService,
     int? RowNumber,
     string RawPayloadJson,
     string NormalizedPayloadJson,
@@ -96,7 +100,8 @@ public sealed record ReviewDecisionRequest(
     string? CanonicalKey,
     string? NormalizedFieldsJson,
     string? SourceEvidenceJson,
-    DateOnly? EffectiveDate);
+    DateOnly? EffectiveDate,
+    Guid? TargetDatasetId);
 
 public sealed record CreateReferenceCrosswalkRequest(
     Guid ReferenceEntityId,
@@ -252,3 +257,8 @@ public sealed record CreateReferenceDatasetInputRequest(
     string? FileName,
     string? Value,
     string? ValuesText);
+
+public sealed record CreateReferenceMasterCsvImportRequest(
+    string CsvText,
+    string? FileName,
+    string? RawObjectKey);

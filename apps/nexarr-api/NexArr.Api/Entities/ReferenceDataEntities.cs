@@ -85,6 +85,8 @@ public sealed class StagingRecord
 
     public Guid JobId { get; set; }
 
+    public Guid? TargetDatasetId { get; set; }
+
     public int? RowNumber { get; set; }
 
     public string RawPayloadJson { get; set; } = "{}";
@@ -112,6 +114,8 @@ public sealed class StagingRecord
     public DateTimeOffset UpdatedAt { get; set; }
 
     public IngestionJob Job { get; set; } = null!;
+
+    public ReferenceDataset? TargetDataset { get; set; }
 }
 
 public sealed class ReferenceEntity

@@ -89,6 +89,16 @@ public static class ReferenceDataEndpoints
         })
         .WithName("ReferenceDataCreateImport");
 
+        admin.MapPost("/imports/master-csv", async (
+            CreateReferenceMasterCsvImportRequest request,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Created("/api/platform-admin/reference-data/imports/master-csv", await service.CreateMasterCsvImportAsync(context.User, request, cancellationToken));
+        })
+        .WithName("ReferenceDataCreateMasterCsvImport");
+
         admin.MapGet("/imports/{jobId:guid}", async (
             Guid jobId,
             HttpContext context,

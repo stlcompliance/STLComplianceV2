@@ -39,6 +39,7 @@ import type {
   CreateReferenceDatasetRequest,
   CreateReferenceSourceRequest,
   CreateReferenceImportRequest,
+  CreateReferenceMasterCsvImportRequest,
   ReviewDecisionRequest,
   ProductOverviewRow,
   ProductManifestResponse,
@@ -521,6 +522,21 @@ export async function createReferenceImport(
 ): Promise<ReferenceImportResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/reference-data/imports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceImportResponse
+}
+
+export async function createReferenceMasterCsvImport(
+  request: CreateReferenceMasterCsvImportRequest,
+): Promise<ReferenceImportResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/imports/master-csv', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

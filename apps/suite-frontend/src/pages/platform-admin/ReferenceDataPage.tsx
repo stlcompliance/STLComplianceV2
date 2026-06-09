@@ -4,6 +4,8 @@ import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { useToast } from '../../feedback'
 
+const MASTER_CSV_DATASET_KEY = 'master-reference-intake'
+
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -92,7 +94,10 @@ export function ReferenceDataPage() {
   const [importSourceId, setImportSourceId] = useState('')
   const [importFileName, setImportFileName] = useState('')
   const [importObjectKey, setImportObjectKey] = useState('')
+  const [masterCsvFile, setMasterCsvFile] = useState<File | null>(null)
+  const [masterCsvObjectKey, setMasterCsvObjectKey] = useState('')
   const [selectedImportId, setSelectedImportId] = useState('')
+  const [rowTargetDatasetIds, setRowTargetDatasetIds] = useState<Record<string, string>>({})
   const [publishDatasetId, setPublishDatasetId] = useState('')
   const [publishSummary, setPublishSummary] = useState('')
 
@@ -134,9 +139,11 @@ export function ReferenceDataPage() {
 
   const datasetOptions = useMemo(
     () =>
-      (datasetsQuery.data ?? []).map((dataset) => ({
+      (datasetsQuery.data ?? [])
+        .filter((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)
+        .map((dataset) => ({
         value: dataset.id,
-        label: `${dataset.name} (${dataset.key})`,
+        label: `${dataset.ownerService} - ${dataset.name}`,
       })),
     [datasetsQuery.data],
   )
@@ -182,7 +189,7 @@ export function ReferenceDataPage() {
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-imports'] }),
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-crosswalks'] }),
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-publish-history'] }),
-      queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-staging-records', selectedImportId] }),
+      queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-staging-records'] }),
     ])
   }
 
@@ -255,6 +262,29 @@ export function ReferenceDataPage() {
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
 
+  const createMasterCsvImportMutation = useMutation({
+    mutationFn: async () => {
+      if (!masterCsvFile) {
+        throw new Error('Choose a CSV file first.')
+      }
+
+      const csvText = await masterCsvFile.text()
+      return nexarr.createReferenceMasterCsvImport({
+        csvText,
+        fileName: masterCsvFile.name,
+        rawObjectKey: masterCsvObjectKey.trim() || null,
+      })
+    },
+    onSuccess: async (created) => {
+      setMasterCsvFile(null)
+      setMasterCsvObjectKey('')
+      setSelectedImportId(created.id)
+      pushToast({ message: 'Master CSV uploaded for review.', variant: 'success' })
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
   const publishMutation = useMutation({
     mutationFn: ({ datasetId, summary }: { datasetId: string; summary: string }) =>
       nexarr.publishReferenceDataset(datasetId, summary),
@@ -270,9 +300,11 @@ export function ReferenceDataPage() {
     mutationFn: ({
       stagingId,
       action,
+      targetDatasetId,
     }: {
       stagingId: string
       action: 'approve' | 'reject' | 'merge' | 'escalate'
+      targetDatasetId: string | null
     }) =>
       (action === 'approve'
         ? nexarr.approveReferenceStagingRecord
@@ -287,6 +319,7 @@ export function ReferenceDataPage() {
         normalizedFieldsJson: null,
         sourceEvidenceJson: null,
         effectiveDate: null,
+        targetDatasetId,
       }),
     onSuccess: async () => {
       pushToast({ message: 'Reference review updated.', variant: 'success' })
@@ -302,6 +335,10 @@ export function ReferenceDataPage() {
   const publishHistory = publishHistoryQuery.data ?? []
   const stagingRecords = stagingRecordsQuery.data ?? []
   const selectedImport = imports.find((item) => item.id === selectedImportId) ?? null
+  const selectedImportIsMasterCsv = selectedImport?.datasetKey === MASTER_CSV_DATASET_KEY
+
+  const resolveRowTargetDatasetId = (record: (typeof stagingRecords)[number]) =>
+    rowTargetDatasetIds[record.id] ?? record.targetDatasetId ?? (selectedImportIsMasterCsv ? '' : record.datasetId)
 
   const isLoading =
     dashboardQuery.isLoading ||
@@ -601,6 +638,55 @@ export function ReferenceDataPage() {
         </div>
       </Section>
 
+      <Section
+        title="Master CSV import"
+        description="Upload a single CSV that can route rows across all product datasets. Each row is staged for live review and must be assigned before approval if the dataset cannot be inferred."
+      >
+        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="space-y-3">
+              <Field label="CSV file">
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(event) => setMasterCsvFile(event.target.files?.[0] ?? null)}
+                  className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </Field>
+              <Field label="Object key">
+                <input
+                  value={masterCsvObjectKey}
+                  onChange={(event) => setMasterCsvObjectKey(event.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="seed/reference/master-import.csv"
+                />
+              </Field>
+              <p className="text-xs text-slate-500">
+                Selected file: {masterCsvFile?.name ?? 'No file selected'}
+              </p>
+              <button
+                type="button"
+                disabled={createMasterCsvImportMutation.isPending || !masterCsvFile}
+                onClick={() => createMasterCsvImportMutation.mutate()}
+                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+              >
+                {createMasterCsvImportMutation.isPending ? 'Uploading…' : 'Upload master CSV'}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <h4 className="text-sm font-semibold text-stl-navy">Expected columns</h4>
+            <ul className="mt-3 space-y-2">
+              <li><span className="font-medium text-slate-700">Routing:</span> product, dataset, dataset_key, or product + dataset</li>
+              <li><span className="font-medium text-slate-700">Identity:</span> entity_type, canonical_key, display_name</li>
+              <li><span className="font-medium text-slate-700">Optional:</span> source_system, source_key, confidence, fields_json</li>
+              <li><span className="font-medium text-slate-700">Review:</span> imported rows are staged first, then approved row by row</li>
+            </ul>
+          </div>
+        </div>
+      </Section>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Section
           title="Datasets"
@@ -769,6 +855,7 @@ export function ReferenceDataPage() {
                       <thead className="border-b border-slate-200 bg-white text-xs uppercase text-slate-500">
                         <tr>
                           <th className="px-3 py-2">Row</th>
+                          <th className="px-3 py-2">Target dataset</th>
                           <th className="px-3 py-2">Entity</th>
                           <th className="px-3 py-2">Canonical key</th>
                           <th className="px-3 py-2">Confidence</th>
@@ -780,6 +867,32 @@ export function ReferenceDataPage() {
                         {stagingRecords.map((record) => (
                           <tr key={record.id} className="border-b border-slate-100 bg-white">
                             <td className="px-3 py-2">{record.rowNumber ?? '—'}</td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={resolveRowTargetDatasetId(record)}
+                                onChange={(event) =>
+                                  setRowTargetDatasetIds((current) => ({
+                                    ...current,
+                                    [record.id]: event.target.value,
+                                  }))
+                                }
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              >
+                                <option value="">Select dataset</option>
+                                {datasetOptions.map((option) => (
+                                  <option key={option.value} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {record.targetDatasetName
+                                  ? `${record.targetOwnerService ?? 'NexArr'} - ${record.targetDatasetName}`
+                                  : selectedImportIsMasterCsv
+                                    ? 'Assign before approving'
+                                    : `${record.datasetKey} target`}
+                              </p>
+                            </td>
                             <td className="px-3 py-2">
                               <p className="font-medium text-stl-navy">{record.proposedEntityType}</p>
                               <p className="text-xs text-slate-500">
@@ -800,8 +913,14 @@ export function ReferenceDataPage() {
                               <div className="flex flex-wrap gap-2">
                                 <button
                                   type="button"
-                                  disabled={reviewMutation.isPending}
-                                  onClick={() => reviewMutation.mutate({ stagingId: record.id, action: 'approve' })}
+                                  disabled={reviewMutation.isPending || (selectedImportIsMasterCsv && !resolveRowTargetDatasetId(record))}
+                                  onClick={() =>
+                                    reviewMutation.mutate({
+                                      stagingId: record.id,
+                                      action: 'approve',
+                                      targetDatasetId: resolveRowTargetDatasetId(record) || null,
+                                    })
+                                  }
                                   className="rounded-md border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
                                 >
                                   Approve
@@ -809,7 +928,13 @@ export function ReferenceDataPage() {
                                 <button
                                   type="button"
                                   disabled={reviewMutation.isPending}
-                                  onClick={() => reviewMutation.mutate({ stagingId: record.id, action: 'reject' })}
+                                  onClick={() =>
+                                    reviewMutation.mutate({
+                                      stagingId: record.id,
+                                      action: 'reject',
+                                      targetDatasetId: resolveRowTargetDatasetId(record) || null,
+                                    })
+                                  }
                                   className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
                                 >
                                   Reject
@@ -817,7 +942,13 @@ export function ReferenceDataPage() {
                                 <button
                                   type="button"
                                   disabled={reviewMutation.isPending}
-                                  onClick={() => reviewMutation.mutate({ stagingId: record.id, action: 'escalate' })}
+                                  onClick={() =>
+                                    reviewMutation.mutate({
+                                      stagingId: record.id,
+                                      action: 'escalate',
+                                      targetDatasetId: resolveRowTargetDatasetId(record) || null,
+                                    })
+                                  }
                                   className="rounded-md border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
                                 >
                                   Escalate
