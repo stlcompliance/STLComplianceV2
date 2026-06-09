@@ -52,6 +52,184 @@ public static class PlatformSeeder
         ("fieldcompanion", "http://localhost:5181", "/launch")
     ];
 
+    private static readonly string[] MaintainArrReferenceDatasetNames =
+    [
+        "Asset Class",
+        "Asset Type",
+        "Asset Subtype",
+        "Asset Category",
+        "Asset Status",
+        "Lifecycle Status",
+        "Criticality",
+        "Maintenance Class",
+        "Service Group",
+        "Readiness Status",
+        "Operational Status",
+        "Availability Status",
+        "Make",
+        "Manufacturer",
+        "Model",
+        "Model Year",
+        "Trim",
+        "Series",
+        "Body Style",
+        "Body Type",
+        "Configuration",
+        "Cab Type",
+        "Sleeper Cab",
+        "Day Cab",
+        "Drivetrain",
+        "Axle Configuration",
+        "Steer Axle Count",
+        "Drive Axle Count",
+        "Trailer Axle Count",
+        "Single Drive Axle",
+        "Tandem Drive Axle",
+        "Lift Axle Equipped",
+        "Tag Axle Equipped",
+        "Pusher Axle Equipped",
+        "Dual Rear Wheel",
+        "Super Singles Equipped",
+        "Duals Equipped",
+        "Four Wheel Drive",
+        "All Wheel Drive",
+        "Two Wheel Drive",
+        "Tire Configuration",
+        "Fuel Type",
+        "Secondary Fuel Type",
+        "DEF Required",
+        "Aftertreatment Type",
+        "EV Battery Type",
+        "Charging Connector Type",
+        "Hybrid Type",
+        "CNG Equipped",
+        "LNG Equipped",
+        "Propane Equipped",
+        "Brake System Type",
+        "Brake Type",
+        "Air Brakes",
+        "Hydraulic Brakes",
+        "Electric Brakes",
+        "Drum Brakes",
+        "Disc Brakes",
+        "ABS Required",
+        "ABS Equipped",
+        "Slack Adjuster Type",
+        "Brake Chamber Type",
+        "Parking Brake Type",
+        "Trailer Type",
+        "Trailer Body Type",
+        "Trailer Door Type",
+        "Roof Type",
+        "Floor Type",
+        "Landing Gear Type",
+        "Kingpin Type",
+        "Reefer Equipped",
+        "Lift Gate Equipped",
+        "Axle Spread Type",
+        "Suspension Type",
+        "Engine Make",
+        "Engine Model",
+        "Engine Family",
+        "Emissions Level",
+        "Transmission Make",
+        "Transmission Model",
+        "Transmission Type",
+        "PTO Equipped",
+        "PTO Type",
+        "Drive Type",
+        "Tire Size",
+        "Wheel Size",
+        "Wheel Material",
+        "Tire Position Layout",
+        "Steer Tire Size",
+        "Drive Tire Size",
+        "Trailer Tire Size",
+        "Spare Tire Equipped",
+        "Retread Allowed",
+        "Tread Depth Minimum Rule",
+        "Torque Spec",
+        "Pressure Spec",
+        "Primary Meter Type",
+        "Secondary Meter Types",
+        "Meter Type",
+        "Meter Unit",
+        "Usage Profile",
+        "Meter Reading Source",
+        "Meter Rollover Behavior",
+        "PM Program",
+        "PM Program Status",
+        "PM Template",
+        "PM Type",
+        "PM Interval Type",
+        "Inspection Template Category",
+        "Inspection Template Owner Role",
+        "Inspection Execution Mode",
+        "Inspection Result Mode",
+        "Inspection Readiness Impact",
+        "Inspection Template",
+        "Inspection Type",
+        "Required Inspection Types",
+        "Inspection Frequency Type",
+        "Seasonal PM Group",
+        "Regulatory Inspection Required",
+        "Annual Inspection Required",
+        "DVIR Required",
+        "Pre Trip Required",
+        "Post Trip Required",
+        "Shop Inspection Required",
+        "Defect Type",
+        "Defect Category",
+        "Defect System",
+        "Defect Component",
+        "Report Source",
+        "Symptom",
+        "Failure Mode",
+        "Severity",
+        "Priority",
+        "Safety Critical",
+        "Operating Restriction",
+        "Operating Condition",
+        "Side Position",
+        "Deferral Code",
+        "Repair Disposition",
+        "Root Cause",
+        "Corrective Action Type",
+        "Work Order Type",
+        "Work Order Priority",
+        "Maintenance Type",
+        "Repair Type",
+        "Labor Category",
+        "Downtime Reason",
+        "Shop Status",
+        "Bay",
+        "Approval Status",
+        "Completion Status",
+        "Return To Service Status",
+        "Document Type",
+        "Document Status",
+        "Verification Status",
+        "Expiration Type",
+        "Fluid Spec",
+        "Oil Spec",
+        "Coolant Spec",
+        "DEF Spec",
+        "Filter Spec",
+        "Belt Spec",
+        "Battery Spec",
+        "Lamp Spec",
+        "Brake Part Spec",
+        "Tire Spec",
+        "Wheel Spec",
+        "Telematics Provider",
+        "Diagnostic Protocol",
+        "ELD Provider",
+        "GPS Provider",
+        "Fault Code Source",
+        "Fault Code Standard",
+        "Data Sync Status"
+    ];
+
     public static async Task SeedAsync(
         NexArrDbContext db,
         IPasswordHasher passwordHasher,
@@ -73,6 +251,7 @@ public static class PlatformSeeder
         await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
         await EnsurePlatformSessionSettingsColumnsAsync(db, cancellationToken);
         await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
+        await SeedReferenceDatasetsAsync(db, now, cancellationToken);
         await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
         SeedSuiteShellCallbackAllowlist(db, now);
         await db.SaveChangesAsync(cancellationToken);
@@ -634,6 +813,45 @@ public static class PlatformSeeder
         }
     }
 
+    private static async Task SeedReferenceDatasetsAsync(
+        NexArrDbContext db,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var existingDatasets = await db.ReferenceDatasets.ToListAsync(cancellationToken);
+        var existingByKey = existingDatasets.ToDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var datasetName in MaintainArrReferenceDatasetNames)
+        {
+            var key = NormalizeKey($"MaintainArr {datasetName}");
+            var category = ResolveReferenceDatasetCategory(datasetName);
+
+            if (existingByKey.TryGetValue(key, out var existing))
+            {
+                existing.Name = datasetName;
+                existing.Category = category;
+                existing.OwnerService = "MaintainArr";
+                existing.Status = ReferenceDatasetStatuses.Ready;
+                existing.UpdatedAt = now;
+                continue;
+            }
+
+            db.ReferenceDatasets.Add(new ReferenceDataset
+            {
+                Id = Guid.NewGuid(),
+                Key = key,
+                Name = datasetName,
+                Category = category,
+                OwnerService = "MaintainArr",
+                Status = ReferenceDatasetStatuses.Ready,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     private static void SeedDemoTenantCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
     {
         foreach (var product in Products)
@@ -666,6 +884,22 @@ public static class PlatformSeeder
             });
         }
     }
+
+    private static string ResolveReferenceDatasetCategory(string datasetName) =>
+        datasetName switch
+        {
+            "PM Program" or "PM Program Status" or "PM Template" or "PM Type" or "PM Interval Type" => "maintenance",
+            "Work Order Type" or "Work Order Priority" or "Maintenance Type" or "Repair Type" or "Labor Category" or "Downtime Reason" or "Shop Status" or "Bay" or "Approval Status" or "Completion Status" or "Return To Service Status" => "maintenance",
+            "Inspection Template Category" or "Inspection Template Owner Role" or "Inspection Execution Mode" or "Inspection Result Mode" or "Inspection Readiness Impact" or "Inspection Template" or "Inspection Type" or "Required Inspection Types" or "Inspection Frequency Type" or "Seasonal PM Group" or "Regulatory Inspection Required" or "Annual Inspection Required" or "DVIR Required" or "Pre Trip Required" or "Post Trip Required" or "Shop Inspection Required" => "inspection",
+            "Defect Type" or "Defect Category" or "Defect System" or "Defect Component" or "Report Source" or "Symptom" or "Failure Mode" or "Severity" or "Priority" or "Safety Critical" or "Operating Restriction" or "Operating Condition" or "Side Position" or "Deferral Code" or "Repair Disposition" or "Root Cause" or "Corrective Action Type" => "defect",
+            "Document Type" or "Document Status" or "Verification Status" or "Expiration Type" => "document",
+            "Fluid Spec" or "Oil Spec" or "Coolant Spec" or "DEF Spec" or "Filter Spec" or "Belt Spec" or "Battery Spec" or "Lamp Spec" or "Brake Part Spec" or "Tire Spec" or "Wheel Spec" => "spec",
+            "Telematics Provider" or "Diagnostic Protocol" or "ELD Provider" or "GPS Provider" or "Fault Code Source" or "Fault Code Standard" or "Data Sync Status" => "telemetry",
+            _ => "asset"
+        };
+
+    private static string NormalizeKey(string value) =>
+        value.Trim().ToLowerInvariant().Replace(' ', '-');
 
     private sealed record ProductSeed(
         string Key,

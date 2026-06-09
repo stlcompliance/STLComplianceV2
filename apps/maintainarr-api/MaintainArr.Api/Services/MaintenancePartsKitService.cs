@@ -571,7 +571,7 @@ public sealed class MaintenancePartsKitService(
             : null;
         var itemLookup = definition is null
             ? null
-            : definition.Items.ToDictionary(item => item.ItemRef, StringComparer.OrdinalIgnoreCase);
+            : definition.Items.ToDictionary(item => ResolveOwnershipItemRef(item), StringComparer.OrdinalIgnoreCase);
         var lines = entity.Lines
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.CreatedAt)
@@ -687,6 +687,9 @@ public sealed class MaintenancePartsKitService(
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string ResolveOwnershipItemRef(MaintenancePartsKitItemResponse item) =>
+        !string.IsNullOrWhiteSpace(item.SupplyarrPartId) ? item.SupplyarrPartId : item.ItemRef;
 
     private static IReadOnlyList<string> NormalizeList(IReadOnlyList<string>? values) =>
         values is null ? [] : values.Select(value => value.Trim()).Where(value => value.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -1020,7 +1023,7 @@ public sealed class MaintenancePartsKitService(
                 Id = Guid.NewGuid(),
                 TenantId = kit.TenantId,
                 MaintenancePartsKitId = kit.Id,
-                ItemRef = item.ItemRef,
+                ItemRef = ResolveOwnershipItemRef(item),
                 ItemDescriptionSnapshot = item.ItemDescriptionSnapshot,
                 Quantity = item.Quantity,
                 UnitOfMeasure = item.UnitOfMeasure,
@@ -1130,10 +1133,19 @@ public sealed class MaintenancePartsKitService(
         }
 
         foreach (var duplicate in definition.Items
-            .GroupBy(item => item.ItemRef, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(item => ResolveOwnershipItemRef(item), StringComparer.OrdinalIgnoreCase)
             .Where(group => group.Count() > 1))
         {
-            errors.Add($"Duplicate kit item reference '{duplicate.Key}'.");
+            errors.Add($"Duplicate kit part reference '{duplicate.Key}'.");
+        }
+
+        var missingSupplyarrPartIds = definition.Items
+            .Where(item => !item.IsPlaceholder && string.IsNullOrWhiteSpace(item.SupplyarrPartId))
+            .Select(item => item.ItemRef)
+            .ToArray();
+        if (missingSupplyarrPartIds.Length > 0)
+        {
+            errors.Add($"Missing Supplyarr part IDs for: {string.Join(", ", missingSupplyarrPartIds)}.");
         }
 
         var missingItemDescriptions = definition.Items
