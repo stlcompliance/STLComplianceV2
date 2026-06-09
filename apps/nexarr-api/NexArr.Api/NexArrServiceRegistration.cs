@@ -27,6 +27,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformUserAdminService>();
         builder.Services.AddScoped<ProductCatalogService>();
         builder.Services.AddScoped<ProductManifestService>();
+        builder.Services.AddScoped<ReferenceDataService>();
         builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
         builder.Services.AddScoped<ServiceTokenDiscoveryService>();
@@ -52,6 +53,11 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformIdentityIntegrationService>();
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
+        builder.Services.AddScoped<PlatformJourneySeedService>();
+        builder.Services.AddHttpClient(PlatformJourneySeedService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
         builder.Services.AddScoped<HybridDataPlaneService>();
         builder.Services.AddHttpClient(HybridDataPlaneService.HttpClientName, client =>
         {
@@ -155,20 +161,19 @@ public static class NexArrServiceRegistration
 
         await using var scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
-            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions, platformProductUrls);
+            await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
         }
         else if (app.Environment.IsProduction())
         {
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
-            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions, platformProductUrls);
+            await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
 
             var productionOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var origin in new[]

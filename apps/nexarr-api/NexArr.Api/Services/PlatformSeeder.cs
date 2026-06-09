@@ -8,6 +8,7 @@ namespace NexArr.Api.Services;
 
 public static class PlatformSeeder
 {
+    // Test/demo identifiers are kept for test fixtures and explicit admin input flows.
     public static readonly Guid DemoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111101");
     public static readonly Guid DemoAdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222201");
 
@@ -58,11 +59,31 @@ public static class PlatformSeeder
         PlatformProductUrlsOptions? platformProductUrls = null,
         CancellationToken cancellationToken = default)
     {
+        await SeedInfrastructureAsync(db, launchOptions, platformProductUrls, cancellationToken);
+        await SeedDemoBusinessDataAsync(db, passwordHasher, cancellationToken);
+    }
+
+    public static async Task SeedInfrastructureAsync(
+        NexArrDbContext db,
+        StlLaunchOptions? launchOptions = null,
+        PlatformProductUrlsOptions? platformProductUrls = null,
+        CancellationToken cancellationToken = default)
+    {
         var now = DateTimeOffset.UtcNow;
         await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
         await EnsurePlatformSessionSettingsColumnsAsync(db, cancellationToken);
         await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
         await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
+        SeedSuiteShellCallbackAllowlist(db, now);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public static async Task SeedDemoBusinessDataAsync(
+        NexArrDbContext db,
+        IPasswordHasher passwordHasher,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
 
         if (!await db.Tenants.AnyAsync(t => t.Id == DemoTenantId, cancellationToken))
         {
@@ -190,8 +211,7 @@ public static class PlatformSeeder
             });
         }
 
-        SeedCallbackAllowlist(db, now);
-
+        SeedDemoTenantCallbackAllowlist(db, now);
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -581,7 +601,7 @@ public static class PlatformSeeder
         return trimmed;
     }
 
-    private static void SeedCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
+    private static void SeedSuiteShellCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
     {
         foreach (var product in Products)
         {
@@ -603,6 +623,21 @@ public static class PlatformSeeder
                 });
             }
 
+            var launchProfileIndex = Array.FindIndex(
+                DefaultLaunchProfiles,
+                p => string.Equals(p.ProductKey, product.Key, StringComparison.Ordinal));
+            if (launchProfileIndex < 0)
+            {
+                continue;
+            }
+
+        }
+    }
+
+    private static void SeedDemoTenantCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
+    {
+        foreach (var product in Products)
+        {
             var launchProfileIndex = Array.FindIndex(
                 DefaultLaunchProfiles,
                 p => string.Equals(p.ProductKey, product.Key, StringComparison.Ordinal));

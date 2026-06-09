@@ -20,6 +20,17 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<ServiceTokenRecord> ServiceTokens => Set<ServiceTokenRecord>();
     public DbSet<ProductLaunchProfile> LaunchProfiles => Set<ProductLaunchProfile>();
     public DbSet<HandoffCodeRecord> HandoffCodes => Set<HandoffCodeRecord>();
+    public DbSet<ReferenceDataset> ReferenceDatasets => Set<ReferenceDataset>();
+    public DbSet<ReferenceSource> ReferenceSources => Set<ReferenceSource>();
+    public DbSet<IngestionJob> IngestionJobs => Set<IngestionJob>();
+    public DbSet<StagingRecord> StagingRecords => Set<StagingRecord>();
+    public DbSet<ReferenceEntity> ReferenceEntities => Set<ReferenceEntity>();
+    public DbSet<ReferenceEntityVersion> ReferenceEntityVersions => Set<ReferenceEntityVersion>();
+    public DbSet<ReferenceCrosswalk> ReferenceCrosswalks => Set<ReferenceCrosswalk>();
+    public DbSet<TenantReferenceOverlay> TenantReferenceOverlays => Set<TenantReferenceOverlay>();
+    public DbSet<ProductMapping> ProductMappings => Set<ProductMapping>();
+    public DbSet<ReferencePublishEvent> ReferencePublishEvents => Set<ReferencePublishEvent>();
+    public DbSet<ReferenceAuditEvent> ReferenceAuditEvents => Set<ReferenceAuditEvent>();
 
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<ProductCallbackAllowlistEntry> CallbackAllowlist => Set<ProductCallbackAllowlistEntry>();
@@ -449,6 +460,151 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.ProcessedAt);
+        });
+
+        modelBuilder.Entity<ReferenceDataset>(entity =>
+        {
+            entity.ToTable("reference_datasets");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OwnerService).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CurrentPublishedVersion).HasMaxLength(32);
+            entity.HasIndex(x => x.Key).IsUnique();
+        });
+
+        modelBuilder.Entity<ReferenceSource>(entity =>
+        {
+            entity.ToTable("reference_sources");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ConnectorType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RefreshCadence).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TermsNotes).HasMaxLength(512);
+            entity.HasIndex(x => x.Key).IsUnique();
+        });
+
+        modelBuilder.Entity<IngestionJob>(entity =>
+        {
+            entity.ToTable("ingestion_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RawObjectKey).HasMaxLength(256);
+            entity.Property(x => x.FileName).HasMaxLength(256);
+            entity.Property(x => x.ErrorSummary).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.DatasetId, x.SourceId, x.CreatedAt });
+            entity.HasOne(x => x.Dataset).WithMany().HasForeignKey(x => x.DatasetId);
+            entity.HasOne(x => x.Source).WithMany().HasForeignKey(x => x.SourceId);
+            entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.RequestedByPersonId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<StagingRecord>(entity =>
+        {
+            entity.ToTable("staging_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RawPayloadJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.NormalizedPayloadJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ProposedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProposedCanonicalKey).HasMaxLength(128);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewReason).HasMaxLength(1024);
+            entity.HasIndex(x => x.JobId);
+            entity.HasIndex(x => new { x.Status, x.Confidence });
+            entity.HasOne(x => x.Job).WithMany().HasForeignKey(x => x.JobId);
+            entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.ReviewerPersonId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ReferenceEntity>(entity =>
+        {
+            entity.ToTable("reference_entities");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CanonicalKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.NormalizedFieldsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.DatasetId, x.EntityType, x.CanonicalKey }).IsUnique();
+            entity.HasIndex(x => new { x.DatasetId, x.Status });
+            entity.HasOne(x => x.Dataset).WithMany().HasForeignKey(x => x.DatasetId);
+            entity.HasOne<ReferenceSource>().WithMany().HasForeignKey(x => x.FirstSeenSourceId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne<ReferenceEntityVersion>().WithMany().HasForeignKey(x => x.CurrentVersionId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ReferenceEntityVersion>(entity =>
+        {
+            entity.ToTable("reference_entity_versions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FieldsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.SourceEvidenceJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.ReferenceEntityId, x.Version }).IsUnique();
+            entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId);
+            entity.HasOne<ReferenceEntityVersion>().WithMany().HasForeignKey(x => x.SupersededByVersionId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ReferenceCrosswalk>(entity =>
+        {
+            entity.ToTable("reference_crosswalks");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ExternalSystem).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.ExternalSystem, x.ExternalKey }).IsUnique();
+            entity.HasIndex(x => x.ReferenceEntityId);
+            entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId);
+            entity.HasOne<ReferenceSource>().WithMany().HasForeignKey(x => x.SourceId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TenantReferenceOverlay>(entity =>
+        {
+            entity.ToTable("tenant_reference_overlays");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LocalName).HasMaxLength(200);
+            entity.Property(x => x.LocalStatus).HasMaxLength(64);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.ReferenceEntityId }).IsUnique();
+            entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId);
+            entity.HasOne<Tenant>().WithMany().HasForeignKey(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<ProductMapping>(entity =>
+        {
+            entity.ToTable("product_mappings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.LocalEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.LocalEntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MappingStatus).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ProductCode, x.LocalEntityType, x.LocalEntityId }).IsUnique();
+            entity.HasOne<ReferenceEntity>().WithMany().HasForeignKey(x => x.ReferenceEntityId);
+            entity.HasOne<Tenant>().WithMany().HasForeignKey(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<ReferencePublishEvent>(entity =>
+        {
+            entity.ToTable("reference_publish_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PublishedVersion).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => new { x.DatasetId, x.CreatedAt });
+            entity.HasOne<ReferenceDataset>().WithMany().HasForeignKey(x => x.DatasetId);
+            entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.PublishedByPersonId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ReferenceAuditEvent>(entity =>
+        {
+            entity.ToTable("reference_audit_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.BeforeSnapshotJson).HasColumnType("jsonb");
+            entity.Property(x => x.AfterSnapshotJson).HasColumnType("jsonb");
+            entity.HasIndex(x => new { x.EntityType, x.EntityId, x.CreatedAt });
+            entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.ActorPersonId).OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

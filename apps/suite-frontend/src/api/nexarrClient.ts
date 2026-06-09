@@ -26,6 +26,19 @@ import type {
   TenantSummary,
   PagedResult,
   PlatformAdminDashboardResponse,
+  JourneySeedResultResponse,
+  JourneySeedTargetResponse,
+  ReferenceDataDashboardResponse,
+  ReferenceDatasetResponse,
+  ReferenceSourceResponse,
+  ReferenceImportResponse,
+  ReferenceStagingRecordResponse,
+  ReferenceCrosswalkResponse,
+  ReferencePublishEventResponse,
+  CreateReferenceDatasetRequest,
+  CreateReferenceSourceRequest,
+  CreateReferenceImportRequest,
+  ReviewDecisionRequest,
   ProductOverviewRow,
   ProductManifestResponse,
   PlatformAuditPackageExportPreview,
@@ -389,6 +402,188 @@ export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboar
     throw await parseError(response)
   }
   return (await response.json()) as PlatformAdminDashboardResponse
+}
+
+export async function getPlatformJourneySeedTargets(): Promise<JourneySeedTargetResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/journey-seeds')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as JourneySeedTargetResponse[]
+}
+
+export async function seedPlatformJourney(productKey: string): Promise<JourneySeedResultResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/journey-seeds/${encodeURIComponent(productKey)}`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as JourneySeedResultResponse
+}
+
+export async function getReferenceDataDashboard(): Promise<ReferenceDataDashboardResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/dashboard')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceDataDashboardResponse
+}
+
+export async function listReferenceDatasets(): Promise<ReferenceDatasetResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/datasets')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceDatasetResponse[]
+}
+
+export async function createReferenceDataset(
+  request: CreateReferenceDatasetRequest,
+): Promise<ReferenceDatasetResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/datasets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceDatasetResponse
+}
+
+export async function listReferenceSources(): Promise<ReferenceSourceResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/sources')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceSourceResponse[]
+}
+
+export async function createReferenceSource(
+  request: CreateReferenceSourceRequest,
+): Promise<ReferenceSourceResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/sources', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceSourceResponse
+}
+
+export async function listReferenceImports(): Promise<ReferenceImportResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/imports')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceImportResponse[]
+}
+
+export async function getReferenceImport(jobId: string): Promise<ReferenceImportResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/imports/${jobId}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceImportResponse
+}
+
+export async function createReferenceImport(
+  request: CreateReferenceImportRequest,
+): Promise<ReferenceImportResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/imports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceImportResponse
+}
+
+export async function listReferenceStagingRecords(jobId: string): Promise<ReferenceStagingRecordResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/imports/${jobId}/staging-records`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceStagingRecordResponse[]
+}
+
+async function reviewReferenceStagingRecord(
+  id: string,
+  action: 'approve' | 'reject' | 'merge' | 'escalate',
+  request: ReviewDecisionRequest,
+): Promise<ReferenceStagingRecordResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/staging-records/${id}/${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceStagingRecordResponse
+}
+
+export const approveReferenceStagingRecord = (id: string, request: ReviewDecisionRequest) =>
+  reviewReferenceStagingRecord(id, 'approve', request)
+
+export const rejectReferenceStagingRecord = (id: string, request: ReviewDecisionRequest) =>
+  reviewReferenceStagingRecord(id, 'reject', request)
+
+export const mergeReferenceStagingRecord = (id: string, request: ReviewDecisionRequest) =>
+  reviewReferenceStagingRecord(id, 'merge', request)
+
+export const escalateReferenceStagingRecord = (id: string, request: ReviewDecisionRequest) =>
+  reviewReferenceStagingRecord(id, 'escalate', request)
+
+export async function listReferenceCrosswalks(): Promise<ReferenceCrosswalkResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/crosswalks')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceCrosswalkResponse[]
+}
+
+export async function listReferencePublishHistory(): Promise<ReferencePublishEventResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/publish-history')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferencePublishEventResponse[]
+}
+
+export async function publishReferenceDataset(
+  datasetId: string,
+  summary?: string | null,
+): Promise<ReferencePublishEventResponse> {
+  await ensureValidAccessToken()
+  const search = summary?.trim() ? `?summary=${encodeURIComponent(summary.trim())}` : ''
+  const response = await fetchWithAuth(
+    `/api/platform-admin/reference-data/datasets/${datasetId}/publish${search}`,
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferencePublishEventResponse
 }
 
 export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleOverviewResponse> {

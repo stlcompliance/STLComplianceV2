@@ -128,6 +128,191 @@ export interface PlatformAdminDashboardResponse {
   generatedAt: string
 }
 
+export interface JourneySeedTargetResponse {
+  productKey: string
+  displayName: string
+  description: string
+  seedPath: string
+  baseUrl: string | null
+  isConfigured: boolean
+}
+
+export interface JourneySeedResultResponse {
+  productKey: string
+  displayName: string
+  description: string
+  seedPath: string
+  baseUrl: string | null
+  isConfigured: boolean
+  succeeded: boolean
+  statusCode: number
+  responseBody: string | null
+  requestedAt: string
+}
+
+export interface ReferenceDataDashboardResponse {
+  datasetCount: number
+  sourceCount: number
+  jobCount: number
+  pendingReviewCount: number
+  failedImportCount: number
+  publishedEntityCount: number
+  crosswalkCount: number
+  publishEventCount: number
+  generatedAt: string
+}
+
+export interface ReferenceDatasetResponse {
+  id: string
+  key: string
+  name: string
+  category: string
+  ownerService: string
+  status: string
+  currentPublishedVersion: string | null
+  sourceCount: number
+  entityCount: number
+  pendingReviewCount: number
+  failedImportCount: number
+  lastPublishedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceSourceResponse {
+  id: string
+  key: string
+  name: string
+  sourceType: string
+  connectorType: string
+  authorityRank: number
+  refreshCadence: string
+  termsNotes: string | null
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceImportResponse {
+  id: string
+  datasetId: string
+  datasetKey: string
+  datasetName: string
+  sourceId: string
+  sourceKey: string
+  sourceName: string
+  tenantId: string | null
+  requestedByPersonId: string | null
+  status: string
+  rawObjectKey: string | null
+  fileName: string | null
+  startedAt: string
+  completedAt: string | null
+  errorSummary: string | null
+  stagingRecordCount: number
+  pendingReviewCount: number
+  approvedCount: number
+  rejectedCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceStagingRecordResponse {
+  id: string
+  jobId: string
+  datasetId: string
+  datasetKey: string
+  sourceId: string
+  sourceKey: string
+  rowNumber: number | null
+  rawPayloadJson: string
+  normalizedPayloadJson: string
+  proposedEntityType: string
+  proposedCanonicalKey: string | null
+  confidence: number
+  status: string
+  reviewReason: string | null
+  reviewerPersonId: string | null
+  reviewedAt: string | null
+  referenceEntityId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReviewDecisionRequest {
+  reason: string | null
+  displayName: string | null
+  canonicalKey: string | null
+  normalizedFieldsJson: string | null
+  sourceEvidenceJson: string | null
+  effectiveDate: string | null
+}
+
+export interface ReferenceCrosswalkResponse {
+  id: string
+  referenceEntityId: string
+  entityType: string
+  canonicalKey: string
+  displayName: string
+  externalSystem: string
+  externalKey: string
+  sourceId: string | null
+  sourceKey: string | null
+  confidence: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferencePublishEventResponse {
+  id: string
+  datasetId: string
+  datasetKey: string
+  datasetName: string
+  publishedVersion: string
+  publishedByPersonId: string | null
+  summary: string
+  createdAt: string
+}
+
+export interface CreateReferenceDatasetRequest {
+  key: string
+  name: string
+  category: string
+  ownerService: string
+  status: string
+}
+
+export interface CreateReferenceSourceRequest {
+  key: string
+  name: string
+  sourceType: string
+  connectorType: string
+  authorityRank: number
+  refreshCadence: string
+  termsNotes: string | null
+  enabled: boolean
+}
+
+export interface CreateReferenceImportRequest {
+  datasetId: string
+  sourceId: string
+  tenantId: string | null
+  requestedByPersonId: string | null
+  rawObjectKey: string | null
+  fileName: string | null
+  records?: ReferenceImportRecordInput[] | null
+}
+
+export interface ReferenceImportRecordInput {
+  rowNumber: number | null
+  rawPayloadJson: string
+  normalizedPayloadJson: string | null
+  proposedEntityType: string
+  proposedCanonicalKey: string | null
+  confidence: number
+}
+
 export interface LaunchDiagnosticIssue {
   issueCode: string
   severity: string
