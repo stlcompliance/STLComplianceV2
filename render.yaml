@@ -135,7 +135,10 @@ envVarGroups:
       - key: SUPPLYARR_PUBLIC_API_URL
         value: https://supplyarr-api-te1h.onrender.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: LOADARR_PUBLIC_API_URL
         value: https://loadarr-api.onrender.com
       - key: ASSURARR_PUBLIC_API_URL
@@ -765,27 +768,45 @@ services:
       - key: SupplyArrIntegrationEvents__ServiceToken
         sync: false
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreScheduledEvaluation__ServiceToken
         sync: false
       - key: ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreRuleChangeMonitor__ServiceToken
         sync: false
       - key: ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreWaiverExpiration__ServiceToken
         sync: false
       - key: ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreFactSourceSync__ServiceToken
         sync: false
       - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreAuditPackageGeneration__ServiceToken
         sync: false
       - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-b6fs.onrender.com
+        fromService:
+          name: compliancecore-api
+          type: web
+          property: host
       - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
         sync: false
       - key: NexArrFieldCompanionNotificationDispatch__NexArrBaseUrl
