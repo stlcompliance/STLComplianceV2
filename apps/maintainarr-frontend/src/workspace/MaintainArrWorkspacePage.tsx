@@ -4,6 +4,7 @@ import { WorkspaceShell } from './WorkspaceShell'
 import { OverviewSection } from './sections/OverviewSection'
 import { AssetsSection } from './sections/AssetsSection'
 import { PmProgramsSection } from './sections/PmProgramsSection'
+import { RecallsSection } from './sections/RecallsSection'
 import { MetersSection } from './sections/MetersSection'
 import { WorkOrdersSection } from './sections/WorkOrdersSection'
 import { DefectsSection } from './sections/DefectsSection'
@@ -24,6 +25,7 @@ export function MaintainArrWorkspacePage({ section }: { section: WorkspaceSectio
       {section === 'overview' ? <OverviewSection state={state} /> : null}
       {section === 'assets' ? <AssetsSection state={state} /> : null}
       {section === 'pm-programs' ? <PmProgramsSection state={state} /> : null}
+      {section === 'recalls' ? <RecallsSection state={state} /> : null}
       {section === 'meters' ? <MetersSection state={state} /> : null}
       {section === 'work-orders' ? <WorkOrdersSection state={state} /> : null}
       {section === 'defects' ? <DefectsSection state={state} /> : null}

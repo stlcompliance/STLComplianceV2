@@ -296,6 +296,9 @@ function mockProfileFetches() {
         headers: { 'Content-Type': 'application/json' },
       })
     }
+    if (url.startsWith('/api/v1/assets/asset-1/recalls')) {
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
     if (url === '/api/v1/readiness?assetId=asset-1') {
       return new Response(JSON.stringify({
         assetId: 'asset-1',

@@ -202,6 +202,8 @@ public static class WorkOrderSources
     public const string Defect = "defect";
 
     public const string PmSchedule = "pm_schedule";
+
+    public const string Recall = "recall";
 }
 
 public static class WorkOrderTypes

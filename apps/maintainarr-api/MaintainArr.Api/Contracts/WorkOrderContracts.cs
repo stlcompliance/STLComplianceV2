@@ -130,7 +130,11 @@ public sealed record CreateWorkOrderRequest(
     Guid? DefectId = null,
     string? DraftPlanJson = null,
     DateTimeOffset? PlannedStartAt = null,
-    DateTimeOffset? PlannedDueAt = null);
+    DateTimeOffset? PlannedDueAt = null,
+    string? Source = null,
+    string? WorkOrderType = null,
+    string? OriginType = null,
+    string? OriginRef = null);
 
 public sealed record CreateWorkOrderFromDefectRequest(
     string? Title,

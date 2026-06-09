@@ -136,10 +136,10 @@ public sealed class WorkOrderService(
             Description = request.Description?.Trim() ?? string.Empty,
             Priority = NormalizePriority(request.Priority),
             Status = WorkOrderStatuses.Open,
-            Source = request.PmScheduleId.HasValue ? WorkOrderSources.PmSchedule : WorkOrderSources.Manual,
-            WorkOrderType = request.PmScheduleId.HasValue ? WorkOrderTypes.Preventive : WorkOrderTypes.OperatorRequest,
-            OriginType = request.PmScheduleId.HasValue ? WorkOrderOriginTypes.PmDue : WorkOrderOriginTypes.Manual,
-            OriginRef = request.PmScheduleId?.ToString("D"),
+            Source = ResolveSource(request),
+            WorkOrderType = ResolveWorkOrderType(request),
+            OriginType = ResolveOriginType(request),
+            OriginRef = ResolveOriginRef(request),
             StaffarrLocationId = NormalizeLocationRef(asset.SiteRef),
             DraftPlanJson = NormalizeDraftPlanJson(request.DraftPlanJson),
             PlannedStartAt = request.PlannedStartAt,
@@ -2905,9 +2905,9 @@ public sealed class WorkOrderService(
         }
 
         var workOrderType = DetermineDraftWorkOrderType(draftPlanJson, request.DefectId, request.PmScheduleId);
-        var source = DetermineDraftSource(request.DefectId, request.PmScheduleId);
-        var originType = DetermineDraftOriginType(request.DefectId, request.PmScheduleId);
-        var originRef = DetermineDraftOriginRef(request.DefectId, request.PmScheduleId);
+        var source = ResolveSource(request);
+        var originType = ResolveOriginType(request);
+        var originRef = ResolveOriginRef(request);
         var qualificationSnapshot = await GetAssignedTechnicianQualificationCheckResultAsync(
             tenantId,
             assignedTechnicianPersonId,
@@ -3500,6 +3500,38 @@ public sealed class WorkOrderService(
             : pmScheduleId.HasValue
                 ? WorkOrderSources.PmSchedule
                 : WorkOrderSources.Manual;
+
+    private static string ResolveSource(CreateWorkOrderRequest request) =>
+        !string.IsNullOrWhiteSpace(request.Source)
+            ? request.Source.Trim()
+            : request.PmScheduleId.HasValue
+                ? WorkOrderSources.PmSchedule
+                : request.DefectId.HasValue
+                    ? WorkOrderSources.Defect
+                    : WorkOrderSources.Manual;
+
+    private static string ResolveWorkOrderType(CreateWorkOrderRequest request) =>
+        !string.IsNullOrWhiteSpace(request.WorkOrderType)
+            ? request.WorkOrderType.Trim()
+            : request.PmScheduleId.HasValue
+                ? WorkOrderTypes.Preventive
+                : request.DefectId.HasValue
+                    ? WorkOrderTypes.DefectRepair
+                    : WorkOrderTypes.OperatorRequest;
+
+    private static string ResolveOriginType(CreateWorkOrderRequest request) =>
+        !string.IsNullOrWhiteSpace(request.OriginType)
+            ? request.OriginType.Trim()
+            : request.PmScheduleId.HasValue
+                ? WorkOrderOriginTypes.PmDue
+                : request.DefectId.HasValue
+                    ? WorkOrderOriginTypes.Defect
+                    : WorkOrderOriginTypes.Manual;
+
+    private static string? ResolveOriginRef(CreateWorkOrderRequest request) =>
+        !string.IsNullOrWhiteSpace(request.OriginRef)
+            ? request.OriginRef.Trim()
+            : request.PmScheduleId?.ToString("D");
 
     private static string DetermineDraftOriginType(Guid? defectId, Guid? pmScheduleId) =>
         defectId.HasValue

@@ -27,6 +27,7 @@ import { OverviewPage } from './pages/overview/OverviewPage'
 
 import { PmProgramsPage } from './pages/pm-programs/PmProgramsPage'
 import { PmProgramCreatePage } from './pages/pm-programs/PmProgramCreatePage'
+import { RecallsPage } from './pages/recalls/RecallsPage'
 
 import { ReportsPage } from './pages/reports/ReportsPage'
 
@@ -90,6 +91,8 @@ export default function App() {
             <Route path="/pm-programs/drawer" element={<PmProgramsPage />} />
             <Route path="/pm-programs/details" element={<PmProgramsPage />} />
             <Route path="/pm-programs/create" element={<PmProgramCreatePage />} />
+
+            <Route path="/recalls" element={<RecallsPage />} />
 
             <Route path="/meters" element={<MetersPage />} />
             <Route path="/meters/drawer" element={<MetersPage />} />

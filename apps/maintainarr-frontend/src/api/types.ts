@@ -2477,6 +2477,292 @@ export interface AssetExternalIntelligenceOverviewResponse {
   complaints: AssetComplaintSignalResponse[]
 }
 
+export interface RecallProviderSummaryResponse {
+  providerKey: string
+  displayName: string
+  description: string
+  sourceOfTruth: string
+  status: string
+  supportsVehicleSearch: boolean
+  supportsCampaignSearch: boolean
+  supportsManualCampaigns: boolean
+  lastCheckedAt: string | null
+  lastSuccessfulAt: string | null
+  lastError: string | null
+}
+
+export interface RecallProviderHealthResponse {
+  providerKey: string
+  status: string
+  message: string
+  checkedAt: string
+  latencyMs: number | null
+}
+
+export interface RecallCampaignApplicabilityResponse {
+  applicabilityId: string
+  recallCampaignId: string
+  modelYear: number | null
+  make: string | null
+  model: string | null
+  assetClass: string | null
+  assetType: string | null
+  bodyClass: string | null
+  vehicleType: string | null
+  fuelType: string | null
+  engineFamily: string | null
+  engineManufacturer: string | null
+  componentCategory: string | null
+  tireBrand: string | null
+  tireLine: string | null
+  tireSize: string | null
+  equipmentMake: string | null
+  equipmentModel: string | null
+  serialRangeStart: string | null
+  serialRangeEnd: string | null
+  productionStartDate: string | null
+  productionEndDate: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecallCampaignResponse {
+  campaignId: string
+  sourceProvider: string
+  sourceType: string
+  sourceProviderRecordId: string | null
+  nhtsaCampaignNumber: string | null
+  nhtsaActionNumber: string | null
+  manufacturerCampaignNumber: string | null
+  campaignTitle: string | null
+  manufacturer: string
+  component: string
+  reportReceivedDate: string | null
+  campaignStartDate: string | null
+  campaignEndDate: string | null
+  campaignStatus: string
+  potentialUnitsAffected: number | null
+  summary: string
+  consequence: string
+  remedy: string
+  notes: string
+  parkIt: boolean
+  parkOutside: boolean
+  overTheAirUpdate: boolean
+  recallType: string
+  sourceUrl: string | null
+  fetchedAt: string | null
+  applicability: RecallCampaignApplicabilityResponse[]
+  assetCaseCount: number
+  openCaseCount: number
+  verifiedOpenCaseCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssetRecallCaseResponse {
+  caseId: string
+  assetId: string
+  recallCampaignId: string
+  campaignNumber: string
+  campaignTitle: string | null
+  manufacturer: string
+  component: string
+  summary: string
+  consequence: string
+  remedy: string
+  notes: string
+  modelYear: string | null
+  make: string | null
+  model: string | null
+  reportReceivedDate: string | null
+  sourceProvider: string
+  sourceType: string
+  sourceUrl: string | null
+  fetchedAt: string | null
+  matchBasis: string
+  matchConfidence: string
+  matchScore: number | null
+  status: string
+  readinessImpact: string
+  reason: string
+  verificationStatus: string
+  verificationSource: string | null
+  verificationMethod: string | null
+  verifiedByPersonId: string | null
+  verifiedAt: string | null
+  dismissedByPersonId: string | null
+  dismissedAt: string | null
+  dismissalReason: string | null
+  parkIt: boolean
+  parkOutside: boolean
+  overTheAirUpdate: boolean
+  evidenceDocumentId: string | null
+  evidenceUrl: string | null
+  evidenceText: string | null
+  workOrderId: string | null
+  inspectionRunId: string | null
+  defectId: string | null
+  readinessHoldId: string | null
+  actionType: string
+  actionStatus: string
+  detectedAt: string
+  lastRefreshedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecallDashboardItemResponse {
+  caseId: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  campaignNumber: string
+  component: string
+  matchBasis: string
+  matchConfidence: string
+  status: string
+  readinessImpact: string
+  sourceProvider: string
+  detectedAt: string
+  lastRefreshedAt: string | null
+  nextReviewAt: string | null
+  workOrderId: string | null
+  siteRef: string | null
+}
+
+export interface RecallDashboardResponse {
+  generatedAt: string
+  verifiedOpenRecallCount: number
+  potentialMatchCount: number
+  parkItWarningCount: number
+  parkOutsideWarningCount: number
+  workOrdersCreatedCount: number
+  completedVerifiedThisMonthCount: number
+  overdueReviewCount: number
+  assetsNeverCheckedCount: number
+  attentionItems: RecallDashboardItemResponse[]
+}
+
+export interface RecallVehicleSearchRequest {
+  year: number
+  make: string
+  model: string
+}
+
+export interface RecallCampaignSearchRequest {
+  campaignNumber: string
+}
+
+export interface RecallCampaignApplicabilityRequest {
+  modelYear?: number | null
+  make?: string | null
+  model?: string | null
+  assetClass?: string | null
+  assetType?: string | null
+  bodyClass?: string | null
+  vehicleType?: string | null
+  fuelType?: string | null
+  engineFamily?: string | null
+  engineManufacturer?: string | null
+  componentCategory?: string | null
+  tireBrand?: string | null
+  tireLine?: string | null
+  tireSize?: string | null
+  equipmentMake?: string | null
+  equipmentModel?: string | null
+  serialRangeStart?: string | null
+  serialRangeEnd?: string | null
+  productionStartDate?: string | null
+  productionEndDate?: string | null
+  notes?: string | null
+}
+
+export interface CreateRecallCampaignRequest {
+  sourceProvider: string
+  sourceType: string
+  sourceProviderRecordId: string | null
+  nhtsaCampaignNumber: string | null
+  nhtsaActionNumber: string | null
+  manufacturerCampaignNumber: string | null
+  campaignTitle: string | null
+  manufacturer: string
+  component: string
+  reportReceivedDate: string | null
+  campaignStartDate: string | null
+  campaignEndDate: string | null
+  campaignStatus: string
+  potentialUnitsAffected: number | null
+  summary: string
+  consequence: string
+  remedy: string
+  notes: string
+  parkIt: boolean
+  parkOutside: boolean
+  overTheAirUpdate: boolean
+  recallType: string
+  sourceUrl: string | null
+  sourceRawJson: string | null
+  applicability: RecallCampaignApplicabilityRequest[] | null
+  affectedAssetIds: string[] | null
+  createCandidatesNow?: boolean
+  createWorkOrdersNow?: boolean
+}
+
+export interface UpdateRecallCampaignRequest {
+  campaignTitle?: string | null
+  manufacturer?: string | null
+  component?: string | null
+  reportReceivedDate?: string | null
+  campaignStartDate?: string | null
+  campaignEndDate?: string | null
+  campaignStatus?: string | null
+  potentialUnitsAffected?: number | null
+  summary?: string | null
+  consequence?: string | null
+  remedy?: string | null
+  notes?: string | null
+  parkIt?: boolean | null
+  parkOutside?: boolean | null
+  overTheAirUpdate?: boolean | null
+  recallType?: string | null
+  sourceUrl?: string | null
+  sourceRawJson?: string | null
+  applicability?: RecallCampaignApplicabilityRequest[] | null
+}
+
+export interface VerifyAssetRecallRequest {
+  verificationSource: string
+  verificationMethod: string
+  verificationStatus: string
+  verifiedByPersonId: string | null
+  verifiedAt: string | null
+  evidenceDocumentId: string | null
+  evidenceUrl: string | null
+  evidenceText: string | null
+  providerRawJson: string | null
+  expiresAt: string | null
+  nextReviewAt: string | null
+  notes: string | null
+}
+
+export interface DismissAssetRecallRequest {
+  dismissalReason: string
+  dismissedByPersonId?: string | null
+}
+
+export interface ReleaseRecallHoldRequest {
+  releasedByPersonId: string | null
+  releaseReason: string | null
+}
+
+export interface CreateRecallWorkItemRequest {
+  actionType: string
+  actionStatus?: string | null
+  requiredAction?: string | null
+}
+
 export interface ExternalVinDecodeRequest {
   vin: string
   modelYear: number | null

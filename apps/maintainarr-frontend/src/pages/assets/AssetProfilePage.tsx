@@ -44,6 +44,7 @@ import type {
 } from '../../api/types'
 import { canCreateWorkOrders, canManageAssets, loadSession } from '../../auth/sessionStorage'
 import { AssetExternalIntelligencePanel } from '../../components/AssetExternalIntelligencePanel'
+import { AssetRecallPanel } from '../../components/AssetRecallPanel'
 import {
   AssetSectionList,
   buildAssetUpsertPayload,
@@ -818,20 +819,25 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
               title: 'External intelligence',
               icon: <Radar className="h-5 w-5" />,
               content: (
-                <AssetExternalIntelligencePanel
-                  overview={externalIntelligenceQuery.data ?? null}
-                  isLoading={externalIntelligenceQuery.isLoading}
-                  isRefreshing={refreshIntelligenceMutation.isPending}
-                  onRefresh={() => refreshIntelligenceMutation.mutate()}
-                  onAcceptSuggestion={(suggestionId) => acceptSuggestionMutation.mutate(suggestionId)}
-                  onRejectSuggestion={(suggestionId) => rejectSuggestionMutation.mutate(suggestionId)}
-                  onCreateRecallWorkOrder={(recallId) => createRecallWorkOrderMutation.mutate(recallId)}
-                />
-              ),
-            },
-            {
-              title: 'Compliance links',
-              icon: <ShieldCheck className="h-5 w-5" />,
+            <AssetExternalIntelligencePanel
+              overview={externalIntelligenceQuery.data ?? null}
+              isLoading={externalIntelligenceQuery.isLoading}
+              isRefreshing={refreshIntelligenceMutation.isPending}
+              onRefresh={() => refreshIntelligenceMutation.mutate()}
+              onAcceptSuggestion={(suggestionId) => acceptSuggestionMutation.mutate(suggestionId)}
+              onRejectSuggestion={(suggestionId) => rejectSuggestionMutation.mutate(suggestionId)}
+              onCreateRecallWorkOrder={(recallId) => createRecallWorkOrderMutation.mutate(recallId)}
+            />
+          ),
+        },
+        {
+          title: 'Recalls',
+          icon: <Radar className="h-5 w-5" />,
+          content: <AssetRecallPanel accessToken={session!.accessToken} assetId={assetId!} />,
+        },
+        {
+          title: 'Compliance links',
+          icon: <ShieldCheck className="h-5 w-5" />,
               content: (
                 <div className="space-y-3">
                   <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">

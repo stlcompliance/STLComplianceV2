@@ -369,7 +369,7 @@ public sealed class NhtsaExternalIntelligenceClient(
 
     private static string NormalizeReferenceValue(string value)
     {
-        var trimmed = value.Trim();
+        var trimmed = value.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(trimmed))
         {
             throw new StlApiException("external_intelligence.validation", "A reference value is required.", 400);
@@ -688,6 +688,14 @@ public sealed class NhtsaRecallResult
     public string? NHTSACampaignNumber { get; set; }
 
     public string? NHTSAActionNumber { get; set; }
+
+    public int? PotentialNumberofUnitsAffected { get; set; }
+
+    public bool ParkIt { get; set; }
+
+    public bool ParkOutSide { get; set; }
+
+    public bool OverTheAirUpdate { get; set; }
 
     public string? ReportReceivedDate { get; set; }
 

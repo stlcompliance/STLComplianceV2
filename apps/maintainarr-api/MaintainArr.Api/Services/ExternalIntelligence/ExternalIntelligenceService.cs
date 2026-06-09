@@ -290,7 +290,7 @@ public sealed class ExternalIntelligenceService(
             identifiers.Count,
             snapshots.Count,
             suggestions.Count,
-            recalls.Count(recall => string.Equals(recall.Status, "active", StringComparison.OrdinalIgnoreCase)),
+            recalls.Count(recall => !string.Equals(recall.Status, "resolved", StringComparison.OrdinalIgnoreCase)),
             complaints.Count,
             snapshots.FirstOrDefault()?.CapturedAt ?? complaintSnapshot?.CapturedAt ?? recalls.FirstOrDefault()?.CapturedAt);
 
@@ -1058,32 +1058,51 @@ public sealed class ExternalIntelligenceService(
             entity.Make = recall.Make?.Trim();
             entity.Model = recall.Model?.Trim();
             entity.ReportReceivedDate = recall.ReportReceivedDate?.Trim();
-            entity.Status = "active";
+            entity.Status = recall.ParkIt || recall.ParkOutSide
+                ? "needs_vin_check"
+                : "potential_match";
             entity.CapturedAt = now;
             entity.UpdatedAt = now;
 
-            var hold = await assetQualityHoldService.CreateAsync(
-                tenantId,
-                actorUserId,
-                new CreateAssetQualityHoldRequest(
-                    assetId,
-                    "nhtsa_recall",
-                    "nhtsa",
-                    campaignNumber,
-                    $"{campaignNumber} - {entity.Component}",
-                    string.Join(" ", new[]
-                    {
-                        entity.Summary,
-                        entity.Consequence,
-                        entity.Remedy,
-                    }.Where(part => !string.IsNullOrWhiteSpace(part))),
-                    "high",
-                    actorPersonId),
-                cancellationToken);
-            entity.QualityHoldId = hold.HoldId;
+            var requiresHold = recall.ParkIt || recall.ParkOutSide;
+            if (requiresHold && !entity.QualityHoldId.HasValue)
+            {
+                var hold = await assetQualityHoldService.CreateAsync(
+                    tenantId,
+                    actorUserId,
+                    new CreateAssetQualityHoldRequest(
+                        assetId,
+                        "nhtsa_recall",
+                        "nhtsa",
+                        campaignNumber,
+                        $"{campaignNumber} - {entity.Component}",
+                        string.Join(" ", new[]
+                        {
+                            entity.Summary,
+                            entity.Consequence,
+                            entity.Remedy,
+                        }.Where(part => !string.IsNullOrWhiteSpace(part))),
+                        "high",
+                        actorPersonId),
+                    cancellationToken);
+                entity.QualityHoldId = hold.HoldId;
+            }
+            else if (!requiresHold && entity.QualityHoldId.HasValue)
+            {
+                await assetQualityHoldService.ReleaseAsync(
+                    tenantId,
+                    actorUserId,
+                    entity.QualityHoldId.Value,
+                    new ReleaseAssetQualityHoldRequest(
+                        entity.QualityHoldId.Value,
+                        actorPersonId,
+                        "No longer returned by the latest NHTSA recall lookup."),
+                    cancellationToken);
+                entity.QualityHoldId = null;
+            }
         }
 
-        foreach (var entity in existing.Where(x => !activeCampaigns.Contains(x.CampaignNumber) && string.Equals(x.Status, "active", StringComparison.OrdinalIgnoreCase)))
+        foreach (var entity in existing.Where(x => !activeCampaigns.Contains(x.CampaignNumber) && !string.Equals(x.Status, "resolved", StringComparison.OrdinalIgnoreCase)))
         {
             if (entity.QualityHoldId.HasValue)
             {
@@ -1096,6 +1115,7 @@ public sealed class ExternalIntelligenceService(
                         actorPersonId,
                         "No longer returned by the latest NHTSA recall lookup."),
                     cancellationToken);
+                entity.QualityHoldId = null;
             }
 
             entity.Status = "resolved";

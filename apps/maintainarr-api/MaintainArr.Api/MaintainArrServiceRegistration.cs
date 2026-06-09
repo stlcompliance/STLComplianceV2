@@ -1,6 +1,7 @@
 using MaintainArr.Api.Options;
 using MaintainArr.Api.Services;
 using MaintainArr.Api.Services.ExternalIntelligence;
+using MaintainArr.Api.Services.Recalls;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 
@@ -13,6 +14,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<ExternalIntelligenceOptions>(builder.Configuration.GetSection(ExternalIntelligenceOptions.SectionName));
+        builder.Services.Configure<RecallOptions>(builder.Configuration.GetSection(RecallOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -144,6 +146,11 @@ public static class MaintainArrServiceRegistration
             client.Timeout = TimeSpan.FromSeconds(30);
         });
         builder.Services.AddScoped<ExternalIntelligenceService>();
+        builder.Services.AddScoped<ManualRecallProvider>();
+        builder.Services.AddScoped<NhtsaRecallProvider>();
+        builder.Services.AddScoped<RecallRegistry>();
+        builder.Services.AddScoped<RecallReadinessPolicy>();
+        builder.Services.AddScoped<RecallService>();
         builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

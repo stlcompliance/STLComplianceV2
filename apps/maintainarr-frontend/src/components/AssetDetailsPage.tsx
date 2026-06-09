@@ -10,6 +10,7 @@ import type {
   AssetResponse,
 } from '../api/types'
 import { AssetExternalIntelligencePanel } from './AssetExternalIntelligencePanel'
+import { AssetRecallPanel } from './AssetRecallPanel'
 
 interface AssetDetailsPageProps {
   asset: AssetResponse
@@ -21,6 +22,7 @@ interface AssetDetailsPageProps {
   installedComponents: AssetInstalledComponentResponse[] | null
   externalIntelligenceOverview: AssetExternalIntelligenceOverviewResponse | null
   isExternalIntelligenceLoading: boolean
+  accessToken: string
 }
 
 function humanize(value: string | null | undefined): string {
@@ -57,6 +59,7 @@ export function AssetDetailsPage({
   installedComponents,
   externalIntelligenceOverview,
   isExternalIntelligenceLoading,
+  accessToken,
 }: AssetDetailsPageProps) {
   const blockers = readiness?.blockers ?? []
   const isReady = readiness?.readinessStatus === 'ready' && blockers.length === 0
@@ -166,6 +169,15 @@ export function AssetDetailsPage({
               overview={externalIntelligenceOverview}
               isLoading={isExternalIntelligenceLoading}
             />
+          ),
+        },
+        {
+          title: 'Recalls',
+          icon: <ShieldCheck className="h-5 w-5" />,
+          content: accessToken.trim() ? (
+            <AssetRecallPanel accessToken={accessToken} assetId={asset.assetId} />
+          ) : (
+            <p className="text-sm text-slate-400">Sign in to view tracked recall cases for this asset.</p>
           ),
         },
         {

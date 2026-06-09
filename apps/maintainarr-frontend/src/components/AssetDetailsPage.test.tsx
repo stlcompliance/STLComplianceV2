@@ -25,6 +25,7 @@ describe('AssetDetailsPage', () => {
           }}
           externalIntelligenceOverview={null}
           isExternalIntelligenceLoading={false}
+          accessToken=""
           readiness={{
             assetId: '11111111-1111-1111-1111-111111111111',
             assetTag: 'TRK-01',

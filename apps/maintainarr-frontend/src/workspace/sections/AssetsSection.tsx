@@ -71,6 +71,7 @@ export function AssetsSection({ state }: Props) {
             installedComponents={s.assetInstalledComponentsQuery.data ?? null}
             externalIntelligenceOverview={externalIntelligenceQuery.data ?? null}
             isExternalIntelligenceLoading={externalIntelligenceQuery.isLoading}
+            accessToken={s.accessToken}
           />
         ) : (
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">

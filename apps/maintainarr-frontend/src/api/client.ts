@@ -54,6 +54,18 @@ import type {
   ExternalAssetIdentifierResponse,
   ExternalIntelligenceProviderSummaryResponse,
   ExternalProviderHealthResponse,
+  RecallProviderSummaryResponse,
+  RecallProviderHealthResponse,
+  RecallCampaignResponse,
+  AssetRecallCaseResponse,
+  RecallDashboardResponse,
+  RecallVehicleSearchRequest,
+  RecallCampaignSearchRequest,
+  CreateRecallCampaignRequest,
+  UpdateRecallCampaignRequest,
+  VerifyAssetRecallRequest,
+  DismissAssetRecallRequest,
+  ReleaseRecallHoldRequest,
   ExternalVinDecodeBatchRequest,
   ExternalVinDecodeBatchItemResponse,
   ExternalVinDecodeRequest,
@@ -1959,6 +1971,286 @@ export async function createAssetRecallWorkOrder(
     },
   )
   return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to create recall work order')
+}
+
+export async function getRecallProviders(
+  accessToken: string,
+): Promise<RecallProviderSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/providers`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecallProviderSummaryResponse[]>(
+    response,
+    'Failed to load recall providers',
+  )
+}
+
+export async function getRecallProviderHealth(
+  accessToken: string,
+): Promise<RecallProviderHealthResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/providers/health`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecallProviderHealthResponse[]>(
+    response,
+    'Failed to load recall provider health',
+  )
+}
+
+export async function getRecallDashboard(
+  accessToken: string,
+): Promise<RecallDashboardResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/dashboard`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecallDashboardResponse>(response, 'Failed to load recall dashboard')
+}
+
+export async function listRecallCampaigns(
+  accessToken: string,
+  filters?: {
+    sourceProvider?: string | null
+    status?: string | null
+    campaignNumber?: string | null
+    component?: string | null
+    limit?: number | null
+    offset?: number | null
+  },
+): Promise<RecallCampaignResponse[]> {
+  const search = new URLSearchParams()
+  if (filters?.sourceProvider && filters.sourceProvider.trim()) {
+    search.set('sourceProvider', filters.sourceProvider.trim())
+  }
+  if (filters?.status && filters.status.trim()) {
+    search.set('status', filters.status.trim())
+  }
+  if (filters?.campaignNumber && filters.campaignNumber.trim()) {
+    search.set('campaignNumber', filters.campaignNumber.trim())
+  }
+  if (filters?.component && filters.component.trim()) {
+    search.set('component', filters.component.trim())
+  }
+  if (filters?.limit != null) {
+    search.set('limit', String(filters.limit))
+  }
+  if (filters?.offset != null) {
+    search.set('offset', String(filters.offset))
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecallCampaignResponse[]>(response, 'Failed to load recall campaigns')
+}
+
+export async function getRecallCampaign(
+  accessToken: string,
+  campaignId: string,
+): Promise<RecallCampaignResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns/${campaignId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecallCampaignResponse>(response, 'Failed to load recall campaign')
+}
+
+export async function searchRecallCampaignsByVehicle(
+  accessToken: string,
+  request: RecallVehicleSearchRequest,
+): Promise<RecallCampaignResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns/search/vehicle`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecallCampaignResponse[]>(
+    response,
+    'Failed to search recalls by vehicle',
+  )
+}
+
+export async function searchRecallCampaignByNumber(
+  accessToken: string,
+  request: RecallCampaignSearchRequest,
+): Promise<RecallCampaignResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns/search/campaign-number`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecallCampaignResponse[]>(
+    response,
+    'Failed to search recall by campaign number',
+  )
+}
+
+export async function createRecallCampaign(
+  accessToken: string,
+  request: CreateRecallCampaignRequest,
+): Promise<RecallCampaignResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecallCampaignResponse>(response, 'Failed to create recall campaign')
+}
+
+export async function updateRecallCampaign(
+  accessToken: string,
+  campaignId: string,
+  request: UpdateRecallCampaignRequest,
+): Promise<RecallCampaignResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recalls/campaigns/${campaignId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecallCampaignResponse>(response, 'Failed to update recall campaign')
+}
+
+export async function listAssetRecallCases(
+  accessToken: string,
+  assetId: string,
+  filters?: {
+    status?: string | null
+    sourceProvider?: string | null
+    campaignNumber?: string | null
+    component?: string | null
+    limit?: number | null
+    offset?: number | null
+  },
+): Promise<AssetRecallCaseResponse[]> {
+  const search = new URLSearchParams()
+  if (filters?.status && filters.status.trim()) {
+    search.set('status', filters.status.trim())
+  }
+  if (filters?.sourceProvider && filters.sourceProvider.trim()) {
+    search.set('sourceProvider', filters.sourceProvider.trim())
+  }
+  if (filters?.campaignNumber && filters.campaignNumber.trim()) {
+    search.set('campaignNumber', filters.campaignNumber.trim())
+  }
+  if (filters?.component && filters.component.trim()) {
+    search.set('component', filters.component.trim())
+  }
+  if (filters?.limit != null) {
+    search.set('limit', String(filters.limit))
+  }
+  if (filters?.offset != null) {
+    search.set('offset', String(filters.offset))
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/recalls${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetRecallCaseResponse[]>(
+    response,
+    'Failed to load asset recalls',
+  )
+}
+
+export async function refreshAssetRecallCases(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetRecallCaseResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/recalls/refresh`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetRecallCaseResponse[]>(
+    response,
+    'Failed to refresh asset recalls',
+  )
+}
+
+export async function verifyAssetRecall(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+  request: VerifyAssetRecallRequest,
+): Promise<AssetRecallCaseResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/verify`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<AssetRecallCaseResponse>(response, 'Failed to verify asset recall')
+}
+
+export async function dismissAssetRecall(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+  request: DismissAssetRecallRequest,
+): Promise<AssetRecallCaseResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/dismiss`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<AssetRecallCaseResponse>(response, 'Failed to dismiss asset recall')
+}
+
+export async function createAssetRecallHold(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+): Promise<AssetRecallCaseResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/hold`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetRecallCaseResponse>(response, 'Failed to create asset recall hold')
+}
+
+export async function releaseAssetRecallHold(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+  request: ReleaseRecallHoldRequest,
+): Promise<AssetRecallCaseResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/hold/release`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(request),
+    },
+  )
+  return parseJsonResponse<AssetRecallCaseResponse>(response, 'Failed to release asset recall hold')
+}
+
+export async function createAssetRecallCaseWorkOrder(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/work-order`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<WorkOrderDetailResponse>(response, 'Failed to create asset recall work order')
+}
+
+export async function createAssetRecallCaseInspectionItem(
+  accessToken: string,
+  assetId: string,
+  caseId: string,
+): Promise<WorkOrderDetailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/assets/${assetId}/recalls/cases/${caseId}/inspection-item`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<WorkOrderDetailResponse>(
+    response,
+    'Failed to create asset recall inspection item',
+  )
 }
 
 export async function getExternalIntelligenceProviders(

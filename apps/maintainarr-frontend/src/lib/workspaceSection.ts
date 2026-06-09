@@ -2,6 +2,7 @@ export const WORKSPACE_SECTIONS = [
   'overview',
   'assets',
   'pm-programs',
+  'recalls',
   'meters',
   'work-orders',
   'defects',
@@ -40,6 +41,10 @@ export const workspaceSectionHeaders: Record<
   'pm-programs': {
     title: 'PM programs',
     subtitle: 'Program scope and schedule assignment',
+  },
+  recalls: {
+    title: 'Recalls',
+    subtitle: 'Campaigns, provider health, and asset-level recall actions',
   },
   meters: {
     title: 'Meters and readings',

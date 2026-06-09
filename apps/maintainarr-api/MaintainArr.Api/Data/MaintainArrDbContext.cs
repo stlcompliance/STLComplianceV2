@@ -161,6 +161,11 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<AssetEnrichmentSnapshot> AssetEnrichmentSnapshots => Set<AssetEnrichmentSnapshot>();
     public DbSet<AssetEnrichmentSuggestion> AssetEnrichmentSuggestions => Set<AssetEnrichmentSuggestion>();
     public DbSet<AssetRecallSnapshot> AssetRecallSnapshots => Set<AssetRecallSnapshot>();
+    public DbSet<RecallCampaign> RecallCampaigns => Set<RecallCampaign>();
+    public DbSet<RecallCampaignApplicability> RecallCampaignApplicabilities => Set<RecallCampaignApplicability>();
+    public DbSet<AssetRecallCase> AssetRecallCases => Set<AssetRecallCase>();
+    public DbSet<RecallAuditLogEntry> RecallAuditLogEntries => Set<RecallAuditLogEntry>();
+    public DbSet<RecallMakeModelAlias> RecallMakeModelAliases => Set<RecallMakeModelAlias>();
     public DbSet<ExternalProviderCacheEntry> ExternalProviderCacheEntries => Set<ExternalProviderCacheEntry>();
     public DbSet<ExternalProviderAuditLogEntry> ExternalProviderAuditLogEntries => Set<ExternalProviderAuditLogEntry>();
     public DbSet<AssetQualityHold> AssetQualityHolds => Set<AssetQualityHold>();
@@ -1507,6 +1512,127 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany()
                 .HasForeignKey(x => x.AssetId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RecallCampaign>(entity =>
+        {
+            entity.ToTable("maintainarr_recall_campaigns");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProvider).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceProviderRecordId).HasMaxLength(128);
+            entity.Property(x => x.NhtsaCampaignNumber).HasMaxLength(64);
+            entity.Property(x => x.NhtsaActionNumber).HasMaxLength(64);
+            entity.Property(x => x.ManufacturerCampaignNumber).HasMaxLength(128);
+            entity.Property(x => x.CampaignTitle).HasMaxLength(256);
+            entity.Property(x => x.Manufacturer).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Component).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReportReceivedDate).HasMaxLength(64);
+            entity.Property(x => x.CampaignStartDate).HasMaxLength(64);
+            entity.Property(x => x.CampaignEndDate).HasMaxLength(64);
+            entity.Property(x => x.CampaignStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Consequence).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Remedy).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.RecallType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceRawJson).HasColumnType("text");
+            entity.Property(x => x.SourceUrl).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SourceProvider, x.SourceProviderRecordId }).IsUnique();
+            entity.HasMany(x => x.Applicabilities)
+                .WithOne(x => x.RecallCampaign)
+                .HasForeignKey(x => x.RecallCampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.AssetCases)
+                .WithOne(x => x.RecallCampaign)
+                .HasForeignKey(x => x.RecallCampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RecallCampaignApplicability>(entity =>
+        {
+            entity.ToTable("maintainarr_recall_campaign_applicabilities");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Make).HasMaxLength(128);
+            entity.Property(x => x.Model).HasMaxLength(128);
+            entity.Property(x => x.AssetClass).HasMaxLength(128);
+            entity.Property(x => x.AssetType).HasMaxLength(128);
+            entity.Property(x => x.BodyClass).HasMaxLength(128);
+            entity.Property(x => x.VehicleType).HasMaxLength(128);
+            entity.Property(x => x.FuelType).HasMaxLength(128);
+            entity.Property(x => x.EngineFamily).HasMaxLength(128);
+            entity.Property(x => x.EngineManufacturer).HasMaxLength(128);
+            entity.Property(x => x.ComponentCategory).HasMaxLength(128);
+            entity.Property(x => x.TireBrand).HasMaxLength(128);
+            entity.Property(x => x.TireLine).HasMaxLength(128);
+            entity.Property(x => x.TireSize).HasMaxLength(128);
+            entity.Property(x => x.EquipmentMake).HasMaxLength(128);
+            entity.Property(x => x.EquipmentModel).HasMaxLength(128);
+            entity.Property(x => x.SerialRangeStart).HasMaxLength(128);
+            entity.Property(x => x.SerialRangeEnd).HasMaxLength(128);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.SourceRawJson).HasColumnType("text");
+            entity.HasIndex(x => new { x.RecallCampaignId, x.ModelYear, x.Make, x.Model });
+        });
+
+        modelBuilder.Entity<AssetRecallCase>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_recall_cases");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.MatchBasis).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.MatchConfidence).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.MatchScore).HasColumnType("decimal(6,2)");
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReadinessImpact).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.DismissedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.DismissalReason).HasMaxLength(1024);
+            entity.Property(x => x.VerificationSource).HasMaxLength(64);
+            entity.Property(x => x.VerificationMethod).HasMaxLength(64);
+            entity.Property(x => x.VerificationStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.VerifiedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.EvidenceUrl).HasMaxLength(512);
+            entity.Property(x => x.EvidenceText).HasMaxLength(1024);
+            entity.Property(x => x.ProviderRawJson).HasColumnType("text");
+            entity.Property(x => x.ActionType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ActionStatus).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.RecallCampaignId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.VerificationStatus });
+            entity.HasOne(x => x.Asset)
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RecallAuditLogEntry>(entity =>
+        {
+            entity.ToTable("maintainarr_recall_audit_log_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PreviousStatus).HasMaxLength(64);
+            entity.Property(x => x.NewStatus).HasMaxLength(64);
+            entity.Property(x => x.PersonId).HasMaxLength(128);
+            entity.Property(x => x.DetailsJson).HasColumnType("text");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.RecallCampaignId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<RecallMakeModelAlias>(entity =>
+        {
+            entity.ToTable("maintainarr_recall_make_model_aliases");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Provider).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RawMake).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RawModel).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.NormalizedMake).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.NormalizedModel).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => new { x.Provider, x.RawMake, x.RawModel }).IsUnique();
+            entity.HasIndex(x => new { x.Provider, x.NormalizedMake, x.NormalizedModel });
         });
 
         modelBuilder.Entity<ExternalProviderCacheEntry>(entity =>
