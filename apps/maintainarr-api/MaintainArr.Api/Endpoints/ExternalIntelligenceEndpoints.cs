@@ -162,7 +162,7 @@ public static class ExternalIntelligenceEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CreateRecallWorkOrderAsync(tenantId, actorUserId, assetId, recallId, cancellationToken));
         })
-        .WithName($"CreateAssetRecallWorkOrder{nameSuffix}");
+        .WithName($"CreateAssetExternalIntelligenceRecallWorkOrder{nameSuffix}");
     }
 
     private static void MapReferenceRoutes(RouteGroupBuilder group, string nameSuffix)

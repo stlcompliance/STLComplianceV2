@@ -27,6 +27,7 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
         Guid actorUserId,
         Guid actorPersonId,
         bool forceRefresh,
+        bool allowStaleOnRefreshFailure = true,
         CancellationToken cancellationToken = default)
     {
         var mirror = await db.StaffarrProcurementApprovalAuthorityMirrors
@@ -42,7 +43,18 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
             return MapMirror(mirror, AuthoritySourceStaffarrMirror);
         }
 
-        return await RefreshMirrorAsync(tenantId, actorUserId, actorPersonId, cancellationToken);
+        try
+        {
+            return await RefreshMirrorAsync(tenantId, actorUserId, actorPersonId, cancellationToken);
+        }
+        catch (StlApiException ex) when (allowStaleOnRefreshFailure && mirror is not null && ex.StatusCode >= 500)
+        {
+            return MapMirror(mirror, AuthoritySourceStaffarrMirror);
+        }
+        catch (HttpRequestException) when (allowStaleOnRefreshFailure && mirror is not null)
+        {
+            return MapMirror(mirror, AuthoritySourceStaffarrMirror);
+        }
     }
 
     public async Task<ProcurementApprovalAuthorityMirrorResponse> RefreshMirrorAsync(
@@ -134,7 +146,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
             return;
         }
 
-        var authority = await GetMirrorForActorAsync(tenantId, actorUserId, actorPersonId, forceRefresh: false, cancellationToken);
+        var authority = await GetMirrorForActorAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            forceRefresh: false,
+            allowStaleOnRefreshFailure: false,
+            cancellationToken);
         if (!authority.CanSubmitPurchaseRequests)
         {
             ThrowDenied(
@@ -163,7 +181,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
             return;
         }
 
-        var authority = await GetMirrorForActorAsync(tenantId, actorUserId, actorPersonId, forceRefresh: false, cancellationToken);
+        var authority = await GetMirrorForActorAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            forceRefresh: false,
+            allowStaleOnRefreshFailure: false,
+            cancellationToken);
         if (!authority.CanApprovePurchaseRequests)
         {
             ThrowDenied(
@@ -192,7 +216,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
             return;
         }
 
-        var authority = await GetMirrorForActorAsync(tenantId, actorUserId, actorPersonId, forceRefresh: false, cancellationToken);
+        var authority = await GetMirrorForActorAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            forceRefresh: false,
+            allowStaleOnRefreshFailure: false,
+            cancellationToken);
         if (!authority.CanIssuePurchaseOrders)
         {
             ThrowDenied(

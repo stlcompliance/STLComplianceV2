@@ -36,6 +36,7 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
     private HttpClient _supplyarrClient = null!;
     private string _userToken = null!;
     private Guid _staffarrPersonId;
+    private volatile bool _staffarrAuthorityLookupFails;
 
     public async Task InitializeAsync()
     {
@@ -109,7 +110,10 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StaffArrProcurementApprovalAuthorityClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                    .ConfigurePrimaryHttpMessageHandler(() =>
+                        new SwitchableStaffArrAuthorityLookupHandler(
+                            _staffarrFactory.Server.CreateHandler(),
+                            () => _staffarrAuthorityLookupFails));
             });
         });
 
@@ -178,6 +182,34 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
         var authority = (await authorityResponse.Content.ReadFromJsonAsync<ProcurementApprovalAuthorityMirrorResponse>())!;
         Assert.True(authority.CanSubmitPurchaseRequests);
         Assert.StartsWith("staffarr_", authority.AuthoritySource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Procurement_authority_mirror_uses_stale_cache_when_staffarr_is_unavailable()
+    {
+        var firstResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/me/procurement-approval-authority", _userToken));
+        firstResponse.EnsureSuccessStatusCode();
+
+        using (var scope = _supplyarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+            var mirror = await db.StaffarrProcurementApprovalAuthorityMirrors
+                .FirstAsync(x => x.TenantId == PlatformSeeder.DemoTenantId && x.StaffarrPersonId == _staffarrPersonId);
+            mirror.RefreshedAt = DateTimeOffset.UtcNow - TimeSpan.FromHours(2);
+            mirror.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync();
+        }
+
+        _staffarrAuthorityLookupFails = true;
+
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/me/procurement-approval-authority", _userToken));
+        response.EnsureSuccessStatusCode();
+
+        var authority = (await response.Content.ReadFromJsonAsync<ProcurementApprovalAuthorityMirrorResponse>())!;
+        Assert.Equal("staffarr_mirror", authority.AuthoritySource);
+        Assert.True(authority.RefreshedAt < DateTimeOffset.UtcNow.AddMinutes(-90));
     }
 
     [Fact]
@@ -434,5 +466,26 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class SwitchableStaffArrAuthorityLookupHandler(
+        HttpMessageHandler innerHandler,
+        Func<bool> shouldFail)
+        : DelegatingHandler(innerHandler)
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            if (shouldFail())
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadGateway)
+                {
+                    Content = new StringContent("upstream unavailable"),
+                });
+            }
+
+            return base.SendAsync(request, cancellationToken);
+        }
     }
 }

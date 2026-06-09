@@ -95,6 +95,7 @@ public static class AuthEndpoints
                 context.User.GetUserId(),
                 context.User.GetPersonId(),
                 forceRefresh: false,
+                allowStaleOnRefreshFailure: true,
                 cancellationToken));
         })
         .WithName("SupplyArrGetProcurementApprovalAuthority");
@@ -112,6 +113,7 @@ public static class AuthEndpoints
                 context.User.GetUserId(),
                 context.User.GetPersonId(),
                 forceRefresh: false,
+                allowStaleOnRefreshFailure: true,
                 cancellationToken));
         })
         .WithName("SupplyArrGetProcurementApprovalAuthorityV1");
