@@ -46,6 +46,38 @@ describe('PlatformJourneySeedsPage', () => {
         createdAt: '2026-06-08T15:00:00Z',
         updatedAt: '2026-06-08T15:00:00Z',
       },
+      {
+        id: 'dataset-2',
+        key: 'compliancecore-governing-bodies',
+        name: 'Governing Bodies',
+        category: 'compliance',
+        ownerService: 'Compliance Core',
+        status: 'ready',
+        currentPublishedVersion: null,
+        sourceCount: 1,
+        entityCount: 0,
+        pendingReviewCount: 0,
+        failedImportCount: 0,
+        lastPublishedAt: null,
+        createdAt: '2026-06-08T15:00:00Z',
+        updatedAt: '2026-06-08T15:00:00Z',
+      },
+      {
+        id: 'dataset-3',
+        key: 'supplyarr-party',
+        name: 'Party',
+        category: 'supply',
+        ownerService: 'SupplyArr',
+        status: 'ready',
+        currentPublishedVersion: null,
+        sourceCount: 1,
+        entityCount: 0,
+        pendingReviewCount: 0,
+        failedImportCount: 0,
+        lastPublishedAt: null,
+        createdAt: '2026-06-08T15:00:00Z',
+        updatedAt: '2026-06-08T15:00:00Z',
+      },
     ])
     vi.mocked(nexarr.createReferenceDatasetInput).mockResolvedValue({
       id: 'job-1',
@@ -74,6 +106,12 @@ describe('PlatformJourneySeedsPage', () => {
     renderPage()
 
     expect(await screen.findByText('MaintainArr - Asset Class')).toBeInTheDocument()
+    expect(screen.getByText('Browse by product')).toBeInTheDocument()
+    expect(screen.getByText('MaintainArr')).toBeInTheDocument()
+    expect(screen.getByText('Compliance Core')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Asset Class/i }))
+    expect(screen.getByRole('button', { name: /Asset Class/i })).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Value'), { target: { value: 'Asset Class A' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add value' }))

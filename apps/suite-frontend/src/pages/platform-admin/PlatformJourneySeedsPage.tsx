@@ -10,6 +10,10 @@ function formatDatasetLabel(dataset: ReferenceDatasetResponse): string {
   return `${dataset.ownerService} - ${dataset.name}`
 }
 
+function formatProductLabel(ownerService: string): string {
+  return ownerService
+}
+
 export function PlatformJourneySeedsPage() {
   const { pushToast } = useToast()
   const [selectedDatasetId, setSelectedDatasetId] = useState('')
@@ -31,6 +35,22 @@ export function PlatformJourneySeedsPage() {
       })),
     [datasetsQuery.data],
   )
+
+  const datasetsByProduct = useMemo(() => {
+    const grouped = new Map<string, ReferenceDatasetResponse[]>()
+    for (const dataset of datasetsQuery.data ?? []) {
+      const bucket = grouped.get(dataset.ownerService) ?? []
+      bucket.push(dataset)
+      grouped.set(dataset.ownerService, bucket)
+    }
+
+    return Array.from(grouped.entries())
+      .map(([ownerService, datasets]) => ({
+        ownerService,
+        datasets: datasets.slice().sort((left, right) => left.name.localeCompare(right.name)),
+      }))
+      .sort((left, right) => left.ownerService.localeCompare(right.ownerService))
+  }, [datasetsQuery.data])
 
   useEffect(() => {
     if (!selectedDatasetId && datasetOptions.length > 0) {
@@ -119,6 +139,55 @@ export function PlatformJourneySeedsPage() {
             <p className="mt-1">{selectedDataset ? formatDatasetLabel(selectedDataset) : '—'}</p>
             <p className="mt-1 font-mono text-xs text-slate-500">{selectedDataset?.key ?? '—'}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h5 className="font-semibold text-stl-navy">Browse by product</h5>
+            <p className="mt-1 text-sm text-slate-600">
+              The seeded datasets are grouped by owning product so you can jump directly to the right list.
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+            {datasetsQuery.data?.length ?? 0} datasets
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          {datasetsByProduct.map((group) => (
+            <div key={group.ownerService} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h6 className="font-medium text-stl-navy">{formatProductLabel(group.ownerService)}</h6>
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-600">
+                  {group.datasets.length}
+                </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {group.datasets.map((dataset) => {
+                  const isSelected = dataset.id === selectedDatasetId
+                  return (
+                    <button
+                      key={dataset.id}
+                      type="button"
+                      onClick={() => setSelectedDatasetId(dataset.id)}
+                      className={[
+                        'rounded-full border px-3 py-1.5 text-left text-sm transition',
+                        isSelected
+                          ? 'border-stl-teal bg-white text-stl-navy shadow-sm'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                      ].join(' ')}
+                    >
+                      <span className="block font-medium">{dataset.name}</span>
+                      <span className="block font-mono text-[11px] text-slate-500">{dataset.key}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

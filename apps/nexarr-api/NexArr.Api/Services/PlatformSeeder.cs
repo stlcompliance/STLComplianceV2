@@ -230,6 +230,41 @@ public static class PlatformSeeder
         "Data Sync Status"
     ];
 
+    private static readonly string[] ComplianceCoreReferenceDatasetNames =
+    [
+        "Governing Bodies",
+        "Jurisdictions",
+        "Regulation Sources",
+        "Citation Types",
+        "Requirement Types",
+        "Evidence Types",
+        "Applicability Subject Types",
+        "Asset Compliance Categories",
+        "Training Compliance Categories",
+        "Document Compliance Categories",
+        "Incident Compliance Categories",
+        "Maintenance Compliance Categories",
+        "Transportation Compliance Categories",
+        "Inventory Compliance Categories",
+        "Supplier Compliance Categories",
+        "Customer Requirement Categories",
+        "Exception Types",
+        "Exemption Types",
+        "Severity Levels",
+        "Confidence Levels",
+        "Retention Triggers"
+    ];
+
+    private static readonly (string Key, string Name)[] SupplyArrReferenceDatasetNames =
+    [
+        ("party", "Party"),
+        ("part", "Part"),
+        ("purchase_request", "Purchase Request"),
+        ("purchase_order", "Purchase Order"),
+        ("receipt", "Receipt"),
+        ("warranty_claim", "Warranty Claim")
+    ];
+
     public static async Task SeedAsync(
         NexArrDbContext db,
         IPasswordHasher passwordHasher,
@@ -821,16 +856,16 @@ public static class PlatformSeeder
         var existingDatasets = await db.ReferenceDatasets.ToListAsync(cancellationToken);
         var existingByKey = existingDatasets.ToDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var datasetName in MaintainArrReferenceDatasetNames)
+        foreach (var seed in GetReferenceDatasetSeeds())
         {
-            var key = NormalizeKey($"MaintainArr {datasetName}");
-            var category = ResolveReferenceDatasetCategory(datasetName);
+            var key = seed.Key;
+            var category = seed.Category;
 
             if (existingByKey.TryGetValue(key, out var existing))
             {
-                existing.Name = datasetName;
+                existing.Name = seed.Name;
                 existing.Category = category;
-                existing.OwnerService = "MaintainArr";
+                existing.OwnerService = seed.OwnerService;
                 existing.Status = ReferenceDatasetStatuses.Ready;
                 existing.UpdatedAt = now;
                 continue;
@@ -840,9 +875,9 @@ public static class PlatformSeeder
             {
                 Id = Guid.NewGuid(),
                 Key = key,
-                Name = datasetName,
+                Name = seed.Name,
                 Category = category,
-                OwnerService = "MaintainArr",
+                OwnerService = seed.OwnerService,
                 Status = ReferenceDatasetStatuses.Ready,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -885,7 +920,37 @@ public static class PlatformSeeder
         }
     }
 
-    private static string ResolveReferenceDatasetCategory(string datasetName) =>
+    private static IEnumerable<ReferenceDatasetSeed> GetReferenceDatasetSeeds()
+    {
+        foreach (var datasetName in MaintainArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"MaintainArr {datasetName}"),
+                datasetName,
+                ResolveMaintainArrReferenceDatasetCategory(datasetName),
+                "MaintainArr");
+        }
+
+        foreach (var datasetName in ComplianceCoreReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"ComplianceCore {datasetName}"),
+                datasetName,
+                "compliance",
+                "Compliance Core");
+        }
+
+        foreach (var dataset in SupplyArrReferenceDatasetNames)
+        {
+            yield return new ReferenceDatasetSeed(
+                NormalizeKey($"SupplyArr {dataset.Name}"),
+                dataset.Name,
+                "supply",
+                "SupplyArr");
+        }
+    }
+
+    private static string ResolveMaintainArrReferenceDatasetCategory(string datasetName) =>
         datasetName switch
         {
             "PM Program" or "PM Program Status" or "PM Template" or "PM Type" or "PM Interval Type" => "maintenance",
@@ -911,4 +976,10 @@ public static class PlatformSeeder
         string ApiBaseUrl,
         string HealthUrl,
         string ServiceAudience);
+
+    private sealed record ReferenceDatasetSeed(
+        string Key,
+        string Name,
+        string Category,
+        string OwnerService);
 }
