@@ -269,6 +269,70 @@ export interface ReferenceCrosswalkResponse {
   updatedAt: string
 }
 
+export interface ReferenceTenantOverlayResponse {
+  id: string
+  tenantId: string
+  referenceEntityId: string
+  entityType: string
+  canonicalKey: string
+  localName: string | null
+  localStatus: string | null
+  hidden: boolean
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceProductMappingResponse {
+  id: string
+  tenantId: string
+  productCode: string
+  referenceEntityId: string
+  entityType: string
+  canonicalKey: string
+  localEntityType: string
+  localEntityId: string
+  mappingStatus: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceEntityVersionResponse {
+  id: string
+  referenceEntityId: string
+  version: number
+  fieldsJson: string
+  sourceEvidenceJson: string
+  effectiveDate: string | null
+  publishedAt: string | null
+  supersededByVersionId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferenceEntityResponse {
+  id: string
+  datasetId: string
+  datasetKey: string
+  datasetName: string
+  entityType: string
+  canonicalKey: string
+  displayName: string
+  status: string
+  normalizedFieldsJson: string
+  firstSeenSourceId: string | null
+  firstSeenSourceKey: string | null
+  currentVersionId: string | null
+  currentVersion: number | null
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+  versions: ReferenceEntityVersionResponse[]
+  crosswalks: ReferenceCrosswalkResponse[]
+  tenantOverlays: ReferenceTenantOverlayResponse[]
+  productMappings: ReferenceProductMappingResponse[]
+}
+
 export interface ReferencePublishEventResponse {
   id: string
   datasetId: string
@@ -288,6 +352,18 @@ export interface CreateReferenceDatasetRequest {
   status: string
 }
 
+export interface PublishReferenceDatasetsRequest {
+  datasetIds: string[]
+  summary?: string | null
+}
+
+export interface ReferencePublishBatchResponse {
+  requestedCount: number
+  publishedCount: number
+  items: ReferencePublishEventResponse[]
+  processedAt: string
+}
+
 export interface CreateReferenceSourceRequest {
   key: string
   name: string
@@ -304,6 +380,14 @@ export interface CreateReferenceDatasetInputRequest {
   fileName?: string | null
   value?: string | null
   valuesText?: string | null
+}
+
+export interface UpdateReferenceEntityRequest {
+  displayName?: string | null
+  canonicalKey?: string | null
+  normalizedFieldsJson?: string | null
+  sourceEvidenceJson?: string | null
+  effectiveDate?: string | null
 }
 
 export interface CreateReferenceMasterCsvImportRequest {

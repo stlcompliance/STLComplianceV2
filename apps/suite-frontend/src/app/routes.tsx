@@ -25,7 +25,6 @@ import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorker
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 import { HybridDataPlanePage } from '../pages/platform-admin/HybridDataPlanePage'
 import { PlatformUsersPage } from '../pages/platform-admin/PlatformUsersPage'
-import { PlatformJourneySeedsPage } from '../pages/platform-admin/PlatformJourneySeedsPage'
 import { ReferenceDataPage } from '../pages/platform-admin/ReferenceDataPage'
 
 export function AppRoutes() {
@@ -47,7 +46,7 @@ export function AppRoutes() {
                 <Route path="users" element={<PlatformUsersPage />} />
                 <Route path="products" element={<ProductOverviewPage />} />
                 <Route path="reference-data" element={<ReferenceDataPage />} />
-                <Route path="dataset-inputs" element={<PlatformJourneySeedsPage />} />
+                <Route path="dataset-inputs" element={<Navigate to="/app/platform-admin/reference-data" replace />} />
                 <Route path="callback-allowlist" element={<CallbackAllowlistPage />} />
                 <Route path="status" element={<PlatformStatusPage />} />
                 <Route path="data-plane" element={<HybridDataPlanePage />} />

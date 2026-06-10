@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+
 import * as nexarr from '../../api/nexarrClient'
+import type { ReferenceDatasetResponse, ReferenceEntityResponse } from '../../api/types'
 import { downloadBlob } from '../../components/platform-admin/audit-export/utils'
 import { useToast } from '../../feedback'
 
@@ -32,6 +34,36 @@ const MASTER_CSV_TEMPLATE_SAMPLE_ROW = [
   'Replace or remove this sample row before upload.',
 ] as const
 
+type DatasetFormState = {
+  id: string
+  key: string
+  name: string
+  category: string
+  ownerService: string
+  status: string
+}
+
+type EntityEditorState = {
+  id: string
+  datasetId: string
+  displayName: string
+  canonicalKey: string
+  normalizedFieldsJson: string
+  sourceEvidenceJson: string
+  effectiveDate: string
+}
+
+function createEmptyDatasetForm(): DatasetFormState {
+  return {
+    id: '',
+    key: '',
+    name: '',
+    category: 'vehicle',
+    ownerService: 'ReferenceDataCore',
+    status: 'draft',
+  }
+}
+
 function buildCsvRow(values: readonly string[]) {
   return values
     .map((value) => {
@@ -43,6 +75,39 @@ function buildCsvRow(values: readonly string[]) {
 
 function buildMasterCsvTemplate() {
   return [MASTER_CSV_TEMPLATE_HEADERS, MASTER_CSV_TEMPLATE_SAMPLE_ROW].map(buildCsvRow).join('\n')
+}
+
+function formatDatasetLabel(dataset: ReferenceDatasetResponse) {
+  return `${dataset.ownerService} - ${dataset.name}`
+}
+
+function formatJsonForEditor(value: string | null | undefined) {
+  if (!value?.trim()) {
+    return '{}'
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(value), null, 2)
+  } catch {
+    return value
+  }
+}
+
+function getCurrentVersion(entity: ReferenceEntityResponse) {
+  return entity.versions[0] ?? null
+}
+
+function buildEntityEditorState(entity: ReferenceEntityResponse): EntityEditorState {
+  const currentVersion = getCurrentVersion(entity)
+  return {
+    id: entity.id,
+    datasetId: entity.datasetId,
+    displayName: entity.displayName,
+    canonicalKey: entity.canonicalKey,
+    normalizedFieldsJson: formatJsonForEditor(entity.normalizedFieldsJson),
+    sourceEvidenceJson: formatJsonForEditor(currentVersion?.sourceEvidenceJson),
+    effectiveDate: currentVersion?.effectiveDate ?? '',
+  }
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
@@ -98,9 +163,9 @@ function StatusBadge({ value }: { value: string }) {
   const classes =
     normalized.includes('active') || normalized.includes('published') || normalized.includes('ready')
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : normalized.includes('review') || normalized.includes('pending')
+      : normalized.includes('review') || normalized.includes('pending') || normalized.includes('draft')
         ? 'border-amber-200 bg-amber-50 text-amber-700'
-        : normalized.includes('failed') || normalized.includes('reject')
+        : normalized.includes('failed') || normalized.includes('reject') || normalized.includes('archiv')
           ? 'border-rose-200 bg-rose-50 text-rose-700'
           : 'border-slate-200 bg-slate-50 text-slate-600'
 
@@ -111,14 +176,26 @@ function StatusBadge({ value }: { value: string }) {
   )
 }
 
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-stl-navy">{value}</p>
+    </div>
+  )
+}
+
 export function ReferenceDataPage() {
   const queryClient = useQueryClient()
   const { pushToast } = useToast()
-  const [datasetKey, setDatasetKey] = useState('')
-  const [datasetName, setDatasetName] = useState('')
-  const [datasetCategory, setDatasetCategory] = useState('vehicle')
-  const [datasetOwnerService, setDatasetOwnerService] = useState('ReferenceDataCore')
-  const [datasetStatus, setDatasetStatus] = useState('draft')
+
+  const [datasetForm, setDatasetForm] = useState<DatasetFormState>(createEmptyDatasetForm)
+  const [selectedDatasetId, setSelectedDatasetId] = useState('')
+  const [selectedDatasetIds, setSelectedDatasetIds] = useState<string[]>([])
+  const [entityEditor, setEntityEditor] = useState<EntityEditorState | null>(null)
+
+  const [singleValue, setSingleValue] = useState('')
+  const [valuesText, setValuesText] = useState('')
 
   const [sourceKey, setSourceKey] = useState('')
   const [sourceName, setSourceName] = useState('')
@@ -137,8 +214,6 @@ export function ReferenceDataPage() {
   const [masterCsvObjectKey, setMasterCsvObjectKey] = useState('')
   const [selectedImportId, setSelectedImportId] = useState('')
   const [rowTargetDatasetIds, setRowTargetDatasetIds] = useState<Record<string, string>>({})
-  const [publishDatasetId, setPublishDatasetId] = useState('')
-  const [publishSummary, setPublishSummary] = useState('')
 
   const downloadMasterCsvTemplate = () => {
     downloadBlob(
@@ -177,29 +252,90 @@ export function ReferenceDataPage() {
     queryFn: () => nexarr.listReferencePublishHistory(),
   })
 
-  const resolvedImportDatasetId =
-    importDatasetId || datasetsQuery.data?.find((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)?.id || ''
+  const visibleDatasets = useMemo(
+    () => (datasetsQuery.data ?? []).filter((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY),
+    [datasetsQuery.data],
+  )
+
+  useEffect(() => {
+    if (visibleDatasets.length === 0) {
+      setSelectedDatasetId('')
+      return
+    }
+
+    if (!selectedDatasetId || !visibleDatasets.some((dataset) => dataset.id === selectedDatasetId)) {
+      setSelectedDatasetId(visibleDatasets[0].id)
+    }
+  }, [selectedDatasetId, visibleDatasets])
+
+  useEffect(() => {
+    setSelectedDatasetIds((current) =>
+      current.filter((id) =>
+        visibleDatasets.some(
+          (dataset) => dataset.id === id && dataset.status.toLowerCase() !== 'archived',
+        ),
+      ),
+    )
+  }, [visibleDatasets])
+
+  useEffect(() => {
+    if (entityEditor && entityEditor.datasetId !== selectedDatasetId) {
+      setEntityEditor(null)
+    }
+  }, [entityEditor, selectedDatasetId])
+
+  const selectedDataset = visibleDatasets.find((dataset) => dataset.id === selectedDatasetId) ?? null
+  const selectableDatasetIds = useMemo(
+    () =>
+      visibleDatasets
+        .filter((dataset) => dataset.status.toLowerCase() !== 'archived')
+        .map((dataset) => dataset.id),
+    [visibleDatasets],
+  )
+  const allSelectableDatasetsChecked =
+    selectableDatasetIds.length > 0 && selectableDatasetIds.every((id) => selectedDatasetIds.includes(id))
+
+  const datasetOptions = useMemo(
+    () =>
+      visibleDatasets.map((dataset) => ({
+        value: dataset.id,
+        label: formatDatasetLabel(dataset),
+        helper: dataset.key,
+      })),
+    [visibleDatasets],
+  )
+
+  const datasetsByProduct = useMemo(() => {
+    const grouped = new Map<string, ReferenceDatasetResponse[]>()
+    for (const dataset of visibleDatasets) {
+      const bucket = grouped.get(dataset.ownerService) ?? []
+      bucket.push(dataset)
+      grouped.set(dataset.ownerService, bucket)
+    }
+
+    return Array.from(grouped.entries())
+      .map(([ownerService, datasets]) => ({
+        ownerService,
+        datasets: datasets.slice().sort((left, right) => left.name.localeCompare(right.name)),
+      }))
+      .sort((left, right) => left.ownerService.localeCompare(right.ownerService))
+  }, [visibleDatasets])
+
+  const resolvedImportDatasetId = importDatasetId || visibleDatasets[0]?.id || ''
   const resolvedImportSourceId = importSourceId || sourcesQuery.data?.[0]?.id || ''
-  const resolvedPublishDatasetId =
-    publishDatasetId || datasetsQuery.data?.find((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)?.id || ''
   const resolvedSelectedImportId = selectedImportId || importsQuery.data?.[0]?.id || ''
+
+  const entitiesQuery = useQuery({
+    queryKey: ['platform-admin-reference-data-dataset-entities', selectedDatasetId],
+    queryFn: () => nexarr.listReferenceDatasetEntities(selectedDatasetId),
+    enabled: Boolean(selectedDatasetId),
+  })
 
   const stagingRecordsQuery = useQuery({
     queryKey: ['platform-admin-reference-data-staging-records', resolvedSelectedImportId],
     queryFn: () => nexarr.listReferenceStagingRecords(resolvedSelectedImportId),
     enabled: Boolean(resolvedSelectedImportId),
   })
-
-  const datasetOptions = useMemo(
-    () =>
-      (datasetsQuery.data ?? [])
-        .filter((dataset) => dataset.key !== MASTER_CSV_DATASET_KEY)
-        .map((dataset) => ({
-        value: dataset.id,
-        label: `${dataset.ownerService} - ${dataset.name}`,
-      })),
-    [datasetsQuery.data],
-  )
 
   const sourceOptions = useMemo(
     () =>
@@ -219,25 +355,54 @@ export function ReferenceDataPage() {
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-crosswalks'] }),
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-publish-history'] }),
       queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-staging-records'] }),
+      queryClient.invalidateQueries({ queryKey: ['platform-admin-reference-data-dataset-entities'] }),
     ])
   }
 
-  const createDatasetMutation = useMutation({
-    mutationFn: () =>
-      nexarr.createReferenceDataset({
-        key: datasetKey.trim(),
-        name: datasetName.trim(),
-        category: datasetCategory.trim(),
-        ownerService: datasetOwnerService.trim(),
-        status: datasetStatus.trim(),
-      }),
-    onSuccess: async () => {
-      setDatasetKey('')
-      setDatasetName('')
-      setDatasetCategory('vehicle')
-      setDatasetOwnerService('ReferenceDataCore')
-      setDatasetStatus('draft')
-      pushToast({ message: 'Reference dataset created.', variant: 'success' })
+  const resetDatasetForm = () => {
+    setDatasetForm(createEmptyDatasetForm())
+  }
+
+  const saveDatasetMutation = useMutation({
+    mutationFn: () => {
+      const payload = {
+        key: datasetForm.key.trim(),
+        name: datasetForm.name.trim(),
+        category: datasetForm.category.trim(),
+        ownerService: datasetForm.ownerService.trim(),
+        status: datasetForm.status.trim(),
+      }
+
+      return datasetForm.id
+        ? nexarr.updateReferenceDataset(datasetForm.id, payload)
+        : nexarr.createReferenceDataset(payload)
+    },
+    onSuccess: async (saved) => {
+      pushToast({
+        message: datasetForm.id ? 'Reference dataset updated.' : 'Reference dataset created.',
+        variant: 'success',
+      })
+      resetDatasetForm()
+      setSelectedDatasetId(saved.id)
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const deleteDatasetMutation = useMutation({
+    mutationFn: (dataset: ReferenceDatasetResponse) => nexarr.deleteReferenceDataset(dataset.id),
+    onSuccess: async (_data, dataset) => {
+      pushToast({ message: 'Reference dataset deleted.', variant: 'success' })
+      setSelectedDatasetIds((current) => current.filter((id) => id !== dataset.id))
+      if (selectedDatasetId === dataset.id) {
+        setSelectedDatasetId('')
+      }
+      if (entityEditor?.datasetId === dataset.id) {
+        setEntityEditor(null)
+      }
+      if (datasetForm.id === dataset.id) {
+        resetDatasetForm()
+      }
       await refreshAll()
     },
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
@@ -314,12 +479,103 @@ export function ReferenceDataPage() {
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
 
-  const publishMutation = useMutation({
-    mutationFn: ({ datasetId, summary }: { datasetId: string; summary: string }) =>
-      nexarr.publishReferenceDataset(datasetId, summary),
+  const publishDatasetMutation = useMutation({
+    mutationFn: (dataset: ReferenceDatasetResponse) =>
+      nexarr.publishReferenceDataset(dataset.id, `Published ${dataset.key} from platform admin`),
     onSuccess: async () => {
-      setPublishSummary('')
       pushToast({ message: 'Dataset published.', variant: 'success' })
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const publishSelectedMutation = useMutation({
+    mutationFn: (datasetIds: string[]) =>
+      nexarr.publishReferenceDatasets({
+        datasetIds,
+        summary: 'Published from platform admin batch',
+      }),
+    onSuccess: async (result) => {
+      pushToast({
+        message: `${result.publishedCount} dataset${result.publishedCount === 1 ? '' : 's'} published.`,
+        variant: 'success',
+      })
+      setSelectedDatasetIds([])
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const publishAllMutation = useMutation({
+    mutationFn: () => nexarr.publishAllReferenceDatasets('Published all reference datasets from platform admin'),
+    onSuccess: async (result) => {
+      pushToast({
+        message: `${result.publishedCount} dataset${result.publishedCount === 1 ? '' : 's'} published.`,
+        variant: 'success',
+      })
+      setSelectedDatasetIds([])
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const addValueMutation = useMutation({
+    mutationFn: () =>
+      nexarr.createReferenceDatasetInput(selectedDatasetId, {
+        value: singleValue.trim(),
+      }),
+    onSuccess: async (created) => {
+      setSingleValue('')
+      setSelectedImportId(created.id)
+      pushToast({ message: 'Dataset value added.', variant: 'success' })
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const importValuesMutation = useMutation({
+    mutationFn: () =>
+      nexarr.createReferenceDatasetInput(selectedDatasetId, {
+        valuesText: valuesText.trim(),
+      }),
+    onSuccess: async (created) => {
+      setValuesText('')
+      setSelectedImportId(created.id)
+      pushToast({ message: 'Dataset values imported.', variant: 'success' })
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const saveEntityMutation = useMutation({
+    mutationFn: () => {
+      if (!entityEditor) {
+        throw new Error('Select an entity to edit.')
+      }
+
+      return nexarr.updateReferenceEntity(entityEditor.id, {
+        displayName: entityEditor.displayName.trim(),
+        canonicalKey: entityEditor.canonicalKey.trim(),
+        normalizedFieldsJson: entityEditor.normalizedFieldsJson.trim() || null,
+        sourceEvidenceJson: entityEditor.sourceEvidenceJson.trim() || null,
+        effectiveDate: entityEditor.effectiveDate.trim() || null,
+      })
+    },
+    onSuccess: async (saved) => {
+      setEntityEditor(buildEntityEditorState(saved))
+      pushToast({ message: 'Reference entity updated.', variant: 'success' })
+      await refreshAll()
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
+  const deleteEntityMutation = useMutation({
+    mutationFn: (entity: ReferenceEntityResponse) => nexarr.deleteReferenceEntity(entity.id),
+    onSuccess: async (_data, entity) => {
+      pushToast({ message: 'Reference entity deleted.', variant: 'success' })
+      if (entityEditor?.id === entity.id) {
+        setEntityEditor(null)
+      }
       await refreshAll()
     },
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
@@ -357,17 +613,22 @@ export function ReferenceDataPage() {
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
 
-  const datasets = datasetsQuery.data ?? []
-  const sources = sourcesQuery.data ?? []
   const imports = importsQuery.data ?? []
   const crosswalks = crosswalksQuery.data ?? []
   const publishHistory = publishHistoryQuery.data ?? []
   const stagingRecords = stagingRecordsQuery.data ?? []
+  const datasetEntities = entitiesQuery.data ?? []
   const selectedImport = imports.find((item) => item.id === resolvedSelectedImportId) ?? null
   const selectedImportIsMasterCsv = selectedImport?.datasetKey === MASTER_CSV_DATASET_KEY
+  const latestDatasetInput =
+    imports.find((entry) => entry.datasetId === selectedDatasetId && entry.sourceKey === 'platform-admin-input') ??
+    imports.find((entry) => entry.datasetId === selectedDatasetId) ??
+    null
 
   const resolveRowTargetDatasetId = (record: (typeof stagingRecords)[number]) =>
-    rowTargetDatasetIds[record.id] ?? record.targetDatasetId ?? (selectedImportIsMasterCsv ? '' : record.datasetId)
+    rowTargetDatasetIds[record.id] ??
+    record.targetDatasetId ??
+    (selectedImportIsMasterCsv ? '' : record.datasetId)
 
   const isLoading =
     dashboardQuery.isLoading ||
@@ -378,7 +639,7 @@ export function ReferenceDataPage() {
     publishHistoryQuery.isLoading
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">Loading reference data…</p>
+    return <p className="text-sm text-slate-500">Loading reference data...</p>
   }
 
   const mainError =
@@ -389,6 +650,7 @@ export function ReferenceDataPage() {
     crosswalksQuery.error ??
     publishHistoryQuery.error ??
     stagingRecordsQuery.error ??
+    entitiesQuery.error ??
     null
 
   if (mainError) {
@@ -407,8 +669,8 @@ export function ReferenceDataPage() {
         <div>
           <h2 className="text-2xl font-semibold text-white">Reference data</h2>
           <p className="mt-1 max-w-3xl text-sm text-slate-400">
-            Platform-controlled reference datasets, source rankings, import queues, crosswalks,
-            and publish history live in NexArr.
+            ReferenceDataCore datasets, platform-managed dataset inputs, import review, and
+            publish history now live on one NexArr admin surface.
           </p>
         </div>
         <p className="text-xs text-slate-500">
@@ -428,25 +690,39 @@ export function ReferenceDataPage() {
       </div>
 
       <Section
-        title="Create and publish"
-        description="Seed datasets, register sources, queue placeholder imports, and publish dataset versions."
+        title="Dataset Control Plane"
+        description="Create or edit datasets, publish selected or all datasets, and manage the live catalog inventory."
       >
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h4 className="text-sm font-semibold text-stl-navy">New dataset</h4>
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-sm font-semibold text-stl-navy">
+                {datasetForm.id ? 'Edit dataset' : 'New dataset'}
+              </h4>
+              {datasetForm.id ? (
+                <button
+                  type="button"
+                  onClick={resetDatasetForm}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+              ) : null}
+            </div>
+
             <div className="mt-3 space-y-3">
               <Field label="Key">
                 <input
-                  value={datasetKey}
-                  onChange={(event) => setDatasetKey(event.target.value)}
+                  value={datasetForm.key}
+                  onChange={(event) => setDatasetForm((current) => ({ ...current, key: event.target.value }))}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   placeholder="vehicle-taxonomy"
                 />
               </Field>
               <Field label="Name">
                 <input
-                  value={datasetName}
-                  onChange={(event) => setDatasetName(event.target.value)}
+                  value={datasetForm.name}
+                  onChange={(event) => setDatasetForm((current) => ({ ...current, name: event.target.value }))}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   placeholder="Vehicle Taxonomy"
                 />
@@ -454,40 +730,225 @@ export function ReferenceDataPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 <Field label="Category">
                   <input
-                    value={datasetCategory}
-                    onChange={(event) => setDatasetCategory(event.target.value)}
+                    value={datasetForm.category}
+                    onChange={(event) =>
+                      setDatasetForm((current) => ({ ...current, category: event.target.value }))
+                    }
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                     placeholder="vehicle"
                   />
                 </Field>
                 <Field label="Owner">
                   <input
-                    value={datasetOwnerService}
-                    onChange={(event) => setDatasetOwnerService(event.target.value)}
+                    value={datasetForm.ownerService}
+                    onChange={(event) =>
+                      setDatasetForm((current) => ({ ...current, ownerService: event.target.value }))
+                    }
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                     placeholder="ReferenceDataCore"
                   />
                 </Field>
                 <Field label="Status">
-                  <input
-                    value={datasetStatus}
-                    onChange={(event) => setDatasetStatus(event.target.value)}
+                  <select
+                    value={datasetForm.status}
+                    onChange={(event) => setDatasetForm((current) => ({ ...current, status: event.target.value }))}
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="draft"
-                  />
+                  >
+                    <option value="draft">draft</option>
+                    <option value="ready">ready</option>
+                    <option value="published">published</option>
+                    <option value="archived">archived</option>
+                  </select>
                 </Field>
               </div>
+
               <button
                 type="button"
-                disabled={createDatasetMutation.isPending || !datasetKey.trim() || !datasetName.trim()}
-                onClick={() => createDatasetMutation.mutate()}
+                disabled={
+                  saveDatasetMutation.isPending ||
+                  !datasetForm.key.trim() ||
+                  !datasetForm.name.trim() ||
+                  !datasetForm.category.trim() ||
+                  !datasetForm.ownerService.trim()
+                }
+                onClick={() => saveDatasetMutation.mutate()}
                 className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
               >
-                {createDatasetMutation.isPending ? 'Saving…' : 'Create dataset'}
+                {saveDatasetMutation.isPending
+                  ? 'Saving...'
+                  : datasetForm.id
+                    ? 'Update dataset'
+                    : 'Create dataset'}
               </button>
             </div>
           </div>
 
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-stl-navy">Batch publish</h4>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Publish selected datasets together or republish the full platform catalog.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={publishSelectedMutation.isPending || selectedDatasetIds.length === 0}
+                    onClick={() => publishSelectedMutation.mutate(selectedDatasetIds)}
+                    className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    {publishSelectedMutation.isPending ? 'Publishing...' : 'Publish selected'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={publishAllMutation.isPending || selectableDatasetIds.length === 0}
+                    onClick={() => publishAllMutation.mutate()}
+                    className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                  >
+                    {publishAllMutation.isPending ? 'Publishing...' : 'Publish all'}
+                  </button>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">
+                {selectedDatasetIds.length} dataset{selectedDatasetIds.length === 1 ? '' : 's'} selected for batch publish.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all publishable datasets"
+                        checked={allSelectableDatasetsChecked}
+                        onChange={(event) =>
+                          setSelectedDatasetIds(event.target.checked ? selectableDatasetIds : [])
+                        }
+                      />
+                    </th>
+                    <th className="px-3 py-2">Dataset</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Entities</th>
+                    <th className="px-3 py-2">Review</th>
+                    <th className="px-3 py-2">Published</th>
+                    <th className="px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleDatasets.map((dataset) => {
+                    const isArchived = dataset.status.toLowerCase() === 'archived'
+                    const isSelected = selectedDatasetIds.includes(dataset.id)
+
+                    return (
+                      <tr key={dataset.id} className="border-b border-slate-100">
+                        <td className="px-3 py-2">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${dataset.name}`}
+                            disabled={isArchived}
+                            checked={isSelected}
+                            onChange={(event) =>
+                              setSelectedDatasetIds((current) =>
+                                event.target.checked
+                                  ? [...current, dataset.id]
+                                  : current.filter((id) => id !== dataset.id),
+                              )
+                            }
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <p className="font-medium text-stl-navy">{dataset.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {dataset.key} · {dataset.category} · {dataset.ownerService}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2">
+                          <StatusBadge value={dataset.status} />
+                        </td>
+                        <td className="px-3 py-2">
+                          {dataset.entityCount} entities
+                          <span className="block text-xs text-slate-500">{dataset.sourceCount} sources</span>
+                        </td>
+                        <td className="px-3 py-2">
+                          {dataset.pendingReviewCount} pending
+                          <span className="block text-xs text-slate-500">
+                            {dataset.failedImportCount} failed imports
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span>{dataset.currentPublishedVersion ?? 'Not published'}</span>
+                          <span className="block text-xs text-slate-500">
+                            {dataset.lastPublishedAt
+                              ? new Date(dataset.lastPublishedAt).toLocaleString()
+                              : 'No publish yet'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDatasetId(dataset.id)}
+                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                            >
+                              Manage inputs
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDatasetForm({
+                                  id: dataset.id,
+                                  key: dataset.key,
+                                  name: dataset.name,
+                                  category: dataset.category,
+                                  ownerService: dataset.ownerService,
+                                  status: dataset.status,
+                                })
+                              }
+                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              disabled={publishDatasetMutation.isPending || isArchived}
+                              onClick={() => publishDatasetMutation.mutate(dataset)}
+                              className="rounded-md border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                            >
+                              Publish
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deleteDatasetMutation.isPending}
+                              onClick={() => {
+                                if (window.confirm(`Delete dataset "${dataset.name}"?`)) {
+                                  deleteDatasetMutation.mutate(dataset)
+                                }
+                              }}
+                              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        title="Sources And Imports"
+        description="Register sources, queue review imports, and upload the master CSV routing template."
+      >
+        <div className="grid gap-4 2xl:grid-cols-4 xl:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h4 className="text-sm font-semibold text-stl-navy">New source</h4>
             <div className="mt-3 space-y-3">
@@ -521,7 +982,7 @@ export function ReferenceDataPage() {
                     value={connectorType}
                     onChange={(event) => setConnectorType(event.target.value)}
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="nhtsa"
+                    placeholder="manual"
                   />
                 </Field>
               </div>
@@ -530,11 +991,11 @@ export function ReferenceDataPage() {
                   <input
                     value={authorityRank}
                     onChange={(event) => setAuthorityRank(event.target.value)}
-                    type="number"
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="50"
                   />
                 </Field>
-                <Field label="Refresh cadence">
+                <Field label="Cadence">
                   <input
                     value={refreshCadence}
                     onChange={(event) => setRefreshCadence(event.target.value)}
@@ -544,11 +1005,12 @@ export function ReferenceDataPage() {
                 </Field>
               </div>
               <Field label="Terms notes">
-                <input
+                <textarea
                   value={termsNotes}
                   onChange={(event) => setTermsNotes(event.target.value)}
+                  rows={3}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                  placeholder="Optional usage notes"
+                  placeholder="Source usage notes"
                 />
               </Field>
               <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -565,13 +1027,13 @@ export function ReferenceDataPage() {
                 onClick={() => createSourceMutation.mutate()}
                 className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
               >
-                {createSourceMutation.isPending ? 'Saving…' : 'Create source'}
+                {createSourceMutation.isPending ? 'Saving...' : 'Create source'}
               </button>
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h4 className="text-sm font-semibold text-stl-navy">Queue import or publish</h4>
+            <h4 className="text-sm font-semibold text-stl-navy">Queue import</h4>
             <div className="mt-3 space-y-3">
               <Field label="Dataset">
                 <select
@@ -617,69 +1079,24 @@ export function ReferenceDataPage() {
               </Field>
               <button
                 type="button"
-                disabled={
-                  createImportMutation.isPending || !resolvedImportDatasetId || !resolvedImportSourceId
-                }
+                disabled={createImportMutation.isPending || !resolvedImportDatasetId || !resolvedImportSourceId}
                 onClick={() => createImportMutation.mutate()}
-                className="w-full rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
               >
-                {createImportMutation.isPending ? 'Queueing…' : 'Queue import'}
+                {createImportMutation.isPending ? 'Queueing...' : 'Queue import'}
               </button>
-
-              <div className="border-t border-slate-200 pt-3">
-                <Field label="Publish dataset summary">
-                  <input
-                    value={publishSummary}
-                    onChange={(event) => setPublishSummary(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="Initial publish for the dataset"
-                  />
-                </Field>
-                <div className="mt-3 flex gap-2">
-                  <select
-                    value={resolvedPublishDatasetId}
-                    onChange={(event) => setPublishDatasetId(event.target.value)}
-                    className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                  >
-                    {datasetOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={publishMutation.isPending || !resolvedPublishDatasetId}
-                    onClick={() =>
-                      publishMutation.mutate({
-                        datasetId: resolvedPublishDatasetId,
-                        summary: publishSummary || 'Published from platform admin',
-                      })
-                    }
-                    className="rounded-md border border-stl-navy px-4 py-2 text-sm font-medium text-stl-navy hover:bg-slate-100 disabled:opacity-50"
-                  >
-                    {publishMutation.isPending ? 'Publishing…' : 'Publish'}
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </Section>
 
-      <Section
-        title="Master CSV import"
-        description="Upload a single CSV that can route rows across all product datasets. Each row is staged for live review and must be assigned before approval if the dataset cannot be inferred."
-      >
-        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-stl-navy">Master CSV upload</h4>
+            <div className="mt-3 space-y-3">
               <Field label="CSV file">
                 <input
                   type="file"
                   accept=".csv,text/csv"
                   onChange={(event) => setMasterCsvFile(event.target.files?.[0] ?? null)}
-                  className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </Field>
               <Field label="Object key">
@@ -690,12 +1107,6 @@ export function ReferenceDataPage() {
                   placeholder="seed/reference/master-import.csv"
                 />
               </Field>
-              <p className="text-xs text-slate-500">
-                Selected file: {masterCsvFile?.name ?? 'No file selected'}
-              </p>
-              <p className="text-xs text-slate-500">
-                Download the template to start with the recommended columns and a removable sample row.
-              </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -710,129 +1121,390 @@ export function ReferenceDataPage() {
                   onClick={() => createMasterCsvImportMutation.mutate()}
                   className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
                 >
-                  {createMasterCsvImportMutation.isPending ? 'Uploading…' : 'Upload master CSV'}
+                  {createMasterCsvImportMutation.isPending ? 'Uploading...' : 'Upload master CSV'}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <h4 className="text-sm font-semibold text-stl-navy">Template and accepted columns</h4>
+            <h4 className="text-sm font-semibold text-stl-navy">Template notes</h4>
             <ul className="mt-3 space-y-2">
-              <li><span className="font-medium text-slate-700">Routing:</span> template uses dataset_key; product + dataset aliases also work</li>
-              <li><span className="font-medium text-slate-700">Identity:</span> entity_type, canonical_key, display_name</li>
-              <li><span className="font-medium text-slate-700">Optional:</span> source_system, source_key, confidence, plus any extra columns you want reviewers to see</li>
-              <li><span className="font-medium text-slate-700">Review:</span> imported rows are staged first, then approved row by row</li>
+              <li><span className="font-medium text-slate-700">Routing:</span> use `dataset_key`; product and dataset aliases also resolve.</li>
+              <li><span className="font-medium text-slate-700">Identity:</span> include `entity_type`, `canonical_key`, and `display_name`.</li>
+              <li><span className="font-medium text-slate-700">Optional:</span> carry source identifiers, confidence, and any reviewer-facing context columns.</li>
+              <li><span className="font-medium text-slate-700">Review:</span> uploaded rows stage first and only become canonical after approval or merge.</li>
             </ul>
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-3 py-2">Source</th>
+                <th className="px-3 py-2">Type</th>
+                <th className="px-3 py-2">Rank</th>
+                <th className="px-3 py-2">Cadence</th>
+                <th className="px-3 py-2">State</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sourcesQuery.data ?? []).map((source) => (
+                <tr key={source.id} className="border-b border-slate-100">
+                  <td className="px-3 py-2">
+                    <p className="font-medium text-stl-navy">{source.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {source.key} · {source.connectorType}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2">{source.sourceType}</td>
+                  <td className="px-3 py-2">{source.authorityRank}</td>
+                  <td className="px-3 py-2">{source.refreshCadence}</td>
+                  <td className="px-3 py-2">
+                    <StatusBadge value={source.enabled ? 'enabled' : 'disabled'} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      <Section
+        title="Dataset Inputs And Current Entities"
+        description="Pick a dataset, add one value or several values, then edit or delete the current canonical records from the same screen."
+      >
+        <div className="grid gap-6 2xl:grid-cols-[320px_320px_1fr]">
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <Field label="Dataset">
+                <select
+                  value={selectedDatasetId}
+                  onChange={(event) => setSelectedDatasetId(event.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                >
+                  {datasetOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <p className="font-medium text-stl-navy">Selected dataset</p>
+                <p className="mt-1">{selectedDataset ? formatDatasetLabel(selectedDataset) : '-'}</p>
+                <p className="mt-1 font-mono text-xs text-slate-500">{selectedDataset?.key ?? '-'}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedDataset ? <StatusBadge value={selectedDataset.status} /> : null}
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    {selectedDataset?.entityCount ?? 0} entities
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-stl-navy">Browse by product</h4>
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-600">
+                  {visibleDatasets.length}
+                </span>
+              </div>
+              <div className="mt-3 space-y-3">
+                {datasetsByProduct.map((group) => (
+                  <div key={group.ownerService} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <h5 className="font-medium text-stl-navy">{group.ownerService}</h5>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {group.datasets.length}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {group.datasets.map((dataset) => {
+                        const isSelected = dataset.id === selectedDatasetId
+                        return (
+                          <button
+                            key={dataset.id}
+                            type="button"
+                            onClick={() => setSelectedDatasetId(dataset.id)}
+                            className={[
+                              'rounded-full border px-3 py-1.5 text-left text-sm transition',
+                              isSelected
+                                ? 'border-stl-teal bg-slate-50 text-stl-navy shadow-sm'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                            ].join(' ')}
+                          >
+                            <span className="block font-medium">{dataset.name}</span>
+                            <span className="block font-mono text-[11px] text-slate-500">{dataset.key}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {latestDatasetInput ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-stl-navy">Latest dataset input</h4>
+                    <p className="text-sm text-slate-600">
+                      {latestDatasetInput.datasetName} · {latestDatasetInput.status}
+                    </p>
+                  </div>
+                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                    {latestDatasetInput.stagingRecordCount} records
+                  </span>
+                </div>
+                <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Detail label="Source" value={latestDatasetInput.sourceName} />
+                  <Detail label="Approved" value={String(latestDatasetInput.approvedCount)} />
+                  <Detail label="Pending review" value={String(latestDatasetInput.pendingReviewCount)} />
+                  <Detail label="Rejected" value={String(latestDatasetInput.rejectedCount)} />
+                </dl>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-stl-navy">Add value</h4>
+              <p className="mt-1 text-sm text-slate-600">Create one canonical reference value immediately.</p>
+              <div className="mt-4 space-y-3">
+                <Field label="Value">
+                  <input
+                    value={singleValue}
+                    onChange={(event) => setSingleValue(event.target.value)}
+                    placeholder="Asset Class A"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </Field>
+                <button
+                  type="button"
+                  disabled={!selectedDatasetId || !singleValue.trim() || addValueMutation.isPending}
+                  onClick={() => addValueMutation.mutate()}
+                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                >
+                  {addValueMutation.isPending ? 'Saving...' : 'Add value'}
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-stl-navy">Import values</h4>
+              <p className="mt-1 text-sm text-slate-600">Paste one value per line to bulk-create dataset inputs.</p>
+              <div className="mt-4 space-y-3">
+                <Field label="Values">
+                  <textarea
+                    value={valuesText}
+                    onChange={(event) => setValuesText(event.target.value)}
+                    rows={8}
+                    placeholder={`Asset Class A\nAsset Class B\nAsset Class C`}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </Field>
+                <button
+                  type="button"
+                  disabled={!selectedDatasetId || !valuesText.trim() || importValuesMutation.isPending}
+                  onClick={() => importValuesMutation.mutate()}
+                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                >
+                  {importValuesMutation.isPending ? 'Importing...' : 'Import values'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-stl-navy">Entity editor</h4>
+                {entityEditor ? (
+                  <button
+                    type="button"
+                    onClick={() => setEntityEditor(null)}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+
+              {entityEditor ? (
+                <div className="mt-3 space-y-3">
+                  <Field label="Display name">
+                    <input
+                      value={entityEditor.displayName}
+                      onChange={(event) =>
+                        setEntityEditor((current) =>
+                          current ? { ...current, displayName: event.target.value } : current,
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </Field>
+                  <Field label="Canonical key">
+                    <input
+                      value={entityEditor.canonicalKey}
+                      onChange={(event) =>
+                        setEntityEditor((current) =>
+                          current ? { ...current, canonicalKey: event.target.value } : current,
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm"
+                    />
+                  </Field>
+                  <Field label="Effective date">
+                    <input
+                      type="date"
+                      value={entityEditor.effectiveDate}
+                      onChange={(event) =>
+                        setEntityEditor((current) =>
+                          current ? { ...current, effectiveDate: event.target.value } : current,
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </Field>
+                  <Field label="Normalized fields JSON">
+                    <textarea
+                      value={entityEditor.normalizedFieldsJson}
+                      onChange={(event) =>
+                        setEntityEditor((current) =>
+                          current ? { ...current, normalizedFieldsJson: event.target.value } : current,
+                        )
+                      }
+                      rows={6}
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs"
+                    />
+                  </Field>
+                  <Field label="Source evidence JSON">
+                    <textarea
+                      value={entityEditor.sourceEvidenceJson}
+                      onChange={(event) =>
+                        setEntityEditor((current) =>
+                          current ? { ...current, sourceEvidenceJson: event.target.value } : current,
+                        )
+                      }
+                      rows={6}
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs"
+                    />
+                  </Field>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={
+                        saveEntityMutation.isPending ||
+                        !entityEditor.displayName.trim() ||
+                        !entityEditor.canonicalKey.trim()
+                      }
+                      onClick={() => saveEntityMutation.mutate()}
+                      className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                    >
+                      {saveEntityMutation.isPending ? 'Saving...' : 'Save entity'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deleteEntityMutation.isPending}
+                      onClick={() => {
+                        const entity = datasetEntities.find((item) => item.id === entityEditor.id)
+                        if (entity && window.confirm(`Delete entity "${entity.displayName}"?`)) {
+                          deleteEntityMutation.mutate(entity)
+                        }
+                      }}
+                      className="rounded-md border border-rose-300 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      Delete entity
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-slate-500">
+                  Select an entity from the table below to edit or delete it.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-stl-navy">Current entities</h4>
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                  {datasetEntities.length}
+                </span>
+              </div>
+
+              {entitiesQuery.isLoading ? (
+                <p className="mt-4 text-sm text-slate-500">Loading entities...</p>
+              ) : datasetEntities.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-500">No entities exist in this dataset yet.</p>
+              ) : (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-white text-xs uppercase text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2">Display name</th>
+                        <th className="px-3 py-2">Canonical key</th>
+                        <th className="px-3 py-2">Version</th>
+                        <th className="px-3 py-2">Published</th>
+                        <th className="px-3 py-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {datasetEntities.map((entity) => {
+                        const currentVersion = getCurrentVersion(entity)
+                        return (
+                          <tr key={entity.id} className="border-b border-slate-100 bg-white">
+                            <td className="px-3 py-2">
+                              <p className="font-medium text-stl-navy">{entity.displayName}</p>
+                              <p className="text-xs text-slate-500">{entity.entityType}</p>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                              {entity.canonicalKey}
+                            </td>
+                            <td className="px-3 py-2">{currentVersion?.version ?? '-'}</td>
+                            <td className="px-3 py-2 text-slate-600">
+                              {entity.publishedAt ? new Date(entity.publishedAt).toLocaleString() : 'Pending publish'}
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setEntityEditor(buildEntityEditorState(entity))}
+                                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={deleteEntityMutation.isPending}
+                                  onClick={() => {
+                                    if (window.confirm(`Delete entity "${entity.displayName}"?`)) {
+                                      deleteEntityMutation.mutate(entity)
+                                    }
+                                  }}
+                                  className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Section>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Section
-          title="Datasets"
-          description="Canonical dataset definitions, owners, and published version state."
-        >
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-3 py-2">Dataset</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Entities</th>
-                  <th className="px-3 py-2">Review</th>
-                  <th className="px-3 py-2">Published</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datasets.map((dataset) => (
-                  <tr key={dataset.id} className="border-b border-slate-100">
-                    <td className="px-3 py-2">
-                      <p className="font-medium text-stl-navy">{dataset.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {dataset.key} · {dataset.category} · {dataset.ownerService}
-                      </p>
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusBadge value={dataset.status} />
-                    </td>
-                    <td className="px-3 py-2">
-                      {dataset.entityCount} entities
-                      <span className="block text-xs text-slate-500">
-                        {dataset.sourceCount} sources
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      {dataset.pendingReviewCount} pending
-                      <span className="block text-xs text-slate-500">
-                        {dataset.failedImportCount} failed imports
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span>{dataset.currentPublishedVersion ?? 'Not published'}</span>
-                        <button
-                          type="button"
-                          disabled={publishMutation.isPending}
-                          onClick={() =>
-                            publishMutation.mutate({
-                              datasetId: dataset.id,
-                              summary: `Published ${dataset.key} from platform admin`,
-                            })
-                          }
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-                        >
-                          Publish
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        <Section
-          title="Sources"
-          description="Source ranking and connector metadata used when adjudicating imports."
-        >
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-3 py-2">Source</th>
-                  <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">Rank</th>
-                  <th className="px-3 py-2">Cadence</th>
-                  <th className="px-3 py-2">State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sources.map((source) => (
-                  <tr key={source.id} className="border-b border-slate-100">
-                    <td className="px-3 py-2">
-                      <p className="font-medium text-stl-navy">{source.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {source.key} · {source.connectorType}
-                      </p>
-                    </td>
-                    <td className="px-3 py-2">{source.sourceType}</td>
-                    <td className="px-3 py-2">{source.authorityRank}</td>
-                    <td className="px-3 py-2">{source.refreshCadence}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge value={source.enabled ? 'enabled' : 'disabled'} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-      </div>
-
       <Section
-        title="Imports and review queue"
+        title="Imports And Review Queue"
         description="Latest import jobs and their staged records. Review actions stay on the platform control plane."
       >
         <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
@@ -873,9 +1545,7 @@ export function ReferenceDataPage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-stl-navy">
-                      {selectedImport.datasetName}
-                    </h4>
+                    <h4 className="text-sm font-semibold text-stl-navy">{selectedImport.datasetName}</h4>
                     <p className="text-xs text-slate-500">
                       {selectedImport.datasetKey} · {selectedImport.sourceKey} ·{' '}
                       {selectedImport.fileName ?? selectedImport.rawObjectKey ?? 'No file attached'}
@@ -887,7 +1557,7 @@ export function ReferenceDataPage() {
                 </div>
 
                 {stagingRecordsQuery.isLoading ? (
-                  <p className="mt-4 text-sm text-slate-500">Loading staged records…</p>
+                  <p className="mt-4 text-sm text-slate-500">Loading staged records...</p>
                 ) : stagingRecords.length === 0 ? (
                   <p className="mt-4 text-sm text-slate-500">No staged records found.</p>
                 ) : (
@@ -907,7 +1577,7 @@ export function ReferenceDataPage() {
                       <tbody>
                         {stagingRecords.map((record) => (
                           <tr key={record.id} className="border-b border-slate-100 bg-white">
-                            <td className="px-3 py-2">{record.rowNumber ?? '—'}</td>
+                            <td className="px-3 py-2">{record.rowNumber ?? '-'}</td>
                             <td className="px-3 py-2">
                               <select
                                 value={resolveRowTargetDatasetId(record)}
@@ -941,7 +1611,7 @@ export function ReferenceDataPage() {
                               </p>
                             </td>
                             <td className="px-3 py-2 font-mono text-xs text-slate-600">
-                              {record.proposedCanonicalKey ?? '—'}
+                              {record.proposedCanonicalKey ?? '-'}
                             </td>
                             <td className="px-3 py-2">{Math.round(record.confidence * 100)}%</td>
                             <td className="px-3 py-2">
@@ -954,7 +1624,10 @@ export function ReferenceDataPage() {
                               <div className="flex flex-wrap gap-2">
                                 <button
                                   type="button"
-                                  disabled={reviewMutation.isPending || (selectedImportIsMasterCsv && !resolveRowTargetDatasetId(record))}
+                                  disabled={
+                                    reviewMutation.isPending ||
+                                    (selectedImportIsMasterCsv && !resolveRowTargetDatasetId(record))
+                                  }
                                   onClick={() =>
                                     reviewMutation.mutate({
                                       stagingId: record.id,
@@ -1035,16 +1708,14 @@ export function ReferenceDataPage() {
                       <p className="font-medium text-stl-navy">{crosswalk.externalSystem}</p>
                       <p className="text-xs text-slate-500">{crosswalk.status}</p>
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-slate-600">
-                      {crosswalk.externalKey}
-                    </td>
+                    <td className="px-3 py-2 font-mono text-xs text-slate-600">{crosswalk.externalKey}</td>
                     <td className="px-3 py-2">
                       <p className="font-medium text-stl-navy">{crosswalk.displayName}</p>
                       <p className="text-xs text-slate-500">
                         {crosswalk.entityType} · {crosswalk.canonicalKey}
                       </p>
                     </td>
-                    <td className="px-3 py-2">{crosswalk.sourceKey ?? '—'}</td>
+                    <td className="px-3 py-2">{crosswalk.sourceKey ?? '-'}</td>
                     <td className="px-3 py-2">{Math.round(crosswalk.confidence * 100)}%</td>
                   </tr>
                 ))}
@@ -1054,8 +1725,8 @@ export function ReferenceDataPage() {
         </Section>
 
         <Section
-          title="Publish history"
-          description="The recent publish events that advanced datasets into a visible version."
+          title="Publish History"
+          description="The recent publish events that advanced datasets into visible versions."
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">

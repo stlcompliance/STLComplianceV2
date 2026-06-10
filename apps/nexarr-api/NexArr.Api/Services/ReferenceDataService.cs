@@ -112,6 +112,127 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         return await ToDatasetResponseAsync(dataset.Id, cancellationToken);
     }
 
+    public async Task<ReferenceDatasetResponse> UpdateDatasetAsync(
+        ClaimsPrincipal principal,
+        Guid datasetId,
+        CreateReferenceDatasetRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var dataset = await db.ReferenceDatasets.FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
+            ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
+
+        var normalizedKey = NormalizeKey(request.Key);
+        if (!string.Equals(dataset.Key, normalizedKey, StringComparison.OrdinalIgnoreCase)
+            && await db.ReferenceDatasets.AnyAsync(x => x.Id != datasetId && x.Key == normalizedKey, cancellationToken))
+        {
+            throw new StlApiException("reference.dataset_conflict", "Dataset key already exists.", 409);
+        }
+
+        if (string.Equals(dataset.Key, MasterCsvIntakeDatasetKey, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(normalizedKey, MasterCsvIntakeDatasetKey, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "reference.dataset_protected",
+                "The master intake dataset key cannot be changed.",
+                400);
+        }
+
+        var before = Serialize(dataset);
+        var now = DateTimeOffset.UtcNow;
+        dataset.Key = normalizedKey;
+        dataset.Name = request.Name.Trim();
+        dataset.Category = request.Category.Trim();
+        dataset.OwnerService = request.OwnerService.Trim();
+        dataset.Status = request.Status.Trim();
+        dataset.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.dataset.updated",
+            "reference_dataset",
+            dataset.Id,
+            before,
+            Serialize(dataset),
+            cancellationToken);
+        return await ToDatasetResponseAsync(dataset.Id, cancellationToken);
+    }
+
+    public async Task DeleteDatasetAsync(
+        ClaimsPrincipal principal,
+        Guid datasetId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var dataset = await db.ReferenceDatasets.FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
+            ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
+
+        if (string.Equals(dataset.Key, MasterCsvIntakeDatasetKey, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "reference.dataset_protected",
+                "The master intake dataset cannot be deleted.",
+                400);
+        }
+
+        var before = Serialize(dataset);
+        var now = DateTimeOffset.UtcNow;
+        var entityIds = await db.ReferenceEntities.AsNoTracking()
+            .Where(x => x.DatasetId == datasetId)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (entityIds.Count > 0)
+        {
+            var referencedStaging = await db.StagingRecords
+                .Where(x => x.ReferenceEntityId.HasValue && entityIds.Contains(x.ReferenceEntityId.Value))
+                .ToListAsync(cancellationToken);
+            foreach (var staging in referencedStaging)
+            {
+                staging.ReferenceEntityId = null;
+                staging.UpdatedAt = now;
+            }
+
+            db.ProductMappings.RemoveRange(await db.ProductMappings
+                .Where(x => entityIds.Contains(x.ReferenceEntityId))
+                .ToListAsync(cancellationToken));
+            db.TenantReferenceOverlays.RemoveRange(await db.TenantReferenceOverlays
+                .Where(x => entityIds.Contains(x.ReferenceEntityId))
+                .ToListAsync(cancellationToken));
+            db.ReferenceCrosswalks.RemoveRange(await db.ReferenceCrosswalks
+                .Where(x => entityIds.Contains(x.ReferenceEntityId))
+                .ToListAsync(cancellationToken));
+            db.ReferenceEntityVersions.RemoveRange(await db.ReferenceEntityVersions
+                .Where(x => entityIds.Contains(x.ReferenceEntityId))
+                .ToListAsync(cancellationToken));
+            db.ReferenceEntities.RemoveRange(await db.ReferenceEntities
+                .Where(x => x.DatasetId == datasetId)
+                .ToListAsync(cancellationToken));
+        }
+
+        db.StagingRecords.RemoveRange(await db.StagingRecords
+            .Where(x => x.TargetDatasetId == datasetId || x.Job.DatasetId == datasetId)
+            .ToListAsync(cancellationToken));
+        db.ReferencePublishEvents.RemoveRange(await db.ReferencePublishEvents
+            .Where(x => x.DatasetId == datasetId)
+            .ToListAsync(cancellationToken));
+        db.IngestionJobs.RemoveRange(await db.IngestionJobs
+            .Where(x => x.DatasetId == datasetId)
+            .ToListAsync(cancellationToken));
+        db.ReferenceDatasets.Remove(dataset);
+
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.dataset.deleted",
+            "reference_dataset",
+            datasetId,
+            before,
+            null,
+            cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ReferenceSourceResponse>> ListSourcesAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
@@ -266,6 +387,11 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         job.Status = ReferenceImportStatuses.Completed;
         job.CompletedAt = now;
         job.UpdatedAt = now;
+        if (!string.Equals(dataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+        {
+            dataset.Status = ReferenceDatasetStatuses.Ready;
+            dataset.UpdatedAt = now;
+        }
         await db.SaveChangesAsync(cancellationToken);
         await WriteAuditAsync(
             principal,
@@ -360,6 +486,11 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             });
         }
 
+        if (!string.Equals(dataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+        {
+            dataset.Status = ReferenceDatasetStatuses.Ready;
+            dataset.UpdatedAt = now;
+        }
         await db.SaveChangesAsync(cancellationToken);
         await WriteAuditAsync(principal, "reference.import.created", "ingestion_job", job.Id, null, Serialize(job), cancellationToken);
         return await GetImportAsync(principal, job.Id, cancellationToken);
@@ -462,6 +593,151 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         return records.Select(ToStagingResponse).ToList();
     }
 
+    public async Task<IReadOnlyList<ReferenceEntityResponse>> ListDatasetEntitiesAsync(
+        ClaimsPrincipal principal,
+        Guid datasetId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var dataset = await db.ReferenceDatasets.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
+            ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
+
+        var entities = await db.ReferenceEntities.AsNoTracking()
+            .Include(x => x.Dataset)
+            .Where(x => x.DatasetId == dataset.Id && x.Status == ReferenceEntityStatuses.Active)
+            .OrderBy(x => x.DisplayName)
+            .ToListAsync(cancellationToken);
+
+        return await Task.WhenAll(entities.Select(entity => ToEntityResponseAsync(entity, cancellationToken)));
+    }
+
+    public async Task<ReferenceEntityResponse> UpdateEntityAsync(
+        ClaimsPrincipal principal,
+        Guid entityId,
+        UpdateReferenceEntityRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var entity = await db.ReferenceEntities
+            .Include(x => x.Dataset)
+            .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken)
+            ?? throw new StlApiException("reference.entity_not_found", "Reference entity was not found.", 404);
+
+        var normalizedCanonicalKey = NormalizeKey(request.CanonicalKey ?? entity.CanonicalKey);
+        if (!string.Equals(entity.CanonicalKey, normalizedCanonicalKey, StringComparison.OrdinalIgnoreCase)
+            && await db.ReferenceEntities.AnyAsync(
+                x => x.Id != entityId && x.DatasetId == entity.DatasetId && x.CanonicalKey == normalizedCanonicalKey,
+                cancellationToken))
+        {
+            throw new StlApiException(
+                "reference.entity_conflict",
+                "Another entity in this dataset already uses that canonical key.",
+                409);
+        }
+
+        var before = Serialize(entity);
+        var now = DateTimeOffset.UtcNow;
+        var currentVersion = await db.ReferenceEntityVersions
+            .Where(x => x.ReferenceEntityId == entity.Id)
+            .OrderByDescending(x => x.Version)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        entity.CanonicalKey = normalizedCanonicalKey;
+        entity.DisplayName = string.IsNullOrWhiteSpace(request.DisplayName)
+            ? entity.DisplayName
+            : request.DisplayName.Trim();
+        entity.NormalizedFieldsJson = string.IsNullOrWhiteSpace(request.NormalizedFieldsJson)
+            ? entity.NormalizedFieldsJson
+            : NormalizeJson(request.NormalizedFieldsJson);
+        entity.UpdatedAt = now;
+        if (!string.Equals(entity.Dataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+        {
+            entity.Dataset.Status = ReferenceDatasetStatuses.Ready;
+            entity.Dataset.UpdatedAt = now;
+        }
+
+        var version = new ReferenceEntityVersion
+        {
+            Id = Guid.NewGuid(),
+            ReferenceEntityId = entity.Id,
+            Version = (currentVersion?.Version ?? 0) + 1,
+            FieldsJson = entity.NormalizedFieldsJson,
+            SourceEvidenceJson = NormalizeJson(request.SourceEvidenceJson ?? currentVersion?.SourceEvidenceJson),
+            EffectiveDate = request.EffectiveDate ?? currentVersion?.EffectiveDate,
+            PublishedAt = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.ReferenceEntityVersions.Add(version);
+        entity.CurrentVersionId = version.Id;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.entity.updated",
+            "reference_entity",
+            entity.Id,
+            before,
+            Serialize(entity),
+            cancellationToken);
+        return await ToEntityResponseAsync(entity, cancellationToken);
+    }
+
+    public async Task DeleteEntityAsync(
+        ClaimsPrincipal principal,
+        Guid entityId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var entity = await db.ReferenceEntities
+            .Include(x => x.Dataset)
+            .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken)
+            ?? throw new StlApiException("reference.entity_not_found", "Reference entity was not found.", 404);
+
+        var before = Serialize(entity);
+        var now = DateTimeOffset.UtcNow;
+        var referencedStaging = await db.StagingRecords
+            .Where(x => x.ReferenceEntityId == entityId)
+            .ToListAsync(cancellationToken);
+        foreach (var staging in referencedStaging)
+        {
+            staging.ReferenceEntityId = null;
+            staging.UpdatedAt = now;
+        }
+
+        db.ProductMappings.RemoveRange(await db.ProductMappings
+            .Where(x => x.ReferenceEntityId == entityId)
+            .ToListAsync(cancellationToken));
+        db.TenantReferenceOverlays.RemoveRange(await db.TenantReferenceOverlays
+            .Where(x => x.ReferenceEntityId == entityId)
+            .ToListAsync(cancellationToken));
+        db.ReferenceCrosswalks.RemoveRange(await db.ReferenceCrosswalks
+            .Where(x => x.ReferenceEntityId == entityId)
+            .ToListAsync(cancellationToken));
+        db.ReferenceEntityVersions.RemoveRange(await db.ReferenceEntityVersions
+            .Where(x => x.ReferenceEntityId == entityId)
+            .ToListAsync(cancellationToken));
+
+        if (!string.Equals(entity.Dataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+        {
+            entity.Dataset.Status = ReferenceDatasetStatuses.Ready;
+            entity.Dataset.UpdatedAt = now;
+        }
+
+        db.ReferenceEntities.Remove(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.entity.deleted",
+            "reference_entity",
+            entityId,
+            before,
+            null,
+            cancellationToken);
+    }
+
     public async Task<ReferenceStagingRecordResponse> ApproveAsync(
         ClaimsPrincipal principal,
         Guid stagingId,
@@ -511,36 +787,78 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
         var dataset = await db.ReferenceDatasets.FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
             ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
+        EnsureDatasetPublishable(dataset);
+        return await PublishDatasetInternalAsync(principal, dataset, summary, cancellationToken);
+    }
 
-        var nextVersionNumber = await db.ReferencePublishEvents.CountAsync(x => x.DatasetId == datasetId, cancellationToken) + 1;
-        var publishedVersion = $"v{nextVersionNumber}";
-        var now = DateTimeOffset.UtcNow;
-        dataset.CurrentPublishedVersion = publishedVersion;
-        dataset.Status = ReferenceDatasetStatuses.Published;
-        dataset.UpdatedAt = now;
+    public async Task<ReferencePublishBatchResponse> PublishDatasetsAsync(
+        ClaimsPrincipal principal,
+        PublishReferenceDatasetsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var datasetIds = request.DatasetIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
 
-        var publishEvent = new ReferencePublishEvent
+        if (datasetIds.Count == 0)
         {
-            Id = Guid.NewGuid(),
-            DatasetId = datasetId,
-            PublishedVersion = publishedVersion,
-            PublishedByPersonId = principal.GetUserId(),
-            Summary = string.IsNullOrWhiteSpace(summary) ? $"Published {dataset.Key} version {publishedVersion}" : summary.Trim(),
-            CreatedAt = now,
-        };
+            throw new StlApiException(
+                "reference.publish_batch_empty",
+                "Select at least one dataset to publish.",
+                400);
+        }
 
-        db.ReferencePublishEvents.Add(publishEvent);
-        await db.SaveChangesAsync(cancellationToken);
-        await WriteAuditAsync(principal, "reference.dataset.published", "reference_dataset", dataset.Id, null, Serialize(dataset), cancellationToken);
-        return new ReferencePublishEventResponse(
-            publishEvent.Id,
-            dataset.Id,
-            dataset.Key,
-            dataset.Name,
-            publishEvent.PublishedVersion,
-            publishEvent.PublishedByPersonId,
-            publishEvent.Summary,
-            publishEvent.CreatedAt);
+        var datasets = await db.ReferenceDatasets
+            .Where(x => datasetIds.Contains(x.Id))
+            .OrderBy(x => x.Key)
+            .ToListAsync(cancellationToken);
+
+        if (datasets.Count != datasetIds.Count)
+        {
+            throw new StlApiException(
+                "reference.dataset_not_found",
+                "One or more datasets were not found.",
+                404);
+        }
+
+        var items = new List<ReferencePublishEventResponse>(datasets.Count);
+        foreach (var dataset in datasets)
+        {
+            EnsureDatasetPublishable(dataset);
+            items.Add(await PublishDatasetInternalAsync(principal, dataset, request.Summary, cancellationToken));
+        }
+
+        return new ReferencePublishBatchResponse(
+            RequestedCount: datasetIds.Count,
+            PublishedCount: items.Count,
+            Items: items,
+            ProcessedAt: DateTimeOffset.UtcNow);
+    }
+
+    public async Task<ReferencePublishBatchResponse> PublishAllDatasetsAsync(
+        ClaimsPrincipal principal,
+        string? summary,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var datasets = await db.ReferenceDatasets
+            .Where(x => x.Key != MasterCsvIntakeDatasetKey && x.Status != ReferenceDatasetStatuses.Archived)
+            .OrderBy(x => x.Key)
+            .ToListAsync(cancellationToken);
+
+        var items = new List<ReferencePublishEventResponse>(datasets.Count);
+        foreach (var dataset in datasets)
+        {
+            items.Add(await PublishDatasetInternalAsync(principal, dataset, summary, cancellationToken));
+        }
+
+        return new ReferencePublishBatchResponse(
+            RequestedCount: datasets.Count,
+            PublishedCount: items.Count,
+            Items: items,
+            ProcessedAt: DateTimeOffset.UtcNow);
     }
 
     public async Task<IReadOnlyList<ReferencePublishEventResponse>> ListPublishHistoryAsync(
@@ -854,6 +1172,16 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
 
             var entity = await UpsertEntityFromStagingAsync(staging, request, cancellationToken);
             staging.ReferenceEntityId = entity.Id;
+
+            var affectedDataset = staging.TargetDatasetId == staging.Job.DatasetId || staging.TargetDatasetId is null
+                ? staging.Job.Dataset
+                : staging.TargetDataset;
+            if (affectedDataset is not null
+                && !string.Equals(affectedDataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+            {
+                affectedDataset.Status = ReferenceDatasetStatuses.Ready;
+                affectedDataset.UpdatedAt = now;
+            }
         }
 
         var remainingReviewCount = await db.StagingRecords.CountAsync(
@@ -1607,6 +1935,72 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         string? ProposedCanonicalKey,
         decimal Confidence,
         string ReviewReason);
+
+    private async Task<ReferencePublishEventResponse> PublishDatasetInternalAsync(
+        ClaimsPrincipal principal,
+        ReferenceDataset dataset,
+        string? summary,
+        CancellationToken cancellationToken)
+    {
+        var before = Serialize(dataset);
+        var nextVersionNumber = await db.ReferencePublishEvents.CountAsync(x => x.DatasetId == dataset.Id, cancellationToken) + 1;
+        var publishedVersion = $"v{nextVersionNumber}";
+        var now = DateTimeOffset.UtcNow;
+
+        dataset.CurrentPublishedVersion = publishedVersion;
+        dataset.Status = ReferenceDatasetStatuses.Published;
+        dataset.UpdatedAt = now;
+
+        var publishEvent = new ReferencePublishEvent
+        {
+            Id = Guid.NewGuid(),
+            DatasetId = dataset.Id,
+            PublishedVersion = publishedVersion,
+            PublishedByPersonId = principal.GetUserId(),
+            Summary = string.IsNullOrWhiteSpace(summary) ? $"Published {dataset.Key} version {publishedVersion}" : summary.Trim(),
+            CreatedAt = now,
+        };
+
+        db.ReferencePublishEvents.Add(publishEvent);
+        await db.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync(
+            principal,
+            "reference.dataset.published",
+            "reference_dataset",
+            dataset.Id,
+            before,
+            Serialize(dataset),
+            cancellationToken);
+
+        return new ReferencePublishEventResponse(
+            publishEvent.Id,
+            dataset.Id,
+            dataset.Key,
+            dataset.Name,
+            publishEvent.PublishedVersion,
+            publishEvent.PublishedByPersonId,
+            publishEvent.Summary,
+            publishEvent.CreatedAt);
+    }
+
+    private static void EnsureDatasetPublishable(ReferenceDataset dataset)
+    {
+        if (string.Equals(dataset.Key, MasterCsvIntakeDatasetKey, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "reference.dataset_protected",
+                "The master intake dataset cannot be published.",
+                400);
+        }
+
+        if (string.Equals(dataset.Status, ReferenceDatasetStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "reference.dataset_archived",
+                "Archived datasets must be restored before publishing.",
+                400);
+        }
+    }
 
     private async Task WriteAuditAsync(
         ClaimsPrincipal principal,

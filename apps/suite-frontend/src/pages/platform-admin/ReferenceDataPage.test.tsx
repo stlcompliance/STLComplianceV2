@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ToastProvider } from '../../feedback'
+
 import * as nexarr from '../../api/nexarrClient'
+import { ToastProvider } from '../../feedback'
 import { ReferenceDataPage } from './ReferenceDataPage'
 
 vi.mock('../../api/nexarrClient', () => ({
@@ -10,14 +11,22 @@ vi.mock('../../api/nexarrClient', () => ({
   listReferenceDatasets: vi.fn(),
   listReferenceSources: vi.fn(),
   listReferenceImports: vi.fn(),
+  listReferenceDatasetEntities: vi.fn(),
   listReferenceStagingRecords: vi.fn(),
   listReferenceCrosswalks: vi.fn(),
   listReferencePublishHistory: vi.fn(),
   createReferenceDataset: vi.fn(),
+  updateReferenceDataset: vi.fn(),
+  deleteReferenceDataset: vi.fn(),
+  createReferenceDatasetInput: vi.fn(),
   createReferenceSource: vi.fn(),
   createReferenceImport: vi.fn(),
   createReferenceMasterCsvImport: vi.fn(),
   publishReferenceDataset: vi.fn(),
+  publishReferenceDatasets: vi.fn(),
+  publishAllReferenceDatasets: vi.fn(),
+  updateReferenceEntity: vi.fn(),
+  deleteReferenceEntity: vi.fn(),
   approveReferenceStagingRecord: vi.fn(),
   rejectReferenceStagingRecord: vi.fn(),
   mergeReferenceStagingRecord: vi.fn(),
@@ -37,7 +46,7 @@ function renderPage() {
 
 function mockReferenceDataQueries() {
   vi.mocked(nexarr.getReferenceDataDashboard).mockResolvedValue({
-    datasetCount: 1,
+    datasetCount: 2,
     sourceCount: 1,
     jobCount: 1,
     pendingReviewCount: 2,
@@ -62,6 +71,22 @@ function mockReferenceDataQueries() {
       pendingReviewCount: 2,
       failedImportCount: 0,
       lastPublishedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'dataset-2',
+      key: 'governing-bodies',
+      name: 'Governing Bodies',
+      category: 'compliance',
+      ownerService: 'Compliance Core',
+      status: 'ready',
+      currentPublishedVersion: null,
+      sourceCount: 1,
+      entityCount: 1,
+      pendingReviewCount: 0,
+      failedImportCount: 0,
+      lastPublishedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
@@ -90,22 +115,60 @@ function mockReferenceDataQueries() {
       datasetKey: 'vehicle-taxonomy',
       datasetName: 'Vehicle Taxonomy',
       sourceId: 'source-1',
-      sourceKey: 'nhtsa-vpic',
-      sourceName: 'NHTSA vPIC',
+      sourceKey: 'platform-admin-input',
+      sourceName: 'Platform admin input',
       tenantId: null,
       requestedByPersonId: null,
-      status: 'in_progress',
+      status: 'completed',
       rawObjectKey: 'seed/reference/vehicle-taxonomy.csv',
       fileName: 'vehicle-taxonomy.csv',
       startedAt: new Date().toISOString(),
-      completedAt: null,
+      completedAt: new Date().toISOString(),
       errorSummary: null,
       stagingRecordCount: 2,
       pendingReviewCount: 2,
-      approvedCount: 0,
+      approvedCount: 1,
       rejectedCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    },
+  ])
+
+  vi.mocked(nexarr.listReferenceDatasetEntities).mockResolvedValue([
+    {
+      id: 'entity-1',
+      datasetId: 'dataset-1',
+      datasetKey: 'vehicle-taxonomy',
+      datasetName: 'Vehicle Taxonomy',
+      entityType: 'vehicle',
+      canonicalKey: 'fleet-truck-001',
+      displayName: 'Fleet Truck 001',
+      status: 'active',
+      normalizedFieldsJson: '{"displayName":"Fleet Truck 001"}',
+      firstSeenSourceId: 'source-1',
+      firstSeenSourceKey: 'platform-admin-input',
+      currentVersionId: 'version-1',
+      currentVersion: 1,
+      publishedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      versions: [
+        {
+          id: 'version-1',
+          referenceEntityId: 'entity-1',
+          version: 1,
+          fieldsJson: '{"displayName":"Fleet Truck 001"}',
+          sourceEvidenceJson: '{"value":"Fleet Truck 001"}',
+          effectiveDate: '2026-06-09',
+          publishedAt: new Date().toISOString(),
+          supersededByVersionId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      crosswalks: [],
+      tenantOverlays: [],
+      productMappings: [],
     },
   ])
 
@@ -147,17 +210,80 @@ describe('ReferenceDataPage', () => {
     vi.clearAllMocks()
   })
 
-  it('renders seeded reference data and review queue', async () => {
+  it('renders the consolidated reference data and dataset inputs surface', async () => {
     mockReferenceDataQueries()
 
     renderPage()
 
-    expect(await screen.findByText('Reference data')).toBeTruthy()
-    expect(screen.getAllByText('Vehicle Taxonomy').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('NHTSA vPIC').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Download template CSV' })).toBeTruthy()
-    expect(await screen.findByText('Upload master CSV')).toBeTruthy()
-    expect(await screen.findByRole('button', { name: 'Approve' })).toBeTruthy()
+    expect(await screen.findByText('Reference data')).toBeInTheDocument()
+    expect(screen.getByText('Dataset Control Plane')).toBeInTheDocument()
+    expect(screen.getByText('Dataset Inputs And Current Entities')).toBeInTheDocument()
+    expect(await screen.findByText('Fleet Truck 001')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download template CSV' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Upload master CSV' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
+  })
+
+  it('supports batch publish from the combined dataset table', async () => {
+    mockReferenceDataQueries()
+    vi.mocked(nexarr.publishReferenceDatasets).mockResolvedValue({
+      requestedCount: 1,
+      publishedCount: 1,
+      items: [],
+      processedAt: new Date().toISOString(),
+    })
+
+    renderPage()
+
+    fireEvent.click(await screen.findByLabelText('Select Vehicle Taxonomy'))
+    fireEvent.click(screen.getByRole('button', { name: 'Publish selected' }))
+
+    await waitFor(() => {
+      expect(nexarr.publishReferenceDatasets).toHaveBeenCalledWith({
+        datasetIds: ['dataset-1'],
+        summary: 'Published from platform admin batch',
+      })
+    })
+  })
+
+  it('lets the user add dataset inputs from the same page', async () => {
+    mockReferenceDataQueries()
+    vi.mocked(nexarr.createReferenceDatasetInput).mockResolvedValue({
+      id: 'job-2',
+      datasetId: 'dataset-1',
+      datasetKey: 'vehicle-taxonomy',
+      datasetName: 'Vehicle Taxonomy',
+      sourceId: 'source-1',
+      sourceKey: 'platform-admin-input',
+      sourceName: 'Platform admin input',
+      tenantId: null,
+      requestedByPersonId: null,
+      status: 'completed',
+      rawObjectKey: null,
+      fileName: null,
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      errorSummary: null,
+      stagingRecordCount: 1,
+      pendingReviewCount: 0,
+      approvedCount: 1,
+      rejectedCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+
+    renderPage()
+
+    fireEvent.change(await screen.findByLabelText('Value'), {
+      target: { value: 'Fleet Truck 002' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Add value' }))
+
+    await waitFor(() => {
+      expect(nexarr.createReferenceDatasetInput).toHaveBeenCalledWith('dataset-1', {
+        value: 'Fleet Truck 002',
+      })
+    })
   })
 
   it('downloads a master CSV template', async () => {

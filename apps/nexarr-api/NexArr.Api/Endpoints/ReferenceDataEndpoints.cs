@@ -40,6 +40,28 @@ public static class ReferenceDataEndpoints
         })
         .WithName("ReferenceDataCreateDataset");
 
+        admin.MapPut("/datasets/{datasetId:guid}", async (
+            Guid datasetId,
+            CreateReferenceDatasetRequest request,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.UpdateDatasetAsync(context.User, datasetId, request, cancellationToken));
+        })
+        .WithName("ReferenceDataUpdateDataset");
+
+        admin.MapDelete("/datasets/{datasetId:guid}", async (
+            Guid datasetId,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            await service.DeleteDatasetAsync(context.User, datasetId, cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("ReferenceDataDeleteDataset");
+
         admin.MapGet("/sources", async (
             HttpContext context,
             ReferenceDataService service,
@@ -173,6 +195,58 @@ public static class ReferenceDataEndpoints
             return Results.Ok(await service.PublishDatasetAsync(context.User, datasetId, summary, cancellationToken));
         })
         .WithName("ReferenceDataPublishDataset");
+
+        admin.MapPost("/datasets/publish-batch", async (
+            PublishReferenceDatasetsRequest request,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.PublishDatasetsAsync(context.User, request, cancellationToken));
+        })
+        .WithName("ReferenceDataPublishDatasets");
+
+        admin.MapPost("/datasets/publish-all", async (
+            string? summary,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.PublishAllDatasetsAsync(context.User, summary, cancellationToken));
+        })
+        .WithName("ReferenceDataPublishAllDatasets");
+
+        admin.MapGet("/datasets/{datasetId:guid}/entities", async (
+            Guid datasetId,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ListDatasetEntitiesAsync(context.User, datasetId, cancellationToken));
+        })
+        .WithName("ReferenceDataListDatasetEntities");
+
+        admin.MapPut("/entities/{id:guid}", async (
+            Guid id,
+            UpdateReferenceEntityRequest request,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.UpdateEntityAsync(context.User, id, request, cancellationToken));
+        })
+        .WithName("ReferenceDataUpdateEntity");
+
+        admin.MapDelete("/entities/{id:guid}", async (
+            Guid id,
+            HttpContext context,
+            ReferenceDataService service,
+            CancellationToken cancellationToken) =>
+        {
+            await service.DeleteEntityAsync(context.User, id, cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("ReferenceDataDeleteEntity");
 
         admin.MapGet("/publish-history", async (
             HttpContext context,

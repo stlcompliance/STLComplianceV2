@@ -242,6 +242,16 @@ public sealed record CreateReferenceDatasetRequest(
     string OwnerService,
     string Status);
 
+public sealed record PublishReferenceDatasetsRequest(
+    IReadOnlyList<Guid> DatasetIds,
+    string? Summary);
+
+public sealed record ReferencePublishBatchResponse(
+    int RequestedCount,
+    int PublishedCount,
+    IReadOnlyList<ReferencePublishEventResponse> Items,
+    DateTimeOffset ProcessedAt);
+
 public sealed record CreateReferenceSourceRequest(
     string Key,
     string Name,
@@ -257,6 +267,13 @@ public sealed record CreateReferenceDatasetInputRequest(
     string? FileName,
     string? Value,
     string? ValuesText);
+
+public sealed record UpdateReferenceEntityRequest(
+    string? DisplayName,
+    string? CanonicalKey,
+    string? NormalizedFieldsJson,
+    string? SourceEvidenceJson,
+    DateOnly? EffectiveDate);
 
 public sealed record CreateReferenceMasterCsvImportRequest(
     string CsvText,

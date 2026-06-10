@@ -35,12 +35,16 @@ import type {
   ReferenceImportResponse,
   ReferenceStagingRecordResponse,
   ReferenceCrosswalkResponse,
+  ReferenceEntityResponse,
   ReferencePublishEventResponse,
+  ReferencePublishBatchResponse,
   CreateReferenceDatasetRequest,
   CreateReferenceSourceRequest,
+  PublishReferenceDatasetsRequest,
   CreateReferenceImportRequest,
   CreateReferenceMasterCsvImportRequest,
   ReviewDecisionRequest,
+  UpdateReferenceEntityRequest,
   ProductOverviewRow,
   ProductManifestResponse,
   PlatformAuditPackageExportPreview,
@@ -459,6 +463,32 @@ export async function createReferenceDataset(
   return (await response.json()) as ReferenceDatasetResponse
 }
 
+export async function updateReferenceDataset(
+  datasetId: string,
+  request: CreateReferenceDatasetRequest,
+): Promise<ReferenceDatasetResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/${datasetId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceDatasetResponse
+}
+
+export async function deleteReferenceDataset(datasetId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/${datasetId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
 export async function listReferenceSources(): Promise<ReferenceSourceResponse[]> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/reference-data/sources')
@@ -497,6 +527,17 @@ export async function createReferenceDatasetInput(
     throw await parseError(response)
   }
   return (await response.json()) as ReferenceImportResponse
+}
+
+export async function listReferenceDatasetEntities(
+  datasetId: string,
+): Promise<ReferenceEntityResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/${datasetId}/entities`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceEntityResponse[]
 }
 
 export async function listReferenceImports(): Promise<ReferenceImportResponse[]> {
@@ -617,6 +658,61 @@ export async function publishReferenceDataset(
     throw await parseError(response)
   }
   return (await response.json()) as ReferencePublishEventResponse
+}
+
+export async function publishReferenceDatasets(
+  request: PublishReferenceDatasetsRequest,
+): Promise<ReferencePublishBatchResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/reference-data/datasets/publish-batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferencePublishBatchResponse
+}
+
+export async function publishAllReferenceDatasets(
+  summary?: string | null,
+): Promise<ReferencePublishBatchResponse> {
+  await ensureValidAccessToken()
+  const search = summary?.trim() ? `?summary=${encodeURIComponent(summary.trim())}` : ''
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/publish-all${search}`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferencePublishBatchResponse
+}
+
+export async function updateReferenceEntity(
+  entityId: string,
+  request: UpdateReferenceEntityRequest,
+): Promise<ReferenceEntityResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/entities/${entityId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceEntityResponse
+}
+
+export async function deleteReferenceEntity(entityId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/reference-data/entities/${entityId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
 }
 
 export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleOverviewResponse> {
