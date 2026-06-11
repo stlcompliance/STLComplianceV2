@@ -150,8 +150,8 @@ public static class RecordArrIntegrationEndpoints
                 storageKey,
                 request.SizeBytes);
 
-            store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
-            store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
+            store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "import", 1.0m, request.UploadedByPersonId.ToString("D"));
+            store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "import", 1.0m, request.UploadedByPersonId.ToString("D"));
 
             return Results.Created($"{routePrefix}/files/{record.CurrentFileRef}", new SmartImportRetainSourceResponse(
                 record.RecordId,

@@ -1,6 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  CircleHelp,
+  Lock,
+  PencilLine,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Users,
+  X,
+} from 'lucide-react'
 import { getErrorMessage } from '@stl/shared-ui'
 import {
   archiveStaffRole,
@@ -25,15 +36,19 @@ import type {
   InternalLocationResponse,
   OrgUnitResponse,
   PermissionCatalogModuleResponse,
+  PermissionCatalogPermissionGroupResponse,
   PermissionCatalogPermissionResponse,
   PermissionCatalogResponse,
   SetStaffPersonRoleItemRequest,
   SetStaffRoleScopeItemRequest,
   StaffRoleAssignedPersonResponse,
   StaffRoleDetailResponse,
+  StaffRoleSummaryResponse,
 } from '../../api/types'
 
 type RoleScopeType = SetStaffRoleScopeItemRequest['scopeType']
+type RoleDirectoryFilter = 'standard' | 'custom'
+type EditorTabKey = 'permissions' | 'scope' | 'assignments' | 'audit'
 
 type RoleDraft = {
   name: string
@@ -75,6 +90,13 @@ const FLAG_SCOPE_OPTIONS: Array<{ type: RoleScopeType; label: string; help: stri
   { type: 'direct_reports', label: 'Direct reports only', help: 'Limit access to the person’s direct reports.' },
 ]
 
+const EDITOR_TABS: Array<{ key: EditorTabKey; label: string }> = [
+  { key: 'permissions', label: 'Permissions' },
+  { key: 'scope', label: 'Scope' },
+  { key: 'assignments', label: 'Assignments' },
+  { key: 'audit', label: 'Audit' },
+]
+
 const emptyDraft = (): RoleDraft => ({
   name: '',
   description: '',
@@ -91,6 +113,10 @@ const emptyAssignmentDraft = (): AssignmentDraft => ({
   startsAt: '',
   endsAt: '',
 })
+
+function classNames(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(' ')
+}
 
 function sortCatalogs(catalogs: PermissionCatalogResponse[]): PermissionCatalogResponse[] {
   return [...catalogs].sort((left, right) => {
@@ -148,7 +174,7 @@ function hasScope(
   )
 }
 
-function permissionKeyCountForModule(
+function permissionCountForModule(
   module: PermissionCatalogModuleResponse,
   permissions: Record<string, 'allow' | 'deny'>,
 ): number {
@@ -163,7 +189,7 @@ function moduleSelectionState(
   permissions: Record<string, 'allow' | 'deny'>,
 ): 'Full' | 'Some' | 'None' {
   const all = module.permissionGroups.flatMap((group) => group.permissions).length
-  const selected = permissionKeyCountForModule(module, permissions)
+  const selected = permissionCountForModule(module, permissions)
   if (selected === 0) {
     return 'None'
   }
@@ -186,6 +212,25 @@ function scopeSummary(role: StaffRoleDetailResponse | null, draft: RoleDraft, is
   return [...labels, ...recordSets]
 }
 
+function formatDateTime(value: string | null | undefined): string {
+  if (!value) {
+    return 'Not available'
+  }
+
+  return new Date(value).toLocaleString()
+}
+
+function roleTypeLabel(roleType: string): string {
+  return roleType.replace(/_/g, ' ')
+}
+
+function assignmentScopeNeedsReference(scopeType: RoleScopeType) {
+  return scopeType !== 'tenant'
+    && scopeType !== 'assigned_assets'
+    && scopeType !== 'own_records'
+    && scopeType !== 'direct_reports'
+}
+
 export function RolesPage() {
   const session = loadSession()
   const queryClient = useQueryClient()
@@ -194,10 +239,14 @@ export function RolesPage() {
   const { roleId } = useParams<{ roleId: string }>()
   const isNew = location.pathname.endsWith('/roles/new')
   const isEditMode = isNew || location.pathname.endsWith('/edit')
+  const isOverlayOpen = Boolean(roleId) || isNew
 
   const [draft, setDraft] = useState<RoleDraft>(emptyDraft)
   const [selectedProductKey, setSelectedProductKey] = useState<string>('')
   const [assignmentDraft, setAssignmentDraft] = useState<AssignmentDraft>(emptyAssignmentDraft)
+  const [directoryFilter, setDirectoryFilter] = useState<RoleDirectoryFilter>('standard')
+  const [searchText, setSearchText] = useState('')
+  const [editorTab, setEditorTab] = useState<EditorTabKey>('permissions')
   const initialCatalogRefreshKeyRef = useRef('')
 
   const sessionQuery = useQuery({
@@ -266,6 +315,12 @@ export function RolesPage() {
       setSelectedProductKey(firstCatalogProductKey)
     }
   }, [catalogsQuery.data, roleDetailQuery.data, selectedProductKey])
+
+  useEffect(() => {
+    if (isOverlayOpen) {
+      setEditorTab('permissions')
+    }
+  }, [isOverlayOpen, roleId, isNew])
 
   const entitledProductKeys = (sessionQuery.data?.entitlements ?? [])
     .map((entitlement) => entitlement.trim().toLowerCase())
@@ -339,7 +394,7 @@ export function RolesPage() {
     onSuccess: async (nextRoleId) => {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-roles'] })
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-role'] })
-      navigate(`/roles/${nextRoleId}`)
+      navigate(`/roles/${nextRoleId}/edit`)
     },
   })
 
@@ -351,6 +406,9 @@ export function RolesPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-roles'] })
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-role'] })
+      if (roleId) {
+        navigate(`/roles/${roleId}`)
+      }
     },
   })
 
@@ -482,6 +540,25 @@ export function RolesPage() {
   ].find(Boolean)
   const errorMessage = apiError ? getErrorMessage(apiError, 'Failed to load role editor.') : null
 
+  const allRoles = rolesQuery.data ?? []
+  const standardRoleCount = allRoles.filter((roleItem) => roleItem.isSystem).length
+  const customRoleCount = allRoles.filter((roleItem) => !roleItem.isSystem).length
+  const filteredRoles = allRoles.filter((roleItem) => {
+    const matchesFilter = directoryFilter === 'standard' ? roleItem.isSystem : !roleItem.isSystem
+    if (!matchesFilter) {
+      return false
+    }
+
+    const query = searchText.trim().toLowerCase()
+    if (!query) {
+      return true
+    }
+
+    return roleItem.name.toLowerCase().includes(query)
+      || (roleItem.description ?? '').toLowerCase().includes(query)
+      || roleTypeLabel(roleItem.roleType).toLowerCase().includes(query)
+  })
+
   const people = [...(peopleQuery.data ?? [])].sort((left, right) => left.displayName.localeCompare(right.displayName))
   const orgUnits = orgUnitsQuery.data ?? []
   const locations = locationsQuery.data ?? []
@@ -489,7 +566,9 @@ export function RolesPage() {
   const departmentUnits = orgUnits.filter((unit) => unit.unitType === 'department')
   const teamUnits = orgUnits.filter((unit) => unit.unitType === 'team')
   const positionUnits = orgUnits.filter((unit) => unit.unitType === 'position')
-
+  const selectedCount = activeCatalog ? permissionCountForCatalog(activeCatalog, draft.permissions) : 0
+  const roleScopeLabels = scopeSummary(role, draft, isEditMode)
+  const selectedRoleId = roleId ?? ''
   const isBusy =
     rolesQuery.isLoading ||
     sessionQuery.isLoading ||
@@ -500,16 +579,34 @@ export function RolesPage() {
     refreshCatalogMutation.isPending ||
     assignPersonMutation.isPending ||
     removeAssignmentMutation.isPending
+  const isEditableRole =
+    isNew || (role != null && isEditMode && !role.isSystem && !role.isArchived)
+  const editorTitle = isNew ? 'Add Role' : isEditMode ? 'Edit Role' : 'Role Detail'
+  const editorDescription = draft.description.trim() || role?.description || 'Describe when this role should be used.'
 
-  const selectedCount = activeCatalog
-    ? activeCatalog.modules
-        .flatMap((module) => module.permissionGroups)
-        .flatMap((group) => group.permissions)
-        .filter((permission) => draft.permissions[permission.key])
-        .length
-    : 0
+  function closeEditor() {
+    navigate('/roles')
+  }
 
-  const selectedRoleId = roleId ?? ''
+  function updateCatalogPermissions(nextState: 'Full' | 'None') {
+    if (!activeCatalog) {
+      return
+    }
+
+    const nextPermissions = { ...draft.permissions }
+    activeCatalog.modules
+      .flatMap((module) => module.permissionGroups)
+      .flatMap((group) => group.permissions)
+      .forEach((permission) => {
+        if (nextState === 'Full') {
+          nextPermissions[permission.key] = nextPermissions[permission.key] ?? 'allow'
+        } else {
+          delete nextPermissions[permission.key]
+        }
+      })
+
+    setDraft((current) => ({ ...current, permissions: nextPermissions }))
+  }
 
   function updateModulePermissions(module: PermissionCatalogModuleResponse, nextState: 'Full' | 'None') {
     const nextPermissions = { ...draft.permissions }
@@ -565,703 +662,1037 @@ export function RolesPage() {
     })
   }
 
-  function assignmentScopeNeedsReference(scopeType: RoleScopeType) {
-    return scopeType !== 'tenant'
-      && scopeType !== 'assigned_assets'
-      && scopeType !== 'own_records'
-      && scopeType !== 'direct_reports'
-  }
-
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/40 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">StaffArr authority</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Role editor</h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-400">
-            Create tenant roles, assign cross-product permissions from live catalogs, scope access with StaffArr org and location data, and assign roles to people.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => refreshCatalogMutation.mutate()}
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white"
-          >
-            Refresh catalogs
-          </button>
-          <Link
-            to="/roles/new"
-            className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-          >
-            New role
-          </Link>
-        </div>
-      </header>
+    <>
+      <div className="mx-auto max-w-[1440px] px-4 py-6">
+        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight text-white">Roles</h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-400">
+              Manage StaffArr authority with standard templates, tenant-specific roles, live product permission catalogs,
+              and scoped assignments.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => refreshCatalogMutation.mutate()}
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh catalogs
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/roles/new')}
+              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+            >
+              <Plus className="h-4 w-4" />
+              Add Role
+            </button>
+          </div>
+        </header>
 
-      {errorMessage ? (
-        <div className="mb-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      ) : null}
+        {errorMessage ? (
+          <div className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+            {errorMessage}
+          </div>
+        ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 shadow-xl shadow-slate-950/30">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-white">Roles</h2>
-              <p className="text-sm text-slate-400">System templates are read-only and can be cloned.</p>
+        <section className="mt-6 rounded-[28px] border border-slate-800 bg-[#171717] shadow-2xl shadow-black/35">
+          <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <DirectoryFilterButton
+                active={directoryFilter === 'standard'}
+                label={`Standard Roles (${standardRoleCount})`}
+                onClick={() => setDirectoryFilter('standard')}
+              />
+              <DirectoryFilterButton
+                active={directoryFilter === 'custom'}
+                label={`Users with Custom Roles (${customRoleCount})`}
+                onClick={() => setDirectoryFilter('custom')}
+              />
             </div>
-            <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">
-              {(rolesQuery.data ?? []).length}
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="relative w-full max-w-sm min-w-[220px]">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search"
+                  className="w-full rounded-2xl border border-slate-700 bg-[#2f2f2f] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
+                />
+              </div>
+              <div className="hidden text-sm text-slate-300 lg:block">
+                {filteredRoles.length} role{filteredRoles.length === 1 ? '' : 's'}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {(rolesQuery.data ?? []).map((roleItem) => {
-              const isActive = selectedRoleId === roleItem.roleId
-              return (
-                <Link
-                  key={roleItem.roleId}
-                  to={`/roles/${roleItem.roleId}`}
-                  className={`block rounded-2xl border px-4 py-3 transition ${
-                    isActive
-                      ? 'border-cyan-400 bg-cyan-400/10 text-white'
-                      : 'border-slate-800 bg-slate-900/80 text-slate-200 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{roleItem.name}</p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">
-                        {roleItem.roleType.replace('_', ' ')}
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
-                        roleItem.isArchived
-                          ? 'bg-slate-700 text-slate-300'
-                          : roleItem.isSystem
-                            ? 'bg-amber-400/20 text-amber-200'
-                            : 'bg-emerald-400/15 text-emerald-200'
-                      }`}
-                    >
-                      {roleItem.isArchived ? 'Archived' : roleItem.isSystem ? 'System' : 'Tenant'}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm text-slate-400">{roleItem.description ?? 'No description yet.'}</p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
-                    <span className="rounded-full bg-slate-800 px-2 py-1">{roleItem.permissionCount} permissions</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-1">{roleItem.scopeCount} scopes</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-1">{roleItem.assignedPersonCount} people</span>
-                  </div>
-                </Link>
-              )
-            })}
+          <div className="hidden border-b border-slate-800 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 lg:grid lg:grid-cols-[minmax(0,2.8fr)_110px_170px_170px_120px] lg:gap-4">
+            <span>Name</span>
+            <span>Users</span>
+            <span>Created At</span>
+            <span>Updated At</span>
+            <span className="text-right">Action</span>
+          </div>
 
-            {!rolesQuery.isLoading && (rolesQuery.data ?? []).length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-6 text-sm text-slate-400">
-                No roles are available yet.
-              </p>
+          <div className="divide-y divide-slate-800">
+            {filteredRoles.map((roleItem) => (
+              <RoleDirectoryRow
+                key={roleItem.roleId}
+                active={selectedRoleId === roleItem.roleId}
+                role={roleItem}
+                onOpen={() => navigate(`/roles/${roleItem.roleId}`)}
+                onEdit={() => navigate(`/roles/${roleItem.roleId}/edit`)}
+              />
+            ))}
+
+            {!rolesQuery.isLoading && filteredRoles.length === 0 ? (
+              <div className="px-5 py-14 text-center text-sm text-slate-400">
+                No roles match the current filter.
+              </div>
             ) : null}
           </div>
-        </aside>
+        </section>
 
-        <section className="space-y-6">
-          {!roleId && !isNew ? (
-            <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/70 px-6 py-10 text-center text-slate-300">
-              Choose a role from the list or create a new one to start editing.
+        {isBusy ? <p className="mt-4 text-sm text-slate-400">Working…</p> : null}
+      </div>
+
+      {isOverlayOpen ? (
+        <>
+          <div className="fixed inset-0 z-40 bg-slate-950/78 backdrop-blur-sm" onClick={closeEditor} />
+          <section className="fixed inset-x-4 bottom-4 top-4 z-50 mx-auto max-w-[1480px] overflow-hidden rounded-[30px] border border-slate-800 bg-[#1b1b1b] shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">StaffArr authority</p>
+                <h2 className="mt-1 truncate text-2xl font-semibold text-white">{editorTitle}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeEditor}
+                className="rounded-full p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Close editor"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          ) : (
-            <>
-              <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-xl shadow-slate-950/30">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
-                      {isNew ? 'New role' : isEditMode ? 'Edit role' : 'Role detail'}
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold text-white">
-                      {draft.name.trim() || role?.name || 'Untitled role'}
-                    </h2>
-                    <p className="mt-2 max-w-3xl text-sm text-slate-400">
-                      {draft.description.trim() || role?.description || 'Describe when this role should be used.'}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {!isNew && !isEditMode ? (
-                      <Link
-                        to={`/roles/${roleId}/edit`}
-                        className="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white"
-                      >
-                        Edit
-                      </Link>
-                    ) : null}
-                    {!isNew ? (
-                      <button
-                        type="button"
-                        onClick={() => cloneMutation.mutate()}
-                        className="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white"
-                      >
-                        Clone
-                      </button>
-                    ) : null}
-                    {!isNew && !role?.isSystem && !role?.isArchived ? (
-                      <button
-                        type="button"
-                        onClick={() => archiveMutation.mutate()}
-                        className="rounded-full border border-rose-500/50 px-4 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-400 hover:text-white"
-                      >
-                        Archive
-                      </button>
-                    ) : null}
-                    {isEditMode ? (
-                      <button
-                        type="button"
-                        onClick={() => saveMutation.mutate()}
-                        className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-                      >
-                        Save
-                      </button>
-                    ) : null}
-                    <a
-                      href="#role-audit"
-                      className="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white"
-                    >
-                      Audit history
-                    </a>
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid gap-6 lg:grid-cols-2">
-                <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                  <h3 className="text-lg font-semibold text-white">Basic details</h3>
-                  <div className="mt-4 grid gap-4">
-                    <label className="grid gap-2 text-sm text-slate-300">
-                      <span>Role name</span>
-                      <input
-                        value={draft.name}
-                        disabled={!isEditMode}
-                        onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                        className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-400 disabled:opacity-70"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm text-slate-300">
-                      <span>Description</span>
-                      <textarea
-                        value={draft.description}
-                        disabled={!isEditMode}
-                        onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
-                        rows={4}
-                        className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-400 disabled:opacity-70"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm text-slate-300">
-                      <span>Role type</span>
-                      <select
-                        value={draft.roleType}
-                        disabled={!isEditMode || !isNew}
-                        onChange={(event) =>
-                          setDraft((current) => ({
-                            ...current,
-                            roleType: event.target.value as RoleDraft['roleType'],
-                          }))
-                        }
-                        className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-400 disabled:opacity-70"
-                      >
-                        <option value="tenant_role">Tenant role</option>
-                        <option value="product_template">Product template</option>
-                      </select>
-                    </label>
-                    {role ? (
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-                        <span className="rounded-full bg-slate-800 px-2.5 py-1">
-                          {role.isSystem ? 'System template' : 'Editable tenant role'}
-                        </span>
-                        <span className="rounded-full bg-slate-800 px-2.5 py-1">
-                          {role.isArchived ? 'Archived' : 'Active'}
-                        </span>
-                        <span className="rounded-full bg-slate-800 px-2.5 py-1">
-                          Updated {new Date(role.updatedAt).toLocaleString()}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </section>
-
-                <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                  <h3 className="text-lg font-semibold text-white">Product access</h3>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Products shown here come from the active permission catalog and are filtered by current tenant entitlement.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {catalogs.map((catalog) => (
-                      <button
-                        key={catalog.productKey}
-                        type="button"
-                        onClick={() => setSelectedProductKey(catalog.productKey)}
-                        className={`rounded-full border px-3 py-2 text-sm transition ${
-                          activeCatalog?.productKey === catalog.productKey
-                            ? 'border-cyan-400 bg-cyan-400/10 text-white'
-                            : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500'
-                        }`}
-                      >
-                        {catalog.productName}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-                    <p className="text-sm text-slate-300">
-                      {activeCatalog
-                        ? `${activeCatalog.productName} exposes ${selectedCount} selected permissions in this role.`
-                        : 'Refresh catalogs to load product permission groups.'}
-                    </p>
-                    {activeCatalog ? (
-                      <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Catalog version {activeCatalog.version}
-                      </p>
-                    ) : null}
-                  </div>
-                </section>
-              </div>
-
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">Module permissions</h3>
-                    <p className="mt-2 text-sm text-slate-400">
-                      Use Full, Some, and None at the module level, then adjust individual permissions when a module needs a custom mix.
-                    </p>
-                  </div>
-                  {activeCatalog ? (
-                    <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
-                      {activeCatalog.modules.length} modules
-                    </span>
-                  ) : null}
-                </div>
-
-                {!activeCatalog ? (
-                  <div className="mt-4 rounded-2xl border border-dashed border-slate-700 px-4 py-8 text-sm text-slate-400">
-                    No product catalog is available yet.
+            <div className="grid h-[calc(100%-81px)] xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="overflow-y-auto px-6 py-6">
+                {!isNew && roleId && roleDetailQuery.isLoading ? (
+                  <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 px-6 py-12 text-center text-sm text-slate-400">
+                    Loading role details…
                   </div>
                 ) : (
-                  <div className="mt-6 space-y-5">
-                    {activeCatalog.modules.map((module) => {
-                      const moduleState = moduleSelectionState(module, draft.permissions)
-                      return (
-                        <article key={module.key} className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                              <h4 className="text-base font-semibold text-white">{module.label}</h4>
-                              <p className="mt-1 text-sm text-slate-400">
-                                {module.description ?? 'Module permissions grouped from the active product catalog.'}
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {(['Full', 'Some', 'None'] as const).map((state) => (
-                                <button
-                                  key={state}
-                                  type="button"
-                                  disabled={!isEditMode || state === 'Some'}
-                                  onClick={() =>
-                                    state === 'Full' || state === 'None'
-                                      ? updateModulePermissions(module, state)
-                                      : undefined
-                                  }
-                                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${
-                                    moduleState === state
-                                      ? 'border-cyan-400 bg-cyan-400/10 text-white'
-                                      : 'border-slate-700 text-slate-300'
-                                  } ${state === 'Some' ? 'cursor-default' : 'transition hover:border-slate-500'} disabled:opacity-80`}
-                                >
-                                  {state}
-                                </button>
+                  <div className="space-y-6">
+                    <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {!isNew ? (
+                              <span className="rounded-full bg-slate-800 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                                {role?.isSystem ? 'Standard' : 'Custom'}
+                              </span>
+                            ) : null}
+                            {!isNew && role?.isArchived ? (
+                              <span className="rounded-full bg-slate-700 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                                Archived
+                              </span>
+                            ) : null}
+                          </div>
+                          <h3 className="mt-3 text-2xl font-semibold text-white">
+                            {draft.name.trim() || role?.name || 'Untitled role'}
+                          </h3>
+                          <p className="mt-2 max-w-4xl text-sm text-slate-400">{editorDescription}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {!isNew && !isEditMode ? (
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/roles/${roleId}/edit`)}
+                              className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
+                            >
+                              Edit
+                            </button>
+                          ) : null}
+                          {!isNew ? (
+                            <button
+                              type="button"
+                              onClick={() => cloneMutation.mutate()}
+                              className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
+                            >
+                              Clone
+                            </button>
+                          ) : null}
+                          {!isNew && !role?.isSystem && !role?.isArchived ? (
+                            <button
+                              type="button"
+                              onClick={() => archiveMutation.mutate()}
+                              className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-400 hover:text-white"
+                            >
+                              Archive
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      {role && (role.isSystem || role.isArchived) && isEditMode ? (
+                        <div className="mt-5 rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                          {role.isSystem
+                            ? 'Standard roles are read-only. Clone this role to make tenant-specific changes.'
+                            : 'Archived roles are read-only. View audit and assignments here, or clone the role to create a replacement.'}
+                        </div>
+                      ) : null}
+
+                      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_240px]">
+                        <label className="grid gap-2 text-sm text-slate-300">
+                          <span>
+                            Name <span className="text-rose-300">*</span>
+                          </span>
+                          <input
+                            value={draft.name}
+                            disabled={!isEditableRole}
+                            onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm text-slate-300">
+                          <span>Description</span>
+                          <textarea
+                            value={draft.description}
+                            disabled={!isEditableRole}
+                            onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+                            rows={4}
+                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm text-slate-300">
+                          <span>Role type</span>
+                          <select
+                            value={draft.roleType}
+                            disabled={!isEditableRole || !isNew}
+                            onChange={(event) =>
+                              setDraft((current) => ({
+                                ...current,
+                                roleType: event.target.value as RoleDraft['roleType'],
+                              }))
+                            }
+                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                          >
+                            <option value="tenant_role">Tenant role</option>
+                            <option value="product_template">Product template</option>
+                          </select>
+                        </label>
+                      </div>
+                    </section>
+
+                    <div className="flex flex-wrap gap-2">
+                      {EDITOR_TABS.map((tab) => (
+                        <EditorTabButton
+                          key={tab.key}
+                          active={editorTab === tab.key}
+                          label={tab.label}
+                          onClick={() => setEditorTab(tab.key)}
+                        />
+                      ))}
+                    </div>
+
+                    {editorTab === 'permissions' ? (
+                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">Module Permissions</h3>
+                            <p className="mt-1 text-sm text-slate-400">
+                              Choose a product catalog, set module-level access, then fine-tune individual permissions.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 text-sm">
+                            <span className="text-slate-400">Select All:</span>
+                            <button
+                              type="button"
+                              disabled={!isEditableRole || !activeCatalog}
+                              onClick={() => updateCatalogPermissions('Full')}
+                              className="font-semibold text-emerald-300 transition hover:text-emerald-200 disabled:opacity-50"
+                            >
+                              Full
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!isEditableRole || !activeCatalog}
+                              onClick={() => updateCatalogPermissions('None')}
+                              className="font-semibold text-slate-300 transition hover:text-white disabled:opacity-50"
+                            >
+                              None
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          {catalogs.map((catalog) => (
+                            <button
+                              key={catalog.productKey}
+                              type="button"
+                              onClick={() => setSelectedProductKey(catalog.productKey)}
+                              className={classNames(
+                                'rounded-2xl border px-3 py-2 text-sm transition',
+                                activeCatalog?.productKey === catalog.productKey
+                                  ? 'border-emerald-400 bg-emerald-500/10 text-white'
+                                  : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500',
+                              )}
+                            >
+                              {catalog.productName}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3 text-sm text-slate-300">
+                          {activeCatalog
+                            ? `${activeCatalog.productName} exposes ${activeCatalog.modules.length} modules with ${selectedCount} selected permissions in this role.`
+                            : 'Refresh catalogs to load product permission groups.'}
+                        </div>
+
+                        {!activeCatalog ? (
+                          <div className="mt-5 rounded-2xl border border-dashed border-slate-700 px-4 py-10 text-sm text-slate-400">
+                            No product catalog is available yet.
+                          </div>
+                        ) : (
+                          <div className="mt-6 space-y-5">
+                            {activeCatalog.modules.map((module) => {
+                              const moduleState = moduleSelectionState(module, draft.permissions)
+                              return (
+                                <article key={module.key} className="rounded-3xl border border-slate-800 bg-slate-950/55 p-5">
+                                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+                                    <div>
+                                      <div className="flex flex-wrap items-center gap-3">
+                                        <h4 className="text-base font-semibold text-white">{module.label}</h4>
+                                        <span className="rounded-full bg-slate-800 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                                          {permissionCountForModule(module, draft.permissions)} selected
+                                        </span>
+                                      </div>
+                                      <p className="mt-2 text-sm text-slate-400">
+                                        {module.description ?? 'Module permissions grouped from the active product catalog.'}
+                                      </p>
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <p className="text-sm font-medium text-slate-300">Access</p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {(['Full', 'Some', 'None'] as const).map((state) => (
+                                          <ModuleAccessButton
+                                            key={state}
+                                            active={moduleState === state}
+                                            disabled={!isEditableRole || state === 'Some'}
+                                            label={state}
+                                            onClick={() =>
+                                              state === 'Full' || state === 'None'
+                                                ? updateModulePermissions(module, state)
+                                                : undefined
+                                            }
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-5 space-y-4 border-t border-slate-800 pt-5">
+                                    {module.permissionGroups.map((group) => (
+                                      <PermissionGroupCard
+                                        key={group.key}
+                                        group={group}
+                                        isEditableRole={isEditableRole}
+                                        permissions={draft.permissions}
+                                        onTogglePermission={togglePermission}
+                                        onSetPermissionEffect={setPermissionEffect}
+                                      />
+                                    ))}
+                                  </div>
+                                </article>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    ) : null}
+
+                    {editorTab === 'scope' ? (
+                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                        <h3 className="text-lg font-semibold text-white">Scope and Record Sets</h3>
+                        <p className="mt-2 text-sm text-slate-400">
+                          StaffArr owns sites, org units, and internal locations. Use these selectors to constrain where the role applies.
+                        </p>
+
+                        <div className="mt-6 space-y-6">
+                          <div>
+                            <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Scope Flags</h4>
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              {FLAG_SCOPE_OPTIONS.map((option) => (
+                                <label key={option.type} className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+                                  <div className="flex items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={hasScope(draft.scopes, option.type, null)}
+                                      disabled={!isEditableRole}
+                                      onChange={() => toggleScope(option.type, null, option.label)}
+                                      className="mt-1 size-4 rounded border-slate-600 bg-slate-950"
+                                    />
+                                    <div>
+                                      <p className="font-medium text-white">{option.label}</p>
+                                      <p className="mt-1 text-sm text-slate-400">{option.help}</p>
+                                    </div>
+                                  </div>
+                                </label>
                               ))}
                             </div>
                           </div>
 
-                          <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                            {module.permissionGroups.map((group) => (
-                              <div key={group.key} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                                <div className="mb-3 flex items-center justify-between gap-3">
-                                  <div>
-                                    <p className="font-medium text-white">{group.label}</p>
-                                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                                      {permissionKeyCountForModule({ ...module, permissionGroups: [group] }, draft.permissions)} selected
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="space-y-3">
-                                  {group.permissions.map((permission) => {
-                                    const selected = Boolean(draft.permissions[permission.key])
-                                    const missingDependencies = permission.dependsOn.filter(
-                                      (dependency) => !draft.permissions[dependency],
-                                    )
-                                    const conflicts = permission.conflictsWith.filter(
-                                      (conflict) => Boolean(draft.permissions[conflict]),
-                                    )
-                                    return (
-                                      <div key={permission.key} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
-                                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                          <label className="flex gap-3">
-                                            <input
-                                              type="checkbox"
-                                              checked={selected}
-                                              disabled={!isEditMode}
-                                              onChange={(event) => togglePermission(permission, event.target.checked)}
-                                              className="mt-1 size-4 rounded border-slate-600 bg-slate-950"
-                                            />
-                                            <div>
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <span className="font-medium text-white">{permission.label}</span>
-                                                <span
-                                                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                                    permission.riskLevel === 'critical'
-                                                      ? 'bg-rose-500/20 text-rose-200'
-                                                      : permission.riskLevel === 'high'
-                                                        ? 'bg-amber-500/20 text-amber-200'
-                                                        : permission.riskLevel === 'medium'
-                                                          ? 'bg-sky-500/20 text-sky-200'
-                                                          : 'bg-emerald-500/20 text-emerald-200'
-                                                  }`}
-                                                >
-                                                  {permission.riskLevel}
-                                                </span>
-                                                {permission.requiresScope ? (
-                                                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
-                                                    needs scope
-                                                  </span>
-                                                ) : null}
-                                              </div>
-                                              <p className="mt-1 text-sm text-slate-400">
-                                                {permission.description ?? permission.key}
-                                              </p>
-                                              <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                                {permission.key}
-                                              </p>
-                                            </div>
-                                          </label>
-                                          {selected ? (
-                                            <select
-                                              value={draft.permissions[permission.key]}
-                                              disabled={!isEditMode}
-                                              onChange={(event) =>
-                                                setPermissionEffect(
-                                                  permission.key,
-                                                  event.target.value as 'allow' | 'deny',
-                                                )
-                                              }
-                                              className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-400"
-                                            >
-                                              <option value="allow">Allow</option>
-                                              <option value="deny">Deny</option>
-                                            </select>
-                                          ) : null}
-                                        </div>
+                          <ScopeSelectionGrid
+                            title="Sites"
+                            items={siteUnits}
+                            scopeType="site"
+                            scopes={draft.scopes}
+                            disabled={!isEditableRole}
+                            onToggle={toggleScope}
+                          />
+                          <ScopeSelectionGrid
+                            title="Departments"
+                            items={departmentUnits}
+                            scopeType="department"
+                            scopes={draft.scopes}
+                            disabled={!isEditableRole}
+                            onToggle={toggleScope}
+                          />
+                          <ScopeSelectionGrid
+                            title="Teams"
+                            items={teamUnits}
+                            scopeType="team"
+                            scopes={draft.scopes}
+                            disabled={!isEditableRole}
+                            onToggle={toggleScope}
+                          />
+                          <ScopeSelectionGrid
+                            title="Positions"
+                            items={positionUnits}
+                            scopeType="position"
+                            scopes={draft.scopes}
+                            disabled={!isEditableRole}
+                            onToggle={toggleScope}
+                          />
+                          <LocationSelectionGrid
+                            title="Locations"
+                            items={locations}
+                            scopes={draft.scopes}
+                            disabled={!isEditableRole}
+                            onToggle={toggleScope}
+                          />
 
-                                        {missingDependencies.length > 0 ? (
-                                          <p className="mt-3 text-xs text-amber-200">
-                                            Depends on: {missingDependencies.join(', ')}
-                                          </p>
-                                        ) : null}
-                                        {conflicts.length > 0 ? (
-                                          <p className="mt-1 text-xs text-rose-200">
-                                            Conflicts with: {conflicts.join(', ')}
-                                          </p>
-                                        ) : null}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </article>
-                      )
-                    })}
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                <h3 className="text-lg font-semibold text-white">Scope and record sets</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  StaffArr owns sites, org units, and internal locations. Use these selectors to constrain where the role applies.
-                </p>
-
-                <div className="mt-6 space-y-6">
-                  <div>
-                    <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Scope flags</h4>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      {FLAG_SCOPE_OPTIONS.map((option) => (
-                        <label key={option.type} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                          <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              checked={hasScope(draft.scopes, option.type, null)}
-                              disabled={!isEditMode}
-                              onChange={() => toggleScope(option.type, null, option.label)}
-                              className="mt-1 size-4 rounded border-slate-600 bg-slate-950"
+                          <label className="grid gap-2 text-sm text-slate-300">
+                            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Record Sets</span>
+                            <textarea
+                              value={draft.recordSetText}
+                              disabled={!isEditableRole}
+                              onChange={(event) => setDraft((current) => ({ ...current, recordSetText: event.target.value }))}
+                              rows={4}
+                              placeholder="One record set id per line"
+                              className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                             />
-                            <div>
-                              <p className="font-medium text-white">{option.label}</p>
-                              <p className="mt-1 text-sm text-slate-400">{option.help}</p>
+                          </label>
+
+                          <div>
+                            <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Applied Scope Summary</h4>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {roleScopeLabels.map((label) => (
+                                <span key={label} className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200">
+                                  {label}
+                                </span>
+                              ))}
+                              {roleScopeLabels.length === 0 ? (
+                                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-400">No scope selected</span>
+                              ) : null}
                             </div>
                           </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                        </div>
+                      </section>
+                    ) : null}
 
-                  <ScopeSelectionGrid
-                    title="Sites"
-                    items={siteUnits}
-                    scopeType="site"
-                    scopes={draft.scopes}
-                    disabled={!isEditMode}
-                    onToggle={toggleScope}
-                  />
-                  <ScopeSelectionGrid
-                    title="Departments"
-                    items={departmentUnits}
-                    scopeType="department"
-                    scopes={draft.scopes}
-                    disabled={!isEditMode}
-                    onToggle={toggleScope}
-                  />
-                  <ScopeSelectionGrid
-                    title="Teams"
-                    items={teamUnits}
-                    scopeType="team"
-                    scopes={draft.scopes}
-                    disabled={!isEditMode}
-                    onToggle={toggleScope}
-                  />
-                  <ScopeSelectionGrid
-                    title="Positions"
-                    items={positionUnits}
-                    scopeType="position"
-                    scopes={draft.scopes}
-                    disabled={!isEditMode}
-                    onToggle={toggleScope}
-                  />
-                  <LocationSelectionGrid
-                    title="Locations"
-                    items={locations}
-                    scopes={draft.scopes}
-                    disabled={!isEditMode}
-                    onToggle={toggleScope}
-                  />
+                    {editorTab === 'assignments' ? (
+                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                        <h3 className="text-lg font-semibold text-white">Assigned People</h3>
+                        <p className="mt-2 text-sm text-slate-400">
+                          Assign this role to people after the role has been created. Assignments are stored per person so products can evaluate scope at runtime.
+                        </p>
 
-                  <label className="grid gap-2 text-sm text-slate-300">
-                    <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Record sets</span>
-                    <textarea
-                      value={draft.recordSetText}
-                      disabled={!isEditMode}
-                      onChange={(event) => setDraft((current) => ({ ...current, recordSetText: event.target.value }))}
-                      rows={4}
-                      placeholder="One record set id per line"
-                      className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-400 disabled:opacity-70"
-                    />
-                  </label>
-
-                  <div>
-                    <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Applied scope summary</h4>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {scopeSummary(role, draft, isEditMode).map((label) => (
-                        <span key={label} className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200">
-                          {label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                <h3 className="text-lg font-semibold text-white">Assigned people</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Assign this role to people after the role has been created. Assignments are stored per person so products can evaluate scope at runtime.
-                </p>
-
-                {!roleId ? (
-                  <div className="mt-4 rounded-2xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-400">
-                    Save the role before assigning people.
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                        <h4 className="font-medium text-white">Current assignments</h4>
-                        <div className="mt-3 space-y-3">
-                          {(role?.assignedPeople ?? []).map((assignment) => (
-                            <div key={assignment.personRoleId} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
-                              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                <div>
-                                  <p className="font-medium text-white">{assignment.displayName}</p>
-                                  <p className="mt-1 text-sm text-slate-400">
-                                    {assignment.assignmentScopeType.replace('_', ' ')}
-                                    {assignment.assignmentScopeRefId ? ` • ${assignment.assignmentScopeRefId}` : ''}
-                                  </p>
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    {assignment.startsAt ? `Starts ${new Date(assignment.startsAt).toLocaleString()}` : 'Starts immediately'}
-                                    {assignment.endsAt ? ` • Ends ${new Date(assignment.endsAt).toLocaleString()}` : ''}
-                                  </p>
-                                </div>
-                                {isEditMode ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => removeAssignmentMutation.mutate(assignment)}
-                                    className="rounded-full border border-rose-500/50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-rose-200 transition hover:border-rose-400 hover:text-white"
-                                  >
-                                    Remove
-                                  </button>
+                        {!roleId ? (
+                          <div className="mt-5 rounded-2xl border border-dashed border-slate-700 px-4 py-8 text-sm text-slate-400">
+                            Save the role before assigning people.
+                          </div>
+                        ) : (
+                          <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
+                            <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+                              <h4 className="font-medium text-white">Current Assignments</h4>
+                              <div className="mt-3 space-y-3">
+                                {(role?.assignedPeople ?? []).map((assignment) => (
+                                  <div key={assignment.personRoleId} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                      <div>
+                                        <p className="font-medium text-white">{assignment.displayName}</p>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                          {assignment.assignmentScopeType.replace(/_/g, ' ')}
+                                          {assignment.assignmentScopeRefId ? ` • ${assignment.assignmentScopeRefId}` : ''}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                          {assignment.startsAt ? `Starts ${formatDateTime(assignment.startsAt)}` : 'Starts immediately'}
+                                          {assignment.endsAt ? ` • Ends ${formatDateTime(assignment.endsAt)}` : ''}
+                                        </p>
+                                      </div>
+                                      {isEditableRole ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeAssignmentMutation.mutate(assignment)}
+                                          className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-rose-200 transition hover:border-rose-400 hover:text-white"
+                                        >
+                                          Remove
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                ))}
+                                {(role?.assignedPeople ?? []).length === 0 ? (
+                                  <div className="rounded-2xl border border-dashed border-slate-800 px-4 py-8 text-sm text-slate-400">
+                                    No people are assigned to this role yet.
+                                  </div>
                                 ) : null}
                               </div>
                             </div>
+
+                            <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+                              <h4 className="font-medium text-white">Add Assignment</h4>
+                              <div className="mt-4 grid gap-3">
+                                <label className="grid gap-2 text-sm text-slate-300">
+                                  <span>Person</span>
+                                  <select
+                                    value={assignmentDraft.personId}
+                                    disabled={!isEditableRole}
+                                    onChange={(event) =>
+                                      setAssignmentDraft((current) => ({ ...current, personId: event.target.value }))
+                                    }
+                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                  >
+                                    <option value="">Select a person</option>
+                                    {people.map((person) => (
+                                      <option key={person.personId} value={person.personId}>
+                                        {person.displayName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="grid gap-2 text-sm text-slate-300">
+                                  <span>Assignment scope</span>
+                                  <select
+                                    value={assignmentDraft.assignmentScopeType}
+                                    disabled={!isEditableRole}
+                                    onChange={(event) =>
+                                      setAssignmentDraft((current) => ({
+                                        ...current,
+                                        assignmentScopeType: event.target.value as RoleScopeType,
+                                        assignmentScopeRefId: '',
+                                      }))
+                                    }
+                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                  >
+                                    <option value="tenant">Entire tenant</option>
+                                    <option value="site">Site</option>
+                                    <option value="department">Department</option>
+                                    <option value="location">Location</option>
+                                    <option value="team">Team</option>
+                                    <option value="position">Position</option>
+                                    <option value="record_set">Record set</option>
+                                    <option value="assigned_assets">Assigned assets only</option>
+                                    <option value="own_records">Own records only</option>
+                                    <option value="direct_reports">Direct reports only</option>
+                                  </select>
+                                </label>
+                                {assignmentScopeNeedsReference(assignmentDraft.assignmentScopeType) ? (
+                                  <label className="grid gap-2 text-sm text-slate-300">
+                                    <span>Scope reference id</span>
+                                    <input
+                                      value={assignmentDraft.assignmentScopeRefId}
+                                      disabled={!isEditableRole}
+                                      onChange={(event) =>
+                                        setAssignmentDraft((current) => ({
+                                          ...current,
+                                          assignmentScopeRefId: event.target.value,
+                                        }))
+                                      }
+                                      className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                    />
+                                  </label>
+                                ) : null}
+                                <label className="grid gap-2 text-sm text-slate-300">
+                                  <span>Starts at</span>
+                                  <input
+                                    type="datetime-local"
+                                    value={assignmentDraft.startsAt}
+                                    disabled={!isEditableRole}
+                                    onChange={(event) =>
+                                      setAssignmentDraft((current) => ({ ...current, startsAt: event.target.value }))
+                                    }
+                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                  />
+                                </label>
+                                <label className="grid gap-2 text-sm text-slate-300">
+                                  <span>Ends at</span>
+                                  <input
+                                    type="datetime-local"
+                                    value={assignmentDraft.endsAt}
+                                    disabled={!isEditableRole}
+                                    onChange={(event) =>
+                                      setAssignmentDraft((current) => ({ ...current, endsAt: event.target.value }))
+                                    }
+                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  disabled={!isEditableRole}
+                                  onClick={() => assignPersonMutation.mutate()}
+                                  className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+                                >
+                                  Assign role
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </section>
+                    ) : null}
+
+                    {editorTab === 'audit' ? (
+                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                        <h3 className="text-lg font-semibold text-white">Audit History</h3>
+                        <p className="mt-2 text-sm text-slate-400">
+                          Every role create, update, archive, clone, permission change, scope change, and person assignment is recorded server-side.
+                        </p>
+                        <div className="mt-5 space-y-3">
+                          {(role?.auditHistory ?? []).map((entry) => (
+                            <div key={entry.id} className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+                              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                  <p className="font-medium text-white">{entry.action}</p>
+                                  <p className="mt-1 text-sm text-slate-400">{entry.reason ?? 'No reason provided.'}</p>
+                                </div>
+                                <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                                  {formatDateTime(entry.createdAt)}
+                                </span>
+                              </div>
+                            </div>
                           ))}
-                          {(role?.assignedPeople ?? []).length === 0 ? (
-                            <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-6 text-sm text-slate-400">
-                              No people are assigned to this role yet.
-                            </p>
+                          {role && role.auditHistory.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-slate-800 px-4 py-8 text-sm text-slate-400">
+                              No audit history has been recorded for this role yet.
+                            </div>
                           ) : null}
                         </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                        <h4 className="font-medium text-white">Add assignment</h4>
-                        <div className="mt-3 grid gap-3">
-                          <label className="grid gap-2 text-sm text-slate-300">
-                            <span>Person</span>
-                            <select
-                              value={assignmentDraft.personId}
-                              disabled={!isEditMode}
-                              onChange={(event) =>
-                                setAssignmentDraft((current) => ({ ...current, personId: event.target.value }))
-                              }
-                              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                            >
-                              <option value="">Select a person</option>
-                              {people.map((person) => (
-                                <option key={person.personId} value={person.personId}>
-                                  {person.displayName}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="grid gap-2 text-sm text-slate-300">
-                            <span>Assignment scope</span>
-                            <select
-                              value={assignmentDraft.assignmentScopeType}
-                              disabled={!isEditMode}
-                              onChange={(event) =>
-                                setAssignmentDraft((current) => ({
-                                  ...current,
-                                  assignmentScopeType: event.target.value as RoleScopeType,
-                                  assignmentScopeRefId: '',
-                                }))
-                              }
-                              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                            >
-                              <option value="tenant">Entire tenant</option>
-                              <option value="site">Site</option>
-                              <option value="department">Department</option>
-                              <option value="location">Location</option>
-                              <option value="team">Team</option>
-                              <option value="position">Position</option>
-                              <option value="record_set">Record set</option>
-                              <option value="assigned_assets">Assigned assets only</option>
-                              <option value="own_records">Own records only</option>
-                              <option value="direct_reports">Direct reports only</option>
-                            </select>
-                          </label>
-                          {assignmentScopeNeedsReference(assignmentDraft.assignmentScopeType) ? (
-                            <label className="grid gap-2 text-sm text-slate-300">
-                              <span>Scope reference id</span>
-                              <input
-                                value={assignmentDraft.assignmentScopeRefId}
-                                disabled={!isEditMode}
-                                onChange={(event) =>
-                                  setAssignmentDraft((current) => ({
-                                    ...current,
-                                    assignmentScopeRefId: event.target.value,
-                                  }))
-                                }
-                                className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                              />
-                            </label>
-                          ) : null}
-                          <label className="grid gap-2 text-sm text-slate-300">
-                            <span>Starts at</span>
-                            <input
-                              type="datetime-local"
-                              value={assignmentDraft.startsAt}
-                              disabled={!isEditMode}
-                              onChange={(event) =>
-                                setAssignmentDraft((current) => ({ ...current, startsAt: event.target.value }))
-                              }
-                              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                            />
-                          </label>
-                          <label className="grid gap-2 text-sm text-slate-300">
-                            <span>Ends at</span>
-                            <input
-                              type="datetime-local"
-                              value={assignmentDraft.endsAt}
-                              disabled={!isEditMode}
-                              onChange={(event) =>
-                                setAssignmentDraft((current) => ({ ...current, endsAt: event.target.value }))
-                              }
-                              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            disabled={!isEditMode}
-                            onClick={() => assignPersonMutation.mutate()}
-                            className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
-                          >
-                            Assign role
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
+                      </section>
+                    ) : null}
+                  </div>
                 )}
-              </section>
+              </div>
 
-              <section id="role-audit" className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6">
-                <h3 className="text-lg font-semibold text-white">Audit history</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Every role create, update, archive, clone, permission change, scope change, and person assignment is recorded server-side.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {(role?.auditHistory ?? []).map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <p className="font-medium text-white">{entry.action}</p>
-                          <p className="mt-1 text-sm text-slate-400">{entry.reason ?? 'No reason provided.'}</p>
-                        </div>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                          {new Date(entry.createdAt).toLocaleString()}
+              <aside className="border-t border-slate-800 bg-[#171717] px-6 py-6 xl:border-l xl:border-t-0">
+                <div className="space-y-4 xl:sticky xl:top-0">
+                  <SummaryCard
+                    icon={<ShieldCheck className="h-4 w-4 text-emerald-300" />}
+                    title="Role Summary"
+                  >
+                    <SummaryRow label="Type" value={roleTypeLabel(draft.roleType)} />
+                    <SummaryRow label="Selected permissions" value={String(Object.keys(draft.permissions).length)} />
+                    <SummaryRow label="Applied scopes" value={String(roleScopeLabels.length)} />
+                    <SummaryRow label="Assigned people" value={String(role?.assignedPeople?.length ?? 0)} />
+                    {role ? <SummaryRow label="Updated" value={formatDateTime(role.updatedAt)} /> : null}
+                  </SummaryCard>
+
+                  <SummaryCard
+                    icon={<Users className="h-4 w-4 text-cyan-300" />}
+                    title="Products in Scope"
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {catalogs.map((catalog) => (
+                        <span
+                          key={catalog.productKey}
+                          className={classNames(
+                            'rounded-full px-2.5 py-1 text-xs',
+                            activeCatalog?.productKey === catalog.productKey
+                              ? 'bg-emerald-500/15 text-emerald-100'
+                              : 'bg-slate-800 text-slate-300',
+                          )}
+                        >
+                          {catalog.productName}
                         </span>
+                      ))}
+                    </div>
+                  </SummaryCard>
+
+                  <SummaryCard
+                    icon={<CircleHelp className="h-4 w-4 text-amber-300" />}
+                    title="Guidance"
+                  >
+                    <p className="text-sm leading-6 text-slate-300">
+                      Standard roles are templates. Tenant roles should be specific, scoping only the product access and org context the user actually needs.
+                    </p>
+                  </SummaryCard>
+
+                  <div className="rounded-[24px] border border-slate-800 bg-[#202020] p-4">
+                    <div className="flex flex-col gap-3">
+                      {isEditableRole ? (
+                        <button
+                          type="button"
+                          onClick={() => saveMutation.mutate()}
+                          className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+                        >
+                          Save role
+                        </button>
+                      ) : null}
+                      {!isNew && !isEditMode ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/roles/${roleId}/edit`)}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
+                        >
+                          <PencilLine className="h-4 w-4" />
+                          Open edit mode
+                        </button>
+                      ) : null}
+                      {!isNew ? (
+                        <button
+                          type="button"
+                          onClick={() => cloneMutation.mutate()}
+                          className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
+                        >
+                          Clone role
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={closeEditor}
+                        className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+
+                  {role?.isSystem ? (
+                    <div className="rounded-[24px] border border-slate-800 bg-slate-900/70 p-4">
+                      <div className="flex items-start gap-3">
+                        <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                        <p className="text-sm text-slate-300">
+                          This is a standard system role. Clone it to create a tenant-specific version before changing permissions or scope.
+                        </p>
                       </div>
                     </div>
-                  ))}
-                  {role && role.auditHistory.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-6 text-sm text-slate-400">
-                      No audit history has been recorded for this role yet.
-                    </p>
                   ) : null}
                 </div>
-              </section>
-            </>
-          )}
-        </section>
+              </aside>
+            </div>
+          </section>
+        </>
+      ) : null}
+    </>
+  )
+}
+
+function permissionCountForCatalog(
+  catalog: PermissionCatalogResponse,
+  permissions: Record<string, 'allow' | 'deny'>,
+): number {
+  return catalog.modules
+    .flatMap((module) => module.permissionGroups)
+    .flatMap((group) => group.permissions)
+    .filter((permission) => permissions[permission.key])
+    .length
+}
+
+function DirectoryFilterButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={classNames(
+        'rounded-full px-4 py-2 text-sm font-medium transition',
+        active
+          ? 'bg-emerald-500 text-slate-950'
+          : 'text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200',
+      )}
+    >
+      {label}
+    </button>
+  )
+}
+
+function RoleDirectoryRow({
+  active,
+  role,
+  onOpen,
+  onEdit,
+}: {
+  active: boolean
+  role: StaffRoleSummaryResponse
+  onOpen: () => void
+  onEdit: () => void
+}) {
+  return (
+    <div
+      className={classNames(
+        'grid gap-4 px-5 py-4 transition lg:grid-cols-[minmax(0,2.8fr)_110px_170px_170px_120px] lg:items-center',
+        active && 'bg-emerald-500/6',
+      )}
+    >
+      <button type="button" onClick={onOpen} className="min-w-0 text-left">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 shrink-0">
+            {role.isSystem ? (
+              <Lock className="h-4 w-4 text-slate-400" />
+            ) : (
+              <div className="h-4 w-4 rounded-[4px] border border-slate-600 bg-slate-900" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold text-white">{role.name}</p>
+              {role.isSystem ? (
+                <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                  Default
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-1 text-sm text-slate-400">
+              {role.description ?? 'No description yet.'}
+            </p>
+          </div>
+        </div>
+      </button>
+
+      <div className="text-sm text-emerald-300">
+        {role.assignedPersonCount > 0 ? `${role.assignedPersonCount} Users` : '—'}
       </div>
 
-      {isBusy ? <p className="mt-4 text-sm text-slate-400">Working…</p> : null}
+      <div className="text-sm text-slate-300">{formatDateTime(role.createdAt)}</div>
+      <div className="text-sm text-slate-300">{formatDateTime(role.updatedAt)}</div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="rounded-xl border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+        >
+          View
+        </button>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:border-emerald-400 hover:text-white"
+        >
+          Edit
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function EditorTabButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={classNames(
+        'rounded-2xl border px-4 py-2 text-sm font-medium transition',
+        active
+          ? 'border-emerald-400 bg-emerald-500/10 text-white'
+          : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500 hover:text-white',
+      )}
+    >
+      {label}
+    </button>
+  )
+}
+
+function ModuleAccessButton({
+  active,
+  disabled,
+  label,
+  onClick,
+}: {
+  active: boolean
+  disabled: boolean
+  label: 'Full' | 'Some' | 'None'
+  onClick?: () => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={classNames(
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition disabled:cursor-default disabled:opacity-65',
+        active
+          ? 'border-emerald-400 bg-emerald-500/10 text-white'
+          : 'border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white',
+      )}
+    >
+      <span
+        className={classNames(
+          'h-3.5 w-3.5 rounded-full border',
+          active ? 'border-emerald-300 bg-emerald-400' : 'border-slate-500 bg-transparent',
+        )}
+      />
+      {label}
+    </button>
+  )
+}
+
+function PermissionGroupCard({
+  group,
+  isEditableRole,
+  permissions,
+  onTogglePermission,
+  onSetPermissionEffect,
+}: {
+  group: PermissionCatalogPermissionGroupResponse
+  isEditableRole: boolean
+  permissions: Record<string, 'allow' | 'deny'>
+  onTogglePermission: (permission: PermissionCatalogPermissionResponse, checked: boolean) => void
+  onSetPermissionEffect: (permissionKey: string, effect: 'allow' | 'deny') => void
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">{group.label}</p>
+      <div className="mt-4 space-y-3">
+        {group.permissions.map((permission) => {
+          const selected = Boolean(permissions[permission.key])
+          const missingDependencies = permission.dependsOn.filter((dependency) => !permissions[dependency])
+          const conflicts = permission.conflictsWith.filter((conflict) => Boolean(permissions[conflict]))
+          return (
+            <div key={permission.key} className="rounded-2xl border border-slate-800 bg-[#232323] p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <label className="flex min-w-0 items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    disabled={!isEditableRole}
+                    onChange={(event) => onTogglePermission(permission, event.target.checked)}
+                    className="mt-1 size-4 rounded border-slate-600 bg-slate-950"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-white">{permission.label}</span>
+                      <RiskPill riskLevel={permission.riskLevel} />
+                      {permission.requiresScope ? (
+                        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+                          needs scope
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {permission.description ?? permission.key}
+                    </p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                      {permission.key}
+                    </p>
+                  </div>
+                </label>
+
+                {selected ? (
+                  <select
+                    value={permissions[permission.key]}
+                    disabled={!isEditableRole}
+                    onChange={(event) =>
+                      onSetPermissionEffect(
+                        permission.key,
+                        event.target.value as 'allow' | 'deny',
+                      )
+                    }
+                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-emerald-400"
+                  >
+                    <option value="allow">Allow</option>
+                    <option value="deny">Deny</option>
+                  </select>
+                ) : null}
+              </div>
+
+              {missingDependencies.length > 0 ? (
+                <p className="mt-3 text-xs text-amber-200">Depends on: {missingDependencies.join(', ')}</p>
+              ) : null}
+              {conflicts.length > 0 ? (
+                <p className="mt-1 text-xs text-rose-200">Conflicts with: {conflicts.join(', ')}</p>
+              ) : null}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function RiskPill({ riskLevel }: { riskLevel: string }) {
+  return (
+    <span
+      className={classNames(
+        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+        riskLevel === 'critical'
+          ? 'bg-rose-500/20 text-rose-200'
+          : riskLevel === 'high'
+            ? 'bg-amber-500/20 text-amber-200'
+            : riskLevel === 'medium'
+              ? 'bg-sky-500/20 text-sky-200'
+              : 'bg-emerald-500/20 text-emerald-200',
+      )}
+    >
+      {riskLevel}
+    </span>
+  )
+}
+
+function SummaryCard({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section className="rounded-[24px] border border-slate-800 bg-[#202020] p-4">
+      <div className="mb-3 flex items-center gap-2">
+        {icon}
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-sm">
+      <span className="text-slate-400">{label}</span>
+      <span className="text-right text-slate-200">{value}</span>
     </div>
   )
 }
@@ -1286,7 +1717,7 @@ function ScopeSelectionGrid({
       <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{title}</h4>
       <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => (
-          <label key={item.orgUnitId} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+          <label key={item.orgUnitId} className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -1325,7 +1756,7 @@ function LocationSelectionGrid({
       <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{title}</h4>
       <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => (
-          <label key={item.locationId} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+          <label key={item.locationId} className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
