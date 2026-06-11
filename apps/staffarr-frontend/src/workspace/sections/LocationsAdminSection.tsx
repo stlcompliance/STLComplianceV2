@@ -7,6 +7,7 @@ import {
   getErrorMessage,
   type PickerOption,
 } from '@stl/shared-ui'
+import { OpenStreetMapLookupCard } from '../../components/OpenStreetMapLookupCard'
 import {
   archiveLocation,
   createLocation,
@@ -143,6 +144,24 @@ function formatLocationLabel(location: InternalLocationResponse) {
   return `${location.parentPathSnapshot} · ${location.locationNumber}`
 }
 
+function buildSiteSearchQuery(siteName: string | null | undefined) {
+  if (!siteName?.trim()) {
+    return null
+  }
+
+  return `${siteName.trim()} site`
+}
+
+function buildLocationSearchQuery(location: InternalLocationResponse | null) {
+  if (!location) {
+    return null
+  }
+
+  return [location.siteNameSnapshot, location.parentPathSnapshot, location.name, location.locationType]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(' ')
+}
+
 export function LocationsAdminSection({ state }: Props) {
   const sites = useMemo(
     () => state.orgUnits.filter((unit) => unit.unitType === 'site'),
@@ -273,6 +292,8 @@ export function LocationsAdminSection({ state }: Props) {
     selectedLocationQuery.data ?? availableLocations.find((location) => location.locationId === selectedLocationId) ?? null
 
   const selectedSite = sites.find((site) => site.orgUnitId === selectedSiteId) ?? null
+  const selectedSiteMapQuery = buildSiteSearchQuery(selectedSite?.name)
+  const selectedLocationMapQuery = buildLocationSearchQuery(selectedLocation)
   const parentLocationOptions = useMemo<PickerOption[]>(
     () =>
       (locationsQuery.data ?? [])
@@ -692,6 +713,13 @@ export function LocationsAdminSection({ state }: Props) {
             </div>
 
             <div className="space-y-4">
+              <OpenStreetMapLookupCard
+                query={selectedLocationMapQuery ?? selectedSiteMapQuery}
+                label={selectedLocation?.name ?? selectedSite?.name ?? 'StaffArr site'}
+                description="StaffArr manages the canonical site and location labels here. The embedded map resolves those labels through OpenStreetMap without adding new persisted map fields."
+                emptyMessage="Select a StaffArr site or location to load an embedded map."
+              />
+
               {archiveOpen && canManageLocations ? (
                 <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-4">
                   <h3 className="text-sm font-medium text-amber-100">Archive location</h3>

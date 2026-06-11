@@ -128,27 +128,28 @@ export function OrgSection({ state }: Props) {
       ) : null}
 
       <OrgHierarchyManager
-        orgUnits={s.orgUnits}
+        orgUnits={s.orgUnitsAdminQuery.data ?? s.orgUnits}
         peopleOptions={s.people.map((person) => ({
           personId: person.personId,
           displayName: person.displayName,
         }))}
-        isLoading={s.orgUnitsQuery.isLoading}
-        isError={s.orgUnitsQuery.isError}
+        isLoading={s.orgUnitsAdminQuery.isLoading}
+        isError={s.orgUnitsAdminQuery.isError}
         readErrorMessage={
-          s.orgUnitsQuery.isError
+          s.orgUnitsAdminQuery.isError
             ? getErrorMessage(
-                s.orgUnitsQuery.error,
+                s.orgUnitsAdminQuery.error,
                 'Failed to load org hierarchy data.',
               )
             : null
         }
-        onRetryRead={() => void s.orgUnitsQuery.refetch()}
+        onRetryRead={() => void s.orgUnitsAdminQuery.refetch()}
         canManage={s.canManageOrgUnits}
         isSubmitting={
           s.createOrgUnitMutation.isPending ||
           s.updateOrgUnitMutation.isPending ||
-          s.updateOrgUnitStatusMutation.isPending
+          s.updateOrgUnitStatusMutation.isPending ||
+          s.restoreOrgUnitMutation.isPending
         }
         actionErrorMessage={
           s.orgMutationError ? getErrorMessage(s.orgMutationError, 'Failed to update org hierarchy.') : null
@@ -161,6 +162,9 @@ export function OrgSection({ state }: Props) {
         }}
         onStatusChange={async (orgUnitId, status) => {
           await s.updateOrgUnitStatusMutation.mutateAsync({ orgUnitId, status })
+        }}
+        onRestore={async (orgUnitId) => {
+          await s.restoreOrgUnitMutation.mutateAsync({ orgUnitId, status: 'active' })
         }}
       />
     </>

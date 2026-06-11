@@ -784,51 +784,55 @@ public static class IntegrationEndpoints
 
         integrations.MapGet("/sites", async (
             Guid tenantId,
+            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.ListActiveSitesAsync(tenantId, cancellationToken));
+            return Results.Ok(await service.ListSitesAsync(tenantId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationListSites");
 
         integrationsV1.MapGet("/sites", async (
             Guid tenantId,
+            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.ListActiveSitesAsync(tenantId, cancellationToken));
+            return Results.Ok(await service.ListSitesAsync(tenantId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationListSitesV1");
 
         integrations.MapGet("/sites/{orgUnitId:guid}", async (
             Guid tenantId,
             Guid orgUnitId,
+            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetActiveSiteAsync(tenantId, orgUnitId, cancellationToken));
+            return Results.Ok(await service.GetSiteAsync(tenantId, orgUnitId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationGetSite");
 
         integrationsV1.MapGet("/sites/{orgUnitId:guid}", async (
             Guid tenantId,
             Guid orgUnitId,
+            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetActiveSiteAsync(tenantId, orgUnitId, cancellationToken));
+            return Results.Ok(await service.GetSiteAsync(tenantId, orgUnitId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationGetSiteV1");
 

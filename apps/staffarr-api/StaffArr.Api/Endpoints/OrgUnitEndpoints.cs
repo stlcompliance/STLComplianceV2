@@ -232,6 +232,42 @@ public static class OrgUnitEndpoints
                 return Results.Ok(updated);
             })
             .WithName($"ArchiveOrgUnit{suffix}");
+
+            group.MapPost("/{orgUnitId:guid}/restore", async (
+                Guid orgUnitId,
+                RestoreOrgUnitRequest? request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                PermissionProjectionService permissionProjectionService,
+                OrgUnitService service,
+                CancellationToken cancellationToken) =>
+            {
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var current = await service.GetAsync(tenantId, orgUnitId, cancellationToken);
+                var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                    tenantId,
+                    context.User.GetPersonId(),
+                    cancellationToken);
+
+                if (string.Equals(current.UnitType, "site", StringComparison.OrdinalIgnoreCase))
+                {
+                    authorization.RequireSiteUpdate(context.User, projection);
+                }
+                else
+                {
+                    authorization.RequireOrganizationUpdate(context.User, projection);
+                }
+
+                var restored = await service.RestoreAsync(
+                    tenantId,
+                    actorUserId,
+                    orgUnitId,
+                    request?.Status,
+                    cancellationToken);
+                return Results.Ok(restored);
+            })
+            .WithName($"RestoreOrgUnit{suffix}");
         }
     }
 

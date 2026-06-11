@@ -67,6 +67,7 @@ import {
   upsertPermissionTemplate,
   updateOrgUnit,
   updateOrgUnitStatus,
+  restoreOrgUnit,
 } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
 import { canManagePeople } from '../components/PersonProfileEditorPanel'
@@ -138,6 +139,11 @@ export function useStaffArrWorkspaceState() {
     queryKey: ['staffarr-org-units', session?.accessToken],
     queryFn: () => getOrgUnits(session!.accessToken),
     enabled: Boolean(session?.accessToken),
+  })
+  const orgUnitsAdminQuery = useQuery({
+    queryKey: ['staffarr-org-units', session?.accessToken, 'admin', 'includeArchived'],
+    queryFn: () => getOrgUnits(session!.accessToken, { includeArchived: true }),
+    enabled: Boolean(session?.accessToken && canManageOrgHierarchy(meQuery.data?.tenantRoleKey ?? '', meQuery.data?.isPlatformAdmin ?? false)),
   })
   const [selectedPersonIdState, setSelectedPersonIdState] = useState<string | null>(requestedPersonId)
   const [activeDirectoryPersonId, setActiveDirectoryPersonId] = useState<string | null>(null)
@@ -819,6 +825,15 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
+  const restoreOrgUnitMutation = useMutation({
+    mutationFn: (payload: { orgUnitId: string; status?: 'planned' | 'active' | 'inactive' | null }) =>
+      restoreOrgUnit(session!.accessToken, payload.orgUnitId, { status: payload.status ?? 'active' }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] }),
+      ])
+    },
+  })
   const startOffboardingMutation = useMutation({
     mutationFn: (payload: {
       personId: string
@@ -1048,7 +1063,7 @@ export function useStaffArrWorkspaceState() {
   const canManagePeopleProfiles = me ? canManagePeople(me.tenantRoleKey, me.isPlatformAdmin) : false
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
-    createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
+    createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? restoreOrgUnitMutation.error ?? null
   const assignmentMutationError =
     createAssignmentMutation.error ?? updateAssignmentMutation.error ?? updateAssignmentStatusMutation.error ?? null
   const managerMutationError = updateManagerMutation.error
@@ -1109,6 +1124,7 @@ export function useStaffArrWorkspaceState() {
     meQuery,
     peopleQuery,
     orgUnitsQuery,
+    orgUnitsAdminQuery,
     fallbackPersonId,
     effectivePersonId,
     personProfileQuery,
@@ -1153,6 +1169,7 @@ export function useStaffArrWorkspaceState() {
     createOrgUnitMutation,
     updateOrgUnitMutation,
     updateOrgUnitStatusMutation,
+    restoreOrgUnitMutation,
     createAssignmentMutation,
     updateAssignmentMutation,
     updateAssignmentStatusMutation,

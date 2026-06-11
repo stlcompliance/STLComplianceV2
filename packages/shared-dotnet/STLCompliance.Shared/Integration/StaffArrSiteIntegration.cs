@@ -12,19 +12,22 @@ public static class StaffArrSiteIntegrationScopes
 public sealed record StaffArrSiteLookupResponse(
     Guid OrgUnitId,
     string Name,
+    string? Code,
     Guid? ParentOrgUnitId,
-    string Status);
+    string Status,
+    DateTimeOffset UpdatedAt);
 
 public sealed class StaffArrSiteLookupClient(HttpClient httpClient)
 {
     public async Task<IReadOnlyList<StaffArrSiteLookupResponse>> ListAsync(
         Guid tenantId,
         string serviceToken,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
         using var request = BuildRequest(
             HttpMethod.Get,
-            $"api/v1/integrations/sites?tenantId={tenantId:D}",
+            $"api/v1/integrations/sites?tenantId={tenantId:D}{(includeArchived ? "&includeArchived=true" : string.Empty)}",
             serviceToken);
 
         using var response = await httpClient.SendAsync(request, cancellationToken);
@@ -41,11 +44,12 @@ public sealed class StaffArrSiteLookupClient(HttpClient httpClient)
         Guid tenantId,
         Guid orgUnitId,
         string serviceToken,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
         using var request = BuildRequest(
             HttpMethod.Get,
-            $"api/v1/integrations/sites/{orgUnitId:D}?tenantId={tenantId:D}",
+            $"api/v1/integrations/sites/{orgUnitId:D}?tenantId={tenantId:D}{(includeArchived ? "&includeArchived=true" : string.Empty)}",
             serviceToken);
 
         using var response = await httpClient.SendAsync(request, cancellationToken);

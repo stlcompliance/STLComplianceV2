@@ -719,6 +719,10 @@ export interface UpdateOrgUnitStatusRequest {
   reason?: string | null
 }
 
+export interface RestoreOrgUnitRequest {
+  status?: Exclude<OrgUnitStatus, 'archived'> | null
+}
+
 export interface CreateInternalLocationRequest {
   name: string
   locationType: LocationType

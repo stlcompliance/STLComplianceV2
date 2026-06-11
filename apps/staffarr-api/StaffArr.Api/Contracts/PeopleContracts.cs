@@ -217,6 +217,9 @@ public sealed record UpdateOrgUnitStatusRequest(
 public sealed record ArchiveOrgUnitRequest(
     string Reason);
 
+public sealed record RestoreOrgUnitRequest(
+    string? Status = null);
+
 public sealed record InternalLocationResponse(
     Guid LocationId,
     Guid TenantId,

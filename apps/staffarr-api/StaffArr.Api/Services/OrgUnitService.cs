@@ -105,8 +105,9 @@ public sealed class OrgUnitService(
             : await ProjectOneAsync(tenantId, orgUnit, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<StaffArrSiteLookupResponse>> ListActiveSitesAsync(
+    public async Task<IReadOnlyList<StaffArrSiteLookupResponse>> ListSitesAsync(
         Guid tenantId,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
         return await db.OrgUnits
@@ -114,19 +115,22 @@ public sealed class OrgUnitService(
             .Where(x =>
                 x.TenantId == tenantId
                 && x.UnitType == "site"
-                && x.Status == "active")
+                && (includeArchived || x.Status != "archived"))
             .OrderBy(x => x.Name)
             .Select(x => new StaffArrSiteLookupResponse(
                 x.Id,
                 x.Name,
+                x.Code,
                 x.ParentOrgUnitId,
-                x.Status))
+                x.Status,
+                x.UpdatedAt))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<StaffArrSiteLookupResponse> GetActiveSiteAsync(
+    public async Task<StaffArrSiteLookupResponse> GetSiteAsync(
         Guid tenantId,
         Guid orgUnitId,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
         var site = await db.OrgUnits
@@ -135,12 +139,14 @@ public sealed class OrgUnitService(
                 x.TenantId == tenantId
                 && x.Id == orgUnitId
                 && x.UnitType == "site"
-                && x.Status == "active")
+                && (includeArchived || x.Status != "archived"))
             .Select(x => new StaffArrSiteLookupResponse(
                 x.Id,
                 x.Name,
+                x.Code,
                 x.ParentOrgUnitId,
-                x.Status))
+                x.Status,
+                x.UpdatedAt))
             .FirstOrDefaultAsync(cancellationToken);
 
         return site ?? throw new StlApiException(
@@ -443,6 +449,14 @@ public sealed class OrgUnitService(
         orgUnit.SafetySensitive = normalized.SafetySensitive;
         orgUnit.CanSupervise = normalized.CanSupervise;
         orgUnit.CanApprove = normalized.CanApprove;
+        if (string.Equals(orgUnit.Status, "archived", StringComparison.OrdinalIgnoreCase)
+            && normalized.Status is not null
+            && !string.Equals(normalized.Status, "archived", StringComparison.OrdinalIgnoreCase))
+        {
+            orgUnit.ArchivedAt = null;
+            orgUnit.ArchivedByUserId = null;
+            orgUnit.ArchiveReason = null;
+        }
         orgUnit.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -499,12 +513,19 @@ public sealed class OrgUnitService(
 
         await EnsureStatusTransitionValidAsync(tenantId, orgUnitId, normalizedStatus, cancellationToken);
 
+        var wasArchived = string.Equals(orgUnit.Status, "archived", StringComparison.OrdinalIgnoreCase);
         orgUnit.Status = normalizedStatus;
+        if (wasArchived)
+        {
+            orgUnit.ArchivedAt = null;
+            orgUnit.ArchivedByUserId = null;
+            orgUnit.ArchiveReason = null;
+        }
         orgUnit.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
-            "org_unit.status_update",
+            wasArchived ? "org_unit.restore" : "org_unit.status_update",
             tenantId,
             actorUserId,
             "org_unit",
@@ -513,6 +534,37 @@ public sealed class OrgUnitService(
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, orgUnit.Id, cancellationToken);
+    }
+
+    public async Task<OrgUnitResponse> RestoreAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid orgUnitId,
+        string? status,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedStatus = string.IsNullOrWhiteSpace(status)
+            ? "active"
+            : NormalizeRequiredCatalogValue(
+                status,
+                OrgStructureCatalog.OrgUnitStatuses,
+                "org_unit.validation",
+                "Restore status must be planned, active, inactive, or archived.");
+
+        if (normalizedStatus == "archived")
+        {
+            throw new StlApiException(
+                "org_unit.validation",
+                "Restore status must be planned, active, or inactive.",
+                400);
+        }
+
+        return await UpdateStatusAsync(
+            tenantId,
+            actorUserId,
+            orgUnitId,
+            new UpdateOrgUnitStatusRequest(normalizedStatus),
+            cancellationToken);
     }
 
     public async Task<OrgUnitResponse> ArchiveAsync(

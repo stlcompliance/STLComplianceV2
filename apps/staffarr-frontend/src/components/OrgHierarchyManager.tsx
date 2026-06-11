@@ -27,6 +27,7 @@ interface OrgHierarchyManagerProps {
   onCreate: (request: CreateOrgUnitRequest) => Promise<void>
   onUpdate: (orgUnitId: string, request: UpdateOrgUnitRequest) => Promise<void>
   onStatusChange: (orgUnitId: string, status: OrgUnitStatus) => Promise<void>
+  onRestore: (orgUnitId: string) => Promise<void>
 }
 
 interface OrgNode extends OrgUnitResponse {
@@ -658,6 +659,7 @@ export function OrgHierarchyManager({
   onCreate,
   onUpdate,
   onStatusChange,
+  onRestore,
 }: OrgHierarchyManagerProps) {
   const [selectedOrgUnitId, setSelectedOrgUnitId] = useState<string | null>(null)
   const [createDraft, setCreateDraft] = useState<OrgUnitDraft>(() => emptyDraft('department'))
@@ -838,8 +840,21 @@ export function OrgHierarchyManager({
               >
                 Save changes
               </button>
+              {selected?.status === 'archived' ? (
+                <button
+                  type="button"
+                  className="rounded border border-emerald-700 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
+                  onClick={() => onRestore(selected.orgUnitId)}
+                  disabled={isSubmitting}
+                >
+                  Restore
+                </button>
+              ) : null}
               {selected
-                ? STATUS_OPTIONS.filter((option) => option.value !== selected.status).map((option) => (
+                ? STATUS_OPTIONS
+                  .filter((option) => option.value !== selected.status)
+                  .filter((option) => !(selected.status === 'archived' && option.value === 'active'))
+                  .map((option) => (
                   <button
                     key={option.value}
                     type="button"
@@ -849,7 +864,7 @@ export function OrgHierarchyManager({
                   >
                     {statusActionLabel(option.value)}
                   </button>
-                ))
+                  ))
                 : null}
             </div>
           </form>

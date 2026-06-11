@@ -84,6 +84,7 @@ describe('OrgHierarchyManager', () => {
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={vi.fn(async () => {})}
+        onRestore={vi.fn(async () => {})}
       />,
     )
 
@@ -103,6 +104,7 @@ describe('OrgHierarchyManager', () => {
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={onStatusChange}
+        onRestore={vi.fn(async () => {})}
       />,
     )
 
@@ -125,6 +127,7 @@ describe('OrgHierarchyManager', () => {
         onCreate={onCreate}
         onUpdate={onUpdate}
         onStatusChange={vi.fn(async () => {})}
+        onRestore={vi.fn(async () => {})}
       />,
     )
 
@@ -202,6 +205,7 @@ describe('OrgHierarchyManager', () => {
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={vi.fn(async () => {})}
+        onRestore={vi.fn(async () => {})}
       />,
     )
 
@@ -224,6 +228,7 @@ describe('OrgHierarchyManager', () => {
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={vi.fn(async () => {})}
+        onRestore={vi.fn(async () => {})}
       />,
     )
 
@@ -231,5 +236,36 @@ describe('OrgHierarchyManager', () => {
     expect(screen.getByText('Org hierarchy query failed')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Retry org hierarchy' }))
     expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows an explicit restore action for archived org units', () => {
+    const onRestore = vi.fn(async () => {})
+    render(
+      <OrgHierarchyManager
+        orgUnits={[
+          ...sampleOrgUnits,
+          {
+            orgUnitId: '33333333-3333-3333-3333-333333333333',
+            unitType: 'site',
+            name: 'Archived Site',
+            parentOrgUnitId: null,
+            status: 'archived',
+          },
+        ]}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onCreate={vi.fn(async () => {})}
+        onUpdate={vi.fn(async () => {})}
+        onStatusChange={vi.fn(async () => {})}
+        onRestore={onRestore}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Archived Site' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }))
+
+    expect(onRestore).toHaveBeenCalledWith('33333333-3333-3333-3333-333333333333')
+    expect(screen.queryByRole('button', { name: 'Activate' })).toBeNull()
   })
 })

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, DetailBadge, getErrorMessage } from '@stl/shared-ui'
 import { getLocation, listLocationChildren, listSiteLocations } from '../../api/client'
+import { OpenStreetMapLookupCard } from '../../components/OpenStreetMapLookupCard'
 import type {
   InternalLocationResponse,
   OrgUnitResponse,
@@ -99,6 +100,8 @@ export function LocationsSection({ state }: Props) {
   const childLocations = childLocationsQuery.data ?? []
   const selectedSiteMapUrl = buildOpenStreetMapSearchUrl(buildSiteSearchQuery(selectedSite))
   const selectedLocationMapUrl = buildOpenStreetMapSearchUrl(buildLocationSearchQuery(selectedLocationDetail))
+  const selectedSiteMapQuery = buildSiteSearchQuery(selectedSite)
+  const selectedLocationMapQuery = buildLocationSearchQuery(selectedLocationDetail)
   const assignedPeople = selectedLocationDetail
     ? state.people.filter((person) => person.primaryOrgUnitId === selectedLocationDetail.siteOrgUnitId)
     : []
@@ -162,7 +165,7 @@ export function LocationsSection({ state }: Props) {
               </p>
               {selectedSite ? (
                 <p className="mt-2 text-xs text-slate-500">
-                  OpenStreetMap lookup uses StaffArr site and location labels because this view does not store
+                  Embedded OpenStreetMap uses StaffArr site and location labels because this view does not store
                   coordinates.
                 </p>
               ) : null}
@@ -299,35 +302,12 @@ export function LocationsSection({ state }: Props) {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-                <h3 className="text-sm font-medium text-slate-200">OpenStreetMap lookup</h3>
-                <p className="mt-2 text-sm text-slate-500">
-                  StaffArr owns site and internal location identity. This lookup uses canonical site and location
-                  labels for external map search because coordinates are not stored on this record.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedSiteMapUrl ? (
-                    <a
-                      href={selectedSiteMapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded border border-sky-700 px-3 py-2 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
-                    >
-                      Search site
-                    </a>
-                  ) : null}
-                  {selectedLocationMapUrl ? (
-                    <a
-                      href={selectedLocationMapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded border border-sky-700 px-3 py-2 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
-                    >
-                      Search location
-                    </a>
-                  ) : null}
-                </div>
-              </div>
+              <OpenStreetMapLookupCard
+                query={selectedLocationMapQuery ?? selectedSiteMapQuery}
+                label={selectedLocationDetail.name}
+                description="StaffArr owns the site and internal location identity. This embedded map resolves the current canonical labels through OpenStreetMap for visual context."
+                emptyMessage="Select a site or location with a canonical StaffArr label to load an embedded map."
+              />
 
               <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
                 <h3 className="text-sm font-medium text-slate-200">Child locations</h3>

@@ -42,6 +42,7 @@ import type {
   UpdateStaffRoleRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
+  RestoreOrgUnitRequest,
   UpdateInternalLocationRequest,
   ArchiveInternalLocationRequest,
   CertificationDefinitionResponse,
@@ -727,8 +728,26 @@ export async function getStaffArrWorkerRuns(
   return parseJsonResponse<StaffArrWorkerRunsResponse>(response, `Failed to load ${workerKey} worker runs`)
 }
 
-export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/org-units`, {
+export async function getOrgUnits(
+  accessToken: string,
+  params: {
+    includeArchived?: boolean
+    search?: string | null
+    type?: string | null
+  } = {},
+): Promise<OrgUnitResponse[]> {
+  const query = new URLSearchParams()
+  if (params.includeArchived) {
+    query.set('includeArchived', 'true')
+  }
+  if (params.search?.trim()) {
+    query.set('search', params.search.trim())
+  }
+  if (params.type?.trim()) {
+    query.set('type', params.type.trim())
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/org-units${suffix}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OrgUnitResponse[]>(response, 'Failed to load org units')
@@ -919,6 +938,19 @@ export async function updateOrgUnitStatus(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<OrgUnitResponse>(response, 'Failed to update org unit status')
+}
+
+export async function restoreOrgUnit(
+  accessToken: string,
+  orgUnitId: string,
+  request: RestoreOrgUnitRequest = {},
+): Promise<OrgUnitResponse> {
+  const response = await fetch(`${apiBase}/api/v1/org-units/${orgUnitId}/restore`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitResponse>(response, 'Failed to restore org unit')
 }
 
 export async function getPersonOrgAssignments(

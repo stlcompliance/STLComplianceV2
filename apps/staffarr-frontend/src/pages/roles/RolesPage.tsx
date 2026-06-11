@@ -132,13 +132,6 @@ function toRoleDraft(role: StaffRoleDetailResponse): RoleDraft {
   }
 }
 
-function toDateTimeLocalValue(value: string | null): string {
-  if (!value) {
-    return ''
-  }
-  return value.slice(0, 16)
-}
-
 function fromDateTimeLocalValue(value: string): string | null {
   return value.trim() ? new Date(value).toISOString() : null
 }
