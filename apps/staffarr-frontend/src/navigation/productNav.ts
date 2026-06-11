@@ -3,7 +3,6 @@ import {
   Users,
   UsersRound,
   Network,
-  Shield,
   Map,
   ShieldAlert,
   Activity,
@@ -35,7 +34,6 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'Org structure', to: '/organization-structure?tab=organization', icon: Network },
   { label: 'Locations', to: '/organization-structure?tab=locations', icon: Map },
   { label: 'Roles', to: '/roles', icon: KeyRound },
-  { label: 'Permissions', to: '/permissions', icon: Shield },
   { label: 'Readiness', to: '/readiness', icon: Activity },
   { label: 'Restrictions', to: '/restrictions', icon: ShieldAlert },
   {

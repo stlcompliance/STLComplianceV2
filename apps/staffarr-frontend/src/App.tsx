@@ -8,7 +8,6 @@ import { IncidentsPage } from './pages/incidents/IncidentsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
 import { OrganizationStructurePage } from './pages/organization-structure/OrganizationStructurePage'
 import { PeoplePage } from './pages/people/PeoplePage'
-import { PermissionsPage } from './pages/permissions/PermissionsPage'
 import { RestrictionsPage } from './pages/restrictions/RestrictionsPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { MePage } from './pages/me/MePage'
@@ -53,7 +52,7 @@ export default function App() {
             <Route path="/staffarr/roles/new" element={<RolesPage />} />
             <Route path="/staffarr/roles/:roleId" element={<RolesPage />} />
             <Route path="/staffarr/roles/:roleId/edit" element={<RolesPage />} />
-            <Route path="/permissions" element={<PermissionsPage />} />
+            <Route path="/permissions" element={<Navigate to="/roles" replace />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
             <Route path="/restrictions" element={<RestrictionsPage />} />

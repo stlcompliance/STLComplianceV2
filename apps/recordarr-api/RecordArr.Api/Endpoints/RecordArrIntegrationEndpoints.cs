@@ -131,6 +131,7 @@ public static class RecordArrIntegrationEndpoints
         {
             ValidateSmartImportRetainSourceCaller(context, tokenValidator, request.TenantId);
 
+            var storageKey = $"recordarr/smart-import/{request.TenantId:D}/{request.ImportBatchId:D}/{request.Sha256}/{request.FileName}";
             var record = store.CreateRecord(
                 $"Smart Import source: {request.FileName}",
                 "Source file retained for STL Smart Import review and audit.",
@@ -144,14 +145,7 @@ public static class RecordArrIntegrationEndpoints
                 request.UploadedByPersonId.ToString("D"),
                 request.UploadedByPersonId.ToString("D"),
                 request.FileName,
-                request.ContentType);
-
-            var storageKey = $"recordarr/smart-import/{request.TenantId:D}/{request.ImportBatchId:D}/{request.Sha256}/{request.FileName}";
-            var file = store.CreateFile(
-                record.RecordId,
-                request.FileName,
                 request.ContentType,
-                request.UploadedByPersonId.ToString("D"),
                 "recordarr",
                 storageKey,
                 request.SizeBytes);
@@ -159,9 +153,9 @@ public static class RecordArrIntegrationEndpoints
             store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
             store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
 
-            return Results.Created($"{routePrefix}/files/{file.FileId}", new SmartImportRetainSourceResponse(
+            return Results.Created($"{routePrefix}/files/{record.CurrentFileRef}", new SmartImportRetainSourceResponse(
                 record.RecordId,
-                file.FileId,
+                record.CurrentFileRef,
                 storageKey,
                 "retained"));
         }).WithName($"RetainRecordArrSmartImportSource{routePrefix}");

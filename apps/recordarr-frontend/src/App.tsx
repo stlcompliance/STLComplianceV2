@@ -247,6 +247,11 @@ function Field({
   )
 }
 
+type WorkspacePageProps = {
+  accessToken: string
+  actorPersonId: string
+}
+
 function useWorkspaceSessionBootstrap() {
   const session = loadSession()
   const sessionQuery = useQuery({
@@ -499,23 +504,23 @@ function SimpleHoldList({ holds, emptyLabel }: { holds: RecordArrLegalHold[]; em
   )
 }
 
-function RecordsPage({ accessToken }: { accessToken: string }) {
+function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({
-    title: 'Inbound BOL for delivery load',
-    description: 'Captured from RoutArr proof-of-delivery handoff.',
+    title: '',
+    description: '',
     recordType: 'document',
     documentType: 'bol',
     classification: 'internal',
-    sourceProduct: 'routarr',
-    sourceObjectType: 'trip',
-    sourceObjectId: 'trip-7781',
-    sourceObjectDisplayName: 'RT-7781',
-    ownerPersonId: 'person-route-lead',
-    uploadedByPersonId: 'person-route-lead',
-    currentFileName: 'bol-7781.pdf',
+    sourceProduct: '',
+    sourceObjectType: '',
+    sourceObjectId: '',
+    sourceObjectDisplayName: '',
+    ownerPersonId: actorPersonId,
+    uploadedByPersonId: actorPersonId,
+    currentFileName: '',
     currentMimeType: 'application/pdf',
   })
 
@@ -662,53 +667,53 @@ function RecordsTable({
   )
 }
 
-function RecordDetailPage({ accessToken }: { accessToken: string }) {
+function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const params = useParams()
   const recordId = params.recordId ?? ''
   const [status, setStatus] = useState('review')
   const [classification, setClassification] = useState('internal')
   const [metadataForm, setMetadataForm] = useState({
-    key: 'source_system_ref',
-    value: 'trip-7781',
+    key: '',
+    value: '',
     valueType: 'string',
-    source: 'source_product',
+    source: 'user_entered',
     confidenceScore: 1,
-    createdByPersonId: 'person-route-lead',
+    createdByPersonId: actorPersonId,
   })
   const [linkForm, setLinkForm] = useState({
     linkedRecordId: '',
     sourceObjectRef: '',
     linkType: 'source',
-    createdByPersonId: 'person-route-lead',
+    createdByPersonId: actorPersonId,
   })
   const [commentForm, setCommentForm] = useState({
-    body: 'Reviewed and ready for internal use.',
+    body: '',
     visibility: 'internal',
-    actorPersonId: 'person-doc-controller',
+    actorPersonId: actorPersonId,
   })
   const [editingCommentId, setEditingCommentId] = useState('')
   const [selectedFileDownload, setSelectedFileDownload] = useState('')
   const [signatureForm, setSignatureForm] = useState({
     signaturePurpose: 'proof_of_delivery',
-    signerPersonId: 'person-route-lead',
+    signerPersonId: actorPersonId,
     signerExternalName: '',
     signerTitle: '',
-    attestationText: 'I attest that this evidence accurately reflects the captured handoff.',
-    capturedByPersonId: 'person-route-lead',
-    sourceProduct: 'routarr',
-    sourceObjectRef: 'trip-7781',
+    attestationText: '',
+    capturedByPersonId: actorPersonId,
+    sourceProduct: '',
+    sourceObjectRef: '',
     geoCoordinates: '',
     deviceSnapshot: '',
   })
   const [photoForm, setPhotoForm] = useState({
     photoPurpose: 'delivery',
-    capturedByPersonId: 'person-route-lead',
-    sourceProduct: 'routarr',
-    sourceObjectRef: 'trip-7781',
+    capturedByPersonId: actorPersonId,
+    sourceProduct: '',
+    sourceObjectRef: '',
     geoCoordinates: '',
     deviceSnapshot: '',
-    notes: 'Captured during delivery closeout.',
+    notes: '',
   })
 
   const recordQuery = useQuery({
@@ -1202,7 +1207,7 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
                   className="recordarr-button"
                   onClick={() => {
                     setEditingCommentId('')
-                    setCommentForm({ body: 'Reviewed and ready for internal use.', visibility: 'internal', actorPersonId: 'person-doc-controller' })
+                    setCommentForm({ body: '', visibility: 'internal', actorPersonId })
                   }}
                 >
                   Cancel edit
@@ -1347,47 +1352,47 @@ function RecordDetailPage({ accessToken }: { accessToken: string }) {
   )
 }
 
-function CapturePage({ accessToken }: { accessToken: string }) {
+function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const [upload, setUpload] = useState({
-    sourceProduct: 'routarr',
-    sourceObjectType: 'trip',
-    sourceObjectId: 'trip-7781',
-    uploadPurpose: 'proof_of_delivery',
+    sourceProduct: '',
+    sourceObjectType: '',
+    sourceObjectId: '',
+    uploadPurpose: '',
     requiresDocumentScan: true,
     requiresOcr: true,
     requiresManualReview: true,
   })
   const [captureRequest, setCaptureRequest] = useState({
-    sourceProduct: 'routarr',
-    sourceObjectRef: 'routarr:trip:trip-7781',
+    sourceProduct: '',
+    sourceObjectRef: '',
     captureType: 'photo',
-    title: 'Dock arrival photo',
-    instructions: 'Capture a dock-side arrival photo before unloading begins.',
+    title: '',
+    instructions: '',
     required: true,
-    uploadSessionRef: 'upl-001',
-    evidenceRequirementRef: 'evidence_requirement.trip.pod',
+    uploadSessionRef: '',
+    evidenceRequirementRef: '',
   })
   const [selectedScanId, setSelectedScanId] = useState('')
   const [scan, setScan] = useState({
-    recordId: 'rec-bol-001',
-    originalFileName: 'bol-7781.jpg',
-    scanPurpose: 'bol',
-    edgeCoordinates: '10,10,540,20,540,720,10,720',
-    correctedByPersonId: 'person-route-lead',
+    recordId: '',
+    originalFileName: '',
+    scanPurpose: '',
+    edgeCoordinates: '',
+    correctedByPersonId: actorPersonId,
   })
   const [mapping, setMapping] = useState({
-    recordId: 'rec-bol-001',
-    sourceProduct: 'routarr',
-    sourceObjectType: 'trip',
-    sourceObjectId: 'trip-7781',
-    complianceRequirementRef: 'evidence_requirement.trip.pod',
-    evidenceTypeKey: 'proof_of_delivery',
+    recordId: '',
+    sourceProduct: '',
+    sourceObjectType: '',
+    sourceObjectId: '',
+    complianceRequirementRef: '',
+    evidenceTypeKey: '',
     mappingSource: 'manual_review',
-    confidenceScore: 0.94,
+    confidenceScore: 1,
   })
   const [extractionReview, setExtractionReview] = useState({
-    reviewedByPersonId: 'person-doc-controller',
+    reviewedByPersonId: actorPersonId,
     status: 'completed',
     failureReason: '',
   })
@@ -1780,10 +1785,10 @@ function CapturePage({ accessToken }: { accessToken: string }) {
               </div>
               <p className="mt-1 text-sm text-slate-300">{mappingRow.recordId} · {mappingRow.evidenceTypeKey}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" className="recordarr-button secondary" onClick={() => confirmEvidenceMapping(accessToken, mappingRow.evidenceMappingId, { confirmedByPersonId: 'person-doc-controller', notes: 'Auto-confirmed in demo workspace.' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
+                <button type="button" className="recordarr-button secondary" onClick={() => confirmEvidenceMapping(accessToken, mappingRow.evidenceMappingId, { confirmedByPersonId: actorPersonId, notes: null }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Confirm
                 </button>
-                <button type="button" className="recordarr-button secondary" onClick={() => rejectEvidenceMapping(accessToken, mappingRow.evidenceMappingId, { rejectedByPersonId: 'person-doc-controller', rejectionReason: 'needs_followup', notes: 'Review required.' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
+                <button type="button" className="recordarr-button secondary" onClick={() => rejectEvidenceMapping(accessToken, mappingRow.evidenceMappingId, { rejectedByPersonId: actorPersonId, rejectionReason: 'needs_followup', notes: null }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Reject
                 </button>
               </div>
@@ -1820,7 +1825,7 @@ function CapturePage({ accessToken }: { accessToken: string }) {
   )
 }
 
-function DocumentsPage({ accessToken }: { accessToken: string }) {
+function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const docsQuery = useQuery({
     queryKey: ['recordarr', 'documents'],
@@ -1829,31 +1834,31 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   })
   const [selectedDocumentId, setSelectedDocumentId] = useState<string>('')
   const [newDocument, setNewDocument] = useState({
-    title: 'Warehouse safe handling procedure',
-    description: 'Controlled SOP for receiving and staging hazardous stock.',
+    title: '',
+    description: '',
     controlledDocumentType: 'procedure',
-    ownerPersonId: 'person-doc-controller',
-    departmentOrgUnitId: 'org-receiving',
-    staffarrSiteId: 'site-north-yard',
+    ownerPersonId: actorPersonId,
+    departmentOrgUnitId: '',
+    staffarrSiteId: '',
     acknowledgementRequired: true,
   })
   const [versionForm, setVersionForm] = useState({
-    fileName: 'hazmat-receiving-v3.pdf',
-    createdByPersonId: 'person-doc-controller',
-    changeSummary: 'Added evidence capture and review steps',
+    fileName: '',
+    createdByPersonId: actorPersonId,
+    changeSummary: '',
   })
   const [reviewForm, setReviewForm] = useState({
     versionId: '',
     reviewType: 'periodic_review',
-    requestedByPersonId: 'person-doc-controller',
-    reviewerPersonId: 'person-quality-reviewer',
+    requestedByPersonId: actorPersonId,
+    reviewerPersonId: '',
     dueAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   })
   const [selectedReviewId, setSelectedReviewId] = useState<string>('')
   const [completeReviewForm, setCompleteReviewForm] = useState({
     status: 'approved',
-    decisionReason: 'Review completed and approved for use.',
-    comments: 'Approved in demo workspace.',
+    decisionReason: '',
+    comments: '',
   })
   const [supersedeForm, setSupersedeForm] = useState({
     supersededByDocumentRef: '',
@@ -1861,12 +1866,12 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   const [distributionForm, setDistributionForm] = useState({
     versionId: '',
     distributionType: 'person',
-    targetRef: 'person-quality-reviewer',
+    targetRef: '',
   })
   const [acknowledgementForm, setAcknowledgementForm] = useState({
     versionId: '',
-    personId: 'person-quality-reviewer',
-    attestationText: 'I acknowledge receipt and review of this controlled document.',
+    personId: '',
+    attestationText: '',
     dueAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   })
 
@@ -1936,13 +1941,13 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     },
   })
   const archiveDocumentMutation = useMutation({
-    mutationFn: () => archiveControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
+    mutationFn: () => archiveControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: actorPersonId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
   const obsoleteDocumentMutation = useMutation({
-    mutationFn: () => obsoleteControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: 'person-doc-controller' }),
+    mutationFn: () => obsoleteControlledDocument(accessToken, selectedDocumentId, { updatedByPersonId: actorPersonId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -1951,7 +1956,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
     mutationFn: () =>
       supersedeControlledDocument(accessToken, selectedDocumentId, {
         supersededByDocumentRef: supersedeForm.supersededByDocumentRef,
-        supersededByPersonId: 'person-doc-controller',
+        supersededByPersonId: actorPersonId,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -1966,7 +1971,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   const promoteVersionMutation = useMutation({
     mutationFn: (versionId: string) =>
       promoteDocumentVersion(accessToken, selectedDocumentId, versionId, {
-        approvedByPersonId: 'person-doc-controller',
+        approvedByPersonId: actorPersonId,
         effectiveAt: new Date().toISOString(),
       }),
     onSuccess: async () => {
@@ -2007,7 +2012,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   const revokeDistributionMutation = useMutation({
     mutationFn: (distributionId: string) =>
       revokeDocumentDistribution(accessToken, selectedDocumentId, distributionId, {
-        revokedByPersonId: 'person-doc-controller',
+        revokedByPersonId: actorPersonId,
         revokeReason: 'Distribution no longer needed.',
       }),
     onSuccess: async () => {
@@ -2017,7 +2022,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   const expireDistributionMutation = useMutation({
     mutationFn: (distributionId: string) =>
       expireDocumentDistribution(accessToken, selectedDocumentId, distributionId, {
-        expiredByPersonId: 'person-doc-controller',
+        expiredByPersonId: actorPersonId,
         expireReason: 'Distribution expired on review cycle.',
       }),
     onSuccess: async () => {
@@ -2038,7 +2043,7 @@ function DocumentsPage({ accessToken }: { accessToken: string }) {
   const completeAcknowledgementMutation = useMutation({
     mutationFn: (acknowledgementId: string) =>
       completeDocumentAcknowledgement(accessToken, selectedDocumentId, acknowledgementId, {
-        signatureRecordRef: 'sig-rec-doc-controller',
+        signatureRecordRef: null,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -2429,11 +2434,11 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
   const queryClient = useQueryClient()
   const [selectedPackageId, setSelectedPackageId] = useState('')
   const [form, setForm] = useState({
-    title: 'RoutArr closeout packet',
+    title: '',
     packageType: 'delivery',
-    sourceProduct: 'routarr',
-    sourceObjectRef: 'trip-7781',
-    recordRef: 'rec-bol-001',
+    sourceProduct: '',
+    sourceObjectRef: '',
+    recordRef: '',
   })
 
   const packagesQuery = useQuery({
@@ -2665,20 +2670,20 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
   )
 }
 
-function RetentionPage({ accessToken }: { accessToken: string }) {
+function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
-  const [recordId, setRecordId] = useState('rec-bol-001')
+  const [recordId, setRecordId] = useState('')
   const [selectedDisposalReviewId, setSelectedDisposalReviewId] = useState('')
   const [disposalForm, setDisposalForm] = useState({
-    recordId: 'rec-bol-001',
-    retentionStatusRef: 'rstat-001',
+    recordId: '',
+    retentionStatusRef: '',
     proposedAction: 'archive',
-    requestedByPersonId: 'person-audit-admin',
+    requestedByPersonId: actorPersonId,
   })
   const [completeDisposalForm, setCompleteDisposalForm] = useState({
     status: 'approved',
-    reviewedByPersonId: 'person-audit-admin',
-    decisionReason: 'Retention review completed.',
+    reviewedByPersonId: actorPersonId,
+    decisionReason: '',
   })
   const policiesQuery = useQuery({
     queryKey: ['recordarr', 'retention-policies'],
@@ -2867,19 +2872,19 @@ function RetentionPage({ accessToken }: { accessToken: string }) {
   )
 }
 
-function HoldsPage({ accessToken }: { accessToken: string }) {
+function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const [selectedHoldId, setSelectedHoldId] = useState('')
   const [form, setForm] = useState({
-    title: 'Open audit hold',
-    description: 'Holds controlled documents while audit evidence is reviewed.',
+    title: '',
+    description: '',
     holdType: 'audit',
-    sourceProduct: 'compliancecore',
-    sourceObjectType: 'audit',
-    sourceObjectId: 'audit-901',
-    createdByPersonId: 'person-audit-admin',
-    scopeRules: 'record_type:document\ndocument_type:procedure',
-    recordRefs: 'rec-sop-001\nrec-bol-001',
+    sourceProduct: '',
+    sourceObjectType: '',
+    sourceObjectId: '',
+    createdByPersonId: actorPersonId,
+    scopeRules: '',
+    recordRefs: '',
   })
 
   const holdsQuery = useQuery({
@@ -2907,7 +2912,7 @@ function HoldsPage({ accessToken }: { accessToken: string }) {
     },
   })
   const releaseMutation = useMutation({
-    mutationFn: () => releaseLegalHold(accessToken, selectedHoldId, { releasedByPersonId: 'person-audit-admin', releaseReason: 'Audit evidence reviewed.' }),
+    mutationFn: () => releaseLegalHold(accessToken, selectedHoldId, { releasedByPersonId: actorPersonId, releaseReason: '' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -3002,42 +3007,42 @@ function HoldsPage({ accessToken }: { accessToken: string }) {
   )
 }
 
-function AccessPage({ accessToken }: { accessToken: string }) {
+function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const [shareForm, setShareForm] = useState({
-    recordId: 'rec-bol-001',
-    recipientName: 'Avery Auditor',
-    recipientEmail: 'avery.auditor@example.com',
-    sharePurpose: 'auditor_access',
-    allowedActions: 'view\ndownload',
-    createdByPersonId: 'person-doc-controller',
+    recordId: '',
+    recipientName: '',
+    recipientEmail: '',
+    sharePurpose: '',
+    allowedActions: '',
+    createdByPersonId: actorPersonId,
   })
   const [grantForm, setGrantForm] = useState({
-    recordId: 'rec-bol-001',
+    recordId: '',
     granteeType: 'role',
-    granteeRef: 'evidence-manager',
+    granteeRef: '',
     permission: 'read',
-    grantedByPersonId: 'person-doc-controller',
+    grantedByPersonId: actorPersonId,
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   })
   const [policyForm, setPolicyForm] = useState({
-    recordId: 'rec-bol-001',
+    recordId: '',
     policyType: 'product_scoped',
     status: 'active',
-    readRules: 'recordarr.records.read\nrecordarr.files.download',
-    writeRules: 'recordarr.records.update',
-    downloadRules: 'recordarr.files.download',
-    shareRules: 'recordarr.external_shares.create',
-    exportRules: 'recordarr.packages.export',
-    purgeRules: 'recordarr.records.purge',
-    createdByPersonId: 'person-doc-controller',
+    readRules: '',
+    writeRules: '',
+    downloadRules: '',
+    shareRules: '',
+    exportRules: '',
+    purgeRules: '',
+    createdByPersonId: actorPersonId,
   })
   const [redactionForm, setRedactionForm] = useState({
-    sourceRecordId: 'rec-bol-001',
-    redactedRecordId: 'rec-bol-001-redacted',
+    sourceRecordId: '',
+    redactedRecordId: '',
     redactionReason: 'privacy',
-    redactedByPersonId: 'person-doc-controller',
-    redactionRules: 'mask:signature\nmask:phone',
+    redactedByPersonId: actorPersonId,
+    redactionRules: '',
   })
 
   const policiesQuery = useQuery({ queryKey: ['recordarr', 'access-policies'], queryFn: () => listAccessPolicies(accessToken), enabled: Boolean(accessToken) })
@@ -3084,7 +3089,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
         shareRules: [...policy.shareRules],
         exportRules: [...policy.exportRules],
         purgeRules: [...policy.purgeRules],
-        updatedByPersonId: 'person-doc-controller',
+        updatedByPersonId: actorPersonId,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
@@ -3092,7 +3097,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
   })
   const expireShareMutation = useMutation({
     mutationFn: (externalShareId: string) =>
-      expireExternalShare(accessToken, externalShareId, { expiredByPersonId: 'person-doc-controller' }),
+      expireExternalShare(accessToken, externalShareId, { expiredByPersonId: actorPersonId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -3106,7 +3111,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
   const accessShareMutation = useMutation({
     mutationFn: (externalShareId: string) =>
       recordExternalShareAccess(accessToken, externalShareId, {
-        accessedByPersonId: 'person-doc-controller',
+        accessedByPersonId: actorPersonId,
         accessAction: 'view',
         sourceIp: null,
         userAgent: navigator.userAgent,
@@ -3277,7 +3282,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
                 <button
                   type="button"
                   className="recordarr-button secondary"
-                  onClick={() => revokeAccessGrant(accessToken, grant.accessGrantId, { revokedByPersonId: 'person-doc-controller', revokeReason: 'Access no longer required.' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}
+                  onClick={() => revokeAccessGrant(accessToken, grant.accessGrantId, { revokedByPersonId: actorPersonId, revokeReason: '' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}
                   disabled={grant.status === 'revoked' || grant.status === 'expired'}
                 >
                   Revoke
@@ -3322,7 +3327,7 @@ function AccessPage({ accessToken }: { accessToken: string }) {
               </p>
               <p className="mt-1 text-xs text-slate-400">Expires {formatDate(share.expiresAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: 'person-doc-controller' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
+                <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: actorPersonId }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
                   Revoke
                 </button>
                 <button
@@ -3452,6 +3457,7 @@ export function App() {
   }
 
   const accessToken = session?.accessToken ?? ''
+  const actorPersonId = session?.personId ?? ''
 
   if (!session && !sessionQuery.isLoading && !bootstrapError) {
     return (
@@ -3490,29 +3496,29 @@ export function App() {
     >
       <Routes>
         <Route index element={<DashboardPage accessToken={accessToken} />} />
-        <Route path="/records" element={<RecordsPage accessToken={accessToken} />} />
-        <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} />} />
-        <Route path="/capture" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/upload-sessions" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/uploads" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/scan-processing" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/ocr-review" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/evidence-mappings" element={<CapturePage accessToken={accessToken} />} />
-        <Route path="/documents" element={<DocumentsPage accessToken={accessToken} />} />
-        <Route path="/controlled-documents" element={<DocumentsPage accessToken={accessToken} />} />
-        <Route path="/document-reviews" element={<DocumentsPage accessToken={accessToken} />} />
-        <Route path="/distributions" element={<DocumentsPage accessToken={accessToken} />} />
-        <Route path="/acknowledgements" element={<DocumentsPage accessToken={accessToken} />} />
+        <Route path="/records" element={<RecordsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/capture" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/upload-sessions" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/uploads" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/scan-processing" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/ocr-review" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/evidence-mappings" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/controlled-documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/document-reviews" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/distributions" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/acknowledgements" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/packages" element={<PackagesPage accessToken={accessToken} />} />
         <Route path="/record-packages" element={<PackagesPage accessToken={accessToken} />} />
-        <Route path="/retention" element={<RetentionPage accessToken={accessToken} />} />
-        <Route path="/disposal-reviews" element={<RetentionPage accessToken={accessToken} />} />
-        <Route path="/holds" element={<HoldsPage accessToken={accessToken} />} />
-        <Route path="/legal-holds" element={<HoldsPage accessToken={accessToken} />} />
-        <Route path="/access" element={<AccessPage accessToken={accessToken} />} />
-        <Route path="/external-shares" element={<AccessPage accessToken={accessToken} />} />
-        <Route path="/redactions" element={<AccessPage accessToken={accessToken} />} />
-        <Route path="/access-logs" element={<AccessPage accessToken={accessToken} />} />
+        <Route path="/retention" element={<RetentionPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/disposal-reviews" element={<RetentionPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/holds" element={<HoldsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/legal-holds" element={<HoldsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/access" element={<AccessPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/external-shares" element={<AccessPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/redactions" element={<AccessPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/access-logs" element={<AccessPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/settings" element={<SettingsPage accessToken={accessToken} session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

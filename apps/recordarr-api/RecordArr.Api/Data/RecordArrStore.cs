@@ -822,7 +822,23 @@ public sealed class RecordArrStore
         }
     }
 
-    public RecordArrRecordResponse CreateRecord(string title, string description, string recordType, string documentType, string classification, string sourceProduct, string sourceObjectType, string sourceObjectId, string sourceObjectDisplayName, string ownerPersonId, string uploadedByPersonId, string currentFileName, string currentMimeType)
+    public RecordArrRecordResponse CreateRecord(
+        string title,
+        string description,
+        string recordType,
+        string documentType,
+        string classification,
+        string sourceProduct,
+        string sourceObjectType,
+        string sourceObjectId,
+        string sourceObjectDisplayName,
+        string ownerPersonId,
+        string uploadedByPersonId,
+        string currentFileName,
+        string currentMimeType,
+        string? currentStorageProvider = null,
+        string? currentStorageKey = null,
+        long? currentSizeBytes = null)
     {
         lock (_gate)
         {
@@ -878,6 +894,9 @@ public sealed class RecordArrStore
                 currentFileName,
                 currentMimeType,
                 uploadedByPersonId,
+                currentStorageProvider,
+                currentStorageKey,
+                currentSizeBytes,
                 attachToRecord: false,
                 setAsCurrentFile: false);
             var record = new RecordArrRecordResponse(

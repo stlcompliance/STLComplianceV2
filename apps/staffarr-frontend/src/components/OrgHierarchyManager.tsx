@@ -306,6 +306,19 @@ function statusActionLabel(status: OrgUnitStatus): string {
   }
 }
 
+function suggestChildUnitType(unitType: OrgUnitType): OrgUnitType {
+  switch (unitType) {
+    case 'site':
+      return 'department'
+    case 'department':
+      return 'team'
+    case 'team':
+      return 'position'
+    default:
+      return 'site'
+  }
+}
+
 function OrgUnitFormFields({
   prefix,
   draft,
@@ -662,8 +675,7 @@ export function OrgHierarchyManager({
   onRestore,
 }: OrgHierarchyManagerProps) {
   const [selectedOrgUnitId, setSelectedOrgUnitId] = useState<string | null>(null)
-  const [createDraft, setCreateDraft] = useState<OrgUnitDraft>(() => emptyDraft('department'))
-  const [editDraft, setEditDraft] = useState<OrgUnitDraft>(() => emptyDraft('department'))
+  const [draft, setDraft] = useState<OrgUnitDraft>(() => emptyDraft('department'))
 
   const orgTree = useMemo(() => buildTree(orgUnits), [orgUnits])
   const rows = useMemo(() => flattenTree(orgTree), [orgTree])
@@ -683,52 +695,59 @@ export function OrgHierarchyManager({
         .map((unit) => ({ value: unit.orgUnitId, label: unit.name })),
     [orgUnits],
   )
+  const isEditing = Boolean(selected)
 
-  const createParentRows = useMemo(
-    () => rows.filter(({ node }) => isAllowedParentType(createDraft.unitType, node.unitType)),
-    [createDraft.unitType, rows],
-  )
-  const editParentRows = useMemo(() => {
+  const parentRows = useMemo(() => {
     if (!selected) {
-      return rows.filter(({ node }) => isAllowedParentType(editDraft.unitType, node.unitType))
+      return rows.filter(({ node }) => isAllowedParentType(draft.unitType, node.unitType))
     }
 
     return rows.filter(({ node }) =>
       node.orgUnitId !== selected.orgUnitId
       && !isDescendantOf(node.orgUnitId, selected.orgUnitId, byId)
-      && isAllowedParentType(editDraft.unitType, node.unitType))
-  }, [byId, editDraft.unitType, rows, selected])
+      && isAllowedParentType(draft.unitType, node.unitType))
+  }, [byId, draft.unitType, rows, selected])
 
-  const createParentOptions = useMemo(() => toIndentedOptions(createParentRows), [createParentRows])
-  const editParentOptions = useMemo(() => toIndentedOptions(editParentRows), [editParentRows])
+  const parentOptions = useMemo(() => toIndentedOptions(parentRows), [parentRows])
 
   useEffect(() => {
     if (selected) {
-      setEditDraft(hydrateDraft(selected))
+      setDraft(hydrateDraft(selected))
     }
   }, [selected])
 
   useEffect(() => {
-    if (createDraft.parentOrgUnitId && !createParentOptions.some((option) => option.value === createDraft.parentOrgUnitId)) {
-      setCreateDraft((current) => ({ ...current, parentOrgUnitId: '' }))
+    if (draft.parentOrgUnitId && !parentOptions.some((option) => option.value === draft.parentOrgUnitId)) {
+      setDraft((current) => ({ ...current, parentOrgUnitId: '' }))
     }
-  }, [createDraft.parentOrgUnitId, createParentOptions])
-
-  useEffect(() => {
-    if (editDraft.parentOrgUnitId && !editParentOptions.some((option) => option.value === editDraft.parentOrgUnitId)) {
-      setEditDraft((current) => ({ ...current, parentOrgUnitId: '' }))
-    }
-  }, [editDraft.parentOrgUnitId, editParentOptions])
+  }, [draft.parentOrgUnitId, parentOptions])
 
   const handlePickForEdit = (orgUnit: OrgUnitResponse) => {
     setSelectedOrgUnitId(orgUnit.orgUnitId)
-    setEditDraft(hydrateDraft(orgUnit))
+    setDraft(hydrateDraft(orgUnit))
+  }
+
+  const handleStartCreate = () => {
+    const nextUnitType = selected ? suggestChildUnitType(selected.unitType) : draft.unitType
+    const nextParentOrgUnitId = selected && isAllowedParentType(nextUnitType, selected.unitType)
+      ? selected.orgUnitId
+      : ''
+
+    setSelectedOrgUnitId(null)
+    setDraft({
+      ...emptyDraft(nextUnitType),
+      parentOrgUnitId: nextParentOrgUnitId,
+      defaultSiteOrgUnitId:
+        selected?.unitType === 'site' && nextUnitType !== 'site'
+          ? selected.orgUnitId
+          : '',
+    })
   }
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
-    await onCreate(serializeDraft(createDraft))
-    setCreateDraft(emptyDraft(createDraft.unitType))
+    await onCreate(serializeDraft(draft))
+    setDraft(emptyDraft(draft.unitType))
   }
 
   const handleUpdate = async (event: FormEvent) => {
@@ -737,20 +756,34 @@ export function OrgHierarchyManager({
       return
     }
 
-    await onUpdate(selected.orgUnitId, serializeDraft(editDraft))
+    await onUpdate(selected.orgUnitId, serializeDraft(draft))
   }
 
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-slate-300">Org hierarchy management</h2>
-        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
-          {canManage ? 'Write enabled' : 'Read only'}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-medium text-slate-300">Org hierarchy management</h2>
+          <p className="mt-2 text-xs text-slate-500">
+            Manage the hierarchy with one shared editor instead of separate create and edit forms.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
+            {canManage ? 'Write enabled' : 'Read only'}
+          </span>
+          {canManage && !isLoading && !isError ? (
+            <button
+              type="button"
+              onClick={handleStartCreate}
+              className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+              disabled={isSubmitting}
+            >
+              New unit
+            </button>
+          ) : null}
+        </div>
       </div>
-      <p className="mt-2 text-xs text-slate-500">
-        Structure units with typed metadata, explicit lifecycle status, and placement-specific fields.
-      </p>
 
       {actionErrorMessage ? (
         <div className="mt-3">
@@ -774,102 +807,122 @@ export function OrgHierarchyManager({
       ) : !isError && rows.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No org units configured yet.</p>
       ) : !isError ? (
-        <ul className="mt-4 divide-y divide-slate-700">
-          {rows.map(({ node, depth }) => (
-            <li key={node.orgUnitId} className="flex items-start justify-between gap-4 py-3 text-sm">
-              <button
-                type="button"
-                onClick={() => handlePickForEdit(node)}
-                className="text-left text-white hover:text-sky-300"
-                style={{ paddingLeft: `${depth * 16}px` }}
-              >
-                <div className="font-medium">{node.name}</div>
-                {node.description ? (
-                  <div className="mt-1 text-xs text-slate-500">{node.description}</div>
-                ) : null}
-              </button>
-              <span className="text-right text-xs uppercase tracking-wide text-slate-500">
-                {humanize(node.unitType)} · {node.status}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+        <div className={`mt-6 grid gap-6 ${canManage ? 'xl:grid-cols-[minmax(0,1.2fr)_minmax(380px,0.8fr)]' : ''}`}>
+          <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-medium text-slate-300">Hierarchy</h3>
+              <span className="text-xs text-slate-500">{rows.length} units</span>
+            </div>
+            <ul className="divide-y divide-slate-700">
+              {rows.map(({ node, depth }) => {
+                const isSelected = node.orgUnitId === selectedOrgUnitId
+                return (
+                  <li key={node.orgUnitId} className="flex items-start justify-between gap-4 py-3 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => handlePickForEdit(node)}
+                      className={`text-left transition hover:text-sky-300 ${isSelected ? 'text-sky-200' : 'text-white'}`}
+                      style={{ paddingLeft: `${depth * 16}px` }}
+                    >
+                      <div className="font-medium">{node.name}</div>
+                      {node.description ? (
+                        <div className="mt-1 text-xs text-slate-500">{node.description}</div>
+                      ) : null}
+                    </button>
+                    <span className="text-right text-xs uppercase tracking-wide text-slate-500">
+                      {humanize(node.unitType)} · {node.status}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
 
-      {canManage && !isLoading && !isError ? (
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          <form className="space-y-4" onSubmit={handleCreate}>
-            <h3 className="text-sm font-medium text-slate-300">Create org unit</h3>
-            <OrgUnitFormFields
-              prefix="create-org-unit"
-              draft={createDraft}
-              setDraft={setCreateDraft}
-              parentOptions={createParentOptions}
-              managerOptions={managerOptions}
-              defaultSiteOptions={defaultSiteOptions}
-              disabled={isSubmitting}
-            />
-            <button
-              type="submit"
-              className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-              disabled={isSubmitting}
+          {canManage ? (
+            <form
+              className="space-y-4 rounded-xl border border-slate-700 bg-slate-950/40 p-4"
+              onSubmit={isEditing ? handleUpdate : handleCreate}
             >
-              {isSubmitting ? 'Saving…' : 'Create'}
-            </button>
-          </form>
-
-          <form className="space-y-4" onSubmit={handleUpdate}>
-            <h3 className="text-sm font-medium text-slate-300">Edit selected org unit</h3>
-            {!selected ? (
-              <p className="text-sm text-slate-500">Select a unit from the hierarchy to edit.</p>
-            ) : null}
-            <OrgUnitFormFields
-              prefix="edit-org-unit"
-              draft={editDraft}
-              setDraft={setEditDraft}
-              parentOptions={editParentOptions}
-              managerOptions={managerOptions}
-              defaultSiteOptions={defaultSiteOptions}
-              disabled={!selected || isSubmitting}
-            />
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className="rounded bg-slate-700 px-3 py-2 text-sm text-white disabled:opacity-50"
-                disabled={!selected || isSubmitting}
-              >
-                Save changes
-              </button>
-              {selected?.status === 'archived' ? (
-                <button
-                  type="button"
-                  className="rounded border border-emerald-700 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
-                  onClick={() => onRestore(selected.orgUnitId)}
-                  disabled={isSubmitting}
-                >
-                  Restore
-                </button>
-              ) : null}
-              {selected
-                ? STATUS_OPTIONS
-                  .filter((option) => option.value !== selected.status)
-                  .filter((option) => !(selected.status === 'archived' && option.value === 'active'))
-                  .map((option) => (
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-300">
+                    {isEditing ? `Edit ${selected?.name ?? 'org unit'}` : 'Create org unit'}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {isEditing
+                      ? 'Update the selected unit or switch to a fresh draft for a new unit.'
+                      : 'Fill the shared editor once, then save the new org unit.'}
+                  </p>
+                </div>
+                {isEditing ? (
                   <button
-                    key={option.value}
                     type="button"
-                    className="rounded border border-amber-700 px-3 py-2 text-sm text-amber-200 disabled:opacity-50"
-                    onClick={() => onStatusChange(selected.orgUnitId, option.value)}
+                    onClick={handleStartCreate}
+                    className="rounded border border-slate-600 px-3 py-2 text-sm text-slate-200 disabled:opacity-50"
                     disabled={isSubmitting}
                   >
-                    {statusActionLabel(option.value)}
+                    Switch to new
                   </button>
-                  ))
-                : null}
-            </div>
-          </form>
+                ) : null}
+              </div>
+
+              {!isEditing ? (
+                <p className="text-xs text-slate-500">
+                  Tip: select an existing unit first, then choose `New unit` to prefill the parent for a child unit.
+                </p>
+              ) : null}
+
+              <OrgUnitFormFields
+                prefix={isEditing ? 'edit-org-unit' : 'create-org-unit'}
+                draft={draft}
+                setDraft={setDraft}
+                parentOptions={parentOptions}
+                managerOptions={managerOptions}
+                defaultSiteOptions={defaultSiteOptions}
+                disabled={isSubmitting}
+              />
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving…' : isEditing ? 'Save changes' : 'Create'}
+                </button>
+                {isEditing && selected?.status === 'archived' ? (
+                  <button
+                    type="button"
+                    className="rounded border border-emerald-700 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
+                    onClick={() => onRestore(selected.orgUnitId)}
+                    disabled={isSubmitting}
+                  >
+                    Restore
+                  </button>
+                ) : null}
+                {isEditing && selected
+                  ? STATUS_OPTIONS
+                    .filter((option) => option.value !== selected.status)
+                    .filter((option) => !(selected.status === 'archived' && option.value === 'active'))
+                    .map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className="rounded border border-amber-700 px-3 py-2 text-sm text-amber-200 disabled:opacity-50"
+                      onClick={() => onStatusChange(selected.orgUnitId, option.value)}
+                      disabled={isSubmitting}
+                    >
+                      {statusActionLabel(option.value)}
+                    </button>
+                    ))
+                  : null}
+              </div>
+            </form>
+          ) : null}
         </div>
-      ) : !isLoading && !isError ? (
+      ) : null}
+
+      {!canManage && !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">Your role does not include org hierarchy write permission.</p>
       ) : null}
     </section>

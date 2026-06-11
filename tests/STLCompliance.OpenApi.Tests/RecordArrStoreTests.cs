@@ -33,6 +33,43 @@ public sealed class RecordArrStoreTests
     }
 
     [Fact]
+    public void CreateRecord_can_attach_a_single_initial_file_without_placeholder_duplication()
+    {
+        var store = new RecordArrStore();
+        var principal = CreatePrincipal(isPlatformAdmin: true);
+        var storageKey = "recordarr/smart-import/tenant/batch/hash/source.pdf";
+
+        var record = store.CreateRecord(
+            "Smart Import source: source.pdf",
+            "Source file retained for import review.",
+            "document",
+            "other",
+            "internal",
+            "nexarr",
+            "smart_import_batch",
+            "batch-001",
+            "source.pdf",
+            "person-importer",
+            "person-importer",
+            "source.pdf",
+            "application/pdf",
+            "recordarr",
+            storageKey,
+            4096);
+
+        var files = store.GetFiles(principal, record.RecordId);
+        var file = Assert.Single(files);
+
+        Assert.Equal(record.CurrentFileRef, file.FileId);
+        Assert.Equal(storageKey, file.StorageKey);
+        Assert.Equal("recordarr", file.StorageProvider);
+        Assert.Equal(4096, file.SizeBytes);
+        Assert.Equal(1, record.VersionNumber);
+        Assert.Single(record.FileRefs);
+        Assert.Single(record.VersionRefs);
+    }
+
+    [Fact]
     public void CreateScanProcessing_creates_original_and_generated_files()
     {
         var store = new RecordArrStore();

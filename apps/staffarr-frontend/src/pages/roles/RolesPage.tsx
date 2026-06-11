@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getErrorMessage } from '@stl/shared-ui'
@@ -198,11 +198,14 @@ export function RolesPage() {
   const [draft, setDraft] = useState<RoleDraft>(emptyDraft)
   const [selectedProductKey, setSelectedProductKey] = useState<string>('')
   const [assignmentDraft, setAssignmentDraft] = useState<AssignmentDraft>(emptyAssignmentDraft)
+  const initialCatalogRefreshKeyRef = useRef('')
 
   const sessionQuery = useQuery({
     queryKey: ['staffarr-session-bootstrap', session?.accessToken],
     queryFn: () => getSessionBootstrap(session!.accessToken),
     enabled: Boolean(session?.accessToken),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const rolesQuery = useQuery({
@@ -220,7 +223,7 @@ export function RolesPage() {
   const catalogsQuery = useQuery({
     queryKey: ['staffarr-v1-permission-catalogs', session?.accessToken],
     queryFn: () => getPermissionCatalogs(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
+    enabled: Boolean(session?.accessToken && sessionQuery.data),
   })
 
   const peopleQuery = useQuery({
@@ -263,6 +266,31 @@ export function RolesPage() {
       setSelectedProductKey(firstCatalogProductKey)
     }
   }, [catalogsQuery.data, roleDetailQuery.data, selectedProductKey])
+
+  const entitledProductKeys = (sessionQuery.data?.entitlements ?? [])
+    .map((entitlement) => entitlement.trim().toLowerCase())
+    .filter((entitlement) => PRODUCT_ORDER.includes(entitlement as (typeof PRODUCT_ORDER)[number]))
+
+  useEffect(() => {
+    if (!session?.accessToken || entitledProductKeys.length === 0) {
+      return
+    }
+
+    const refreshKey = [...entitledProductKeys].sort().join('|')
+    if (!refreshKey || initialCatalogRefreshKeyRef.current === refreshKey) {
+      return
+    }
+
+    initialCatalogRefreshKeyRef.current = refreshKey
+    void (async () => {
+      await Promise.all(
+        entitledProductKeys.map((productKey) =>
+          refreshPermissionCatalogs(session.accessToken, { productKey }),
+        ),
+      )
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-permission-catalogs'] })
+    })()
+  }, [entitledProductKeys, queryClient, session?.accessToken])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -346,7 +374,18 @@ export function RolesPage() {
   })
 
   const refreshCatalogMutation = useMutation({
-    mutationFn: () => refreshPermissionCatalogs(session!.accessToken),
+    mutationFn: async () => {
+      if (entitledProductKeys.length === 0) {
+        return refreshPermissionCatalogs(session!.accessToken)
+      }
+
+      const results = await Promise.all(
+        entitledProductKeys.map((productKey) =>
+          refreshPermissionCatalogs(session!.accessToken, { productKey }),
+        ),
+      )
+      return results[results.length - 1]
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-permission-catalogs'] })
     },
@@ -417,7 +456,13 @@ export function RolesPage() {
     return <p className="px-4 py-6 text-sm text-slate-300">Sign in to manage roles.</p>
   }
 
-  const catalogs = sortCatalogs(catalogsQuery.data ?? [])
+  const catalogs = sortCatalogs(
+    (catalogsQuery.data ?? []).filter(
+      (catalog) =>
+        entitledProductKeys.length === 0 ||
+        entitledProductKeys.includes(catalog.productKey.toLowerCase()),
+    ),
+  )
   const activeCatalog =
     catalogs.find((catalog) => catalog.productKey === selectedProductKey) ?? catalogs[0] ?? null
   const role = roleDetailQuery.data ?? null
