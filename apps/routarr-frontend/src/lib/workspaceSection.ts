@@ -8,6 +8,7 @@ export const WORKSPACE_SECTIONS = [
   'routes',
   'stops',
   'exceptions',
+  'reports',
   'proof-review',
   'dock-appointments',
   'load-visibility',
@@ -57,6 +58,7 @@ export const workspaceSectionHeaders: Record<
   routes: { title: 'Routes', subtitle: 'Route definitions and planning' },
   stops: { title: 'Stops', subtitle: 'Stop progress, requirements, and proof readiness' },
   exceptions: { title: 'Exceptions', subtitle: 'Route and trip exceptions requiring triage' },
+  reports: { title: 'Reports', subtitle: 'Dispatch, route, proof, and export dashboards' },
   'proof-review': { title: 'Proof review', subtitle: 'Pickup and delivery proof with DVIR review' },
   'dock-appointments': {
     title: 'Dock appointments',

@@ -15,7 +15,8 @@ public sealed record HandoffSessionResponse(
     Guid SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    string? CallbackUrl);
 
 public sealed record MaintainArrSessionBootstrapResponse(
     Guid UserId,

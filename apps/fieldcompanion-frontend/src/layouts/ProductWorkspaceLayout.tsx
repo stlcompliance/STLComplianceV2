@@ -15,6 +15,7 @@ import { formatProductLaunchError } from '../lib/productLaunch'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
+const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
 
 const navItems: ProductNavItem[] = [{ label: 'Field inbox', to: '/' }]
 
@@ -77,6 +78,9 @@ export function ProductWorkspaceLayout() {
       isProductLaunchPending={productLaunch.isPending}
       productLaunchError={
         productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
+      }
+      aiAssistance={
+        session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
       }
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}

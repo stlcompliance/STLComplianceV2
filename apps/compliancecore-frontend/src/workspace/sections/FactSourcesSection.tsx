@@ -12,9 +12,6 @@ export function FactSourcesSection({ state }: Props) {
       <FactSourcesPanel
         factDefinitions={s.factDefinitionsQuery.data ?? []}
         factSources={s.factSourcesQuery.data ?? []}
-        canManage={s.canManage}
-        onSeedSources={() => s.seedSourcesMutation.mutate()}
-        isSeeding={s.seedSourcesMutation.isPending}
       />
     </div>
   )

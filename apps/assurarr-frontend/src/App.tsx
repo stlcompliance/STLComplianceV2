@@ -20,7 +20,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import {
-  ProductAppShell,
+  ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
@@ -77,33 +77,36 @@ const statusOptions: Record<string, readonly string[]> = {
 
 function AppShell({
   children,
-  tenantDisplayName,
-  tenantSlug,
-  userDisplayName,
+  workspaceSession,
+  isBootstrapping,
+  bootstrapError,
   entitlements = ['assurarr'],
   onSelectProduct,
   onSignOut,
   isProductLaunchPending,
   productLaunchError,
+  aiAccessToken,
 }: {
   children: ReactNode
-  tenantDisplayName?: string
-  tenantSlug?: string
-  userDisplayName?: string
+  workspaceSession: {
+    userDisplayName: string
+    tenantDisplayName: string
+    tenantSlug: string
+  } | null
+  isBootstrapping?: boolean
+  bootstrapError?: 'forbidden' | 'expired' | null
   entitlements?: readonly string[]
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
+  aiAccessToken?: string
 }) {
   return (
-    <ProductAppShell
+    <ProductWorkspaceFrame
       productName="AssurArr"
       productKey="assurarr"
       workspaceSubtitle="Quality assurance, holds, and CAPA"
-      tenantDisplayName={tenantDisplayName}
-      tenantSlug={tenantSlug}
-      userDisplayName={userDisplayName}
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
@@ -111,10 +114,14 @@ function AppShell({
       onSignOut={onSignOut}
       isProductLaunchPending={isProductLaunchPending}
       productLaunchError={productLaunchError}
+      aiAssistance={aiAccessToken ? { apiBase, accessToken: aiAccessToken } : undefined}
       navItems={navItems}
+      workspaceSession={workspaceSession}
+      isBootstrapping={isBootstrapping}
+      bootstrapError={bootstrapError}
     >
       {children}
-    </ProductAppShell>
+    </ProductWorkspaceFrame>
   )
 }
 
@@ -6671,9 +6678,13 @@ export function App() {
     return 'Dashboard'
   }, [normalizedPathname])
 
-  const bootstrapError = sessionQuery.isError
+  const sessionBootstrapError = sessionQuery.isError
     ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
     : null
+  const launchBootstrapError = launchCatalogQuery.isError
+    ? resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)
+    : null
+  const bootstrapError = sessionBootstrapError ?? launchBootstrapError
 
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
@@ -6699,9 +6710,11 @@ export function App() {
 
   return (
     <AppShell
-      tenantDisplayName={workspaceSession?.tenantDisplayName}
-      tenantSlug={workspaceSession?.tenantSlug}
-      userDisplayName={workspaceSession?.userDisplayName}
+      workspaceSession={workspaceSession}
+      isBootstrapping={
+        Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)
+      }
+      bootstrapError={bootstrapError}
       entitlements={switcherEntitlements}
       onSelectProduct={
         session?.accessToken
@@ -6720,6 +6733,7 @@ export function App() {
       }
       isProductLaunchPending={productLaunch.isPending}
       productLaunchError={productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null}
+      aiAccessToken={session?.accessToken}
     >
       <Routes>
         <Route index element={<DashboardPage />} />

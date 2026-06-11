@@ -39,15 +39,4 @@ public static class AssurArrServiceRegistration
         app.UseCors("AssurArrFrontend");
     }
 
-    public static async Task SeedAsync(WebApplication app)
-    {
-        if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
-        {
-            return;
-        }
-
-        await using var scope = app.Services.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<AssurArrQualityService>();
-        await service.EnsureDemoDataAsync();
-    }
 }

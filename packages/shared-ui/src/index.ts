@@ -3,6 +3,20 @@ export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
 export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
 export type { AiHelpDrawerProps, AiHelpMessage } from './AiHelpDrawer'
+export {
+  ProductAiAssistanceError,
+  sendProductAiAssistantMessage,
+} from './aiAssistance'
+export type {
+  ProductAiAssistantMessageRequest,
+  ProductAiAssistantMessageResponse,
+} from './aiAssistance'
+export { buildAiNavigationLinks } from './aiNavigationLinks'
+export type {
+  AiNavigationItem,
+  AiNavigationLink,
+  BuildAiNavigationLinksOptions,
+} from './aiNavigationLinks'
 export { SmartImportReviewWorkspace } from './SmartImportReviewWorkspace'
 export type {
   SmartImportBatchDetail,
@@ -11,7 +25,7 @@ export type {
   SmartImportReviewWorkspaceProps,
 } from './SmartImportReviewWorkspace'
 export { ProductAppShell } from './ProductAppShell'
-export type { ProductAppShellProps, ProductNavItem } from './ProductAppShell'
+export type { ProductAiAssistanceConfig, ProductAppShellProps, ProductNavItem } from './ProductAppShell'
 export { ProductSwitcher } from './ProductSwitcher'
 export type { ProductSwitcherProps } from './ProductSwitcher'
 export {
@@ -62,7 +76,9 @@ export type {
 } from './productLaunchHandoff'
 export { useProductWorkspaceLaunch } from './useProductWorkspaceLaunch'
 export {
+  buildNexArrLoginUrl,
   isProductWorkspaceAuthError,
+  resolveProductLaunchCallbackPath,
   resolveProductWorkspaceBootstrapError,
 } from './productWorkspaceAuth'
 export { resolveNexArrLaunchFailureMessage } from './launchFailure'

@@ -116,6 +116,14 @@ public sealed class SmartImportService(
             retained.RecordId,
             retained.FileId
         }));
+
+        var csvRows = ParseCsvImportRows(bytes, file.FileName, importFile.ContentType);
+        if (csvRows.Count > 0)
+        {
+            importFile.RowCount = csvRows.Count;
+            StageCsvRowsForReview(batch, importFile, csvRows, now);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         return new SmartImportUploadResponse(
@@ -125,7 +133,9 @@ public sealed class SmartImportService(
             batch.DestinationProductHint,
             retained.RecordId,
             retained.FileId,
-            "Source file was retained in RecordArr and queued for Smart Import processing.");
+            csvRows.Count > 0
+                ? $"Source file was retained in RecordArr and {csvRows.Count} CSV rows were staged for Smart Import review."
+                : "Source file was retained in RecordArr and queued for Smart Import processing.");
     }
 
     public async Task<IReadOnlyList<SmartImportBatchSummary>> ListBatchesAsync(
@@ -205,12 +215,24 @@ public sealed class SmartImportService(
             ?? throw new StlApiException("smart_import.proposed_record_not_found", "Proposed import record was not found.", 404);
 
         var decision = NormalizeDecision(request.Decision);
+        var decidedAt = DateTimeOffset.UtcNow;
         proposed.ReviewStatus = decision;
-        proposed.UpdatedAt = DateTimeOffset.UtcNow;
+        proposed.UpdatedAt = decidedAt;
         if (request.CorrectedPayload is JsonElement corrected)
         {
             proposed.DeterministicPayloadJson = corrected.GetRawText();
         }
+
+        var batch = await db.ImportBatches.FirstAsync(x => x.Id == proposed.ImportBatchId, cancellationToken);
+        var batchRecords = await db.ImportProposedRecords
+            .Where(x => x.ImportBatchId == proposed.ImportBatchId && x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+        if (batchRecords.Count > 0
+            && batchRecords.All(x => x.ReviewStatus.Equals("rejected", StringComparison.OrdinalIgnoreCase)))
+        {
+            batch.Status = SmartImportStatuses.Rejected;
+        }
+        batch.UpdatedAt = decidedAt;
 
         db.ImportReviewDecisions.Add(new ImportReviewDecision
         {
@@ -222,12 +244,13 @@ public sealed class SmartImportService(
             Decision = decision,
             Notes = request.Notes,
             CorrectedPayloadJson = request.CorrectedPayload?.GetRawText(),
-            DecidedAt = DateTimeOffset.UtcNow
+            DecidedAt = decidedAt
         });
         db.ImportAuditEvents.Add(ImportAudit(proposed.ImportBatchId, tenantId, actorPersonId, "smart_import.review_decision", "success", decision, new
         {
             proposed.Id,
-            decision
+            decision,
+            batchStatus = batch.Status
         }));
 
         await db.SaveChangesAsync(cancellationToken);
@@ -532,6 +555,66 @@ public sealed class SmartImportService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    private void StageCsvRowsForReview(
+        ImportBatch batch,
+        ImportFile file,
+        IReadOnlyList<CsvImportRow> rows,
+        DateTimeOffset now)
+    {
+        var destinationProduct = ResolveDestinationProduct(batch.DestinationProductHint, file.FileName);
+        var entityType = ResolveEntityType(destinationProduct, file.FileName);
+        var confidence = batch.DestinationProductHint == "unknown" ? 75m : 90m;
+        var reviewReasons = BuildReviewReasons(destinationProduct, entityType, "create", confidence, file.ContentType);
+
+        db.ImportClassifications.Add(new ImportClassification
+        {
+            Id = Guid.NewGuid(),
+            ImportBatchId = batch.Id,
+            ImportFileId = file.Id,
+            TenantId = batch.TenantId,
+            DestinationProduct = destinationProduct,
+            EntityType = entityType,
+            Confidence = confidence,
+            RequiresReview = true,
+            ReviewReasonsJson = JsonSerializer.Serialize(reviewReasons, JsonOptions),
+            Notes = $"{rows.Count} CSV rows were parsed into row-level import candidates for human review.",
+            ProviderOutcome = "deterministic_csv",
+            CreatedAt = now
+        });
+
+        foreach (var row in rows)
+        {
+            db.ImportProposedRecords.Add(new ImportProposedRecord
+            {
+                Id = Guid.NewGuid(),
+                ImportBatchId = batch.Id,
+                TenantId = batch.TenantId,
+                DestinationProduct = destinationProduct,
+                EntityType = entityType,
+                Operation = "create",
+                Confidence = confidence,
+                ReviewStatus = "review_required",
+                RequiresReview = true,
+                ReviewReasonsJson = JsonSerializer.Serialize(reviewReasons, JsonOptions),
+                ProposedPayloadJson = BuildCsvRowPayload(file, row, destinationProduct, entityType, confidence),
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
+
+        batch.Status = SmartImportStatuses.ReviewRequired;
+        batch.ProcessingStartedAt = now;
+        batch.ProcessingCompletedAt = now;
+        batch.UpdatedAt = now;
+        db.ImportAuditEvents.Add(ImportAudit(batch.Id, batch.TenantId, batch.ActorPersonId, "smart_import.csv_rows_staged", "success", "deterministic_csv", new
+        {
+            destinationProduct,
+            entityType,
+            rowCount = rows.Count,
+            reviewReasons
+        }));
+    }
+
     private async Task<SmartImportBatchDetail> BuildBatchDetailAsync(ImportBatch batch, CancellationToken cancellationToken)
     {
         var files = await db.ImportFiles.AsNoTracking()
@@ -816,6 +899,228 @@ public sealed class SmartImportService(
             }
         }, JsonOptions);
 
+    private static string BuildCsvRowPayload(
+        ImportFile file,
+        CsvImportRow row,
+        string destinationProduct,
+        string entityType,
+        decimal confidence)
+    {
+        var proposedFields = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["rowNumber"] = row.RowNumber
+        };
+
+        foreach (var field in row.Fields)
+        {
+            proposedFields[field.Key] = field.Value;
+        }
+
+        if (!proposedFields.ContainsKey("displayName"))
+        {
+            var displayName = ResolveCsvDisplayName(row.Fields);
+            if (!string.IsNullOrWhiteSpace(displayName))
+            {
+                proposedFields["displayName"] = displayName;
+            }
+        }
+
+        return JsonSerializer.Serialize(new
+        {
+            destinationProduct,
+            entityType,
+            confidence,
+            source = new
+            {
+                file.Id,
+                file.FileName,
+                file.ContentType,
+                file.SizeBytes,
+                file.Sha256,
+                file.RecordArrRecordId,
+                file.RecordArrFileId,
+                row.RowNumber
+            },
+            proposedFields
+        }, JsonOptions);
+    }
+
+    private static IReadOnlyList<CsvImportRow> ParseCsvImportRows(byte[] bytes, string fileName, string contentType)
+    {
+        if (!IsCsvFile(fileName, contentType) || bytes.Length == 0)
+        {
+            return [];
+        }
+
+        var csv = Encoding.UTF8.GetString(bytes);
+        if (csv.Length > 0 && csv[0] == '\uFEFF')
+        {
+            csv = csv[1..];
+        }
+
+        var parsedRows = ParseCsvRows(csv);
+        if (parsedRows.Count < 2)
+        {
+            return [];
+        }
+
+        var headers = BuildCsvHeaders(parsedRows[0]);
+        var rows = new List<CsvImportRow>(parsedRows.Count - 1);
+        for (var index = 1; index < parsedRows.Count; index++)
+        {
+            var values = parsedRows[index];
+            if (values.All(string.IsNullOrWhiteSpace))
+            {
+                continue;
+            }
+
+            var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            for (var column = 0; column < Math.Max(headers.Count, values.Count); column++)
+            {
+                var value = column < values.Count ? values[column].Trim() : string.Empty;
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                var header = column < headers.Count ? headers[column] : $"column_{column + 1}";
+                fields[header] = value;
+            }
+
+            if (fields.Count > 0)
+            {
+                rows.Add(new CsvImportRow(index + 1, fields));
+            }
+        }
+
+        return rows;
+    }
+
+    private static bool IsCsvFile(string fileName, string contentType) =>
+        fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
+        || contentType.Contains("csv", StringComparison.OrdinalIgnoreCase);
+
+    private static IReadOnlyList<string> BuildCsvHeaders(IReadOnlyList<string> rawHeaders)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var headers = new List<string>(rawHeaders.Count);
+        for (var index = 0; index < rawHeaders.Count; index++)
+        {
+            var header = rawHeaders[index].Trim();
+            if (string.IsNullOrWhiteSpace(header))
+            {
+                header = $"column_{index + 1}";
+            }
+
+            if (!counts.TryAdd(header, 1))
+            {
+                counts[header]++;
+                header = $"{header}_{counts[header]}";
+            }
+
+            headers.Add(header);
+        }
+
+        return headers;
+    }
+
+    private static IReadOnlyList<IReadOnlyList<string>> ParseCsvRows(string csv)
+    {
+        if (string.IsNullOrWhiteSpace(csv))
+        {
+            return [];
+        }
+
+        return csv
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(ParseCsvRow)
+            .ToList();
+    }
+
+    private static IReadOnlyList<string> ParseCsvRow(string line)
+    {
+        var fields = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        for (var index = 0; index < line.Length; index++)
+        {
+            var character = line[index];
+            if (inQuotes)
+            {
+                if (character == '"')
+                {
+                    if (index + 1 < line.Length && line[index + 1] == '"')
+                    {
+                        current.Append('"');
+                        index++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else
+                {
+                    current.Append(character);
+                }
+
+                continue;
+            }
+
+            if (character == '"')
+            {
+                inQuotes = true;
+                continue;
+            }
+
+            if (character == ',')
+            {
+                fields.Add(current.ToString().Trim());
+                current.Clear();
+                continue;
+            }
+
+            current.Append(character);
+        }
+
+        fields.Add(current.ToString().Trim());
+        return fields;
+    }
+
+    private static string? ResolveCsvDisplayName(IReadOnlyDictionary<string, string> fields)
+    {
+        var preferredKeys = new[]
+        {
+            "displayname",
+            "name",
+            "assetname",
+            "assettag",
+            "assetid",
+            "assetnumber",
+            "unit",
+            "unitnumber",
+            "equipmentid",
+            "vin",
+            "serialnumber"
+        };
+        foreach (var preferredKey in preferredKeys)
+        {
+            var match = fields.FirstOrDefault(field => NormalizeColumnKey(field.Key) == preferredKey);
+            if (!string.IsNullOrWhiteSpace(match.Value))
+            {
+                return match.Value;
+            }
+        }
+
+        return fields.Values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    private static string NormalizeColumnKey(string value) =>
+        new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+
     private static string ExtractAiProposedPayload(JsonElement root, ImportFile file, string destinationProduct, string entityType, decimal confidence)
     {
         if (root.TryGetProperty("proposedRecords", out var records)
@@ -904,4 +1209,6 @@ public sealed class SmartImportService(
       "required": ["destinationProduct", "entityType", "confidence", "notes", "proposedRecords"]
     }
     """;
+
+    private sealed record CsvImportRow(int RowNumber, IReadOnlyDictionary<string, string> Fields);
 }

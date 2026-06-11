@@ -423,7 +423,7 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
-    public async Task Revoke_session_invalidates_refresh_token()
+    public async Task Revoke_session_invalidates_refresh_and_access_token()
     {
         await SeedDatabaseAsync();
         var tokens = await LoginAsync();
@@ -437,6 +437,11 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             "/api/auth/renew",
             new RenewSessionRequest(tokens.RefreshToken));
         Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+
+        var meRequest = new HttpRequestMessage(HttpMethod.Get, "/api/me");
+        meRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var meResponse = await _client.SendAsync(meRequest);
+        Assert.Equal(HttpStatusCode.Unauthorized, meResponse.StatusCode);
     }
 
     [Fact]

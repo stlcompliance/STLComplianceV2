@@ -70,6 +70,7 @@ import {
   restoreOrgUnit,
 } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
+import { canExportAuditPackage, canReadReports as userCanReadReports } from '../auth/sessionStorage'
 import { canManagePeople } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents } from '../components/IncidentsPanel'
 import { canManagePersonnelNotes } from '../components/PersonnelNotesPanel'
@@ -1061,6 +1062,8 @@ export function useStaffArrWorkspaceState() {
   const canManagePersonNotes = me ? canManagePersonnelNotes(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManagePersonDocuments = me ? canManagePersonnelDocuments(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManagePeopleProfiles = me ? canManagePeople(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canReadReports = me ? userCanReadReports(me.tenantRoleKey, me.isPlatformAdmin) : false
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? restoreOrgUnitMutation.error ?? null
@@ -1234,6 +1237,8 @@ export function useStaffArrWorkspaceState() {
     canManagePersonNotes,
     canManagePersonDocuments,
     canManagePeopleProfiles,
+    canExportAudit,
+    canReadReports,
     personIncidents,
     personNotes: personNotesQuery.data ?? [],
     personDocuments: personDocumentsQuery.data ?? [],

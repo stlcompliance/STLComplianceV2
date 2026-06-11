@@ -34,6 +34,9 @@ const TrainingAcknowledgementsSection = lazy(() =>
     default: module.TrainingAcknowledgementsSection,
   })),
 )
+const ReportsSection = lazy(() =>
+  import('./sections/ReportsSection').then((module) => ({ default: module.ReportsSection })),
+)
 const CertificationsSection = lazy(() =>
   import('./sections/CertificationsSection').then((module) => ({ default: module.CertificationsSection })),
 )
@@ -51,6 +54,7 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
   incidents: IncidentsSection,
   restrictions: RestrictionsSection,
   'training-acknowledgements': TrainingAcknowledgementsSection,
+  reports: ReportsSection,
   certifications: CertificationsSection,
   admin: AdminSection,
 }
@@ -65,6 +69,7 @@ const sectionLabels: Record<WorkspaceSection, string> = {
   incidents: 'Incidents',
   restrictions: 'Restrictions',
   'training-acknowledgements': 'Training Acknowledgements',
+  reports: 'Reports',
   certifications: 'Certifications',
   admin: 'Admin',
 }

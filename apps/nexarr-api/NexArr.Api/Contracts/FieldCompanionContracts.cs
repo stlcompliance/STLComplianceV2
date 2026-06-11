@@ -17,7 +17,8 @@ public sealed record FieldCompanionSessionResponse(
     string TenantDisplayName,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    string? CallbackUrl);
 
 public sealed record FieldCompanionMeResponse(
     Guid UserId,

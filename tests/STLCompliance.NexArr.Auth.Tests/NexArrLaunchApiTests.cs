@@ -321,6 +321,54 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Handoff_create_denies_revoked_source_session()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginTokensAsync(PlatformSeeder.DemoAdminEmail);
+
+        var logoutResponse = await _client.PostAsJsonAsync(
+            "/api/auth/logout",
+            new LogoutRequest(tokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tokens.AccessToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, handoffResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_denies_revoked_source_session()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginTokensAsync(PlatformSeeder.DemoAdminEmail);
+        const string callbackUrl = "http://localhost:5173/app/staffarr";
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tokens.AccessToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var serviceToken = await IssueServiceTokenAsync(tokens.AccessToken, "staffarr");
+        var logoutResponse = await _client.PostAsJsonAsync(
+            "/api/auth/logout",
+            new LogoutRequest(tokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
+
+        var redeemRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/handoff/redeem")
+        {
+            Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken))
+        };
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, redeemResponse.StatusCode);
+        var body = await redeemResponse.Content.ReadAsStringAsync();
+        Assert.Contains("launch.session_revoked", body);
+    }
+
+    [Fact]
     public async Task Handoff_create_and_redeem_enqueue_platform_launch_events()
     {
         await SeedDatabaseAsync();
@@ -728,12 +776,17 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
 
     private async Task<string> LoginAsync(string email)
     {
+        var payload = await LoginTokensAsync(email);
+        return payload.AccessToken;
+    }
+
+    private async Task<AuthTokenResponse> LoginTokensAsync(string email)
+    {
         var response = await _client.PostAsJsonAsync(
             "/api/auth/login",
             new LoginRequest(email, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
         response.EnsureSuccessStatusCode();
-        var payload = (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
-        return payload.AccessToken;
+        return (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
     }
 
     private async Task SeedDatabaseAsync()

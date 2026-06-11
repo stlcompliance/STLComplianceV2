@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { CatalogPage } from './pages/catalog/CatalogPage'
 import { PartiesPage } from './pages/parties/PartiesPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { PlanningPage } from './pages/planning/PlanningPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { PricingPage } from './pages/pricing/PricingPage'
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/parties/details" element={<PartiesPage />} />
             <Route path="/parties/create" element={<PartiesPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/purchasing" element={<PurchasingPage />} />
             <Route path="/purchasing/procurement" element={<PurchasingPage />} />
             <Route path="/purchasing/approvals" element={<PurchasingPage />} />
@@ -58,5 +60,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-
 

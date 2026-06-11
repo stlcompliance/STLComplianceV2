@@ -1,0 +1,29 @@
+# Glossary
+
+- Person: A StaffArr-owned human record used across the suite.
+- User account: A NexArr platform sign-in account. It may be linked to a StaffArr person.
+- Product access: The ability to launch a product through NexArr entitlement.
+- Role: A StaffArr or product authority assignment used to control access.
+- Permission: A named action grant, such as read, create, manage, approve, execute, export, or release.
+- Site: A StaffArr-owned internal place, often used as a parent for locations.
+- Location: A StaffArr-owned internal operational place such as a dock, yard, room, warehouse area, or parts room.
+- Asset: A MaintainArr-owned maintainable item such as equipment or vehicle.
+- Work order: A MaintainArr-owned maintenance work record.
+- Defect: A MaintainArr-owned problem report against an asset or maintenance context.
+- Inspection: A MaintainArr checklist execution or inspection run.
+- PM program: A MaintainArr preventive maintenance program.
+- Certification: A TrainArr-owned qualification or certification result that may be published to StaffArr.
+- Incident: A StaffArr personnel incident unless a product-specific incident owns its own operational context.
+- Vendor: A SupplyArr-owned supplier or vendor record.
+- Customer: Customer master data is not implemented as a SupplyArr source of truth. Future customer master ownership belongs outside SupplyArr.
+- Purchase order: A SupplyArr operational procurement or vendor-order context. Financial execution remains outside STL Compliance.
+- Receiving record: A LoadArr record for inbound goods.
+- Inventory movement: A LoadArr stock movement between states or locations.
+- Dispatch: RoutArr transportation planning and assignment work.
+- Trip: A RoutArr transportation execution record.
+- Citation: A Compliance Core regulatory citation or law reference.
+- Rule: Compliance Core logic or requirement interpretation.
+- Requirement: A Compliance Core obligation or expected evidence condition.
+- Evidence: A document, file, product record, photo, signature, inspection result, status, or event that helps support a requirement or decision.
+- Attachment: A document or file connected to a record. RecordArr owns retained stored files.
+- Audit record: A retained record, package, report, or evidence set used to support audit review.

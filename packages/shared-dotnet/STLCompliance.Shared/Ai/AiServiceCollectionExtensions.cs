@@ -27,6 +27,10 @@ public static class AiServiceCollectionExtensions
                 configuration["OPENAI_SMART_IMPORT_MODEL"],
                 configuration["OpenAI:SmartImportModel"],
                 options.SmartImportModel);
+            options.AssistantVectorStoreIds = FirstNonEmpty(
+                configuration["OPENAI_ASSISTANT_VECTOR_STORE_IDS"],
+                configuration["OpenAI:AssistantVectorStoreIds"],
+                options.AssistantVectorStoreIds);
             options.RedisUrl = FirstNonEmpty(
                 configuration["REDIS_URL"],
                 configuration["OpenAI:RedisUrl"],
@@ -40,6 +44,10 @@ public static class AiServiceCollectionExtensions
             options.RequestsPerMinute = ReadInt(configuration, "OPENAI_REQUESTS_PER_MINUTE", options.RequestsPerMinute);
             options.TokensPerMinute = ReadInt(configuration, "OPENAI_TOKENS_PER_MINUTE", options.TokensPerMinute);
             options.MaxOutputTokens = ReadInt(configuration, "OPENAI_MAX_OUTPUT_TOKENS", options.MaxOutputTokens);
+            options.AssistantFileSearchMaxResults = ReadInt(
+                configuration,
+                "OPENAI_ASSISTANT_FILE_SEARCH_MAX_RESULTS",
+                options.AssistantFileSearchMaxResults);
         });
 
         services.AddSingleton<IAiTokenEstimator, HeuristicAiTokenEstimator>();

@@ -67,7 +67,7 @@ public static class WorkspaceEndpoints
             return Results.Ok(comment);
         }).WithName("UpdateRecordArrRecordComment");
 
-        group.MapPost("/records", (CreateRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/records", (HttpContext context, CreateRecordRequest request, RecordArrStore store) =>
         {
             if (string.IsNullOrWhiteSpace(request.SourceProduct))
             {
@@ -75,6 +75,7 @@ public static class WorkspaceEndpoints
             }
 
             var record = store.CreateRecord(
+                context.User.GetTenantId().ToString(),
                 request.Title,
                 request.Description,
                 request.RecordType,
@@ -115,9 +116,10 @@ public static class WorkspaceEndpoints
         group.MapGet("/capture-requests", (RecordArrStore store) => Results.Ok(store.GetCaptureRequests()))
             .WithName("ListRecordArrCaptureRequests");
 
-        group.MapPost("/capture-requests", (CreateCaptureRequestRequest request, RecordArrStore store) =>
+        group.MapPost("/capture-requests", (HttpContext context, CreateCaptureRequestRequest request, RecordArrStore store) =>
         {
             var captureRequest = store.CreateCaptureRequest(
+                context.User.GetTenantId().ToString(),
                 request.SourceProduct,
                 request.SourceObjectRef,
                 request.CaptureType,

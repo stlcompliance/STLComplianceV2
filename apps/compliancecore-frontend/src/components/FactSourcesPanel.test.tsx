@@ -8,9 +8,6 @@ describe('FactSourcesPanel', () => {
       <FactSourcesPanel
         factDefinitions={[]}
         factSources={[]}
-        canManage={false}
-        onSeedSources={() => undefined}
-        isSeeding={false}
       />,
     )
 
@@ -52,15 +49,12 @@ describe('FactSourcesPanel', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ]}
-        canManage={true}
-        onSeedSources={() => undefined}
-        isSeeding={false}
       />,
     )
 
     expect(screen.getByText('Default license valid')).toBeInTheDocument()
     expect(screen.getByText('default_license_flag')).toBeInTheDocument()
     expect(screen.getByText('static_config')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Seed sample sources' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Seed sample sources' })).not.toBeInTheDocument()
   })
 })

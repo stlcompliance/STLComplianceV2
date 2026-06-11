@@ -1,12 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ApiErrorCallout } from '@stl/shared-ui'
-import { useState } from 'react'
+import { ApiErrorCallout, buildProductLaunchUrlMap } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../auth/AuthProvider'
 import { getNexarrApiBaseUrl } from '../api/nexarrBaseUrl'
 import { NexarrApiError } from '../api/types'
+import * as nexarr from '../api/nexarrClient'
+import { formatLaunchFailureError } from '../lib/launchFailure'
+import { resolveLoginRedirectTarget } from '../lib/loginRedirect'
 
 const loginSchema = z.object({
   email: z.email('Enter a valid email'),
@@ -19,22 +22,100 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
-const demoTenantId = import.meta.env.DEV
-  ? import.meta.env.VITE_DEMO_TENANT_ID || '11111111-1111-1111-1111-111111111101'
-  : null
+const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
-const defaultEmail = demoTenantId ? 'admin@demo.stl' : ''
-const defaultPassword = demoTenantId ? 'ChangeMe!Demo2026' : ''
+function formatProductLaunchRedirectError(error: unknown): string {
+  if (error instanceof NexarrApiError) {
+    return formatLaunchFailureError(error.code ?? error.message)
+  }
+  if (error instanceof Error) {
+    return error.message
+  }
+  return 'NexArr could not relaunch this product.'
+}
+
+function LoginStatusPanel({
+  title,
+  message,
+  error,
+}: {
+  title: string
+  message: string
+  error?: string | null
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
+      <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
+          STL Compliance Suite
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold text-white">{title}</h1>
+        <p className="mt-2 text-sm text-slate-400">{message}</p>
+        {error ? (
+          <div className="mt-4">
+            <ApiErrorCallout message={error} />
+            <Link to="/app" className="mt-4 inline-flex text-sm text-stl-teal hover:underline">
+              Return to suite
+            </Link>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
+  const [launchRedirectError, setLaunchRedirectError] = useState<string | null>(null)
+  const [isLaunchingProduct, setIsLaunchingProduct] = useState(false)
   const [mfaChallengeRequired, setMfaChallengeRequired] = useState(false)
 
   const locationState = location.state as { from?: string; passwordReset?: boolean } | null
-  const from = locationState?.from?.toString() ?? '/app'
+  const redirectTarget = useMemo(
+    () => resolveLoginRedirectTarget(location.search, productLaunchUrls),
+    [location.search],
+  )
+  const from =
+    redirectTarget?.kind === 'internal'
+      ? redirectTarget.to
+      : locationState?.from?.toString() ?? '/app'
   const passwordResetDone = locationState?.passwordReset === true
+
+  useEffect(() => {
+    setLaunchRedirectError(null)
+  }, [location.search])
+
+  useEffect(() => {
+    if (!isAuthenticated || redirectTarget?.kind !== 'product' || launchRedirectError) {
+      return
+    }
+
+    let cancelled = false
+    setIsLaunchingProduct(true)
+    void nexarr
+      .createHandoff(redirectTarget.productKey, redirectTarget.callbackUrl)
+      .then((handoff) => {
+        if (!cancelled) {
+          window.location.assign(handoff.launchUrl)
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setLaunchRedirectError(formatProductLaunchRedirectError(err))
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLaunchingProduct(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, launchRedirectError, redirectTarget])
 
   const {
     register,
@@ -44,8 +125,8 @@ export function LoginPage() {
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: defaultEmail,
-      password: defaultPassword,
+      email: '',
+      password: '',
       rememberDevice: false,
       mfaMethod: 'totp',
       mfaCode: '',
@@ -53,6 +134,22 @@ export function LoginPage() {
     },
   })
   const mfaMethod = watch('mfaMethod')
+
+  if (isAuthenticated && redirectTarget?.kind === 'product') {
+    return (
+      <LoginStatusPanel
+        title={launchRedirectError ? 'Product launch blocked' : 'Launching product'}
+        message={
+          launchRedirectError
+            ? 'NexArr could not authorize the product handoff for this callback.'
+            : isLaunchingProduct
+              ? 'Creating a fresh NexArr handoff for your product workspace…'
+              : 'Preparing your product workspace…'
+        }
+        error={launchRedirectError}
+      />
+    )
+  }
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />
@@ -79,7 +176,7 @@ export function LoginPage() {
         }
       }
 
-      await login(values.email, values.password, demoTenantId, values.rememberDevice, mfaCode, recoveryCode)
+      await login(values.email, values.password, null, values.rememberDevice, mfaCode, recoveryCode)
     } catch (err) {
       if (err instanceof NexarrApiError) {
         setError(err.message)
@@ -105,7 +202,7 @@ export function LoginPage() {
         <h1 className="mt-1 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-slate-400">
           Uses NexArr <code className="text-xs text-slate-300">/api/auth/login</code>
-          {demoTenantId ? ' (demo tenant).' : '.'}
+          .
         </p>
 
         {passwordResetDone && (

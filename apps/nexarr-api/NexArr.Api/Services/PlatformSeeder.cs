@@ -722,11 +722,6 @@ public static class PlatformSeeder
                 false);
         }
 
-        if (environment.IsDevelopment() || environment.EnvironmentName == "Testing")
-        {
-            return new FirstAdminSeedProfile(DemoAdminEmail, DemoAdminPassword, "Demo Platform Admin", true);
-        }
-
         return null;
     }
 

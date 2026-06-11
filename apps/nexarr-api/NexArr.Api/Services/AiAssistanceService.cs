@@ -117,9 +117,11 @@ public sealed class AiAssistanceService(
                 RateLimitScope: "assistant"),
             cancellationToken);
 
-        var answer = ExtractAssistantAnswer(providerResult.OutputText)
+        var assistantPayload = ExtractAssistantPayload(providerResult.OutputText);
+        var answer = assistantPayload.Answer
             ?? providerResult.SafeMessage
             ?? "AI assistance is temporarily unavailable. Please try again later.";
+        answer = AppendCitations(answer, assistantPayload.Citations);
         if (providerResult.Outcome == AiProviderOutcomes.MissingConfig)
         {
             answer = "AI assistance is not configured. Please contact your administrator.";
@@ -258,27 +260,48 @@ public sealed class AiAssistanceService(
             }
         }, JsonOptions);
 
-    private static string? ExtractAssistantAnswer(string? outputText)
+    private static AssistantPayload ExtractAssistantPayload(string? outputText)
     {
         if (string.IsNullOrWhiteSpace(outputText))
         {
-            return null;
+            return new AssistantPayload(null, []);
         }
 
         try
         {
             using var document = JsonDocument.Parse(outputText);
+            var citations = new List<string>();
             if (document.RootElement.TryGetProperty("answer", out var answer) && answer.ValueKind == JsonValueKind.String)
             {
-                return answer.GetString();
+                if (document.RootElement.TryGetProperty("citations", out var citationArray)
+                    && citationArray.ValueKind == JsonValueKind.Array)
+                {
+                    citations.AddRange(citationArray.EnumerateArray()
+                        .Where(citation => citation.ValueKind == JsonValueKind.String)
+                        .Select(citation => citation.GetString())
+                        .Where(citation => !string.IsNullOrWhiteSpace(citation))
+                        .Select(citation => citation!.Trim()));
+                }
+
+                return new AssistantPayload(answer.GetString(), citations.Distinct(StringComparer.OrdinalIgnoreCase).ToList());
             }
         }
         catch (JsonException)
         {
-            return outputText;
+            return new AssistantPayload(outputText, []);
         }
 
-        return outputText;
+        return new AssistantPayload(outputText, []);
+    }
+
+    private static string AppendCitations(string answer, IReadOnlyList<string> citations)
+    {
+        if (citations.Count == 0 || answer.Contains("References:", StringComparison.OrdinalIgnoreCase))
+        {
+            return answer;
+        }
+
+        return $"{answer.TrimEnd()}\n\nReferences: {string.Join(", ", citations)}";
     }
 
     private static Guid ResolveTenantId(ClaimsPrincipal principal, Guid? requestedTenantId)
@@ -344,6 +367,8 @@ public sealed class AiAssistanceService(
 
     private static string NormalizeProduct(string value) =>
         string.IsNullOrWhiteSpace(value) ? "nexarr" : value.Trim().ToLowerInvariant();
+
+    private sealed record AssistantPayload(string? Answer, IReadOnlyList<string> Citations);
 
     private const string AssistantResponseSchema = """
     {

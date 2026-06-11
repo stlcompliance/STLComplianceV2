@@ -27,6 +27,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrPersonalTrainingDashboardEndpoints();
 
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
 
         app.MapTrainArrSettingsEndpoints();
 
@@ -80,7 +81,10 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrInternalQualificationRecalculationEndpoints();
         app.MapTrainArrInternalRulePackImpactEndpoints();
         app.MapTrainArrFieldInboxEndpoints();
-        app.MapTrainArrLoadTestJourneySeedEndpoints();
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+        {
+            app.MapTrainArrLoadTestJourneySeedEndpoints();
+        }
         app.MapTrainArrNotificationSettingsEndpoints();
         app.MapTrainArrAssignmentDueReminderSettingsEndpoints();
         app.MapTrainArrAssignmentEscalationSettingsEndpoints();

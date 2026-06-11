@@ -1,5 +1,6 @@
 import {
   Building2,
+  FileText,
   PackageSearch,
   ShoppingCart,
   Tags,
@@ -24,6 +25,7 @@ export const supplyarrNavItems: ProductNavItem[] = [
     ],
   },
   { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },
+  { label: 'Reports', to: '/reports', icon: FileText as NavIcon },
   {
     label: 'Purchasing',
     to: '/purchasing',

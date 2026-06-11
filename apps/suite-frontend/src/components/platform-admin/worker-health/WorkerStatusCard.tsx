@@ -48,7 +48,7 @@ export function WorkerStatusCard({
       </div>
 
       <p className="mt-2 text-sm text-slate-400">
-        Pending (sample): <span className="font-mono text-slate-200">{worker.pendingCount}</span>
+        Pending: <span className="font-mono text-slate-200">{worker.pendingCount}</span>
       </p>
       {worker.latestRun ? (
         <p className="mt-1 text-sm text-slate-400">

@@ -108,6 +108,8 @@ public static class StaffArrServiceRegistration
         builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
         builder.Services.AddSingleton<StaffArrDocumentStorageService>();
         builder.Services.AddScoped<AuditTimelineService>();
+        builder.Services.AddScoped<AuditPackageService>();
+        builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<StaffArrEntityBulkExportService>();
         builder.Services.AddScoped<StaffArrWorkerAdminService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();

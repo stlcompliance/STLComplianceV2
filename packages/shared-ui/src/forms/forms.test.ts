@@ -15,6 +15,10 @@ describe('slugifyKey', () => {
     expect(slugifyKey('a')).toBe('')
   })
 
+  it('normalizes repeated separators around uncontrolled labels', () => {
+    expect(slugifyKey(`${'-'.repeat(5000)}Product Name${'-'.repeat(5000)}`)).toBe('product-name')
+  })
+
   it('adds collision suffixes within max length', () => {
     expect(withKeySuffix('product-name', 2)).toBe('product-name-2')
   })

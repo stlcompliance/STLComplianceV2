@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 export interface TrainArrMeResponse {

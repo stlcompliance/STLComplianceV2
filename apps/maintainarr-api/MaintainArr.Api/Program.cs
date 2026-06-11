@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     {
         app.MapMaintainArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapMaintainArrSettingsEndpoints();
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();

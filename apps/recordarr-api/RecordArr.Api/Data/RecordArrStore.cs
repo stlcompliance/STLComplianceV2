@@ -42,721 +42,36 @@ public sealed class RecordArrStore
 
     public RecordArrStore()
     {
-        var now = DateTimeOffset.UtcNow;
-        var bolFileId = "file-bol-001";
-        var sopFileId = "file-sop-001";
-        var bolRenditionId = "rend-bol-001";
-        var sopRenditionId = "rend-sop-001";
-
-        _records =
-        [
-            new RecordArrRecordResponse(
-                "rec-bol-001",
-                "REC-260604-001",
-                "Inbound BOL for delivery load",
-                "Captured from RoutArr proof-of-delivery handoff.",
-                "document",
-                "bol",
-                "active",
-                "internal",
-                "routarr",
-                "trip",
-                "trip-7781",
-                "RT-7781",
-                "person-route-lead",
-                "person-route-lead",
-                now.AddDays(-3),
-                now.AddDays(27),
-                now.AddDays(365),
-                "bol-7781.pdf",
-                "application/pdf",
-                2,
-                ["route", "evidence", "delivery"],
-                bolFileId,
-                [bolFileId],
-                bolFileId,
-                ["routarr:trip:trip-7781"],
-                [],
-                [bolFileId],
-                [],
-                [],
-                [],
-                [],
-                null,
-                null,
-                [],
-                null,
-                ["evidence", "delivery", "route"],
-                [],
-                null,
-                null),
-            new RecordArrRecordResponse(
-                "rec-sop-001",
-                "REC-260604-002",
-                "Warehouse safe handling procedure",
-                "Controlled SOP for receiving and staging hazardous stock.",
-                "document",
-                "procedure",
-                "review",
-                "internal",
-                "recordarr",
-                "template",
-                "sop-hazmat-01",
-                "Hazmat Receiving Procedure",
-                "person-doc-controller",
-                "person-doc-controller",
-                now.AddDays(-14),
-                now.AddDays(1),
-                now.AddDays(730),
-                "hazmat-receiving-v3.pdf",
-                "application/pdf",
-                3,
-                ["controlled", "procedure", "review"],
-                sopFileId,
-                [sopFileId],
-                sopFileId,
-                ["recordarr:template:sop-hazmat-01"],
-                [],
-                [sopFileId],
-                [],
-                [],
-                [],
-                [],
-                null,
-                null,
-                [],
-                null,
-                ["controlled", "procedure", "review"],
-                [],
-                null,
-                null),
-        ];
-
-        _files =
-        [
-            new RecordArrFileResponse(
-                bolFileId,
-                "tenant-demo",
-                "rec-bol-001",
-                "FILE-260604-001",
-                "local",
-                $"recordarr/files/{bolFileId}",
-                "bol-7781.pdf",
-                "bol-7781.pdf",
-                "pdf",
-                "application/pdf",
-                28192,
-                "sha256-file-bol-001",
-                1,
-                null,
-                null,
-                null,
-                now.AddDays(-3),
-                "person-route-lead",
-                "clean",
-                "completed",
-                "encrypted",
-                null,
-                null,
-                [
-                    new RecordArrFileRenditionResponse(
-                        bolRenditionId,
-                        bolFileId,
-                        "rec-bol-001",
-                        "preview",
-                        $"recordarr/renditions/{bolRenditionId}",
-                        "application/pdf",
-                        8192,
-                        1,
-                        "generated",
-                        now.AddDays(-3))
-                ]),
-            new RecordArrFileResponse(
-                sopFileId,
-                "tenant-demo",
-                "rec-sop-001",
-                "FILE-260604-002",
-                "local",
-                $"recordarr/files/{sopFileId}",
-                "hazmat-receiving-v3.pdf",
-                "hazmat-receiving-v3.pdf",
-                "pdf",
-                "application/pdf",
-                35648,
-                "sha256-file-sop-001",
-                2,
-                null,
-                null,
-                null,
-                now.AddDays(-14),
-                "person-doc-controller",
-                "clean",
-                "completed",
-                "encrypted",
-                null,
-                null,
-                [
-                    new RecordArrFileRenditionResponse(
-                        sopRenditionId,
-                        sopFileId,
-                        "rec-sop-001",
-                        "preview",
-                        $"recordarr/renditions/{sopRenditionId}",
-                        "application/pdf",
-                        11264,
-                        2,
-                        "generated",
-                        now.AddDays(-14))
-                ]),
-        ];
-
-        _uploadSessions =
-        [
-            new RecordArrUploadSessionResponse(
-                "upl-001",
-                "UPL-260604-001",
-                "authenticated",
-                "routarr",
-                "trip",
-                "trip-7781",
-                "proof_of_delivery",
-                "completed",
-                true,
-                true,
-                true,
-                now.AddHours(-4),
-                now.AddHours(20),
-                now.AddMinutes(-75),
-                null,
-                ["application/pdf", "image/jpeg"],
-                5,
-                25_000_000,
-                ["rec-bol-001"]),
-        ];
-
-        _captureRequests =
-        [
-            new RecordArrCaptureRequestResponse(
-                "cap-001",
-                "tenant-demo",
-                "routarr",
-                "routarr:trip:trip-7781",
-                "photo",
-                "Dock arrival photo",
-                "Capture a dock-side arrival photo before unloading begins.",
-                true,
-                "open",
-                null,
-                "evidence_requirement.trip.pod",
-                now.AddHours(-2),
-                null),
-            new RecordArrCaptureRequestResponse(
-                "cap-002",
-                "tenant-demo",
-                "routarr",
-                "routarr:trip:trip-7781",
-                "signature",
-                "Delivery signature",
-                "Collect the signature from the receiver after delivery.",
-                true,
-                "completed",
-                "upl-001",
-                "evidence_requirement.trip.pod",
-                now.AddHours(-5),
-                now.AddHours(-4)),
-        ];
-
-        _recordMetadata =
-        [
-            new RecordArrRecordMetadataResponse(
-                "meta-001",
-                "rec-bol-001",
-                "bol_number",
-                "RT-7781",
-                "string",
-                "source_product",
-                1m,
-                true,
-                "person-route-lead",
-                now.AddDays(-3)),
-            new RecordArrRecordMetadataResponse(
-                "meta-002",
-                "rec-sop-001",
-                "review_cycle_days",
-                "180",
-                "number",
-                "system",
-                1m,
-                true,
-                "person-doc-controller",
-                now.AddDays(-14)),
-        ];
-
-        _recordLinks =
-        [
-            new RecordArrRecordLinkResponse(
-                "rlk-001",
-                "rec-bol-001",
-                null,
-                "routarr:trip:trip-7781",
-                "source",
-                now.AddDays(-3),
-                "person-route-lead"),
-            new RecordArrRecordLinkResponse(
-                "rlk-002",
-                "rec-sop-001",
-                null,
-                "recordarr:controlled_document:doc-001",
-                "related_to",
-                now.AddDays(-14),
-                "person-doc-controller"),
-        ];
-
-        _recordComments =
-        [
-            new RecordArrRecordCommentResponse(
-                "com-001",
-                "rec-bol-001",
-                "Confirm the receiving signature against the trip closeout packet before release.",
-                "product_visible",
-                now.AddDays(-2),
-                "person-route-lead",
-                null,
-                null),
-            new RecordArrRecordCommentResponse(
-                "com-002",
-                "rec-sop-001",
-                "This procedure is under audit review; keep the current draft available for the quality team.",
-                "auditor_visible",
-                now.AddDays(-1),
-                "person-audit-admin",
-                now.AddHours(-12),
-                "person-doc-controller"),
-        ];
-
-        _scans =
-        [
-            new RecordArrScanProcessingResponse(
-                "scan-001",
-                "rec-bol-001",
-                "bol-7781.jpg",
-                "completed",
-                "bol",
-                "edge:manual",
-                null,
-                null,
-                null,
-                bolFileId,
-                null,
-                "rec-bol-001",
-                "ocr-001",
-                "ext-001",
-                new RecordArrEdgeDetectionResultResponse(
-                    "edge-001",
-                    "scan-001",
-                    "detected",
-                    0.96m,
-                    0,
-                    "10,10,540,20,540,720,10,720",
-                    now.AddHours(-2),
-                    false),
-                new RecordArrImageEnhancementSettingsResponse(
-                    "enh-001",
-                    "scan-001",
-                    true,
-                    true,
-                    true,
-                    false,
-                    true,
-                    false,
-                    true,
-                    false,
-                    "pdf"),
-                0.94m,
-                now.AddHours(-2),
-                null),
-        ];
-
-        string seedOcrResultId = "ocr-001";
-        _ocrResults =
-        [
-            new RecordArrOcrResultResponse(
-                seedOcrResultId,
-                "rec-bol-001",
-                "file-bol-001",
-                "azure_document_intelligence",
-                "completed",
-                "en",
-                0.93m,
-                "Bill of lading number RT-7781 with delivery signature and pickup confirmation.",
-                [
-                    new RecordArrOcrPageResultResponse(
-                        "ocrpage-001",
-                        seedOcrResultId,
-                        1,
-                        "Bill of lading number RT-7781 with delivery signature and pickup confirmation.",
-                        0.93m,
-                        1920,
-                        1080,
-                        ["Bill of lading number RT-7781", "Delivery signature"]),
-                ],
-                ["Bill of lading number RT-7781", "Delivery signature"],
-                now.AddHours(-2),
-                null),
-        ];
-
-        _extractionResults =
-        [
-            new RecordArrExtractionResultResponse(
-                "ext-001",
-                "rec-bol-001",
-                "bol",
-                "manual_review_required",
-                [
-                    new RecordArrExtractedFieldResponse("fld-001", "ext-001", "bol_number", "BOL Number", "RT-7781", "string", 0.98m, 1, "10,10,120,24", "unreviewed", null, null, null),
-                    new RecordArrExtractedFieldResponse("fld-002", "ext-001", "delivery_signature", "Delivery Signature", "Avery Auditor", "string", 0.77m, 1, "220,640,420,720", "unreviewed", null, null, null),
-                ],
-                0.88m,
-                now.AddHours(-2),
-                null,
-                null,
-                "Fields with lower confidence need a quick human review."),
-        ];
-
-        _evidenceMappings =
-        [
-            new RecordArrEvidenceMappingResponse(
-                "map-001",
-                "rec-bol-001",
-                "routarr",
-                "trip",
-                "trip-7781",
-                "evidence_requirement.trip.pod",
-                "proof_of_delivery",
-                "confirmed",
-                "user_confirmed",
-                0.96m,
-                "person-auditor",
-                now.AddHours(-1),
-                null,
-                null,
-                null,
-                "Mapped by dispatch evidence review."),
-        ];
-
-        _evidenceCoverage = BuildEvidenceCoverage();
-
-        _packages =
-        [
-            new RecordArrPackageResponse(
-                "pkg-001",
-                "PKG-260604-001",
-                "RoutArr closeout packet",
-                "delivery",
-                "complete",
-                "routarr",
-                ["trip-7781"],
-                ["rec-bol-001"],
-                "manifest-001",
-                "rec-bol-001",
-                null,
-                now.AddHours(-1),
-                now.AddHours(-1),
-                null,
-                null,
-                now.AddDays(30)),
-        ];
-
-        _manifests =
-        [
-            new RecordArrPackageManifestResponse(
-                "manifest-001",
-                "pkg-001",
-                1,
-                now.AddHours(-1),
-                [
-                    new RecordArrPackageManifestEntryResponse("mrec-001", "record", "Inbound BOL for delivery load", "routarr", "trip-7781", "rec-bol-001", null, "active", "sha256-record-bol"),
-                ],
-                [
-                    new RecordArrPackageManifestEntryResponse("mobj-001", "source_object", "RoutArr trip RT-7781", "routarr", "trip-7781", null, null, "closed", "sha256-source-trip"),
-                ],
-                [
-                    new RecordArrPackageManifestEntryResponse("mreq-001", "requirement", "Proof of delivery", null, null, null, "evidence_requirement.trip.pod", "satisfied", "sha256-requirement-pod"),
-                ],
-                "sha256-manifest-001",
-                "person-evidence-manager"),
-        ];
-
-        _retentionPolicies =
-        [
-            new RecordArrRetentionPolicyResponse(
-                "ret-001",
-                "default-delivery",
-                "Delivery evidence retention",
-                "Keeps delivery evidence for operational audit windows.",
-                "delivery_record",
-                "pod",
-                "routarr",
-                365,
-                "days",
-                "closure_at",
-                "archive",
-                true,
-                "active",
-                now.AddDays(-20),
-                now.AddDays(-2)),
-        ];
-
-        _retentionStatuses =
-        [
-            new RecordArrRetentionStatusResponse(
-                "rstat-001",
-                "rec-bol-001",
-                "ret-001",
-                "active",
-                now.AddDays(-3),
-                now.AddDays(362),
-                now.AddDays(330),
-                null,
-                null,
-                null),
-        ];
-
+        _records = [];
+        _uploadSessions = [];
+        _captureRequests = [];
+        _files = [];
+        _scans = [];
+        _ocrResults = [];
+        _extractionResults = [];
+        _evidenceMappings = [];
+        _evidenceCoverage = [];
+        _packages = [];
+        _manifests = [];
+        _recordMetadata = [];
+        _recordLinks = [];
+        _recordComments = [];
+        _retentionPolicies = [];
+        _retentionStatuses = [];
         _disposalReviews = [];
-
-        _legalHolds =
-        [
-            new RecordArrLegalHoldResponse(
-                "hold-001",
-                "HOLD-260604-001",
-                "Open audit hold",
-                "Holds controlled documents while audit evidence is reviewed.",
-                "active",
-                "audit",
-                ["record:rec-sop-001", "document_type:procedure"],
-                ["rec-sop-001"],
-                "compliancecore",
-                "audit",
-                "audit-901",
-                now.AddDays(-1),
-                "person-audit-admin",
-                now.AddHours(-20),
-                null,
-                null,
-                null),
-        ];
-
-        _controlledDocuments =
-        [
-            new RecordArrControlledDocumentResponse(
-                "doc-001",
-                "DOC-260604-001",
-                "rec-sop-001",
-                "Warehouse safe handling procedure",
-                "Controlled SOP for receiving and staging hazardous stock.",
-                "procedure",
-                "review",
-                "person-doc-controller",
-                "org-receiving",
-                "site-north-yard",
-                "ver-002",
-                180,
-                now.AddDays(1),
-                now.AddDays(-14),
-                now.AddDays(730),
-                null,
-                null,
-                true,
-                ["rec-sop-001", "rec-bol-001"],
-                [
-                    new RecordArrAuditTrailEntryResponse(
-                        "aud-001",
-                        "created",
-                        "person-doc-controller",
-                        now.AddDays(-14),
-                        "Controlled document created."),
-                    new RecordArrAuditTrailEntryResponse(
-                        "aud-002",
-                        "version_created",
-                        "person-doc-controller",
-                        now.AddDays(-14),
-                        "Initial version was created."),
-                    new RecordArrAuditTrailEntryResponse(
-                        "aud-003",
-                        "submitted_for_review",
-                        "person-doc-controller",
-                        now.AddDays(-2),
-                        "Review workflow started for the current version.")
-                ]),
-        ];
-
-        _documentVersions =
-        [
-            new RecordArrControlledDocumentVersionResponse(
-                "ver-001",
-                "doc-001",
-                1,
-                "v1",
-                "superseded",
-                "hazmat-receiving-v1.pdf",
-                now.AddDays(-14),
-                "person-doc-controller",
-                now.AddDays(-12),
-                now.AddDays(-10),
-                "person-doc-controller",
-                now.AddDays(-14),
-                now.AddDays(-7),
-                "Initial release",
-                null,
-                "ver-002",
-                "file-sop-001"),
-            new RecordArrControlledDocumentVersionResponse(
-                "ver-002",
-                "doc-001",
-                2,
-                "v2",
-                "review",
-                "hazmat-receiving-v3.pdf",
-                now.AddDays(-14),
-                "person-doc-controller",
-                now.AddDays(-2),
-                null,
-                null,
-                now.AddDays(-14),
-                null,
-                "Added evidence capture and review steps",
-                "ver-001",
-                null,
-                "file-sop-001"),
-        ];
-
-        _documentReviews =
-        [
-            new RecordArrDocumentReviewResponse(
-                "drev-001",
-                "doc-001",
-                "ver-002",
-                "periodic_review",
-                "in_review",
-                "person-doc-controller",
-                "person-quality-reviewer",
-                now.AddDays(-2),
-                now.AddDays(5),
-                null,
-                null,
-                null),
-        ];
-
-        _documentDistributions =
-        [
-            new RecordArrDocumentDistributionResponse(
-                "dist-001",
-                "doc-001",
-                "ver-002",
-                "role",
-                "quality-reviewer",
-                "distributed",
-                now.AddDays(-1),
-                null,
-                null),
-        ];
-
-        _documentAcknowledgements =
-        [
-            new RecordArrDocumentAcknowledgementResponse(
-                "ack-001",
-                "doc-001",
-                "ver-002",
-                "person-quality-reviewer",
-                "pending",
-                null,
-                null,
-                "I have read and will follow the controlled procedure.",
-                now.AddDays(2)),
-        ];
-
-        _accessPolicies =
-        [
-            new RecordArrAccessPolicyResponse(
-                "acc-001",
-                "rec-bol-001",
-                "product_scoped",
-                "active",
-                ["recordarr.records.read", "recordarr.files.download"],
-                ["recordarr.records.update"],
-                ["recordarr.files.download"],
-                ["recordarr.external_shares.create"],
-                ["recordarr.packages.export"],
-                ["recordarr.records.purge"]),
-        ];
-
-        _accessGrants =
-        [
-            new RecordArrAccessGrantResponse(
-                "grant-001",
-                "rec-bol-001",
-                "role",
-                "evidence-manager",
-                "read",
-                "active",
-                "person-doc-controller",
-                now.AddHours(-6),
-                now.AddDays(60),
-                null,
-                null),
-        ];
-
-        _externalShares =
-        [
-            new RecordArrExternalShareResponse(
-                "share-001",
-                "SHARE-260604-001",
-                "rec-bol-001",
-                "auditor_access",
-                "active",
-                "Avery Auditor",
-                "avery.auditor@example.com",
-                ["view", "download"],
-                now.AddHours(-3),
-                "person-doc-controller",
-                now.AddDays(2),
-                null,
-                null,
-                now.AddHours(-1),
-                2),
-        ];
-
-        _redactions =
-        [
-            new RecordArrRedactionResponse(
-                "red-001",
-                "rec-bol-001",
-                "rec-bol-001-redacted",
-                "privacy",
-                "completed",
-                "person-doc-controller",
-                now.AddHours(-2),
-                ["mask:signature", "mask:phone"]),
-        ];
-
+        _legalHolds = [];
+        _controlledDocuments = [];
+        _documentVersions = [];
+        _documentReviews = [];
+        _documentDistributions = [];
+        _documentAcknowledgements = [];
+        _accessPolicies = [];
+        _accessGrants = [];
+        _externalShares = [];
+        _redactions = [];
         _signatureRecords = [];
         _photoEvidence = [];
-
-        _accessLogs =
-        [
-            new RecordArrAccessLogResponse(
-                "alog-001",
-                "rec-bol-001",
-                "view",
-                "allowed",
-                "person-quality-reviewer",
-                null,
-                null,
-                now.AddMinutes(-75),
-                "127.0.0.1",
-                "Mozilla/5.0",
-                "review"),
-        ];
+        _accessLogs = [];
     }
 
     public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> entitlements) =>
@@ -823,6 +138,7 @@ public sealed class RecordArrStore
     }
 
     public RecordArrRecordResponse CreateRecord(
+        string tenantId,
         string title,
         string description,
         string recordType,
@@ -842,6 +158,11 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new InvalidOperationException("Record creation requires a tenant id.");
+            }
+
             var normalizedRecordType = NormalizeRecordArrEnum(
                 recordType,
                 nameof(recordType),
@@ -890,6 +211,7 @@ public sealed class RecordArrStore
             var normalizedClassification = NormalizeClassification(classification);
             var recordId = $"rec-{Guid.NewGuid():N}"[..12];
             var file = CreateFileObject(
+                tenantId.Trim(),
                 recordId,
                 currentFileName,
                 currentMimeType,
@@ -1045,6 +367,7 @@ public sealed class RecordArrStore
         {
             RequireRecord(recordId);
             return CreateFileObject(
+                ResolveRecordTenantId(recordId),
                 recordId,
                 originalFilename,
                 mimeType,
@@ -1092,6 +415,7 @@ public sealed class RecordArrStore
         {
             RequireRecord(recordId);
             var file = CreateFileObject(
+                ResolveRecordTenantId(recordId),
                 recordId,
                 $"signature-{signaturePurpose}.png",
                 "image/png",
@@ -1104,7 +428,7 @@ public sealed class RecordArrStore
 
             var signature = new RecordArrSignatureRecordResponse(
                 $"sig-{Guid.NewGuid():N}"[..12],
-                "tenant-demo",
+                file.TenantId,
                 recordId,
                 signaturePurpose,
                 signerPersonId,
@@ -1151,6 +475,7 @@ public sealed class RecordArrStore
         {
             RequireRecord(recordId);
             CreateFileObject(
+                ResolveRecordTenantId(recordId),
                 recordId,
                 $"photo-{photoPurpose}.jpg",
                 "image/jpeg",
@@ -1163,7 +488,7 @@ public sealed class RecordArrStore
 
             var photo = new RecordArrPhotoEvidenceResponse(
                 $"pho-{Guid.NewGuid():N}"[..12],
-                "tenant-demo",
+                ResolveRecordTenantId(recordId),
                 recordId,
                 photoPurpose,
                 sourceProduct,
@@ -1572,6 +897,7 @@ public sealed class RecordArrStore
     }
 
     public RecordArrCaptureRequestResponse CreateCaptureRequest(
+        string tenantId,
         string sourceProduct,
         string sourceObjectRef,
         string captureType,
@@ -1583,6 +909,11 @@ public sealed class RecordArrStore
     {
         lock (_gate)
         {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new InvalidOperationException("Capture request tenantId is required.");
+            }
+
             if (string.IsNullOrWhiteSpace(sourceProduct))
             {
                 throw new InvalidOperationException("Capture request sourceProduct is required.");
@@ -1616,7 +947,7 @@ public sealed class RecordArrStore
 
             var request = new RecordArrCaptureRequestResponse(
                 $"cap-{Guid.NewGuid():N}"[..12],
-                "tenant-demo",
+                tenantId.Trim(),
                 sourceProduct.Trim(),
                 sourceObjectRef.Trim(),
                 normalizedCaptureType,
@@ -1756,6 +1087,7 @@ public sealed class RecordArrStore
             var edgeDetectionId = $"edge-{Guid.NewGuid():N}"[..12];
             var enhancementSettingsId = $"enh-{Guid.NewGuid():N}"[..12];
             var originalFile = CreateFileObject(
+                ResolveRecordTenantId(recordId),
                 recordId,
                 originalFileName,
                 "image/jpeg",
@@ -1766,6 +1098,7 @@ public sealed class RecordArrStore
                 attachToRecord: true,
                 setAsCurrentFile: false);
             var generatedPdfFile = CreateFileObject(
+                ResolveRecordTenantId(recordId),
                 recordId,
                 $"{Path.GetFileNameWithoutExtension(originalFileName)}.pdf",
                 "application/pdf",
@@ -2112,6 +1445,7 @@ public sealed class RecordArrStore
             var manifestChecksum = ComputePackageManifestChecksum(recordEntries, sourceObjectEntries, requirementEntries);
             var packageId = $"pkg-{Guid.NewGuid():N}"[..12];
             var generatedPdfFile = CreateFileObject(
+                ResolveRecordTenantId(recordRef),
                 recordRef,
                 $"{title}.pdf",
                 "application/pdf",
@@ -2123,6 +1457,7 @@ public sealed class RecordArrStore
                 attachToRecord: true,
                 setAsCurrentFile: false);
             var generatedZipFile = CreateFileObject(
+                ResolveRecordTenantId(recordRef),
                 recordRef,
                 $"{title}.zip",
                 "application/zip",
@@ -2712,7 +2047,16 @@ public sealed class RecordArrStore
         return ProjectRecord(updated);
     }
 
+    private string ResolveRecordTenantId(string recordId)
+    {
+        var fileTenantId = _files.FirstOrDefault(file =>
+            string.Equals(file.RecordId, recordId, StringComparison.OrdinalIgnoreCase))?.TenantId;
+
+        return string.IsNullOrWhiteSpace(fileTenantId) ? "unassigned" : fileTenantId;
+    }
+
     private RecordArrFileResponse CreateFileObject(
+        string tenantId,
         string recordId,
         string originalFilename,
         string mimeType,
@@ -2733,7 +2077,7 @@ public sealed class RecordArrStore
         var extension = Path.GetExtension(normalizedFilename).TrimStart('.').ToLowerInvariant();
         var file = new RecordArrFileResponse(
             fileId,
-            "tenant-demo",
+            tenantId,
             recordId,
             $"FILE-{now:yyMMdd-HHmmss}-{_files.Count + 1:000}",
             storageProvider ?? "local",
@@ -3673,6 +3017,7 @@ public sealed class RecordArrStore
 
             var controlledDocument = _controlledDocuments.First(document => string.Equals(document.ControlledDocumentId, controlledDocumentId, StringComparison.OrdinalIgnoreCase));
             var file = CreateFileObject(
+                ResolveRecordTenantId(controlledDocument.RecordId),
                 controlledDocument.RecordId,
                 fileName,
                 "application/pdf",
@@ -4390,6 +3735,7 @@ public sealed class RecordArrStore
                      StringComparer.OrdinalIgnoreCase))
         {
             var recordRefs = group.Select(mapping => mapping.RecordId).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            var tenantId = ResolveRecordTenantId(recordRefs.FirstOrDefault() ?? string.Empty);
             var statuses = group.Select(mapping => mapping.Status.Trim().ToLowerInvariant()).ToArray();
             var status = statuses.Contains("confirmed")
                 ? "satisfied"
@@ -4410,7 +3756,7 @@ public sealed class RecordArrStore
             var seed = $"{group.First().SourceProduct}-{group.First().SourceObjectType}-{group.First().SourceObjectId}-{group.First().ComplianceRequirementRef}".ToLowerInvariant();
             coverage.Add(new RecordArrEvidenceCoverageResponse(
                 $"cov-{seed}"[..Math.Min(48, $"cov-{seed}".Length)],
-                "tenant-demo",
+                tenantId,
                 group.First().SourceProduct,
                 sourceObjectRef,
                 group.First().ComplianceRequirementRef,
@@ -4478,6 +3824,7 @@ public sealed class RecordArrStore
         var redactedFileName = BuildRedactedFileName(sourceRecord.CurrentFileName);
         var redactedMimeType = sourceFile?.MimeType ?? sourceRecord.CurrentMimeType;
         var redactedFile = CreateFileObject(
+            sourceFile?.TenantId ?? ResolveRecordTenantId(sourceRecord.RecordId),
             redactedRecordId,
             redactedFileName,
             redactedMimeType,

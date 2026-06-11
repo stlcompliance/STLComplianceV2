@@ -139,6 +139,16 @@ import type {
   IssueEmergencyPurchaseOrderResponse,
   ForgivingSearchResponse,
   AuditHistoryListResponse,
+  VendorReportSummaryResponse,
+  VendorReportDetailResponse,
+  ComplianceReportSummaryResponse,
+  CompliancePartyDetailResponse,
+  PartsInventoryReportSummaryResponse,
+  PartsInventoryPartDetailResponse,
+  PartsInventoryLocationDetailResponse,
+  PurchasingReportSummaryResponse,
+  PurchasingPurchaseRequestDetailResponse,
+  PurchasingPurchaseOrderDetailResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -218,6 +228,20 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   }
 
   return (await response.json()) as T
+}
+
+async function downloadExportBlob(
+  accessToken: string,
+  path: string,
+  errorMessage: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    throw await toApiError(response, errorMessage)
+  }
+  return response.blob()
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
@@ -2688,5 +2712,233 @@ export async function getProcurementApprovalAuthority(
   return parseJsonResponse<ProcurementApprovalAuthorityMirrorResponse>(
     response,
     'Failed to load StaffArr procurement approval authority',
+  )
+}
+
+export async function getVendorReportSummary(
+  accessToken: string,
+  options?: { approvalStatus?: string; activeOnly?: boolean },
+): Promise<VendorReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.approvalStatus) params.set('approvalStatus', options.approvalStatus)
+  if (options?.activeOnly) params.set('activeOnly', 'true')
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/vendors/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorReportSummaryResponse>(response, 'Failed to load vendor report summary')
+}
+
+export async function getVendorReportDetail(
+  accessToken: string,
+  vendorPartyId: string,
+): Promise<VendorReportDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/vendors/${vendorPartyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorReportDetailResponse>(response, 'Failed to load vendor report detail')
+}
+
+export function exportVendorReportSummaryCsv(
+  accessToken: string,
+  options?: { approvalStatus?: string; activeOnly?: boolean },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.approvalStatus) params.set('approvalStatus', options.approvalStatus)
+  if (options?.activeOnly) params.set('activeOnly', 'true')
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(
+    accessToken,
+    `/api/reports/vendors/summary/export${query}`,
+    'Vendor report export failed',
+  )
+}
+
+export async function getComplianceReportSummary(
+  accessToken: string,
+  options?: {
+    attentionOnly?: boolean
+    partyType?: string
+    externalPartyId?: string
+    reviewStatus?: string
+  },
+): Promise<ComplianceReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.attentionOnly) params.set('attentionOnly', 'true')
+  if (options?.partyType) params.set('partyType', options.partyType)
+  if (options?.externalPartyId) params.set('externalPartyId', options.externalPartyId)
+  if (options?.reviewStatus) params.set('reviewStatus', options.reviewStatus)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/compliance/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceReportSummaryResponse>(
+    response,
+    'Failed to load compliance report summary',
+  )
+}
+
+export async function getCompliancePartyDetail(
+  accessToken: string,
+  externalPartyId: string,
+): Promise<CompliancePartyDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/compliance/parties/${externalPartyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompliancePartyDetailResponse>(
+    response,
+    'Failed to load compliance party detail',
+  )
+}
+
+export function exportComplianceReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    attentionOnly?: boolean
+    partyType?: string
+    externalPartyId?: string
+    reviewStatus?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.attentionOnly) params.set('attentionOnly', 'true')
+  if (options?.partyType) params.set('partyType', options.partyType)
+  if (options?.externalPartyId) params.set('externalPartyId', options.externalPartyId)
+  if (options?.reviewStatus) params.set('reviewStatus', options.reviewStatus)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(
+    accessToken,
+    `/api/reports/compliance/summary/export${query}`,
+    'Compliance report export failed',
+  )
+}
+
+export async function getPartsInventoryReportSummary(
+  accessToken: string,
+  options?: {
+    partStatus?: string
+    activePartsOnly?: boolean
+    belowReorderOnly?: boolean
+    inventoryLocationId?: string
+  },
+): Promise<PartsInventoryReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.partStatus) params.set('partStatus', options.partStatus)
+  if (options?.activePartsOnly) params.set('activePartsOnly', 'true')
+  if (options?.belowReorderOnly) params.set('belowReorderOnly', 'true')
+  if (options?.inventoryLocationId) params.set('inventoryLocationId', options.inventoryLocationId)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/parts-inventory/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PartsInventoryReportSummaryResponse>(
+    response,
+    'Failed to load parts inventory report summary',
+  )
+}
+
+export async function getPartsInventoryPartDetail(
+  accessToken: string,
+  partId: string,
+): Promise<PartsInventoryPartDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/parts-inventory/parts/${partId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PartsInventoryPartDetailResponse>(
+    response,
+    'Failed to load parts inventory part detail',
+  )
+}
+
+export async function getPartsInventoryLocationDetail(
+  accessToken: string,
+  inventoryLocationId: string,
+): Promise<PartsInventoryLocationDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/parts-inventory/locations/${inventoryLocationId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PartsInventoryLocationDetailResponse>(
+    response,
+    'Failed to load parts inventory location detail',
+  )
+}
+
+export function exportPartsInventoryReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    partStatus?: string
+    activePartsOnly?: boolean
+    belowReorderOnly?: boolean
+    inventoryLocationId?: string
+  },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.partStatus) params.set('partStatus', options.partStatus)
+  if (options?.activePartsOnly) params.set('activePartsOnly', 'true')
+  if (options?.belowReorderOnly) params.set('belowReorderOnly', 'true')
+  if (options?.inventoryLocationId) params.set('inventoryLocationId', options.inventoryLocationId)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(
+    accessToken,
+    `/api/reports/parts-inventory/summary/export${query}`,
+    'Parts inventory report export failed',
+  )
+}
+
+export async function getPurchasingReportSummary(
+  accessToken: string,
+  options?: { openDocumentsOnly?: boolean; vendorPartyId?: string },
+): Promise<PurchasingReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.openDocumentsOnly) params.set('openDocumentsOnly', 'true')
+  if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/purchasing/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PurchasingReportSummaryResponse>(
+    response,
+    'Failed to load purchasing report summary',
+  )
+}
+
+export async function getPurchasingPurchaseRequestDetail(
+  accessToken: string,
+  purchaseRequestId: string,
+): Promise<PurchasingPurchaseRequestDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/purchasing/purchase-requests/${purchaseRequestId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PurchasingPurchaseRequestDetailResponse>(
+    response,
+    'Failed to load purchasing purchase request detail',
+  )
+}
+
+export async function getPurchasingPurchaseOrderDetail(
+  accessToken: string,
+  purchaseOrderId: string,
+): Promise<PurchasingPurchaseOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/purchasing/purchase-orders/${purchaseOrderId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PurchasingPurchaseOrderDetailResponse>(
+    response,
+    'Failed to load purchasing purchase order detail',
+  )
+}
+
+export function exportPurchasingReportSummaryCsv(
+  accessToken: string,
+  options?: { openDocumentsOnly?: boolean; vendorPartyId?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.openDocumentsOnly) params.set('openDocumentsOnly', 'true')
+  if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(
+    accessToken,
+    `/api/reports/purchasing/summary/export${query}`,
+    'Purchasing report export failed',
   )
 }

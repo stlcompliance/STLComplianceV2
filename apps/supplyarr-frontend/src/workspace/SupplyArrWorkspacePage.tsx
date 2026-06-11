@@ -3,6 +3,7 @@ import { useSupplyArrWorkspaceState } from './useSupplyArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
 import { PartiesSection } from './sections/PartiesSection'
 import { CatalogSection } from './sections/CatalogSection'
+import { ReportsSection } from './sections/ReportsSection'
 import { PurchasingSection } from './sections/PurchasingSection'
 import { PricingSection } from './sections/PricingSection'
 import { PlanningSection } from './sections/PlanningSection'
@@ -15,7 +16,7 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
   if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
 
   return (
-    <WorkspaceShell
+      <WorkspaceShell
       section={section}
       me={state.me}
       apiError={state.apiError}
@@ -24,6 +25,7 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
     >
       {section === 'parties' ? <PartiesSection state={state} /> : null}
       {section === 'catalog' ? <CatalogSection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'purchasing' ? <PurchasingSection state={state} /> : null}
       {section === 'pricing' ? <PricingSection state={state} /> : null}
       {section === 'planning' ? <PlanningSection state={state} /> : null}

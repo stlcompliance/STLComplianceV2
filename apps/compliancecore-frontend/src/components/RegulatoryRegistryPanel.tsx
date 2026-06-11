@@ -11,8 +11,6 @@ interface RegulatoryRegistryPanelProps {
   programs: RegulatoryProgramResponse[]
   rulePacks: RulePackResponse[]
   canManage: boolean
-  onSeedRegistry: () => void
-  isSeeding: boolean
   onAdvanceRulePack: (rulePackId: string, status: string) => void
   isAdvancingRulePack: boolean
 }
@@ -36,8 +34,6 @@ export function RegulatoryRegistryPanel({
   programs,
   rulePacks,
   canManage,
-  onSeedRegistry,
-  isSeeding,
   onAdvanceRulePack,
   isAdvancingRulePack,
 }: RegulatoryRegistryPanelProps) {
@@ -47,16 +43,6 @@ export function RegulatoryRegistryPanel({
         <p className="text-sm text-slate-400">
           Governing body → jurisdiction → regulatory program → rule pack hierarchy for compliance rule authority.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            onClick={onSeedRegistry}
-            disabled={isSeeding}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeeding ? 'Creating…' : 'Seed sample registry'}
-          </button>
-        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

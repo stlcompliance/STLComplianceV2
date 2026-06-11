@@ -16,7 +16,8 @@ public sealed class AuthService(
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
     PlatformSessionSettingsService sessionSettingsService,
-    MfaService mfaService)
+    MfaService mfaService,
+    PlatformAuthorizationService authorization)
 {
     public const int FailedLoginLockoutThreshold = 5;
     public const int LockoutMinutes = 15;
@@ -298,6 +299,8 @@ public sealed class AuthService(
 
     public async Task<MeResponse> GetMeAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
         var context = ParsePrincipal(principal);
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == context.UserId, cancellationToken);
         var tenant = await db.Tenants.AsNoTracking().FirstAsync(t => t.Id == context.TenantId, cancellationToken);
@@ -315,9 +318,12 @@ public sealed class AuthService(
     }
 
     public async Task<IReadOnlyList<TenantSummary>> GetMyTenantsAsync(
-        Guid userId,
+        ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
+        var userId = principal.GetUserId();
         return await (
             from m in db.TenantMemberships.AsNoTracking()
             where m.UserId == userId && m.IsActive
@@ -328,9 +334,12 @@ public sealed class AuthService(
     }
 
     public async Task<IReadOnlyList<EntitlementSummary>> GetMyEntitlementsAsync(
-        Guid tenantId,
+        ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
+        var tenantId = principal.GetTenantId();
         return await (
             from e in db.Entitlements.AsNoTracking()
             where e.TenantId == tenantId && e.Status == EntitlementStatuses.Active
@@ -344,6 +353,8 @@ public sealed class AuthService(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
         var userId = principal.GetUserId();
         var currentSessionId = principal.GetSessionId();
         var now = DateTimeOffset.UtcNow;
@@ -373,6 +384,8 @@ public sealed class AuthService(
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
         var userId = principal.GetUserId();
         var session = await db.UserSessions
             .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId, cancellationToken);
@@ -405,6 +418,8 @@ public sealed class AuthService(
         string? currentProductKey = null,
         CancellationToken cancellationToken = default)
     {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
         var tenantId = principal.GetTenantId();
         var entitlements = principal.GetEntitlements();
         var isPlatformAdmin = principal.IsPlatformAdmin();

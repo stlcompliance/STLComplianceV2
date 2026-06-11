@@ -9,9 +9,6 @@ describe('CitationFactCatalogPanel', () => {
         citations={[]}
         factDefinitions={[]}
         factRequirements={[]}
-        canManage={false}
-        onSeedCatalog={() => undefined}
-        isSeeding={false}
       />,
     )
 
@@ -74,9 +71,6 @@ describe('CitationFactCatalogPanel', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ]}
-        canManage={true}
-        onSeedCatalog={() => undefined}
-        isSeeding={false}
       />,
     )
 
@@ -84,6 +78,6 @@ describe('CitationFactCatalogPanel', () => {
     expect(screen.getByText('49 CFR 391.11')).toBeInTheDocument()
     expect(screen.getByText('Valid driver license')).toBeInTheDocument()
     expect(screen.getByText('License validity check')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Seed sample catalog' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Seed sample catalog' })).not.toBeInTheDocument()
   })
 })

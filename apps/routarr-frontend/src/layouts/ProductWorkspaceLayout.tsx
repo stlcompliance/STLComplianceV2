@@ -61,9 +61,13 @@ export function ProductWorkspaceLayout() {
     return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
   }
 
-  const bootstrapError = sessionQuery.isError
+  const sessionBootstrapError = sessionQuery.isError
     ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
     : null
+  const launchBootstrapError = launchCatalogQuery.isError
+    ? resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)
+    : null
+  const bootstrapError = sessionBootstrapError ?? launchBootstrapError
 
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
@@ -101,8 +105,13 @@ export function ProductWorkspaceLayout() {
       productLaunchError={
         productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
       }
+      aiAssistance={
+        session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
+      }
       workspaceSession={workspaceSession}
-      isBootstrapping={Boolean(session?.accessToken) && sessionQuery.isLoading}
+      isBootstrapping={
+        Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)
+      }
       bootstrapError={bootstrapError}
     >
       <Outlet />

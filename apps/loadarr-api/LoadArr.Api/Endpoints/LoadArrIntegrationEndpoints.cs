@@ -31,13 +31,37 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/items", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var itemCode = ReadOptionalString(request, "itemCode");
+            if (string.IsNullOrWhiteSpace(itemCode))
+            {
+                return MissingRequired("itemCode");
+            }
+
+            var itemNameSnapshot = ReadOptionalString(request, "itemNameSnapshot");
+            if (string.IsNullOrWhiteSpace(itemNameSnapshot))
+            {
+                return MissingRequired("itemNameSnapshot");
+            }
+
+            var unitOfMeasureSnapshot = ReadOptionalString(request, "unitOfMeasureSnapshot");
+            if (string.IsNullOrWhiteSpace(unitOfMeasureSnapshot))
+            {
+                return MissingRequired("unitOfMeasureSnapshot");
+            }
+
             var createdAt = TimestampUtc();
             var response = new LoadArrIntegrationItemResponse(
                 $"item-{Guid.NewGuid():N}"[..14],
-                ReadOptionalString(request, "supplyarrItemId") ?? $"supplyarr-{Guid.NewGuid():N}"[..12],
-                ReadOptionalString(request, "itemCode") ?? "item-mock-001",
-                ReadOptionalString(request, "itemNameSnapshot") ?? "Mock integration item",
-                ReadOptionalString(request, "unitOfMeasureSnapshot") ?? "each",
+                supplyarrItemId,
+                itemCode,
+                itemNameSnapshot,
+                unitOfMeasureSnapshot,
                 "active",
                 createdAt);
 
@@ -61,10 +85,22 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/location-profiles", (JsonElement request) =>
         {
+            var staffarrLocationId = ReadOptionalString(request, "staffarrLocationId");
+            if (string.IsNullOrWhiteSpace(staffarrLocationId))
+            {
+                return MissingRequired("staffarrLocationId");
+            }
+
+            var wmsLocationType = ReadOptionalString(request, "wmsLocationType");
+            if (string.IsNullOrWhiteSpace(wmsLocationType))
+            {
+                return MissingRequired("wmsLocationType");
+            }
+
             var response = new LoadArrIntegrationLocationProfileResponse(
                 $"lpf-{Guid.NewGuid():N}"[..14],
-                ReadOptionalString(request, "staffarrLocationId") ?? "location-001",
-                ReadOptionalString(request, "wmsLocationType") ?? "BIN",
+                staffarrLocationId,
+                wmsLocationType,
                 true,
                 TimestampUtc());
 
@@ -88,11 +124,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/availability-checks", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var warehouseLocationId = ReadOptionalString(request, "warehouseLocationId");
+            if (string.IsNullOrWhiteSpace(warehouseLocationId))
+            {
+                return MissingRequired("warehouseLocationId");
+            }
+
+            var requestedQuantity = ReadOptionalDecimal(request, "requestedQuantity");
+            if (requestedQuantity is null)
+            {
+                return MissingRequired("requestedQuantity");
+            }
+
             var response = new LoadArrIntegrationAvailabilityCheckResponse(
                 $"check-{Guid.NewGuid():N}"[..15],
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalString(request, "warehouseLocationId") ?? "location-001",
-                ReadOptionalDecimal(request, "requestedQuantity") ?? 1m,
+                supplyarrItemId,
+                warehouseLocationId,
+                requestedQuantity.Value,
                 true,
                 "availability_ok",
                 TimestampUtc());
@@ -102,13 +156,37 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/expected-receipts", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var supplierName = ReadOptionalString(request, "supplierName");
+            if (string.IsNullOrWhiteSpace(supplierName))
+            {
+                return MissingRequired("supplierName");
+            }
+
+            var warehouseLocationId = ReadOptionalString(request, "warehouseLocationId");
+            if (string.IsNullOrWhiteSpace(warehouseLocationId))
+            {
+                return MissingRequired("warehouseLocationId");
+            }
+
+            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
+            if (expectedQuantity is null)
+            {
+                return MissingRequired("expectedQuantity");
+            }
+
             var createdAt = TimestampUtc();
             var response = new LoadArrIntegrationExpectedReceiptResponse(
                 $"exp-{Guid.NewGuid():N}"[..15],
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalString(request, "supplierName") ?? "Mock Supplier",
-                ReadOptionalString(request, "warehouseLocationId") ?? "location-001",
-                ReadOptionalDecimal(request, "expectedQuantity") ?? 10m,
+                supplyarrItemId,
+                supplierName,
+                warehouseLocationId,
+                expectedQuantity.Value,
                 "pending",
                 createdAt);
             return Results.Created($"{routePrefix}/expected-receipts/{response.ExpectedReceiptId}", response);
@@ -124,14 +202,24 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/expected-receipts/{expectedReceiptId}/status-updates", (string expectedReceiptId, JsonElement request) =>
         {
-            var status = ReadOptionalString(request, "status") ?? "updated";
             var existing = ResolveExpectedReceipt(expectedReceiptId);
+            if (existing is null)
+            {
+                return Results.NotFound();
+            }
+
+            var status = ReadOptionalString(request, "status");
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return MissingRequired("status");
+            }
+
             var updated = new LoadArrIntegrationExpectedReceiptResponse(
                 expectedReceiptId,
-                existing?.SupplyarrItemId ?? "supplyarr-item-001",
-                existing?.SupplierName ?? "Mock Supplier",
-                existing?.WarehouseLocationId ?? "location-001",
-                existing?.ExpectedQuantity ?? 10m,
+                existing.SupplyarrItemId,
+                existing.SupplierName,
+                existing.WarehouseLocationId,
+                existing.ExpectedQuantity,
                 status,
                 TimestampUtc());
             return Results.Ok(updated);
@@ -154,14 +242,32 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/receipts", (JsonElement request) =>
         {
+            var receiptNumber = ReadOptionalString(request, "receiptNumber");
+            if (string.IsNullOrWhiteSpace(receiptNumber))
+            {
+                return MissingRequired("receiptNumber");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
+            if (expectedQuantity is null)
+            {
+                return MissingRequired("expectedQuantity");
+            }
+
             var response = new LoadArrIntegrationReceiptResponse(
                 $"rcpt-{Guid.NewGuid():N}"[..15],
-                ReadOptionalString(request, "receiptNumber") ?? "RCPT-0001",
+                receiptNumber,
                 ReadOptionalString(request, "expectedReceiptId"),
                 "open",
                 "supplier-created",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "expectedQuantity") ?? 1m,
+                supplyarrItemId,
+                expectedQuantity.Value,
                 TimestampUtc());
             return Results.Created($"{routePrefix}/receipts/{response.ReceiptId}", response);
         })
@@ -176,11 +282,23 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/receipts/{receiptId}/lines", (string receiptId, JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var receivedQuantity = ReadOptionalDecimal(request, "receivedQuantity");
+            if (receivedQuantity is null)
+            {
+                return MissingRequired("receivedQuantity");
+            }
+
             var line = new LoadArrIntegrationReceiptLineResponse(
                 $"line-{Guid.NewGuid():N}"[..14],
                 receiptId,
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "receivedQuantity") ?? 1m,
+                supplyarrItemId,
+                receivedQuantity.Value,
                 TimestampUtc());
             return Results.Ok(line);
         })
@@ -189,9 +307,14 @@ public static class LoadArrIntegrationEndpoints
         integrations.MapPost("/receipts/{receiptId}/close", (string receiptId) =>
         {
             var existing = ResolveReceipt(receiptId);
+            if (existing is null)
+            {
+                return Results.NotFound();
+            }
+
             var response = new LoadArrIntegrationReceiptCloseResponse(
                 receiptId,
-                existing?.Status == "open" ? "completed" : existing?.Status ?? "completed",
+                existing.Status == "open" ? "completed" : existing.Status,
                 TimestampUtc());
             return Results.Ok(response);
         })
@@ -199,13 +322,31 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/putaway-tasks", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
+            var locationId = ReadOptionalString(request, "locationId");
+            if (string.IsNullOrWhiteSpace(locationId))
+            {
+                return MissingRequired("locationId");
+            }
+
             var response = new LoadArrIntegrationTaskResponse(
                 $"pt-{Guid.NewGuid():N}"[..13],
                 "putaway",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                supplyarrItemId,
+                quantity.Value,
                 "ready",
-                ReadOptionalString(request, "locationId") ?? "location-001",
+                locationId,
                 TimestampUtc());
             return Results.Created($"{routePrefix}/putaway-tasks/{response.Id}", response);
         })
@@ -213,25 +354,35 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/putaway-tasks/{putawayTaskId}/complete", (string putawayTaskId, JsonElement _) =>
         {
-            var response = new LoadArrIntegrationTaskResponse(
-                putawayTaskId,
-                "putaway",
-                "supplyarr-item-001",
-                1m,
-                "completed",
-                "location-001",
-                TimestampUtc());
-            return Results.Ok(response);
+            return Results.NotFound();
         })
         .WithName($"CompleteLoadArrIntegrationPutawayTask{nameSuffix}");
 
         integrations.MapPost("/reservations", (JsonElement request) =>
         {
+            var demandReference = ReadOptionalString(request, "demandReference");
+            if (string.IsNullOrWhiteSpace(demandReference))
+            {
+                return MissingRequired("demandReference");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationReservationResponse(
                 $"resv-{Guid.NewGuid():N}"[..15],
-                ReadOptionalString(request, "demandReference") ?? "demand-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                demandReference,
+                supplyarrItemId,
+                quantity.Value,
                 "reserved",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/reservations/{response.ReservationId}", response);
@@ -248,11 +399,16 @@ public static class LoadArrIntegrationEndpoints
         integrations.MapPost("/reservations/{reservationId}/release", (string reservationId, JsonElement _) =>
         {
             var reservation = ResolveReservation(reservationId);
+            if (reservation is null)
+            {
+                return Results.NotFound();
+            }
+
             var response = new LoadArrIntegrationReservationResponse(
                 reservationId,
-                reservation?.DemandReference ?? "demand-001",
-                reservation?.SupplyarrItemId ?? "supplyarr-item-001",
-                reservation?.Quantity ?? 1m,
+                reservation.DemandReference,
+                reservation.SupplyarrItemId,
+                reservation.Quantity,
                 "released",
                 TimestampUtc());
             return Results.Ok(response);
@@ -261,11 +417,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/work-order-demands", (JsonElement request) =>
         {
+            var workOrderId = ReadOptionalString(request, "workOrderId");
+            if (string.IsNullOrWhiteSpace(workOrderId))
+            {
+                return MissingRequired("workOrderId");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationDemandResponse(
                 $"wod-{Guid.NewGuid():N}"[..15],
-                ReadOptionalString(request, "workOrderId") ?? "wo-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                workOrderId,
+                supplyarrItemId,
+                quantity.Value,
                 "received",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/work-order-demands/{response.DemandId}", response);
@@ -274,11 +448,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/order-demands", (JsonElement request) =>
         {
+            var orderId = ReadOptionalString(request, "orderId");
+            if (string.IsNullOrWhiteSpace(orderId))
+            {
+                return MissingRequired("orderId");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationDemandResponse(
                 $"od-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "orderId") ?? "order-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                orderId,
+                supplyarrItemId,
+                quantity.Value,
                 "received",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/order-demands/{response.DemandId}", response);
@@ -287,13 +479,31 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/pick-tasks", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
+            var locationId = ReadOptionalString(request, "locationId");
+            if (string.IsNullOrWhiteSpace(locationId))
+            {
+                return MissingRequired("locationId");
+            }
+
             var response = new LoadArrIntegrationTaskResponse(
                 $"pk-{Guid.NewGuid():N}"[..13],
                 "pick",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                supplyarrItemId,
+                quantity.Value,
                 "ready",
-                ReadOptionalString(request, "locationId") ?? "location-001",
+                locationId,
                 TimestampUtc());
             return Results.Created($"{routePrefix}/pick-tasks/{response.Id}", response);
         })
@@ -301,25 +511,35 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/pick-tasks/{pickTaskId}/complete", (string pickTaskId, JsonElement _) =>
         {
-            var response = new LoadArrIntegrationTaskResponse(
-                pickTaskId,
-                "pick",
-                "supplyarr-item-001",
-                1m,
-                "completed",
-                "location-001",
-                TimestampUtc());
-            return Results.Ok(response);
+            return Results.NotFound();
         })
         .WithName($"CompleteLoadArrIntegrationPickTask{nameSuffix}");
 
         integrations.MapPost("/issues", (JsonElement request) =>
         {
+            var sourceReference = ReadOptionalString(request, "sourceReference");
+            if (string.IsNullOrWhiteSpace(sourceReference))
+            {
+                return MissingRequired("sourceReference");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationIssueResponse(
                 $"is-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "sourceReference") ?? "pick-task-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                sourceReference,
+                supplyarrItemId,
+                quantity.Value,
                 "posted",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/issues/{response.IssueId}", response);
@@ -328,11 +548,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/returns", (JsonElement request) =>
         {
+            var sourceReference = ReadOptionalString(request, "sourceReference");
+            if (string.IsNullOrWhiteSpace(sourceReference))
+            {
+                return MissingRequired("sourceReference");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationReturnResponse(
                 $"ret-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "sourceReference") ?? "issue-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                sourceReference,
+                supplyarrItemId,
+                quantity.Value,
                 "received",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/returns/{response.ReturnId}", response);
@@ -341,12 +579,36 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/transfers", (JsonElement request) =>
         {
+            var fromLocationId = ReadOptionalString(request, "fromLocationId");
+            if (string.IsNullOrWhiteSpace(fromLocationId))
+            {
+                return MissingRequired("fromLocationId");
+            }
+
+            var toLocationId = ReadOptionalString(request, "toLocationId");
+            if (string.IsNullOrWhiteSpace(toLocationId))
+            {
+                return MissingRequired("toLocationId");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationTransferResponse(
                 $"trf-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "fromLocationId") ?? "location-001",
-                ReadOptionalString(request, "toLocationId") ?? "location-002",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                fromLocationId,
+                toLocationId,
+                supplyarrItemId,
+                quantity.Value,
                 "created",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/transfers/{response.TransferId}", response);
@@ -355,12 +617,36 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/counts", (JsonElement request) =>
         {
+            var countNumber = ReadOptionalString(request, "countNumber");
+            if (string.IsNullOrWhiteSpace(countNumber))
+            {
+                return MissingRequired("countNumber");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
+            if (expectedQuantity is null)
+            {
+                return MissingRequired("expectedQuantity");
+            }
+
+            var countedQuantity = ReadOptionalDecimal(request, "countedQuantity");
+            if (countedQuantity is null)
+            {
+                return MissingRequired("countedQuantity");
+            }
+
             var response = new LoadArrIntegrationCountResponse(
                 $"cnt-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "countNumber") ?? "CNT-0001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "expectedQuantity") ?? 5m,
-                ReadOptionalDecimal(request, "countedQuantity") ?? 0m,
+                countNumber,
+                supplyarrItemId,
+                expectedQuantity.Value,
+                countedQuantity.Value,
                 "open",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/counts/{response.CountId}", response);
@@ -376,12 +662,30 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/counts/{countId}/lines", (string countId, JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
+            if (expectedQuantity is null)
+            {
+                return MissingRequired("expectedQuantity");
+            }
+
+            var countedQuantity = ReadOptionalDecimal(request, "countedQuantity");
+            if (countedQuantity is null)
+            {
+                return MissingRequired("countedQuantity");
+            }
+
             var response = new LoadArrIntegrationCountLineResponse(
                 $"cline-{Guid.NewGuid():N}"[..16],
                 countId,
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "expectedQuantity") ?? 5m,
-                ReadOptionalDecimal(request, "countedQuantity") ?? 5m,
+                supplyarrItemId,
+                expectedQuantity.Value,
+                countedQuantity.Value,
                 TimestampUtc());
             return Results.Ok(response);
         })
@@ -390,10 +694,21 @@ public static class LoadArrIntegrationEndpoints
         integrations.MapPost("/counts/{countId}/post", (string countId, JsonElement request) =>
         {
             var count = ResolveCount(countId);
+            if (count is null)
+            {
+                return Results.NotFound();
+            }
+
+            var personId = ReadOptionalString(request, "personId");
+            if (string.IsNullOrWhiteSpace(personId))
+            {
+                return MissingRequired("personId");
+            }
+
             var response = new LoadArrIntegrationCountPostResponse(
                 countId,
-                count?.Status == "open" ? "posted" : count?.Status ?? "posted",
-                ReadOptionalString(request, "personId") ?? "person-001",
+                count.Status == "open" ? "posted" : count.Status,
+                personId,
                 TimestampUtc());
             return Results.Ok(response);
         })
@@ -401,10 +716,22 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/adjustments", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantityDelta = ReadOptionalDecimal(request, "quantityDelta");
+            if (quantityDelta is null)
+            {
+                return MissingRequired("quantityDelta");
+            }
+
             var response = new LoadArrIntegrationAdjustmentResponse(
                 $"adj-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantityDelta") ?? -1m,
+                supplyarrItemId,
+                quantityDelta.Value,
                 "created",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/adjustments/{response.AdjustmentId}", response);
@@ -413,11 +740,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/discrepancies", (JsonElement request) =>
         {
+            var sourceReference = ReadOptionalString(request, "sourceReference");
+            if (string.IsNullOrWhiteSpace(sourceReference))
+            {
+                return MissingRequired("sourceReference");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var varianceQuantity = ReadOptionalDecimal(request, "varianceQuantity");
+            if (varianceQuantity is null)
+            {
+                return MissingRequired("varianceQuantity");
+            }
+
             var response = new LoadArrIntegrationDiscrepancyResponse(
                 $"dsc-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "sourceReference") ?? "receipts/rcpt-001",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "varianceQuantity") ?? 0m,
+                sourceReference,
+                supplyarrItemId,
+                varianceQuantity.Value,
                 "open",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/discrepancies/{response.DiscrepancyId}", response);
@@ -426,11 +771,29 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/holds", (JsonElement request) =>
         {
+            var holdType = ReadOptionalString(request, "holdType");
+            if (string.IsNullOrWhiteSpace(holdType))
+            {
+                return MissingRequired("holdType");
+            }
+
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
             var response = new LoadArrIntegrationHoldResponse(
                 $"hld-{Guid.NewGuid():N}"[..13],
-                ReadOptionalString(request, "holdType") ?? "quarantine",
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
+                holdType,
+                supplyarrItemId,
+                quantity.Value,
                 "active",
                 TimestampUtc());
             return Results.Created($"{routePrefix}/holds/{response.HoldId}", response);
@@ -439,8 +802,14 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/hold-releases", (JsonElement request) =>
         {
+            var holdId = ReadOptionalString(request, "holdId");
+            if (string.IsNullOrWhiteSpace(holdId))
+            {
+                return MissingRequired("holdId");
+            }
+
             var response = new LoadArrIntegrationHoldReleaseResponse(
-                ReadOptionalString(request, "holdId") ?? "hld-001",
+                holdId,
                 "released",
                 TimestampUtc());
             return Results.Ok(response);
@@ -449,13 +818,43 @@ public static class LoadArrIntegrationEndpoints
 
         integrations.MapPost("/disposition-movements", (JsonElement request) =>
         {
+            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
+            if (string.IsNullOrWhiteSpace(supplyarrItemId))
+            {
+                return MissingRequired("supplyarrItemId");
+            }
+
+            var fromLocationId = ReadOptionalString(request, "fromLocationId");
+            if (string.IsNullOrWhiteSpace(fromLocationId))
+            {
+                return MissingRequired("fromLocationId");
+            }
+
+            var toLocationId = ReadOptionalString(request, "toLocationId");
+            if (string.IsNullOrWhiteSpace(toLocationId))
+            {
+                return MissingRequired("toLocationId");
+            }
+
+            var quantity = ReadOptionalDecimal(request, "quantity");
+            if (quantity is null)
+            {
+                return MissingRequired("quantity");
+            }
+
+            var dispositionCode = ReadOptionalString(request, "dispositionCode");
+            if (string.IsNullOrWhiteSpace(dispositionCode))
+            {
+                return MissingRequired("dispositionCode");
+            }
+
             var response = new LoadArrIntegrationDispositionMovementResponse(
                 $"dmv-{Guid.NewGuid():N}"[..14],
-                ReadOptionalString(request, "supplyarrItemId") ?? "supplyarr-item-001",
-                ReadOptionalString(request, "fromLocationId") ?? "location-001",
-                ReadOptionalString(request, "toLocationId") ?? "location-002",
-                ReadOptionalDecimal(request, "quantity") ?? 1m,
-                ReadOptionalString(request, "dispositionCode") ?? "REWORK",
+                supplyarrItemId,
+                fromLocationId,
+                toLocationId,
+                quantity.Value,
+                dispositionCode,
                 TimestampUtc());
             return Results.Created($"{routePrefix}/disposition-movements/{response.DispositionMovementId}", response);
         })
@@ -484,151 +883,58 @@ public static class LoadArrIntegrationEndpoints
             : null;
     }
 
+    private static IResult MissingRequired(string propertyName) =>
+        Results.BadRequest(new { error = $"{propertyName} is required." });
+
     private static LoadArrIntegrationItemResponse[] CreateIntegrationItems() =>
-        new[]
-        {
-            new LoadArrIntegrationItemResponse(
-                "item-001",
-                "supplyarr-item-001",
-                "BP-1001",
-                "Brake pump",
-                "each",
-                "active",
-                "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationItemResponse(
-                "item-002",
-                "supplyarr-item-002",
-                "GT-2201",
-                "Hydraulic hose",
-                "each",
-                "active",
-                "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationItemResponse? ResolveIntegrationItem(string id) =>
         CreateIntegrationItems().SingleOrDefault(item => string.Equals(item.ItemId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationLocationProfileResponse[] CreateLocationProfiles() =>
-        new[]
-        {
-            new LoadArrIntegrationLocationProfileResponse(
-                "profile-001",
-                "location-001",
-                "BIN",
-                true,
-                "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationLocationProfileResponse(
-                "profile-002",
-                "location-002",
-                "DOCK",
-                true,
-                "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationLocationProfileResponse? ResolveLocationProfile(string id) =>
         CreateLocationProfiles().SingleOrDefault(profile =>
             string.Equals(profile.WmsLocationProfileId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationBalanceResponse[] CreateIntegrationBalances() =>
-        new[]
-        {
-            new LoadArrIntegrationBalanceResponse("bal-001", "supplyarr-item-001", "location-001", 150m, 120m, "available", "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationBalanceResponse("bal-002", "supplyarr-item-002", "location-002", 40m, 35m, "allocated", "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationBalanceResponse? ResolveIntegrationBalance(string id) =>
         CreateIntegrationBalances().SingleOrDefault(balance => string.Equals(balance.BalanceId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationExpectedReceiptResponse[] CreateExpectedReceipts() =>
-        new[]
-        {
-            new LoadArrIntegrationExpectedReceiptResponse("exp-001", "supplyarr-item-001", "Fleet Supplier", "location-001", 25m, "arrived", "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationExpectedReceiptResponse("exp-002", "supplyarr-item-002", "Depot Supplier", "location-002", 12m, "pending", "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationExpectedReceiptResponse? ResolveExpectedReceipt(string id) =>
         CreateExpectedReceipts().SingleOrDefault(receipt =>
             string.Equals(receipt.ExpectedReceiptId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationReceiptResponse[] CreateReceipts() =>
-        new[]
-        {
-            new LoadArrIntegrationReceiptResponse(
-                "rcpt-001",
-                "RCPT-1001",
-                "exp-001",
-                "completed",
-                "supplier-created",
-                "supplyarr-item-001",
-                25m,
-                "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationReceiptResponse(
-                "rcpt-002",
-                "RCPT-1002",
-                null,
-                "open",
-                "supplier-created",
-                "supplyarr-item-002",
-                8m,
-                "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationReceiptResponse? ResolveReceipt(string id) =>
         CreateReceipts().SingleOrDefault(receipt =>
             string.Equals(receipt.ReceiptId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationReservationResponse[] CreateReservations() =>
-        new[]
-        {
-            new LoadArrIntegrationReservationResponse(
-                "resv-001",
-                "demand-001",
-                "supplyarr-item-001",
-                2m,
-                "reserved",
-                "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationReservationResponse(
-                "resv-002",
-                "wod-001",
-                "supplyarr-item-002",
-                1m,
-                "partially_reserved",
-                "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationReservationResponse? ResolveReservation(string id) =>
         CreateReservations().SingleOrDefault(reservation =>
             string.Equals(reservation.ReservationId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationCountResponse[] CreateCounts() =>
-        new[]
-        {
-            new LoadArrIntegrationCountResponse("cnt-001", "CNT-001", "supplyarr-item-001", 10m, 8m, "open", "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationCountResponse("cnt-002", "CNT-002", "supplyarr-item-002", 5m, 5m, "approved", "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationCountResponse? ResolveCount(string id) =>
         CreateCounts().SingleOrDefault(count =>
             string.Equals(count.CountId, id, StringComparison.OrdinalIgnoreCase));
 
     private static LoadArrIntegrationStockMovementResponse[] CreateStockMovements() =>
-        new[]
-        {
-            new LoadArrIntegrationStockMovementResponse(
-                "mov-001",
-                "inbound",
-                "supplyarr-item-001",
-                "location-001",
-                10m,
-                "2026-06-03T00:00:00Z"),
-            new LoadArrIntegrationStockMovementResponse(
-                "mov-002",
-                "outbound",
-                "supplyarr-item-002",
-                "location-002",
-                -3m,
-                "2026-06-03T00:00:00Z")
-        };
+        [];
 
     private static LoadArrIntegrationStockMovementResponse? ResolveStockMovement(string id) =>
         CreateStockMovements().SingleOrDefault(movement =>

@@ -2,9 +2,11 @@
 
 ## 1. Purpose
 
-This constitution defines how STL Compliance creates, defines, calculates, snapshots, displays, schedules, exports, and governs reports, dashboards, metrics, and KPIs.
+This constitution defines how STL Compliance creates, defines, calculates, snapshots, displays, schedules, exports, and governs reports, report-backed dashboards, metrics, and KPIs.
 
 ReportArr may report across the suite, but source corrections happen in the owning product.
+
+Operational product dashboards are governed by the dashboard page constitution and the owning product's dashboard rules. They are exempt from report-specific rules unless the surface is explicitly a report artifact, report-backed widget set, or exported/scheduled dashboard deliverable owned by ReportArr.
 
 ## 2. Scope
 
@@ -12,7 +14,7 @@ This constitution applies to:
 
 - Product metrics
 - Cross-product KPIs
-- Dashboards
+- Dashboards only when they are report artifacts, report-backed widgets, or scheduled/exported dashboard deliverables
 - Report definitions
 - Scheduled reports
 - Exports
@@ -80,7 +82,7 @@ KPI responses should include:
 
 ## 7. Current state vs snapshot
 
-Reports and dashboards must distinguish current state from historical snapshots.
+Reports and report-backed dashboards must distinguish current state from historical snapshots.
 
 Examples:
 

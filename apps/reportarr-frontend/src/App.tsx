@@ -28,6 +28,7 @@ import {
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
+  getLaunchCatalog,
   getErrorMessage,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
@@ -444,22 +445,39 @@ function useWorkspaceSessionBootstrap() {
     retry: false,
   })
 
+  const launchCatalogQuery = useQuery({
+    queryKey: ['reportarr', 'launch-catalog', session?.accessToken],
+    queryFn: () => getLaunchCatalog(apiBase, session!.accessToken, 'reportarr'),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
   useEffect(() => {
     if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
       clearSession()
     }
   }, [sessionQuery.error, sessionQuery.isError])
 
-  const bootstrapError = sessionQuery.isError
+  useEffect(() => {
+    if (launchCatalogQuery.isError && resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)) {
+      clearSession()
+    }
+  }, [launchCatalogQuery.error, launchCatalogQuery.isError])
+
+  const sessionBootstrapError = sessionQuery.isError
     ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
     : null
+  const launchBootstrapError = launchCatalogQuery.isError
+    ? resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)
+    : null
+  const bootstrapError = sessionBootstrapError ?? launchBootstrapError
 
-  return { session, sessionQuery, bootstrapError }
+  return { session, sessionQuery, launchCatalogQuery, bootstrapError }
 }
 
 function useReportArrWorkspace() {
   const queryClient = useQueryClient()
-  const { session, sessionQuery, bootstrapError } = useWorkspaceSessionBootstrap()
+  const { session, sessionQuery, launchCatalogQuery, bootstrapError } = useWorkspaceSessionBootstrap()
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
       ? {
@@ -469,7 +487,10 @@ function useReportArrWorkspace() {
         }
       : null
 
-  const switcherEntitlements = sessionQuery.data?.entitlements ?? []
+  const switcherEntitlements =
+    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
+    sessionQuery.data?.entitlements ??
+    []
 
   const launch = useProductWorkspaceLaunch({
     apiBase,
@@ -482,6 +503,7 @@ function useReportArrWorkspace() {
   return {
     session,
     sessionQuery,
+    launchCatalogQuery,
     bootstrapError,
     workspaceSession,
     switcherEntitlements,
@@ -6672,7 +6694,7 @@ function ReadModelDetailPage({ accessToken }: { accessToken: string }) {
 
 export function App() {
   const location = useLocation()
-  const { session, sessionQuery, bootstrapError, workspaceSession, switcherEntitlements, launch } = useReportArrWorkspace()
+  const { session, sessionQuery, launchCatalogQuery, bootstrapError, workspaceSession, switcherEntitlements, launch } = useReportArrWorkspace()
   const [bootstrapRedirected, setBootstrapRedirected] = useState(false)
 
   useEffect(() => {
@@ -6742,8 +6764,13 @@ export function App() {
       }}
       isProductLaunchPending={launch.isPending}
       productLaunchError={launch.isError ? formatProductLaunchError(launch.error) : null}
+      aiAssistance={
+        session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
+      }
       workspaceSession={workspaceSession}
-      isBootstrapping={sessionQuery.isLoading}
+      isBootstrapping={
+        Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)
+      }
       bootstrapError={bootstrapError}
     >
       <Routes>

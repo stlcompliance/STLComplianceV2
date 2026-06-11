@@ -1,6 +1,6 @@
 import { Bot, Send, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { FormEvent, KeyboardEvent } from 'react'
 
 export type AiHelpMessage = {
   id: string
@@ -19,6 +19,47 @@ export type AiHelpDrawerProps = {
   errorMessage?: string | null
   onClose: () => void
   onSend: (message: string) => Promise<void> | void
+}
+
+const httpUrlPattern = /https?:\/\/[^\s<]+[^\s<.,;:!?)\]}]/gi
+
+function MessageText({ text }: { text: string }) {
+  const parts: Array<string | { href: string; text: string }> = []
+  let lastIndex = 0
+
+  for (const match of text.matchAll(httpUrlPattern)) {
+    const href = match[0]
+    const index = match.index ?? 0
+    if (index > lastIndex) {
+      parts.push(text.slice(lastIndex, index))
+    }
+    parts.push({ href, text: href })
+    lastIndex = index + href.length
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return (
+    <p className="whitespace-pre-wrap">
+      {parts.map((part, index) =>
+        typeof part === 'string' ? (
+          part
+        ) : (
+          <a
+            key={`${part.href}-${index}`}
+            href={part.href}
+            target="_blank"
+            rel="noreferrer"
+            className="break-words text-teal-300 underline decoration-teal-400/60 underline-offset-2 hover:text-teal-200"
+          >
+            {part.text}
+          </a>
+        ),
+      )}
+    </p>
+  )
 }
 
 export function AiHelpButton({
@@ -53,15 +94,43 @@ export function AiHelpDrawer({
   onSend,
 }: AiHelpDrawerProps) {
   const [draft, setDraft] = useState('')
+  const scrollAnchorRef = useRef<HTMLDivElement>(null)
   const canSend = draft.trim().length > 0 && !isSending
   const status = useMemo(() => `${productKey} · ${route}`, [productKey, route])
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
+  useEffect(() => {
+    if (!open) return
+
+    scrollAnchorRef.current?.scrollIntoView?.({ block: 'end' })
+  }, [messages, open, isSending])
+
+  const submitDraft = async () => {
     if (!canSend) return
+
     const next = draft.trim()
     setDraft('')
     await onSend(next)
+  }
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    await submitDraft()
+  }
+
+  const handleDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (
+      event.key !== 'Enter' ||
+      event.shiftKey ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.nativeEvent.isComposing
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    void submitDraft()
   }
 
   if (!open) return null
@@ -101,13 +170,14 @@ export function AiHelpDrawer({
                     : 'mr-10 border-slate-700 bg-slate-900/80 text-slate-100',
                 ].join(' ')}
               >
-                <p className="whitespace-pre-wrap">{message.text}</p>
+                <MessageText text={message.text} />
                 {message.outcome && message.outcome !== 'success' ? (
                   <p className="mt-2 text-xs text-amber-300">{message.outcome}</p>
                 ) : null}
               </div>
             ))
           )}
+          <div ref={scrollAnchorRef} aria-hidden />
         </div>
 
         <form onSubmit={handleSubmit} className="border-t border-slate-700 p-4">
@@ -124,6 +194,7 @@ export function AiHelpDrawer({
               id="ai-help-message"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleDraftKeyDown}
               rows={3}
               className="min-h-[88px] flex-1 resize-none rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-teal-400"
             />

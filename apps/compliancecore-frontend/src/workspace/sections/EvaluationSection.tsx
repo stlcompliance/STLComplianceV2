@@ -25,8 +25,6 @@ export function EvaluationSection({ state }: Props) {
         canManage={s.canManage}
         onSaveContent={(content) => s.saveRuleContentMutation.mutate(content)}
         isSavingContent={s.saveRuleContentMutation.isPending}
-        onSeedContent={() => s.seedRuleContentMutation.mutate()}
-        isSeedingContent={s.seedRuleContentMutation.isPending}
         onEvaluate={(facts) => s.evaluateRulePackMutation.mutate(facts)}
         isEvaluating={s.evaluateRulePackMutation.isPending}
         lastEvaluation={s.lastEvaluation}

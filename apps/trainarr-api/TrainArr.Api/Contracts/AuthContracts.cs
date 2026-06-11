@@ -32,7 +32,8 @@ public sealed record HandoffSessionResponse(
 
     bool IsPlatformAdmin,
 
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    string? CallbackUrl);
 
 
 

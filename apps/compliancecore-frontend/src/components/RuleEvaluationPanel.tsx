@@ -21,8 +21,6 @@ interface RuleEvaluationPanelProps {
   canManage: boolean
   onSaveContent: (content: RulePackContentBody) => void
   isSavingContent: boolean
-  onSeedContent: () => void
-  isSeedingContent: boolean
   onEvaluate: (facts: Record<string, boolean>) => void
   isEvaluating: boolean
   lastEvaluation: RuleEvaluationRunResponse | null
@@ -52,8 +50,6 @@ export function RuleEvaluationPanel({
   canManage,
   onSaveContent,
   isSavingContent,
-  onSeedContent,
-  isSeedingContent,
   onEvaluate,
   isEvaluating,
   lastEvaluation,
@@ -86,17 +82,6 @@ export function RuleEvaluationPanel({
         <p className="text-sm text-slate-400">
           Attach structured rule content to rule packs and run synchronous fact-based evaluations.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            data-testid="rule-evaluation-seed-content"
-            onClick={onSeedContent}
-            disabled={isSeedingContent || rulePacks.length === 0}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeedingContent ? 'Seeding…' : 'Seed sample rule content'}
-          </button>
-        )}
       </div>
 
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">

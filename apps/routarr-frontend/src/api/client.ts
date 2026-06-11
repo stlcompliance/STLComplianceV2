@@ -61,6 +61,17 @@ import type {
   PublishTripPartsDemandRequest,
   PublishTripPartsDemandResponse,
   EntityExportManifestResponse,
+  AuditPackageManifestResponse,
+  AuditPackageGenerationJobResponse,
+  AuditPackageExportResponse,
+  AuditPackageScope,
+  DispatchReportSummaryResponse,
+  DispatchReportTripDetailResponse,
+  DispatchReportExceptionDetailResponse,
+  DispatchOverrideReportSummaryResponse,
+  RouteReportSummaryResponse,
+  RouteReportRouteDetailResponse,
+  RouteReportStopDetailResponse,
   TripDetailResponse,
   HandoffSessionResponse,
   LinkRouteTripRequest,
@@ -98,6 +109,10 @@ import type {
   TripCompletionsListResponse,
   TripCompletionDetailResponse,
   RouteCompletionsListResponse,
+  ProofDvirReportSummaryResponse,
+  ProofDvirReportTripDetailResponse,
+  ProofDvirReportProofDetailResponse,
+  ProofDvirReportDvirDetailResponse,
   AttachmentRetentionSettingsResponse,
   UpsertAttachmentRetentionSettingsRequest,
   AttachmentRetentionRunsResponse,
@@ -812,6 +827,311 @@ export async function correctProofDvirReportProof(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<TripProofRecordResponse>(response, 'Failed to correct trip proof')
+}
+
+export async function getProofDvirReportSummary(
+  accessToken: string,
+  options?: { scope?: 'daily' | 'weekly' },
+): Promise<ProofDvirReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.scope) {
+    params.set('scope', options.scope)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProofDvirReportSummaryResponse>(
+    response,
+    'Failed to load proof/DVIR report summary',
+  )
+}
+
+export async function getProofDvirReportTripDetail(
+  accessToken: string,
+  tripId: string,
+): Promise<ProofDvirReportTripDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/trips/${tripId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProofDvirReportTripDetailResponse>(
+    response,
+    'Failed to load proof/DVIR report trip detail',
+  )
+}
+
+export async function getProofDvirReportProofDetail(
+  accessToken: string,
+  proofId: string,
+): Promise<ProofDvirReportProofDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/proofs/${proofId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProofDvirReportProofDetailResponse>(
+    response,
+    'Failed to load proof/DVIR report proof detail',
+  )
+}
+
+export async function getProofDvirReportDvirDetail(
+  accessToken: string,
+  dvirId: string,
+): Promise<ProofDvirReportDvirDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/dvir/${dvirId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProofDvirReportDvirDetailResponse>(
+    response,
+    'Failed to load proof/DVIR report DVIR detail',
+  )
+}
+
+export async function exportProofDvirReportSummaryCsv(
+  accessToken: string,
+  options?: { scope?: 'daily' | 'weekly' },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.scope) {
+    params.set('scope', options.scope)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/proof-dvir/summary/export${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Proof/DVIR report CSV export failed')
+  }
+  return response.blob()
+}
+
+function buildScopedReportQuery(options?: { scope?: string; limit?: number }) {
+  const params = new URLSearchParams()
+  if (options?.scope) {
+    params.set('scope', options.scope)
+  }
+  if (typeof options?.limit === 'number') {
+    params.set('limit', String(options.limit))
+  }
+  return params.size > 0 ? `?${params.toString()}` : ''
+}
+
+export async function getDispatchReportSummary(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<DispatchReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/dispatch/summary${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<DispatchReportSummaryResponse>(response, 'Failed to load dispatch report summary')
+}
+
+export async function exportDispatchReportSummaryCsv(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/dispatch/summary/export${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Dispatch report CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function getDispatchReportTripDetail(
+  accessToken: string,
+  tripId: string,
+): Promise<DispatchReportTripDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/dispatch/trips/${tripId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchReportTripDetailResponse>(response, 'Failed to load dispatch trip detail')
+}
+
+export async function getDispatchReportExceptionDetail(
+  accessToken: string,
+  exceptionId: string,
+): Promise<DispatchReportExceptionDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/dispatch/exceptions/${exceptionId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchReportExceptionDetailResponse>(
+    response,
+    'Failed to load dispatch exception detail',
+  )
+}
+
+export async function getRouteReportSummary(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<RouteReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/routes/summary${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<RouteReportSummaryResponse>(response, 'Failed to load route report summary')
+}
+
+export async function exportRouteReportSummaryCsv(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/routes/summary/export${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Route report CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function getRouteReportRouteDetail(
+  accessToken: string,
+  routeId: string,
+): Promise<RouteReportRouteDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/routes/${routeId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteReportRouteDetailResponse>(response, 'Failed to load route detail')
+}
+
+export async function getRouteReportStopDetail(
+  accessToken: string,
+  stopId: string,
+): Promise<RouteReportStopDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/routes/stops/${stopId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteReportStopDetailResponse>(response, 'Failed to load stop detail')
+}
+
+export async function getDispatchOverrideReportSummary(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<DispatchOverrideReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/dispatch-overrides/summary${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<DispatchOverrideReportSummaryResponse>(
+    response,
+    'Failed to load dispatch override report summary',
+  )
+}
+
+export async function exportDispatchOverrideReportSummaryCsv(
+  accessToken: string,
+  options?: { scope?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/dispatch-overrides/summary/export${buildScopedReportQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Dispatch override report CSV export failed')
+  }
+  return response.blob()
+}
+
+function buildAuditPackageQuery(options?: {
+  from?: string
+  to?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
+  format?: string
+}) {
+  const params = new URLSearchParams()
+  if (options?.from) params.set('from', options.from)
+  if (options?.to) params.set('to', options.to)
+  if (options?.action) params.set('action', options.action)
+  if (options?.result) params.set('result', options.result)
+  if (options?.targetType) params.set('targetType', options.targetType)
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId)
+  if (options?.format) params.set('format', options.format)
+  return params.size > 0 ? `?${params.toString()}` : ''
+}
+
+export async function getAuditPackageManifest(
+  accessToken: string,
+): Promise<AuditPackageManifestResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
+}
+
+export async function getAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to load audit package generation job',
+  )
+}
+
+export async function createAuditPackageGenerationJob(
+  accessToken: string,
+  options: AuditPackageScope & { format: 'zip' | 'json' },
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...options, format: options.format }),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to queue audit package generation job',
+  )
+}
+
+export async function downloadAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}/download`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download audit package generation job')
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageZip(
+  accessToken: string,
+  options?: AuditPackageScope,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'zip' })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Audit package ZIP export failed')
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageJson(
+  accessToken: string,
+  options?: AuditPackageScope,
+): Promise<AuditPackageExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
 }
 
 export async function submitDriverPortalTripDvir(

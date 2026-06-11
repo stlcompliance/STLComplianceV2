@@ -58,7 +58,7 @@ export function PlatformLifecycleOverviewPanel() {
 
             <dl className="mt-3 space-y-1 text-sm text-slate-700">
               <div className="flex justify-between gap-2">
-                <dt>Pending (sample)</dt>
+                <dt>Pending</dt>
                 <dd className="font-medium tabular-nums">{worker.pendingCount}</dd>
               </div>
               {worker.latestRun ? (

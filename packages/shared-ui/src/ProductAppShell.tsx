@@ -1,7 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { LogOut, Upload } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from './AiHelpDrawer'
+import { sendProductAiAssistantMessage } from './aiAssistance'
+import { buildAiNavigationLinks } from './aiNavigationLinks'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
 import { WorkspaceUserChrome } from './WorkspaceUserChrome'
@@ -12,6 +16,15 @@ export type ProductNavItem = {
   icon?: LucideIcon
   sectionBreakBefore?: boolean
   children?: ProductNavItem[]
+}
+
+export type ProductAiAssistanceConfig = {
+  apiBase: string
+  accessToken: string
+  surface?: string
+  category?: string
+  pageContext?: Record<string, unknown>
+  allowedBehaviors?: string[]
 }
 
 export type ProductAppShellProps = {
@@ -28,6 +41,7 @@ export type ProductAppShellProps = {
   onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
+  aiAssistance?: ProductAiAssistanceConfig
   navItems?: ProductNavItem[]
   /** Compact layout hides sidebar navigation (field/mobile apps). */
   layoutVariant?: 'standard' | 'compact'
@@ -48,6 +62,7 @@ function WorkspaceTopBar({
   onSignOut,
   isProductLaunchPending,
   productLaunchError,
+  onOpenAiHelp,
 }: {
   productName: string
   productKey: string
@@ -62,6 +77,7 @@ function WorkspaceTopBar({
   onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
+  onOpenAiHelp?: () => void
 }) {
   const ProductIcon = getSuiteProductIcon(productKey)
   const smartImportUrl = `${suiteHomeUrl.replace(/\/$/, '')}/imports?destinationProduct=${encodeURIComponent(productKey)}`
@@ -76,6 +92,7 @@ function WorkspaceTopBar({
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {onOpenAiHelp ? <AiHelpButton onClick={onOpenAiHelp} /> : null}
         <a
           href={smartImportUrl}
           title="Smart Import"
@@ -127,13 +144,20 @@ export function ProductAppShell({
   onSignOut,
   isProductLaunchPending,
   productLaunchError,
+  aiAssistance,
   navItems = [{ label: 'Workspace', to: '/' }],
   layoutVariant = 'standard',
   children,
 }: ProductAppShellProps) {
   const location = useLocation()
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiSessionId, setAiSessionId] = useState<string | null>(null)
+  const [aiMessages, setAiMessages] = useState<AiHelpMessage[]>([])
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiSending, setAiSending] = useState(false)
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
+  const aiHelpAvailable = Boolean(aiAssistance?.accessToken)
   const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
       'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -170,6 +194,83 @@ export function ProductAppShell({
     return [item]
   })
 
+  const sendAiMessage = async (message: string) => {
+    if (!aiAssistance?.accessToken) {
+      setAiError('AI assistance requires an active workspace session.')
+      return
+    }
+
+    const userMessage: AiHelpMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      text: message,
+    }
+    setAiMessages((current) => [...current, userMessage])
+    setAiError(null)
+    setAiSending(true)
+    try {
+      const response = await sendProductAiAssistantMessage(
+        aiAssistance.apiBase,
+        aiAssistance.accessToken,
+        {
+          sessionId: aiSessionId,
+          productKey,
+          surface: aiAssistance.surface ?? 'product-shell',
+          route: location.pathname,
+          category: aiAssistance.category ?? 'guidance',
+          message,
+          pageContext: {
+            productName,
+            workspaceSubtitle,
+            tenant: tenantDisplayName,
+            ...aiAssistance.pageContext,
+            navigationLinks: buildAiNavigationLinks({
+              currentProductKey: productKey,
+              entitlements,
+              suiteHomeUrl,
+              productLaunchUrls,
+              currentNavItems: navItems,
+            }),
+          },
+          allowedBehaviors: aiAssistance.allowedBehaviors ?? [
+            'explain',
+            'summarize',
+            'troubleshoot',
+            'recommend',
+          ],
+        },
+      )
+      setAiSessionId(response.sessionId)
+      setAiMessages((current) => [
+        ...current,
+        {
+          id: response.messageId,
+          role: 'assistant',
+          text: response.answer,
+          outcome: response.outcome,
+        },
+      ])
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'AI assistance failed.')
+    } finally {
+      setAiSending(false)
+    }
+  }
+
+  const aiDrawer = aiHelpAvailable ? (
+    <AiHelpDrawer
+      open={aiOpen}
+      title="AI assistance"
+      productKey={productKey}
+      route={location.pathname}
+      messages={aiMessages}
+      isSending={aiSending}
+      errorMessage={aiError}
+      onClose={() => setAiOpen(false)}
+      onSend={sendAiMessage}
+    />
+  ) : null
+
   if (!showSidebar) {
     return (
       <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100">
@@ -187,7 +288,9 @@ export function ProductAppShell({
           onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
+          onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
         />
+        {aiDrawer}
         <main className="min-h-0 flex-1 overflow-auto px-4 pb-8 pt-4">{children}</main>
       </div>
     )
@@ -253,7 +356,9 @@ export function ProductAppShell({
           onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
+          onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
         />
+        {aiDrawer}
         <nav aria-label={`${productName} mobile navigation`} className="border-b border-slate-700/70 bg-[#0a101c] px-4 py-2 lg:hidden">
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {mobileNavItems.map((item) => {

@@ -31,28 +31,6 @@ type VendorCatalogEntryRow = {
   catalogAvailabilityStatus: string | null
 }
 
-function buildExamplePayload(parts: PartResponse[]): string {
-  const firstPart = parts[0]
-  const firstVendorLink = firstPart?.vendorLinks[0]
-  return JSON.stringify(
-    [
-      {
-        partKey: firstPart?.partKey ?? 'filter-001',
-        vendorPartNumber: firstVendorLink?.vendorPartNumber ?? 'V-FLT-001',
-        isPreferred: true,
-        catalogUnitPrice: firstVendorLink?.catalogUnitPrice ?? 12.5,
-        catalogCurrencyCode: firstVendorLink?.catalogCurrencyCode ?? 'USD',
-        catalogMinimumOrderQuantity: firstVendorLink?.catalogMinimumOrderQuantity ?? 5,
-        catalogLeadTimeDays: firstVendorLink?.catalogLeadTimeDays ?? 10,
-        catalogQuantityAvailable: firstVendorLink?.catalogQuantityAvailable ?? 20,
-        catalogAvailabilityStatus: firstVendorLink?.catalogAvailabilityStatus ?? 'in_stock',
-      },
-    ],
-    null,
-    2,
-  )
-}
-
 function formatMoney(value: number | null): string {
   if (value == null) return '—'
   return new Intl.NumberFormat(undefined, {
@@ -65,7 +43,7 @@ function formatMoney(value: number | null): string {
 export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }: VendorCatalogApiPanelProps) {
   const queryClient = useQueryClient()
   const [selectedVendorId, setSelectedVendorId] = useState('')
-  const [payloadJson, setPayloadJson] = useState(() => buildExamplePayload(parts))
+  const [payloadJson, setPayloadJson] = useState('[]')
   const [dryRun, setDryRun] = useState(true)
   const [syncResult, setSyncResult] = useState<VendorCatalogApiSyncResponse | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
@@ -256,13 +234,6 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
               onClick={handleSync}
             >
               {syncMutation.isPending ? 'Syncing…' : 'Sync feed'}
-            </button>
-            <button
-              type="button"
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
-              onClick={() => setPayloadJson(buildExamplePayload(parts))}
-            >
-              Load sample
             </button>
           </div>
 

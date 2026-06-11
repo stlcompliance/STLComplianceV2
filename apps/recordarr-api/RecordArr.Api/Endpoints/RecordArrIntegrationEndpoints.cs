@@ -69,9 +69,10 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(comment);
         }).WithName($"UpdateRecordArrIntegrationRecordComment{routePrefix}");
 
-        group.MapPost("/records", (WorkspaceEndpoints.CreateRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/records", (HttpContext context, WorkspaceEndpoints.CreateRecordRequest request, RecordArrStore store) =>
         {
             var record = store.CreateRecord(
+                context.User.GetTenantId().ToString(),
                 request.Title,
                 request.Description,
                 request.RecordType,
@@ -133,6 +134,7 @@ public static class RecordArrIntegrationEndpoints
 
             var storageKey = $"recordarr/smart-import/{request.TenantId:D}/{request.ImportBatchId:D}/{request.Sha256}/{request.FileName}";
             var record = store.CreateRecord(
+                request.TenantId.ToString("D"),
                 $"Smart Import source: {request.FileName}",
                 "Source file retained for STL Smart Import review and audit.",
                 "document",
@@ -184,9 +186,10 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/capture-requests", (RecordArrStore store) => Results.Ok(store.GetCaptureRequests()))
             .WithName($"ListRecordArrIntegrationCaptureRequests{routePrefix}");
 
-        group.MapPost("/capture-requests", (WorkspaceEndpoints.CreateCaptureRequestRequest request, RecordArrStore store) =>
+        group.MapPost("/capture-requests", (HttpContext context, WorkspaceEndpoints.CreateCaptureRequestRequest request, RecordArrStore store) =>
         {
             var captureRequest = store.CreateCaptureRequest(
+                context.User.GetTenantId().ToString(),
                 request.SourceProduct,
                 request.SourceObjectRef,
                 request.CaptureType,

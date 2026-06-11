@@ -371,6 +371,8 @@ public sealed class LaunchService(
             throw new StlApiException("launch.handoff_expired", "Handoff code has expired.", 401);
         }
 
+        await RequireActiveHandoffSessionAsync(record, cancellationToken);
+
         if (record.Tenant.Status != TenantStatuses.Active)
         {
             await audit.WriteAsync(
@@ -623,6 +625,61 @@ public sealed class LaunchService(
             reasonCode: "auth.forbidden",
             cancellationToken: cancellationToken);
         throw new StlApiException("auth.forbidden", "A valid service token or platform administrator access is required to redeem handoff codes.", 403);
+    }
+
+    private async Task RequireActiveHandoffSessionAsync(
+        HandoffCodeRecord record,
+        CancellationToken cancellationToken)
+    {
+        var session = await db.UserSessions.AsNoTracking()
+            .FirstOrDefaultAsync(
+                s => s.Id == record.SessionId && s.UserId == record.UserId,
+                cancellationToken);
+
+        if (session is null || session.RevokedAt is not null)
+        {
+            await audit.WriteAsync(
+                "launch.handoff.redeem",
+                "handoff_code",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: record.UserId,
+                reasonCode: "session_revoked",
+                cancellationToken: cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, "session_revoked", cancellationToken);
+            throw new StlApiException("launch.session_revoked", "The source NexArr session has ended. Sign in again.", 401);
+        }
+
+        if (session.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            await audit.WriteAsync(
+                "launch.handoff.redeem",
+                "handoff_code",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: record.UserId,
+                reasonCode: "session_expired",
+                cancellationToken: cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, "session_expired", cancellationToken);
+            throw new StlApiException("launch.session_expired", "The source NexArr session has expired. Sign in again.", 401);
+        }
+
+        if (session.ActiveTenantId != record.TenantId)
+        {
+            await audit.WriteAsync(
+                "launch.handoff.redeem",
+                "handoff_code",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: record.UserId,
+                reasonCode: "session_tenant_mismatch",
+                cancellationToken: cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, "session_tenant_mismatch", cancellationToken);
+            throw new StlApiException("launch.session_tenant_mismatch", "The source NexArr session tenant no longer matches the handoff.", 403);
+        }
     }
 
     private async Task<string?> ResolveLaunchDenialAsync(

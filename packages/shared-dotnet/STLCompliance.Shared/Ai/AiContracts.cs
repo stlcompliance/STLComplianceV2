@@ -49,6 +49,10 @@ public sealed class AiProviderOptions
 
     public string SmartImportModel { get; set; } = "gpt-5.5";
 
+    public string AssistantVectorStoreIds { get; set; } = string.Empty;
+
+    public int AssistantFileSearchMaxResults { get; set; } = 6;
+
     public string ResponsesEndpoint { get; set; } = "https://api.openai.com/v1/responses";
 
     public int RequestsPerMinute { get; set; } = 500;

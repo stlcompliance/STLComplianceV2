@@ -13,7 +13,8 @@ public sealed record ReportArrHandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    string? CallbackUrl);
 
 public sealed record ReportArrSessionBootstrapResponse(
     string UserId,

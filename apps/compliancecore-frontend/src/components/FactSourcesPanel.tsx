@@ -3,17 +3,11 @@ import type { FactDefinitionResponse, FactSourceResponse } from '../api/types'
 interface FactSourcesPanelProps {
   factDefinitions: FactDefinitionResponse[]
   factSources: FactSourceResponse[]
-  canManage: boolean
-  onSeedSources: () => void
-  isSeeding: boolean
 }
 
 export function FactSourcesPanel({
   factDefinitions,
   factSources,
-  canManage,
-  onSeedSources,
-  isSeeding,
 }: FactSourcesPanelProps) {
   return (
     <div className="space-y-6">
@@ -22,16 +16,6 @@ export function FactSourcesPanel({
           Fact sources bind catalog facts to static configuration or product API references. Compliance Core resolves
           registered sources via the internal resolve API for entitled service tokens.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            onClick={onSeedSources}
-            disabled={isSeeding}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeeding ? 'Creating…' : 'Seed sample sources'}
-          </button>
-        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

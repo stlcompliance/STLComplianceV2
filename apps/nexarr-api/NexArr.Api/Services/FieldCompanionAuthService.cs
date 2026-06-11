@@ -147,7 +147,8 @@ public sealed class FieldCompanionAuthService(
             record.Tenant.DisplayName,
             tenantRoleKey,
             record.User.IsPlatformAdmin,
-            entitlements);
+            entitlements,
+            record.CallbackUrl);
     }
 
     public FieldCompanionMeResponse GetMe(ClaimsPrincipal principal)

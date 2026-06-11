@@ -9,14 +9,10 @@ export function FindingsSection({ state }: Props) {
   return (
     <div className="space-y-8">
       <FindingsWorkflowGatesPanel
-        rulePacks={s.rulePacksQuery.data ?? []}
         factDefinitions={s.factDefinitionsQuery.data ?? []}
         rulePackContent={s.rulePackContentQuery.data?.content ?? null}
         findings={s.findingsQuery.data ?? []}
         workflowGates={s.workflowGatesQuery.data ?? []}
-        canManage={s.canManage}
-        onSeedGate={() => s.seedWorkflowGateMutation.mutate()}
-        isSeedingGate={s.seedWorkflowGateMutation.isPending}
         onCheckGate={(gateKey, facts, emitFindings) =>
           s.checkWorkflowGateMutation.mutate({ gateKey, facts, emitFindings })
         }

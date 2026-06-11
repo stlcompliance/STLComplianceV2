@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 export interface RoutArrMeResponse {
@@ -1723,6 +1724,16 @@ export interface AuditPackageManifestResponse {
   sections: AuditPackageSectionDescriptor[]
 }
 
+export interface AuditPackageCountsResponse {
+  auditEvents: number
+  people: number
+  permissionHistory: number
+  personCertifications: number
+  personnelIncidents: number
+  readinessOverrides: number
+  trainingBlockers: number
+}
+
 export interface AuditPackageAppliedFilters {
   from: string | null
   to: string | null
@@ -1790,7 +1801,7 @@ export interface AuditPackageExportResponse {
   tenantId: string
   generatedAt: string
   appliedFilters?: AuditPackageAppliedFilters | null
-  counts: { auditEvents: number }
+  counts: AuditPackageCountsResponse
 }
 
 export interface PagedAuditTimeline {

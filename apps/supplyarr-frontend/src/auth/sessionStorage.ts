@@ -181,3 +181,47 @@ export function canReadSupplyReadiness(tenantRoleKey: string, isPlatformAdmin: b
     'supplyarr_buyer',
   ].includes(tenantRoleKey.toLowerCase())
 }
+
+export function canReadVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canExportVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canReadPurchasingReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canExportPurchasingReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadPurchasingReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canReadComplianceReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadVendorReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canExportComplianceReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canReadComplianceReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canReadPartsInventoryReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canReadParties(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canExportPartsInventoryReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageParts(tenantRoleKey, isPlatformAdmin)
+}

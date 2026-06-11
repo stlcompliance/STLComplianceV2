@@ -191,7 +191,6 @@ public static class NexArrServiceRegistration
 
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
-            await PlatformSeeder.SeedDemoBusinessDataAsync(db, passwordHasher, firstAdminUserId);
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
         }
         else if (app.Environment.IsProduction())

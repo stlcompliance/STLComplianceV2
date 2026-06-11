@@ -8,18 +8,12 @@ interface CitationFactCatalogPanelProps {
   citations: RegulatoryCitationResponse[]
   factDefinitions: FactDefinitionResponse[]
   factRequirements: FactRequirementResponse[]
-  canManage: boolean
-  onSeedCatalog: () => void
-  isSeeding: boolean
 }
 
 export function CitationFactCatalogPanel({
   citations,
   factDefinitions,
   factRequirements,
-  canManage,
-  onSeedCatalog,
-  isSeeding,
 }: CitationFactCatalogPanelProps) {
   return (
     <div className="space-y-6">
@@ -27,16 +21,6 @@ export function CitationFactCatalogPanel({
         <p className="text-sm text-slate-400">
           Regulatory citations linked to programs and rule packs, plus fact definitions and requirements for rule evaluation.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            onClick={onSeedCatalog}
-            disabled={isSeeding}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeeding ? 'Creating…' : 'Seed sample catalog'}
-          </button>
-        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

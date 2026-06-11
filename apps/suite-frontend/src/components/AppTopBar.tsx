@@ -2,20 +2,29 @@ import { LayoutDashboard } from 'lucide-react'
 import {
   AiHelpButton,
   AiHelpDrawer,
+  buildAiNavigationLinks,
+  buildProductLaunchUrlMap,
   getSuiteProductCatalogEntry,
   getSuiteProductIcon,
   type AiHelpMessage,
 } from '@stl/shared-ui'
-import { useState } from 'react'
+import { createElement, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { sendAiAssistantMessage } from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
 import { normalizeProductKey } from '../navigation/suiteNavigation'
 
+const suiteHomeUrl = '/app'
+const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
+
 function resolveTitle(pathname: string): { title: string; subtitle: string } {
   if (pathname.startsWith('/app/platform-admin')) {
     return { title: 'Platform administration', subtitle: 'NexArr control plane' }
+  }
+
+  if (pathname.startsWith('/app/imports')) {
+    return { title: 'Smart Import', subtitle: 'NexArr intake and review' }
   }
 
   if (pathname === '/app' || pathname === '/app/') {
@@ -35,13 +44,37 @@ function resolveTitle(pathname: string): { title: string; subtitle: string } {
   }
 }
 
+function resolveCurrentProductKey(pathname: string): string {
+  if (pathname.startsWith('/app/platform-admin') || pathname.startsWith('/app/imports')) {
+    return 'nexarr'
+  }
+
+  const match = /^\/app\/([^/]+)/.exec(pathname)
+  if (!match) {
+    return 'nexarr'
+  }
+
+  const productKey = normalizeProductKey(match[1])
+  return getSuiteProductCatalogEntry(productKey) ? productKey : 'nexarr'
+}
+
 export function AppTopBar() {
   const { me } = useAuth()
   const location = useLocation()
   const { title, subtitle } = resolveTitle(location.pathname)
+  const productKey = resolveCurrentProductKey(location.pathname)
   const productMatch = /^\/app\/([^/]+)/.exec(location.pathname)
-  const productKey = productMatch ? normalizeProductKey(productMatch[1]) : 'nexarr'
-  const ProductIcon = productMatch ? getSuiteProductIcon(productKey) : LayoutDashboard
+  const matchedProductKey = productMatch ? normalizeProductKey(productMatch[1]) : null
+  const productIcon =
+    matchedProductKey && getSuiteProductCatalogEntry(matchedProductKey)
+      ? createElement(getSuiteProductIcon(productKey), {
+          className: 'h-5 w-5 shrink-0 text-stl-teal',
+          'aria-hidden': true,
+        })
+      : createElement(LayoutDashboard, {
+          className: 'h-5 w-5 shrink-0 text-stl-teal',
+          'aria-hidden': true,
+        })
   const [aiOpen, setAiOpen] = useState(false)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)
   const [aiMessages, setAiMessages] = useState<AiHelpMessage[]>([])
@@ -68,6 +101,12 @@ export function AppTopBar() {
         pageContext: {
           title,
           tenant: me?.tenantDisplayName,
+          navigationLinks: buildAiNavigationLinks({
+            currentProductKey: productKey,
+            entitlements: me?.entitlements ?? [],
+            suiteHomeUrl,
+            productLaunchUrls,
+          }),
         },
         allowedBehaviors: ['explain', 'summarize', 'troubleshoot', 'recommend'],
       })
@@ -92,7 +131,7 @@ export function AppTopBar() {
     <>
       <header className="flex shrink-0 items-center justify-between border-b border-slate-700/40 bg-stl-navy px-6 py-4 text-white">
         <div className="flex min-w-0 items-center gap-3">
-          <ProductIcon className="h-5 w-5 shrink-0 text-stl-teal" aria-hidden />
+          {productIcon}
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold">{title}</h2>
             <p className="truncate text-xs text-slate-300">{subtitle}</p>

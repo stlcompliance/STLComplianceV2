@@ -20,8 +20,6 @@ describe('RuleEvaluationPanel', () => {
         canManage={false}
         onSaveContent={() => undefined}
         isSavingContent={false}
-        onSeedContent={() => undefined}
-        isSeedingContent={false}
         onEvaluate={() => undefined}
         isEvaluating={false}
         lastEvaluation={null}
@@ -106,8 +104,6 @@ describe('RuleEvaluationPanel', () => {
         canManage={true}
         onSaveContent={() => undefined}
         isSavingContent={false}
-        onSeedContent={() => undefined}
-        isSeedingContent={false}
         onEvaluate={() => undefined}
         isEvaluating={false}
         lastEvaluation={null}
@@ -119,7 +115,7 @@ describe('RuleEvaluationPanel', () => {
 
     expect(screen.getAllByText('Driver Qualification Rules').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Run batch evaluation \(0 packs\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Seed sample rule content' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Seed sample rule content' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Evaluate rule pack' })).toBeInTheDocument()
     expect(screen.getByText('pass')).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'No listed rule may pass' })).toBeInTheDocument()

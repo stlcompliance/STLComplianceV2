@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiErrorCallout } from '@stl/shared-ui'
+import { ApiErrorCallout, resolveProductLaunchCallbackPath } from '@stl/shared-ui'
 import { FieldCompanionApiError, redeemHandoff } from '../api/client'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
@@ -26,7 +26,7 @@ export function LaunchPage() {
           return
         }
         saveSession(toStoredSession(session))
-        navigate('/', { replace: true })
+        navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {
         if (!cancelled) {
           if (err instanceof FieldCompanionApiError && err.status === 403) {

@@ -6,6 +6,8 @@ ReportArr is the reporting, dashboard, analytics, KPI, scheduled-report, export,
 
 ReportArr is not the operational source of truth. It consumes events, read APIs, snapshots, and product facts from source products and builds useful read models, dashboards, reports, exports, and analytical views.
 
+Operational dashboards owned by source products remain governed by the dashboard page constitution and the owning product. ReportArr's report rules apply to report artifacts and report-backed dashboard surfaces, not to every operational dashboard by default.
+
 ReportArr answers:
 
 - What is the current cross-suite status?
@@ -22,7 +24,7 @@ ReportArr answers:
 
 ```text
 - Report definitions
-- Dashboard definitions
+- Dashboard definitions for report-backed and ReportArr-owned dashboard surfaces
 - Dashboard widgets
 - KPI definitions
 - Metric definitions
@@ -191,7 +193,7 @@ SourceTrace
 
 ## Data freshness rule
 
-Every dashboard/report/read model should show or carry freshness metadata.
+Every report or report-backed dashboard/read model should show or carry freshness metadata.
 
 ```text
 FreshnessStatus

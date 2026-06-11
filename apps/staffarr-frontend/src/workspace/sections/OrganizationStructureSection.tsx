@@ -37,7 +37,7 @@ type Props = { state: StaffArrWorkspaceState }
 type OrganizationStructureTab = 'organization' | 'locations' | 'people'
 type ViewMode = 'browse' | 'create-unit' | 'edit-unit' | 'location-admin'
 
-type OrgUnitDraft = {
+export type OrgUnitDraft = {
   unitType: OrgUnitType
   name: string
   code: string
@@ -62,6 +62,8 @@ type OrgUnitDraft = {
   visibleInDirectory: boolean
   useInReporting: boolean
 }
+
+type StoredOrgUnitDraft = Omit<OrgUnitDraft, 'emergencyContact'>
 
 type OrgNode = OrgUnitResponse & { children: OrgNode[] }
 
@@ -216,6 +218,47 @@ function emptyDraft(): OrgUnitDraft {
     allowPeopleAssignment: true,
     visibleInDirectory: true,
     useInReporting: true,
+  }
+}
+
+export function toStoredOrgUnitDraft(draft: OrgUnitDraft): StoredOrgUnitDraft {
+  return {
+    unitType: draft.unitType,
+    name: draft.name,
+    code: draft.code,
+    parentOrgUnitId: draft.parentOrgUnitId,
+    status: draft.status,
+    description: draft.description,
+    managerPersonId: draft.managerPersonId,
+    defaultSiteOrgUnitId: draft.defaultSiteOrgUnitId,
+    siteType: draft.siteType,
+    teamType: draft.teamType,
+    positionCode: draft.positionCode,
+    effectiveStartDate: draft.effectiveStartDate,
+    effectiveEndDate: draft.effectiveEndDate,
+    timezone: draft.timezone,
+    phone: draft.phone,
+    complianceSensitive: draft.complianceSensitive,
+    safetySensitive: draft.safetySensitive,
+    canSupervise: draft.canSupervise,
+    canApprove: draft.canApprove,
+    allowPeopleAssignment: draft.allowPeopleAssignment,
+    visibleInDirectory: draft.visibleInDirectory,
+    useInReporting: draft.useInReporting,
+  }
+}
+
+export function restoreStoredOrgUnitDraft(
+  storedDraft: Partial<StoredOrgUnitDraft>,
+  fallbackParentOrgUnitId: string,
+  fallbackDefaultSiteOrgUnitId: string,
+): OrgUnitDraft {
+  return {
+    ...emptyDraft(),
+    ...storedDraft,
+    emergencyContact: '',
+    parentOrgUnitId: storedDraft.parentOrgUnitId || fallbackParentOrgUnitId,
+    defaultSiteOrgUnitId: storedDraft.defaultSiteOrgUnitId || fallbackDefaultSiteOrgUnitId,
   }
 }
 
@@ -623,13 +666,12 @@ export function OrganizationStructureSection({ state }: Props) {
       }
 
       try {
-        const parsed = JSON.parse(savedDraft) as OrgUnitDraft
-        setUnitDraft({
-          ...emptyDraft(),
-          ...parsed,
-          parentOrgUnitId: parsed.parentOrgUnitId || selectedOrgUnit?.orgUnitId || '',
-          defaultSiteOrgUnitId: parsed.defaultSiteOrgUnitId || siteUnits[0]?.orgUnitId || '',
-        })
+        const parsed = JSON.parse(savedDraft) as Partial<StoredOrgUnitDraft>
+        setUnitDraft(restoreStoredOrgUnitDraft(
+          parsed,
+          selectedOrgUnit?.orgUnitId ?? '',
+          siteUnits[0]?.orgUnitId ?? '',
+        ))
         setDraftNotice('Restored a locally saved draft.')
       } catch {
         setUnitDraft({
@@ -701,7 +743,7 @@ export function OrganizationStructureSection({ state }: Props) {
   }
 
   const saveDraftLocally = () => {
-    window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(unitDraft))
+    window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(toStoredOrgUnitDraft(unitDraft)))
     setDraftNotice('Draft saved locally in this browser session.')
   }
 

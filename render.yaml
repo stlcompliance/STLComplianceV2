@@ -40,6 +40,10 @@ envVarGroups:
         value: gpt-5.5
       - key: OPENAI_SMART_IMPORT_MODEL
         value: gpt-5.5
+      - key: OPENAI_ASSISTANT_VECTOR_STORE_IDS
+        sync: false
+      - key: OPENAI_ASSISTANT_FILE_SEARCH_MAX_RESULTS
+        value: "6"
       - key: OPENAI_REQUESTS_PER_MINUTE
         value: "500"
       - key: OPENAI_TOKENS_PER_MINUTE

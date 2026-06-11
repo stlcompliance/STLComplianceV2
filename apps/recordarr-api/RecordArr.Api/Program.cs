@@ -13,6 +13,7 @@ await StlApiHost.RunAsync<RecordArrDbContext>(
     {
         app.MapRecordArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapRecordArrWorkspaceEndpoints();
         app.MapRecordArrIntegrationEndpoints();
         app.MapStlSmartImportAdapterEndpoints();

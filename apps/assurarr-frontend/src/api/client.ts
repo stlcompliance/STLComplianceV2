@@ -24,6 +24,7 @@ export interface AssurArrHandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 const apiBase = import.meta.env.VITE_ASSURARR_API_BASE ?? ''

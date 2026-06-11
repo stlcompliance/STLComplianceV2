@@ -64,6 +64,8 @@ export const routarrNavItems: ProductNavItem[] = [
 
   { label: 'Exceptions', to: '/exceptions', icon: AlertTriangle as NavIcon },
 
+  { label: 'Reports', to: '/reports', icon: FileText as NavIcon },
+
   { label: 'Proof review', to: '/proof-review', icon: FileText as NavIcon },
 
   { label: 'Dock appointments', to: '/dock-appointments', icon: Clock3 as NavIcon },

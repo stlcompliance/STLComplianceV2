@@ -11,6 +11,7 @@ public static class SmartImportStatuses
     public const string Committing = "committing";
     public const string Committed = "committed";
     public const string PartiallyCommitted = "partially_committed";
+    public const string Rejected = "rejected";
     public const string Failed = "failed";
 }
 

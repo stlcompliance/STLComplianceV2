@@ -20,9 +20,6 @@ describe('VocabularyPanel', () => {
         materialKeys={[]}
         selectedTypeKey=""
         onSelectType={() => undefined}
-        canManage={false}
-        onCreateTerm={() => undefined}
-        isCreatingTerm={false}
       />,
     )
 
@@ -70,15 +67,12 @@ describe('VocabularyPanel', () => {
         ]}
         selectedTypeKey="material_hazard"
         onSelectType={() => undefined}
-        canManage={true}
-        onCreateTerm={() => undefined}
-        isCreatingTerm={false}
       />,
     )
 
     expect(screen.getByText('Flammable')).toBeInTheDocument()
     expect(screen.getByText('Driver Qualification')).toBeInTheDocument()
     expect(screen.getByText('Gas')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add sample term' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add sample term' })).not.toBeInTheDocument()
   })
 })

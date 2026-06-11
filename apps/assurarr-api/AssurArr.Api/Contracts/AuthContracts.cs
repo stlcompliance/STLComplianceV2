@@ -15,4 +15,5 @@ public sealed record HandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> Entitlements,
+    string? CallbackUrl);

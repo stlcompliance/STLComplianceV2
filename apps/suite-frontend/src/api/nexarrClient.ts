@@ -2196,6 +2196,27 @@ export type SmartImportBatchRow = {
   errorMessage?: string | null
 }
 
+export type SmartImportFileSummary = {
+  fileId: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  sha256: string
+  recordArrRecordId?: string | null
+  recordArrFileId?: string | null
+  status: string
+}
+
+export type SmartImportClassificationSummary = {
+  classificationId: string
+  destinationProduct: string
+  entityType: string
+  confidence: number
+  requiresReview: boolean
+  reviewReasons: string[]
+  notes?: string | null
+}
+
 export type SmartImportProposedRecordRow = {
   proposedRecordId: string
   destinationProduct: string
@@ -2210,7 +2231,11 @@ export type SmartImportProposedRecordRow = {
 
 export type SmartImportBatchDetail = {
   batch: SmartImportBatchRow
+  files: SmartImportFileSummary[]
+  classifications: SmartImportClassificationSummary[]
   proposedRecords: SmartImportProposedRecordRow[]
+  commitPlans: SmartImportCommitPlanSummary[]
+  auditEvents?: SmartImportAuditEventSummary[]
 }
 
 export type SmartImportCommitPlanSummary = {
@@ -2221,6 +2246,16 @@ export type SmartImportCommitPlanSummary = {
   failedStepCount: number
   createdAt: string
   approvedAt?: string | null
+}
+
+export type SmartImportAuditEventSummary = {
+  auditEventId: string
+  eventType: string
+  actorType: string
+  actorPersonId?: string | null
+  result: string
+  reasonCode?: string | null
+  occurredAt: string
 }
 
 export async function sendAiAssistantMessage(

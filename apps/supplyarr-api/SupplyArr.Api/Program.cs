@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrWorkflowAliasEndpoints();
         app.MapSupplyArrCoverageAliasEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapSupplyArrSettingsEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
@@ -32,6 +33,10 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrVendorDocumentEndpoints();
         app.MapSupplyArrVendorRestrictionEndpoints();
         app.MapSupplyArrSupplierIncidentEndpoints();
+        app.MapSupplyArrVendorReportEndpoints();
+        app.MapSupplyArrComplianceReportEndpoints();
+        app.MapSupplyArrPartsInventoryReportEndpoints();
+        app.MapSupplyArrPurchasingReportEndpoints();
         app.MapSupplyArrProcurementExceptionEndpoints();
         app.MapSupplyArrEmergencyPurchaseEndpoints();
         app.MapSupplyArrPurchaseRequestEndpoints();
@@ -77,7 +82,10 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrAuditHistoryEndpoints();
         app.MapSupplyArrEventAndAuditEndpoints();
         app.MapSupplyArrSupplyReadinessEndpoints();
-        app.MapSupplyArrLoadTestJourneySeedEndpoints();
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+        {
+            app.MapSupplyArrLoadTestJourneySeedEndpoints();
+        }
         app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

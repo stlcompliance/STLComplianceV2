@@ -23,8 +23,58 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
         "platform_owner",
     };
 
+    public async Task RequireActiveSessionAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        Guid userId;
+        Guid tenantId;
+        Guid sessionId;
+        try
+        {
+            userId = principal.GetUserId();
+            tenantId = principal.GetTenantId();
+            sessionId = principal.GetSessionId();
+        }
+        catch (InvalidOperationException)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        var session = await db.UserSessions.AsNoTracking()
+            .Where(s => s.Id == sessionId && s.UserId == userId)
+            .Select(s => new
+            {
+                s.ActiveTenantId,
+                s.ExpiresAt,
+                s.RevokedAt,
+                UserIsActive = s.User.IsActive
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (session is null || session.RevokedAt is not null)
+        {
+            throw new StlApiException("auth.session_revoked", "Session has ended. Sign in again.", 401);
+        }
+
+        if (session.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            throw new StlApiException("auth.session_expired", "Session expired. Sign in again.", 401);
+        }
+
+        if (!session.UserIsActive)
+        {
+            throw new StlApiException("auth.user_inactive", "User account is inactive.", 403);
+        }
+
+        if (session.ActiveTenantId != tenantId)
+        {
+            throw new StlApiException("auth.tenant_forbidden", "Session tenant does not match the requested tenant.", 403);
+        }
+    }
+
     public async Task RequirePlatformAdminAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         if (!principal.IsPlatformAdmin())
         {
             throw new StlApiException("auth.forbidden", "Platform administrator access is required.", 403);
@@ -42,6 +92,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
 
     public async Task RequirePlatformReadAccessAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         var userId = principal.GetUserId();
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
         if (user is null)
@@ -73,6 +125,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
         Guid? requestedTenantId,
         CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         var userId = principal.GetUserId();
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
         if (user is null)
@@ -120,6 +174,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
 
     public async Task RequirePlatformOwnerAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         var userId = principal.GetUserId();
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
         if (user is null)
@@ -210,6 +266,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
 
     public async Task RequireNexArrAccessAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         if (principal.IsPlatformAdmin() || principal.HasProductEntitlement("nexarr"))
         {
             return;
@@ -224,6 +282,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
         bool allowTenantAdmin = false,
         CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -262,6 +322,8 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
+        await RequireActiveSessionAsync(principal, cancellationToken);
+
         if (principal.IsPlatformAdmin() || principal.HasProductEntitlement(productKey))
         {
             if (principal.IsPlatformAdmin())

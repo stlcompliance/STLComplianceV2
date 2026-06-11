@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 export interface StaffArrMeResponse {
@@ -1860,4 +1861,172 @@ export interface EntityExportManifestEntity {
 export interface EntityExportManifestResponse {
   packageVersion: string
   entities: EntityExportManifestEntity[]
+}
+
+export interface AuditPackageSectionDescriptor {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageManifestResponse {
+  packageVersion: string
+  sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageAppliedFilters {
+  from: string | null
+  to: string | null
+  action: string | null
+  result: string | null
+  targetType: string | null
+  actorUserId: string | null
+  personId: string | null
+}
+
+export interface AuditPackageFilterOptions {
+  actions: string[]
+  results: string[]
+  targetTypes: string[]
+  actorUserIds: string[]
+}
+
+export interface AuditPackageBreakdownItem {
+  key: string
+  count: number
+}
+
+export interface AuditPackageCountsResponse {
+  auditEvents: number
+  people: number
+  permissionHistory: number
+  personCertifications: number
+  personnelIncidents: number
+  readinessOverrides: number
+  trainingBlockers: number
+}
+
+export interface AuditPackageExportSummary {
+  filters: AuditPackageAppliedFilters
+  counts: AuditPackageCountsResponse
+  byResult: AuditPackageBreakdownItem[]
+  byAction: AuditPackageBreakdownItem[]
+  generatedAt: string
+}
+
+export interface AuditPackageScope {
+  from?: string
+  to?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
+  personId?: string
+}
+
+export interface StaffArrAuditEventExportItem {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface AuditPackageGenerationJobResponse {
+  jobId: string
+  status: string
+  format: string
+  from: string | null
+  to: string | null
+  packageId: string | null
+  errorMessage: string | null
+  createdAt: string
+  startedAt: string | null
+  completedAt: string | null
+  downloadReady: boolean
+}
+
+export interface AuditPackageExportResponse {
+  packageId: string
+  tenantId: string
+  generatedAt: string
+  appliedFilters?: AuditPackageAppliedFilters | null
+  counts: AuditPackageCountsResponse
+  auditEvents?: StaffArrAuditEventExportItem[]
+  people?: unknown[]
+  permissionHistory?: unknown[]
+  personCertifications?: unknown[]
+  personnelIncidents?: unknown[]
+  readinessOverrides?: unknown[]
+  trainingBlockers?: unknown[]
+}
+
+export interface PersonnelReportSummaryItem {
+  personId: string
+  displayName: string
+  employmentStatus: string
+  primaryOrgUnitName: string | null
+}
+
+export interface PersonnelReportSummaryResponse {
+  totalPeople: number
+  activeCount: number
+  inactiveCount: number
+  onLeaveCount: number
+  activePercent: number
+  recentPeople: PersonnelReportSummaryItem[]
+}
+
+export interface ReadinessReportSummaryItem {
+  rollupId: string
+  orgUnitName: string
+  scopeType: string
+  notReadyCount: number
+}
+
+export interface ReadinessReportSummaryResponse {
+  totalRollups: number
+  totalMembers: number
+  readyCount: number
+  notReadyCount: number
+  overrideCount: number
+  readyPercent: number
+  recentRollups: ReadinessReportSummaryItem[]
+}
+
+export interface IncidentReportSummaryItem {
+  incidentId: string
+  title: string
+  severity: string
+  status: string
+}
+
+export interface IncidentReportSummaryResponse {
+  totalIncidents: number
+  openCount: number
+  closedCount: number
+  highSeverityOpenCount: number
+  recentIncidents: IncidentReportSummaryItem[]
+}
+
+export interface CertificationReportSummaryItem {
+  personCertificationId: string
+  personDisplayName: string
+  certificationName: string
+  certificationKey: string
+  status: string
+}
+
+export interface CertificationReportSummaryResponse {
+  totalPeople: number
+  activeCertificationCount: number
+  expiringSoonCount: number
+  expiredCertificationCount: number
+  missingCertificationCount: number
+  recentCertifications: CertificationReportSummaryItem[]
 }

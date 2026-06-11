@@ -124,15 +124,13 @@ public static class AuthEndpoints
 
         me.MapGet("/tenants", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
-            var userId = context.User.GetUserId();
-            return Results.Ok(await auth.GetMyTenantsAsync(userId, cancellationToken));
+            return Results.Ok(await auth.GetMyTenantsAsync(context.User, cancellationToken));
         })
         .WithName("GetMyTenants");
 
         me.MapGet("/entitlements", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await auth.GetMyEntitlementsAsync(tenantId, cancellationToken));
+            return Results.Ok(await auth.GetMyEntitlementsAsync(context.User, cancellationToken));
         })
         .WithName("GetMyEntitlements");
 

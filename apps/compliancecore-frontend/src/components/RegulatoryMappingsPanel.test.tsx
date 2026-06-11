@@ -7,9 +7,6 @@ describe('RegulatoryMappingsPanel', () => {
     render(
       <RegulatoryMappingsPanel
         mappings={[]}
-        canManage={false}
-        onSeedMappings={() => undefined}
-        isSeeding={false}
       />,
     )
 
@@ -45,15 +42,12 @@ describe('RegulatoryMappingsPanel', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ]}
-        canManage={true}
-        onSeedMappings={() => undefined}
-        isSeeding={false}
       />,
     )
 
     expect(screen.getByText('Vehicle inspection under driver qualification')).toBeInTheDocument()
     expect(screen.getByText('vehicle_inspection')).toBeInTheDocument()
     expect(screen.getByText(/FMCSA Safety Compliance/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Seed sample mapping' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Seed sample mapping' })).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,7 @@
 export const WORKSPACE_SECTIONS = [
   'parties',
   'catalog',
+  'reports',
   'purchasing',
   'pricing',
   'planning',
@@ -26,6 +27,7 @@ export const workspaceSectionHeaders: Record<
 > = {
   parties: { title: 'Parties', subtitle: 'Vendors, dealers, and suppliers' },
   catalog: { title: 'Part catalog', subtitle: 'Parts, alternates, and catalog maintenance' },
+  reports: { title: 'Reports', subtitle: 'Vendor, compliance, inventory, and purchasing dashboards' },
   purchasing: { title: 'Purchasing', subtitle: 'Purchase requests and orders' },
   pricing: { title: 'Pricing', subtitle: 'Pricing snapshots and lead times' },
   planning: {

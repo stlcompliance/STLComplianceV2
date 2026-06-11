@@ -61,7 +61,7 @@ describe('productLaunchUrls', () => {
       ).toBe('https://app.stlcompliance.com/assurarr/launch')
     } finally {
       if (originalWindow === undefined) {
-        delete (globalThis as typeof globalThis & { window?: Window }).window
+        Reflect.deleteProperty(globalThis, 'window')
       } else {
         Object.defineProperty(globalThis, 'window', {
           configurable: true,

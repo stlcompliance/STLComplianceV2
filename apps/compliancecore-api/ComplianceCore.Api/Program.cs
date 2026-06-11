@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
     {
         app.MapComplianceCoreAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapComplianceCoreSettingsEndpoints();
         app.MapComplianceCoreVocabularyEndpoints();
         app.MapComplianceCoreComplianceKeyEndpoints();
@@ -64,7 +65,10 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreEvaluationHistoryExplorerEndpoints();
         app.MapComplianceCoreCalculatorEndpoints();
         app.MapComplianceCoreEntityExportEndpoints();
-        app.MapComplianceCoreLoadTestJourneySeedEndpoints();
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+        {
+            app.MapComplianceCoreLoadTestJourneySeedEndpoints();
+        }
         app.MapStlSmartImportAdapterEndpoints();
 
         await SeedVocabularyTypesAsync(app);

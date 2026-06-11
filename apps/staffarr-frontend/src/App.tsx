@@ -12,6 +12,8 @@ import { RestrictionsPage } from './pages/restrictions/RestrictionsPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { MePage } from './pages/me/MePage'
 import { MyTeamPage } from './pages/my-team/MyTeamPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
+import { AuditPackagesPage } from './pages/audit-packages/AuditPackagesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { RolesPage } from './pages/roles/RolesPage'
@@ -59,8 +61,8 @@ export default function App() {
             <Route path="/incidents/create" element={<IncidentCreatePage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
-            <Route path="/reports" element={<Navigate to="/people" replace />} />
-            <Route path="/audit-packages" element={<Navigate to="/people" replace />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/audit-packages" element={<AuditPackagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
@@ -70,5 +72,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-
 

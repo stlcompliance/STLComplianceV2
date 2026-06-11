@@ -2,22 +2,42 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import * as nexarr from '../api/nexarrClient'
 import { NexarrApiError } from '../api/types'
 import { LoginPage } from './LoginPage'
 
-const loginMock = vi.fn()
+const authMock = vi.hoisted(() => ({
+  isAuthenticated: false,
+  login: vi.fn(),
+}))
+const loginMock = authMock.login
 
 vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
-    login: loginMock,
-    isAuthenticated: false,
+    login: authMock.login,
+    isAuthenticated: authMock.isAuthenticated,
   }),
 }))
+
+vi.mock('../api/nexarrClient', () => ({
+  createHandoff: vi.fn(),
+}))
+
+function fillLoginCredentials() {
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'admin@demo.stl' },
+  })
+  fireEvent.change(screen.getByLabelText('Password'), {
+    target: { value: 'ChangeMe!Demo2026' },
+  })
+}
 
 describe('LoginPage', () => {
   afterEach(() => {
     cleanup()
+    authMock.isAuthenticated = false
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('renders sign-in failures in shared error callout', async () => {
@@ -29,6 +49,7 @@ describe('LoginPage', () => {
       </MemoryRouter>,
     )
 
+    fillLoginCredentials()
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByText('Invalid credentials')).toBeTruthy()
@@ -44,6 +65,7 @@ describe('LoginPage', () => {
       </MemoryRouter>,
     )
 
+    fillLoginCredentials()
     fireEvent.click(screen.getByLabelText('Remember this device'))
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
@@ -51,7 +73,7 @@ describe('LoginPage', () => {
       expect(loginMock).toHaveBeenCalledWith(
         'admin@demo.stl',
         'ChangeMe!Demo2026',
-        '11111111-1111-1111-1111-111111111101',
+        null,
         true,
         undefined,
         undefined,
@@ -69,6 +91,7 @@ describe('LoginPage', () => {
       </MemoryRouter>,
     )
 
+    fillLoginCredentials()
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByText('Multi-factor authentication required')).toBeTruthy()
@@ -82,11 +105,45 @@ describe('LoginPage', () => {
       expect(loginMock).toHaveBeenLastCalledWith(
         'admin@demo.stl',
         'ChangeMe!Demo2026',
-        '11111111-1111-1111-1111-111111111101',
+        null,
         false,
         '123456',
         undefined,
       )
+    })
+  })
+
+  it('creates a NexArr handoff for authenticated product callback visits', async () => {
+    authMock.isAuthenticated = true
+    vi.mocked(nexarr.createHandoff).mockResolvedValueOnce({
+      handoffCode: 'handoff-1',
+      handoffId: 'handoff-id-1',
+      expiresAt: '2026-06-11T12:00:00Z',
+      launchUrl: 'http://localhost:5175/launch?handoff=handoff-1',
+    })
+    const assign = vi.fn()
+    vi.stubGlobal('location', {
+      href: 'http://localhost:5174/login?productKey=staffarr',
+      assign,
+    })
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          '/login?productKey=staffarr&callbackUrl=http%3A%2F%2Flocalhost%3A5175%2Fpeople%3Ftab%3Droles',
+        ]}
+      >
+        <LoginPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Launching product')).toBeTruthy()
+    await waitFor(() => {
+      expect(nexarr.createHandoff).toHaveBeenCalledWith(
+        'staffarr',
+        'http://localhost:5175/people?tab=roles',
+      )
+      expect(assign).toHaveBeenCalledWith('http://localhost:5175/launch?handoff=handoff-1')
     })
   })
 })

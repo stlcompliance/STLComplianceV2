@@ -12,22 +12,6 @@ describe('FindingsWorkflowGatesPanel', () => {
   it('renders empty findings state and gate list', () => {
     render(
       <FindingsWorkflowGatesPanel
-        rulePacks={[
-          {
-            rulePackId: 'pack-1',
-            regulatoryProgramId: 'prog-1',
-            regulatoryProgramKey: 'fmcsa_safety',
-            regulatoryProgramLabel: 'FMCSA Safety',
-            packKey: 'driver_qualification',
-            label: 'Driver Qualification',
-            description: '',
-            versionNumber: 1,
-            status: 'published',
-            isActive: true,
-            createdAt: '2026-01-01T00:00:00Z',
-            updatedAt: '2026-01-01T00:00:00Z',
-          },
-        ]}
         factDefinitions={[
           {
             factDefinitionId: 'fact-1',
@@ -67,9 +51,6 @@ describe('FindingsWorkflowGatesPanel', () => {
             updatedAt: '2026-01-01T00:00:00Z',
           },
         ]}
-        canManage
-        onSeedGate={vi.fn()}
-        isSeedingGate={false}
         onCheckGate={vi.fn()}
         isCheckingGate={false}
         lastGateCheck={null}
@@ -80,7 +61,7 @@ describe('FindingsWorkflowGatesPanel', () => {
     )
 
     expect(screen.getByTestId('findings-workflow-gates-panel')).toBeTruthy()
-    expect(screen.getByTestId('findings-workflow-gate-seed')).toBeTruthy()
+    expect(screen.queryByTestId('findings-workflow-gate-seed')).not.toBeInTheDocument()
     expect(screen.getByTestId('findings-workflow-gate-select')).toBeTruthy()
     expect(screen.getByTestId('findings-workflow-gate-emit-findings')).toBeTruthy()
     expect(screen.getByTestId('findings-workflow-gate-findings-section')).toBeTruthy()
@@ -93,7 +74,6 @@ describe('FindingsWorkflowGatesPanel', () => {
 
     render(
       <FindingsWorkflowGatesPanel
-        rulePacks={[]}
         factDefinitions={[]}
         rulePackContent={null}
         findings={[
@@ -126,9 +106,6 @@ describe('FindingsWorkflowGatesPanel', () => {
             updatedAt: '2026-01-01T00:00:00Z',
           },
         ]}
-        canManage={false}
-        onSeedGate={vi.fn()}
-        isSeedingGate={false}
         onCheckGate={onCheckGate}
         isCheckingGate={false}
         lastGateCheck={{

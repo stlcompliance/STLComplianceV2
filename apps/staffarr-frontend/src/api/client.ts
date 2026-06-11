@@ -100,6 +100,17 @@ import type {
   LaunchHandoffResponse,
   StaffArrRestrictionSnapshotResponse,
   ReadinessOverrideResponse,
+  AuditPackageManifestResponse,
+  AuditPackageExportResponse,
+  AuditPackageGenerationJobResponse,
+  AuditPackageFilterOptions,
+  AuditPackageExportSummary,
+  AuditPackageScope,
+  StaffArrAuditEventExportItem,
+  PersonnelReportSummaryResponse,
+  ReadinessReportSummaryResponse,
+  IncidentReportSummaryResponse,
+  CertificationReportSummaryResponse,
   CreateStaffRoleRequest,
   ArchiveStaffRoleRequest,
   CloneStaffRoleRequest,
@@ -193,6 +204,41 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   }
 
   return (await response.json()) as T
+}
+
+function buildAuditPackageQuery(
+  options?: AuditPackageScope & {
+    format?: string
+    page?: number
+    pageSize?: number
+  },
+): string {
+  const params = new URLSearchParams()
+  if (options?.format) params.set('format', options.format)
+  if (options?.from) params.set('from', options.from)
+  if (options?.to) params.set('to', options.to)
+  if (options?.action) params.set('action', options.action)
+  if (options?.result) params.set('result', options.result)
+  if (options?.targetType) params.set('targetType', options.targetType)
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId)
+  if (options?.personId) params.set('personId', options.personId)
+  if (options?.page != null) params.set('page', String(options.page))
+  if (options?.pageSize != null) params.set('pageSize', String(options.pageSize))
+  const query = params.toString()
+  return query ? `?${query}` : ''
+}
+
+function auditPackageJobBody(scope: AuditPackageScope & { format: string }) {
+  return {
+    format: scope.format,
+    from: scope.from ? `${scope.from}T00:00:00.000Z` : undefined,
+    to: scope.to ? `${scope.to}T23:59:59.999Z` : undefined,
+    action: scope.action,
+    result: scope.result,
+    targetType: scope.targetType,
+    actorUserId: scope.actorUserId,
+    personId: scope.personId,
+  }
 }
 
 async function parseCrossProductJsonResponse<T>(
@@ -1844,6 +1890,271 @@ export async function getEntityExportManifest(
     response,
     'Failed to load export manifest',
   )
+}
+
+export async function getAuditPackageFilterOptions(
+  accessToken: string,
+): Promise<AuditPackageFilterOptions> {
+  const response = await fetch(`${apiBase}/api/audit-packages/filter-options`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageFilterOptions>(response, 'Failed to load audit filter options')
+}
+
+export async function getAuditPackageExportSummary(
+  accessToken: string,
+  scope?: AuditPackageScope,
+): Promise<AuditPackageExportSummary> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/summary${buildAuditPackageQuery(scope)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<AuditPackageExportSummary>(response, 'Failed to load audit export summary')
+}
+
+export async function getAuditPackageTimeline(
+  accessToken: string,
+  options?: AuditPackageScope & { page?: number; pageSize?: number },
+): Promise<PagedResult<StaffArrAuditEventExportItem>> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/timeline${buildAuditPackageQuery(options)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PagedResult<StaffArrAuditEventExportItem>>(
+    response,
+    'Failed to load audit package timeline',
+  )
+}
+
+export async function getAuditPackageManifest(
+  accessToken: string,
+): Promise<AuditPackageManifestResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageManifestResponse>(
+    response,
+    'Failed to load audit package manifest',
+  )
+}
+
+export async function exportAuditPackageCsv(
+  accessToken: string,
+  scope?: AuditPackageScope,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...scope, format: 'csv' })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Audit events CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageZip(
+  accessToken: string,
+  options?: AuditPackageScope,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Audit package ZIP export failed')
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageJson(
+  accessToken: string,
+  options?: AuditPackageScope,
+): Promise<AuditPackageExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
+}
+
+export async function createAuditPackageGenerationJob(
+  accessToken: string,
+  options: AuditPackageScope & { format: 'zip' | 'json' },
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(auditPackageJobBody(options)),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to queue audit package generation job',
+  )
+}
+
+export async function getAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to load audit package generation job',
+  )
+}
+
+export async function downloadAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}/download`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download audit package generation job')
+  }
+  return response.blob()
+}
+
+export async function getPersonnelReportSummary(
+  accessToken: string,
+  options?: { employmentStatus?: string },
+): Promise<PersonnelReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/personnel/summary${buildReportQuery({
+      employmentStatus: options?.employmentStatus,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PersonnelReportSummaryResponse>(
+    response,
+    'Failed to load personnel report summary',
+  )
+}
+
+export async function exportPersonnelReportSummaryCsv(
+  accessToken: string,
+  options?: { employmentStatus?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/personnel/summary/export${buildReportQuery({
+      employmentStatus: options?.employmentStatus,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Personnel report CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function getReadinessReportSummary(
+  accessToken: string,
+  options?: { scopeType?: string; attentionOnly?: boolean },
+): Promise<ReadinessReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/readiness/summary${buildReportQuery({
+      scopeType: options?.scopeType,
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ReadinessReportSummaryResponse>(
+    response,
+    'Failed to load readiness report summary',
+  )
+}
+
+export async function exportReadinessReportSummaryCsv(
+  accessToken: string,
+  options?: { scopeType?: string; attentionOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/readiness/summary/export${buildReportQuery({
+      scopeType: options?.scopeType,
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Readiness report CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function getIncidentReportSummary(
+  accessToken: string,
+  options?: { status?: string; severity?: string; openOnly?: boolean },
+): Promise<IncidentReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/incidents/summary${buildReportQuery({
+      status: options?.status,
+      severity: options?.severity,
+      openOnly: options?.openOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<IncidentReportSummaryResponse>(
+    response,
+    'Failed to load incident report summary',
+  )
+}
+
+export async function exportIncidentReportSummaryCsv(
+  accessToken: string,
+  options?: { status?: string; severity?: string; openOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/incidents/summary/export${buildReportQuery({
+      status: options?.status,
+      severity: options?.severity,
+      openOnly: options?.openOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Incident report CSV export failed')
+  }
+  return response.blob()
+}
+
+export async function getCertificationReportSummary(
+  accessToken: string,
+  options?: { missingOnly?: boolean; expiringOnly?: boolean },
+): Promise<CertificationReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/certifications/summary${buildReportQuery({
+      missingOnly: options?.missingOnly,
+      expiringOnly: options?.expiringOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<CertificationReportSummaryResponse>(
+    response,
+    'Failed to load certification report summary',
+  )
+}
+
+export async function exportCertificationReportSummaryCsv(
+  accessToken: string,
+  options?: { missingOnly?: boolean; expiringOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/certifications/summary/export${buildReportQuery({
+      missingOnly: options?.missingOnly,
+      expiringOnly: options?.expiringOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Certification report CSV export failed')
+  }
+  return response.blob()
 }
 
 export async function exportBulkPeopleCsv(

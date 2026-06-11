@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { ProductAppShell, type ProductAppShellProps } from './ProductAppShell'
+import { buildNexArrLoginUrl } from './productWorkspaceAuth'
 
 export type ProductWorkspaceSession = {
   userDisplayName: string
@@ -20,6 +21,7 @@ export type ProductWorkspaceFrameProps = {
   onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
+  aiAssistance?: ProductAppShellProps['aiAssistance']
   workspaceSession: ProductWorkspaceSession | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
@@ -59,17 +61,31 @@ export function ProductWorkspaceFrame({
   onSignOut,
   isProductLaunchPending,
   productLaunchError,
+  aiAssistance,
   workspaceSession,
   isBootstrapping = false,
   bootstrapError = null,
   children,
 }: ProductWorkspaceFrameProps) {
-  if (!workspaceSession && !isBootstrapping && !bootstrapError) {
+  const shouldRedirectToNexArr =
+    (!workspaceSession && !isBootstrapping && !bootstrapError) || bootstrapError === 'expired'
+  const nexArrLoginUrl = shouldRedirectToNexArr
+    ? buildNexArrLoginUrl({ suiteHomeUrl, productKey })
+    : null
+
+  useEffect(() => {
+    if (!nexArrLoginUrl) {
+      return
+    }
+    globalThis.location?.assign(nexArrLoginUrl)
+  }, [nexArrLoginUrl])
+
+  if (shouldRedirectToNexArr) {
     return (
       <WorkspaceMessage
         productName={productName}
-        title="Sign in required"
-        message={`Launch ${productName} from the STL Compliance suite to open your workspace.`}
+        title="Redirecting to sign in"
+        message={`Your ${productName} session is not active. Sending you to NexArr to sign in again.`}
       />
     )
   }
@@ -102,8 +118,8 @@ export function ProductWorkspaceFrame({
     return (
       <WorkspaceMessage
         productName={productName}
-        title="Sign in required"
-        message={`Launch ${productName} from the STL Compliance suite to open your workspace.`}
+        title="Redirecting to sign in"
+        message={`Your ${productName} session is not active. Sending you to NexArr to sign in again.`}
       />
     )
   }
@@ -123,6 +139,7 @@ export function ProductWorkspaceFrame({
       onSignOut={onSignOut}
       isProductLaunchPending={isProductLaunchPending}
       productLaunchError={productLaunchError}
+      aiAssistance={aiAssistance}
       navItems={navItems}
       layoutVariant={layoutVariant}
     >

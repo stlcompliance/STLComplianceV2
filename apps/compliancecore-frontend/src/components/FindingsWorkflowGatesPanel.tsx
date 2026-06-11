@@ -4,7 +4,6 @@ import type {
   ComplianceFindingResponse,
   FactDefinitionResponse,
   RulePackContentBody,
-  RulePackResponse,
   WorkflowGateBatchCheckResponse,
   WorkflowGateCheckResponse,
   WorkflowGateDefinitionResponse,
@@ -13,14 +12,10 @@ import type {
 import { BatchWorkflowGateCheckPanel } from './BatchWorkflowGateCheckPanel'
 
 interface FindingsWorkflowGatesPanelProps {
-  rulePacks: RulePackResponse[]
   factDefinitions: FactDefinitionResponse[]
   rulePackContent: RulePackContentBody | null
   findings: ComplianceFindingResponse[]
   workflowGates: WorkflowGateDefinitionResponse[]
-  canManage: boolean
-  onSeedGate: () => void
-  isSeedingGate: boolean
   onCheckGate: (gateKey: string, facts: Record<string, boolean>, emitFindings: boolean) => void
   isCheckingGate: boolean
   lastGateCheck: WorkflowGateCheckResponse | null
@@ -46,14 +41,10 @@ function severityBadgeClass(severity: string): string {
 }
 
 export function FindingsWorkflowGatesPanel({
-  rulePacks,
   factDefinitions,
   rulePackContent,
   findings,
   workflowGates,
-  canManage,
-  onSeedGate,
-  isSeedingGate,
   onCheckGate,
   isCheckingGate,
   lastGateCheck,
@@ -78,17 +69,6 @@ export function FindingsWorkflowGatesPanel({
         <p className="text-sm text-slate-400">
           Review compliance findings from evaluations and run workflow gate checks tied to rule pack outcomes.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            data-testid="findings-workflow-gate-seed"
-            onClick={onSeedGate}
-            disabled={isSeedingGate || rulePacks.length === 0}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeedingGate ? 'Seeding…' : 'Seed sample workflow gate'}
-          </button>
-        )}
       </div>
 
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">

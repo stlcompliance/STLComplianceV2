@@ -49,6 +49,15 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
     return `${productName} requires platform administrator access in NexArr.`
   }
 
+  if (
+    code === 'auth.session_revoked'
+    || code === 'auth.session_expired'
+    || code === 'launch.session_revoked'
+    || code === 'launch.session_expired'
+  ) {
+    return 'Your NexArr session has ended. Sign in again and relaunch from the suite.'
+  }
+
   if (code === 'handoff.product_mismatch' || code === 'launch.callback_not_allowed') {
     return `Invalid callback for ${productName}. Relaunch from NexArr.`
   }

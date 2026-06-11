@@ -15,7 +15,6 @@ import {
   Check,
   CheckCircle,
   ClipboardList,
-  FileText,
   GraduationCap,
   HelpCircle,
   Info,
@@ -164,12 +163,6 @@ const followUpOptions: SelectOption[] = [
   { value: 'no', label: 'No' },
   { value: 'yes', label: 'Yes' },
   { value: 'conditional', label: 'Conditional' },
-]
-
-const fakeEvidence = [
-  { icon: FileText, name: 'Scene_photo_01.jpg', meta: '1.2 MB · JPG', status: 'Uploaded', tone: 'emerald' },
-  { icon: FileText, name: 'Witness_statement_JD.pdf', meta: '245 KB · PDF', status: 'Pending review', tone: 'amber' },
-  { icon: FileText, name: 'Equipment_Inspection_Form.xlsx', meta: '82 KB · XLSX', status: 'Linked', tone: 'sky' },
 ]
 
 const quickReferences: Array<[string, ComponentType<{ className?: string }>]> = [
@@ -1374,35 +1367,9 @@ export function IncidentCreatePage() {
                   <p className="mt-3 text-xs text-slate-500">Accepted: jpg, png, pdf, docx, xlsx, txt</p>
                 </div>
                 <div className="space-y-2">
-                  {fakeEvidence.map((file) => {
-                    const Icon = file.icon
-                    return (
-                      <div
-                        key={file.name}
-                        className="flex items-center justify-between gap-3 rounded-md border border-slate-700 bg-slate-950/50 px-3 py-2"
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <Icon className="h-5 w-5 shrink-0 text-slate-300" />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm text-slate-100">{file.name}</p>
-                            <p className="text-xs text-slate-500">{file.meta}</p>
-                          </div>
-                        </div>
-                        <span
-                          className={classNames(
-                            'rounded-full px-2 py-0.5 text-[11px] font-medium ring-1',
-                            file.tone === 'emerald' &&
-                              'bg-emerald-500/15 text-emerald-200 ring-emerald-400/30',
-                            file.tone === 'amber' &&
-                              'bg-amber-500/15 text-amber-200 ring-amber-400/30',
-                            file.tone === 'sky' && 'bg-sky-500/15 text-sky-200 ring-sky-400/30',
-                          )}
-                        >
-                          {file.status}
-                        </span>
-                      </div>
-                    )
-                  })}
+                  <div className="rounded-md border border-slate-700 bg-slate-950/50 px-3 py-4 text-sm text-slate-400">
+                    No files attached yet.
+                  </div>
                   <Toggle
                     checked={evidencePackageRequested}
                     onChange={setEvidencePackageRequested}

@@ -13,9 +13,13 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
     {
         app.MapRoutArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapRoutArrSettingsEndpoints();
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrTripProofDvirEndpoints();
+        app.MapRoutArrDispatchReportEndpoints();
+        app.MapRoutArrRouteReportEndpoints();
+        app.MapRoutArrDispatchOverrideReportEndpoints();
         app.MapRoutArrTripCaptureAttachmentEndpoints();
         app.MapGroup("/api/driver-portal").MapRoutArrDriverPortalTimeTrackingEndpoints();
         app.MapRoutArrTripPartsDemandEndpoints();
@@ -40,7 +44,10 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDriverEligibilityEndpoints();
         app.MapRoutArrAssetDispatchabilityEndpoints();
         app.MapRoutArrDispatchWorkflowGateEndpoints();
-        app.MapRoutArrLoadTestJourneySeedEndpoints();
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+        {
+            app.MapRoutArrLoadTestJourneySeedEndpoints();
+        }
         app.MapRoutArrFieldInboxEndpoints();
         app.MapRoutArrNotificationSettingsEndpoints();
         app.MapRoutArrIntegrationEventSettingsEndpoints();

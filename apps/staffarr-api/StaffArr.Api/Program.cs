@@ -16,6 +16,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrMePortalEndpoints();
         app.MapStaffArrPersonnelUpdateRequestEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapStlProductAiAssistanceEndpoints();
         app.MapStaffArrPeopleEndpoints();
         app.MapStaffArrPersonLookupEndpoints();
         app.MapStaffArrPeopleExportEndpoints();
@@ -40,6 +41,8 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrInternalPersonnelHistoryEndpoints();
         app.MapStaffArrInternalPermissionProjectionEndpoints();
         app.MapStaffArrInternalPersonExportDeliveryEndpoints();
+        app.MapStaffArrAuditPackageEndpoints();
+        app.MapStaffArrInternalAuditPackageGenerationEndpoints();
         app.MapStaffArrTrainingAcknowledgementEndpoints();
         app.MapStaffArrOffboardingEndpoints();
         app.MapStaffArrFieldInboxEndpoints();

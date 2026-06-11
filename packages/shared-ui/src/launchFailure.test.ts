@@ -49,4 +49,16 @@ describe('resolveNexArrLaunchFailureMessage', () => {
 
     expect(message).toBe('Compliance Core requires platform administrator access in NexArr.')
   })
+
+  it('maps ended NexArr sessions to relaunch guidance', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 401,
+      body: JSON.stringify({
+        code: 'launch.session_revoked',
+        message: 'The source NexArr session has ended.',
+      }),
+    })
+
+    expect(message).toBe('Your NexArr session has ended. Sign in again and relaunch from the suite.')
+  })
 })

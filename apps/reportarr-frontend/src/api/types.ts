@@ -12,6 +12,7 @@ export type ReportArrHandoffSessionResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 export type ReportArrSessionBootstrapResponse = {

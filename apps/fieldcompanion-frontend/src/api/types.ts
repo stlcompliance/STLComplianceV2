@@ -109,6 +109,7 @@ export interface FieldCompanionSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  callbackUrl: string | null
 }
 
 export interface FieldCompanionOfflineActionPayload {

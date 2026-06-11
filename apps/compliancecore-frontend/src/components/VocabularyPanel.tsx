@@ -7,9 +7,6 @@ interface VocabularyPanelProps {
   materialKeys: MaterialKeyResponse[]
   selectedTypeKey: string
   onSelectType: (typeKey: string) => void
-  canManage: boolean
-  onCreateTerm: () => void
-  isCreatingTerm: boolean
 }
 
 export function VocabularyPanel({
@@ -19,25 +16,12 @@ export function VocabularyPanel({
   materialKeys,
   selectedTypeKey,
   onSelectType,
-  canManage,
-  onCreateTerm,
-  isCreatingTerm,
 }: VocabularyPanelProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Controlled vocabulary</h2>
-          {canManage && (
-            <button
-              type="button"
-              onClick={onCreateTerm}
-              disabled={isCreatingTerm || !selectedTypeKey}
-              className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-            >
-              {isCreatingTerm ? 'Creating…' : 'Add sample term'}
-            </button>
-          )}
         </div>
 
         <label htmlFor="vocabulary-type-filter" className="mt-4 block text-xs text-slate-500">

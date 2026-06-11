@@ -11,6 +11,7 @@ import { CustomerPortalPage } from './pages/customer-portal/CustomerPortalPage'
 import { ExceptionsPage } from './pages/exceptions/ExceptionsPage'
 import { DriverPortalPage } from './pages/driver-portal/DriverPortalPage'
 import { LoadVisibilityPage } from './pages/load-visibility/LoadVisibilityPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { ProofReviewPage } from './pages/proof-review/ProofReviewPage'
 import { RoutePlannerPage } from './pages/route-planner/RoutePlannerPage'
 import { RoutesPage } from './pages/routes/RoutesPage'
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/routes/create" element={<RoutesPage />} />
             <Route path="/stops" element={<StopsPage />} />
             <Route path="/exceptions" element={<ExceptionsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/proof-review" element={<ProofReviewPage />} />
             <Route path="/dock-appointments" element={<DockAppointmentsPage />} />
             <Route path="/load-visibility" element={<LoadVisibilityPage />} />
@@ -71,5 +73,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-
 

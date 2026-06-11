@@ -11,8 +11,6 @@ describe('RegulatoryRegistryPanel', () => {
         programs={[]}
         rulePacks={[]}
         canManage={false}
-        onSeedRegistry={() => undefined}
-        isSeeding={false}
         onAdvanceRulePack={() => undefined}
         isAdvancingRulePack={false}
       />,
@@ -78,8 +76,6 @@ describe('RegulatoryRegistryPanel', () => {
           },
         ]}
         canManage={true}
-        onSeedRegistry={() => undefined}
-        isSeeding={false}
         onAdvanceRulePack={() => undefined}
         isAdvancingRulePack={false}
       />,
@@ -88,7 +84,7 @@ describe('RegulatoryRegistryPanel', () => {
     expect(screen.getAllByText('U.S. DOT').length).toBeGreaterThan(0)
     expect(screen.getByText('FMCSA Safety Compliance')).toBeInTheDocument()
     expect(screen.getByText('Driver Qualification Rules')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Seed sample registry' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Seed sample registry' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Submit for review' })).toBeInTheDocument()
   })
 })

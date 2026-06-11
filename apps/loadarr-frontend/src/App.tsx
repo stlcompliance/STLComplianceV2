@@ -23,7 +23,7 @@ import { generatePath, matchPath, useLocation, useNavigate } from 'react-router-
 import {
   ControlledSelect,
   FormField,
-  ProductAppShell,
+  ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
@@ -975,603 +975,35 @@ const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
 
 const fallbackSummary: LoadArrWorkspaceSummary = {
-  generatedAt: '2026-06-03T14:00:00Z',
+  generatedAt: new Date(0).toISOString(),
   metrics: {
-    activeLocations: 4,
-    quantityOnHand: 64,
-    quantityCommitted: 23,
-    quantityBlocked: 14,
-    openTasks: 3,
-    openHolds: 2,
-    unexplainedInventory: 2,
+    activeLocations: 0,
+    quantityOnHand: 0,
+    quantityCommitted: 0,
+    quantityBlocked: 0,
+    openTasks: 0,
+    openHolds: 0,
+    unexplainedInventory: 0,
   },
-  locations: [
-    {
-      id: 'loc-dock-01',
-      staffarrSiteNameSnapshot: 'STL North Yard',
-      staffarrSiteOrgUnitId: 'staff-site-stl-north',
-      name: 'Receiving Dock 1',
-      locationType: 'dock',
-      path: 'STL North Yard / Main Warehouse / Dock 1',
-      active: true,
-      complianceRestrictions: ['ambient', 'forklift'],
-      capacityPercent: 78,
-      notes: 'Open for receipts and outbound staging',
-    },
-    {
-      id: 'loc-haz-01',
-      staffarrSiteNameSnapshot: 'STL North Yard',
-      staffarrSiteOrgUnitId: 'staff-site-stl-north',
-      name: 'Hazmat Cage A',
-      locationType: 'hazmat_cage',
-      path: 'STL North Yard / Secure Storage / Hazmat Cage A',
-      active: true,
-      complianceRestrictions: ['hazmat', 'controlled_access', 'inspection_required'],
-      capacityPercent: 63,
-      notes: 'Authorized staff and current hazmat training required',
-    },
-    {
-      id: 'loc-quarantine-01',
-      staffarrSiteNameSnapshot: 'STL North Yard',
-      staffarrSiteOrgUnitId: 'staff-site-stl-north',
-      name: 'Quarantine Bay',
-      locationType: 'quarantine_area',
-      path: 'STL North Yard / Quality / Quarantine Bay',
-      active: true,
-      complianceRestrictions: ['quality_hold', 'blocked'],
-      capacityPercent: 41,
-      notes: 'Blocked from allocation until investigation closes',
-    },
-    {
-      id: 'loc-truck-17',
-      staffarrSiteNameSnapshot: 'South Service Depot',
-      staffarrSiteOrgUnitId: 'staff-site-south-depot',
-      name: 'Truck Stock 17',
-      locationType: 'service_truck',
-      path: 'South Service Depot / Mobile Stock / Truck 17',
-      active: true,
-      complianceRestrictions: ['mobile_stock', 'route_ready'],
-      capacityPercent: 55,
-      notes: 'Assigned to field maintenance route handoff',
-    },
-  ],
-  inventory: [
-    {
-      id: 'bal-valve-kit-a',
-      supplyarrItemId: 'SUP-VALVE-KIT-A',
-      itemNameSnapshot: 'Valve repair kit A',
-      unitOfMeasureSnapshot: 'each',
-      state: 'available',
-      locationId: 'loc-dock-01',
-      locationNameSnapshot: 'Receiving Dock 1',
-      quantityOnHand: 38,
-      quantityReserved: 11,
-      quantityAllocated: 4,
-      quantityBlocked: 0,
-      originEventType: 'purchase_receipt',
-      originReference: 'PO-10492 / RR-24018',
-      traceTags: ['lot:L2405-77', 'supplyarr:part:SUP-VALVE-KIT-A'],
-      notes: 'Ready for putaway',
-    },
-    {
-      id: 'bal-adhesive-haz',
-      supplyarrItemId: 'SUP-ADH-49',
-      itemNameSnapshot: 'Regulated adhesive cartridge',
-      unitOfMeasureSnapshot: 'case',
-      state: 'pending_inspection',
-      locationId: 'loc-haz-01',
-      locationNameSnapshot: 'Hazmat Cage A',
-      quantityOnHand: 14,
-      quantityReserved: 0,
-      quantityAllocated: 0,
-      quantityBlocked: 14,
-      originEventType: 'vendor_consignment_receipt',
-      originReference: 'ASN-8834',
-      traceTags: ['hazmat', 'sds:current', 'lot:ADH-991'],
-      notes: 'SDS and label check required',
-    },
-    {
-      id: 'bal-brake-rotor',
-      supplyarrItemId: 'SUP-BR-ROTOR-22',
-      itemNameSnapshot: 'Brake rotor assembly',
-      unitOfMeasureSnapshot: 'each',
-      state: 'reserved',
-      locationId: 'loc-truck-17',
-      locationNameSnapshot: 'Truck Stock 17',
-      quantityOnHand: 12,
-      quantityReserved: 2,
-      quantityAllocated: 6,
-      quantityBlocked: 0,
-      originEventType: 'route_return',
-      originReference: 'RoutArr trip RT-7781',
-      traceTags: ['maintainarr:work-order:WO-5530', 'truck_stock'],
-      notes: 'Reserved for maintenance work orders',
-    },
-  ],
-  tasks: [
-    {
-      id: 'task-receive-24018',
-      taskType: 'receive',
-      title: 'Receive PO-10492',
-      priority: 'high',
-      status: 'ready',
-      locationNameSnapshot: 'Receiving Dock 1',
-      assignedRole: 'Inventory Clerk',
-      supplyarrItemId: 'SUP-VALVE-KIT-A',
-      quantity: 38,
-      dueAtUtc: '2026-06-03T15:00:00Z',
-      requiredSignals: ['purchase_receipt', 'packing_slip_attached'],
-    },
-    {
-      id: 'task-inspect-adh-49',
-      taskType: 'quality_inspection',
-      title: 'Inspect regulated adhesive lot',
-      priority: 'urgent',
-      status: 'blocked_by_training',
-      locationNameSnapshot: 'Hazmat Cage A',
-      assignedRole: 'Hazmat-qualified reviewer',
-      supplyarrItemId: 'SUP-ADH-49',
-      quantity: 14,
-      dueAtUtc: '2026-06-03T18:00:00Z',
-      requiredSignals: ['hazmat', 'trainarr_required', 'compliancecore_sds_check'],
-    },
-    {
-      id: 'task-pick-wo-5530',
-      taskType: 'pick',
-      title: 'Pick parts for WO-5530',
-      priority: 'normal',
-      status: 'in_progress',
-      locationNameSnapshot: 'Truck Stock 17',
-      assignedRole: 'Route Stock Lead',
-      supplyarrItemId: 'SUP-BR-ROTOR-22',
-      quantity: 6,
-      dueAtUtc: '2026-06-04T13:30:00Z',
-      requiredSignals: ['maintainarr', 'route_ready'],
-    },
-  ],
-  holds: [
-    {
-      id: 'hold-adh-49',
-      holdType: 'quality_hold',
-      supplyarrItemId: 'SUP-ADH-49',
-      locationNameSnapshot: 'Hazmat Cage A',
-      status: 'Open',
-      reason: 'SDS label mismatch requires Compliance Core review',
-      sourceReference: 'ComplianceCore rule title49.hazmat.labeling',
-      openedAtUtc: '2026-06-02T21:10:00Z',
-    },
-    {
-      id: 'hold-count-rotor',
-      holdType: 'investigation',
-      supplyarrItemId: 'SUP-BR-ROTOR-22',
-      locationNameSnapshot: 'Truck Stock 17',
-      status: 'Review',
-      reason: 'Cycle count variance above mobile-stock threshold',
-      sourceReference: 'Count CC-8021',
-      openedAtUtc: '2026-06-02T19:40:00Z',
-    },
-  ],
-  routeHandoffs: [
-    {
-      id: 'handoff-rt-7781',
-      targetProduct: 'RoutArr',
-      targetReference: 'RT-7781',
-      locationNameSnapshot: 'Truck Stock 17',
-      status: 'ready',
-      quantity: 6,
-      notes: 'WO-5530 parts staged for mobile maintenance route',
-    },
-    {
-      id: 'handoff-out-1204',
-      targetProduct: 'SupplyArr',
-      targetReference: 'OUT-1204',
-      locationNameSnapshot: 'Receiving Dock 1',
-      status: 'waiting_on_pick',
-      quantity: 11,
-      notes: 'Outbound stock movement pending pick confirmation',
-    },
-  ],
-  evidence: [
-    {
-      id: 'ev-rr-24018-photo',
-      evidenceType: 'photo',
-      locationNameSnapshot: 'Receiving Dock 1',
-      summary: 'Dock receipt photo attached to RR-24018',
-      capturedAtUtc: '2026-06-02T20:16:00Z',
-      capturedBy: 'Inventory Clerk',
-    },
-    {
-      id: 'ev-adh-sds-check',
-      evidenceType: 'rule_evaluation',
-      locationNameSnapshot: 'Hazmat Cage A',
-      summary: 'SDS and label rule check opened',
-      capturedAtUtc: '2026-06-02T21:12:00Z',
-      capturedBy: 'ComplianceCore',
-    },
-    {
-      id: 'ev-count-8021',
-      evidenceType: 'cycle_count',
-      locationNameSnapshot: 'Truck Stock 17',
-      summary: 'Mobile stock variance captured for review',
-      capturedAtUtc: '2026-06-02T19:42:00Z',
-      capturedBy: 'Route Stock Lead',
-    },
-  ],
-  unexplainedInventory: [
-    {
-      id: 'unexplained-count-8021',
-      recordNumber: 'UNX-8021',
-      status: 'needs_approval',
-      discoverySource: 'cycle_count_variance',
-      staffarrSiteOrgUnitId: 'staff-site-south-depot',
-      staffarrSiteNameSnapshot: 'South Service Depot',
-      warehouseLocationId: 'loc-truck-17',
-      locationNameSnapshot: 'Truck Stock 17',
-      supplyarrItemId: 'SUP-BR-ROTOR-22',
-      itemNameSnapshot: 'Brake rotor assembly',
-      expectedQuantity: 10,
-      quantity: 12,
-      varianceQuantity: 2,
-      unitOfMeasure: 'each',
-      lotCode: null,
-      serialCode: 'BR-SN-7781',
-      discoveredByPersonId: 'person-route-stock-lead',
-      reasonCode: 'cycle_count_variance',
-      evidenceSummary: 'Positive mobile-stock variance captured; stock is not trusted available until supervisor approval.',
-      complianceEvaluationId: null,
-      resolutionState: 'not_trusted_available',
-      discoveredAtUtc: '2026-06-02T19:45:00Z',
-      resolvedAtUtc: null,
-    },
-    {
-      id: 'unexplained-dock-adh',
-      recordNumber: 'UNX-ADH-49',
-      status: 'needs_quarantine',
-      discoverySource: 'damaged_freight_receipt',
-      staffarrSiteOrgUnitId: 'staff-site-stl-north',
-      staffarrSiteNameSnapshot: 'STL North Yard',
-      warehouseLocationId: 'loc-quarantine-01',
-      locationNameSnapshot: 'Quarantine Bay',
-      supplyarrItemId: 'SUP-ADH-49',
-      itemNameSnapshot: 'Regulated adhesive cartridge',
-      expectedQuantity: 0,
-      quantity: 1,
-      varianceQuantity: 1,
-      unitOfMeasure: 'case',
-      lotCode: 'ADH-991',
-      serialCode: null,
-      discoveredByPersonId: 'person-inventory-clerk',
-      reasonCode: 'unknown_origin_review',
-      evidenceSummary: 'One extra case found beside freight paperwork; moved to StaffArr quarantine location for review.',
-      complianceEvaluationId: 'cc-eval-adh-extra',
-      resolutionState: 'quarantined_untrusted',
-      discoveredAtUtc: '2026-06-02T20:50:00Z',
-      resolvedAtUtc: null,
-    },
-  ],
+  locations: [],
+  inventory: [],
+  tasks: [],
+  holds: [],
+  routeHandoffs: [],
+  evidence: [],
+  unexplainedInventory: [],
 }
+const fallbackReceivingSessions: LoadArrReceivingSession[] = []
 
-const fallbackReceivingSessions: LoadArrReceivingSession[] = [
-  {
-    id: 'recv-24018',
-    receivingNumber: 'RCV-24018',
-    receivingType: 'purchase_order',
-    status: 'open',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    sourceProductKey: 'supplyarr',
-    sourceObjectType: 'purchase_order',
-    sourceObjectId: 'PO-10492',
-    supplierNameSnapshot: 'Midwest Fleet Supply',
-    startedByPersonId: 'person-inventory-clerk',
-    completedByPersonId: null,
-    startedAtUtc: '2026-06-02T20:10:00Z',
-    completedAtUtc: null,
-    lines: [
-      {
-        id: 'line-24018-1',
-        supplyarrItemId: 'SUP-VALVE-KIT-A',
-        itemNameSnapshot: 'Valve repair kit A',
-        expectedQuantity: 38,
-        receivedQuantity: 38,
-        unitOfMeasure: 'each',
-        warehouseLocationId: 'loc-dock-01',
-        locationNameSnapshot: 'Receiving Dock 1',
-        lotCode: 'L2405-77',
-        serialCode: null,
-        condition: 'new',
-        status: 'ready_to_complete',
-        discrepancyReasonCode: null,
-        evidenceSummary: 'Dock receipt photo attached',
-      },
-    ],
-  },
-  {
-    id: 'recv-8834',
-    receivingNumber: 'RCV-8834',
-    receivingType: 'vendor_consignment',
-    status: 'inspection_required',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    sourceProductKey: 'supplyarr',
-    sourceObjectType: 'asn',
-    sourceObjectId: 'ASN-8834',
-    supplierNameSnapshot: 'Applied Chemical Partners',
-    startedByPersonId: 'person-hazmat-reviewer',
-    completedByPersonId: null,
-    startedAtUtc: '2026-06-02T21:05:00Z',
-    completedAtUtc: null,
-    lines: [
-      {
-        id: 'line-8834-1',
-        supplyarrItemId: 'SUP-ADH-49',
-        itemNameSnapshot: 'Regulated adhesive cartridge',
-        expectedQuantity: 14,
-        receivedQuantity: 14,
-        unitOfMeasure: 'case',
-        warehouseLocationId: 'loc-haz-01',
-        locationNameSnapshot: 'Hazmat Cage A',
-        lotCode: 'ADH-991',
-        serialCode: null,
-        condition: 'pending_inspection',
-        status: 'blocked_by_compliance',
-        discrepancyReasonCode: 'label_mismatch',
-        evidenceSummary: 'SDS and label check opened',
-      },
-    ],
-  },
-]
+const fallbackTransferOrders: LoadArrTransferOrder[] = []
 
-const fallbackTransferOrders: LoadArrTransferOrder[] = [
-  {
-    id: 'xfer-24018-putaway',
-    transferNumber: 'TRF-24018',
-    status: 'ready',
-    transferType: 'bin_to_bin',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    fromLocationId: 'loc-dock-01',
-    fromLocationNameSnapshot: 'Receiving Dock 1',
-    toLocationId: 'loc-quarantine-01',
-    toLocationNameSnapshot: 'Quarantine Bay',
-    requestedByPersonId: 'person-inventory-clerk',
-    completedByPersonId: null,
-    reasonCode: 'quality_inspection',
-    createdAtUtc: '2026-06-03T14:15:00Z',
-    completedAtUtc: null,
-    lines: [
-      {
-        id: 'xfer-line-24018',
-        supplyarrItemId: 'SUP-VALVE-KIT-A',
-        itemNameSnapshot: 'Valve repair kit A',
-        quantity: 4,
-        unitOfMeasure: 'each',
-        lotCode: 'L2405-77',
-        serialCode: null,
-        status: 'ready',
-      },
-    ],
-  },
-  {
-    id: 'xfer-truck-17',
-    transferNumber: 'TRF-TRUCK-17',
-    status: 'completed',
-    transferType: 'warehouse_to_truck',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    fromLocationId: 'loc-truck-17',
-    fromLocationNameSnapshot: 'Truck Stock 17',
-    toLocationId: 'loc-dock-01',
-    toLocationNameSnapshot: 'Receiving Dock 1',
-    requestedByPersonId: 'person-route-stock-lead',
-    completedByPersonId: 'person-route-stock-lead',
-    reasonCode: 'route_replenishment',
-    createdAtUtc: '2026-06-02T18:00:00Z',
-    completedAtUtc: '2026-06-02T18:35:00Z',
-    lines: [
-      {
-        id: 'xfer-line-truck-17',
-        supplyarrItemId: 'SUP-BR-ROTOR-22',
-        itemNameSnapshot: 'Brake rotor assembly',
-        quantity: 2,
-        unitOfMeasure: 'each',
-        lotCode: null,
-        serialCode: 'BR-SN-7781',
-        status: 'completed',
-      },
-    ],
-  },
-]
+const fallbackCounts: LoadArrCount[] = []
 
-const fallbackCounts: LoadArrCount[] = [
-  {
-    id: 'count-8021',
-    countNumber: 'CNT-260602-1945',
-    status: 'variance_pending_approval',
-    countType: 'cycle_count',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    warehouseLocationId: 'loc-truck-17',
-    locationNameSnapshot: 'Truck Stock 17',
-    supplyarrItemId: 'SUP-BR-ROTOR-22',
-    itemNameSnapshot: 'Brake rotor assembly',
-    expectedQuantity: 10,
-    countedQuantity: 12,
-    varianceQuantity: 2,
-    unitOfMeasure: 'each',
-    countedByPersonId: 'person-route-stock-lead',
-    approvedByPersonId: null,
-    reasonCode: 'cycle_count_variance',
-    inventoryAdjustmentId: null,
-    evidenceSummary: 'Positive variance waiting supervisor approval',
-    createdAtUtc: '2026-06-02T19:45:00Z',
-    completedAtUtc: '2026-06-02T19:54:00Z',
-    approvedAtUtc: null,
-    updatedAtUtc: '2026-06-02T19:54:00Z',
-  },
-  {
-    id: 'count-adh-49',
-    countNumber: 'CNT-260602-2110',
-    status: 'approved',
-    countType: 'compliance',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    warehouseLocationId: 'loc-haz-01',
-    locationNameSnapshot: 'Hazmat Cage A',
-    supplyarrItemId: 'SUP-ADH-49',
-    itemNameSnapshot: 'Regulated adhesive cartridge',
-    expectedQuantity: 14,
-    countedQuantity: 14,
-    varianceQuantity: 0,
-    unitOfMeasure: 'case',
-    countedByPersonId: 'person-hazmat-reviewer',
-    approvedByPersonId: 'person-hazmat-supervisor',
-    reasonCode: 'sds_label_mismatch',
-    inventoryAdjustmentId: 'adj-count-adh-49',
-    evidenceSummary: 'SDS and label rule check completed',
-    createdAtUtc: '2026-06-02T21:10:00Z',
-    completedAtUtc: '2026-06-02T21:18:00Z',
-    approvedAtUtc: '2026-06-02T21:20:00Z',
-    updatedAtUtc: '2026-06-02T21:20:00Z',
-  },
-]
+const fallbackAdjustments: LoadArrAdjustment[] = []
 
-const fallbackAdjustments: LoadArrAdjustment[] = [
-  {
-    id: 'adj-count-adh-49',
-    adjustmentNumber: 'ADJ-260602-2118',
-    status: 'approved',
-    adjustmentType: 'loss',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    warehouseLocationId: 'loc-haz-01',
-    locationNameSnapshot: 'Hazmat Cage A',
-    supplyarrItemId: 'SUP-ADH-49',
-    itemNameSnapshot: 'Regulated adhesive cartridge',
-    quantityDelta: -0.5,
-    unitOfMeasure: 'case',
-    reasonCode: 'sds_label_mismatch',
-    createdByPersonId: 'person-hazmat-reviewer',
-    approvedByPersonId: 'person-hazmat-supervisor',
-    inventoryOriginEventId: null,
-    evidenceSummary: 'SDS and label review correction',
-    createdAtUtc: '2026-06-02T21:18:00Z',
-    approvedAtUtc: '2026-06-02T21:20:00Z',
-    updatedAtUtc: '2026-06-02T21:20:00Z',
-  },
-  {
-    id: 'adj-count-8021',
-    adjustmentNumber: 'ADJ-260602-1954',
-    status: 'open',
-    adjustmentType: 'gain',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    warehouseLocationId: 'loc-truck-17',
-    locationNameSnapshot: 'Truck Stock 17',
-    supplyarrItemId: 'SUP-BR-ROTOR-22',
-    itemNameSnapshot: 'Brake rotor assembly',
-    quantityDelta: 2,
-    unitOfMeasure: 'each',
-    reasonCode: 'cycle_count_variance',
-    createdByPersonId: 'person-route-stock-lead',
-    approvedByPersonId: null,
-    inventoryOriginEventId: null,
-    evidenceSummary: 'Supervisor approval pending',
-    createdAtUtc: '2026-06-02T19:54:00Z',
-    approvedAtUtc: null,
-    updatedAtUtc: '2026-06-02T19:54:00Z',
-  },
-]
+const fallbackTruckStock: LoadArrTruckStock[] = []
 
-const fallbackTruckStock: LoadArrTruckStock[] = [
-  {
-    id: 'truck-stock-17-rotor',
-    truckStockNumber: 'TRK-17-ROTOR',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    truckLocationId: 'loc-truck-17',
-    truckLocationNameSnapshot: 'Truck Stock 17',
-    supplyarrItemId: 'SUP-BR-ROTOR-22',
-    itemNameSnapshot: 'Brake rotor assembly',
-    unitOfMeasure: 'each',
-    assignedPersonId: 'person-route-stock-lead',
-    assignedPersonNameSnapshot: 'Jordan Reed',
-    quantityOnHand: 12,
-    minimumQuantity: 6,
-    maximumQuantity: 18,
-    status: 'ready',
-    lastCountedAtUtc: '2026-06-02T19:40:00Z',
-    lastMovementAtUtc: '2026-06-02T19:48:00Z',
-    notes: 'Reserved for maintenance work orders and route returns.',
-    traceTags: ['truck_stock', 'route_ready', 'maintainarr:work-order:WO-5530'],
-  },
-  {
-    id: 'truck-stock-17-kit',
-    truckStockNumber: 'TRK-17-KIT',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    truckLocationId: 'loc-truck-17',
-    truckLocationNameSnapshot: 'Truck Stock 17',
-    supplyarrItemId: 'SUP-VALVE-KIT-A',
-    itemNameSnapshot: 'Valve repair kit A',
-    unitOfMeasure: 'each',
-    assignedPersonId: 'person-route-stock-lead',
-    assignedPersonNameSnapshot: 'Jordan Reed',
-    quantityOnHand: 4,
-    minimumQuantity: 3,
-    maximumQuantity: 10,
-    status: 'low_stock',
-    lastCountedAtUtc: '2026-06-02T18:15:00Z',
-    lastMovementAtUtc: '2026-06-02T18:50:00Z',
-    notes: 'Needs restock after route replenishment and technician issue.',
-    traceTags: ['truck_stock', 'restock_required', 'route_replenishment'],
-  },
-]
-
-const fallbackKits: LoadArrKit[] = [
-  {
-    id: 'kit-pm-emergency-17',
-    kitNumber: 'KIT-PM-17',
-    staffarrSiteOrgUnitId: 'staff-site-south-depot',
-    staffarrSiteNameSnapshot: 'South Service Depot',
-    locationId: 'loc-truck-17',
-    locationNameSnapshot: 'Truck Stock 17',
-    primaryItemId: 'SUP-VALVE-KIT-A',
-    kitNameSnapshot: 'Valve repair kit A',
-    unitOfMeasure: 'each',
-    assignedPersonId: 'person-route-stock-lead',
-    assignedPersonNameSnapshot: 'Jordan Reed',
-    quantityOnHand: 4,
-    minimumQuantity: 3,
-    maximumQuantity: 10,
-    status: 'built',
-    lastActionAtUtc: '2026-06-02T18:50:00Z',
-    lastMovementAtUtc: '2026-06-02T18:50:00Z',
-    notes: 'Maintenance and route response kit assigned to mobile stock.',
-    traceTags: ['kit', 'mobile_stock', 'pm_ready'],
-  },
-  {
-    id: 'kit-ppe-hazmat-04',
-    kitNumber: 'KIT-PPE-04',
-    staffarrSiteOrgUnitId: 'staff-site-stl-north',
-    staffarrSiteNameSnapshot: 'STL North Yard',
-    locationId: 'loc-dock-01',
-    locationNameSnapshot: 'Receiving Dock 1',
-    primaryItemId: 'SUP-ADH-49',
-    kitNameSnapshot: 'Regulated adhesive cartridge kit',
-    unitOfMeasure: 'case',
-    assignedPersonId: 'person-hazmat-reviewer',
-    assignedPersonNameSnapshot: 'Taylor Brooks',
-    quantityOnHand: 1,
-    minimumQuantity: 1,
-    maximumQuantity: 4,
-    status: 'needs_replenishment',
-    lastActionAtUtc: '2026-06-02T20:30:00Z',
-    lastMovementAtUtc: '2026-06-02T20:30:00Z',
-    notes: 'Hazmat response kit pending replenishment after inspection.',
-    traceTags: ['kit', 'hazmat', 'inspection'],
-  },
-]
+const fallbackKits: LoadArrKit[] = []
 
 const formatNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
 const fieldClassName = 'field-block'
@@ -1639,13 +1071,7 @@ const kitOperationOptions: PickerOption[] = [
   { value: 'track-location', label: 'Track location' },
 ]
 
-const kitPersonOptions: PickerOption[] = [
-  { value: 'person-route-stock-lead', label: 'Jordan Reed' },
-  { value: 'person-hazmat-reviewer', label: 'Taylor Brooks' },
-  { value: 'person-hazmat-supervisor', label: 'Riley Quinn' },
-  { value: 'person-inventory-clerk', label: 'Avery Morgan' },
-  { value: 'person-inventory-supervisor', label: 'Morgan Patel' },
-]
+const kitPersonOptions: PickerOption[] = []
 
 const holdTypeOptions: PickerOption[] = [
   { value: 'compliance', label: 'Compliance' },
@@ -1696,159 +1122,122 @@ const unexplainedResolutionReasonOptions: PickerOption[] = [
   { value: 'scrap_unknown_origin', label: 'Scrap unknown origin' },
 ]
 
-const fallbackSupplyArrItemReferences: SupplyArrItemReference[] = [
-  {
-    supplyarrItemId: 'SUP-VALVE-KIT-A',
-    itemNumberSnapshot: 'VALVE-KIT-A',
-    itemNameSnapshot: 'Valve repair kit A',
-    unitOfMeasureSnapshot: 'each',
-    itemTypeSnapshot: 'maintenance_part',
-    isLotControlled: true,
-    isSerialControlled: false,
-    isHazardous: false,
-    requiresSds: false,
-    updatedAtUtc: '2026-06-01T12:00:00Z',
-  },
-  {
-    supplyarrItemId: 'SUP-ADH-49',
-    itemNumberSnapshot: 'ADH-49',
-    itemNameSnapshot: 'Regulated adhesive cartridge',
-    unitOfMeasureSnapshot: 'case',
-    itemTypeSnapshot: 'regulated_consumable',
-    isLotControlled: true,
-    isSerialControlled: false,
-    isHazardous: true,
-    requiresSds: true,
-    updatedAtUtc: '2026-06-01T12:00:00Z',
-  },
-  {
-    supplyarrItemId: 'SUP-BR-ROTOR-22',
-    itemNumberSnapshot: 'BR-ROTOR-22',
-    itemNameSnapshot: 'Brake rotor assembly',
-    unitOfMeasureSnapshot: 'each',
-    itemTypeSnapshot: 'maintenance_part',
-    isLotControlled: false,
-    isSerialControlled: true,
-    isHazardous: false,
-    requiresSds: false,
-    updatedAtUtc: '2026-06-01T12:00:00Z',
-  },
-]
+const fallbackSupplyArrItemReferences: SupplyArrItemReference[] = []
 
 const initialReceivingForm: ReceivingFormState = {
   receivingType: 'manual',
   sourceProductKey: 'supplyarr',
   sourceObjectType: 'purchase_order',
-  sourceObjectId: 'PO-10492',
-  supplierNameSnapshot: 'Midwest Fleet Supply',
-  completedByPersonId: 'person-inventory-clerk',
-  supplyarrItemId: 'SUP-VALVE-KIT-A',
-  expectedQuantity: '38',
-  receivedQuantity: '38',
-  warehouseLocationId: 'loc-dock-01',
-  lotCode: 'L2405-77',
+  sourceObjectId: '',
+  supplierNameSnapshot: '',
+  completedByPersonId: '',
+  supplyarrItemId: '',
+  expectedQuantity: '',
+  receivedQuantity: '',
+  warehouseLocationId: '',
+  lotCode: '',
   serialCode: '',
   condition: 'new',
   discrepancyReasonCode: '',
   complianceEvaluationId: '',
-  evidenceSummary: 'Dock receipt photo attached',
+  evidenceSummary: '',
 }
 
 const initialTransferForm: TransferFormState = {
   transferType: 'bin_to_bin',
-  fromLocationId: 'loc-dock-01',
-  toLocationId: 'loc-quarantine-01',
-  completedByPersonId: 'person-inventory-clerk',
-  supplyarrItemId: 'SUP-VALVE-KIT-A',
-  quantity: '4',
-  lotCode: 'L2405-77',
+  fromLocationId: '',
+  toLocationId: '',
+  completedByPersonId: '',
+  supplyarrItemId: '',
+  quantity: '',
+  lotCode: '',
   serialCode: '',
   reasonCode: 'quality_inspection',
   complianceEvaluationId: '',
-  evidenceSummary: 'Moved to StaffArr quarantine location for inspection',
+  evidenceSummary: '',
 }
 
 const initialHoldForm: HoldFormState = {
   holdType: 'quality',
-  warehouseLocationId: 'loc-haz-01',
-  supplyarrItemId: 'SUP-ADH-49',
-  quantity: '4',
+  warehouseLocationId: '',
+  supplyarrItemId: '',
+  quantity: '',
   reasonCode: 'sds_label_mismatch',
-  description: 'Hold pending SDS label verification',
-  createdByPersonId: 'person-hazmat-reviewer',
-  complianceEvaluationId: 'cc-eval-adh-49',
-  evidenceSummary: 'SDS and label rule check opened',
+  description: '',
+  createdByPersonId: '',
+  complianceEvaluationId: '',
+  evidenceSummary: '',
 }
 
 const initialHoldReleaseForm: HoldReleaseFormState = {
-  holdId: 'hold-adh-49',
+  holdId: '',
   reasonCode: 'compliance_review_cleared',
-  releasedByPersonId: 'person-hazmat-reviewer',
-  evidenceSummary: 'Compliance Core label review cleared',
+  releasedByPersonId: '',
+  evidenceSummary: '',
 }
 
 const initialUnexplainedInventoryForm: UnexplainedInventoryFormState = {
   discoverySource: 'cycle_count_variance',
-  warehouseLocationId: 'loc-truck-17',
-  supplyarrItemId: 'SUP-BR-ROTOR-22',
-  expectedQuantity: '10',
-  quantity: '12',
+  warehouseLocationId: '',
+  supplyarrItemId: '',
+  expectedQuantity: '',
+  quantity: '',
   lotCode: '',
-  serialCode: 'BR-SN-7781',
-  discoveredByPersonId: 'person-route-stock-lead',
+  serialCode: '',
+  discoveredByPersonId: '',
   reasonCode: 'cycle_count_variance',
-  evidenceSummary: 'Cycle count found two additional rotors; keep unavailable until supervisor approval.',
+  evidenceSummary: '',
   complianceEvaluationId: '',
 }
 
 const initialUnexplainedResolutionForm: UnexplainedInventoryResolutionFormState = {
-  recordId: 'unexplained-count-8021',
+  recordId: '',
   reasonCode: 'supervisor_approved_valid_stock',
-  personId: 'person-inventory-supervisor',
-  quarantineLocationId: 'loc-quarantine-01',
+  personId: '',
+  quarantineLocationId: '',
   complianceEvaluationId: '',
-  evidenceSummary: 'Supervisor reviewed count evidence and approved trusted stock resolution.',
+  evidenceSummary: '',
 }
 
 const initialCountForm: CountFormState = {
   countType: 'cycle_count',
-  warehouseLocationId: 'loc-truck-17',
-  supplyarrItemId: 'SUP-BR-ROTOR-22',
-  expectedQuantity: '10',
-  countedQuantity: '12',
-  countedByPersonId: 'person-route-stock-lead',
+  warehouseLocationId: '',
+  supplyarrItemId: '',
+  expectedQuantity: '',
+  countedQuantity: '',
+  countedByPersonId: '',
   reasonCode: 'cycle_count_variance',
-  evidenceSummary: 'Positive variance waiting supervisor approval',
+  evidenceSummary: '',
 }
 
 const initialAdjustmentForm: AdjustmentFormState = {
   adjustmentType: 'gain',
-  warehouseLocationId: 'loc-truck-17',
-  supplyarrItemId: 'SUP-BR-ROTOR-22',
-  quantityDelta: '2',
-  createdByPersonId: 'person-route-stock-lead',
+  warehouseLocationId: '',
+  supplyarrItemId: '',
+  quantityDelta: '',
+  createdByPersonId: '',
   reasonCode: 'cycle_count_variance',
-  evidenceSummary: 'Create adjustment from cycle count variance',
-  approvedByPersonId: 'person-inventory-supervisor',
+  evidenceSummary: '',
+  approvedByPersonId: '',
 }
 
 const initialTruckStockForm: TruckStockFormState = {
-  truckStockId: 'truck-stock-17-rotor',
-  quantity: '1',
-  personId: 'person-route-stock-lead',
+  truckStockId: '',
+  quantity: '',
+  personId: '',
   reasonCode: 'route_replenishment',
-  evidenceSummary: 'Mobile stock movement captured from the warehouse shell',
+  evidenceSummary: '',
 }
 
 const initialKitForm: KitFormState = {
-  kitId: 'kit-pm-emergency-17',
+  kitId: '',
   operation: 'build',
-  quantity: '1',
-  personId: 'person-route-stock-lead',
+  quantity: '',
+  personId: '',
   reasonCode: 'kit_build',
-  evidenceSummary: 'Kit lifecycle action captured from the warehouse shell',
-  targetPersonId: 'person-hazmat-reviewer',
-  targetLocationId: 'loc-truck-17',
+  evidenceSummary: '',
+  targetPersonId: '',
+  targetLocationId: '',
 }
 
 export function App() {
@@ -3070,15 +2459,32 @@ export function App() {
       ])
       setReceivingStatus('completed')
     } catch {
-      const fallback = createLocalReceivingCompletion(
-        receivingForm,
-        selectedReceivingLocation,
-        selectedSupplyArrItem,
-      )
-      setReceivingCompletion(fallback)
+      const fallback = createLocalPreview(() => {
+        const completion = createLocalReceivingCompletion(
+          receivingForm,
+          selectedReceivingLocation,
+          selectedSupplyArrItem,
+        )
+        return {
+          completion,
+          record: createLocalReceivingSessionRecord(
+            receivingForm,
+            selectedReceivingLocation,
+            selectedSupplyArrItem,
+            completion,
+          ),
+        }
+      })
+
+      if (!fallback) {
+        setReceivingStatus('failed')
+        return
+      }
+
+      setReceivingCompletion(fallback.completion)
       setReceivingSessions((current) => [
-        createLocalReceivingSessionRecord(receivingForm, selectedReceivingLocation, selectedSupplyArrItem, fallback),
-        ...current.filter((record) => record.receivingNumber !== fallback.session.receivingNumber),
+        fallback.record,
+        ...current.filter((record) => record.receivingNumber !== fallback.completion.session.receivingNumber),
       ])
       setReceivingStatus('completed')
     }
@@ -3116,23 +2522,35 @@ export function App() {
       ])
       setTransferStatus('completed')
     } catch {
-      const fallback = createLocalTransferCompletion(
-        transferForm,
-        selectedTransferSourceLocation,
-        selectedTransferDestinationLocation,
-        selectedTransferItem,
-        selectedTransferSourceBalance,
-      )
-      setTransferCompletion(fallback)
-      setTransferOrders((current) => [
-        createLocalTransferOrderRecord(
+      const fallback = createLocalPreview(() => {
+        const completion = createLocalTransferCompletion(
           transferForm,
           selectedTransferSourceLocation,
           selectedTransferDestinationLocation,
           selectedTransferItem,
-          fallback,
-        ),
-        ...current.filter((record) => record.transferNumber !== fallback.transfer.transferNumber),
+          selectedTransferSourceBalance,
+        )
+        return {
+          completion,
+          record: createLocalTransferOrderRecord(
+            transferForm,
+            selectedTransferSourceLocation,
+            selectedTransferDestinationLocation,
+            selectedTransferItem,
+            completion,
+          ),
+        }
+      })
+
+      if (!fallback) {
+        setTransferStatus('failed')
+        return
+      }
+
+      setTransferCompletion(fallback.completion)
+      setTransferOrders((current) => [
+        fallback.record,
+        ...current.filter((record) => record.transferNumber !== fallback.completion.transfer.transferNumber),
       ])
       setTransferStatus('completed')
     }
@@ -3160,12 +2578,18 @@ export function App() {
       setHoldMutation(data)
       setHoldStatus('completed')
     } catch {
-      const fallback = createLocalHoldMutation(
-        holdForm,
-        selectedHoldLocation,
-        selectedHoldItem,
-        selectedHoldBalance,
+      const fallback = createLocalPreview(() =>
+        createLocalHoldMutation(
+          holdForm,
+          selectedHoldLocation,
+          selectedHoldItem,
+          selectedHoldBalance,
+        ),
       )
+      if (!fallback) {
+        setHoldStatus('failed')
+        return
+      }
       setHoldMutation(fallback)
       setHoldStatus('completed')
     }
@@ -3193,11 +2617,17 @@ export function App() {
       setHoldMutation(data)
       setHoldReleaseStatus('completed')
     } catch {
-      const fallback = createLocalHoldReleaseMutation(
-        holdReleaseForm,
-        selectedReleaseHold,
-        selectedReleaseBalance,
+      const fallback = createLocalPreview(() =>
+        createLocalHoldReleaseMutation(
+          holdReleaseForm,
+          selectedReleaseHold,
+          selectedReleaseBalance,
+        ),
       )
+      if (!fallback) {
+        setHoldReleaseStatus('failed')
+        return
+      }
       setHoldMutation(fallback)
       setHoldReleaseStatus('completed')
     }
@@ -3225,11 +2655,18 @@ export function App() {
       setUnexplainedMutation(data)
       setUnexplainedStatus('completed')
     } catch {
-      setUnexplainedMutation(createLocalUnexplainedInventoryMutation(
-        unexplainedForm,
-        selectedUnexplainedLocation,
-        selectedUnexplainedItem,
-      ))
+      const fallback = createLocalPreview(() =>
+        createLocalUnexplainedInventoryMutation(
+          unexplainedForm,
+          selectedUnexplainedLocation,
+          selectedUnexplainedItem,
+        ),
+      )
+      if (!fallback) {
+        setUnexplainedStatus('failed')
+        return
+      }
+      setUnexplainedMutation(fallback)
       setUnexplainedStatus('completed')
     }
   }
@@ -3260,11 +2697,18 @@ export function App() {
       setUnexplainedMutation(data)
       setUnexplainedStatus('completed')
     } catch {
-      setUnexplainedMutation(createLocalUnexplainedResolutionMutation(
-        unexplainedResolutionForm,
-        selectedUnexplainedRecord,
-        action,
-      ))
+      const fallback = createLocalPreview(() =>
+        createLocalUnexplainedResolutionMutation(
+          unexplainedResolutionForm,
+          selectedUnexplainedRecord,
+          action,
+        ),
+      )
+      if (!fallback) {
+        setUnexplainedStatus('failed')
+        return
+      }
+      setUnexplainedMutation(fallback)
       setUnexplainedStatus('completed')
     }
   }
@@ -3306,7 +2750,11 @@ export function App() {
       setTruckStockResult(data)
       setTruckStockStatus('completed')
     } catch {
-      const fallback = createLocalTruckStockMutation(action, truckStockForm, record)
+      const fallback = createLocalPreview(() => createLocalTruckStockMutation(action, truckStockForm, record))
+      if (!fallback) {
+        setTruckStockStatus('failed')
+        return
+      }
       setTruckStockRecords((current) =>
         current.map((item) => (item.id === fallback.truckStock.id ? fallback.truckStock : item)),
       )
@@ -3372,7 +2820,13 @@ export function App() {
       setKitResult(data)
       setKitStatus('completed')
     } catch {
-      const fallback = createLocalKitMutation(operation, kitForm, record, targetPersonNameSnapshot, targetLocationNameSnapshot)
+      const fallback = createLocalPreview(() =>
+        createLocalKitMutation(operation, kitForm, record, targetPersonNameSnapshot, targetLocationNameSnapshot),
+      )
+      if (!fallback) {
+        setKitStatus('failed')
+        return
+      }
       setKitRecords((current) => current.map((item) => (item.id === fallback.kit.id ? fallback.kit : item)))
       setKitResult(fallback)
       setKitStatus('completed')
@@ -3417,7 +2871,13 @@ export function App() {
       setCountResult(data)
       setCountStatus('completed')
     } catch {
-      const fallback = createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences)
+      const fallback = createLocalPreview(() =>
+        createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences),
+      )
+      if (!fallback) {
+        setCountStatus('failed')
+        return
+      }
       setCountResult(fallback)
       setCountStatus('completed')
     }
@@ -3461,7 +2921,16 @@ export function App() {
       setCountResult(data)
       setCountStatus('completed')
     } catch {
-      setCountResult(createLocalCountVarianceApproval(countResult ?? createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences)))
+      const fallback = createLocalPreview(() =>
+        createLocalCountVarianceApproval(
+          countResult ?? createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences),
+        ),
+      )
+      if (!fallback) {
+        setCountStatus('failed')
+        return
+      }
+      setCountResult(fallback)
       setCountStatus('completed')
     }
   }
@@ -3488,7 +2957,20 @@ export function App() {
       setAdjustmentResult({ adjustment: data, originEvent: null, movement: null })
       setAdjustmentStatus('completed')
     } catch {
-      setAdjustmentResult(createLocalAdjustmentMutation(adjustmentForm, selectedLocation, selectedAdjustment, selectedCount, supplyArrItemReferences))
+      const fallback = createLocalPreview(() =>
+        createLocalAdjustmentMutation(
+          adjustmentForm,
+          selectedLocation,
+          selectedAdjustment,
+          selectedCount,
+          supplyArrItemReferences,
+        ),
+      )
+      if (!fallback) {
+        setAdjustmentStatus('failed')
+        return
+      }
+      setAdjustmentResult(fallback)
       setAdjustmentStatus('completed')
     }
   }
@@ -3531,14 +3013,34 @@ export function App() {
       setAdjustmentResult(data)
       setAdjustmentStatus('completed')
     } catch {
-      setAdjustmentResult(createLocalAdjustmentApproval(adjustmentResult ?? createLocalAdjustmentMutation(adjustmentForm, selectedLocation, selectedAdjustment, selectedCount, supplyArrItemReferences)))
+      const fallback = createLocalPreview(() =>
+        createLocalAdjustmentApproval(
+          adjustmentResult
+            ?? createLocalAdjustmentMutation(
+              adjustmentForm,
+              selectedLocation,
+              selectedAdjustment,
+              selectedCount,
+              supplyArrItemReferences,
+            ),
+        ),
+      )
+      if (!fallback) {
+        setAdjustmentStatus('failed')
+        return
+      }
+      setAdjustmentResult(fallback)
       setAdjustmentStatus('completed')
     }
   }
 
-  const bootstrapError = sessionQuery.isError
+  const sessionBootstrapError = sessionQuery.isError
     ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
     : null
+  const launchBootstrapError = launchCatalogQuery.isError
+    ? resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)
+    : null
+  const bootstrapError = sessionBootstrapError ?? launchBootstrapError
 
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
@@ -3563,14 +3065,11 @@ export function App() {
   })
 
   return (
-    <ProductAppShell
+    <ProductWorkspaceFrame
       productName="LoadArr"
       productKey="loadarr"
       workspaceSubtitle="Warehouse execution and inventory custody"
       navItems={productNavItems}
-      tenantDisplayName={workspaceSession?.tenantDisplayName}
-      tenantSlug={workspaceSession?.tenantSlug}
-      userDisplayName={workspaceSession?.userDisplayName}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
@@ -3585,6 +3084,14 @@ export function App() {
       }}
       isProductLaunchPending={productLaunch.isPending}
       productLaunchError={productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null}
+      aiAssistance={
+        session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
+      }
+      workspaceSession={workspaceSession}
+      isBootstrapping={
+        Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)
+      }
+      bootstrapError={bootstrapError}
     >
       <div className="shell">
         <section className="workspace" aria-label="LoadArr workspace">
@@ -6119,7 +5626,7 @@ export function App() {
         </footer>
       </section>
       </div>
-    </ProductAppShell>
+    </ProductWorkspaceFrame>
   )
 }
 
@@ -6328,8 +5835,9 @@ function createLocalReceivingCompletion(
   item: SupplyArrItemReference | undefined,
 ): LoadArrReceivingCompletion {
   const receivedQuantity = toPositiveNumber(form.receivedQuantity)
-  const locationName = location?.name ?? 'Receiving location'
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
+  const locationSnapshot = requireLocalValue(location)
+  const itemSnapshot = requireLocalValue(item)
+  const locationName = locationSnapshot.name
   const now = Date.now().toString(36)
 
   return {
@@ -6391,9 +5899,11 @@ function createLocalTransferCompletion(
   sourceBalance: LoadArrInventoryBalance | undefined,
 ): LoadArrTransferCompletion {
   const quantity = toPositiveNumber(form.quantity)
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
-  const fromLocationName = fromLocation?.name ?? 'StaffArr source location'
-  const toLocationName = toLocation?.name ?? 'StaffArr destination location'
+  const itemSnapshot = requireLocalValue(item)
+  const fromLocationSnapshot = requireLocalValue(fromLocation)
+  const toLocationSnapshot = requireLocalValue(toLocation)
+  const fromLocationName = fromLocationSnapshot.name
+  const toLocationName = toLocationSnapshot.name
   const sourceQuantity = Math.max(0, (sourceBalance?.quantityOnHand ?? quantity) - quantity)
   const now = Date.now().toString(36)
 
@@ -6464,8 +5974,8 @@ function createLocalReceivingSessionRecord(
   completion: LoadArrReceivingCompletion,
 ): LoadArrReceivingSession {
   const now = Date.now().toString(36)
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
-  const locationSnapshot = location ?? fallbackSummary.locations[0]
+  const itemSnapshot = requireLocalValue(item)
+  const locationSnapshot = requireLocalValue(location)
   const quantity = toPositiveNumber(form.receivedQuantity) || completion.balance.quantityOnHand
   const timestamp = new Date().toISOString()
 
@@ -6513,9 +6023,9 @@ function createLocalTransferOrderRecord(
   completion: LoadArrTransferCompletion,
 ): LoadArrTransferOrder {
   const now = Date.now().toString(36)
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
-  const fromLocationSnapshot = fromLocation ?? fallbackSummary.locations[0]
-  const toLocationSnapshot = toLocation ?? fallbackSummary.locations[1] ?? fallbackSummary.locations[0]
+  const itemSnapshot = requireLocalValue(item)
+  const fromLocationSnapshot = requireLocalValue(fromLocation)
+  const toLocationSnapshot = requireLocalValue(toLocation)
   const timestamp = new Date().toISOString()
 
   return {
@@ -6554,7 +6064,7 @@ function createLocalTruckStockMutation(
   form: TruckStockFormState,
   record: LoadArrTruckStock | undefined,
 ): LoadArrTruckStockMutation {
-  const current = record ?? fallbackTruckStock[0]
+  const current = requireLocalValue(record)
   const quantity = toPositiveNumber(form.quantity) || 1
   const now = Date.now().toString(36)
   const timestamp = new Date().toISOString()
@@ -6623,7 +6133,7 @@ function createLocalKitMutation(
   targetPersonNameSnapshot?: string,
   targetLocationNameSnapshot?: string,
 ): LoadArrKitMutation {
-  const current = record ?? fallbackKits[0]
+  const current = requireLocalValue(record)
   const quantity = toPositiveNumber(form.quantity) || 1
   const now = Date.now().toString(36)
   const timestamp = new Date().toISOString()
@@ -6730,8 +6240,9 @@ function createLocalHoldMutation(
   balance: LoadArrInventoryBalance | undefined,
 ): LoadArrHoldMutation {
   const quantity = toPositiveNumber(form.quantity)
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
-  const locationName = location?.name ?? 'StaffArr location'
+  const itemSnapshot = requireLocalValue(item)
+  const locationSnapshot = requireLocalValue(location)
+  const locationName = locationSnapshot.name
   const now = Date.now().toString(36)
   const blockedQuantity = (balance?.quantityBlocked ?? 0) + quantity
 
@@ -6775,10 +6286,12 @@ function createLocalHoldReleaseMutation(
   balance: LoadArrInventoryBalance | undefined,
 ): LoadArrHoldMutation {
   const now = Date.now().toString(36)
-  const heldQuantity = Math.max(0, balance?.quantityBlocked ?? 0)
+  const holdSnapshot = requireLocalValue(hold)
+  const balanceSnapshot = requireLocalValue(balance)
+  const heldQuantity = Math.max(0, balanceSnapshot.quantityBlocked)
   const releasedQuantity = heldQuantity || 1
-  const itemId = hold?.supplyarrItemId ?? balance?.supplyarrItemId ?? 'SUP-ADH-49'
-  const locationName = hold?.locationNameSnapshot ?? balance?.locationNameSnapshot ?? 'StaffArr location'
+  const itemId = holdSnapshot.supplyarrItemId
+  const locationName = holdSnapshot.locationNameSnapshot
 
   return {
     hold: {
@@ -6786,7 +6299,7 @@ function createLocalHoldReleaseMutation(
       status: 'released',
       reasonCode: form.reasonCode,
       quantity: releasedQuantity,
-      unitOfMeasure: balance?.unitOfMeasureSnapshot ?? 'each',
+      unitOfMeasure: balanceSnapshot.unitOfMeasureSnapshot,
       locationNameSnapshot: locationName,
     },
     movement: {
@@ -6795,20 +6308,20 @@ function createLocalHoldReleaseMutation(
       reasonCode: form.reasonCode,
     },
     balance: {
-      id: balance?.id ?? `bal-release-${now}`,
+      id: balanceSnapshot.id,
       supplyarrItemId: itemId,
-      itemNameSnapshot: balance?.itemNameSnapshot ?? itemId,
-      unitOfMeasureSnapshot: balance?.unitOfMeasureSnapshot ?? 'each',
-      state: balance?.state ?? 'available',
-      locationId: balance?.locationId ?? 'staffarr-location',
+      itemNameSnapshot: balanceSnapshot.itemNameSnapshot,
+      unitOfMeasureSnapshot: balanceSnapshot.unitOfMeasureSnapshot,
+      state: balanceSnapshot.state,
+      locationId: balanceSnapshot.locationId,
       locationNameSnapshot: locationName,
-      quantityOnHand: balance?.quantityOnHand ?? releasedQuantity,
-      quantityReserved: balance?.quantityReserved ?? 0,
-      quantityAllocated: balance?.quantityAllocated ?? 0,
+      quantityOnHand: balanceSnapshot.quantityOnHand,
+      quantityReserved: balanceSnapshot.quantityReserved,
+      quantityAllocated: balanceSnapshot.quantityAllocated,
       quantityBlocked: Math.max(0, heldQuantity - releasedQuantity),
-      originEventType: balance?.originEventType ?? 'purchase_receipt',
-      originReference: balance?.originReference ?? hold?.sourceReference ?? 'Existing trusted LoadArr balance',
-      traceTags: [...(balance?.traceTags ?? []), `released-hold:${form.holdId}`, `movement:move-${now}`],
+      originEventType: balanceSnapshot.originEventType,
+      originReference: balanceSnapshot.originReference,
+      traceTags: [...balanceSnapshot.traceTags, `released-hold:${form.holdId}`, `movement:move-${now}`],
       notes: `Released hold ${form.holdId}: ${form.reasonCode}`,
     },
   }
@@ -6820,7 +6333,8 @@ function createLocalUnexplainedInventoryMutation(
   item: SupplyArrItemReference | undefined,
 ): LoadArrUnexplainedInventoryMutation {
   const now = Date.now().toString(36)
-  const itemSnapshot = item ?? fallbackSupplyArrItemReferences[0]
+  const itemSnapshot = requireLocalValue(item)
+  const locationSnapshot = requireLocalValue(location)
   const foundQuantity = toPositiveNumber(form.quantity)
   const expectedQuantity = toNonNegativeNumber(form.expectedQuantity)
   const varianceQuantity = foundQuantity - expectedQuantity
@@ -6831,10 +6345,10 @@ function createLocalUnexplainedInventoryMutation(
       recordNumber: `UNX-${now.toUpperCase()}`,
       status: varianceQuantity > 0 ? 'needs_approval' : 'needs_review',
       discoverySource: form.discoverySource,
-      staffarrSiteOrgUnitId: location?.staffarrSiteOrgUnitId ?? 'staffarr-site',
-      staffarrSiteNameSnapshot: location?.staffarrSiteNameSnapshot ?? 'StaffArr site',
+      staffarrSiteOrgUnitId: locationSnapshot.staffarrSiteOrgUnitId,
+      staffarrSiteNameSnapshot: locationSnapshot.staffarrSiteNameSnapshot,
       warehouseLocationId: form.warehouseLocationId,
-      locationNameSnapshot: location?.name ?? 'StaffArr location',
+      locationNameSnapshot: locationSnapshot.name,
       supplyarrItemId: itemSnapshot.supplyarrItemId,
       itemNameSnapshot: itemSnapshot.itemNameSnapshot,
       expectedQuantity,
@@ -6859,7 +6373,7 @@ function createLocalUnexplainedInventoryMutation(
       title: `Resolve unexplained ${itemSnapshot.itemNameSnapshot}`,
       priority: 'urgent',
       status: 'ready',
-      locationNameSnapshot: location?.name ?? 'StaffArr location',
+      locationNameSnapshot: locationSnapshot.name,
       assignedRole: 'Inventory Supervisor',
       supplyarrItemId: itemSnapshot.supplyarrItemId,
       quantity: foundQuantity,
@@ -6875,7 +6389,7 @@ function createLocalUnexplainedResolutionMutation(
   action: 'resolve' | 'quarantine' | 'scrap',
 ): LoadArrUnexplainedInventoryMutation {
   const now = Date.now().toString(36)
-  const baseRecord = record ?? fallbackSummary.unexplainedInventory[0]
+  const baseRecord = requireLocalValue(record)
   const status =
     action === 'resolve' ? 'resolved_valid_stock' : action === 'scrap' ? 'resolved_scrap' : 'needs_quarantine'
   const resolutionState =
@@ -6954,8 +6468,8 @@ function createLocalCountCompletion(
   selectedCount: LoadArrCount | undefined,
   items: SupplyArrItemReference[],
 ): LoadArrCountCompletion {
-  const locationSnapshot = location ?? fallbackSummary.locations[0]
-  const itemSnapshot = items.find((item) => item.supplyarrItemId === form.supplyarrItemId) ?? items[0]
+  const locationSnapshot = requireLocalValue(location)
+  const itemSnapshot = requireLocalValue(items.find((item) => item.supplyarrItemId === form.supplyarrItemId))
   const expectedQuantity = toNonNegativeNumber(form.expectedQuantity) || selectedCount?.expectedQuantity || 0
   const countedQuantity = toNonNegativeNumber(form.countedQuantity)
   const varianceQuantity = countedQuantity - expectedQuantity
@@ -7058,8 +6572,8 @@ function createLocalAdjustmentMutation(
   selectedCount: LoadArrCount | undefined,
   items: SupplyArrItemReference[],
 ): LoadArrAdjustmentMutation {
-  const locationSnapshot = location ?? fallbackSummary.locations[0]
-  const itemSnapshot = items.find((item) => item.supplyarrItemId === form.supplyarrItemId) ?? items[0]
+  const locationSnapshot = requireLocalValue(location)
+  const itemSnapshot = requireLocalValue(items.find((item) => item.supplyarrItemId === form.supplyarrItemId))
   const now = Date.now().toString(36)
   const timestamp = new Date().toISOString()
   const adjustment: LoadArrAdjustment = {
@@ -7152,6 +6666,22 @@ function toSignedNumber(value: string) {
   }
 
   return parsed
+}
+
+function requireLocalValue<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error('Required source data is unavailable.')
+  }
+
+  return value
+}
+
+function createLocalPreview<T>(factory: () => T): T | null {
+  try {
+    return factory()
+  } catch {
+    return null
+  }
 }
 
 function formatDate(value: string) {

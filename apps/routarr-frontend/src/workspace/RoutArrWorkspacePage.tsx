@@ -6,6 +6,7 @@ import { DispatchSection } from './sections/DispatchSection'
 import { DispatchPlansSection } from './sections/DispatchPlansSection'
 import { DockAppointmentsSection } from './sections/DockAppointmentsSection'
 import { ExceptionsSection } from './sections/ExceptionsSection'
+import { ReportsSection } from './sections/ReportsSection'
 import { LoadVisibilitySection } from './sections/LoadVisibilitySection'
 import { ProofReviewSection } from './sections/ProofReviewSection'
 import { RoutePlannerSection } from './sections/RoutePlannerSection'
@@ -34,6 +35,7 @@ export function RoutArrWorkspacePage({ section }: { section: WorkspaceSection })
       {section === 'routes' ? <RoutesSection state={state} /> : null}
       {section === 'stops' ? <StopsSection state={state} /> : null}
       {section === 'exceptions' ? <ExceptionsSection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'proof-review' ? <ProofReviewSection state={state} /> : null}
       {section === 'dock-appointments' ? <DockAppointmentsSection state={state} /> : null}
       {section === 'load-visibility' ? <LoadVisibilitySection state={state} /> : null}

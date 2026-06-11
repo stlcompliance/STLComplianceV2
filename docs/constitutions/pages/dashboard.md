@@ -38,6 +38,8 @@ Dashboard implementations must follow this constitution unless a more specific p
 
 Product ownership constitutions remain authoritative for data ownership. A dashboard may display cross-product readiness signals, but it must not assume ownership of another product’s records, workflows, or canonical identifiers.
 
+Operational dashboards are not report artifacts by default. They are exempt from the reporting constitution's report-specific rules unless the dashboard is explicitly implemented as a report-backed surface, scheduled dashboard export, or other ReportArr-owned deliverable.
+
 For example:
 
 - RoutArr may show vehicle readiness from MaintainArr, but RoutArr does not own vehicle inspection clearance.

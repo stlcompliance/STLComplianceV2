@@ -2,16 +2,10 @@ import type { RegulatoryMappingResponse } from '../api/types'
 
 interface RegulatoryMappingsPanelProps {
   mappings: RegulatoryMappingResponse[]
-  canManage: boolean
-  onSeedMappings: () => void
-  isSeeding: boolean
 }
 
 export function RegulatoryMappingsPanel({
   mappings,
-  canManage,
-  onSeedMappings,
-  isSeeding,
 }: RegulatoryMappingsPanelProps) {
   return (
     <div className="space-y-6">
@@ -20,16 +14,6 @@ export function RegulatoryMappingsPanel({
           Links compliance and material keys to regulatory programs, rule packs, citations, and fact definitions for
           cross-product evaluation.
         </p>
-        {canManage && (
-          <button
-            type="button"
-            onClick={onSeedMappings}
-            disabled={isSeeding}
-            className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {isSeeding ? 'Creating…' : 'Seed sample mapping'}
-          </button>
-        )}
       </div>
 
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">

@@ -47,7 +47,7 @@ public sealed class OpenAiResponsesProvider(
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, settings.ResponsesEndpoint);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
         httpRequest.Headers.TryAddWithoutValidation("X-Client-Request-Id", request.CorrelationId);
-        httpRequest.Content = new StringContent(BuildRequestJson(request), Encoding.UTF8, "application/json");
+        httpRequest.Content = new StringContent(BuildRequestJson(request, settings), Encoding.UTF8, "application/json");
 
         try
         {
@@ -206,7 +206,7 @@ public sealed class OpenAiResponsesProvider(
         }
     }
 
-    private static string BuildRequestJson(AiProviderRequest request)
+    internal static string BuildRequestJson(AiProviderRequest request, AiProviderOptions settings)
     {
         var payload = new JsonObject
         {
@@ -231,8 +231,39 @@ public sealed class OpenAiResponsesProvider(
             };
         }
 
+        var vectorStoreIds = ParseVectorStoreIds(settings.AssistantVectorStoreIds);
+        if (ShouldAttachAssistantFileSearch(request, vectorStoreIds))
+        {
+            var vectorStoreIdArray = new JsonArray();
+            foreach (var vectorStoreId in vectorStoreIds)
+            {
+                vectorStoreIdArray.Add(vectorStoreId);
+            }
+
+            var fileSearchTool = new JsonObject
+            {
+                ["type"] = "file_search",
+                ["vector_store_ids"] = vectorStoreIdArray,
+                ["max_num_results"] = Math.Clamp(settings.AssistantFileSearchMaxResults, 1, 50)
+            };
+            payload["tools"] = new JsonArray(fileSearchTool);
+        }
+
         return payload.ToJsonString(new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
+
+    private static IReadOnlyList<string> ParseVectorStoreIds(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? []
+            : value.Split([',', ';', ' ', '\r', '\n', '\t'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+
+    private static bool ShouldAttachAssistantFileSearch(
+        AiProviderRequest request,
+        IReadOnlyList<string> vectorStoreIds) =>
+        vectorStoreIds.Count > 0
+        && string.Equals(request.Purpose, "assistant", StringComparison.OrdinalIgnoreCase);
 
     private static string? ExtractOutputText(JsonElement root)
     {
