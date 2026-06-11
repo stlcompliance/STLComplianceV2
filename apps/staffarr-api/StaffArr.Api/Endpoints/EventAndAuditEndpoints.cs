@@ -42,13 +42,13 @@ public static class EventAndAuditEndpoints
                 int? page,
                 int? pageSize,
                 StaffArrAuthorizationService authorization,
-                AuditPackageService auditService,
+                AuditTimelineService auditService,
                 HttpContext context,
                 CancellationToken cancellationToken) =>
             {
-                authorization.RequireAuditPackageRead(context.User);
+                authorization.RequireAuditTimelineRead(context.User);
                 var tenantId = context.User.GetTenantId();
-                var filter = new AuditPackageFilter(from, to, action, result, targetType, actorUserId);
+                var filter = new AuditTimelineFilter(from, to, action, result, targetType, actorUserId);
                 return Results.Ok(await auditService.ListAuditTimelineAsync(
                     tenantId,
                     filter,

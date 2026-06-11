@@ -24,6 +24,5 @@
       "@stl/shared-ui/*": ["../../packages/shared-ui/src/*"]
     }
   },
-  "include": ["src"],
-  "exclude": ["src/pages/HomePage.tsx"]
+  "include": ["src"]
 }

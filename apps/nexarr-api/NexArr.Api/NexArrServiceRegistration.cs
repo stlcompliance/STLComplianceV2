@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
 using NexArr.Api.Options;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Ai;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 
@@ -15,9 +17,17 @@ public static class NexArrServiceRegistration
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services.AddStlJwtAuthentication(builder.Configuration);
+        builder.Services.AddStlAiServices(builder.Configuration);
         builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPlatformAuditService, PlatformAuditService>();
+        builder.Services.AddScoped<AiAssistanceService>();
+        builder.Services.AddScoped<SmartImportService>();
+        builder.Services.AddScoped<RecordArrSmartImportClient>();
+        builder.Services.AddHttpClient(RecordArrSmartImportClient.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<MfaService>();
         builder.Services.AddScoped<PasswordResetService>();
@@ -162,20 +172,30 @@ public static class NexArrServiceRegistration
 
         await using var scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
+        var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
+        var seedCsvPath = app.Configuration["Seed:ReferenceDataCsvPath"];
+        if (string.IsNullOrWhiteSpace(seedCsvPath))
+        {
+            seedCsvPath = Path.Combine(app.Environment.ContentRootPath, "Data", "stl_acceptable_values_platform_only.csv");
+        }
+
+        await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
+        var firstAdminUserId = await PlatformSeeder.SeedFirstAdminAsync(
+            db,
+            passwordHasher,
+            app.Configuration,
+            app.Environment);
+        await PlatformSeeder.SeedMasterReferenceDataAsync(db, seedCsvPath, firstAdminUserId);
 
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
-            var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
-            var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
-            await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
+            await PlatformSeeder.SeedDemoBusinessDataAsync(db, passwordHasher, firstAdminUserId);
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
         }
         else if (app.Environment.IsProduction())
         {
-            var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
-            var platformProductUrls = scope.ServiceProvider.GetService<IOptions<PlatformProductUrlsOptions>>()?.Value;
-            await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
-
             var productionOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var origin in new[]
                      {

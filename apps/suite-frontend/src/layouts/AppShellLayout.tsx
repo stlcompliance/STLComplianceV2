@@ -1,4 +1,4 @@
-import { LayoutDashboard, LockKeyhole, LogOut, Shield } from 'lucide-react'
+import { LayoutDashboard, LockKeyhole, LogOut, Shield, Upload } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { AppTopBar } from '../components/AppTopBar'
@@ -58,6 +58,14 @@ export function AppShellLayout() {
               Identity & access
             </NavLink>
           </PermissionGate>
+
+          <NavLink
+            to="/app/imports"
+            className={desktopNavLinkClassName}
+          >
+            <Upload className="h-4 w-4 shrink-0" aria-hidden />
+            Smart Import
+          </NavLink>
         </nav>
 
         <PermissionGate allowed={isPlatformAdmin(me)}>
@@ -96,6 +104,10 @@ export function AppShellLayout() {
                 <span>Identity</span>
               </NavLink>
             </PermissionGate>
+            <NavLink to="/app/imports" className={mobileNavLinkClassName}>
+              <Upload className="h-4 w-4 shrink-0" aria-hidden />
+              <span>Import</span>
+            </NavLink>
             <PermissionGate allowed={isPlatformAdmin(me)}>
               <NavLink to="/app/platform-admin" className={mobileNavLinkClassName}>
                 <Shield className="h-4 w-4 shrink-0" aria-hidden />

@@ -43,7 +43,7 @@ $includedExtensions = [System.Collections.Generic.HashSet[string]]::new([System.
     '.html', '.htm', '.razor',
     '.json', '.jsonc', '.yaml', '.yml', '.xml', '.config',
     '.ps1', '.psm1', '.psd1', '.sh', '.bash', '.cmd', '.bat',
-    '.py', '.sql',
+    '.py', '.sql', '.svg',
     '.md', '.mdx', '.txt',
     '.dockerfile'
 ) | ForEach-Object { [void]$includedExtensions.Add($_) }
@@ -58,7 +58,7 @@ $excludedExtensions = [System.Collections.Generic.HashSet[string]]::new([System.
 @(
     '.dll', '.exe', '.pdb', '.so', '.dylib', '.class', '.jar',
     '.zip', '.tar', '.gz', '.tgz', '.7z', '.rar',
-    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg',
+    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
     '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
     '.mp3', '.mp4', '.mov', '.avi', '.wav',
     '.pyc', '.cache', '.lock', '.log'
@@ -67,7 +67,6 @@ $excludedExtensions = [System.Collections.Generic.HashSet[string]]::new([System.
 $excludedFileNamePatterns = @(
     '\.g\.(cs|ts|tsx|js|jsx)$',
     '\.generated\.',
-    '\.designer\.cs$',
     '\.openapi\.json$',
     '\.min\.(css|js)$',
     '\.bundle\.(css|js)$',
@@ -166,34 +165,6 @@ function Test-BinaryFile {
     }
 }
 
-function Get-CommentStyle {
-    param([string]$Extension)
-
-    switch ($Extension.ToLowerInvariant()) {
-        { $_ -in '.cs', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css', '.scss', '.sass', '.less', '.java', '.go', '.rs', '.php' } { return 'slash' }
-        { $_ -in '.ps1', '.psm1', '.psd1', '.py', '.sh', '.bash', '.yaml', '.yml' } { return 'hash' }
-        { $_ -in '.html', '.htm', '.xml', '.config', '.csproj', '.props', '.targets' } { return 'xml' }
-        default { return 'none' }
-    }
-}
-
-function Test-CommentLine {
-    param(
-        [string]$TrimmedLine,
-        [string]$Style
-    )
-
-    if ($TrimmedLine.Length -eq 0) {
-        return $false
-    }
-
-    switch ($Style) {
-        'slash' { return $TrimmedLine.StartsWith('//') -or $TrimmedLine.StartsWith('/*') -or $TrimmedLine.StartsWith('*') -or $TrimmedLine.StartsWith('*/') }
-        'hash' { return $TrimmedLine.StartsWith('#') }
-        'xml' { return $TrimmedLine.StartsWith('<!--') -or $TrimmedLine.StartsWith('-->') }
-        default { return $false }
-    }
-}
 
 function ConvertTo-ProductName {
     param([string]$Slug)

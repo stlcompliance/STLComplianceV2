@@ -118,7 +118,7 @@ public sealed class StaffArrWorkerAdminTests : IAsyncLifetime
         var manifest = (await adminResponse.Content.ReadFromJsonAsync<StaffArrSettingsManifestResponse>())!;
         Assert.Contains(manifest.Items, x => x.SettingKey == "readiness_rollup_settings");
         Assert.Contains(manifest.Items, x => x.SettingKey == "permission_projection_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "audit_package_generation_settings");
+        Assert.DoesNotContain(manifest.Items, x => x.SettingKey == "audit_package_generation_settings");
     }
 
     [Fact]

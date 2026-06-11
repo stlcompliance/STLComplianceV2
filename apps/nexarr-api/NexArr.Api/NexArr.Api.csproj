@@ -19,4 +19,12 @@
     <ProjectReference Include="..\..\..\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\..\stl_acceptable_values_platform_only.csv">
+      <Link>Data\stl_acceptable_values_platform_only.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

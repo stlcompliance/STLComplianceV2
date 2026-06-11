@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, DetailBadge, getErrorMessage } from '@stl/shared-ui'
 import { getLocation, listLocationChildren, listSiteLocations } from '../../api/client'
-import type { StaffArrIntegrationLocationResponse } from '../../api/types'
+import type {
+  InternalLocationResponse,
+  OrgUnitResponse,
+  StaffArrIntegrationLocationResponse,
+} from '../../api/types'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
@@ -11,6 +15,25 @@ function locationSummary(location: StaffArrIntegrationLocationResponse) {
   return [location.locationType, location.allowedProductUsage, location.status]
     .filter(Boolean)
     .join(' · ')
+}
+
+function buildOpenStreetMapSearchUrl(query: string | null) {
+  if (!query?.trim()) return null
+  return `https://www.openstreetmap.org/search?query=${encodeURIComponent(query.trim())}`
+}
+
+function buildSiteSearchQuery(site: OrgUnitResponse | null) {
+  if (!site) return null
+  return [site.name, site.siteType, 'site']
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(' ')
+}
+
+function buildLocationSearchQuery(location: InternalLocationResponse | StaffArrIntegrationLocationResponse | null) {
+  if (!location) return null
+  return [location.siteNameSnapshot, location.parentPathSnapshot, location.name, location.locationType]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(' ')
 }
 
 export function LocationsSection({ state }: Props) {
@@ -74,6 +97,8 @@ export function LocationsSection({ state }: Props) {
 
   const selectedLocationDetail = locationDetailQuery.data ?? selectedLocation
   const childLocations = childLocationsQuery.data ?? []
+  const selectedSiteMapUrl = buildOpenStreetMapSearchUrl(buildSiteSearchQuery(selectedSite))
+  const selectedLocationMapUrl = buildOpenStreetMapSearchUrl(buildLocationSearchQuery(selectedLocationDetail))
   const assignedPeople = selectedLocationDetail
     ? state.people.filter((person) => person.primaryOrgUnitId === selectedLocationDetail.siteOrgUnitId)
     : []
@@ -135,10 +160,28 @@ export function LocationsSection({ state }: Props) {
                   ? `${selectedSite.name} and its operating locations`
                   : 'Select a site to see its operational location map.'}
               </p>
+              {selectedSite ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  OpenStreetMap lookup uses StaffArr site and location labels because this view does not store
+                  coordinates.
+                </p>
+              ) : null}
             </div>
-            {selectedSite ? (
-              <DetailBadge label={selectedSite.status} tone={selectedSite.status === 'active' ? 'good' : 'warn'} />
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedSite ? (
+                <DetailBadge label={selectedSite.status} tone={selectedSite.status === 'active' ? 'good' : 'warn'} />
+              ) : null}
+              {selectedSiteMapUrl ? (
+                <a
+                  href={selectedSiteMapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded border border-sky-700 px-3 py-1 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
+                >
+                  Search site in OpenStreetMap
+                </a>
+              ) : null}
+            </div>
           </div>
 
           {locationsQuery.isError ? (
@@ -256,6 +299,36 @@ export function LocationsSection({ state }: Props) {
             </div>
 
             <div className="space-y-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                <h3 className="text-sm font-medium text-slate-200">OpenStreetMap lookup</h3>
+                <p className="mt-2 text-sm text-slate-500">
+                  StaffArr owns site and internal location identity. This lookup uses canonical site and location
+                  labels for external map search because coordinates are not stored on this record.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedSiteMapUrl ? (
+                    <a
+                      href={selectedSiteMapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded border border-sky-700 px-3 py-2 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
+                    >
+                      Search site
+                    </a>
+                  ) : null}
+                  {selectedLocationMapUrl ? (
+                    <a
+                      href={selectedLocationMapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded border border-sky-700 px-3 py-2 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
+                    >
+                      Search location
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+
               <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
                 <h3 className="text-sm font-medium text-slate-200">Child locations</h3>
                 {childLocationsQuery.isLoading ? (

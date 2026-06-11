@@ -45,7 +45,7 @@ describe('DataExportsPanel', () => {
       entities: [
         {
           entityKey: 'people',
-          exportPath: '/v1/reports/people/export',
+          exportPath: '/api/v1/exports/people',
           displayName: 'People',
           csvHeader: 'personId,displayName',
           description: 'People export',
@@ -59,8 +59,6 @@ describe('DataExportsPanel', () => {
           ],
         },
       ],
-      reportExports: [],
-      auditPackageFormats: [],
     })
     vi.mocked(client.exportBulkPeopleCsv).mockRejectedValue(new Error('export down'))
     renderPanel()

@@ -20,10 +20,13 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrPartCatalogEndpoints();
         app.MapSupplyArrVendorCatalogApiEndpoints();
         app.MapSupplyArrVendorEmailInboxEndpoints();
+        app.MapSupplyArrVendorOrderSettingsEndpoints();
+        app.MapSupplyArrVendorOrderEndpoints();
         app.MapSupplyArrPartAliasEndpoints();
         app.MapSupplyArrExternalReferenceEndpoints();
         app.MapSupplyArrRfqEndpoints();
         app.MapSupplyArrVendorPortalEndpoints();
+        app.MapSupplyArrVendorAccessEndpoints();
         app.MapSupplyArrQuoteAliasEndpoints();
         app.MapSupplyArrSupplierOnboardingEndpoints();
         app.MapSupplyArrVendorDocumentEndpoints();
@@ -75,5 +78,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrEventAndAuditEndpoints();
         app.MapSupplyArrSupplyReadinessEndpoints();
         app.MapSupplyArrLoadTestJourneySeedEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

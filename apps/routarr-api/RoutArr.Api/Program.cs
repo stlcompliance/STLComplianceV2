@@ -52,5 +52,6 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrTripCompletionEndpoints();
         app.MapRoutArrAttachmentRetentionSettingsEndpoints();
         app.MapRoutArrInternalAttachmentRetentionEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

@@ -172,6 +172,29 @@ public sealed class RoutArrAuthorizationService
             "routarr_dispatcher");
     }
 
+    public void RequireVendorReadinessOverride(ClaimsPrincipal principal)
+    {
+        RequireRoutArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "routarr_admin",
+                "routarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Vendor-readiness overrides require tenant admin, RoutArr admin, or RoutArr manager access.",
+            403);
+    }
+
     public void RequireTripAccess(
         ClaimsPrincipal principal,
         Guid createdByUserId,

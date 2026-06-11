@@ -12,6 +12,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
+        builder.Services.Configure<RecordArrClientOptions>(builder.Configuration.GetSection(RecordArrClientOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -76,6 +77,8 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
         builder.Services.AddScoped<IntegrationInboxEnqueueService>();
         builder.Services.AddScoped<RfqService>();
+        builder.Services.AddScoped<VendorOrderService>();
+        builder.Services.AddScoped<VendorOrderSettingsService>();
         builder.Services.AddSingleton<SupplyArrDocumentStorageService>();
         builder.Services.AddScoped<PartyComplianceDocumentService>();
         builder.Services.AddScoped<SupplierOnboardingService>();
@@ -160,6 +163,16 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddHttpClient<RoutArrShipmentClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<RoutArrVendorOrderClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<RecordArrVendorOrderClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RecordArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddHttpClient<TrainArrDemandStatusClient>((sp, client) =>

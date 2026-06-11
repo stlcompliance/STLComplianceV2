@@ -23,7 +23,7 @@ export const STAFFARR_SCHEDULED_WORKER_PANELS: StaffArrWorkerPanelConfig[] = [
     saveTestId: 'readiness-rollup-save',
     heading: 'Readiness rollup worker',
     description:
-      'Refresh materialized team and site readiness rollups used by supervisor dashboards and reports.',
+      'Refresh materialized team and site readiness rollups used by supervisor readiness views.',
     supportsStaleness: true,
   },
   {
@@ -43,14 +43,5 @@ export const STAFFARR_SCHEDULED_WORKER_PANELS: StaffArrWorkerPanelConfig[] = [
     description:
       'Rebuild per-person workforce history summaries and timeline events from StaffArr source records.',
     supportsStaleness: true,
-  },
-  {
-    workerKey: 'audit-package-generation',
-    panelTestId: 'audit-package-generation-settings-panel',
-    saveTestId: 'audit-package-generation-save',
-    heading: 'Audit package generation worker',
-    description:
-      'Process background audit package ZIP generation jobs queued from the audit export panel.',
-    supportsStaleness: false,
   },
 ]

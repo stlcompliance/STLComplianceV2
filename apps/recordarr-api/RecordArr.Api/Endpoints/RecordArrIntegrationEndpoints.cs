@@ -123,6 +123,49 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/files/{file.FileId}", file);
         }).WithName($"CreateRecordArrIntegrationFile{routePrefix}");
 
+        group.MapPost("/smart-import/source-files", (
+            SmartImportRetainSourceRequest request,
+            HttpContext context,
+            RecordArrStore store,
+            StlServiceTokenValidator tokenValidator) =>
+        {
+            ValidateSmartImportRetainSourceCaller(context, tokenValidator, request.TenantId);
+
+            var record = store.CreateRecord(
+                $"Smart Import source: {request.FileName}",
+                "Source file retained for STL Smart Import review and audit.",
+                "document",
+                ResolveDocumentType(request.FileName, request.ContentType),
+                "internal",
+                "nexarr",
+                "smart_import_batch",
+                request.ImportBatchId.ToString("D"),
+                request.FileName,
+                request.UploadedByPersonId.ToString("D"),
+                request.UploadedByPersonId.ToString("D"),
+                request.FileName,
+                request.ContentType);
+
+            var storageKey = $"recordarr/smart-import/{request.TenantId:D}/{request.ImportBatchId:D}/{request.Sha256}/{request.FileName}";
+            var file = store.CreateFile(
+                record.RecordId,
+                request.FileName,
+                request.ContentType,
+                request.UploadedByPersonId.ToString("D"),
+                "recordarr",
+                storageKey,
+                request.SizeBytes);
+
+            store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
+            store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "smart_import", 1.0m, request.UploadedByPersonId.ToString("D"));
+
+            return Results.Created($"{routePrefix}/files/{file.FileId}", new SmartImportRetainSourceResponse(
+                record.RecordId,
+                file.FileId,
+                storageKey,
+                "retained"));
+        }).WithName($"RetainRecordArrSmartImportSource{routePrefix}");
+
         group.MapGet("/files", (HttpContext context, string? recordId, RecordArrStore store) => Results.Ok(store.GetFiles(context.User, recordId)))
             .WithName($"ListRecordArrIntegrationFiles{routePrefix}");
 
@@ -609,4 +652,55 @@ public static class RecordArrIntegrationEndpoints
     public sealed record CreateExternalShareRequest(string RecordId, string RecipientName, string RecipientEmail, string SharePurpose, IReadOnlyList<string> AllowedActions, string CreatedByPersonId);
     public sealed record RevokeExternalShareRequest(string RevokedByPersonId);
     public sealed record CreateRedactionRequest(string SourceRecordId, string RedactedRecordId, string RedactionReason, string RedactedByPersonId, IReadOnlyList<string> RedactionRules);
+
+    public sealed record SmartImportRetainSourceRequest(
+        Guid TenantId,
+        Guid UploadedByPersonId,
+        Guid ImportBatchId,
+        string FileName,
+        string ContentType,
+        long SizeBytes,
+        string Sha256,
+        string ContentBase64,
+        string DestinationProductHint);
+
+    public sealed record SmartImportRetainSourceResponse(
+        string RecordId,
+        string FileId,
+        string StorageKey,
+        string Status);
+
+    private static string ResolveDocumentType(string fileName, string contentType)
+    {
+        var name = fileName.ToLowerInvariant();
+        if (name.Contains("certificate") || name.Contains("cert")) return "certificate";
+        if (name.Contains("policy")) return "policy";
+        if (name.Contains("procedure") || name.Contains("sop")) return "procedure";
+        if (name.Contains("inspection")) return "inspection_form";
+        if (name.Contains("training")) return "training_evidence";
+        if (name.Contains("quality")) return "quality_evidence";
+        if (contentType.Contains("image", StringComparison.OrdinalIgnoreCase)) return "photo_evidence";
+        return "other";
+    }
+
+    private static void ValidateSmartImportRetainSourceCaller(
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization);
+        var serviceToken = tokenValidator.TryValidate(bearer);
+        if (serviceToken is null)
+        {
+            return;
+        }
+
+        tokenValidator.ValidateOrThrow(bearer, new ServiceTokenRequirements
+        {
+            ExpectedSourceProduct = "nexarr",
+            RequiredTargetProduct = "recordarr",
+            TenantId = tenantId,
+            RequiredActionScope = "platform.smart_import.retain"
+        });
+    }
 }

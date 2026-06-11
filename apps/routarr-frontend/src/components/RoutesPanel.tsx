@@ -2,6 +2,7 @@ import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { RouteDetailResponse, RouteSummaryResponse } from '../api/types'
+import { OpenStreetMapCard } from './OpenStreetMapCard'
 
 interface RoutesPanelProps {
   mode: 'drawer' | 'details' | 'create'
@@ -240,6 +241,16 @@ export function RoutesPanel({
             />
           </label>
           <div className="md:col-span-2">
+            <OpenStreetMapCard
+              latitude={stopGeofenceAnchorLatitude}
+              longitude={stopGeofenceAnchorLongitude}
+              label="First stop geofence preview"
+              addressQuery={stopAddress}
+              heightClassName="h-56"
+              emptyMessage="Add geofence latitude and longitude to preview the first stop in OpenStreetMap."
+            />
+          </div>
+          <div className="md:col-span-2">
             <button
               type="button"
               className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
@@ -364,6 +375,19 @@ export function RoutesPanel({
                   <div className="text-slate-400">
                     {stop.stopType} · {stop.addressLabel || 'No address'}
                   </div>
+                  {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
+                    <div className="mt-1 text-xs text-slate-500">
+                      Anchor {stop.geofenceAnchorLatitude.toFixed(4)}, {stop.geofenceAnchorLongitude.toFixed(4)} ·{' '}
+                      <a
+                        href={`https://www.openstreetmap.org/?mlat=${stop.geofenceAnchorLatitude}&mlon=${stop.geofenceAnchorLongitude}#map=16/${stop.geofenceAnchorLatitude}/${stop.geofenceAnchorLongitude}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
+                      >
+                        OpenStreetMap
+                      </a>
+                    </div>
+                  ) : null}
                   {stop.scheduledArrivalAt ? (
                     <div className="text-xs text-slate-500">
                       Scheduled arrival {new Date(stop.scheduledArrivalAt).toLocaleString()}

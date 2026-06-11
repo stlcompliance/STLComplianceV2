@@ -684,21 +684,6 @@ public static class V1FeatureAliasEndpoints
         })
         .WithName("CreateIntegrationPersonHistoryEventV1Alias");
 
-        integrations.MapPost("/audit-packages", async (
-            CreateAuditPackageGenerationJobRequest request,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            AuditPackageGenerationService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireAuditPackageExport(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var job = await service.CreateJobAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Accepted($"/api/v1/audit-packages/jobs/{job.JobId}", job);
-        })
-        .WithName("CreateIntegrationAuditPackageV1Alias");
-
         integrations.MapGet("/org-units", async (
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -880,7 +865,6 @@ public static class V1FeatureAliasEndpoints
                 new { key = "positions", path = "/api/v1/integrations/positions" },
                 new { key = "teams", path = "/api/v1/integrations/teams" },
                 new { key = "incidents", path = "/api/v1/integrations/incidents" },
-                new { key = "audit-packages", path = "/api/v1/integrations/audit-packages" },
                 new { key = "supplyarr-demand-status", path = "/api/v1/integrations/supplyarr-demand-status" },
                 new { key = "training-acknowledgements", path = "/api/v1/integrations/training-acknowledgements" },
                 new { key = "training-acknowledgements-supersede", path = "/api/v1/integrations/training-acknowledgements/supersede" },

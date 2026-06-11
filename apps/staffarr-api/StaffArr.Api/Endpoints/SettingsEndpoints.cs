@@ -31,7 +31,6 @@ public static class SettingsEndpoints
                     new("readiness_rollup_settings", "/api/worker-admin/readiness-rollup/settings", "Readiness rollup worker settings."),
                     new("permission_projection_settings", "/api/worker-admin/permission-projection/settings", "Permission projection worker settings."),
                     new("personnel_history_rollup_settings", "/api/worker-admin/personnel-history-rollup/settings", "Personnel history rollup worker settings."),
-                    new("audit_package_generation_settings", "/api/worker-admin/audit-package-generation/settings", "Audit package generation worker settings."),
                 ]);
 
                 return Results.Ok(response);

@@ -2,7 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
-import { canManageTrips, canPerformTrips } from '../auth/sessionStorage'
+import {
+  canAssignDrivers,
+  canManageTrips,
+  canOverrideVendorReadiness,
+  canPerformTrips,
+} from '../auth/sessionStorage'
 import { TripExecutionWorkspacePanel } from '../components/TripExecutionWorkspacePanel'
 
 export function TripWorkspacePage() {
@@ -36,8 +41,10 @@ export function TripWorkspacePage() {
       <TripExecutionWorkspacePanel
         accessToken={session.accessToken}
         tripId={tripId}
+        canDispatch={canAssignDrivers(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}
         canManage={canManageTrips(roleKey, isPlatformAdmin)}
+        canOverrideVendorReadiness={canOverrideVendorReadiness(roleKey, isPlatformAdmin)}
       />
     </div>
   )

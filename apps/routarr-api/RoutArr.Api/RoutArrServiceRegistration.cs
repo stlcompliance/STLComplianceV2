@@ -81,6 +81,11 @@ public static class RoutArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<SupplyArrVendorOrderClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
 
         builder.Services.AddScoped<RoutArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
@@ -94,7 +99,9 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<BulkDispatchService>();
         builder.Services.AddScoped<DispatchCloseoutService>();
         builder.Services.AddScoped<DispatchPlanService>();
+        builder.Services.AddScoped<TripVendorReadinessService>();
         builder.Services.AddScoped<TripService>();
+        builder.Services.AddScoped<SupplyArrVendorOrderEventIngestionService>();
         builder.Services.AddScoped<TripEtaService>();
         builder.Services.AddScoped<TripPartsDemandService>();
         builder.Services.AddScoped<TripPartsDemandStatusIngestionService>();

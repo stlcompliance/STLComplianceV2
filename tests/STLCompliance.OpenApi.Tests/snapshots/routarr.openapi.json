@@ -3180,6 +3180,29 @@
         }
       }
     },
+    "/api/integrations/supplyarr-vendor-order-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrVendorOrderEvents",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyArrVendorOrderEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/trips": {
       "get": {
         "tags": [
@@ -3192,6 +3215,22 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "vendorOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brokerOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -4442,6 +4481,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "vendorOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brokerOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -5183,6 +5238,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateTripDispatchStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/vendor-readiness-override": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "OverrideTripVendorReadiness",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripVendorReadinessOverrideRequest"
               }
             }
           },
@@ -6539,6 +6628,72 @@
         }
       }
     },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitroutarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidateroutarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/stops": {
       "post": {
         "tags": [
@@ -6728,6 +6883,29 @@
         }
       }
     },
+    "/api/v1/integrations/supplyarr-vendor-order-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrVendorOrderEventsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyArrVendorOrderEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/trips": {
       "get": {
         "tags": [
@@ -6740,6 +6918,22 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "vendorOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brokerOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -8578,14 +8772,6 @@
         }
       },
       "CreateTripRequest": {
-        "required": [
-          "title",
-          "description",
-          "vehicleRefKey",
-          "scheduledStartAt",
-          "scheduledEndAt",
-          "loads"
-        ],
         "type": "object",
         "properties": {
           "title": {
@@ -8599,6 +8785,20 @@
               "null",
               "string"
             ]
+          },
+          "vendorOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "brokerOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           },
           "scheduledStartAt": {
             "type": [
@@ -8887,6 +9087,212 @@
           }
         }
       },
+      "IngestSupplyArrVendorOrderEventRequest": {
+        "required": [
+          "eventId",
+          "eventType",
+          "occurredAt",
+          "tenantId",
+          "vendorOrderId",
+          "brokerOrderId",
+          "brokerOrderNumberSnapshot",
+          "previousStatus",
+          "newStatus",
+          "vendorId",
+          "vendorNameSnapshot",
+          "pickupLocationNameSnapshot",
+          "pickupAddressSnapshot",
+          "deliveryLocationNameSnapshot",
+          "deliveryAddressSnapshot",
+          "itemDescription",
+          "orderedQuantity",
+          "quantityReady",
+          "quantityRemaining",
+          "expectedReadyAt",
+          "confirmedReadyAt",
+          "pickupWindowStart",
+          "pickupWindowEnd",
+          "pickupInstructions",
+          "source",
+          "selectedTripId",
+          "authorizedQuantity",
+          "readyChildVendorOrderId",
+          "remainingChildVendorOrderId"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vendorOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brokerOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "brokerOrderNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "previousStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "newStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vendorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vendorNameSnapshot": {
+            "type": "string"
+          },
+          "pickupLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pickupAddressSnapshot": {
+            "type": "string"
+          },
+          "deliveryLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryAddressSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemDescription": {
+            "type": "string"
+          },
+          "orderedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityReady": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityRemaining": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "confirmedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupInstructions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "selectedTripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "authorizedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "readyChildVendorOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "remainingChildVendorOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "JsonElement": {},
       "LinkDispatchExceptionTripRequest": {
         "required": [
           "tripId"
@@ -9156,6 +9562,136 @@
           }
         }
       },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "SubmitTripDvirRequest": {
         "required": [
           "phase",
@@ -9222,6 +9758,17 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "TripVendorReadinessOverrideRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -9846,6 +10393,9 @@
     },
     {
       "name": "AttachmentRetentionSettings"
+    },
+    {
+      "name": "Smart Import Integrations"
     }
   ]
 }

@@ -53,6 +53,8 @@ public sealed class LoadTestJourneySeedService(
                 title,
                 StlRoutArrLoadTestJourneySeedCatalog.JourneyTripDescription,
                 VehicleRefKey: null,
+                VendorOrderId: null,
+                BrokerOrderId: null,
                 scheduledStartAt,
                 scheduledEndAt,
                 Loads: null),

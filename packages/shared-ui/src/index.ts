@@ -1,6 +1,15 @@
 export { PageHeader } from './PageHeader'
 export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
+export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
+export type { AiHelpDrawerProps, AiHelpMessage } from './AiHelpDrawer'
+export { SmartImportReviewWorkspace } from './SmartImportReviewWorkspace'
+export type {
+  SmartImportBatchDetail,
+  SmartImportBatchRow,
+  SmartImportProposedRecordRow,
+  SmartImportReviewWorkspaceProps,
+} from './SmartImportReviewWorkspace'
 export { ProductAppShell } from './ProductAppShell'
 export type { ProductAppShellProps, ProductNavItem } from './ProductAppShell'
 export { ProductSwitcher } from './ProductSwitcher'

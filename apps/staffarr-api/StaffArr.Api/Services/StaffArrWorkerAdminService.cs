@@ -11,7 +11,6 @@ public sealed class StaffArrWorkerAdminService(
     ReadinessRollupService readinessRollupService,
     PermissionProjectionService permissionProjectionService,
     PersonnelHistoryService personnelHistoryService,
-    AuditPackageGenerationService auditPackageGenerationService,
     IStaffArrAuditService audit)
 {
     public async Task<StaffArrWorkerSettingsResponse> GetSettingsAsync(
@@ -113,13 +112,6 @@ public sealed class StaffArrWorkerAdminService(
                 settings.StalenessHours,
                 cancellationToken)).Items
                 .Select(x => x.PersonId.ToString())
-                .ToList(),
-            StaffArrWorkerKeys.AuditPackageGeneration => (await auditPackageGenerationService.ListPendingAsync(
-                tenantId,
-                asOf,
-                batchSize,
-                cancellationToken)).Items
-                .Select(x => $"{x.JobId} ({x.Format})")
                 .ToList(),
             _ => [],
         };

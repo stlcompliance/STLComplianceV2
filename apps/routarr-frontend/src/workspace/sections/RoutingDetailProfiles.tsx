@@ -4,6 +4,7 @@ import {
   ClipboardList,
   MapPinned,
   Navigation,
+  Package,
   Play,
   Route,
   Truck,
@@ -19,6 +20,7 @@ import {
   type DetailRailSectionConfig,
   type DetailTone,
 } from '@stl/shared-ui'
+import { OpenStreetMapCard } from '../../components/OpenStreetMapCard'
 import type { RouteStopSummaryResponse } from '../../api/types'
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
 
@@ -174,8 +176,61 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
   const loadCount = detail?.loads.length ?? summary?.loadCount ?? 0
   const dispatchability = s.tripAssetDispatchabilityQuery?.data ?? null
   const unassigned = !trip.assignedDriverPersonId || !trip.vehicleRefKey
-  const blocked = ['cancelled'].includes(trip.dispatchStatus) || unassigned || Boolean(dispatchability?.isBlocking)
+  const activeVendorBlock =
+    trip.dispatchBlocks?.find(
+      (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
+    ) ?? null
+  const blocked =
+    ['cancelled'].includes(trip.dispatchStatus) ||
+    unassigned ||
+    Boolean(dispatchability?.isBlocking) ||
+    Boolean(activeVendorBlock)
   const rails: DetailRailSectionConfig[] = [
+    {
+      title: 'Vendor readiness',
+      icon: <Package className="h-5 w-5" />,
+      content: trip.vendorOrderId || trip.vendorReadinessStatusSnapshot || activeVendorBlock ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {trip.vendorOrderId ? (
+              <DetailBadge label={`Vendor order ${trip.vendorOrderId}`} tone="info" />
+            ) : null}
+            {trip.brokerOrderId ? (
+              <DetailBadge label={`Broker order ${trip.brokerOrderId}`} tone="neutral" />
+            ) : null}
+            <DetailBadge
+              label={activeVendorBlock ? 'Dispatch blocked' : trip.releasedForDispatchAt ? 'Released' : humanize(trip.vendorReadinessStatusSnapshot)}
+              tone={activeVendorBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : 'warn'}
+            />
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300">
+            <p className="font-semibold text-white">SupplyArr readiness snapshot</p>
+            <p className="mt-2">
+              {trip.vendorReadinessStatusSnapshot
+                ? humanize(trip.vendorReadinessStatusSnapshot)
+                : 'No vendor-readiness snapshot recorded yet.'}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              {trip.vendorQuantityReadySnapshot != null || trip.vendorOrderedQuantitySnapshot != null
+                ? `${trip.vendorQuantityReadySnapshot ?? 0} of ${trip.vendorOrderedQuantitySnapshot ?? 0} ready`
+                : 'Quantity snapshot unavailable'}
+            </p>
+            {activeVendorBlock ? (
+              <p className="mt-2 text-xs text-amber-200">
+                Active block reason: {humanize(activeVendorBlock.blockReason)}
+              </p>
+            ) : null}
+            {trip.dispatchOverrideReason ? (
+              <p className="mt-2 text-xs text-amber-200">
+                Override reason: {trip.dispatchOverrideReason}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <DetailEmptyState text="No linked vendor order or vendor-readiness snapshot." />
+      ),
+    },
     {
       title: 'Loads',
       icon: <ClipboardList className="h-5 w-5" />,
@@ -205,13 +260,23 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
       badges={[
         { label: trip.tripNumber, tone: 'info' },
         { label: humanize(trip.dispatchStatus), tone: statusTone(trip.dispatchStatus) },
+        activeVendorBlock ? { label: 'Vendor blocked', tone: 'bad' } : null,
         { label: `${loadCount} loads`, tone: 'neutral' },
-      ]}
+      ].filter(Boolean) as Array<{ label: string; tone: DetailTone }>}
       actions={<>{actionLink(`/trips/${trip.tripId}`, 'Open trip workspace', <Play className="h-4 w-4" />, true)}</>}
       metrics={[
         { label: 'Dispatch state', value: humanize(trip.dispatchStatus), hint: `Created ${formatDate(trip.createdAt)}`, icon: <Navigation className="h-5 w-5" />, tone: statusTone(trip.dispatchStatus) },
         { label: 'Driver', value: trip.assignedDriverPersonId ? 'Assigned' : 'Open', hint: trip.assignedDriverPersonId ?? 'No driver assignment', icon: <UserCheck className="h-5 w-5" />, tone: trip.assignedDriverPersonId ? 'good' : 'warn' },
         { label: 'Vehicle', value: trip.vehicleRefKey ?? 'Open', hint: 'Equipment reference', icon: <Truck className="h-5 w-5" />, tone: trip.vehicleRefKey ? 'good' : 'warn' },
+        {
+          label: 'Vendor readiness',
+          value: activeVendorBlock ? 'Blocked' : trip.releasedForDispatchAt ? 'Released' : trip.vendorOrderId ? humanize(trip.vendorReadinessStatusSnapshot) : 'No link',
+          hint: trip.vendorOrderId
+            ? `${trip.vendorQuantityReadySnapshot ?? 0} of ${trip.vendorOrderedQuantitySnapshot ?? 0} ready`
+            : 'No linked SupplyArr vendor order',
+          icon: <Package className="h-5 w-5" />,
+          tone: activeVendorBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : trip.vendorOrderId ? 'warn' : 'neutral',
+        },
         { label: 'Loads', value: loadCount, hint: 'Trip load plan', icon: <ClipboardList className="h-5 w-5" />, tone: 'info' },
       ]}
       tabs={['Overview', 'Loads', 'Driver', 'Vehicle', 'Proofs', 'DVIR', 'History']}
@@ -223,6 +288,13 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
         { label: 'Description', value: detail?.description ?? 'Not recorded', source: 'Trip plan' },
         { label: 'Driver', value: trip.assignedDriverPersonId ?? 'Unassigned', source: 'StaffArr personId' },
         { label: 'Vehicle', value: trip.vehicleRefKey ?? 'Unassigned', source: 'MaintainArr asset ref' },
+        { label: 'Vendor order', value: trip.vendorOrderId ?? 'Not linked', source: 'SupplyArr reference' },
+        { label: 'Broker order', value: trip.brokerOrderId ?? 'Not linked', source: 'OrdArr reference snapshot' },
+        { label: 'Vendor readiness', value: humanize(trip.vendorReadinessStatusSnapshot), source: 'SupplyArr readiness snapshot' },
+        { label: 'Vendor quantity ready', value: trip.vendorQuantityReadySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
+        { label: 'Vendor ordered quantity', value: trip.vendorOrderedQuantitySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
+        { label: 'Released for dispatch', value: formatDateTime(trip.releasedForDispatchAt), source: 'RoutArr release audit' },
+        { label: 'Override reason', value: trip.dispatchOverrideReason ?? 'Not recorded', source: 'RoutArr override audit' },
         { label: 'Scheduled start', value: formatDate(trip.scheduledStartAt), source: 'Dispatch plan' },
         { label: 'Scheduled end', value: formatDate(trip.scheduledEndAt), source: 'Dispatch plan' },
         { label: 'Started', value: formatDate(trip.startedAt), source: 'Execution record' },
@@ -397,17 +469,27 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                     <div className="flex flex-col items-end gap-2">
                       <DetailBadge label={humanize(stop.stopStatus)} tone={statusTone(stop.stopStatus)} />
                       {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
-                        <button
-                          type="button"
-                          className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:border-sky-500"
-                          onClick={() => {
-                            setSelectedGeofenceStopId(stop.stopId)
-                            setReportedLatitude(stop.geofenceAnchorLatitude?.toString() ?? '')
-                            setReportedLongitude(stop.geofenceAnchorLongitude?.toString() ?? '')
-                          }}
-                        >
-                          Check geofence
-                        </button>
+                        <div className="flex flex-col items-end gap-2">
+                          <button
+                            type="button"
+                            className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:border-sky-500"
+                            onClick={() => {
+                              setSelectedGeofenceStopId(stop.stopId)
+                              setReportedLatitude(stop.geofenceAnchorLatitude?.toString() ?? '')
+                              setReportedLongitude(stop.geofenceAnchorLongitude?.toString() ?? '')
+                            }}
+                          >
+                            Check geofence
+                          </button>
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${stop.geofenceAnchorLatitude}&mlon=${stop.geofenceAnchorLongitude}#map=16/${stop.geofenceAnchorLatitude}/${stop.geofenceAnchorLongitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
+                          >
+                            Open map
+                          </a>
+                        </div>
                       ) : null}
                     </div>
                   </div>
@@ -446,6 +528,14 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                     />
                   </label>
                 </div>
+                <OpenStreetMapCard
+                  latitude={selectedGeofenceStop.geofenceAnchorLatitude}
+                  longitude={selectedGeofenceStop.geofenceAnchorLongitude}
+                  label={`${selectedGeofenceStop.label} geofence anchor`}
+                  addressQuery={selectedGeofenceStop.addressLabel}
+                  heightClassName="h-72"
+                  emptyMessage="This stop needs a geofence anchor before OpenStreetMap preview is available."
+                />
                 <button
                   type="button"
                   className="rounded bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"

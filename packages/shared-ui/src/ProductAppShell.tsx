@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { LogOut } from 'lucide-react'
+import { LogOut, Upload } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
@@ -64,6 +64,7 @@ function WorkspaceTopBar({
   productLaunchError?: string | null
 }) {
   const ProductIcon = getSuiteProductIcon(productKey)
+  const smartImportUrl = `${suiteHomeUrl.replace(/\/$/, '')}/imports?destinationProduct=${encodeURIComponent(productKey)}`
 
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-4 py-4 sm:px-6">
@@ -75,6 +76,14 @@ function WorkspaceTopBar({
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <a
+          href={smartImportUrl}
+          title="Smart Import"
+          aria-label="Smart Import"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-600 bg-slate-900/60 text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+        >
+          <Upload className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+        </a>
         <ProductSwitcher
           currentProductKey={productKey}
           entitlements={entitlements}

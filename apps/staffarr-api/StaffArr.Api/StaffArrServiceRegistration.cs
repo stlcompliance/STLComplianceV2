@@ -43,6 +43,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<OrgUnitService>();
         builder.Services.AddScoped<OrgUnitAssignmentService>();
         builder.Services.AddScoped<RoleTemplateService>();
+        builder.Services.AddScoped<RoleManagementService>();
         builder.Services.AddScoped<ProductPermissionCatalogService>();
         builder.Services.AddScoped<InternalLocationService>();
         builder.Services.AddScoped<CertificationService>();
@@ -106,12 +107,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PersonnelDocumentService>();
         builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
         builder.Services.AddSingleton<StaffArrDocumentStorageService>();
-        builder.Services.AddScoped<AuditPackageService>();
-        builder.Services.AddScoped<AuditPackageGenerationService>();
-        builder.Services.AddScoped<PersonnelReportService>();
-        builder.Services.AddScoped<ReadinessReportService>();
-        builder.Services.AddScoped<CertificationReportService>();
-        builder.Services.AddScoped<IncidentReportService>();
+        builder.Services.AddScoped<AuditTimelineService>();
         builder.Services.AddScoped<StaffArrEntityBulkExportService>();
         builder.Services.AddScoped<StaffArrWorkerAdminService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();

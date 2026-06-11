@@ -38,6 +38,9 @@ services:
       <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=nexarr;Username=stl;Password=stl_dev_password
+      REDIS_URL: redis:6379
+      OPENAI_ASSISTANT_MODEL: gpt-5.5
+      OPENAI_SMART_IMPORT_MODEL: gpt-5.5
       STL_SERVICE_NAME: nexarr-api
     depends_on:
       postgres:
@@ -300,3 +303,23 @@ services:
     depends_on:
       - postgres
       - redis
+
+  shared-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/shared-worker/Shared.Worker/Shared.Worker.csproj
+        ASSEMBLY_NAME: Shared.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      REDIS_URL: redis:6379
+      NexArr__BaseUrl: http://nexarr-api:8080
+      NexArrSmartImport__NexArrBaseUrl: http://nexarr-api:8080
+      NexArrSmartImport__ServiceToken: ""
+      OPENAI_ASSISTANT_MODEL: gpt-5.5
+      OPENAI_SMART_IMPORT_MODEL: gpt-5.5
+    depends_on:
+      - postgres
+      - redis
+      - nexarr-api

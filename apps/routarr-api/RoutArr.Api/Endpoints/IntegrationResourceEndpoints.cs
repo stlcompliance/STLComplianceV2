@@ -173,6 +173,8 @@ public static class IntegrationResourceEndpoints
     {
         group.MapGet("/trips", async (
             string? dispatchStatus,
+            Guid? vendorOrderId,
+            Guid? brokerOrderId,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             TripService service,
@@ -189,6 +191,8 @@ public static class IntegrationResourceEndpoints
                 actorUserId,
                 actorPersonId,
                 dispatchStatus,
+                vendorOrderId,
+                brokerOrderId,
                 cancellationToken));
         })
         .WithName($"ListTrips{nameSuffix}Integration");

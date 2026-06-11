@@ -13,7 +13,8 @@ public sealed class TripService(
     DispatchAssignmentService dispatchAssignment,
     DispatchNotificationEnqueueService notificationEnqueueService,
     IntegrationOutboxEnqueueService integrationOutboxEnqueueService,
-    StaffarrPersonRefService staffarrPersonRefService)
+    StaffarrPersonRefService staffarrPersonRefService,
+    TripVendorReadinessService readinessService)
 {
     public async Task<IReadOnlyList<TripSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -21,11 +22,14 @@ public sealed class TripService(
         Guid? actorUserId,
         string? actorPersonId,
         string? dispatchStatus = null,
+        Guid? vendorOrderId = null,
+        Guid? brokerOrderId = null,
         CancellationToken cancellationToken = default)
     {
         var query = db.Trips
             .AsNoTracking()
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .Where(x => x.TenantId == tenantId);
 
@@ -42,6 +46,16 @@ public sealed class TripService(
         if (!string.IsNullOrWhiteSpace(dispatchStatus))
         {
             query = query.Where(x => x.DispatchStatus == dispatchStatus);
+        }
+
+        if (vendorOrderId.HasValue)
+        {
+            query = query.Where(x => x.VendorOrderId == vendorOrderId.Value);
+        }
+
+        if (brokerOrderId.HasValue)
+        {
+            query = query.Where(x => x.BrokerOrderId == brokerOrderId.Value);
         }
 
         var trips = await query
@@ -74,6 +88,7 @@ public sealed class TripService(
         var trip = await db.Trips
             .AsNoTracking()
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.TripNumber == normalizedTripNumber,
@@ -105,6 +120,8 @@ public sealed class TripService(
             Description = request.Description?.Trim() ?? string.Empty,
             DispatchStatus = TripDispatchStatuses.Planned,
             VehicleRefKey = NormalizeOptionalKey(request.VehicleRefKey),
+            VendorOrderId = request.VendorOrderId,
+            BrokerOrderId = request.BrokerOrderId,
             ScheduledStartAt = request.ScheduledStartAt,
             ScheduledEndAt = request.ScheduledEndAt,
             CreatedByUserId = actorUserId,
@@ -119,6 +136,8 @@ public sealed class TripService(
                 entity.Loads.Add(CreateLoadEntity(tenantId, entity.Id, loadRequest, now));
             }
         }
+
+        await readinessService.ApplyInitialVendorOrderLinkAsync(entity, cancellationToken);
 
         db.Trips.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
@@ -148,6 +167,7 @@ public sealed class TripService(
 
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -242,6 +262,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -325,6 +346,7 @@ public sealed class TripService(
 
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -372,6 +394,7 @@ public sealed class TripService(
         DispatchReleasePreviewSnapshot? releasePreview = null;
         if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
         {
+            readinessService.EnsureDispatchAllowed(trip);
             releasePreview = await BuildDispatchReleasePreviewAsync(
                 tenantId,
                 trip,
@@ -492,6 +515,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -541,6 +565,45 @@ public sealed class TripService(
         return MapDetail(trip);
     }
 
+    public async Task<TripDetailResponse> OverrideVendorReadinessAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string actorPersonId,
+        Guid tripId,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        var trip = await db.Trips
+            .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
+            .Include(x => x.DispatchReleaseSnapshot)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+        }
+
+        readinessService.ApplyVendorReadinessOverride(trip, reason, actorPersonId, DateTimeOffset.UtcNow);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "trip.vendor_readiness_override",
+            tenantId,
+            actorUserId,
+            "trip",
+            trip.Id.ToString(),
+            "override",
+            cancellationToken: cancellationToken);
+
+        await integrationOutboxEnqueueService.TryEnqueueDispatchOverridePerformedAsync(
+            trip,
+            reason,
+            cancellationToken);
+
+        return MapDetail(trip);
+    }
+
     private static void EnsureDriverCanTransition(
         Trip trip,
         string targetStatus,
@@ -559,15 +622,13 @@ public sealed class TripService(
                 403);
         }
 
-        var allowedForDriver = targetStatus is TripDispatchStatuses.Dispatched
-            or TripDispatchStatuses.InProgress
-            or TripDispatchStatuses.Completed;
+        var allowedForDriver = targetStatus is TripDispatchStatuses.InProgress or TripDispatchStatuses.Completed;
 
         if (!allowedForDriver)
         {
             throw new StlApiException(
                 "auth.forbidden",
-                "Drivers can only dispatch, start, or complete assigned trips.",
+                "Drivers can only start or complete assigned trips after dispatcher release.",
                 403);
         }
     }
@@ -580,6 +641,7 @@ public sealed class TripService(
         var trip = await db.Trips
             .AsNoTracking()
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -713,7 +775,18 @@ public sealed class TripService(
             trip.StartedAt,
             trip.CompletedAt,
             trip.ClosedAt,
-            trip.CancelledAt);
+            trip.CancelledAt,
+            trip.VendorOrderId,
+            trip.BrokerOrderId,
+            trip.DispatchBlockReason,
+            trip.VendorReadinessStatusSnapshot,
+            trip.VendorQuantityReadySnapshot,
+            trip.VendorOrderedQuantitySnapshot,
+            trip.VendorExpectedReadyAtSnapshot,
+            trip.VendorConfirmedReadyAtSnapshot,
+            trip.DispatchOverrideAt,
+            trip.DispatchOverrideReason,
+            TripVendorReadinessService.MapBlocks(trip));
 
     public async Task<TripDetailResponse> AcknowledgeDriverCloseAsync(
         Guid tenantId,
@@ -724,6 +797,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchBlocks)
             .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
@@ -770,52 +844,7 @@ public sealed class TripService(
         return MapDetail(trip);
     }
 
-    private static TripDetailResponse MapDetail(Trip trip) =>
-        new(
-            trip.Id,
-            trip.TripNumber,
-            trip.Title,
-            trip.Description,
-            trip.DispatchStatus,
-            trip.AssignedDriverPersonId,
-            trip.VehicleRefKey,
-            trip.ScheduledStartAt,
-            trip.ScheduledEndAt,
-            trip.Loads
-                .OrderBy(x => x.SequenceNumber)
-                .Select(load => new TripLoadSummaryResponse(
-                    load.Id,
-                    load.LoadKey,
-                    load.Description,
-                    load.LoadType,
-                    load.Status,
-                    load.SequenceNumber,
-                    load.OriginLabel,
-                    load.DestinationLabel,
-                    load.CreatedAt,
-                    load.UpdatedAt))
-                .ToList(),
-            trip.CreatedByUserId,
-            trip.CreatedAt,
-            trip.UpdatedAt,
-            trip.AssignedAt,
-            trip.AcceptedAt,
-            trip.DispatchedAt,
-            trip.StartedAt,
-            trip.CompletedAt,
-            trip.ClosedAt,
-            trip.CancelledAt,
-            trip.DispatchReleaseSnapshot is null
-                ? null
-                : new TripDispatchReleaseSnapshotResponse(
-                    trip.DispatchReleaseSnapshot.Id,
-                    trip.DispatchReleaseSnapshot.ReleasedAt,
-                    trip.DispatchReleaseSnapshot.ReleasedByUserId,
-                    trip.DispatchReleaseSnapshot.DriverCanAssign,
-                    trip.DispatchReleaseSnapshot.VehicleCanAssign,
-                    trip.DispatchReleaseSnapshot.HasMissingExternalData,
-                    trip.DispatchReleaseSnapshot.HasStaleExternalData,
-                    trip.DispatchReleaseSnapshot.Summary));
+    private static TripDetailResponse MapDetail(Trip trip) => TripMappings.MapDetail(trip);
 
     private async Task<DispatchReleasePreviewSnapshot> BuildDispatchReleasePreviewAsync(
         Guid tenantId,

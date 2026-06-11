@@ -8,14 +8,13 @@ import {
   ShieldAlert,
   Activity,
   AlertCircle,
-  BarChart3,
   ClipboardCheck,
-  ClipboardList,
   Award,
   SlidersHorizontal,
   Settings,
   ListCollapse,
   StickyNote,
+  KeyRound,
 } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -35,6 +34,7 @@ export const staffarrNavItems: ProductNavItem[] = [
   },
   { label: 'Org structure', to: '/organization-structure?tab=organization', icon: Network },
   { label: 'Locations', to: '/organization-structure?tab=locations', icon: Map },
+  { label: 'Roles', to: '/roles', icon: KeyRound },
   { label: 'Permissions', to: '/permissions', icon: Shield },
   { label: 'Readiness', to: '/readiness', icon: Activity },
   { label: 'Restrictions', to: '/restrictions', icon: ShieldAlert },
@@ -49,8 +49,6 @@ export const staffarrNavItems: ProductNavItem[] = [
   },
   { label: 'Training acks', to: '/training-acknowledgements', icon: ClipboardCheck },
   { label: 'Certifications', to: '/certifications', icon: Award },
-  { label: 'Reports', to: '/reports', icon: BarChart3 },
-  { label: 'Audit packages', to: '/audit-packages', icon: ClipboardList },
   { label: 'Settings', to: '/settings', icon: SlidersHorizontal },
   { label: 'Admin', to: '/admin', icon: Settings, sectionBreakBefore: true },
 ]

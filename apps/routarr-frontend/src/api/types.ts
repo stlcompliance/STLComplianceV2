@@ -52,6 +52,20 @@ export interface TripLoadSummaryResponse {
   updatedAt: string
 }
 
+export interface DispatchBlockResponse {
+  dispatchBlockId: string
+  blockType: string
+  blockReason: string
+  blockingEntityType: string
+  blockingEntityId: string
+  status: string
+  createdAt: string
+  resolvedAt: string | null
+  resolvedByEventId: string | null
+  resolvedByPersonId: string | null
+  overrideReason: string | null
+}
+
 export interface TripSummaryResponse {
   tripId: string
   tripNumber: string
@@ -71,6 +85,19 @@ export interface TripSummaryResponse {
   completedAt: string | null
   closedAt: string | null
   cancelledAt: string | null
+  vendorOrderId?: string | null
+  brokerOrderId?: string | null
+  dispatchBlockReason?: string | null
+  vendorReadinessStatusSnapshot?: string | null
+  vendorQuantityReadySnapshot?: number | null
+  vendorOrderedQuantitySnapshot?: number | null
+  vendorExpectedReadyAtSnapshot?: string | null
+  vendorConfirmedReadyAtSnapshot?: string | null
+  releasedForDispatchAt?: string | null
+  releasedForDispatchByEventId?: string | null
+  dispatchOverrideAt?: string | null
+  dispatchOverrideReason?: string | null
+  dispatchBlocks?: DispatchBlockResponse[]
 }
 
 export interface TripDetailResponse {
@@ -93,6 +120,21 @@ export interface TripDetailResponse {
   completedAt: string | null
   closedAt: string | null
   cancelledAt: string | null
+  vendorOrderId?: string | null
+  brokerOrderId?: string | null
+  dispatchBlockReason?: string | null
+  vendorReadinessStatusSnapshot?: string | null
+  vendorQuantityReadySnapshot?: number | null
+  vendorOrderedQuantitySnapshot?: number | null
+  vendorExpectedReadyAtSnapshot?: string | null
+  vendorConfirmedReadyAtSnapshot?: string | null
+  releasedForDispatchAt?: string | null
+  releasedForDispatchByEventId?: string | null
+  dispatchOverrideAt?: string | null
+  dispatchOverrideByPersonId?: string | null
+  dispatchOverrideReason?: string | null
+  dispatchBlocks?: DispatchBlockResponse[]
+  dispatchReleaseSnapshot?: TripDispatchReleaseSnapshotResponse | null
 }
 
 export interface CreateTripLoadRequest {
@@ -108,9 +150,15 @@ export interface CreateTripRequest {
   title: string
   description: string
   vehicleRefKey?: string | null
+  vendorOrderId?: string | null
+  brokerOrderId?: string | null
   scheduledStartAt?: string | null
   scheduledEndAt?: string | null
   loads?: CreateTripLoadRequest[] | null
+}
+
+export interface TripVendorReadinessOverrideRequest {
+  reason: string
 }
 
 export interface AssignTripDriverRequest {
@@ -199,6 +247,17 @@ export interface DispatchReleaseReadinessSnapshotResponse {
   capturedAt: string
   context: Record<string, string>
   gates: DispatchWorkflowGateResultSummary[]
+}
+
+export interface TripDispatchReleaseSnapshotResponse {
+  snapshotId: string
+  releasedAt: string
+  releasedByUserId: string
+  driverCanAssign: boolean
+  vehicleCanAssign: boolean
+  hasMissingExternalData: boolean
+  hasStaleExternalData: boolean
+  summary: string
 }
 
 export interface DispatchAssignmentWorkflowGateSummary {

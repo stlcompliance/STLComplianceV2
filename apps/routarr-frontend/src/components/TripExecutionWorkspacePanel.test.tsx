@@ -12,6 +12,7 @@ vi.mock('../api/client', () => ({
   getTripCaptureReadiness: vi.fn(),
   getTripExecutionSummary: vi.fn(),
   listDispatchExceptions: vi.fn(),
+  overrideTripVendorReadiness: vi.fn(),
   getTripAuditTrail: vi.fn(),
   updateTripStatus: vi.fn(),
   submitTripDvir: vi.fn(),
@@ -27,8 +28,10 @@ function renderPanel() {
         <TripExecutionWorkspacePanel
           accessToken="token"
           tripId="trip-1"
+          canDispatch={true}
           canPerform={true}
           canManage={true}
+          canOverrideVendorReadiness={true}
         />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -294,5 +297,138 @@ describe('TripExecutionWorkspacePanel', () => {
 
     expect(await screen.findByText('trip workspace unavailable')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry trip workspace' })).toBeInTheDocument()
+  })
+
+  it('allows authorized users to override an active vendor-readiness block', async () => {
+    vi.mocked(client.getTrip).mockResolvedValue({
+      tripId: 'trip-1',
+      tripNumber: 'TR-001',
+      title: 'Morning run',
+      description: 'Test trip',
+      dispatchStatus: 'assigned',
+      assignedDriverPersonId: 'person-1',
+      vehicleRefKey: 'VEH-1',
+      scheduledStartAt: new Date().toISOString(),
+      scheduledEndAt: new Date().toISOString(),
+      loads: [],
+      createdByUserId: 'user-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      assignedAt: null,
+      dispatchedAt: null,
+      startedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+      closedAt: null,
+      vendorOrderId: 'vendor-order-1',
+      brokerOrderId: null,
+      dispatchBlockReason: 'vendor_order_not_complete',
+      vendorReadinessStatusSnapshot: 'partially_ready',
+      vendorQuantityReadySnapshot: 200,
+      vendorOrderedQuantitySnapshot: 520,
+      vendorExpectedReadyAtSnapshot: null,
+      vendorConfirmedReadyAtSnapshot: null,
+      releasedForDispatchAt: null,
+      releasedForDispatchByEventId: null,
+      dispatchOverrideAt: null,
+      dispatchOverrideByPersonId: null,
+      dispatchOverrideReason: null,
+      dispatchBlocks: [
+        {
+          dispatchBlockId: 'block-1',
+          blockType: 'vendor_readiness',
+          blockReason: 'vendor_order_partially_ready',
+          blockingEntityType: 'vendor_order',
+          blockingEntityId: 'vendor-order-1',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          resolvedAt: null,
+          resolvedByEventId: null,
+          resolvedByPersonId: null,
+          overrideReason: null,
+        },
+      ],
+      dispatchReleaseSnapshot: null,
+    })
+    vi.mocked(client.getRoutes).mockResolvedValue([])
+    vi.mocked(client.getTripCaptureReadiness).mockResolvedValue({
+      tripId: 'trip-1',
+      dispatchStatus: 'assigned',
+      canStartTrip: true,
+      canCompleteTrip: false,
+      items: [],
+    })
+    vi.mocked(client.getTripExecutionSummary).mockResolvedValue({
+      tripId: 'trip-1',
+      tripNumber: 'TR-001',
+      dispatchStatus: 'assigned',
+      assignedDriverPersonId: 'person-1',
+      closedAt: null,
+      proofs: [],
+      dvirInspections: [],
+      hasPreTripDvir: true,
+      hasPostTripDvir: false,
+    })
+    vi.mocked(client.listDispatchExceptions).mockResolvedValue({
+      totalCount: 0,
+      openCount: 0,
+      overdueCount: 0,
+      items: [],
+    })
+    vi.mocked(client.getTripAuditTrail).mockResolvedValue({
+      tripId: 'trip-1',
+      entries: [],
+    })
+    vi.mocked(client.overrideTripVendorReadiness).mockResolvedValue({
+      tripId: 'trip-1',
+      tripNumber: 'TR-001',
+      title: 'Morning run',
+      description: 'Test trip',
+      dispatchStatus: 'assigned',
+      assignedDriverPersonId: 'person-1',
+      vehicleRefKey: 'VEH-1',
+      scheduledStartAt: new Date().toISOString(),
+      scheduledEndAt: new Date().toISOString(),
+      loads: [],
+      createdByUserId: 'user-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      assignedAt: null,
+      dispatchedAt: null,
+      startedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+      closedAt: null,
+      vendorOrderId: 'vendor-order-1',
+      brokerOrderId: null,
+      dispatchBlockReason: null,
+      vendorReadinessStatusSnapshot: 'partially_ready',
+      vendorQuantityReadySnapshot: 200,
+      vendorOrderedQuantitySnapshot: 520,
+      vendorExpectedReadyAtSnapshot: null,
+      vendorConfirmedReadyAtSnapshot: null,
+      releasedForDispatchAt: null,
+      releasedForDispatchByEventId: null,
+      dispatchOverrideAt: new Date().toISOString(),
+      dispatchOverrideByPersonId: 'person-99',
+      dispatchOverrideReason: 'Approved after phone confirmation',
+      dispatchBlocks: [],
+      dispatchReleaseSnapshot: null,
+    })
+
+    renderPanel()
+
+    expect(await screen.findByText('Vendor-readiness block is active.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Override reason'), {
+      target: { value: 'Approved after phone confirmation' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Override vendor-readiness block' }))
+
+    await waitFor(() => {
+      expect(client.overrideTripVendorReadiness).toHaveBeenCalledWith('token', 'trip-1', {
+        reason: 'Approved after phone confirmation',
+      })
+    })
   })
 })

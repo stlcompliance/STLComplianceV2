@@ -201,6 +201,39 @@ public static class IntegrationEndpoints
                 cancellationToken));
         })
         .WithName($"IntegrationResolveSupplyReferenceByKey{nameSuffix}");
+
+        integrations.MapGet("/vendor-orders/{vendorOrderId:guid}", async (
+            Guid tenantId,
+            Guid vendorOrderId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            VendorOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateVendorOrderReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetForIntegrationAsync(tenantId, vendorOrderId, cancellationToken));
+        })
+        .WithName($"IntegrationGetVendorOrder{nameSuffix}");
+
+        integrations.MapGet("/vendor-orders/search", async (
+            Guid tenantId,
+            Guid? brokerOrderId,
+            Guid? vendorId,
+            string? status,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            VendorOrderService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateVendorOrderReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.SearchForIntegrationAsync(
+                tenantId,
+                brokerOrderId,
+                vendorId,
+                status,
+                cancellationToken));
+        })
+        .WithName($"IntegrationSearchVendorOrders{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty);
@@ -210,6 +243,8 @@ public static class IntegrationEndpoints
     public const string SupplyReadinessReadActionScope = "supplyarr.readiness.read";
 
     public const string SupplyReferenceReadActionScope = "supplyarr.references.read";
+
+    public const string VendorOrderReadActionScope = "supplyarr.vendor_orders.read";
 
     private static void ValidateReadinessServiceToken(
         StlServiceTokenValidator tokenValidator,
@@ -289,6 +324,25 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "supplyarr",
                 TenantId = tenantId,
                 RequiredActionScope = SupplyReferenceReadActionScope,
+            });
+    }
+
+    private static void ValidateVendorOrderReadServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = "routarr",
+                RequiredTargetProduct = "supplyarr",
+                TenantId = tenantId,
+                RequiredActionScope = VendorOrderReadActionScope,
             });
     }
 }

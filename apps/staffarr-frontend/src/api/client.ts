@@ -12,10 +12,14 @@ import type {
   InternalLocationResponse,
   PermissionHistoryTimelineEntryResponse,
   PermissionTemplateSummaryResponse,
+  PermissionCatalogResponse,
   ProductPermissionCatalogItemResponse,
   PersonRoleAssignmentResponse,
+  StaffPersonRoleAssignmentResponse,
   PersonManagerResponse,
   RoleTemplateResponse,
+  StaffRoleSummaryResponse,
+  StaffRoleDetailResponse,
   MePortalSummaryResponse,
   MyTeamDashboardResponse,
   StaffArrPersonIntegrationSummaryResponse,
@@ -35,6 +39,7 @@ import type {
   UpdateOrgUnitAssignmentRequest,
   UpdateOrgUnitAssignmentStatusRequest,
   UpdateRoleTemplateRequest,
+  UpdateStaffRoleRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
   UpdateInternalLocationRequest,
@@ -63,10 +68,6 @@ import type {
   CreatePersonnelDocumentRequest,
   PagedResult,
   PersonTimelineEntryResponse,
-  AuditPackageManifestResponse,
-  AuditPackageExportResponse,
-  AuditPackageGenerationJobResponse,
-  StaffArrAuditEventExportItem,
   UpdateStaffPersonRequest,
   UpdatePersonEmploymentStatusRequest,
   BulkPersonImportRequest,
@@ -94,14 +95,20 @@ import type {
   StartPersonOffboardingRequest,
   ExecutePersonOffboardingRequest,
   TrainingAcknowledgementResponse,
-  PersonnelReportSummaryResponse,
-  ReadinessReportSummaryResponse,
-  IncidentReportSummaryResponse,
-  CertificationReportSummaryResponse,
   EntityExportManifestResponse,
   LaunchHandoffResponse,
   StaffArrRestrictionSnapshotResponse,
   ReadinessOverrideResponse,
+  CreateStaffRoleRequest,
+  ArchiveStaffRoleRequest,
+  CloneStaffRoleRequest,
+  SetStaffRolePermissionsRequest,
+  SetStaffRoleScopesRequest,
+  SetStaffPersonRolesRequest,
+  RefreshPermissionCatalogRequest,
+  RefreshPermissionCatalogResponse,
+  PermissionEvaluateRequest,
+  PermissionEvaluateResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -1154,6 +1161,151 @@ export async function checkPersonPermissions(
   return parseJsonResponse<PermissionCheckResponse>(response, 'Failed to check permissions')
 }
 
+export async function listStaffRoles(accessToken: string): Promise<StaffRoleSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/roles`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffRoleSummaryResponse[]>(response, 'Failed to load roles')
+}
+
+export async function getStaffRole(accessToken: string, roleId: string): Promise<StaffRoleDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse>(response, 'Failed to load role')
+}
+
+export async function createStaffRole(
+  accessToken: string,
+  request: CreateStaffRoleRequest,
+): Promise<StaffRoleDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/roles`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse>(response, 'Failed to create role')
+}
+
+export async function updateStaffRole(
+  accessToken: string,
+  roleId: string,
+  request: UpdateStaffRoleRequest,
+): Promise<StaffRoleDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse>(response, 'Failed to update role')
+}
+
+export async function archiveStaffRole(
+  accessToken: string,
+  roleId: string,
+  request: ArchiveStaffRoleRequest,
+): Promise<StaffRoleDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}/archive`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse>(response, 'Failed to archive role')
+}
+
+export async function cloneStaffRole(
+  accessToken: string,
+  roleId: string,
+  request: CloneStaffRoleRequest,
+): Promise<StaffRoleDetailResponse> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}/clone`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse>(response, 'Failed to clone role')
+}
+
+export async function setStaffRolePermissions(
+  accessToken: string,
+  roleId: string,
+  request: SetStaffRolePermissionsRequest,
+): Promise<StaffRoleDetailResponse['permissions']> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}/permissions`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse['permissions']>(response, 'Failed to save role permissions')
+}
+
+export async function setStaffRoleScopes(
+  accessToken: string,
+  roleId: string,
+  request: SetStaffRoleScopesRequest,
+): Promise<StaffRoleDetailResponse['scopes']> {
+  const response = await fetch(`${apiBase}/api/v1/roles/${roleId}/scopes`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffRoleDetailResponse['scopes']>(response, 'Failed to save role scopes')
+}
+
+export async function getStaffPersonRoles(
+  accessToken: string,
+  personId: string,
+): Promise<StaffPersonRoleAssignmentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/people/${personId}/roles`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffPersonRoleAssignmentResponse[]>(response, 'Failed to load person roles')
+}
+
+export async function setStaffPersonRoles(
+  accessToken: string,
+  personId: string,
+  request: SetStaffPersonRolesRequest,
+): Promise<StaffPersonRoleAssignmentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/people/${personId}/roles`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffPersonRoleAssignmentResponse[]>(response, 'Failed to save person roles')
+}
+
+export async function getPermissionCatalogs(accessToken: string): Promise<PermissionCatalogResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/permissions/catalog`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PermissionCatalogResponse[]>(response, 'Failed to load permission catalogs')
+}
+
+export async function refreshPermissionCatalogs(
+  accessToken: string,
+  request?: RefreshPermissionCatalogRequest,
+): Promise<RefreshPermissionCatalogResponse> {
+  const response = await fetch(`${apiBase}/api/v1/permissions/catalog/refresh`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request ?? {}),
+  })
+  return parseJsonResponse<RefreshPermissionCatalogResponse>(response, 'Failed to refresh permission catalogs')
+}
+
+export async function evaluatePermission(
+  accessToken: string,
+  request: PermissionEvaluateRequest,
+): Promise<PermissionEvaluateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/permissions/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PermissionEvaluateResponse>(response, 'Failed to evaluate permission')
+}
+
 export async function getPersonTimeline(
   accessToken: string,
   personId: string,
@@ -1638,189 +1790,6 @@ export function personnelDocumentContentUrl(personId: string, documentId: string
   return `${apiBase}/api/people/${personId}/documents/${documentId}/content`
 }
 
-function buildAuditPackageQuery(
-  options?: import('./types').AuditPackageScope & {
-    format?: string
-    page?: number
-    pageSize?: number
-  },
-): string {
-  const params = new URLSearchParams()
-  if (options?.from) {
-    params.set('from', `${options.from}T00:00:00.000Z`)
-  }
-  if (options?.to) {
-    params.set('to', `${options.to}T23:59:59.999Z`)
-  }
-  if (options?.format) {
-    params.set('format', options.format)
-  }
-  if (options?.action) {
-    params.set('action', options.action)
-  }
-  if (options?.result) {
-    params.set('result', options.result)
-  }
-  if (options?.targetType) {
-    params.set('targetType', options.targetType)
-  }
-  if (options?.actorUserId) {
-    params.set('actorUserId', options.actorUserId)
-  }
-  if (options?.page != null) {
-    params.set('page', String(options.page))
-  }
-  if (options?.pageSize != null) {
-    params.set('pageSize', String(options.pageSize))
-  }
-  const query = params.toString()
-  return query ? `?${query}` : ''
-}
-
-function auditPackageJobBody(scope: import('./types').AuditPackageScope & { format: string }) {
-  return {
-    format: scope.format,
-    from: scope.from ? `${scope.from}T00:00:00.000Z` : undefined,
-    to: scope.to ? `${scope.to}T23:59:59.999Z` : undefined,
-    action: scope.action,
-    result: scope.result,
-    targetType: scope.targetType,
-    actorUserId: scope.actorUserId,
-  }
-}
-
-export async function getAuditPackageFilterOptions(
-  accessToken: string,
-): Promise<import('./types').AuditPackageFilterOptions> {
-  const response = await fetch(`${apiBase}/api/audit-packages/filter-options`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse(response, 'Failed to load audit filter options')
-}
-
-export async function getAuditPackageExportSummary(
-  accessToken: string,
-  scope?: import('./types').AuditPackageScope,
-): Promise<import('./types').AuditPackageExportSummary> {
-  const response = await fetch(
-    `${apiBase}/api/audit-packages/summary${buildAuditPackageQuery(scope)}`,
-    { headers: authHeaders(accessToken) },
-  )
-  return parseJsonResponse(response, 'Failed to load audit export summary')
-}
-
-export async function getAuditPackageTimeline(
-  accessToken: string,
-  options?: import('./types').AuditPackageScope & { page?: number; pageSize?: number },
-): Promise<PagedResult<StaffArrAuditEventExportItem>> {
-  const response = await fetch(
-    `${apiBase}/api/audit-packages/timeline${buildAuditPackageQuery(options)}`,
-    {
-      headers: authHeaders(accessToken),
-    },
-  )
-  return parseJsonResponse<PagedResult<StaffArrAuditEventExportItem>>(
-    response,
-    'Failed to load audit timeline',
-  )
-}
-
-export async function getAuditPackageManifest(
-  accessToken: string,
-): Promise<AuditPackageManifestResponse> {
-  const response = await fetch(`${apiBase}/api/audit-packages/manifest`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
-}
-
-export async function exportAuditPackageCsv(
-  accessToken: string,
-  scope?: import('./types').AuditPackageScope,
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...scope, format: 'csv' })}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Audit events CSV export failed')
-  }
-  return response.blob()
-}
-
-export async function exportAuditPackageZip(
-  accessToken: string,
-  options?: import('./types').AuditPackageScope,
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Audit package export failed')
-  }
-  return response.blob()
-}
-
-export async function exportAuditPackageJson(
-  accessToken: string,
-  options?: import('./types').AuditPackageScope,
-): Promise<AuditPackageExportResponse> {
-  const response = await fetch(
-    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
-    {
-      headers: authHeaders(accessToken),
-    },
-  )
-  return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
-}
-
-export async function createAuditPackageGenerationJob(
-  accessToken: string,
-  options: import('./types').AuditPackageScope & { format: 'zip' | 'json' },
-): Promise<AuditPackageGenerationJobResponse> {
-  const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
-    method: 'POST',
-    headers: {
-      ...authHeaders(accessToken),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(auditPackageJobBody(options)),
-  })
-  return parseJsonResponse<AuditPackageGenerationJobResponse>(
-    response,
-    'Failed to queue audit package generation job',
-  )
-}
-
-export async function getAuditPackageGenerationJob(
-  accessToken: string,
-  jobId: string,
-): Promise<AuditPackageGenerationJobResponse> {
-  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<AuditPackageGenerationJobResponse>(
-    response,
-    'Failed to load audit package generation job',
-  )
-}
-
-export async function downloadAuditPackageGenerationJob(
-  accessToken: string,
-  jobId: string,
-): Promise<Blob> {
-  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}/download`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-  if (!response.ok) {
-    throw await toApiError(response, 'Audit package download failed')
-  }
-  return response.blob()
-}
-
 function buildReportQuery(params: Record<string, string | boolean | undefined>): string {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
@@ -1831,142 +1800,6 @@ function buildReportQuery(params: Record<string, string | boolean | undefined>):
   }
   const query = search.toString()
   return query ? `?${query}` : ''
-}
-
-export async function getPersonnelReportSummary(
-  accessToken: string,
-  options?: { employmentStatus?: string },
-): Promise<PersonnelReportSummaryResponse> {
-  const response = await fetch(
-    `${apiBase}/api/reports/personnel/summary${buildReportQuery({
-      employmentStatus: options?.employmentStatus,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  return parseJsonResponse<PersonnelReportSummaryResponse>(
-    response,
-    'Failed to load personnel report summary',
-  )
-}
-
-export async function exportPersonnelReportSummaryCsv(
-  accessToken: string,
-  options?: { employmentStatus?: string },
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/reports/personnel/summary/export${buildReportQuery({
-      employmentStatus: options?.employmentStatus,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Personnel report export failed')
-  }
-  return response.blob()
-}
-
-export async function getReadinessReportSummary(
-  accessToken: string,
-  options?: { scopeType?: string; attentionOnly?: boolean },
-): Promise<ReadinessReportSummaryResponse> {
-  const response = await fetch(
-    `${apiBase}/api/reports/readiness/summary${buildReportQuery({
-      scopeType: options?.scopeType,
-      attentionOnly: options?.attentionOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  return parseJsonResponse<ReadinessReportSummaryResponse>(
-    response,
-    'Failed to load readiness report summary',
-  )
-}
-
-export async function exportReadinessReportSummaryCsv(
-  accessToken: string,
-  options?: { scopeType?: string; attentionOnly?: boolean },
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/reports/readiness/summary/export${buildReportQuery({
-      scopeType: options?.scopeType,
-      attentionOnly: options?.attentionOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Readiness report export failed')
-  }
-  return response.blob()
-}
-
-export async function getIncidentReportSummary(
-  accessToken: string,
-  options?: { status?: string; severity?: string; openOnly?: boolean },
-): Promise<IncidentReportSummaryResponse> {
-  const response = await fetch(
-    `${apiBase}/api/reports/incidents/summary${buildReportQuery({
-      status: options?.status,
-      severity: options?.severity,
-      openOnly: options?.openOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  return parseJsonResponse<IncidentReportSummaryResponse>(
-    response,
-    'Failed to load incident report summary',
-  )
-}
-
-export async function exportIncidentReportSummaryCsv(
-  accessToken: string,
-  options?: { status?: string; severity?: string; openOnly?: boolean },
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/reports/incidents/summary/export${buildReportQuery({
-      status: options?.status,
-      severity: options?.severity,
-      openOnly: options?.openOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Incident report export failed')
-  }
-  return response.blob()
-}
-
-export async function getCertificationReportSummary(
-  accessToken: string,
-  options?: { missingOnly?: boolean; expiringOnly?: boolean },
-): Promise<CertificationReportSummaryResponse> {
-  const response = await fetch(
-    `${apiBase}/api/reports/certifications/summary${buildReportQuery({
-      missingOnly: options?.missingOnly,
-      expiringOnly: options?.expiringOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  return parseJsonResponse<CertificationReportSummaryResponse>(
-    response,
-    'Failed to load certification report summary',
-  )
-}
-
-export async function exportCertificationReportSummaryCsv(
-  accessToken: string,
-  options?: { missingOnly?: boolean; expiringOnly?: boolean },
-): Promise<Blob> {
-  const response = await fetch(
-    `${apiBase}/api/reports/certifications/summary/export${buildReportQuery({
-      missingOnly: options?.missingOnly,
-      expiringOnly: options?.expiringOnly,
-    })}`,
-    { headers: authHeaders(accessToken) },
-  )
-  if (!response.ok) {
-    throw await toApiError(response, 'Certification report export failed')
-  }
-  return response.blob()
 }
 
 export async function getEntityExportManifest(

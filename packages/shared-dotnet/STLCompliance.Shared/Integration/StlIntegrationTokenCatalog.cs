@@ -127,6 +127,21 @@ public static class StlIntegrationTokenCatalog
         Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
         Profile("handoff-reportarr", "reportarr-api", "Handoff__ServiceToken", "reportarr", ["reportarr"], "launch.redeem"),
 
+        Profile(
+            "nexarr-recordarr-smart-import",
+            "nexarr-api",
+            "RecordArr__ServiceToken",
+            "nexarr",
+            ["recordarr"],
+            "platform.smart_import.retain"),
+        Profile(
+            "nexarr-smart-import-destinations",
+            "nexarr-api",
+            "SmartImport__DestinationServiceToken",
+            "nexarr",
+            ["staffarr", "trainarr", "maintainarr", "routarr", "supplyarr", "compliancecore", "loadarr", "recordarr", "reportarr", "assurarr"],
+            "platform.smart_import.validate,platform.smart_import.commit"),
+
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
         Profile(
             "worker-trainarr-recertification",
@@ -336,6 +351,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["nexarr"],
             "nexarr.platform_audit_packages.generate"),
+        Profile(
+            "worker-nexarr-smart-import",
+            "shared-worker",
+            "NexArrSmartImport__ServiceToken",
+            "shared-worker",
+            ["nexarr"],
+            "nexarr.smart_import.process"),
         Profile(
             "worker-maintainarr-audit-packages",
             "shared-worker",

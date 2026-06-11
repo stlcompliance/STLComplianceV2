@@ -62,6 +62,11 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<TripDispatchReleaseSnapshot> TripDispatchReleaseSnapshots => Set<TripDispatchReleaseSnapshot>();
 
+    public DbSet<DispatchBlock> DispatchBlocks => Set<DispatchBlock>();
+
+    public DbSet<SupplyArrVendorOrderEventReceipt> SupplyArrVendorOrderEventReceipts =>
+        Set<SupplyArrVendorOrderEventReceipt>();
+
     public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
 
     public DbSet<TripDvirInspection> TripDvirInspections => Set<TripDvirInspection>();
@@ -94,11 +99,19 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.AssignedDriverPersonId).HasMaxLength(128);
             entity.Property(x => x.VehicleRefKey).HasMaxLength(128);
+            entity.Property(x => x.DispatchBlockReason).HasMaxLength(64);
+            entity.Property(x => x.VendorReadinessStatusSnapshot).HasMaxLength(64);
+            entity.Property(x => x.VendorQuantityReadySnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.VendorOrderedQuantitySnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.DispatchOverrideByPersonId).HasMaxLength(128);
+            entity.Property(x => x.DispatchOverrideReason).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.TripNumber }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.AssignedDriverPersonId });
             entity.HasIndex(x => new { x.TenantId, x.AcceptedAt });
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId });
+            entity.HasIndex(x => new { x.TenantId, x.BrokerOrderId });
             entity.HasOne(x => x.DispatchReleaseSnapshot)
                 .WithOne(x => x.Trip)
                 .HasForeignKey<TripDispatchReleaseSnapshot>(x => x.TripId)
@@ -114,6 +127,35 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.TripId }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.ReleasedAt });
+        });
+
+        modelBuilder.Entity<DispatchBlock>(entity =>
+        {
+            entity.ToTable("routarr_dispatch_blocks");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BlockType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.BlockReason).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.BlockingEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.BlockingEntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResolvedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.OverrideReason).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.BlockType, x.Status });
+            entity.HasOne(x => x.Trip)
+                .WithMany(x => x.DispatchBlocks)
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SupplyArrVendorOrderEventReceipt>(entity =>
+        {
+            entity.ToTable("routarr_supplyarr_vendor_order_event_receipts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.EventId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId, x.ProcessedAt });
         });
 
         modelBuilder.Entity<TripLoad>(entity =>

@@ -989,6 +989,273 @@ export interface PermissionHistoryTimelineEntryResponse {
   occurredAt: string
 }
 
+export interface StaffRoleSummaryResponse {
+  roleId: string
+  tenantId: string
+  name: string
+  description: string | null
+  roleType: 'system_template' | 'tenant_role' | 'product_template'
+  isSystem: boolean
+  isArchived: boolean
+  permissionCount: number
+  scopeCount: number
+  assignedPersonCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StaffRolePermissionResponse {
+  id: string
+  productKey: string
+  permissionKey: string
+  effect: 'allow' | 'deny'
+  label: string
+  description: string | null
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  requiresScope: boolean
+  supportedScopeTypes: string[]
+  dependsOn: string[]
+  conflictsWith: string[]
+  createdAt: string
+}
+
+export interface StaffRoleScopeResponse {
+  id: string
+  scopeType:
+    | 'tenant'
+    | 'site'
+    | 'department'
+    | 'location'
+    | 'team'
+    | 'position'
+    | 'record_set'
+    | 'assigned_assets'
+    | 'own_records'
+    | 'direct_reports'
+  scopeRefId: string | null
+  scopeRefSnapshot: string | null
+  createdAt: string
+}
+
+export interface StaffRoleAssignedPersonResponse {
+  personRoleId: string
+  personId: string
+  displayName: string
+  assignmentScopeType:
+    | 'tenant'
+    | 'site'
+    | 'department'
+    | 'location'
+    | 'team'
+    | 'position'
+    | 'record_set'
+    | 'assigned_assets'
+    | 'own_records'
+    | 'direct_reports'
+  assignmentScopeRefId: string | null
+  startsAt: string | null
+  endsAt: string | null
+  createdAt: string
+}
+
+export interface PermissionAuditLogEntryResponse {
+  id: string
+  tenantId: string
+  actorPersonId: string | null
+  action: string
+  roleId: string | null
+  beforeJson: string | null
+  afterJson: string | null
+  reason: string | null
+  createdAt: string
+}
+
+export interface StaffRoleDetailResponse {
+  roleId: string
+  tenantId: string
+  name: string
+  description: string | null
+  roleType: 'system_template' | 'tenant_role' | 'product_template'
+  isSystem: boolean
+  isArchived: boolean
+  createdAt: string
+  updatedAt: string
+  permissions: StaffRolePermissionResponse[]
+  scopes: StaffRoleScopeResponse[]
+  assignedPeople: StaffRoleAssignedPersonResponse[]
+  auditHistory: PermissionAuditLogEntryResponse[]
+}
+
+export interface CreateStaffRoleRequest {
+  name: string
+  description: string | null
+  roleType?: 'tenant_role' | 'product_template'
+}
+
+export interface UpdateStaffRoleRequest {
+  name: string
+  description: string | null
+}
+
+export interface ArchiveStaffRoleRequest {
+  reason: string | null
+}
+
+export interface CloneStaffRoleRequest {
+  name: string
+  description: string | null
+  roleType?: 'tenant_role' | 'product_template'
+}
+
+export interface SetStaffRolePermissionItemRequest {
+  productKey: string
+  permissionKey: string
+  effect: 'allow' | 'deny'
+}
+
+export interface SetStaffRolePermissionsRequest {
+  permissions: SetStaffRolePermissionItemRequest[]
+}
+
+export interface SetStaffRoleScopeItemRequest {
+  scopeType:
+    | 'tenant'
+    | 'site'
+    | 'department'
+    | 'location'
+    | 'team'
+    | 'position'
+    | 'record_set'
+    | 'assigned_assets'
+    | 'own_records'
+    | 'direct_reports'
+  scopeRefId: string | null
+  scopeRefSnapshot: string | null
+}
+
+export interface SetStaffRoleScopesRequest {
+  scopes: SetStaffRoleScopeItemRequest[]
+}
+
+export interface StaffPersonRoleAssignmentResponse {
+  personRoleId: string
+  tenantId: string
+  personId: string
+  roleId: string
+  roleName: string
+  roleType: 'system_template' | 'tenant_role' | 'product_template'
+  roleIsSystem: boolean
+  roleIsArchived: boolean
+  assignmentScopeType:
+    | 'tenant'
+    | 'site'
+    | 'department'
+    | 'location'
+    | 'team'
+    | 'position'
+    | 'record_set'
+    | 'assigned_assets'
+    | 'own_records'
+    | 'direct_reports'
+  assignmentScopeRefId: string | null
+  startsAt: string | null
+  endsAt: string | null
+  assignedByPersonId: string | null
+  createdAt: string
+}
+
+export interface SetStaffPersonRoleItemRequest {
+  roleId: string
+  assignmentScopeType:
+    | 'tenant'
+    | 'site'
+    | 'department'
+    | 'location'
+    | 'team'
+    | 'position'
+    | 'record_set'
+    | 'assigned_assets'
+    | 'own_records'
+    | 'direct_reports'
+  assignmentScopeRefId: string | null
+  startsAt: string | null
+  endsAt: string | null
+}
+
+export interface SetStaffPersonRolesRequest {
+  roles: SetStaffPersonRoleItemRequest[]
+}
+
+export interface PermissionCatalogPermissionResponse {
+  key: string
+  label: string
+  description: string | null
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  requiresScope: boolean
+  supportedScopeTypes: string[]
+  dependsOn: string[]
+  conflictsWith: string[]
+}
+
+export interface PermissionCatalogPermissionGroupResponse {
+  key: string
+  label: string
+  permissions: PermissionCatalogPermissionResponse[]
+}
+
+export interface PermissionCatalogModuleResponse {
+  key: string
+  label: string
+  description: string | null
+  permissionGroups: PermissionCatalogPermissionGroupResponse[]
+}
+
+export interface PermissionCatalogResponse {
+  productKey: string
+  productName: string
+  version: string
+  modules: PermissionCatalogModuleResponse[]
+}
+
+export interface RefreshPermissionCatalogRequest {
+  productKey?: string | null
+}
+
+export interface RefreshPermissionCatalogResponse {
+  refreshedAt: string
+  catalogs: PermissionCatalogResponse[]
+}
+
+export interface PermissionEvaluationResourceRequest {
+  type: string
+  id: string | null
+  siteId: string | null
+  locationId: string | null
+  departmentId: string | null
+  teamId: string | null
+  positionId: string | null
+  recordSetId: string | null
+  assignedPersonId: string | null
+  ownerPersonId: string | null
+  personId: string | null
+  managerPersonId: string | null
+}
+
+export interface PermissionEvaluateRequest {
+  tenantId: string
+  personId: string
+  productKey: string
+  permissionKey: string
+  resource: PermissionEvaluationResourceRequest | null
+}
+
+export interface PermissionEvaluateResponse {
+  allowed: boolean
+  reason: string
+  roleIds: string[]
+  scopeMatched: boolean
+}
+
 export interface CertificationDefinitionResponse {
   certificationDefinitionId: string
   certificationKey: string
@@ -1570,190 +1837,6 @@ export interface PersonnelHistorySummaryResponse {
   isMaterialized: boolean
 }
 
-export interface AuditPackageSectionDescriptor {
-  key: string
-  fileName: string
-  label: string
-  description: string
-}
-
-export interface AuditPackageManifestResponse {
-  packageVersion: string
-  sections: AuditPackageSectionDescriptor[]
-}
-
-export interface AuditPackageAppliedFilters {
-  from: string | null
-  to: string | null
-  action: string | null
-  result: string | null
-  targetType: string | null
-  actorUserId: string | null
-  personId: string | null
-}
-
-export interface AuditPackageFilterOptions {
-  actions: string[]
-  results: string[]
-  targetTypes: string[]
-  actorUserIds: string[]
-}
-
-export interface AuditPackageBreakdownItem {
-  key: string
-  count: number
-}
-
-export interface AuditPackageExportSummary {
-  filters: AuditPackageAppliedFilters
-  counts: AuditPackageCountsResponse
-  byResult: AuditPackageBreakdownItem[]
-  byAction: AuditPackageBreakdownItem[]
-  generatedAt: string
-}
-
-export interface AuditPackageScope {
-  from?: string
-  to?: string
-  action?: string
-  result?: string
-  targetType?: string
-  actorUserId?: string
-  personId?: string
-}
-
-export interface AuditPackageCountsResponse {
-  auditEvents: number
-  people: number
-  permissionHistory: number
-  personCertifications: number
-  personnelIncidents: number
-  readinessOverrides: number
-  trainingBlockers: number
-}
-
-export interface StaffArrAuditEventExportItem {
-  auditEventId: string
-  actorUserId: string | null
-  action: string
-  targetType: string
-  targetId: string | null
-  result: string
-  reasonCode: string | null
-  correlationId: string
-  occurredAt: string
-}
-
-export interface AuditPackageExportResponse {
-  packageId: string
-  tenantId: string
-  generatedAt: string
-  dateRange: { from: string | null; to: string | null } | null
-  appliedFilters?: AuditPackageAppliedFilters | null
-  counts: AuditPackageCountsResponse
-  auditEvents: unknown[]
-  people: unknown[]
-  permissionHistory: unknown[]
-  personCertifications: unknown[]
-  personnelIncidents: unknown[]
-  readinessOverrides: unknown[]
-  trainingBlockers: unknown[]
-}
-
-export interface AuditPackageGenerationJobResponse {
-  jobId: string
-  status: string
-  format: string
-  from: string | null
-  to: string | null
-  packageId: string | null
-  errorMessage: string | null
-  createdAt: string
-  startedAt: string | null
-  completedAt: string | null
-  downloadReady: boolean
-}
-
-export interface PersonnelReportSummaryResponse {
-  totalPeople: number
-  activeCount: number
-  inactiveCount: number
-  onLeaveCount: number
-  activePercent: number
-  recentPeople: PersonnelReportSummaryItem[]
-}
-
-export interface PersonnelReportSummaryItem {
-  personId: string
-  displayName: string
-  primaryEmail: string
-  employmentStatus: string
-  primaryOrgUnitName: string | null
-  jobTitle: string | null
-  updatedAt: string
-}
-
-export interface ReadinessReportSummaryResponse {
-  totalRollups: number
-  totalMembers: number
-  readyCount: number
-  notReadyCount: number
-  overrideCount: number
-  readyPercent: number
-  recentRollups: ReadinessReportSummaryItem[]
-}
-
-export interface ReadinessReportSummaryItem {
-  rollupId: string
-  scopeType: string
-  orgUnitId: string
-  orgUnitName: string
-  totalMembers: number
-  readyCount: number
-  notReadyCount: number
-  readyPercent: number
-  computedAt: string
-}
-
-export interface IncidentReportSummaryResponse {
-  totalIncidents: number
-  openCount: number
-  closedCount: number
-  highSeverityOpenCount: number
-  recentIncidents: IncidentReportSummaryItem[]
-}
-
-export interface IncidentReportSummaryItem {
-  incidentId: string
-  personId: string
-  reasonCategoryKey: string
-  severity: string
-  status: string
-  title: string
-  occurredAt: string
-  reportedAt: string
-}
-
-export interface CertificationReportSummaryResponse {
-  totalPeople: number
-  activeCertificationCount: number
-  expiringSoonCount: number
-  expiredCertificationCount: number
-  missingCertificationCount: number
-  recentCertifications: CertificationReportSummaryItem[]
-}
-
-export interface CertificationReportSummaryItem {
-  personCertificationId: string
-  personId: string
-  personDisplayName: string
-  certificationKey: string
-  certificationName: string
-  status: string
-  grantedAt: string
-  expiresAt: string | null
-}
-
 export interface EntityExportFormatDescriptor {
   formatKey: string
   contentType: string
@@ -1773,6 +1856,4 @@ export interface EntityExportManifestEntity {
 export interface EntityExportManifestResponse {
   packageVersion: string
   entities: EntityExportManifestEntity[]
-  reportExports: { reportKey: string; exportPath: string; displayName: string; description: string }[]
-  auditPackageFormats: string[]
 }

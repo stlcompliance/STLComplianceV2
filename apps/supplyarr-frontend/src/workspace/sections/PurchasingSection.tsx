@@ -9,7 +9,7 @@ import { RfqPanel } from '../../components/RfqPanel'
 import { EmergencyPurchasePanel } from '../../components/EmergencyPurchasePanel'
 import { ContractsImportPanel } from '../../components/ContractsImportPanel'
 import { VendorEmailInboxPanel } from '../../components/VendorEmailInboxPanel'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -30,6 +30,32 @@ export function PurchasingSection({ state: s }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Vendor-order readiness</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Manage vendor confirmations, broker partial decisions, magic links, and related RoutArr dispatch readiness.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/purchasing/vendor-orders"
+              className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+            >
+              Open vendor orders
+            </Link>
+            {s.canCreatePr ? (
+              <Link
+                to="/purchasing/vendor-orders/create"
+                className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
+              >
+                Create vendor order
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </section>
       {mode !== 'exceptions' ? (
         <ProcurementApprovalAuthorityBanner
           accessToken={s.accessToken}

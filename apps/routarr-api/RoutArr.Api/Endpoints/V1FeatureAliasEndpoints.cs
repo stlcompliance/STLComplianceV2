@@ -115,6 +115,8 @@ public static class V1FeatureAliasEndpoints
                 actorUserId,
                 actorPersonId,
                 dispatchStatus,
+                null,
+                null,
                 cancellationToken));
         })
         .WithTags("Trips")

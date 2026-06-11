@@ -105,338 +105,6 @@
         }
       }
     },
-    "/api/audit-packages/export": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "ExportStaffArrAuditPackage",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/filter-options": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageFilterOptions",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/jobs": {
-      "post": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "CreateStaffArrAuditPackageGenerationJob",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/jobs/{jobId}": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageGenerationJob",
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/jobs/{jobId}/download": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "DownloadStaffArrAuditPackageGenerationJob",
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/manifest": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageManifest",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/summary": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageExportSummary",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/audit-packages/timeline": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageTimeline",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -1105,6 +773,134 @@
         }
       }
     },
+    "/api/integrations/locations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationListLocations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationGetLocation",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/locations/{locationId}/children": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationListLocationChildren",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/permission-check": {
       "get": {
         "tags": [
@@ -1542,6 +1338,61 @@
         }
       }
     },
+    "/api/integrations/sites/{siteOrgUnitId}/locations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationListSiteLocations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/supplyarr-demand-status": {
       "post": {
         "tags": [
@@ -1678,72 +1529,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ClearTrainingBlockerRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/internal/audit-package-jobs/pending": {
-      "get": {
-        "tags": [
-          "Internal"
-        ],
-        "operationId": "InternalListPendingAuditPackageGenerationJobs",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "asOfUtc",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "batchSize",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/internal/audit-package-jobs/process-batch": {
-      "post": {
-        "tags": [
-          "Internal"
-        ],
-        "operationId": "InternalProcessAuditPackageGenerationJobs",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessAuditPackageGenerationJobsRequest"
               }
             }
           },
@@ -2547,6 +2332,30 @@
           "OrgUnits"
         ],
         "operationId": "ListOrgUnits",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2575,7 +2384,66 @@
         }
       }
     },
+    "/api/org-units/tree": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListOrgUnitTree",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/org-units/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "GetOrgUnit",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "put": {
         "tags": [
           "OrgUnits"
@@ -2597,6 +2465,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgUnitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/org-units/{orgUnitId}/archive": {
+      "post": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ArchiveOrgUnit",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveOrgUnitRequest"
               }
             }
           },
@@ -2694,6 +2596,214 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateStaffPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ExportStaffArrPeople",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPending",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/manifest": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/preset": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportPreset",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportPreset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/schedule": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportSchedule",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/import": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "BulkImportStaffPeople",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPersonImportRequest"
               }
             }
           },
@@ -3816,214 +3926,6 @@
         }
       }
     },
-    "/api/people/export": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ExportStaffArrPeople",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "employmentStatus",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "orgUnitId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-notifications": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-pending": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryPending",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/delivery-runs": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryRuns",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/manifest": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportManifest",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/preset": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportPreset",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportPreset",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/export/schedule": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportSchedule",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportSchedule",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/people/import": {
-      "post": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "BulkImportStaffPeople",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkPersonImportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/permissions": {
       "get": {
         "tags": [
@@ -4708,338 +4610,6 @@
           },
           {
             "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/export": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "ExportStaffArrAuditPackageV1",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/filter-options": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageFilterOptionsV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/jobs": {
-      "post": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "CreateStaffArrAuditPackageGenerationJobV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/jobs/{jobId}": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageGenerationJobV1",
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/jobs/{jobId}/download": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "DownloadStaffArrAuditPackageGenerationJobV1",
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/manifest": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageManifestV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/summary": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageExportSummaryV1",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/audit-packages/timeline": {
-      "get": {
-        "tags": [
-          "AuditPackages"
-        ],
-        "operationId": "GetStaffArrAuditPackageTimelineV1",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "targetType",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actorUserId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "personId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -5821,29 +5391,6 @@
         }
       }
     },
-    "/api/v1/integrations/audit-packages": {
-      "post": {
-        "tags": [
-          "Integrations"
-        ],
-        "operationId": "CreateIntegrationAuditPackageV1Alias",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/integrations/certification-grants": {
       "post": {
         "tags": [
@@ -6098,7 +5645,48 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "ListIntegrationLocationsV1Alias",
+        "operationId": "IntegrationListLocationsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6111,8 +5699,17 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "GetIntegrationLocationV1Alias",
+        "operationId": "IntegrationGetLocationV1",
         "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "locationId",
             "in": "path",
@@ -6135,12 +5732,29 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "ListIntegrationLocationChildrenV1Alias",
+        "operationId": "IntegrationListLocationChildrenV1",
         "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "locationId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -6951,7 +6565,18 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "ListIntegrationSitesV1Alias",
+        "operationId": "IntegrationListSitesV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6964,8 +6589,17 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "GetIntegrationSiteV1Alias",
+        "operationId": "IntegrationGetSiteV1",
         "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "orgUnitId",
             "in": "path",
@@ -6988,8 +6622,17 @@
         "tags": [
           "Integrations"
         ],
-        "operationId": "ListIntegrationSiteLocationsV1Alias",
+        "operationId": "IntegrationListSiteLocationsV1",
         "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "siteOrgUnitId",
             "in": "path",
@@ -6998,8 +6641,96 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitstaffarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidatestaffarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7219,6 +6950,207 @@
           "Launch"
         ],
         "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "ListLocations",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SiteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "CreateLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInternalLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations/tree": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "ListLocationTree",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SiteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "GetLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "UpdateLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInternalLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations/{locationId}/archive": {
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "operationId": "ArchiveLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveInternalLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7617,6 +7549,30 @@
           "OrgUnits"
         ],
         "operationId": "ListOrgUnitsV1",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7645,7 +7601,66 @@
         }
       }
     },
+    "/api/v1/org-units/tree": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListOrgUnitTreeV1",
+        "parameters": [
+          {
+            "name": "IncludeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/org-units/{orgUnitId}": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "GetOrgUnitV1",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "put": {
         "tags": [
           "OrgUnits"
@@ -7667,6 +7682,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgUnitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/org-units/{orgUnitId}/archive": {
+      "post": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ArchiveOrgUnitV1",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveOrgUnitRequest"
               }
             }
           },
@@ -7820,6 +7869,214 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateStaffPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ExportStaffArrPeopleV1",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotificationsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPendingV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRunsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/manifest": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/preset": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportPresetV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportPresetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/schedule": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportScheduleV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportScheduleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/import": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "BulkImportStaffPeopleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPersonImportRequest"
               }
             }
           },
@@ -8452,214 +8709,6 @@
         }
       }
     },
-    "/api/v1/people/export": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ExportStaffArrPeopleV1",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "employmentStatus",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "orgUnitId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-notifications": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryNotificationsV1",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-pending": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryPendingV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/delivery-runs": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "ListStaffArrPeopleExportDeliveryRunsV1",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/manifest": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportManifestV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/preset": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportPresetV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportPresetV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/export/schedule": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "GetStaffArrPeopleExportScheduleV1",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "UpsertStaffArrPeopleExportScheduleV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/people/import": {
-      "post": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "BulkImportStaffPeopleV1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkPersonImportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/permission-templates": {
       "get": {
         "tags": [
@@ -9204,6 +9253,28 @@
   },
   "components": {
     "schemas": {
+      "ArchiveInternalLocationRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ArchiveOrgUnitRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
       "BulkPersonImportRequest": {
         "required": [
           "people"
@@ -9289,65 +9360,6 @@
           },
           "trainarrPublicationId": {
             "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "CreateAuditPackageGenerationJobRequest": {
-        "required": [
-          "format",
-          "from",
-          "to"
-        ],
-        "type": "object",
-        "properties": {
-          "format": {
-            "type": "string"
-          },
-          "from": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "to": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "action": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "result": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "targetType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "actorUserId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "personId": {
-            "type": [
-              "null",
-              "string"
-            ],
             "format": "uuid"
           }
         }
@@ -9438,7 +9450,7 @@
             ]
           },
           "quantityRequested": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
             "type": [
               "number",
               "string"
@@ -9456,6 +9468,57 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateInternalLocationRequest": {
+        "required": [
+          "name",
+          "locationType",
+          "parentLocationId",
+          "siteOrgUnitId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "locationType": {
+            "type": "string"
+          },
+          "parentLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "siteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "default": "planned"
+          },
+          "allowedProductUsage": {
+            "type": "string",
+            "default": "all"
           }
         }
       },
@@ -9483,6 +9546,36 @@
           "positionOrgUnitId": {
             "type": "string",
             "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "default": "active"
+          },
+          "isPrimary": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9506,6 +9599,104 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "managerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "effectiveStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "effectiveEndDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "siteType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "emergencyContact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "teamType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "positionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "complianceSensitive": {
+            "type": "boolean",
+            "default": false
+          },
+          "safetySensitive": {
+            "type": "boolean",
+            "default": false
+          },
+          "canSupervise": {
+            "type": "boolean",
+            "default": false
+          },
+          "canApprove": {
+            "type": "boolean",
+            "default": false
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9911,29 +10102,138 @@
       },
       "CreateStaffPersonRequest": {
         "required": [
-          "givenName",
-          "familyName",
-          "primaryEmail",
-          "employmentStatus",
-          "primaryOrgUnitId",
-          "managerPersonId",
-          "jobTitle"
+          "primaryEmail"
         ],
         "type": "object",
         "properties": {
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
           "primaryEmail": {
             "type": "string"
           },
+          "legalFirstName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "legalMiddleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "legalLastName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "preferredName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pronouns": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "givenName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "familyName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "employmentStatus": {
-            "type": "string"
+            "type": "string",
+            "default": "pending_start"
+          },
+          "workRelationshipType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "employmentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "alternateEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "alternatePhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expectedStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "primaryOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "siteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "departmentOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "teamOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "positionOrgUnitId": {
             "type": [
               "null",
               "string"
@@ -9952,6 +10252,26 @@
               "null",
               "string"
             ]
+          },
+          "homeBaseLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "canLogin": {
+            "type": "boolean",
+            "default": false
+          },
+          "initialRoleAssignments": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreatePersonRoleAssignmentRequest"
+            }
           }
         }
       },
@@ -10220,7 +10540,7 @@
             "format": "uuid"
           },
           "quantityReceivedDelta": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
             "type": [
               "null",
               "number",
@@ -10333,6 +10653,7 @@
           }
         }
       },
+      "JsonElement": {},
       "PersonAssignmentCheckRequest": {
         "required": [
           "personId",
@@ -10418,39 +10739,6 @@
           "personId": {
             "type": "string",
             "format": "uuid"
-          }
-        }
-      },
-      "ProcessAuditPackageGenerationJobsRequest": {
-        "required": [
-          "tenantId",
-          "asOfUtc",
-          "batchSize"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "asOfUtc": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "batchSize": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
           }
         }
       },
@@ -10749,6 +11037,136 @@
           }
         }
       },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "StartPersonOffboardingRequest": {
         "required": [
           "personId",
@@ -10906,6 +11324,57 @@
           }
         }
       },
+      "UpdateInternalLocationRequest": {
+        "required": [
+          "name",
+          "locationType",
+          "parentLocationId",
+          "siteOrgUnitId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "locationType": {
+            "type": "string"
+          },
+          "parentLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "siteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "default": "planned"
+          },
+          "allowedProductUsage": {
+            "type": "string",
+            "default": "all"
+          }
+        }
+      },
       "UpdateOrgUnitAssignmentRequest": {
         "required": [
           "siteOrgUnitId",
@@ -10930,6 +11399,36 @@
           "positionOrgUnitId": {
             "type": "string",
             "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "default": "active"
+          },
+          "isPrimary": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10941,6 +11440,19 @@
         "properties": {
           "status": {
             "type": "string"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10964,6 +11476,104 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "managerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "effectiveStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "effectiveEndDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "siteType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "emergencyContact": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "teamType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "positionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultSiteOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "complianceSensitive": {
+            "type": "boolean",
+            "default": false
+          },
+          "safetySensitive": {
+            "type": "boolean",
+            "default": false
+          },
+          "canSupervise": {
+            "type": "boolean",
+            "default": false
+          },
+          "canApprove": {
+            "type": "boolean",
+            "default": false
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10975,6 +11585,12 @@
         "properties": {
           "status": {
             "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -11064,25 +11680,113 @@
       },
       "UpdateStaffPersonRequest": {
         "required": [
-          "givenName",
-          "familyName",
-          "primaryEmail",
-          "primaryOrgUnitId",
-          "managerPersonId",
-          "jobTitle"
+          "primaryEmail"
         ],
         "type": "object",
         "properties": {
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
           "primaryEmail": {
             "type": "string"
           },
+          "legalFirstName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "legalMiddleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "legalLastName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "preferredName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pronouns": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "givenName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "familyName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "alternateEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "alternatePhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workRelationshipType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "employmentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expectedStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "primaryOrgUnitId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "siteOrgUnitId": {
             "type": [
               "null",
               "string"
@@ -11100,6 +11804,19 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "homeBaseLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "canLoginSnapshot": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }
@@ -11287,6 +12004,9 @@
       "name": "StaffArrWorkerAdmin"
     },
     {
+      "name": "Locations"
+    },
+    {
       "name": "OrgUnitAssignments"
     },
     {
@@ -11329,13 +12049,13 @@
       "name": "FieldInbox"
     },
     {
-      "name": "AuditPackages"
-    },
-    {
       "name": "EventAndAudit"
     },
     {
       "name": "EntityExports"
+    },
+    {
+      "name": "Smart Import Integrations"
     }
   ]
 }

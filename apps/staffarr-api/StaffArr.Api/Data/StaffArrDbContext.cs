@@ -24,6 +24,18 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PermissionHistoryEvent> PermissionHistoryEvents => Set<PermissionHistoryEvent>();
 
+    public DbSet<StaffRole> StaffRoles => Set<StaffRole>();
+
+    public DbSet<StaffRolePermission> StaffRolePermissions => Set<StaffRolePermission>();
+
+    public DbSet<StaffRoleScope> StaffRoleScopes => Set<StaffRoleScope>();
+
+    public DbSet<StaffPersonRole> StaffPersonRoles => Set<StaffPersonRole>();
+
+    public DbSet<PermissionCatalogCacheEntry> PermissionCatalogCacheEntries => Set<PermissionCatalogCacheEntry>();
+
+    public DbSet<PermissionAuditLogEntry> PermissionAuditLogEntries => Set<PermissionAuditLogEntry>();
+
     public DbSet<CertificationDefinition> CertificationDefinitions => Set<CertificationDefinition>();
 
     public DbSet<PersonCertification> PersonCertifications => Set<PersonCertification>();
@@ -300,6 +312,86 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasOne<PersonRoleAssignment>().WithMany().HasForeignKey(x => x.AssignmentId);
             entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
             entity.HasOne<PermissionTemplate>().WithMany().HasForeignKey(x => x.PermissionTemplateId);
+        });
+
+        modelBuilder.Entity<StaffRole>(entity =>
+        {
+            entity.ToTable("staffarr_roles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.Property(x => x.RoleType).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.Name });
+            entity.HasIndex(x => new { x.TenantId, x.IsArchived });
+        });
+
+        modelBuilder.Entity<StaffRolePermission>(entity =>
+        {
+            entity.ToTable("staffarr_role_permissions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PermissionKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Effect).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RoleId });
+            entity.HasIndex(x => new { x.TenantId, x.RoleId, x.ProductKey, x.PermissionKey, x.Effect }).IsUnique();
+        });
+
+        modelBuilder.Entity<StaffRoleScope>(entity =>
+        {
+            entity.ToTable("staffarr_role_scopes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ScopeRefId).HasMaxLength(128);
+            entity.Property(x => x.ScopeRefSnapshot).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RoleId });
+            entity.HasIndex(x => new { x.TenantId, x.RoleId, x.ScopeType, x.ScopeRefId }).IsUnique();
+        });
+
+        modelBuilder.Entity<StaffPersonRole>(entity =>
+        {
+            entity.ToTable("staffarr_person_roles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssignmentScopeType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AssignmentScopeRefId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId });
+            entity.HasIndex(x => new { x.TenantId, x.RoleId });
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.PersonId,
+                x.RoleId,
+                x.AssignmentScopeType,
+                x.AssignmentScopeRefId
+            }).IsUnique();
+        });
+
+        modelBuilder.Entity<PermissionCatalogCacheEntry>(entity =>
+        {
+            entity.ToTable("staffarr_permission_catalog_cache");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CatalogVersion).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.CatalogJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey, x.IsActive });
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey, x.CatalogVersion }).IsUnique();
+        });
+
+        modelBuilder.Entity<PermissionAuditLogEntry>(entity =>
+        {
+            entity.ToTable("staffarr_permission_audit_log");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.BeforeJson).HasColumnType("text");
+            entity.Property(x => x.AfterJson).HasColumnType("text");
+            entity.Property(x => x.Reason).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RoleId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ActorPersonId, x.CreatedAt });
         });
 
         modelBuilder.Entity<CertificationDefinition>(entity =>

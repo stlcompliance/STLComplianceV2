@@ -275,18 +275,6 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<StaffArrPersonExportDeliveryJob>();
 
-        builder.Services.Configure<StaffArrAuditPackageGenerationOptions>(
-            builder.Configuration.GetSection(StaffArrAuditPackageGenerationOptions.SectionName));
-
-        builder.Services.AddHttpClient<StaffArrAuditPackageGenerationClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<IOptions<StaffArrAuditPackageGenerationOptions>>().Value;
-            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.StaffArrBaseUrl) + "/");
-            client.Timeout = TimeSpan.FromMinutes(10);
-        });
-
-        builder.Services.AddHostedService<StaffArrAuditPackageGenerationJob>();
-
         builder.Services.Configure<MaintainArrPmDueScanOptions>(
             builder.Configuration.GetSection(MaintainArrPmDueScanOptions.SectionName));
 
@@ -514,6 +502,18 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<NexArrPlatformAuditPackageGenerationJob>();
+
+        builder.Services.Configure<NexArrSmartImportOptions>(
+            builder.Configuration.GetSection(NexArrSmartImportOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrSmartImportClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrSmartImportOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<NexArrSmartImportJob>();
 
         builder.Services.Configure<MaintainArrAuditPackageGenerationOptions>(
             builder.Configuration.GetSection(MaintainArrAuditPackageGenerationOptions.SectionName));

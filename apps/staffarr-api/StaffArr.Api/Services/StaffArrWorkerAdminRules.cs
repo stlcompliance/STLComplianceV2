@@ -43,7 +43,6 @@ public static class StaffArrWorkerAdminRules
     public static int DefaultScanIntervalMinutes(string workerKey) => workerKey switch
     {
         StaffArrWorkerKeys.CertificationExpiration => 15,
-        StaffArrWorkerKeys.AuditPackageGeneration => 2,
         _ => StaffArrWorkerSettingsDefaults.ScanIntervalMinutes,
     };
 
@@ -52,7 +51,6 @@ public static class StaffArrWorkerAdminRules
         StaffArrWorkerKeys.CertificationExpiration => 100,
         StaffArrWorkerKeys.PermissionProjection => 100,
         StaffArrWorkerKeys.PersonnelHistoryRollup => 100,
-        StaffArrWorkerKeys.AuditPackageGeneration => 5,
         _ => StaffArrWorkerSettingsDefaults.BatchSize,
     };
 

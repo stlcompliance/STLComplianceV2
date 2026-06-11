@@ -60,6 +60,8 @@ public static class StlApiHost
             builder.Services.AddOpenApi();
             builder.Services.AddStlCorrelationId();
             builder.Services.AddStlJwtAuthentication(builder.Configuration);
+            builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+            builder.Services.AddSingleton<StlServiceTokenValidator>();
             builder.AddStlIntegrationTokenProvisioning();
             builder.AddStlOpenTelemetry(product);
             configure?.Invoke(builder);

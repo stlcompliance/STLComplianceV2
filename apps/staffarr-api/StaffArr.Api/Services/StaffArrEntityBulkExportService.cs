@@ -24,11 +24,9 @@ public sealed class StaffArrEntityBulkExportService(
         "staffarr-{entity}-export-{timestamp}.csv",
         "Comma-separated values for spreadsheets and operational analysis.");
 
-    public EntityExportManifestResponse GetManifest(
-        string exportBasePath = "/api/exports",
-        string reportBasePath = "/api/reports") =>
+    public EntityExportManifestResponse GetManifest(string exportBasePath = "/api/exports") =>
         new(
-            PackageVersion: "1",
+            PackageVersion: "2",
             Entities:
             [
                 new(
@@ -52,31 +50,7 @@ public sealed class StaffArrEntityBulkExportService(
                     CertificationsCsvHeader,
                     "Granted certifications with lifecycle status and expiry.",
                     [CsvFormat]),
-            ],
-            ReportExports:
-            [
-                new(
-                    "personnel",
-                    $"{reportBasePath}/personnel/summary/export",
-                    "Personnel report CSV",
-                    "Scoped workforce rollups by employment status."),
-                new(
-                    "readiness",
-                    $"{reportBasePath}/readiness/summary/export",
-                    "Readiness report CSV",
-                    "Org-unit readiness rollups with attention filters."),
-                new(
-                    "certifications",
-                    $"{reportBasePath}/certifications/summary/export",
-                    "Certification report CSV",
-                    "Certification readiness, missing, and expiring coverage."),
-                new(
-                    "incidents",
-                    $"{reportBasePath}/incidents/summary/export",
-                    "Incident report CSV",
-                    "Scoped incident metrics with open and severity filters."),
-            ],
-            AuditPackageFormats: ["json", "zip"]);
+            ]);
 
     public async Task<CsvExportResult> ExportPeopleCsvAsync(
         Guid tenantId,

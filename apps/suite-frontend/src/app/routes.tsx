@@ -4,6 +4,7 @@ import { RequirePlatformAdmin } from '../components/RequirePlatformAdmin'
 import { AppShellLayout } from '../layouts/AppShellLayout'
 import { PlatformAdminLayout } from '../layouts/PlatformAdminLayout'
 import { HomePage } from '../pages/HomePage'
+import { SmartImportPage } from '../pages/SmartImportPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
 import { LoginPage } from '../pages/LoginPage'
 import { ResetPasswordPage } from '../pages/ResetPasswordPage'
@@ -38,6 +39,7 @@ export function AppRoutes() {
           <Route element={<AppShellLayout />}>
             <Route path="/" element={<Navigate to="/app" replace />} />
             <Route path="/app" element={<HomePage />} />
+            <Route path="/app/imports" element={<SmartImportPage />} />
             <Route element={<RequirePlatformAdmin />}>
               <Route path="/app/platform-admin" element={<PlatformAdminLayout />}>
                 <Route index element={<PlatformAdminDashboardPage />} />

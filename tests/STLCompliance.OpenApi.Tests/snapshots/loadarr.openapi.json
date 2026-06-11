@@ -44,6 +44,19 @@
         }
       }
     },
+    "/api/field-inbox": {
+      "get": {
+        "tags": [
+          "FieldInbox"
+        ],
+        "operationId": "GetLoadArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/adjustments": {
       "post": {
         "tags": [
@@ -1306,6 +1319,19 @@
         }
       }
     },
+    "/api/v1/field-inbox": {
+      "get": {
+        "tags": [
+          "FieldInbox"
+        ],
+        "operationId": "GetLoadArrFieldInboxV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -2254,6 +2280,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/JsonElement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitloadarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidateloadarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
               }
             }
           },
@@ -6080,6 +6172,136 @@
           }
         }
       },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "TruckStockCountRequest": {
         "required": [
           "personId",
@@ -6189,6 +6411,9 @@
       "name": "Session"
     },
     {
+      "name": "FieldInbox"
+    },
+    {
       "name": "Launch"
     },
     {
@@ -6235,6 +6460,9 @@
     },
     {
       "name": "Integrations"
+    },
+    {
+      "name": "Smart Import Integrations"
     }
   ]
 }

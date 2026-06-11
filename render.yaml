@@ -32,6 +32,23 @@ envVarGroups:
       - key: STL_INTEGRATION_BOOTSTRAP_SECRET
         generateValue: true
 
+  - name: stl-ai-provider
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_ASSISTANT_MODEL
+        value: gpt-5.5
+      - key: OPENAI_SMART_IMPORT_MODEL
+        value: gpt-5.5
+      - key: OPENAI_REQUESTS_PER_MINUTE
+        value: "500"
+      - key: OPENAI_TOKENS_PER_MINUTE
+        value: "500000"
+      - key: OPENAI_TIMEOUT_SECONDS
+        value: "120"
+      - key: OPENAI_RETRY_ATTEMPTS
+        value: "5"
+
   # Server-to-server API URLs. These use the deployed Render HTTPS hosts because
   # Blueprint service names are not portable DNS aliases in every Render runtime.
   - name: stl-internal-api-urls
@@ -201,6 +218,7 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - fromGroup: stl-ai-provider
       - key: DATABASE_URL
         fromDatabase:
           name: nexarr-db
@@ -282,6 +300,11 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: keyvalue
+          property: connectionString
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
       - key: STL_SERVICE_NAME
@@ -592,6 +615,7 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - fromGroup: stl-ai-provider
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
       - key: STL_SERVICE_NAME
@@ -813,6 +837,10 @@ services:
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
         value: https://app.stlcompliance.com
       - key: NexArrPlatformAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: NexArrSmartImport__NexArrBaseUrl
+        value: https://app.stlcompliance.com
+      - key: NexArrSmartImport__ServiceToken
         sync: false
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl
         value: https://app.stlcompliance.com

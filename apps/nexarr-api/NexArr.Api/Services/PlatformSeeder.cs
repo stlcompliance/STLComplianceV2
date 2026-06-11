@@ -1,4 +1,10 @@
+using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
@@ -17,6 +23,11 @@ public static class PlatformSeeder
     public const string DemoAdminEmail = "admin@demo.stl";
     public const string DemoTenantAdminEmail = "tenant-admin@demo.stl";
     public const string DemoAdminPassword = "ChangeMe!Demo2026";
+    private const string FirstAdminEmailConfigKey = "Seed:FirstAdminEmail";
+    private const string FirstAdminPasswordConfigKey = "Seed:FirstAdminPassword";
+    private const string FirstAdminDisplayNameConfigKey = "Seed:FirstAdminDisplayName";
+    private const string MasterCsvIntakeDatasetKey = "master-reference-intake";
+    private const string MasterCsvSourceKey = "master-reference-csv";
 
     private static readonly ProductSeed[] Products =
     [
@@ -400,31 +411,272 @@ public static class PlatformSeeder
         CancellationToken cancellationToken = default)
     {
         await SeedInfrastructureAsync(db, launchOptions, platformProductUrls, cancellationToken);
-        await SeedDemoBusinessDataAsync(db, passwordHasher, cancellationToken);
+        await SeedDemoBusinessDataAsync(db, passwordHasher, DemoAdminUserId, cancellationToken);
     }
 
-    public static async Task SeedInfrastructureAsync(
+    public static async Task<Guid?> SeedFirstAdminAsync(
         NexArrDbContext db,
-        StlLaunchOptions? launchOptions = null,
-        PlatformProductUrlsOptions? platformProductUrls = null,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration,
+        Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment,
         CancellationToken cancellationToken = default)
     {
+        var resolvedProfile = ResolveFirstAdminProfile(configuration, environment);
+        if (resolvedProfile is null)
+        {
+            return null;
+        }
+
         var now = DateTimeOffset.UtcNow;
-        await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
-        await EnsurePlatformSessionSettingsColumnsAsync(db, cancellationToken);
-        await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
-        await SeedReferenceDatasetsAsync(db, now, cancellationToken);
-        await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
-        SeedSuiteShellCallbackAllowlist(db, now);
+        var adminEmail = resolvedProfile.Email;
+        var adminDisplayName = resolvedProfile.DisplayName;
+        var adminPassword = resolvedProfile.Password;
+
+        var admin = await db.Users
+            .Include(x => x.Credential)
+            .FirstOrDefaultAsync(x => x.Email == adminEmail, cancellationToken);
+
+        if (admin is null)
+        {
+            admin = new PlatformUser
+            {
+                Id = resolvedProfile.UseDeterministicId ? DemoAdminUserId : Guid.NewGuid(),
+                Email = adminEmail,
+                DisplayName = adminDisplayName,
+                IsActive = true,
+                IsPlatformAdmin = true,
+                CreatedAt = now,
+                ModifiedAt = now,
+                Credential = new UserCredential
+                {
+                    UserId = resolvedProfile.UseDeterministicId ? DemoAdminUserId : Guid.Empty,
+                    PasswordHash = passwordHasher.Hash(adminPassword),
+                    PasswordChangedAt = now
+                }
+            };
+            if (!resolvedProfile.UseDeterministicId)
+            {
+                admin.Credential.UserId = admin.Id;
+            }
+
+            db.Users.Add(admin);
+        }
+        else
+        {
+            admin.IsActive = true;
+            admin.DisplayName = string.IsNullOrWhiteSpace(admin.DisplayName)
+                ? adminDisplayName
+                : admin.DisplayName;
+            admin.IsPlatformAdmin = true;
+            admin.ModifiedAt = now;
+
+            if (admin.Credential is null)
+            {
+                admin.Credential = new UserCredential
+                {
+                    UserId = admin.Id,
+                    PasswordHash = passwordHasher.Hash(adminPassword),
+                    PasswordChangedAt = now
+                };
+            }
+        }
+
+        if (!await db.PlatformRoleAssignments.AnyAsync(
+                x => x.UserId == admin.Id
+                     && x.TenantId == null
+                     && x.RoleKey == "platform_owner",
+                cancellationToken))
+        {
+            db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
+            {
+                Id = Guid.NewGuid(),
+                UserId = admin.Id,
+                TenantId = null,
+                RoleKey = "platform_owner",
+                CreatedAt = now,
+                CreatedByUserId = admin.Id,
+            });
+        }
+
         await db.SaveChangesAsync(cancellationToken);
+        return admin.Id;
+    }
+
+    public static async Task SeedMasterReferenceDataAsync(
+        NexArrDbContext db,
+        string csvFilePath,
+        Guid? firstAdminUserId = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(csvFilePath))
+        {
+            return;
+        }
+
+        if (!File.Exists(csvFilePath))
+        {
+            return;
+        }
+
+        var csvText = await File.ReadAllTextAsync(csvFilePath, cancellationToken);
+        if (string.IsNullOrWhiteSpace(csvText))
+        {
+            return;
+        }
+
+        var normalizedRows = await ParseReferenceSeedRowsAsync(db, csvText, cancellationToken);
+        var rows = normalizedRows.ToList();
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var datasetIndex = await db.ReferenceDatasets
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Key, x => x, StringComparer.OrdinalIgnoreCase, cancellationToken);
+        var datasetIndexById = datasetIndex.Values.ToDictionary(x => x.Id, x => x);
+
+        var stagedRows = rows.Select(row =>
+            new StagingRecord
+            {
+                Id = Guid.NewGuid(),
+                JobId = Guid.Empty,
+                TargetDatasetId = row.TargetDatasetId,
+                RowNumber = row.RowNumber,
+                RawPayloadJson = row.RawPayloadJson,
+                NormalizedPayloadJson = row.NormalizedPayloadJson,
+                ProposedEntityType = row.EntityType,
+                ProposedCanonicalKey = row.CanonicalKey,
+                Confidence = row.Confidence,
+                Status = ReferenceStagingStatuses.NeedsReview,
+                ReviewReason = row.ReviewReason,
+                CreatedAt = now,
+                UpdatedAt = now,
+            })
+            .ToList();
+
+        if (stagedRows.Count == 0)
+        {
+            return;
+        }
+
+        var source = await EnsureMasterCsvSeedSourceAsync(db, cancellationToken);
+        var sourceFingerprint = ComputeSha256Hex(csvText);
+        var jobFileKey = $"stl://reference-seed/{sourceFingerprint}";
+        var fileName = Path.GetFileName(csvFilePath);
+
+        var existingCompletedJob = await db.IngestionJobs.AnyAsync(
+            x => x.DatasetId != Guid.Empty
+                 && x.SourceId == source.Id
+                 && x.FileName == fileName
+                 && x.RawObjectKey == jobFileKey
+                 && x.Status == ReferenceImportStatuses.Completed,
+            cancellationToken);
+        if (existingCompletedJob)
+        {
+            return;
+        }
+
+        var masterDataset = await EnsureMasterCsvIntakeDatasetAsync(db, cancellationToken);
+        var importJob = new IngestionJob
+        {
+            Id = Guid.NewGuid(),
+            DatasetId = masterDataset.Id,
+            SourceId = source.Id,
+            TenantId = null,
+            RequestedByPersonId = firstAdminUserId,
+            Status = ReferenceImportStatuses.ReviewRequired,
+            RawObjectKey = jobFileKey,
+            FileName = fileName,
+            StartedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.IngestionJobs.Add(importJob);
+        await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var staged in stagedRows)
+        {
+            staged.JobId = importJob.Id;
+            db.StagingRecords.Add(staged);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        var rowsToApprove = await db.StagingRecords
+            .Where(x => x.JobId == importJob.Id)
+            .ToListAsync(cancellationToken);
+        foreach (var staged in rowsToApprove)
+        {
+            if (staged.TargetDatasetId is null)
+            {
+                continue;
+            }
+
+            if (staged.TargetDatasetId is null || !datasetIndexById.TryGetValue(staged.TargetDatasetId.Value, out var targetDataset))
+            {
+                continue;
+            }
+
+            var entity = await UpsertReferenceEntityFromSeedAsync(
+                db,
+                staged,
+                targetDataset,
+                source.Key,
+                source.Id,
+                now,
+                cancellationToken);
+            staged.ReferenceEntityId = entity.Id;
+            staged.Status = ReferenceStagingStatuses.Approved;
+            staged.ReviewerPersonId = firstAdminUserId;
+            staged.ReviewedAt = now;
+            staged.UpdatedAt = now;
+        }
+
+        var pending = await db.StagingRecords.CountAsync(
+            x => x.JobId == importJob.Id && x.Status != ReferenceStagingStatuses.Approved,
+            cancellationToken);
+        importJob.Status = pending == 0 ? ReferenceImportStatuses.Completed : ReferenceImportStatuses.ReviewRequired;
+        importJob.CompletedAt = pending == 0 ? now : null;
+        importJob.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static FirstAdminSeedProfile? ResolveFirstAdminProfile(
+        IConfiguration configuration,
+        Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment)
+    {
+        var configuredEmail = configuration[FirstAdminEmailConfigKey];
+        var configuredPassword = configuration[FirstAdminPasswordConfigKey];
+        if (!string.IsNullOrWhiteSpace(configuredEmail) && !string.IsNullOrWhiteSpace(configuredPassword))
+        {
+            return new FirstAdminSeedProfile(
+                configuredEmail.Trim().ToLowerInvariant(),
+                configuredPassword.Trim(),
+                configuration[FirstAdminDisplayNameConfigKey]?.Trim() ?? "Platform Admin",
+                false);
+        }
+
+        if (environment.IsDevelopment() || environment.EnvironmentName == "Testing")
+        {
+            return new FirstAdminSeedProfile(DemoAdminEmail, DemoAdminPassword, "Demo Platform Admin", true);
+        }
+
+        return null;
     }
 
     public static async Task SeedDemoBusinessDataAsync(
         NexArrDbContext db,
         IPasswordHasher passwordHasher,
+        Guid? firstAdminUserId = null,
         CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
+        var resolvedAdminUserId = firstAdminUserId ?? DemoAdminUserId;
+        var isDemoAdminFromSeed = firstAdminUserId is null;
 
         if (!await db.Tenants.AnyAsync(t => t.Id == DemoTenantId, cancellationToken))
         {
@@ -439,11 +691,11 @@ public static class PlatformSeeder
             });
         }
 
-        if (!await db.Users.AnyAsync(u => u.Id == DemoAdminUserId, cancellationToken))
+        if (!await db.Users.AnyAsync(u => u.Id == resolvedAdminUserId, cancellationToken))
         {
             db.Users.Add(new PlatformUser
             {
-                Id = DemoAdminUserId,
+                Id = resolvedAdminUserId,
                 Email = DemoAdminEmail,
                 DisplayName = "Demo Platform Admin",
                 IsActive = true,
@@ -452,29 +704,33 @@ public static class PlatformSeeder
                 ModifiedAt = now,
                 Credential = new UserCredential
                 {
-                    UserId = DemoAdminUserId,
+                    UserId = resolvedAdminUserId,
                     PasswordHash = passwordHasher.Hash(DemoAdminPassword),
                     PasswordChangedAt = now
                 }
             });
+            if (!isDemoAdminFromSeed)
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
         }
 
         if (!await db.TenantMemberships.AnyAsync(
-                m => m.TenantId == DemoTenantId && m.UserId == DemoAdminUserId,
+                m => m.TenantId == DemoTenantId && m.UserId == resolvedAdminUserId,
                 cancellationToken))
         {
             db.TenantMemberships.Add(new TenantMembership
             {
                 Id = Guid.Parse("33333333-3333-3333-3333-333333333301"),
                 TenantId = DemoTenantId,
-                UserId = DemoAdminUserId,
+                UserId = resolvedAdminUserId,
                 RoleKey = "platform_admin",
                 IsActive = true,
                 CreatedAt = now
             });
         }
 
-        await EnsureDemoOwnerRoleAsync(db, cancellationToken);
+        await EnsureDemoOwnerRoleAsync(db, resolvedAdminUserId, cancellationToken);
 
         if (!await db.Users.AnyAsync(u => u.Id == DemoTenantAdminUserId, cancellationToken))
         {
@@ -558,10 +814,11 @@ public static class PlatformSeeder
 
     private static async Task EnsureDemoOwnerRoleAsync(
         NexArrDbContext db,
+        Guid userId,
         CancellationToken cancellationToken)
     {
         var hasOwner = await db.PlatformRoleAssignments.AnyAsync(
-            x => x.UserId == DemoAdminUserId
+            x => x.UserId == userId
                  && x.TenantId == null
                  && x.RoleKey == "platform_owner",
             cancellationToken);
@@ -573,12 +830,28 @@ public static class PlatformSeeder
         db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
         {
             Id = Guid.NewGuid(),
-            UserId = DemoAdminUserId,
+            UserId = userId,
             TenantId = null,
             RoleKey = "platform_owner",
             CreatedAt = DateTimeOffset.UtcNow,
-            CreatedByUserId = DemoAdminUserId,
+            CreatedByUserId = userId,
         });
+    }
+
+    public static async Task SeedInfrastructureAsync(
+        NexArrDbContext db,
+        StlLaunchOptions? launchOptions = null,
+        PlatformProductUrlsOptions? platformProductUrls = null,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
+        await EnsurePlatformSessionSettingsColumnsAsync(db, cancellationToken);
+        await EnsureProductCatalogAsync(db, platformProductUrls, cancellationToken);
+        await SeedReferenceDatasetsAsync(db, now, cancellationToken);
+        await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
+        SeedSuiteShellCallbackAllowlist(db, now);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task EnsureProductCatalogManifestColumnsAsync(
@@ -1269,6 +1542,565 @@ public static class PlatformSeeder
             _ => "asset"
         };
 
+    private static async Task<ReferenceDataset> EnsureMasterCsvIntakeDatasetAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var dataset = await db.ReferenceDatasets
+            .FirstOrDefaultAsync(x => x.Key == MasterCsvIntakeDatasetKey, cancellationToken);
+        if (dataset is not null)
+        {
+            return dataset;
+        }
+
+        dataset = new ReferenceDataset
+        {
+            Id = Guid.NewGuid(),
+            Key = MasterCsvIntakeDatasetKey,
+            Name = "Master Reference Intake",
+            Category = "platform",
+            OwnerService = "NexArr",
+            Status = ReferenceDatasetStatuses.Ready,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.ReferenceDatasets.Add(dataset);
+        await db.SaveChangesAsync(cancellationToken);
+        return dataset;
+    }
+
+    private static async Task<ReferenceSource> EnsureMasterCsvSeedSourceAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var source = await db.ReferenceSources
+            .FirstOrDefaultAsync(x => x.Key == MasterCsvSourceKey, cancellationToken);
+        if (source is not null)
+        {
+            return source;
+        }
+
+        source = new ReferenceSource
+        {
+            Id = Guid.NewGuid(),
+            Key = MasterCsvSourceKey,
+            Name = "Master CSV upload",
+            SourceType = "manual",
+            ConnectorType = "csv_upload",
+            AuthorityRank = 1000,
+            RefreshCadence = "on_demand",
+            TermsNotes = "Platform admin master CSV intake source.",
+            Enabled = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.ReferenceSources.Add(source);
+        await db.SaveChangesAsync(cancellationToken);
+        return source;
+    }
+
+    private static async Task<IReadOnlyList<ParsedReferenceSeedRow>> ParseReferenceSeedRowsAsync(
+        NexArrDbContext db,
+        string csvText,
+        CancellationToken cancellationToken)
+    {
+        var datasetIndex = (await db.ReferenceDatasets
+            .AsNoTracking()
+            .ToListAsync(cancellationToken))
+            .ToDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
+
+        var rows = ParseCsvRows(csvText);
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+
+        var headers = rows[0].Select(header => header.Trim()).ToList();
+        if (headers.Count == 0)
+        {
+            return [];
+        }
+
+        var parsedRows = new List<ParsedReferenceSeedRow>(rows.Count - 1);
+        for (var index = 1; index < rows.Count; index++)
+        {
+            var row = rows[index];
+            var rowNumber = index + 1;
+            var columnMap = BuildColumnMap(headers, row);
+            if (columnMap.Count == 0)
+            {
+                continue;
+            }
+
+            var targetDataset = ResolveTargetDatasetFromColumns(columnMap, datasetIndex);
+            var product = ReadColumn(columnMap, "product", "product_key", "owner_service", "ownerService", "productCode");
+            var datasetName = ReadColumn(columnMap, "dataset", "dataset_name", "datasetName", "dataset_label");
+            var entityType = ReadColumn(columnMap, "entity_type", "entityType", "record_type", "type") ?? targetDataset?.Category ?? "reference";
+            var canonicalKey = ReadColumn(columnMap, "canonical_key", "canonicalKey", "key");
+            var displayName = ReadColumn(columnMap, "display_name", "displayName", "name");
+            var sourceSystem = ReadColumn(columnMap, "source_system", "sourceSystem", "source");
+            var sourceKey = ReadColumn(columnMap, "source_key", "sourceKey");
+            var confidence = ReadConfidence(ReadColumn(columnMap, "confidence", "score"), targetDataset is not null);
+
+            var normalizedCanonicalKey =
+                !string.IsNullOrWhiteSpace(canonicalKey) ? NormalizeKey(canonicalKey) :
+                !string.IsNullOrWhiteSpace(displayName) ? NormalizeKey(displayName) :
+                !string.IsNullOrWhiteSpace(datasetName) ? NormalizeKey(datasetName) :
+                null;
+
+            var rawPayloadJson = Serialize(new
+            {
+                rowNumber,
+                columns = columnMap,
+            });
+
+            var normalizedPayloadJson = Serialize(new
+            {
+                rowNumber,
+                product,
+                dataset = datasetName,
+                datasetKey = targetDataset?.Key,
+                targetDatasetId = targetDataset?.Id,
+                targetDatasetName = targetDataset?.Name,
+                targetOwnerService = targetDataset?.OwnerService,
+                entityType = NormalizeKey(entityType),
+                canonicalKey = normalizedCanonicalKey,
+                displayName,
+                sourceSystem,
+                sourceKey,
+                confidence,
+                data = BuildDataPayload(columnMap),
+            });
+
+            parsedRows.Add(new ParsedReferenceSeedRow(
+                rowNumber,
+                targetDataset?.Id,
+                rawPayloadJson,
+                normalizedPayloadJson,
+                NormalizeKey(entityType),
+                normalizedCanonicalKey,
+                confidence,
+                targetDataset is null ? "Assign a target dataset before approving this row." : "Review and approve before upsert."));
+        }
+
+        return parsedRows;
+    }
+
+    private static ReferenceDataset? ResolveTargetDatasetFromColumns(
+        IReadOnlyDictionary<string, string> columns,
+        IReadOnlyDictionary<string, ReferenceDataset> datasets)
+    {
+        var datasetKey = ReadColumn(columns, "dataset_key", "datasetKey", "target_dataset_key", "targetDatasetKey");
+        if (!string.IsNullOrWhiteSpace(datasetKey) && datasets.TryGetValue(NormalizeKey(datasetKey), out var directMatch))
+        {
+            return directMatch;
+        }
+
+        var product = ReadColumn(columns, "product", "product_key", "owner_service", "ownerService", "productCode");
+        var datasetName = ReadColumn(columns, "dataset", "dataset_name", "datasetName", "dataset_label");
+        if (!string.IsNullOrWhiteSpace(product) && !string.IsNullOrWhiteSpace(datasetName))
+        {
+            var combinedKey = $"{NormalizeKey(product)}-{NormalizeKey(datasetName)}";
+            if (datasets.TryGetValue(combinedKey, out var combinedMatch))
+            {
+                return combinedMatch;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(datasetName))
+        {
+            var normalizedName = NormalizeKey(datasetName);
+            var matches = datasets.Values
+                .Where(x => string.Equals(NormalizeKey(x.Name), normalizedName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (matches.Count == 1)
+            {
+                return matches[0];
+            }
+        }
+
+        return null;
+    }
+
+    private static ReferenceEntity CreateOrUpdateEntityFromSeed(
+        ReferenceEntity? existing,
+        Guid targetDatasetId,
+        string entityType,
+        string canonicalKey,
+        string displayName,
+        string normalizedFieldsJson,
+        DateTimeOffset now)
+    {
+        if (existing is null)
+        {
+            return new ReferenceEntity
+            {
+                Id = Guid.NewGuid(),
+                DatasetId = targetDatasetId,
+                EntityType = entityType,
+                CanonicalKey = canonicalKey,
+                DisplayName = displayName,
+                Status = ReferenceEntityStatuses.Active,
+                NormalizedFieldsJson = normalizedFieldsJson,
+                FirstSeenSourceId = null,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+        }
+
+        existing.EntityType = entityType;
+        existing.DisplayName = displayName;
+        existing.NormalizedFieldsJson = normalizedFieldsJson;
+        existing.Status = ReferenceEntityStatuses.Active;
+        existing.UpdatedAt = now;
+        return existing;
+    }
+
+    private static async Task<ReferenceEntity> UpsertReferenceEntityFromSeedAsync(
+        NexArrDbContext db,
+        StagingRecord staged,
+        ReferenceDataset targetDataset,
+        string sourceKey,
+        Guid sourceId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var normalized = DeserializeObject(staged.NormalizedPayloadJson);
+        var canonicalKey = NormalizeKey(staged.ProposedCanonicalKey ?? DetermineFallbackCanonicalKey(normalized, targetDataset));
+        var displayName = DetermineDisplayName(normalized, canonicalKey);
+        var normalizedFieldsJson = NormalizeJson(staged.NormalizedPayloadJson);
+
+        ReferenceEntity entity;
+        var existingEntity = await db.ReferenceEntities
+            .FirstOrDefaultAsync(
+                x => x.DatasetId == targetDataset.Id && x.CanonicalKey == canonicalKey,
+                cancellationToken);
+        if (existingEntity is not null)
+        {
+            entity = CreateOrUpdateEntityFromSeed(
+                existingEntity,
+                targetDataset.Id,
+                NormalizeKey(staged.ProposedEntityType),
+                canonicalKey,
+                displayName,
+                normalizedFieldsJson,
+                now);
+        }
+        else
+        {
+            entity = CreateOrUpdateEntityFromSeed(
+                null,
+                targetDataset.Id,
+                NormalizeKey(staged.ProposedEntityType),
+                canonicalKey,
+                displayName,
+                normalizedFieldsJson,
+                now);
+            entity.FirstSeenSourceId = sourceId;
+            db.ReferenceEntities.Add(entity);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await UpsertReferenceEntityVersionFromSeedAsync(
+            db,
+            entity,
+            normalizedFieldsJson,
+            staged.RawPayloadJson,
+            now,
+            cancellationToken);
+
+        if (staged.Confidence >= 0.75m
+            && !await db.ReferenceCrosswalks.AnyAsync(
+                x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == sourceKey,
+                cancellationToken))
+        {
+            db.ReferenceCrosswalks.Add(new ReferenceCrosswalk
+            {
+                Id = Guid.NewGuid(),
+                ReferenceEntityId = entity.Id,
+                ExternalSystem = sourceKey,
+                ExternalKey = canonicalKey,
+                SourceId = sourceId,
+                Confidence = staged.Confidence,
+                Status = ReferenceCrosswalkStatuses.Active,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return entity;
+    }
+
+    private static async Task UpsertReferenceEntityVersionFromSeedAsync(
+        NexArrDbContext db,
+        ReferenceEntity entity,
+        string normalizedFieldsJson,
+        string sourceEvidenceJson,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        // Keep seed-import behavior consistent with approval flow.
+        var currentVersion = await db
+            .ReferenceEntityVersions
+            .Where(x => x.ReferenceEntityId == entity.Id)
+            .OrderByDescending(x => x.Version)
+            .FirstOrDefaultAsync(cancellationToken);
+        var versionNumber = (currentVersion?.Version ?? 0) + 1;
+
+        var version = new ReferenceEntityVersion
+        {
+            Id = Guid.NewGuid(),
+            ReferenceEntityId = entity.Id,
+            Version = versionNumber,
+            FieldsJson = normalizedFieldsJson,
+            SourceEvidenceJson = NormalizeJson(sourceEvidenceJson),
+            PublishedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.ReferenceEntityVersions.Add(version);
+        entity.CurrentVersionId = version.Id;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string NormalizeJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return "{}";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(document.RootElement);
+        }
+        catch
+        {
+            return JsonSerializer.Serialize(new { value = json.Trim() });
+        }
+    }
+
+    private static JsonElement DeserializeObject(string? json)
+    {
+        using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
+        return document.RootElement.Clone();
+    }
+
+    private static string DetermineFallbackCanonicalKey(JsonElement normalized, ReferenceDataset targetDataset)
+    {
+        if (normalized.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var key in new[] { "canonicalKey", "displayName", "name", "productName", "entityType" })
+            {
+                if (normalized.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String)
+                {
+                    var text = value.GetString();
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        return NormalizeKey(text);
+                    }
+                }
+            }
+        }
+
+        return NormalizeKey(targetDataset.Name);
+    }
+
+    private static string DetermineDisplayName(JsonElement normalized, string fallback)
+    {
+        foreach (var key in new[] { "displayName", "name", "productName", "manufacturer", "make", "model" })
+        {
+            if (normalized.ValueKind == JsonValueKind.Object
+                && normalized.TryGetProperty(key, out var value)
+                && value.ValueKind == JsonValueKind.String)
+            {
+                var text = value.GetString();
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    return text.Trim();
+                }
+            }
+        }
+
+        return fallback;
+    }
+
+    private static decimal ReadConfidence(string? confidence, bool targetAssigned)
+    {
+        if (decimal.TryParse(confidence, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+        {
+            return ClampConfidence(parsed);
+        }
+
+        return targetAssigned ? 0.9m : 0.5m;
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildColumnMap(IReadOnlyList<string> headers, IReadOnlyList<string> row)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < headers.Count; index++)
+        {
+            var header = NormalizeColumnKey(headers[index]);
+            if (string.IsNullOrWhiteSpace(header))
+            {
+                continue;
+            }
+
+            var value = index < row.Count ? row[index].Trim() : string.Empty;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            map[header] = value;
+        }
+
+        return map;
+    }
+
+    private static IReadOnlyDictionary<string, object?> BuildDataPayload(IReadOnlyDictionary<string, string> columns)
+    {
+        var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, value) in columns)
+        {
+            if (IsRoutingColumn(key))
+            {
+                continue;
+            }
+
+            payload[key] = value;
+        }
+
+        return payload;
+    }
+
+    private static bool IsRoutingColumn(string columnName) =>
+        string.Equals(columnName, NormalizeColumnKey("product"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("product_key"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("owner_service"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("product_code"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("dataset"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("dataset_name"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("dataset_label"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("dataset_key"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("target_dataset_key"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("entity_type"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("record_type"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("type"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("canonical_key"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("display_name"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("name"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("source_system"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("source"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("source_key"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("confidence"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("score"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("fields_json"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("normalized_fields_json"), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(columnName, NormalizeColumnKey("source_evidence_json"), StringComparison.OrdinalIgnoreCase);
+
+    private static string? ReadColumn(IReadOnlyDictionary<string, string> columns, params string[] aliases)
+    {
+        foreach (var alias in aliases)
+        {
+            var normalizedAlias = NormalizeColumnKey(alias);
+            if (columns.TryGetValue(normalizedAlias, out var value) && !string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyList<IReadOnlyList<string>> ParseCsvRows(string csv)
+    {
+        if (string.IsNullOrWhiteSpace(csv))
+        {
+            return [];
+        }
+
+        return csv
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(ParseCsvRow)
+            .ToList();
+    }
+
+    private static IReadOnlyList<string> ParseCsvRow(string line)
+    {
+        var fields = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        for (var index = 0; index < line.Length; index++)
+        {
+            var character = line[index];
+            if (inQuotes)
+            {
+                if (character == '"')
+                {
+                    if (index + 1 < line.Length && line[index + 1] == '"')
+                    {
+                        current.Append('"');
+                        index++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else
+                {
+                    current.Append(character);
+                }
+
+                continue;
+            }
+
+            if (character == '"')
+            {
+                inQuotes = true;
+                continue;
+            }
+
+            if (character == ',')
+            {
+                fields.Add(current.ToString().Trim());
+                current.Clear();
+                continue;
+            }
+
+            current.Append(character);
+        }
+
+        fields.Add(current.ToString().Trim());
+        return fields;
+    }
+
+    private static string NormalizeColumnKey(string value) =>
+        new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+
+    private static decimal ClampConfidence(decimal confidence) =>
+        confidence < 0 ? 0 : confidence > 1 ? 1 : confidence;
+
+    private static string ComputeSha256Hex(string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static string Serialize(object value) =>
+        JsonSerializer.Serialize(value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
     private static string NormalizeKey(string value) =>
         value.Trim().ToLowerInvariant().Replace(' ', '-');
 
@@ -1288,4 +2120,20 @@ public static class PlatformSeeder
         string Name,
         string Category,
         string OwnerService);
+
+    private sealed record ParsedReferenceSeedRow(
+        int RowNumber,
+        Guid? TargetDatasetId,
+        string RawPayloadJson,
+        string NormalizedPayloadJson,
+        string EntityType,
+        string? CanonicalKey,
+        decimal Confidence,
+        string ReviewReason);
+
+    private sealed record FirstAdminSeedProfile(
+        string Email,
+        string Password,
+        string DisplayName,
+        bool UseDeterministicId);
 }

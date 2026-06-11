@@ -8,7 +8,6 @@ public static class StaffArrWorkerKeys
     public const string ReadinessRollup = "readiness-rollup";
     public const string PermissionProjection = "permission-projection";
     public const string PersonnelHistoryRollup = "personnel-history-rollup";
-    public const string AuditPackageGeneration = "audit-package-generation";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -16,7 +15,6 @@ public static class StaffArrWorkerKeys
         ReadinessRollup,
         PermissionProjection,
         PersonnelHistoryRollup,
-        AuditPackageGeneration,
     };
 }
 

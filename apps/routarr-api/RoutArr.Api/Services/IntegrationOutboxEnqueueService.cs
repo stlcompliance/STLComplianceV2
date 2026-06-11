@@ -214,6 +214,28 @@ public sealed class IntegrationOutboxEnqueueService(
             cancellationToken: cancellationToken);
     }
 
+    public Task<Guid?> TryEnqueueDispatchOverridePerformedAsync(
+        Trip trip,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var payload = BuildTripPayload(trip, $"Dispatch override performed: {reason}") with
+        {
+            OverrideTargetType = "vendor_readiness",
+            OverrideKinds = [reason],
+        };
+
+        return TryEnqueueAsync(
+            trip.TenantId,
+            RoutArrIntegrationOutboxEventKinds.DispatchOverridePerformed,
+            "trip",
+            trip.Id,
+            payload,
+            idempotencySuffix: suffix,
+            cancellationToken: cancellationToken);
+    }
+
     public Task<Guid?> TryEnqueueStopCompletedAsync(
         RouteStop stop,
         CancellationToken cancellationToken = default) =>

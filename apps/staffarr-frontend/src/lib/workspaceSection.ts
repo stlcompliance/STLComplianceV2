@@ -66,7 +66,7 @@ export const workspaceSectionHeaders: Record<
   },
   admin: {
     title: 'Admin',
-    subtitle: 'Bulk import, export, and audit packages',
+    subtitle: 'Bulk import, exports, and worker operations',
   },
   'organization-structure': {
     title: 'Organization structure',

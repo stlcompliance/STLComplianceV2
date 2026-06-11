@@ -4204,6 +4204,38 @@ namespace SupplyArr.Api.Migrations
                     b.ToTable("supplyarr_tenant_supplier_onboarding_settings", (string)null);
                 });
 
+            modelBuilder.Entity("SupplyArr.Api.Entities.TenantVendorOrderSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowDestinationSummaryInVendorPortal")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MagicLinkTtlHours")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("supplyarr_tenant_vendor_order_settings", (string)null);
+                });
+
             modelBuilder.Entity("SupplyArr.Api.Entities.TrainArrDemandRef", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4442,6 +4474,406 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId", "VendorPartyId", "ReceivedAt");
 
                     b.ToTable("supplyarr_vendor_email_inbox_messages", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BrokerOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BrokerOrderNumberSnapshot")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ConfirmedReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CustomerIdSnapshot")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DeliveryAddressSnapshot")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("DeliveryLocationNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("ExpectedReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ItemDescription")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<decimal>("OrderedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid?>("ParentVendorOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PickupAddressSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("PickupInstructions")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("PickupLocationNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("PickupWindowEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("PickupWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("QuantityReady")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityRemaining")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("QuantityUom")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("SplitFromStatusUpdateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SplitReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VendorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("VendorLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VendorNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentVendorOrderId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("VendorId");
+
+                    b.HasIndex("TenantId", "BrokerOrderId");
+
+                    b.HasIndex("TenantId", "ParentVendorOrderId");
+
+                    b.HasIndex("TenantId", "VendorId", "Status", "UpdatedAt");
+
+                    b.ToTable("supplyarr_vendor_orders", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderBrokerDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("AuthorizedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DecidedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DecisionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid?>("SelectedTripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VendorOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("VendorOrderId");
+
+                    b.HasIndex("TenantId", "VendorOrderId", "CreatedAt");
+
+                    b.ToTable("supplyarr_vendor_order_broker_decisions", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderDocumentLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("RecordArrFileId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RecordArrRecordId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RecordArrRecordNumberSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("StorageProvider")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UploadedByMagicLinkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UploadedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("UploadedByVendorContactId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("VendorOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("VendorOrderId");
+
+                    b.HasIndex("TenantId", "VendorOrderId", "UploadedAt");
+
+                    b.ToTable("supplyarr_vendor_order_document_links", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderMagicLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("VendorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VendorOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("VendorOrderId");
+
+                    b.HasIndex("TenantId", "ExpiresAt");
+
+                    b.HasIndex("TenantId", "TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "VendorOrderId");
+
+                    b.ToTable("supplyarr_vendor_order_magic_links", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderStatusUpdate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ConfirmedReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("EstimatedReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExceptionReason")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<decimal>("OrderedQuantitySnapshot")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateTimeOffset?>("PickupWindowEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("PickupWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("QuantityReady")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityRemaining")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("SubmittedByMagicLinkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubmittedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("SubmittedByVendorContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubmittedIpHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SubmittedUserAgentHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VendorOrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("VendorOrderId");
+
+                    b.HasIndex("TenantId", "VendorOrderId", "CreatedAt");
+
+                    b.ToTable("supplyarr_vendor_order_status_updates", (string)null);
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.VendorQuote", b =>
@@ -5699,6 +6131,68 @@ namespace SupplyArr.Api.Migrations
                     b.Navigation("Part");
                 });
 
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrder", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.VendorOrder", "ParentVendorOrder")
+                        .WithMany("ChildVendorOrders")
+                        .HasForeignKey("ParentVendorOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SupplyArr.Api.Entities.ExternalParty", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentVendorOrder");
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderBrokerDecision", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.VendorOrder", "VendorOrder")
+                        .WithMany("BrokerDecisions")
+                        .HasForeignKey("VendorOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VendorOrder");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderDocumentLink", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.VendorOrder", "VendorOrder")
+                        .WithMany("Documents")
+                        .HasForeignKey("VendorOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VendorOrder");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderMagicLink", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.VendorOrder", "VendorOrder")
+                        .WithMany("MagicLinks")
+                        .HasForeignKey("VendorOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VendorOrder");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrderStatusUpdate", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.VendorOrder", "VendorOrder")
+                        .WithMany("StatusUpdates")
+                        .HasForeignKey("VendorOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VendorOrder");
+                });
+
             modelBuilder.Entity("SupplyArr.Api.Entities.VendorQuote", b =>
                 {
                     b.HasOne("SupplyArr.Api.Entities.Rfq", "Rfq")
@@ -5979,6 +6473,19 @@ namespace SupplyArr.Api.Migrations
             modelBuilder.Entity("SupplyArr.Api.Entities.TrainArrDemandRef", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.VendorOrder", b =>
+                {
+                    b.Navigation("BrokerDecisions");
+
+                    b.Navigation("ChildVendorOrders");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("MagicLinks");
+
+                    b.Navigation("StatusUpdates");
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.VendorQuote", b =>

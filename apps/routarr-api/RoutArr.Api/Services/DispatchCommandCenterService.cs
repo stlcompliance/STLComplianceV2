@@ -61,6 +61,8 @@ public sealed class DispatchCommandCenterService(
                 actorUserId,
                 actorPersonId,
                 status,
+                null,
+                null,
                 cancellationToken);
             tripColumns.Add(new DispatchCommandCenterTripColumn(status, label, trips.Count, trips));
         }

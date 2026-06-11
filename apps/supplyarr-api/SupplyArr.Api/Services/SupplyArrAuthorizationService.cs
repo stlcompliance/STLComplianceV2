@@ -365,6 +365,27 @@ public sealed class SupplyArrAuthorizationService
     public void RequireRfqAward(ClaimsPrincipal principal) =>
         RequirePurchaseRequestApprove(principal);
 
+    public void RequireVendorOrderRead(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequireVendorOrderCreate(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireVendorOrderUpdate(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireVendorOrderSend(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireVendorOrderStatusUpdate(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireVendorOrderDocumentUpload(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireVendorOrderSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     public void RequireSupplierOnboardingRead(ClaimsPrincipal principal) =>
         RequirePartiesRead(principal);
 

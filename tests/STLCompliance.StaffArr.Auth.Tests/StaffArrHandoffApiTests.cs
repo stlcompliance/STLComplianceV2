@@ -1674,7 +1674,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(legacyEventCount, v1EventCount);
 
         var legacyAuditResponse = await _staffarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/audit-packages/timeline?page=1&pageSize=10", token));
+            Authorized(HttpMethod.Get, "/api/audit?page=1&pageSize=10", token));
         legacyAuditResponse.EnsureSuccessStatusCode();
         var legacyAuditJson = JsonDocument.Parse(await legacyAuditResponse.Content.ReadAsStringAsync());
         var legacyAuditCount = legacyAuditJson.RootElement.GetProperty("items").GetArrayLength();

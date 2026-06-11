@@ -246,6 +246,14 @@ public static class IntegrationOutboxEventKinds
     public const string EmergencyPurchaseManagerOverrideApproved = "emergency_purchase.manager_override_approved";
 
     public const string EmergencyPurchaseOrderIssued = "emergency_purchase.purchase_order_issued";
+
+    public const string VendorOrderStatusChanged = "supplyarr.vendor_order.status_changed";
+
+    public const string VendorOrderCompletedForDispatch = "supplyarr.vendor_order.completed_for_dispatch";
+
+    public const string VendorOrderPartialDispatchAuthorized = "supplyarr.vendor_order.partial_dispatch_authorized";
+
+    public const string VendorOrderSplitCreated = "supplyarr.vendor_order.split_created";
 }
 
 public static class IntegrationInboxEventKinds

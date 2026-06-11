@@ -731,6 +731,29 @@
         }
       }
     },
+    "/api/internal/smart-import/process-batch": {
+      "post": {
+        "tags": [
+          "Internal Smart Import"
+        ],
+        "operationId": "ProcessSmartImportBatchInternal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalProcessSmartImportBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/tenant-lifecycle/pending": {
       "get": {
         "tags": [
@@ -1770,6 +1793,42 @@
         }
       }
     },
+    "/api/platform-admin/journey-seeds": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformJourneySeedTargets",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/journey-seeds/{productKey}": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "SeedPlatformJourney",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/launch-attempts": {
       "get": {
         "tags": [
@@ -2130,6 +2189,621 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/crosswalks": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListCrosswalks",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateCrosswalk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceCrosswalkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/dashboard": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListDatasets",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateDataset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/publish-all": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataPublishAllDatasets",
+        "parameters": [
+          {
+            "name": "summary",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/publish-batch": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataPublishDatasets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishReferenceDatasetsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/{datasetId}": {
+      "put": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataUpdateDataset",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataDeleteDataset",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/{datasetId}/entities": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListDatasetEntities",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/{datasetId}/input": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateDatasetInput",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceDatasetInputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/datasets/{datasetId}/publish": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataPublishDataset",
+        "parameters": [
+          {
+            "name": "datasetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/entities/{id}": {
+      "put": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataUpdateEntity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferenceEntityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataDeleteEntity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/imports": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListImports",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateImport",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/imports/master-csv": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateMasterCsvImport",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceMasterCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/imports/{jobId}": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataGetImport",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/imports/{jobId}/staging-records": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListStagingRecords",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/publish-history": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataPublishHistory",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/sources": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataListSources",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataCreateSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/staging-records/{id}/approve": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataApproveStagingRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/staging-records/{id}/escalate": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataEscalateStagingRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/staging-records/{id}/merge": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataMergeStagingRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/reference-data/staging-records/{id}/reject": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataRejectStagingRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4098,6 +4772,135 @@
         }
       }
     },
+    "/api/v1/ai/actions/preview": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "PreviewAiAction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiActionPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/actions/{proposalId}/confirm": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "ConfirmAiAction",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/admin-diagnostics": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "RunAiAdminDiagnostic",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateAiAssistantMessage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAssistantMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/support-drafts": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateAiSupportDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAssistantMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/validation/explain": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "ExplainAiValidationError",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAssistantMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit/events": {
       "get": {
         "tags": [
@@ -4677,6 +5480,263 @@
           "Health"
         ],
         "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/batches": {
+      "get": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "ListSmartImportBatches",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CreateSmartImportBatch",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/IFormFile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/batches/{batchId}": {
+      "get": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "GetSmartImportBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/batches/{batchId}/commit-plans": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CreateSmartImportCommitPlan",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportCreateCommitPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/batches/{batchId}/review-decisions": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CreateSmartImportReviewDecision",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/commit-plans/{commitPlanId}/approve": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "ApproveSmartImportCommitPlan",
+        "parameters": [
+          {
+            "name": "commitPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/commit-plans/{commitPlanId}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CommitSmartImportCommitPlan",
+        "parameters": [
+          {
+            "name": "commitPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/commit-plans/{commitPlanId}/steps/{stepId}/retry": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "RetrySmartImportCommitStep",
+        "parameters": [
+          {
+            "name": "commitPlanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/templates": {
+      "get": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "ListSmartImportMappingTemplates",
+        "parameters": [
+          {
+            "name": "destinationProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CreateSmartImportMappingTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportMappingTemplate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6760,6 +7820,254 @@
         }
       }
     },
+    "/api/v1/reference-data/catalogs/{datasetKey}/entities": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataGetCatalogEntities",
+        "parameters": [
+          {
+            "name": "datasetKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/chemicals/lookup": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataLookupChemical",
+        "parameters": [
+          {
+            "name": "cas",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/crosswalks/resolve": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataResolveCrosswalk",
+        "parameters": [
+          {
+            "name": "externalSystem",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/entities/{id}": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataGetEntity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/lookup": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataLookup",
+        "parameters": [
+          {
+            "name": "datasetKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "canonicalKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalSystem",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/products/lookup-gtin": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataLookupGtin",
+        "parameters": [
+          {
+            "name": "gtin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/sds/lookup": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataLookupSds",
+        "parameters": [
+          {
+            "name": "manufacturer",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reference-data/vehicles/decode-vin": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "operationId": "ReferenceDataDecodeVin",
+        "parameters": [
+          {
+            "name": "vin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelYear",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/service-clients": {
       "get": {
         "tags": [
@@ -7593,6 +8901,94 @@
           }
         }
       },
+      "AiActionPreviewRequest": {
+        "required": [
+          "sessionId",
+          "productKey",
+          "actionCategory",
+          "proposal"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "actionCategory": {
+            "type": "string"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
+      "AiAssistantMessageRequest": {
+        "required": [
+          "sessionId",
+          "tenantId",
+          "productKey",
+          "surface",
+          "route",
+          "category",
+          "message",
+          "pageContext",
+          "allowedBehaviors"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "pageContext": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "allowedBehaviors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "AssignPlatformUserRoleRequest": {
         "required": [
           "roleKey"
@@ -7835,6 +9231,238 @@
           }
         }
       },
+      "CreateReferenceCrosswalkRequest": {
+        "required": [
+          "referenceEntityId",
+          "externalSystem",
+          "externalKey",
+          "sourceId",
+          "confidence",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceEntityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalSystem": {
+            "type": "string"
+          },
+          "externalKey": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "confidence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateReferenceDatasetInputRequest": {
+        "required": [
+          "rawObjectKey",
+          "fileName",
+          "value",
+          "valuesText"
+        ],
+        "type": "object",
+        "properties": {
+          "rawObjectKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "valuesText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateReferenceDatasetRequest": {
+        "required": [
+          "key",
+          "name",
+          "category",
+          "ownerService",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "ownerService": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateReferenceImportRequest": {
+        "required": [
+          "datasetId",
+          "sourceId",
+          "tenantId",
+          "requestedByPersonId",
+          "rawObjectKey",
+          "fileName",
+          "records"
+        ],
+        "type": "object",
+        "properties": {
+          "datasetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requestedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "rawObjectKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "records": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ReferenceImportRecordInput"
+            }
+          }
+        }
+      },
+      "CreateReferenceMasterCsvImportRequest": {
+        "required": [
+          "csvText",
+          "fileName",
+          "rawObjectKey"
+        ],
+        "type": "object",
+        "properties": {
+          "csvText": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rawObjectKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateReferenceSourceRequest": {
+        "required": [
+          "key",
+          "name",
+          "sourceType",
+          "connectorType",
+          "authorityRank",
+          "refreshCadence",
+          "termsNotes",
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "connectorType": {
+            "type": "string"
+          },
+          "authorityRank": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "refreshCadence": {
+            "type": "string"
+          },
+          "termsNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
       "CreateTenantRequest": {
         "required": [
           "slug",
@@ -8006,6 +9634,74 @@
           }
         }
       },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
+      "ImportMappingTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "templateName": {
+            "type": "string"
+          },
+          "mappingJson": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InternalProcessSmartImportBatchRequest": {
+        "required": [
+          "tenantId",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "InvitePlatformUserRequest": {
         "required": [
           "email",
@@ -8076,6 +9772,7 @@
           }
         }
       },
+      "JsonElement": {},
       "LogFieldCompanionFieldWorkOrderLaborRequest": {
         "required": [
           "taskKey",
@@ -8397,6 +10094,28 @@
           }
         }
       },
+      "PublishReferenceDatasetsRequest": {
+        "required": [
+          "datasetIds",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "datasetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode",
@@ -8412,6 +10131,54 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ReferenceImportRecordInput": {
+        "required": [
+          "rowNumber",
+          "rawPayloadJson",
+          "normalizedPayloadJson",
+          "proposedEntityType",
+          "proposedCanonicalKey",
+          "confidence"
+        ],
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rawPayloadJson": {
+            "type": "string"
+          },
+          "normalizedPayloadJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposedEntityType": {
+            "type": "string"
+          },
+          "proposedCanonicalKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "confidence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -8467,6 +10234,64 @@
           }
         }
       },
+      "ReviewDecisionRequest": {
+        "required": [
+          "reason",
+          "displayName",
+          "canonicalKey",
+          "normalizedFieldsJson",
+          "sourceEvidenceJson",
+          "effectiveDate",
+          "targetDatasetId"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "normalizedFieldsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEvidenceJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "targetDatasetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "SetPlatformUserMfaRequest": {
         "required": [
           "isEnabled"
@@ -8475,6 +10300,58 @@
         "properties": {
           "isEnabled": {
             "type": "boolean"
+          }
+        }
+      },
+      "SmartImportCreateCommitPlanRequest": {
+        "required": [
+          "proposedRecordIds"
+        ],
+        "type": "object",
+        "properties": {
+          "proposedRecordIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SmartImportReviewDecisionRequest": {
+        "required": [
+          "proposedRecordId",
+          "decision",
+          "notes",
+          "correctedPayload"
+        ],
+        "type": "object",
+        "properties": {
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correctedPayload": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
           }
         }
       },
@@ -8633,8 +10510,7 @@
             "type": "string"
           },
           "lineId": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "quantityReceived": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
@@ -8701,6 +10577,49 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "UpdateReferenceEntityRequest": {
+        "required": [
+          "displayName",
+          "canonicalKey",
+          "normalizedFieldsJson",
+          "sourceEvidenceJson",
+          "effectiveDate"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "normalizedFieldsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEvidenceJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
           }
         }
       },
@@ -9269,10 +11188,22 @@
       "name": "PlatformAdmin"
     },
     {
+      "name": "ReferenceData"
+    },
+    {
       "name": "PlatformAuditPackages"
     },
     {
       "name": "HybridDataPlane"
+    },
+    {
+      "name": "AI Assistance"
+    },
+    {
+      "name": "Smart Import"
+    },
+    {
+      "name": "Internal Smart Import"
     },
     {
       "name": "fieldcompanion"

@@ -32,6 +32,8 @@ export const supplyarrNavItems: ProductNavItem[] = [
       { label: 'Procurement', to: '/purchasing/procurement' },
       { label: 'Approvals', to: '/purchasing/approvals' },
       { label: 'Exceptions', to: '/purchasing/exceptions' },
+      { label: 'Vendor orders', to: '/purchasing/vendor-orders' },
+      { label: 'Create vendor order', to: '/purchasing/vendor-orders/create' },
     ],
   },
   { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },

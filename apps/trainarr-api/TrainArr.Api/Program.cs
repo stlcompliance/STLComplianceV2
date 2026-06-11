@@ -105,6 +105,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrIntegrationSettingsEndpoints();
         app.MapTrainArrCommandCenterEndpoints();
         app.MapTrainArrEntityExportEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
 
         await Task.CompletedTask;
 

@@ -20,6 +20,32 @@ public sealed class Trip : IHasTenant
 
     public string? VehicleRefKey { get; set; }
 
+    public Guid? VendorOrderId { get; set; }
+
+    public Guid? BrokerOrderId { get; set; }
+
+    public string? DispatchBlockReason { get; set; }
+
+    public string? VendorReadinessStatusSnapshot { get; set; }
+
+    public decimal? VendorQuantityReadySnapshot { get; set; }
+
+    public decimal? VendorOrderedQuantitySnapshot { get; set; }
+
+    public DateTimeOffset? VendorExpectedReadyAtSnapshot { get; set; }
+
+    public DateTimeOffset? VendorConfirmedReadyAtSnapshot { get; set; }
+
+    public DateTimeOffset? ReleasedForDispatchAt { get; set; }
+
+    public Guid? ReleasedForDispatchByEventId { get; set; }
+
+    public DateTimeOffset? DispatchOverrideAt { get; set; }
+
+    public string? DispatchOverrideByPersonId { get; set; }
+
+    public string? DispatchOverrideReason { get; set; }
+
     public DateTimeOffset? ScheduledStartAt { get; set; }
 
     public DateTimeOffset? ScheduledEndAt { get; set; }
@@ -50,6 +76,8 @@ public sealed class Trip : IHasTenant
     public ICollection<TripPartsDemandLine> PartsDemandLines { get; set; } = [];
 
     public ICollection<DispatchMessage> DispatchMessages { get; set; } = [];
+
+    public ICollection<DispatchBlock> DispatchBlocks { get; set; } = [];
 
     public TripDispatchReleaseSnapshot? DispatchReleaseSnapshot { get; set; }
 }

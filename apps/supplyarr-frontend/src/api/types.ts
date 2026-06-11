@@ -1399,6 +1399,227 @@ export interface VendorPortalRfqResponse {
   updatedAt: string
 }
 
+export interface VendorOrderStatusUpdateResponse {
+  statusUpdateId: string
+  previousStatus: string | null
+  newStatus: string
+  orderedQuantitySnapshot: number
+  quantityReady: number
+  quantityRemaining: number
+  estimatedReadyAt: string | null
+  confirmedReadyAt: string | null
+  pickupWindowStart: string | null
+  pickupWindowEnd: string | null
+  note: string | null
+  exceptionReason: string | null
+  source: string
+  submittedByPersonId: string | null
+  createdAt: string
+}
+
+export interface VendorOrderDocumentResponse {
+  documentId: string
+  documentType: string
+  fileName: string
+  contentType: string
+  recordArrRecordId: string
+  recordArrRecordNumberSnapshot: string
+  recordArrFileId: string
+  uploadedAt: string
+}
+
+export interface VendorOrderBrokerDecisionResponse {
+  decisionId: string
+  decisionType: string
+  authorizedQuantity: number | null
+  selectedTripId: string | null
+  note: string | null
+  decidedByPersonId: string | null
+  createdAt: string
+}
+
+export interface VendorOrderListItemResponse {
+  vendorOrderId: string
+  status: string
+  vendorNameSnapshot: string
+  itemDescription: string
+  orderedQuantity: number
+  quantityReady: number
+  quantityRemaining: number
+  quantityUom: string
+  expectedReadyAt: string | null
+  confirmedReadyAt: string | null
+  parentVendorOrderId: string | null
+  updatedAt: string
+}
+
+export interface VendorOrderResponse {
+  vendorOrderId: string
+  brokerOrderId: string | null
+  brokerOrderNumberSnapshot: string | null
+  vendorId: string
+  vendorNameSnapshot: string
+  vendorLocationId: string | null
+  pickupLocationNameSnapshot: string | null
+  pickupAddressSnapshot: string
+  customerIdSnapshot: string | null
+  deliveryLocationNameSnapshot: string | null
+  deliveryAddressSnapshot: string | null
+  itemDescription: string
+  orderedQuantity: number
+  quantityReady: number
+  quantityRemaining: number
+  quantityUom: string
+  expectedReadyAt: string | null
+  confirmedReadyAt: string | null
+  pickupWindowStart: string | null
+  pickupWindowEnd: string | null
+  pickupInstructions: string | null
+  status: string
+  createdByPersonId: string | null
+  parentVendorOrderId: string | null
+  splitReason: string | null
+  splitFromStatusUpdateId: string | null
+  createdAt: string
+  updatedAt: string
+  cancelledAt: string | null
+  closedAt: string | null
+  documents: VendorOrderDocumentResponse[]
+  brokerDecisions: VendorOrderBrokerDecisionResponse[]
+  statusHistory: VendorOrderStatusUpdateResponse[]
+}
+
+export interface CreateVendorOrderRequest {
+  brokerOrderId?: string | null
+  brokerOrderNumberSnapshot?: string | null
+  vendorId: string
+  vendorLocationId?: string | null
+  pickupLocationNameSnapshot?: string | null
+  pickupAddressSnapshot: string
+  customerIdSnapshot?: string | null
+  deliveryLocationNameSnapshot?: string | null
+  deliveryAddressSnapshot?: string | null
+  itemDescription: string
+  orderedQuantity: number
+  quantityUom?: string | null
+  expectedReadyAt?: string | null
+  pickupWindowStart?: string | null
+  pickupWindowEnd?: string | null
+  pickupInstructions?: string | null
+}
+
+export interface UpdateVendorOrderRequest {
+  brokerOrderNumberSnapshot?: string | null
+  vendorLocationId?: string | null
+  pickupLocationNameSnapshot?: string | null
+  pickupAddressSnapshot: string
+  customerIdSnapshot?: string | null
+  deliveryLocationNameSnapshot?: string | null
+  deliveryAddressSnapshot?: string | null
+  itemDescription: string
+  orderedQuantity: number
+  quantityUom?: string | null
+  expectedReadyAt?: string | null
+  pickupWindowStart?: string | null
+  pickupWindowEnd?: string | null
+  pickupInstructions?: string | null
+}
+
+export interface UpdateVendorOrderStatusRequest {
+  newStatus: string
+  quantityReady?: number | null
+  estimatedReadyAt?: string | null
+  confirmedReadyAt?: string | null
+  pickupWindowStart?: string | null
+  pickupWindowEnd?: string | null
+  note?: string | null
+  exceptionReason?: string | null
+  readyForPickupConfirmed: boolean
+}
+
+export interface SendVendorOrderResponse {
+  vendorOrder: VendorOrderResponse
+  magicLinkUrl: string
+  expiresAt: string
+}
+
+export interface CreateVendorOrderMagicLinkResponse {
+  magicLinkId: string
+  token: string
+  url: string
+  expiresAt: string
+}
+
+export interface RegisterVendorOrderDocumentRequest {
+  documentType: string
+  fileName: string
+  contentType: string
+  storageProvider?: string | null
+  storageKey?: string | null
+  sizeBytes?: number | null
+  pageCount?: number | null
+  imageWidth?: number | null
+  imageHeight?: number | null
+  durationSeconds?: number | null
+}
+
+export interface VendorOrderPortalResponse {
+  vendorOrderId: string
+  status: string
+  vendorNameSnapshot: string
+  pickupLocationNameSnapshot: string
+  pickupAddressSnapshot: string
+  deliveryLocationNameSnapshot: string | null
+  deliveryAddressSnapshot: string | null
+  itemDescription: string
+  orderedQuantity: number
+  quantityReady: number
+  quantityRemaining: number
+  quantityUom: string
+  expectedReadyAt: string | null
+  confirmedReadyAt: string | null
+  pickupWindowStart: string | null
+  pickupWindowEnd: string | null
+  pickupInstructions: string | null
+  linkExpiresAt: string
+  documents: VendorOrderDocumentResponse[]
+  statusHistory: VendorOrderStatusUpdateResponse[]
+}
+
+export interface CreateVendorOrderBrokerDecisionRequest {
+  decisionType: string
+  authorizedQuantity?: number | null
+  selectedTripId?: string | null
+  note?: string | null
+}
+
+export interface SplitVendorOrderRequest {
+  selectedTripId?: string | null
+  splitReason?: string | null
+  remainingExpectedReadyAt?: string | null
+  remainingPickupWindowStart?: string | null
+  remainingPickupWindowEnd?: string | null
+}
+
+export interface SplitVendorOrderResponse {
+  parentVendorOrder: VendorOrderResponse
+  readyVendorOrder: VendorOrderResponse
+  remainingVendorOrder: VendorOrderResponse
+  remainingVendorOrderToken: string
+  remainingVendorOrderUrl: string
+}
+
+export interface VendorOrderSettingsResponse {
+  allowDestinationSummaryInVendorPortal: boolean
+  magicLinkTtlHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertVendorOrderSettingsRequest {
+  allowDestinationSummaryInVendorPortal: boolean
+  magicLinkTtlHours: number
+}
+
 export interface RfqQuoteLineMetric {
   vendorQuoteId: string
   vendorPartyId: string

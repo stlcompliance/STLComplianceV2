@@ -54,6 +54,18 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<PurchaseRequestLine> PurchaseRequestLines => Set<PurchaseRequestLine>();
 
+    public DbSet<VendorOrder> VendorOrders => Set<VendorOrder>();
+
+    public DbSet<VendorOrderStatusUpdate> VendorOrderStatusUpdates => Set<VendorOrderStatusUpdate>();
+
+    public DbSet<VendorOrderMagicLink> VendorOrderMagicLinks => Set<VendorOrderMagicLink>();
+
+    public DbSet<VendorOrderDocumentLink> VendorOrderDocumentLinks => Set<VendorOrderDocumentLink>();
+
+    public DbSet<VendorOrderBrokerDecision> VendorOrderBrokerDecisions => Set<VendorOrderBrokerDecision>();
+
+    public DbSet<TenantVendorOrderSettings> TenantVendorOrderSettings => Set<TenantVendorOrderSettings>();
+
     public DbSet<Rfq> Rfqs => Set<Rfq>();
 
     public DbSet<RfqLine> RfqLines => Set<RfqLine>();
@@ -317,6 +329,124 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.SlaDueAt });
             entity.HasIndex(x => new { x.TenantId, x.LastEscalatedAt });
+        });
+
+        modelBuilder.Entity<VendorOrder>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_orders");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BrokerOrderNumberSnapshot).HasMaxLength(128);
+            entity.Property(x => x.VendorNameSnapshot).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PickupLocationNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.PickupAddressSnapshot).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.CustomerIdSnapshot).HasMaxLength(128);
+            entity.Property(x => x.DeliveryLocationNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.DeliveryAddressSnapshot).HasMaxLength(1024);
+            entity.Property(x => x.ItemDescription).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.OrderedQuantity).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReady).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityRemaining).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityUom).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.PickupInstructions).HasMaxLength(2048);
+            entity.Property(x => x.Status).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.SplitReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VendorId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.BrokerOrderId });
+            entity.HasIndex(x => new { x.TenantId, x.ParentVendorOrderId });
+            entity.HasOne(x => x.Vendor)
+                .WithMany()
+                .HasForeignKey(x => x.VendorId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.ParentVendorOrder)
+                .WithMany(x => x.ChildVendorOrders)
+                .HasForeignKey(x => x.ParentVendorOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<VendorOrderStatusUpdate>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_order_status_updates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PreviousStatus).HasMaxLength(64);
+            entity.Property(x => x.NewStatus).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OrderedQuantitySnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReady).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityRemaining).HasPrecision(18, 4);
+            entity.Property(x => x.Note).HasMaxLength(2048);
+            entity.Property(x => x.ExceptionReason).HasMaxLength(1024);
+            entity.Property(x => x.Source).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SubmittedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.SubmittedIpHash).HasMaxLength(128);
+            entity.Property(x => x.SubmittedUserAgentHash).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId, x.CreatedAt });
+            entity.HasOne(x => x.VendorOrder)
+                .WithMany(x => x.StatusUpdates)
+                .HasForeignKey(x => x.VendorOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<VendorOrderMagicLink>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_order_magic_links");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TokenHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId });
+            entity.HasIndex(x => new { x.TenantId, x.TokenHash }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ExpiresAt });
+            entity.HasOne(x => x.VendorOrder)
+                .WithMany(x => x.MagicLinks)
+                .HasForeignKey(x => x.VendorOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<VendorOrderDocumentLink>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_order_document_links");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DocumentType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageProvider).HasMaxLength(64);
+            entity.Property(x => x.StorageKey).HasMaxLength(512);
+            entity.Property(x => x.RecordArrRecordId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RecordArrRecordNumberSnapshot).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RecordArrFileId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UploadedByVendorContactId).HasMaxLength(128);
+            entity.Property(x => x.UploadedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId, x.UploadedAt });
+            entity.HasOne(x => x.VendorOrder)
+                .WithMany(x => x.Documents)
+                .HasForeignKey(x => x.VendorOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<VendorOrderBrokerDecision>(entity =>
+        {
+            entity.ToTable("supplyarr_vendor_order_broker_decisions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DecisionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AuthorizedQuantity).HasPrecision(18, 4);
+            entity.Property(x => x.Note).HasMaxLength(1024);
+            entity.Property(x => x.DecidedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VendorOrderId, x.CreatedAt });
+            entity.HasOne(x => x.VendorOrder)
+                .WithMany(x => x.BrokerDecisions)
+                .HasForeignKey(x => x.VendorOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TenantVendorOrderSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_vendor_order_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
         modelBuilder.Entity<SupplierIncident>(entity =>

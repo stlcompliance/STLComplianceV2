@@ -22,8 +22,10 @@ interface TripsPanelProps {
   accessToken: string
   canCreate: boolean
   canAssign: boolean
+  canDispatch: boolean
   canPerform: boolean
   canManage: boolean
+  canOverrideVendorReadiness: boolean
   viewAllTrips: boolean
   sessionPersonId: string
   trips: TripSummaryResponse[]
@@ -32,6 +34,8 @@ interface TripsPanelProps {
   tripTitle: string
   tripDescription: string
   vehicleRefKey: string
+  vendorOrderId: string
+  brokerOrderId: string
   driverPersonId: string
   loadKey: string
   loadOrigin: string
@@ -46,6 +50,8 @@ interface TripsPanelProps {
   onTripTitleChange: (value: string) => void
   onTripDescriptionChange: (value: string) => void
   onVehicleRefKeyChange: (value: string) => void
+  onVendorOrderIdChange: (value: string) => void
+  onBrokerOrderIdChange: (value: string) => void
   onDriverPersonIdChange: (value: string) => void
   onLoadKeyChange: (value: string) => void
   onLoadOriginChange: (value: string) => void
@@ -56,12 +62,13 @@ interface TripsPanelProps {
   onUpdateStatus: (tripId: string, status: string) => void
 }
 
-function statusOptionsFor(currentStatus: string, canManage: boolean): string[] {
+function statusOptionsFor(currentStatus: string, canDispatch: boolean, canManage: boolean): string[] {
   if (currentStatus === 'planned') {
     return canManage ? ['planned', 'cancelled'] : ['planned']
   }
   if (currentStatus === 'assigned') {
-    const options = ['assigned', 'dispatched']
+    const options = ['assigned']
+    if (canDispatch) options.push('dispatched')
     if (canManage) options.push('cancelled')
     return options
   }
@@ -83,8 +90,10 @@ export function TripsPanel({
   accessToken,
   canCreate,
   canAssign,
+  canDispatch,
   canPerform,
   canManage,
+  canOverrideVendorReadiness,
   viewAllTrips,
   sessionPersonId,
   trips,
@@ -93,6 +102,8 @@ export function TripsPanel({
   tripTitle,
   tripDescription,
   vehicleRefKey,
+  vendorOrderId,
+  brokerOrderId,
   driverPersonId,
   loadKey,
   loadOrigin,
@@ -107,6 +118,8 @@ export function TripsPanel({
   onTripTitleChange,
   onTripDescriptionChange,
   onVehicleRefKeyChange,
+  onVendorOrderIdChange,
+  onBrokerOrderIdChange,
   onDriverPersonIdChange,
   onLoadKeyChange,
   onLoadOriginChange,
@@ -272,8 +285,27 @@ export function TripsPanel({
               testId="trip-create-vehicle-advanced"
             />
           </div>
-          <div>
-            <div className="text-xs text-slate-400">Load reference is generated automatically from origin and destination.</div>
+          <label className="text-sm text-slate-300">
+            Vendor order reference
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={vendorOrderId}
+              onChange={(event) => onVendorOrderIdChange(event.target.value)}
+              placeholder="Optional SupplyArr vendorOrderId"
+            />
+          </label>
+          <label className="text-sm text-slate-300">
+            Broker order reference
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+              value={brokerOrderId}
+              onChange={(event) => onBrokerOrderIdChange(event.target.value)}
+              placeholder="Optional OrdArr brokerOrderId"
+            />
+          </label>
+          <div className="md:col-span-2 text-xs text-slate-400">
+            Load reference is generated automatically from origin and destination. When you link a SupplyArr vendor order,
+            RoutArr can block dispatch until vendor readiness is released or explicitly overridden.
           </div>
           <label className="text-sm text-slate-300" htmlFor="trips-load-origin">
           Load origin
@@ -354,9 +386,27 @@ export function TripsPanel({
                 >
                   {selectedColumns.map((column: TripColumnKey) => (
                     <td key={`${trip.tripId}-${column}`} className="px-3 py-2 text-slate-200">
-                      {column === 'title' ? trip.title : null}
+                      {column === 'title' ? (
+                        <div>
+                          <div>{trip.title}</div>
+                          {trip.vendorOrderId ? (
+                            <div className="mt-1 text-xs text-slate-500">
+                              Vendor order {trip.vendorOrderId}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                       {column === 'number' ? trip.tripNumber : null}
-                      {column === 'status' ? trip.dispatchStatus : null}
+                      {column === 'status' ? (
+                        <div>
+                          <div>{trip.dispatchStatus}</div>
+                          {trip.dispatchBlockReason ? (
+                            <div className="mt-1 text-xs text-amber-300">
+                              {trip.dispatchBlockReason}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                       {column === 'loads' ? `${trip.loadCount}` : null}
                       {column === 'driver'
                         ? trip.assignedDriverPersonId
@@ -413,7 +463,27 @@ export function TripsPanel({
                         : 'Unassigned')}
                   </dd>
                 </div>
+                <div className="col-span-2">
+                  <dt className="text-slate-500">Vendor readiness</dt>
+                  <dd className="font-medium text-slate-200">
+                    {selectedTrip.vendorOrderId
+                      ? `${selectedTrip.vendorOrderId} · ${selectedTrip.vendorReadinessStatusSnapshot ?? 'not ready'}`
+                      : 'No vendor-order link'}
+                  </dd>
+                </div>
               </dl>
+
+              {selectedTrip.dispatchBlocks && selectedTrip.dispatchBlocks.length > 0 ? (
+                <div className="rounded border border-amber-700/40 bg-amber-950/20 p-3 text-sm text-amber-100">
+                  <p className="font-medium">Dispatch blocked</p>
+                  {(selectedTrip.dispatchBlocks ?? []).map((block) => (
+                    <p key={block.dispatchBlockId} className="mt-1 text-xs">
+                      {block.blockType} · {block.blockReason}
+                      {block.overrideReason ? ` · override ${block.overrideReason}` : ''}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
 
               {selectedTrip.loads.length > 0 ? (
                 <div>
@@ -478,13 +548,25 @@ export function TripsPanel({
                       onChange={(event) => onUpdateStatus(selectedTrip.tripId, event.target.value)}
                       disabled={isUpdatingStatus}
                     >
-                      {statusOptionsFor(selectedTrip.dispatchStatus, canManage).map((status) => (
+                      {statusOptionsFor(selectedTrip.dispatchStatus, canDispatch, canManage).map((status) => (
                         <option key={status} value={status}>
                           {status}
                         </option>
                       ))}
                     </select>
                   </label>
+                </div>
+              ) : null}
+
+              {canOverrideVendorReadiness &&
+              (selectedTrip.dispatchBlocks ?? []).some(
+                (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
+              ) ? (
+                <div className="rounded border border-red-700/40 bg-red-950/20 p-3 text-sm text-red-100">
+                  <p className="font-medium">Vendor-readiness override is available in the trip workspace.</p>
+                  <p className="mt-1 text-xs">
+                    Open the execution workspace to resolve the block with a required reason and audit trail.
+                  </p>
                 </div>
               ) : null}
             </div>

@@ -553,7 +553,7 @@ public sealed class DriverPortalService(
             closedAt,
             CanAccept: string.Equals(status, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase)
                 && !trip.AcceptedAt.HasValue,
-            CanDispatch: string.Equals(status, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase),
+            CanDispatch: false,
             CanStart: canStartStatus && captureStartReady,
             CanComplete: canCompleteStatus && captureCompleteReady,
             CanClose: canCompleteStatus || pendingDriverClose,

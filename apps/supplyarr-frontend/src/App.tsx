@@ -8,6 +8,10 @@ import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { PricingPage } from './pages/pricing/PricingPage'
 import { PurchasingPage } from './pages/purchasing/PurchasingPage'
 import { VendorPortalPage } from './pages/vendor-portal/VendorPortalPage'
+import { VendorOrderCreatePage } from './pages/vendor-orders/VendorOrderCreatePage'
+import { VendorOrderDetailPage } from './pages/vendor-orders/VendorOrderDetailPage'
+import { VendorOrderPortalPage } from './pages/vendor-orders/VendorOrderPortalPage'
+import { VendorOrdersPage } from './pages/vendor-orders/VendorOrdersPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -28,6 +32,7 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
           <Route path="/vendor-portal" element={<VendorPortalPage />} />
+          <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/parties" replace />} />
             <Route path="/parties" element={<PartiesPage />} />
@@ -39,6 +44,9 @@ export default function App() {
             <Route path="/purchasing/procurement" element={<PurchasingPage />} />
             <Route path="/purchasing/approvals" element={<PurchasingPage />} />
             <Route path="/purchasing/exceptions" element={<PurchasingPage />} />
+            <Route path="/purchasing/vendor-orders" element={<VendorOrdersPage />} />
+            <Route path="/purchasing/vendor-orders/create" element={<VendorOrderCreatePage />} />
+            <Route path="/purchasing/vendor-orders/:vendorOrderId" element={<VendorOrderDetailPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/planning" element={<PlanningPage />} />
             <Route path="/readiness" element={<ReadinessPage />} />

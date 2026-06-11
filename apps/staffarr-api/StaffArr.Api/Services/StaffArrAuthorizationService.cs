@@ -506,12 +506,12 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
-    public void RequireAuditPackageRead(ClaimsPrincipal principal)
+    public void RequireAuditTimelineRead(ClaimsPrincipal principal)
     {
         RequirePeopleRead(principal);
     }
 
-    public void RequireAuditPackageExport(ClaimsPrincipal principal)
+    public void RequireEntityExport(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
         if (principal.IsPlatformAdmin())
@@ -526,27 +526,9 @@ public sealed class StaffArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Audit package export requires staffarr.audit.export scope.",
+            "Bulk entity export requires tenant admin, StaffArr admin, or HR admin access.",
             403);
     }
-
-    public void RequirePersonnelReportRead(ClaimsPrincipal principal) =>
-        RequireAuditPackageRead(principal);
-
-    public void RequirePersonnelReportExport(ClaimsPrincipal principal) =>
-        RequireAuditPackageExport(principal);
-
-    public void RequireReadinessReportRead(ClaimsPrincipal principal) =>
-        RequireAuditPackageRead(principal);
-
-    public void RequireReadinessReportExport(ClaimsPrincipal principal) =>
-        RequireAuditPackageExport(principal);
-
-    public void RequireIncidentReportRead(ClaimsPrincipal principal) =>
-        RequireAuditPackageRead(principal);
-
-    public void RequireIncidentReportExport(ClaimsPrincipal principal) =>
-        RequireAuditPackageExport(principal);
 
     public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
     {

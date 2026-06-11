@@ -14,5 +14,6 @@ await StlApiHost.RunAsync<AssurArrDbContext>(
         app.MapAssurArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapAssurArrEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
         await AssurArrServiceRegistration.SeedAsync(app);
     });

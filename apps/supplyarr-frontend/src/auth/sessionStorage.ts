@@ -93,6 +93,25 @@ export function canApprovePurchaseOrders(tenantRoleKey: string, isPlatformAdmin:
   return canApprovePurchaseRequests(tenantRoleKey, isPlatformAdmin)
 }
 
+export function canReadVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadProcurementRecords(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreateVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canCreatePurchaseRequests(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canUpdateVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canCreateVendorOrders(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canManageVendorOrderSettings(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageNotificationSettings(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canPerformReceiving(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'supplyarr_admin', 'supplyarr_manager', 'supplyarr_clerk'].includes(

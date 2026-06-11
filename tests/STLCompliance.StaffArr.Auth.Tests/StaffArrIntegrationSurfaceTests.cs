@@ -76,23 +76,12 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             ($"/api/v1/integrations/persons/{personId}/permissions", token),
             ($"/api/v1/integrations/persons/{personId}/history", token),
             ($"/api/v1/integrations/persons/{personId}/restrictions", token),
-            ("/api/v1/integrations/incidents", token),
-            ("/api/v1/integrations/audit-packages", token)
+            ("/api/v1/integrations/incidents", token)
         };
 
         foreach (var (route, routeToken) in routes)
         {
-            using var request = string.Equals(route, "/api/v1/integrations/audit-packages", StringComparison.Ordinal)
-                ? Authorized(HttpMethod.Post, route, routeToken)
-                : Authorized(HttpMethod.Get, route, routeToken);
-
-            if (string.Equals(route, "/api/v1/integrations/audit-packages", StringComparison.Ordinal))
-            {
-                request.Content = JsonContent.Create(new CreateAuditPackageGenerationJobRequest(
-                    "json",
-                    null,
-                    null));
-            }
+            using var request = Authorized(HttpMethod.Get, route, routeToken);
 
             var response = await _client.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
@@ -121,6 +110,19 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
         var liftResponse = await _client.SendAsync(
             Authorized(HttpMethod.Post, $"/api/v1/integrations/restrictions/{created.OverrideId}/lift", token));
         liftResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Integrations_index_omits_audit_package_surface()
+    {
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations", CreateStaffArrToken()));
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, IReadOnlyList<Dictionary<string, string>>>>();
+        Assert.NotNull(payload);
+        var items = payload!["items"];
+        Assert.DoesNotContain(items, item => item.TryGetValue("key", out var key) && key == "audit-packages");
     }
 
     private async Task SeedAsync(StaffArrDbContext db)

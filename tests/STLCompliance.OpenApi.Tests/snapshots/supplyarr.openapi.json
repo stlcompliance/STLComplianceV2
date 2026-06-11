@@ -2253,6 +2253,86 @@
         }
       }
     },
+    "/api/integrations/vendor-orders/search": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationSearchVendorOrders",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brokerOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/vendor-orders/{vendorOrderId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationGetVendorOrder",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/vendor-supply-readiness": {
       "get": {
         "tags": [
@@ -11058,6 +11138,72 @@
         }
       }
     },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitsupplyarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidatesupplyarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/staffarr-demand": {
       "post": {
         "tags": [
@@ -11097,6 +11243,86 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/vendor-orders/search": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationSearchVendorOrdersV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brokerOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/vendor-orders/{vendorOrderId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationGetVendorOrderV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -16450,6 +16676,95 @@
         }
       }
     },
+    "/api/v1/vendor-access/orders/{token}": {
+      "get": {
+        "tags": [
+          "VendorAccess"
+        ],
+        "operationId": "GetVendorAccessOrder",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-access/orders/{token}/documents": {
+      "post": {
+        "tags": [
+          "VendorAccess"
+        ],
+        "operationId": "RegisterVendorAccessOrderDocument",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterVendorOrderDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-access/orders/{token}/status": {
+      "post": {
+        "tags": [
+          "VendorAccess"
+        ],
+        "operationId": "UpdateVendorAccessOrderStatus",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vendor-catalogs/sync": {
       "post": {
         "tags": [
@@ -16693,6 +17008,355 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-order-settings": {
+      "get": {
+        "tags": [
+          "VendorOrderSettings"
+        ],
+        "operationId": "GetVendorOrderSettingsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "VendorOrderSettings"
+        ],
+        "operationId": "UpsertVendorOrderSettingsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertVendorOrderSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "ListVendorOrdersV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrderV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrderV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "UpdateVendorOrderV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/documents": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "RegisterVendorOrderDocumentV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterVendorOrderDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/magic-link": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrderMagicLinkV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/partial-decision": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrderPartialDecisionV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorOrderBrokerDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/send-to-vendor": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "SendVendorOrderV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/split": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "SplitVendorOrderV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/status": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "UpdateVendorOrderStatusV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendor-orders/{vendorOrderId}/status-history": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrderStatusHistoryV1",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -17621,6 +18285,355 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-order-settings": {
+      "get": {
+        "tags": [
+          "VendorOrderSettings"
+        ],
+        "operationId": "GetVendorOrderSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "VendorOrderSettings"
+        ],
+        "operationId": "UpsertVendorOrderSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertVendorOrderSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "ListVendorOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrder",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "UpdateVendorOrder",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/documents": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "RegisterVendorOrderDocument",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterVendorOrderDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/magic-link": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrderMagicLink",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/partial-decision": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "CreateVendorOrderPartialDecision",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorOrderBrokerDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/send-to-vendor": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "SendVendorOrder",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/split": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "SplitVendorOrder",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitVendorOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/status": {
+      "post": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "UpdateVendorOrderStatus",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-orders/{vendorOrderId}/status-history": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrderStatusHistory",
+        "parameters": [
+          {
+            "name": "vendorOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -19751,6 +20764,160 @@
           }
         }
       },
+      "CreateVendorOrderBrokerDecisionRequest": {
+        "required": [
+          "decisionType",
+          "authorizedQuantity",
+          "selectedTripId",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "decisionType": {
+            "type": "string"
+          },
+          "authorizedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "selectedTripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateVendorOrderRequest": {
+        "required": [
+          "brokerOrderId",
+          "brokerOrderNumberSnapshot",
+          "vendorId",
+          "vendorLocationId",
+          "pickupLocationNameSnapshot",
+          "pickupAddressSnapshot",
+          "customerIdSnapshot",
+          "deliveryLocationNameSnapshot",
+          "deliveryAddressSnapshot",
+          "itemDescription",
+          "orderedQuantity",
+          "quantityUom",
+          "expectedReadyAt",
+          "pickupWindowStart",
+          "pickupWindowEnd",
+          "pickupInstructions"
+        ],
+        "type": "object",
+        "properties": {
+          "brokerOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "brokerOrderNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vendorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vendorLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "pickupLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pickupAddressSnapshot": {
+            "type": "string"
+          },
+          "customerIdSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryAddressSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemDescription": {
+            "type": "string"
+          },
+          "orderedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityUom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupInstructions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateVendorQuoteRequest": {
         "required": [
           "vendorPartyId",
@@ -20724,6 +21891,7 @@
           }
         }
       },
+      "JsonElement": {},
       "LeadTimeListCsvImportRequest": {
         "required": [
           "csv"
@@ -21434,6 +22602,89 @@
           }
         }
       },
+      "RegisterVendorOrderDocumentRequest": {
+        "required": [
+          "documentType",
+          "fileName",
+          "contentType",
+          "storageProvider",
+          "storageKey",
+          "sizeBytes",
+          "pageCount",
+          "imageWidth",
+          "imageHeight",
+          "durationSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "storageProvider": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "pageCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "imageWidth": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "imageHeight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RejectPartyComplianceDocumentRequest": {
         "required": [
           "reason"
@@ -21548,6 +22799,182 @@
           "vendorQuoteId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SplitVendorOrderRequest": {
+        "required": [
+          "selectedTripId",
+          "splitReason",
+          "remainingExpectedReadyAt",
+          "remainingPickupWindowStart",
+          "remainingPickupWindowEnd"
+        ],
+        "type": "object",
+        "properties": {
+          "selectedTripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "splitReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remainingExpectedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "remainingPickupWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "remainingPickupWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -21922,6 +23349,182 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateVendorOrderRequest": {
+        "required": [
+          "brokerOrderNumberSnapshot",
+          "vendorLocationId",
+          "pickupLocationNameSnapshot",
+          "pickupAddressSnapshot",
+          "customerIdSnapshot",
+          "deliveryLocationNameSnapshot",
+          "deliveryAddressSnapshot",
+          "itemDescription",
+          "orderedQuantity",
+          "quantityUom",
+          "expectedReadyAt",
+          "pickupWindowStart",
+          "pickupWindowEnd",
+          "pickupInstructions"
+        ],
+        "type": "object",
+        "properties": {
+          "brokerOrderNumberSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vendorLocationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "pickupLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pickupAddressSnapshot": {
+            "type": "string"
+          },
+          "customerIdSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryLocationNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deliveryAddressSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemDescription": {
+            "type": "string"
+          },
+          "orderedQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityUom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupInstructions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateVendorOrderStatusRequest": {
+        "required": [
+          "newStatus",
+          "quantityReady",
+          "estimatedReadyAt",
+          "confirmedReadyAt",
+          "pickupWindowStart",
+          "pickupWindowEnd",
+          "note",
+          "exceptionReason",
+          "readyForPickupConfirmed"
+        ],
+        "type": "object",
+        "properties": {
+          "newStatus": {
+            "type": "string"
+          },
+          "quantityReady": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "estimatedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "confirmedReadyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickupWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "readyForPickupConfirmed": {
+            "type": "boolean"
           }
         }
       },
@@ -22474,6 +24077,26 @@
           }
         }
       },
+      "UpsertVendorOrderSettingsRequest": {
+        "required": [
+          "allowDestinationSummaryInVendorPortal",
+          "magicLinkTtlHours"
+        ],
+        "type": "object",
+        "properties": {
+          "allowDestinationSummaryInVendorPortal": {
+            "type": "boolean"
+          },
+          "magicLinkTtlHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertVendorQuoteLineRequest": {
         "required": [
           "rfqLineId",
@@ -22741,6 +24364,12 @@
       "name": "VendorEmailInbox"
     },
     {
+      "name": "VendorOrderSettings"
+    },
+    {
+      "name": "VendorOrders"
+    },
+    {
       "name": "ExternalReferences"
     },
     {
@@ -22748,6 +24377,9 @@
     },
     {
       "name": "VendorPortal"
+    },
+    {
+      "name": "VendorAccess"
     },
     {
       "name": "SupplierOnboarding"
@@ -22862,6 +24494,9 @@
     },
     {
       "name": "SupplyReadiness"
+    },
+    {
+      "name": "Smart Import Integrations"
     }
   ]
 }

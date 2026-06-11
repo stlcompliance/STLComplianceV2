@@ -78,6 +78,22 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
 
     public DbSet<PlatformOutboxPublisherRun> PlatformOutboxPublisherRuns => Set<PlatformOutboxPublisherRun>();
 
+    public DbSet<AiSession> AiSessions => Set<AiSession>();
+    public DbSet<AiMessage> AiMessages => Set<AiMessage>();
+    public DbSet<AiActionProposal> AiActionProposals => Set<AiActionProposal>();
+    public DbSet<AiAuditEvent> AiAuditEvents => Set<AiAuditEvent>();
+    public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
+    public DbSet<ImportFile> ImportFiles => Set<ImportFile>();
+    public DbSet<ImportClassification> ImportClassifications => Set<ImportClassification>();
+    public DbSet<ImportExtractedField> ImportExtractedFields => Set<ImportExtractedField>();
+    public DbSet<ImportProposedRecord> ImportProposedRecords => Set<ImportProposedRecord>();
+    public DbSet<ImportMatchCandidate> ImportMatchCandidates => Set<ImportMatchCandidate>();
+    public DbSet<ImportReviewDecision> ImportReviewDecisions => Set<ImportReviewDecision>();
+    public DbSet<ImportCommitPlan> ImportCommitPlans => Set<ImportCommitPlan>();
+    public DbSet<ImportCommitStep> ImportCommitSteps => Set<ImportCommitStep>();
+    public DbSet<ImportAuditEvent> ImportAuditEvents => Set<ImportAuditEvent>();
+    public DbSet<ImportMappingTemplate> ImportMappingTemplates => Set<ImportMappingTemplate>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -460,6 +476,202 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.ProcessedAt);
+        });
+
+        modelBuilder.Entity<AiSession>(entity =>
+        {
+            entity.ToTable("nexarr_ai_sessions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Surface).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Route).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ActorPersonId, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<AiMessage>(entity =>
+        {
+            entity.ToTable("nexarr_ai_messages");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Role).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.UserInputRedacted).HasMaxLength(12000).IsRequired();
+            entity.Property(x => x.OutputRedacted).HasMaxLength(12000).IsRequired();
+            entity.Property(x => x.ContextJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProviderResponseId).HasMaxLength(128);
+            entity.Property(x => x.ProviderRequestId).HasMaxLength(128);
+            entity.Property(x => x.ErrorCode).HasMaxLength(128);
+            entity.Property(x => x.SafeMessage).HasMaxLength(512);
+            entity.HasIndex(x => new { x.TenantId, x.SessionId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<AiActionProposal>(entity =>
+        {
+            entity.ToTable("nexarr_ai_action_proposals");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ActionCategory).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProposalJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.RequiredPermissionsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ReviewReasonsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.SessionId, x.Status });
+        });
+
+        modelBuilder.Entity<AiAuditEvent>(entity =>
+        {
+            entity.ToTable("nexarr_ai_audit_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TargetType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetId).HasMaxLength(128);
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(128);
+            entity.Property(x => x.MetadataJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.CorrelationId).HasMaxLength(64);
+            entity.HasIndex(x => new { x.TenantId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TargetType, x.TargetId });
+        });
+
+        modelBuilder.Entity<ImportBatch>(entity =>
+        {
+            entity.ToTable("nexarr_import_batches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DestinationProductHint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReviewPolicyJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ErrorCode).HasMaxLength(128);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ActorPersonId, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<ImportFile>(entity =>
+        {
+            entity.ToTable("nexarr_import_files");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FileName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Sha256).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RecordArrRecordId).HasMaxLength(128);
+            entity.Property(x => x.RecordArrFileId).HasMaxLength(128);
+            entity.Property(x => x.RecordArrStorageKey).HasMaxLength(512);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId });
+            entity.HasIndex(x => new { x.TenantId, x.Sha256 });
+        });
+
+        modelBuilder.Entity<ImportClassification>(entity =>
+        {
+            entity.ToTable("nexarr_import_classifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DestinationProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ReviewReasonsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.ProviderOutcome).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId });
+        });
+
+        modelBuilder.Entity<ImportExtractedField>(entity =>
+        {
+            entity.ToTable("nexarr_import_extracted_fields");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FieldKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RawValue).HasMaxLength(4096);
+            entity.Property(x => x.NormalizedValue).HasMaxLength(4096);
+            entity.Property(x => x.ReviewReasonsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.SourceLocationJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId });
+        });
+
+        modelBuilder.Entity<ImportProposedRecord>(entity =>
+        {
+            entity.ToTable("nexarr_import_proposed_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DestinationProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Operation).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewReasonsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ProposedPayloadJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.DeterministicPayloadJson).HasColumnType("jsonb");
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId, x.ReviewStatus });
+        });
+
+        modelBuilder.Entity<ImportMatchCandidate>(entity =>
+        {
+            entity.ToTable("nexarr_import_match_candidates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.MatchReasonsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportProposedRecordId });
+        });
+
+        modelBuilder.Entity<ImportReviewDecision>(entity =>
+        {
+            entity.ToTable("nexarr_import_review_decisions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Decision).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.CorrectedPayloadJson).HasColumnType("jsonb");
+            entity.HasIndex(x => new { x.TenantId, x.ImportProposedRecordId, x.DecidedAt });
+        });
+
+        modelBuilder.Entity<ImportCommitPlan>(entity =>
+        {
+            entity.ToTable("nexarr_import_commit_plans");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId, x.Status });
+        });
+
+        modelBuilder.Entity<ImportCommitStep>(entity =>
+        {
+            entity.ToTable("nexarr_import_commit_steps");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DestinationProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Operation).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PayloadJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ResultEntityId).HasMaxLength(128);
+            entity.Property(x => x.ResultDisplayName).HasMaxLength(256);
+            entity.Property(x => x.ErrorCode).HasMaxLength(128);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.ImportCommitPlanId, x.StepOrder });
+            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.IdempotencyKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<ImportAuditEvent>(entity =>
+        {
+            entity.ToTable("nexarr_import_audit_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ActorType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(128);
+            entity.Property(x => x.MetadataJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ImportBatchId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<ImportMappingTemplate>(entity =>
+        {
+            entity.ToTable("nexarr_import_mapping_templates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DestinationProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TemplateName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.MappingJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.EntityType, x.TemplateName }).IsUnique();
         });
 
         modelBuilder.Entity<ReferenceDataset>(entity =>

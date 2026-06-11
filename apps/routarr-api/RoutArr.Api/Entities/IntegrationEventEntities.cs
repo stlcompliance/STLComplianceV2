@@ -89,6 +89,8 @@ public static class RoutArrIntegrationOutboxEventKinds
 
     public const string ComplianceOverridePerformed = "routarr.compliance.override.performed";
 
+    public const string DispatchOverridePerformed = "routarr.dispatch.override.performed";
+
     public const string ComplianceHoldCreated = "routarr.compliance.hold.created";
 
     public const string ComplianceHoldReleased = "routarr.compliance.hold.released";

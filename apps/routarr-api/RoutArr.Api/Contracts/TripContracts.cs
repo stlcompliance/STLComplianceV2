@@ -31,7 +31,18 @@ public sealed record TripSummaryResponse(
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
     DateTimeOffset? ClosedAt,
-    DateTimeOffset? CancelledAt);
+    DateTimeOffset? CancelledAt,
+    Guid? VendorOrderId,
+    Guid? BrokerOrderId,
+    string? DispatchBlockReason,
+    string? VendorReadinessStatusSnapshot,
+    decimal? VendorQuantityReadySnapshot,
+    decimal? VendorOrderedQuantitySnapshot,
+    DateTimeOffset? VendorExpectedReadyAtSnapshot,
+    DateTimeOffset? VendorConfirmedReadyAtSnapshot,
+    DateTimeOffset? DispatchOverrideAt,
+    string? DispatchOverrideReason,
+    IReadOnlyList<DispatchBlockResponse> DispatchBlocks);
 
 public sealed record TripDetailResponse(
     Guid TripId,
@@ -54,6 +65,20 @@ public sealed record TripDetailResponse(
     DateTimeOffset? CompletedAt,
     DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt,
+    Guid? VendorOrderId,
+    Guid? BrokerOrderId,
+    string? DispatchBlockReason,
+    string? VendorReadinessStatusSnapshot,
+    decimal? VendorQuantityReadySnapshot,
+    decimal? VendorOrderedQuantitySnapshot,
+    DateTimeOffset? VendorExpectedReadyAtSnapshot,
+    DateTimeOffset? VendorConfirmedReadyAtSnapshot,
+    DateTimeOffset? ReleasedForDispatchAt,
+    Guid? ReleasedForDispatchByEventId,
+    DateTimeOffset? DispatchOverrideAt,
+    string? DispatchOverrideByPersonId,
+    string? DispatchOverrideReason,
+    IReadOnlyList<DispatchBlockResponse> DispatchBlocks,
     TripDispatchReleaseSnapshotResponse? DispatchReleaseSnapshot = null);
 
 public sealed record TripDispatchReleaseSnapshotResponse(
@@ -78,9 +103,31 @@ public sealed record CreateTripRequest(
     string Title,
     string Description,
     string? VehicleRefKey,
+    Guid? VendorOrderId,
+    Guid? BrokerOrderId,
     DateTimeOffset? ScheduledStartAt,
     DateTimeOffset? ScheduledEndAt,
-    IReadOnlyList<CreateTripLoadRequest>? Loads);
+    IReadOnlyList<CreateTripLoadRequest>? Loads)
+{
+    public CreateTripRequest(
+        string title,
+        string description,
+        string? vehicleRefKey,
+        DateTimeOffset? scheduledStartAt,
+        DateTimeOffset? scheduledEndAt,
+        IReadOnlyList<CreateTripLoadRequest>? loads)
+        : this(
+            title,
+            description,
+            vehicleRefKey,
+            null,
+            null,
+            scheduledStartAt,
+            scheduledEndAt,
+            loads)
+    {
+    }
+}
 
 public sealed record AssignTripDriverRequest(
     string DriverPersonId,

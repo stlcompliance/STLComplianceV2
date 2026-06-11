@@ -25,6 +25,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrLocationEndpoints();
         app.MapStaffArrOrgUnitAssignmentEndpoints();
         app.MapStaffArrRoleTemplateEndpoints();
+        app.MapStaffArrRoleManagementEndpoints();
         app.MapStaffArrCertificationEndpoints();
         app.MapStaffArrReadinessEndpoints();
         app.MapStaffArrReadinessRollupEndpoints();
@@ -39,13 +40,12 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrInternalPersonnelHistoryEndpoints();
         app.MapStaffArrInternalPermissionProjectionEndpoints();
         app.MapStaffArrInternalPersonExportDeliveryEndpoints();
-        app.MapStaffArrInternalAuditPackageGenerationEndpoints();
         app.MapStaffArrTrainingAcknowledgementEndpoints();
         app.MapStaffArrOffboardingEndpoints();
         app.MapStaffArrFieldInboxEndpoints();
-        app.MapStaffArrAuditPackageEndpoints();
         app.MapStaffArrEventAndAuditEndpoints();
         app.MapStaffArrV1FeatureAliasEndpoints();
         app.MapStaffArrEntityExportEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

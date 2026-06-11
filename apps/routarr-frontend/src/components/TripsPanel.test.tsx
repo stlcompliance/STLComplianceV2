@@ -17,8 +17,10 @@ function renderPanel(overrides: Partial<Parameters<typeof TripsPanel>[0]> = {}) 
         accessToken="token"
         canCreate
         canAssign
+        canDispatch
         canPerform
         canManage
+        canOverrideVendorReadiness={false}
         viewAllTrips
         sessionPersonId="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
         trips={[
@@ -48,6 +50,8 @@ function renderPanel(overrides: Partial<Parameters<typeof TripsPanel>[0]> = {}) 
         tripTitle=""
         tripDescription=""
         vehicleRefKey=""
+        vendorOrderId=""
+        brokerOrderId=""
         driverPersonId=""
         loadKey=""
         loadOrigin=""
@@ -62,6 +66,8 @@ function renderPanel(overrides: Partial<Parameters<typeof TripsPanel>[0]> = {}) 
         onTripTitleChange={vi.fn()}
         onTripDescriptionChange={vi.fn()}
         onVehicleRefKeyChange={vi.fn()}
+        onVendorOrderIdChange={vi.fn()}
+        onBrokerOrderIdChange={vi.fn()}
         onDriverPersonIdChange={vi.fn()}
         onLoadKeyChange={vi.fn()}
         onLoadOriginChange={vi.fn()}
@@ -84,5 +90,6 @@ describe('TripsPanel', () => {
     expect(screen.getByText('assigned')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create trip' })).toBeInTheDocument()
     expect(screen.getByTestId('trip-create-vehicle-picker')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Optional SupplyArr vendorOrderId')).toBeInTheDocument()
   })
 })

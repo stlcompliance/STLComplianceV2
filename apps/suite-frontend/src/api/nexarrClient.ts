@@ -169,7 +169,8 @@ async function fetchWithAuth(
   retryOnUnauthorized = true,
 ): Promise<Response> {
   const headers = new Headers(init.headers)
-  if (!headers.has('Content-Type') && init.body) {
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData
+  if (!headers.has('Content-Type') && init.body && !isFormData) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -2150,4 +2151,166 @@ export async function deleteDataPlaneProfile(
   if (!response.ok) {
     throw await parseError(response)
   }
+}
+
+export type AiAssistantMessageRequest = {
+  sessionId?: string | null
+  productKey: string
+  surface: string
+  route: string
+  category: string
+  message: string
+  pageContext?: Record<string, unknown>
+  allowedBehaviors?: string[]
+}
+
+export type AiAssistantMessageResponse = {
+  sessionId: string
+  messageId: string
+  outcome: string
+  answer: string
+  errorCode?: string | null
+  safeMessage?: string | null
+  requiredReviewReasons: string[]
+}
+
+export type AiAdminDiagnosticResponse = {
+  status: string
+  openAiConfigured: boolean
+  model: string
+  message: string
+}
+
+export type SmartImportBatchRow = {
+  batchId: string
+  tenantId: string
+  actorPersonId: string
+  status: string
+  destinationProductHint: string
+  sourceLabel: string
+  fileCount: number
+  proposedRecordCount: number
+  createdAt: string
+  updatedAt: string
+  errorCode?: string | null
+  errorMessage?: string | null
+}
+
+export type SmartImportProposedRecordRow = {
+  proposedRecordId: string
+  destinationProduct: string
+  entityType: string
+  operation: string
+  confidence: number
+  reviewStatus: string
+  requiresReview: boolean
+  reviewReasons: string[]
+  proposedPayload: unknown
+}
+
+export type SmartImportBatchDetail = {
+  batch: SmartImportBatchRow
+  proposedRecords: SmartImportProposedRecordRow[]
+}
+
+export type SmartImportCommitPlanSummary = {
+  commitPlanId: string
+  status: string
+  stepCount: number
+  completedStepCount: number
+  failedStepCount: number
+  createdAt: string
+  approvedAt?: string | null
+}
+
+export async function sendAiAssistantMessage(
+  body: AiAssistantMessageRequest,
+): Promise<AiAssistantMessageResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/ai/assistant/messages', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as AiAssistantMessageResponse
+}
+
+export async function runAiAdminDiagnostic(): Promise<AiAdminDiagnosticResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/ai/assistant/admin-diagnostics', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as AiAdminDiagnosticResponse
+}
+
+export async function listSmartImportBatches(): Promise<SmartImportBatchRow[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/imports/batches')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportBatchRow[]
+}
+
+export async function createSmartImportBatch(
+  file: File,
+  destinationProduct: string,
+): Promise<{ batchId: string; status: string; message: string }> {
+  await ensureValidAccessToken()
+  const form = new FormData()
+  form.set('file', file)
+  form.set('destinationProduct', destinationProduct)
+  const response = await fetchWithAuth('/api/v1/imports/batches', {
+    method: 'POST',
+    body: form,
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as { batchId: string; status: string; message: string }
+}
+
+export async function getSmartImportBatch(batchId: string): Promise<SmartImportBatchDetail> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/batches/${batchId}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportBatchDetail
+}
+
+export async function reviewSmartImportRecord(
+  batchId: string,
+  proposedRecordId: string,
+  decision: 'approved' | 'rejected' | 'needs_changes',
+): Promise<SmartImportProposedRecordRow> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/batches/${batchId}/review-decisions`, {
+    method: 'POST',
+    body: JSON.stringify({ proposedRecordId, decision }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportProposedRecordRow
+}
+
+export async function createSmartImportCommitPlan(
+  batchId: string,
+): Promise<SmartImportCommitPlanSummary> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/batches/${batchId}/commit-plans`, {
+    method: 'POST',
+    body: JSON.stringify({ proposedRecordIds: null }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportCommitPlanSummary
 }

@@ -12,6 +12,8 @@ public static class TripEndpoints
 
         group.MapGet("/", async (
             string? dispatchStatus,
+            Guid? vendorOrderId,
+            Guid? brokerOrderId,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             TripService service,
@@ -28,6 +30,8 @@ public static class TripEndpoints
                 actorUserId,
                 actorPersonId,
                 dispatchStatus,
+                vendorOrderId,
+                brokerOrderId,
                 cancellationToken));
         })
         .WithName("ListTrips");
@@ -163,5 +167,25 @@ public static class TripEndpoints
             return Results.Ok(updated);
         })
         .WithName("UpdateTripDispatchStatus");
+
+        group.MapPost("/{tripId:guid}/vendor-readiness-override", async (
+            Guid tripId,
+            TripVendorReadinessOverrideRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            TripService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireVendorReadinessOverride(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.OverrideVendorReadinessAsync(
+                tenantId,
+                context.User.GetUserId(),
+                context.User.GetPersonId().ToString(),
+                tripId,
+                request.Reason,
+                cancellationToken));
+        })
+        .WithName("OverrideTripVendorReadiness");
     }
 }

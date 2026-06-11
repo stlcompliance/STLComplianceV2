@@ -69,5 +69,6 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrDashboardEndpoints();
         app.MapMaintainArrAssetImportEndpoints();
         app.MapMaintainArrEntityExportEndpoints();
+        app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

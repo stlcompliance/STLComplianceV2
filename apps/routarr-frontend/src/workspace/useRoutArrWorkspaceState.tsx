@@ -36,6 +36,8 @@ export function useRoutArrWorkspaceState() {
   const [tripTitle, setTripTitle] = useState('')
   const [tripDescription, setTripDescription] = useState('')
   const [vehicleRefKey, setVehicleRefKey] = useState('')
+  const [vendorOrderId, setVendorOrderId] = useState('')
+  const [brokerOrderId, setBrokerOrderId] = useState('')
   const [driverPersonId, setDriverPersonId] = useState('')
   const [loadKey, setLoadKey] = useState('')
   const [loadOrigin, setLoadOrigin] = useState('')
@@ -108,6 +110,8 @@ export function useRoutArrWorkspaceState() {
         title: tripTitle,
         description: tripDescription,
         vehicleRefKey: vehicleRefKey || null,
+        vendorOrderId: vendorOrderId || null,
+        brokerOrderId: brokerOrderId || null,
         loads: loadKey.trim()
           ? [
               {
@@ -125,6 +129,8 @@ export function useRoutArrWorkspaceState() {
       setTripTitle('')
       setTripDescription('')
       setVehicleRefKey('')
+      setVendorOrderId('')
+      setBrokerOrderId('')
       setLoadKey('')
       setLoadOrigin('')
       setLoadDestination('')
@@ -260,6 +266,8 @@ export function useRoutArrWorkspaceState() {
     tripTitle,
     tripDescription,
     vehicleRefKey,
+    vendorOrderId,
+    brokerOrderId,
     driverPersonId,
     loadKey,
     loadOrigin,
@@ -282,6 +290,8 @@ export function useRoutArrWorkspaceState() {
     setTripTitle,
     setTripDescription,
     setVehicleRefKey,
+    setVendorOrderId,
+    setBrokerOrderId,
     setDriverPersonId,
     setLoadKey,
     setLoadOrigin,

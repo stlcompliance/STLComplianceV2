@@ -4,6 +4,7 @@ import {
   canAssignDrivers,
   canCreateTrips,
   canManageTrips,
+  canOverrideVendorReadiness,
   canPerformTrips,
   canViewAllTrips,
 } from '../../auth/sessionStorage'
@@ -31,6 +32,8 @@ export function TripsSection({ state }: Props) {
     tripTitle,
     tripDescription,
     vehicleRefKey,
+    vendorOrderId,
+    brokerOrderId,
     driverPersonId,
     loadKey,
     loadOrigin,
@@ -43,6 +46,8 @@ export function TripsSection({ state }: Props) {
     setTripTitle,
     setTripDescription,
     setVehicleRefKey,
+    setVendorOrderId,
+    setBrokerOrderId,
     setDriverPersonId,
     setLoadKey,
     setLoadOrigin,
@@ -61,8 +66,10 @@ export function TripsSection({ state }: Props) {
         accessToken={accessToken}
         canCreate={canCreateTrips(roleKey, isPlatformAdmin)}
         canAssign={canAssignDrivers(roleKey, isPlatformAdmin)}
+        canDispatch={canAssignDrivers(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}
         canManage={canManageTrips(roleKey, isPlatformAdmin)}
+        canOverrideVendorReadiness={canOverrideVendorReadiness(roleKey, isPlatformAdmin)}
         viewAllTrips={canViewAllTrips(roleKey, isPlatformAdmin)}
         sessionPersonId={session.personId}
         trips={tripsQuery.data ?? []}
@@ -71,6 +78,8 @@ export function TripsSection({ state }: Props) {
         tripTitle={tripTitle}
         tripDescription={tripDescription}
         vehicleRefKey={vehicleRefKey}
+        vendorOrderId={vendorOrderId}
+        brokerOrderId={brokerOrderId}
         driverPersonId={driverPersonId}
         loadKey={loadKey}
         loadOrigin={loadOrigin}
@@ -85,6 +94,8 @@ export function TripsSection({ state }: Props) {
         onTripTitleChange={setTripTitle}
         onTripDescriptionChange={setTripDescription}
         onVehicleRefKeyChange={setVehicleRefKey}
+        onVendorOrderIdChange={setVendorOrderId}
+        onBrokerOrderIdChange={setBrokerOrderId}
         onDriverPersonIdChange={setDriverPersonId}
         onLoadKeyChange={setLoadKey}
         onLoadOriginChange={setLoadOrigin}

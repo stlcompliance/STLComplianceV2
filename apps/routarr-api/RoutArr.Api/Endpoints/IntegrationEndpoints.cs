@@ -8,6 +8,7 @@ public static class IntegrationEndpoints
 {
     public const string SupplyarrDemandStatusIngestActionScope = "routarr.demand_status.write";
     public const string SupplyarrShipmentCreateActionScope = "routarr.shipments.create";
+    public const string SupplyarrVendorOrderEventIngestActionScope = "routarr.vendor_orders.write";
 
     public static void MapRoutArrIntegrationEndpoints(this WebApplication app)
     {
@@ -58,6 +59,28 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName($"CreateSupplyarrShipmentIntent{nameSuffix}");
+
+            integrations.MapPost("/supplyarr-vendor-order-events", async (
+            IngestSupplyArrVendorOrderEventRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            SupplyArrVendorOrderEventIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "supplyarr",
+                    RequiredTargetProduct = "routarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = SupplyarrVendorOrderEventIngestActionScope
+                });
+
+            var result = await service.IngestAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"IngestSupplyarrVendorOrderEvents{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty);

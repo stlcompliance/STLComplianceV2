@@ -9,4 +9,6 @@ public sealed class RoutArrClientOptions
     public string ServiceToken { get; set; } = string.Empty;
 
     public string ShipmentServiceToken { get; set; } = string.Empty;
+
+    public string VendorOrderEventServiceToken { get; set; } = string.Empty;
 }

@@ -714,6 +714,294 @@
         }
       }
     },
+    "/api/assets/{assetId}/external-intelligence": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "GetAssetExternalIntelligenceOverview",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/complaints": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceComplaints",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/identifiers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceIdentifiers",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/recalls": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceRecalls",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/recalls/{recallId}/work-order": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "CreateAssetExternalIntelligenceRecallWorkOrder",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/refresh": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "RefreshAssetExternalIntelligence",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/snapshots": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceSnapshots",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "snapshotType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/suggestions": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceSuggestions",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/suggestions/{suggestionId}/accept": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "AcceptAssetExternalIntelligenceSuggestion",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/external-intelligence/suggestions/{suggestionId}/reject": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "RejectAssetExternalIntelligenceSuggestion",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/assets/{assetId}/lifecycle-status": {
       "patch": {
         "tags": [
@@ -797,6 +1085,282 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListAssetRecalls",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/dismiss": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "DismissAssetRecall",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismissAssetRecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/hold": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallHold",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/hold/release": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ReleaseAssetRecallHold",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseRecallHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/inspection-item": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallInspectionItem",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/verify": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "VerifyAssetRecall",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyAssetRecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/cases/{caseId}/work-order": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallWorkOrder",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{assetId}/recalls/refresh": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "RefreshAssetRecalls",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2161,6 +2725,227 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/providers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceProviders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/providers/health": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "GetExternalIntelligenceProviderHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/references/equipment-plant-codes": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceEquipmentPlantCodes",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "equipmentType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/references/makes": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceMakes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/references/manufacturers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceManufacturers",
+        "parameters": [
+          {
+            "name": "manufacturerType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/references/models": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceModels",
+        "parameters": [
+          {
+            "name": "make",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelYear",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/vin/batch-decode": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "DecodeVinBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalVinDecodeBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-intelligence/vin/decode": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "DecodeVin",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "persist",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalVinDecodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -5384,6 +6169,129 @@
         }
       }
     },
+    "/api/parts": {
+      "get": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}": {
+      "get": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-event-settings": {
       "get": {
         "tags": [
@@ -5943,6 +6851,235 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/campaigns": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListRecallCampaigns",
+        "parameters": [
+          {
+            "name": "sourceProvider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campaignNumber",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "component",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateRecallCampaign",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/campaigns/search/campaign-number": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "SearchRecallCampaignsByNumber",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallCampaignSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/campaigns/search/vehicle": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "SearchRecallCampaignsByVehicle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallVehicleSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/campaigns/{campaignId}": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallCampaign",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "UpdateRecallCampaign",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecallCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/dashboard": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/providers": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListRecallProviders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recalls/providers/health": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallProviderHealth",
         "responses": {
           "200": {
             "description": "OK"
@@ -6700,6 +7837,294 @@
         }
       }
     },
+    "/api/v1/assets/{assetId}/external-intelligence": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "GetAssetExternalIntelligenceOverviewV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/complaints": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceComplaintsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/identifiers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceIdentifiersV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/recalls": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceRecallsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/recalls/{recallId}/work-order": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "CreateAssetExternalIntelligenceRecallWorkOrderV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/refresh": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "RefreshAssetExternalIntelligenceV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/snapshots": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceSnapshotsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "snapshotType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/suggestions": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListAssetExternalIntelligenceSuggestionsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/suggestions/{suggestionId}/accept": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "AcceptAssetExternalIntelligenceSuggestionV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/external-intelligence/suggestions/{suggestionId}/reject": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "RejectAssetExternalIntelligenceSuggestionV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/assets/{assetId}/field-context": {
       "get": {
         "tags": [
@@ -6807,6 +8232,282 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListAssetRecallsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/dismiss": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "DismissAssetRecallV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismissAssetRecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/hold": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallHoldV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/hold/release": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ReleaseAssetRecallHoldV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseRecallHoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/inspection-item": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallInspectionItemV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/verify": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "VerifyAssetRecallV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyAssetRecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/cases/{caseId}/work-order": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateAssetRecallWorkOrderV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/recalls/refresh": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "RefreshAssetRecallsV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -8388,6 +10089,227 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/providers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceProvidersV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/providers/health": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "GetExternalIntelligenceProviderHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/references/equipment-plant-codes": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceEquipmentPlantCodesV1",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "equipmentType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/references/makes": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceMakesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/references/manufacturers": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceManufacturersV1",
+        "parameters": [
+          {
+            "name": "manufacturerType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/references/models": {
+      "get": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "ListExternalIntelligenceModelsV1",
+        "parameters": [
+          {
+            "name": "make",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelYear",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/vin/batch-decode": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "DecodeVinBatchV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalVinDecodeBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/external-intelligence/vin/decode": {
+      "post": {
+        "tags": [
+          "External Intelligence"
+        ],
+        "operationId": "DecodeVinV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "persist",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalVinDecodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -10056,6 +11978,72 @@
         }
       }
     },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitmaintainarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidatemaintainarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/supplier-work-status": {
       "post": {
         "tags": [
@@ -11357,6 +13345,54 @@
         }
       }
     },
+    "/api/v1/parts": {
+      "get": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenancePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/parts-usage": {
       "get": {
         "tags": [
@@ -11393,6 +13429,81 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parts/{partId}": {
+      "get": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenancePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MaintenanceParts"
+        ],
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -12283,6 +14394,235 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/campaigns": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListRecallCampaignsV1",
+        "parameters": [
+          {
+            "name": "sourceProvider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campaignNumber",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "component",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "CreateRecallCampaignV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/campaigns/search/campaign-number": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "SearchRecallCampaignsByNumberV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallCampaignSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/campaigns/search/vehicle": {
+      "post": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "SearchRecallCampaignsByVehicleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallVehicleSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/campaigns/{campaignId}": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallCampaignV1",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "UpdateRecallCampaignV1",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecallCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/dashboard": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallDashboardV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/providers": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "ListRecallProvidersV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recalls/providers/health": {
+      "get": {
+        "tags": [
+          "Recalls"
+        ],
+        "operationId": "GetRecallProviderHealthV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -15178,6 +17518,109 @@
           }
         }
       },
+      "CreateMaintenancePartRequest": {
+        "required": [
+          "partNumber",
+          "displayName",
+          "description",
+          "categoryKey",
+          "unitOfMeasure",
+          "status",
+          "sourceType",
+          "supplyArrPartId",
+          "manufacturerName",
+          "manufacturerPartNumber",
+          "sdsDocumentId",
+          "complianceCoreMaterialKey",
+          "complianceCoreHazardKeys",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partNumber": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supplyArrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "manufacturerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturerPartNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sdsDocumentId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceCoreMaterialKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceCoreHazardKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateMaintenancePartsKitLineRequest": {
         "required": [
           "itemRef",
@@ -15657,6 +18100,174 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "CreateRecallCampaignRequest": {
+        "required": [
+          "sourceProvider",
+          "sourceType",
+          "sourceProviderRecordId",
+          "nhtsaCampaignNumber",
+          "nhtsaActionNumber",
+          "manufacturerCampaignNumber",
+          "campaignTitle",
+          "manufacturer",
+          "component",
+          "reportReceivedDate",
+          "campaignStartDate",
+          "campaignEndDate",
+          "campaignStatus",
+          "potentialUnitsAffected",
+          "summary",
+          "consequence",
+          "remedy",
+          "notes",
+          "parkIt",
+          "parkOutside",
+          "overTheAirUpdate",
+          "recallType",
+          "sourceUrl",
+          "sourceRawJson",
+          "applicability",
+          "affectedAssetIds"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProvider": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceProviderRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nhtsaCampaignNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nhtsaActionNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturerCampaignNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string"
+          },
+          "reportReceivedDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignStartDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignEndDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignStatus": {
+            "type": "string"
+          },
+          "potentialUnitsAffected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "consequence": {
+            "type": "string"
+          },
+          "remedy": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "parkIt": {
+            "type": "boolean"
+          },
+          "parkOutside": {
+            "type": "boolean"
+          },
+          "overTheAirUpdate": {
+            "type": "boolean"
+          },
+          "recallType": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRawJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "applicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/RecallCampaignApplicabilityRequest"
+            }
+          },
+          "affectedAssetIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "createCandidatesNow": {
+            "type": "boolean",
+            "default": false
+          },
+          "createWorkOrdersNow": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -16143,6 +18754,13 @@
               "null",
               "string"
             ]
+          },
+          "maintenancePartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -16200,6 +18818,13 @@
               "null",
               "string"
             ]
+          },
+          "maintenancePartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -16266,6 +18891,30 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "originType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "originRef": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -16320,6 +18969,77 @@
             ]
           },
           "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DismissAssetRecallRequest": {
+        "required": [
+          "dismissalReason"
+        ],
+        "type": "object",
+        "properties": {
+          "dismissalReason": {
+            "type": "string"
+          },
+          "dismissedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ExternalVinDecodeBatchItemRequest": {
+        "required": [
+          "vin"
+        ],
+        "type": "object",
+        "properties": {
+          "vin": {
+            "type": "string"
+          },
+          "modelYear": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ExternalVinDecodeBatchRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalVinDecodeBatchItemRequest"
+            }
+          }
+        }
+      },
+      "ExternalVinDecodeRequest": {
+        "required": [
+          "vin"
+        ],
+        "type": "object",
+        "properties": {
+          "vin": {
+            "type": "string"
+          },
+          "modelYear": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -16668,6 +19388,7 @@
           }
         }
       },
+      "JsonElement": {},
       "MaintenancePartsKitApprovalRequest": {
         "required": [
           "requiresApprovalBeforeActivation",
@@ -18664,6 +21385,177 @@
           }
         }
       },
+      "RecallCampaignApplicabilityRequest": {
+        "type": "object",
+        "properties": {
+          "modelYear": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "make": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetClass": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bodyClass": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fuelType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "engineFamily": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "engineManufacturer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "componentCategory": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tireBrand": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tireLine": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tireSize": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "equipmentMake": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "equipmentModel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialRangeStart": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serialRangeEnd": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productionStartDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "productionEndDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RecallCampaignSearchRequest": {
+        "required": [
+          "campaignNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "campaignNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "RecallVehicleSearchRequest": {
+        "required": [
+          "year",
+          "make",
+          "model"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "make": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          }
+        }
+      },
       "RecordMeterReadingRequest": {
         "required": [
           "readingValue",
@@ -18719,6 +21611,27 @@
             "type": "string",
             "format": "uuid"
           },
+          "releasedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "releaseReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReleaseRecallHoldRequest": {
+        "required": [
+          "releasedByPersonId",
+          "releaseReason"
+        ],
+        "type": "object",
+        "properties": {
           "releasedByPersonId": {
             "type": [
               "null",
@@ -18981,6 +21894,136 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -19696,6 +22739,109 @@
           }
         }
       },
+      "UpdateMaintenancePartRequest": {
+        "required": [
+          "partNumber",
+          "displayName",
+          "description",
+          "categoryKey",
+          "unitOfMeasure",
+          "status",
+          "sourceType",
+          "supplyArrPartId",
+          "manufacturerName",
+          "manufacturerPartNumber",
+          "sdsDocumentId",
+          "complianceCoreMaterialKey",
+          "complianceCoreHazardKeys",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partNumber": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supplyArrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "manufacturerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturerPartNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sdsDocumentId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceCoreMaterialKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceCoreHazardKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpdateMaintenancePartsKitLineRequest": {
         "required": [
           "itemDescriptionSnapshot",
@@ -20106,6 +23252,131 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateRecallCampaignRequest": {
+        "type": "object",
+        "properties": {
+          "campaignTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "component": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportReceivedDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignStartDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignEndDate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaignStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "potentialUnitsAffected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "consequence": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remedy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parkIt": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "parkOutside": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "overTheAirUpdate": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "recallType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRawJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "applicability": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/RecallCampaignApplicabilityRequest"
+            }
           }
         }
       },
@@ -20797,6 +24068,92 @@
             ]
           }
         }
+      },
+      "VerifyAssetRecallRequest": {
+        "required": [
+          "verificationSource",
+          "verificationMethod",
+          "verificationStatus",
+          "verifiedByPersonId",
+          "verifiedAt",
+          "evidenceDocumentId",
+          "evidenceUrl",
+          "evidenceText",
+          "providerRawJson",
+          "expiresAt",
+          "nextReviewAt",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "verificationSource": {
+            "type": "string"
+          },
+          "verificationMethod": {
+            "type": "string"
+          },
+          "verificationStatus": {
+            "type": "string"
+          },
+          "verifiedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "verifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "evidenceDocumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "evidenceUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerRawJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "nextReviewAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       }
     }
   },
@@ -20844,6 +24201,12 @@
       "name": "References"
     },
     {
+      "name": "External Intelligence"
+    },
+    {
+      "name": "Recalls"
+    },
+    {
       "name": "PreventiveMaintenance"
     },
     {
@@ -20887,6 +24250,9 @@
     },
     {
       "name": "WorkOrderPartsDemand"
+    },
+    {
+      "name": "MaintenanceParts"
     },
     {
       "name": "VendorWork"
@@ -20956,6 +24322,9 @@
     },
     {
       "name": "Exports"
+    },
+    {
+      "name": "Smart Import Integrations"
     }
   ]
 }

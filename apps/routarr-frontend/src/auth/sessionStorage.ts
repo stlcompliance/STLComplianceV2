@@ -73,6 +73,13 @@ export function canManageTrips(tenantRoleKey: string, isPlatformAdmin: boolean):
   return ['tenant_admin', 'routarr_admin', 'routarr_manager'].includes(tenantRoleKey.toLowerCase())
 }
 
+export function canOverrideVendorReadiness(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canManageTrips(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canPerformTrips(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return [

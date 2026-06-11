@@ -15,15 +15,14 @@ vi.mock('../../components/StaffArrScheduledWorkerSettingsPanel', () => ({
   ),
 }))
 
-vi.mock('../../components/AuditPackageExportPanel', () => ({
-  AuditPackageExportPanel: () => <div data-testid="staffarr-audit-export-panel" />,
+vi.mock('../../components/DataExportsPanel', () => ({
+  DataExportsPanel: () => <div data-testid="data-exports-panel" />,
 }))
 
-function buildState(canManagePeopleProfiles: boolean, canExportAudit = false): StaffArrWorkspaceState {
+function buildState(canManagePeopleProfiles: boolean): StaffArrWorkspaceState {
   return {
     accessToken: 'token',
     canManagePeopleProfiles,
-    canExportAudit,
   } as StaffArrWorkspaceState
 }
 
@@ -32,7 +31,7 @@ describe('AdminSection', () => {
     cleanup()
   })
 
-  it('renders admin workspace with all six product-admin panels for staffarr_admin', () => {
+  it('renders admin workspace with export and worker panels for staffarr_admin', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -47,20 +46,7 @@ describe('AdminSection', () => {
     expect(screen.getByTestId('readiness-rollup-settings-panel')).toBeTruthy()
     expect(screen.getByTestId('permission-projection-settings-panel')).toBeTruthy()
     expect(screen.getByTestId('personnel-history-rollup-settings-panel')).toBeTruthy()
-    expect(screen.getByTestId('audit-package-generation-settings-panel')).toBeTruthy()
-  })
-
-  it('renders audit export panel outside admin workspace when user can export audit packages', () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminSection state={buildState(true, true)} />
-      </QueryClientProvider>,
-    )
-
-    expect(screen.getByTestId('staffarr-settings-admin-workspace')).toBeTruthy()
-    expect(screen.getByTestId('staffarr-audit-export-panel')).toBeTruthy()
+    expect(screen.getByTestId('data-exports-panel')).toBeTruthy()
   })
 
   it('omits admin workspace when user cannot manage worker settings', () => {
@@ -68,11 +54,11 @@ describe('AdminSection', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <AdminSection state={buildState(false, true)} />
+        <AdminSection state={buildState(false)} />
       </QueryClientProvider>,
     )
 
     expect(screen.queryByTestId('staffarr-settings-admin-workspace')).toBeNull()
-    expect(screen.getByTestId('staffarr-audit-export-panel')).toBeTruthy()
+    expect(screen.queryByTestId('data-exports-panel')).toBeNull()
   })
 })

@@ -42,6 +42,9 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapPlatformWorkerHealthOrchestrationEndpoints();
         app.MapHybridDataPlaneEndpoints();
         app.MapPlatformHealthEndpoints();
+        app.MapAiAssistanceEndpoints();
+        app.MapSmartImportEndpoints();
+        app.MapNexArrInternalSmartImportEndpoints();
         app.MapFieldCompanionEndpoints();
         app.MapFieldCompanionNotificationEndpoints();
         app.MapFieldCompanionPushEndpoints();
