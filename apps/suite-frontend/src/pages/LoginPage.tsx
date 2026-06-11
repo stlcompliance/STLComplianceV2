@@ -19,8 +19,12 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
-const demoTenantId =
-  import.meta.env.VITE_DEMO_TENANT_ID || '11111111-1111-1111-1111-111111111101'
+const demoTenantId = import.meta.env.DEV
+  ? import.meta.env.VITE_DEMO_TENANT_ID || '11111111-1111-1111-1111-111111111101'
+  : null
+
+const defaultEmail = demoTenantId ? 'admin@demo.stl' : ''
+const defaultPassword = demoTenantId ? 'ChangeMe!Demo2026' : ''
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
@@ -40,8 +44,8 @@ export function LoginPage() {
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'admin@demo.stl',
-      password: 'ChangeMe!Demo2026',
+      email: defaultEmail,
+      password: defaultPassword,
       rememberDevice: false,
       mfaMethod: 'totp',
       mfaCode: '',
@@ -100,7 +104,8 @@ export function LoginPage() {
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Uses NexArr <code className="text-xs text-slate-300">/api/auth/login</code> (demo tenant).
+          Uses NexArr <code className="text-xs text-slate-300">/api/auth/login</code>
+          {demoTenantId ? ' (demo tenant).' : '.'}
         </p>
 
         {passwordResetDone && (
