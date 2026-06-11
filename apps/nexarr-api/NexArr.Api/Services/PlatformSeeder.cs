@@ -1816,31 +1816,15 @@ public static class PlatformSeeder
         if (staged.Confidence >= 0.75m)
         {
             var externalKey = ResolveCrosswalkExternalKey(normalized, canonicalKey);
-            var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
-                x => x.ExternalSystem == sourceKey && x.ExternalKey == externalKey,
-                cancellationToken)
-                ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
-                    x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == sourceKey,
-                    cancellationToken);
-
-            if (crosswalk is null)
-            {
-                crosswalk = new ReferenceCrosswalk
-                {
-                    Id = Guid.NewGuid(),
-                    CreatedAt = now,
-                };
-                db.ReferenceCrosswalks.Add(crosswalk);
-            }
-
-            crosswalk.ReferenceEntityId = entity.Id;
-            crosswalk.ExternalSystem = sourceKey;
-            crosswalk.ExternalKey = externalKey;
-            crosswalk.SourceId = sourceId;
-            crosswalk.Confidence = staged.Confidence;
-            crosswalk.Status = ReferenceCrosswalkStatuses.Active;
-            crosswalk.UpdatedAt = now;
-            await db.SaveChangesAsync(cancellationToken);
+            await UpsertReferenceCrosswalkAsync(
+                db,
+                entity.Id,
+                sourceKey,
+                externalKey,
+                sourceId,
+                staged.Confidence,
+                now,
+                cancellationToken);
         }
 
         return entity;
@@ -1955,6 +1939,59 @@ public static class PlatformSeeder
         }
 
         return fallbackCanonicalKey;
+    }
+
+    private static async Task UpsertReferenceCrosswalkAsync(
+        NexArrDbContext db,
+        Guid referenceEntityId,
+        string externalSystem,
+        string externalKey,
+        Guid sourceId,
+        decimal confidence,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(db.Database.ProviderName, "Npgsql.EntityFrameworkCore.PostgreSQL", StringComparison.Ordinal))
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO reference_crosswalks ("Id", "Confidence", "CreatedAt", "ExternalKey", "ExternalSystem", "ReferenceEntityId", "SourceId", "Status", "UpdatedAt")
+                VALUES ({Guid.NewGuid()}, {confidence}, {now}, {externalKey}, {externalSystem}, {referenceEntityId}, {sourceId}, {ReferenceCrosswalkStatuses.Active}, {now})
+                ON CONFLICT ("ExternalSystem", "ExternalKey")
+                DO UPDATE SET
+                    "ReferenceEntityId" = EXCLUDED."ReferenceEntityId",
+                    "SourceId" = EXCLUDED."SourceId",
+                    "Confidence" = EXCLUDED."Confidence",
+                    "Status" = EXCLUDED."Status",
+                    "UpdatedAt" = EXCLUDED."UpdatedAt";
+                """, cancellationToken);
+            return;
+        }
+
+        var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+            x => x.ExternalSystem == externalSystem && x.ExternalKey == externalKey,
+            cancellationToken)
+            ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                x => x.ReferenceEntityId == referenceEntityId && x.ExternalSystem == externalSystem,
+                cancellationToken);
+
+        if (crosswalk is null)
+        {
+            crosswalk = new ReferenceCrosswalk
+            {
+                Id = Guid.NewGuid(),
+                CreatedAt = now,
+            };
+            db.ReferenceCrosswalks.Add(crosswalk);
+        }
+
+        crosswalk.ReferenceEntityId = referenceEntityId;
+        crosswalk.ExternalSystem = externalSystem;
+        crosswalk.ExternalKey = externalKey;
+        crosswalk.SourceId = sourceId;
+        crosswalk.Confidence = confidence;
+        crosswalk.Status = ReferenceCrosswalkStatuses.Active;
+        crosswalk.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private static decimal ReadConfidence(string? confidence, bool targetAssigned)

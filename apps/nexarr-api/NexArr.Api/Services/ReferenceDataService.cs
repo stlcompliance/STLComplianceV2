@@ -1322,31 +1322,14 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         if (staging.Confidence >= 0.75m)
         {
             var externalKey = ResolveCrosswalkExternalKey(normalized, canonicalKey);
-            var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
-                x => x.ExternalSystem == staging.Job.Source.Key && x.ExternalKey == externalKey,
-                cancellationToken)
-                ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
-                    x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == staging.Job.Source.Key,
-                    cancellationToken);
-
-            if (crosswalk is null)
-            {
-                crosswalk = new ReferenceCrosswalk
-                {
-                    Id = Guid.NewGuid(),
-                    CreatedAt = now,
-                };
-                db.ReferenceCrosswalks.Add(crosswalk);
-            }
-
-            crosswalk.ReferenceEntityId = entity.Id;
-            crosswalk.ExternalSystem = staging.Job.Source.Key;
-            crosswalk.ExternalKey = externalKey;
-            crosswalk.SourceId = staging.Job.SourceId;
-            crosswalk.Confidence = staging.Confidence;
-            crosswalk.Status = ReferenceCrosswalkStatuses.Active;
-            crosswalk.UpdatedAt = now;
-            await db.SaveChangesAsync(cancellationToken);
+            await UpsertReferenceCrosswalkAsync(
+                entity.Id,
+                staging.Job.Source.Key,
+                externalKey,
+                staging.Job.SourceId,
+                staging.Confidence,
+                now,
+                cancellationToken);
         }
 
         return entity;
@@ -1965,6 +1948,58 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         }
 
         return fallbackCanonicalKey;
+    }
+
+    private async Task UpsertReferenceCrosswalkAsync(
+        Guid referenceEntityId,
+        string externalSystem,
+        string externalKey,
+        Guid sourceId,
+        decimal confidence,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(db.Database.ProviderName, "Npgsql.EntityFrameworkCore.PostgreSQL", StringComparison.Ordinal))
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO reference_crosswalks ("Id", "Confidence", "CreatedAt", "ExternalKey", "ExternalSystem", "ReferenceEntityId", "SourceId", "Status", "UpdatedAt")
+                VALUES ({Guid.NewGuid()}, {confidence}, {now}, {externalKey}, {externalSystem}, {referenceEntityId}, {sourceId}, {ReferenceCrosswalkStatuses.Active}, {now})
+                ON CONFLICT ("ExternalSystem", "ExternalKey")
+                DO UPDATE SET
+                    "ReferenceEntityId" = EXCLUDED."ReferenceEntityId",
+                    "SourceId" = EXCLUDED."SourceId",
+                    "Confidence" = EXCLUDED."Confidence",
+                    "Status" = EXCLUDED."Status",
+                    "UpdatedAt" = EXCLUDED."UpdatedAt";
+                """, cancellationToken);
+            return;
+        }
+
+        var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+            x => x.ExternalSystem == externalSystem && x.ExternalKey == externalKey,
+            cancellationToken)
+            ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                x => x.ReferenceEntityId == referenceEntityId && x.ExternalSystem == externalSystem,
+                cancellationToken);
+
+        if (crosswalk is null)
+        {
+            crosswalk = new ReferenceCrosswalk
+            {
+                Id = Guid.NewGuid(),
+                CreatedAt = now,
+            };
+            db.ReferenceCrosswalks.Add(crosswalk);
+        }
+
+        crosswalk.ReferenceEntityId = referenceEntityId;
+        crosswalk.ExternalSystem = externalSystem;
+        crosswalk.ExternalKey = externalKey;
+        crosswalk.SourceId = sourceId;
+        crosswalk.Confidence = confidence;
+        crosswalk.Status = ReferenceCrosswalkStatuses.Active;
+        crosswalk.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private static string NormalizeColumnKey(string value) =>
