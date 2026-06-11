@@ -102,8 +102,12 @@ public static class ProductSurfaceCatalog
             "supplyarr" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),
-                new("inventory", "Inventory", "inventory", "inventory", 10),
-                new("procurement", "Procurement", "procurement", "warehouse", 20),
+                new("parties", "Parties", "parties", "sites", 10),
+                new("catalog", "Catalog", "catalog", "supplyarr", 20),
+                new("purchasing", "Purchasing", "purchasing", "warehouse", 30),
+                new("pricing", "Pricing", "pricing", "database", 40),
+                new("planning", "Planning", "planning", "activity", 50),
+                new("readiness", "Readiness", "readiness", "activity", 60),
                 new("launch", "Open SupplyArr app", "launch", "supplyarr", 90, LaunchExternal: true),
             ],
             "loadarr" =>
@@ -150,10 +154,10 @@ public static class ProductSurfaceCatalog
             ],
             "compliancecore" =>
             [
-                new("overview", "Overview", "", "dashboard", 0),
-                new("vocabulary", "Vocabulary", "vocabulary", "database", 10),
-                new("rules", "Rule packs", "rules", "complianceCore", 20),
-                new("launch", "Open Compliance Core app", "launch", "complianceCore", 90, LaunchExternal: true),
+                new("overview", "Overview", "", "dashboard", 0, RequiresPlatformAdmin: true),
+                new("vocabulary", "Vocabulary", "vocabulary", "database", 10, RequiresPlatformAdmin: true),
+                new("rules", "Rule packs", "rules", "complianceCore", 20, RequiresPlatformAdmin: true),
+                new("launch", "Open Compliance Core app", "launch", "complianceCore", 90, RequiresPlatformAdmin: true, LaunchExternal: true),
             ],
             _ when isLaunchable =>
             [

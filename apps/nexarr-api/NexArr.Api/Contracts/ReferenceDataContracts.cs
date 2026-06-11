@@ -164,6 +164,20 @@ public sealed record ReferenceEntityVersionResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+public sealed record ReferenceEntityListItemResponse(
+    Guid Id,
+    Guid DatasetId,
+    string DatasetKey,
+    string DatasetName,
+    string EntityType,
+    string CanonicalKey,
+    string DisplayName,
+    string Status,
+    int? CurrentVersion,
+    DateTimeOffset? PublishedAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
 public sealed record ReferenceEntityResponse(
     Guid Id,
     Guid DatasetId,

@@ -37,4 +37,16 @@ describe('resolveNexArrLaunchFailureMessage', () => {
 
     expect(message).toContain('Select the correct tenant in NexArr and relaunch.')
   })
+
+  it('maps platform-admin failures to administrator guidance', () => {
+    const message = resolveNexArrLaunchFailureMessage('Compliance Core', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'auth.platform_admin_required',
+        message: 'Platform administrator access is required.',
+      }),
+    })
+
+    expect(message).toBe('Compliance Core requires platform administrator access in NexArr.')
+  })
 })

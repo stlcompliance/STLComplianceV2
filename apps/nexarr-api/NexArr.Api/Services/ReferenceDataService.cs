@@ -51,6 +51,48 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             })
             .ToListAsync(cancellationToken);
         var lastPublishedMap = lastPublishedByDataset.ToDictionary(x => x.DatasetId, x => x.LastPublishedAt);
+        var sourceCount = await db.ReferenceSources.AsNoTracking().CountAsync(cancellationToken);
+        var entityCountMap = await db.ReferenceEntities.AsNoTracking()
+            .GroupBy(x => x.DatasetId)
+            .Select(g => new
+            {
+                DatasetId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.DatasetId, x => x.Count, cancellationToken);
+        var pendingReviewByJobDataset = await db.StagingRecords.AsNoTracking()
+            .Where(x => x.Status == ReferenceStagingStatuses.NeedsReview)
+            .GroupBy(x => x.Job.DatasetId)
+            .Select(g => new
+            {
+                DatasetId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.DatasetId, x => x.Count, cancellationToken);
+        var pendingReviewByTargetDataset = await db.StagingRecords.AsNoTracking()
+            .Where(x =>
+                x.Status == ReferenceStagingStatuses.NeedsReview
+                && x.TargetDatasetId.HasValue
+                && x.TargetDatasetId != x.Job.DatasetId)
+            .GroupBy(x => x.TargetDatasetId!.Value)
+            .Select(g => new
+            {
+                DatasetId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.DatasetId, x => x.Count, cancellationToken);
+        var pendingReviewMap = new Dictionary<Guid, int>();
+        AddCounts(pendingReviewMap, pendingReviewByJobDataset);
+        AddCounts(pendingReviewMap, pendingReviewByTargetDataset);
+        var failedImportCountMap = await db.IngestionJobs.AsNoTracking()
+            .Where(x => x.Status == ReferenceImportStatuses.Failed)
+            .GroupBy(x => x.DatasetId)
+            .Select(g => new
+            {
+                DatasetId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.DatasetId, x => x.Count, cancellationToken);
 
         var query = db.ReferenceDatasets.AsNoTracking();
         var datasets = await query.OrderBy(x => x.Key).ToListAsync(cancellationToken);
@@ -66,13 +108,10 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
                 dataset.OwnerService,
                 dataset.Status,
                 dataset.CurrentPublishedVersion,
-                SourceCount: await db.ReferenceSources.CountAsync(cancellationToken),
-                EntityCount: await db.ReferenceEntities.CountAsync(x => x.DatasetId == dataset.Id, cancellationToken),
-                PendingReviewCount: await db.StagingRecords.CountAsync(x =>
-                    (x.TargetDatasetId == dataset.Id || x.Job.DatasetId == dataset.Id)
-                    && x.Status == ReferenceStagingStatuses.NeedsReview,
-                    cancellationToken),
-                FailedImportCount: await db.IngestionJobs.CountAsync(x => x.DatasetId == dataset.Id && x.Status == ReferenceImportStatuses.Failed, cancellationToken),
+                SourceCount: sourceCount,
+                EntityCount: entityCountMap.GetValueOrDefault(dataset.Id),
+                PendingReviewCount: pendingReviewMap.GetValueOrDefault(dataset.Id),
+                FailedImportCount: failedImportCountMap.GetValueOrDefault(dataset.Id),
                 LastPublishedAt: lastPublishedMap.GetValueOrDefault(dataset.Id),
                 dataset.CreatedAt,
                 dataset.UpdatedAt));
@@ -410,13 +449,27 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         CancellationToken cancellationToken = default)
     {
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var stagingSummaries = await db.StagingRecords.AsNoTracking()
+            .GroupBy(x => x.JobId)
+            .Select(g => new
+            {
+                JobId = g.Key,
+                Summary = new ImportStagingSummary(
+                    g.Count(),
+                    g.Count(x => x.Status == ReferenceStagingStatuses.NeedsReview),
+                    g.Count(x => x.Status == ReferenceStagingStatuses.Approved),
+                    g.Count(x => x.Status == ReferenceStagingStatuses.Rejected))
+            })
+            .ToDictionaryAsync(x => x.JobId, x => x.Summary, cancellationToken);
         var jobs = await db.IngestionJobs.AsNoTracking()
             .Include(x => x.Dataset)
             .Include(x => x.Source)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return await Task.WhenAll(jobs.Select(job => BuildImportResponseAsync(job, cancellationToken)));
+        return jobs
+            .Select(job => BuildImportResponse(job, stagingSummaries.GetValueOrDefault(job.Id) ?? ImportStagingSummary.Empty))
+            .ToList();
     }
 
     public async Task<ReferenceImportResponse> CreateImportAsync(
@@ -593,7 +646,7 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         return records.Select(ToStagingResponse).ToList();
     }
 
-    public async Task<IReadOnlyList<ReferenceEntityResponse>> ListDatasetEntitiesAsync(
+    public async Task<IReadOnlyList<ReferenceEntityListItemResponse>> ListDatasetEntitiesAsync(
         ClaimsPrincipal principal,
         Guid datasetId,
         CancellationToken cancellationToken = default)
@@ -603,13 +656,29 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             .FirstOrDefaultAsync(x => x.Id == datasetId, cancellationToken)
             ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
 
-        var entities = await db.ReferenceEntities.AsNoTracking()
-            .Include(x => x.Dataset)
+        return await db.ReferenceEntities.AsNoTracking()
             .Where(x => x.DatasetId == dataset.Id && x.Status == ReferenceEntityStatuses.Active)
             .OrderBy(x => x.DisplayName)
+            .Select(entity => new ReferenceEntityListItemResponse(
+                entity.Id,
+                entity.DatasetId,
+                entity.Dataset.Key,
+                entity.Dataset.Name,
+                entity.EntityType,
+                entity.CanonicalKey,
+                entity.DisplayName,
+                entity.Status,
+                db.ReferenceEntityVersions
+                    .Where(version => version.Id == entity.CurrentVersionId)
+                    .Select(version => (int?)version.Version)
+                    .FirstOrDefault(),
+                db.ReferenceEntityVersions
+                    .Where(version => version.Id == entity.CurrentVersionId)
+                    .Select(version => version.PublishedAt)
+                    .FirstOrDefault(),
+                entity.CreatedAt,
+                entity.UpdatedAt))
             .ToListAsync(cancellationToken);
-
-        return await Task.WhenAll(entities.Select(entity => ToEntityResponseAsync(entity, cancellationToken)));
     }
 
     public async Task<ReferenceEntityResponse> UpdateEntityAsync(
@@ -1308,8 +1377,24 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         IngestionJob job,
         CancellationToken cancellationToken)
     {
-        var staging = await db.StagingRecords.AsNoTracking().Where(x => x.JobId == job.Id).ToListAsync(cancellationToken);
-        return new ReferenceImportResponse(
+        var stagingSummary = await db.StagingRecords.AsNoTracking()
+            .Where(x => x.JobId == job.Id)
+            .GroupBy(x => x.JobId)
+            .Select(g => new ImportStagingSummary(
+                g.Count(),
+                g.Count(x => x.Status == ReferenceStagingStatuses.NeedsReview),
+                g.Count(x => x.Status == ReferenceStagingStatuses.Approved),
+                g.Count(x => x.Status == ReferenceStagingStatuses.Rejected)))
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? ImportStagingSummary.Empty;
+
+        return BuildImportResponse(job, stagingSummary);
+    }
+
+    private static ReferenceImportResponse BuildImportResponse(
+        IngestionJob job,
+        ImportStagingSummary stagingSummary) =>
+        new(
             job.Id,
             job.DatasetId,
             job.Dataset.Key,
@@ -1325,13 +1410,12 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             job.StartedAt,
             job.CompletedAt,
             job.ErrorSummary,
-            staging.Count,
-            staging.Count(x => x.Status == ReferenceStagingStatuses.NeedsReview),
-            staging.Count(x => x.Status == ReferenceStagingStatuses.Approved),
-            staging.Count(x => x.Status == ReferenceStagingStatuses.Rejected),
+            stagingSummary.StagingRecordCount,
+            stagingSummary.PendingReviewCount,
+            stagingSummary.ApprovedCount,
+            stagingSummary.RejectedCount,
             job.CreatedAt,
             job.UpdatedAt);
-    }
 
     private async Task<ReferenceSource> EnsurePlatformInputSourceAsync(CancellationToken cancellationToken)
     {
@@ -2090,6 +2174,23 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         {
             return false;
         }
+    }
+
+    private static void AddCounts(Dictionary<Guid, int> target, IReadOnlyDictionary<Guid, int> source)
+    {
+        foreach (var (key, value) in source)
+        {
+            target[key] = target.TryGetValue(key, out var existing) ? existing + value : value;
+        }
+    }
+
+    private sealed record ImportStagingSummary(
+        int StagingRecordCount,
+        int PendingReviewCount,
+        int ApprovedCount,
+        int RejectedCount)
+    {
+        public static readonly ImportStagingSummary Empty = new(0, 0, 0, 0);
     }
 
     private static string DetermineDisplayName(JsonElement normalized, string fallback)

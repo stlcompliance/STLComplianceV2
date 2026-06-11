@@ -7,7 +7,8 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class HandoffAuthService(
     StlNexArrHandoffClient nexArrHandoff,
-    ComplianceCoreTokenService tokenService)
+    ComplianceCoreTokenService tokenService,
+    IComplianceCoreAuditService audit)
 {
     private const string ProductKey = "compliancecore";
 
@@ -36,6 +37,24 @@ public sealed class HandoffAuthService(
             throw new StlApiException(
                 "handoff.not_entitled",
                 "Tenant does not have an active Compliance Core entitlement.",
+                403);
+        }
+
+        if (!redeemed.IsPlatformAdmin)
+        {
+            await audit.WriteAsync(
+                "compliancecore.admin_access.denied",
+                redeemed.TenantId,
+                redeemed.UserId,
+                "handoff",
+                redeemed.SessionId.ToString(),
+                "denied",
+                "auth.platform_admin_required",
+                cancellationToken);
+
+            throw new StlApiException(
+                "auth.platform_admin_required",
+                "Compliance Core requires NexArr-confirmed platform administrator access.",
                 403);
         }
 

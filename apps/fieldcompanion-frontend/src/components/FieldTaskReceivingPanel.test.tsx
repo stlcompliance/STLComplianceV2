@@ -5,71 +5,63 @@ import { FieldTaskReceivingPanel } from './FieldTaskReceivingPanel'
 import type { FieldInboxTaskItem } from '../api/types'
 import * as client from '../api/client'
 
-const receivingTask: FieldInboxTaskItem = {
-  taskKey: 'supplyarr:receiving:eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-  productKey: 'supplyarr',
+const loadArrReceivingTask: FieldInboxTaskItem = {
+  taskKey: 'loadarr:receiving:11111111-1111-1111-1111-111111111111',
+  productKey: 'loadarr',
   taskType: 'receiving',
-  title: 'RCPT-1001',
-  subtitle: 'PO-5001',
-  status: 'draft',
-  priority: null,
+  title: 'RCV-24018',
+  subtitle: 'PO-10492',
+  status: 'open',
+  priority: 'high',
   dueAt: null,
-  sortAt: '2026-05-27T08:00:00.000Z',
-  deepLinkPath: '/receiving/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  sortAt: '2026-06-02T20:10:00.000Z',
+  deepLinkPath:
+    '/work/receiving/recv-24018?taskKey=loadarr:receiving:11111111-1111-1111-1111-111111111111',
 }
 
-const receivingDetail = {
-  taskKey: receivingTask.taskKey,
-  productKey: 'supplyarr',
-  receivingReceiptId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-  receiptKey: 'RCPT-1001',
-  status: 'draft',
-  purchaseOrderKey: 'PO-5001',
-  binKey: 'BIN-A1',
-  binName: 'Main bin',
-  locationName: 'Warehouse 1',
-  notes: 'Dock delivery',
+const loadArrReceivingDetail = {
+  taskKey: loadArrReceivingTask.taskKey,
+  productKey: 'loadarr',
+  receivingReceiptId: 'recv-24018',
+  receiptKey: 'RCV-24018',
+  status: 'open',
+  purchaseOrderKey: 'PO-10492',
+  binKey: 'loc-dock-01',
+  binName: 'Receiving Dock 1',
+  locationName: 'STL North Yard',
+  notes: 'Midwest Fleet Supply',
   lines: [
     {
-      lineId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+      lineId: 'line-24018-1',
       lineNumber: 1,
-      partKey: 'FLT-001',
-      partDisplayName: 'Oil filter',
-      quantityExpected: 4,
-      quantityReceived: 0,
-      quantityOrdered: 4,
-      quantityRemainingOnOrder: 4,
+      partKey: 'SUP-VALVE-KIT-A',
+      partDisplayName: 'Valve repair kit A',
+      quantityExpected: 38,
+      quantityReceived: 38,
+      quantityOrdered: 38,
+      quantityRemainingOnOrder: 0,
       openExceptionCount: 0,
     },
   ],
 }
 
 vi.mock('../api/client', () => ({
-  validateFieldCompanionFieldTask: vi.fn(async () => ({
+  validateFieldCompanionFieldTask: vi.fn(async (_accessToken: string, input: { taskKey: string; productKey?: string | null }) => ({
     allowed: true,
     reasonCode: null,
     reasonMessage: null,
-    taskKey: receivingTask.taskKey,
-    productKey: 'supplyarr',
-    title: receivingTask.title,
+    taskKey: input.taskKey,
+    productKey: input.productKey ?? 'loadarr',
+    title: loadArrReceivingTask.title,
     blockedReason: null,
   })),
-  getFieldCompanionFieldReceivingDetail: vi.fn(async () => receivingDetail),
-  updateFieldCompanionFieldReceivingLine: vi.fn(async () => ({
-    taskKey: receivingTask.taskKey,
-    productKey: 'supplyarr',
-    receivingReceiptId: receivingDetail.receivingReceiptId,
-    lineId: receivingDetail.lines[0]!.lineId,
-    quantityReceived: 4,
-    status: 'draft',
-    updatedAt: '2026-05-28T12:00:00.000Z',
-  })),
+  getFieldCompanionFieldReceivingDetail: vi.fn(async () => loadArrReceivingDetail),
   postFieldCompanionFieldReceiving: vi.fn(async () => ({
-    taskKey: receivingTask.taskKey,
-    productKey: 'supplyarr',
-    receivingReceiptId: receivingDetail.receivingReceiptId,
-    status: 'posted',
-    postedAt: '2026-05-28T12:05:00.000Z',
+    taskKey: loadArrReceivingTask.taskKey,
+    productKey: 'loadarr',
+    receivingReceiptId: loadArrReceivingDetail.receivingReceiptId,
+    status: 'completed',
+    postedAt: '2026-06-02T20:15:00.000Z',
   })),
 }))
 
@@ -82,52 +74,44 @@ describe('FieldTaskReceivingPanel', () => {
     cleanup()
   })
 
-  it('renders receiving detail for supplyarr receiving tasks', async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  it('renders loadarr receiving detail without inline line editing', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
     render(
-      <QueryClientProvider client={client}>
-        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskReceivingPanel accessToken="test-token" task={loadArrReceivingTask} />
       </QueryClientProvider>,
     )
 
     expect(await screen.findByTestId('fieldcompanion-field-receiving-panel')).toBeInTheDocument()
     expect(await screen.findByTestId('fieldcompanion-receiving-line-1')).toBeInTheDocument()
-    expect(await screen.findByTestId('fieldcompanion-receiving-save-line-1')).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        'Line quantity edits stay in LoadArr. Use the owner-side session when counts need to change.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId('fieldcompanion-receiving-save-line-1')).not.toBeInTheDocument()
+    expect(screen.getByTestId('fieldcompanion-receiving-post')).toHaveTextContent(
+      'Complete receiving',
+    )
   })
 
-  it('updates line quantity and posts receiving through fieldcompanion API', async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    const { updateFieldCompanionFieldReceivingLine, postFieldCompanionFieldReceiving } =
-      await import('../api/client')
+  it('posts loadarr receiving through the fieldcompanion API', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { postFieldCompanionFieldReceiving } = await import('../api/client')
 
     render(
-      <QueryClientProvider client={client}>
-        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskReceivingPanel accessToken="test-token" task={loadArrReceivingTask} />
       </QueryClientProvider>,
     )
 
-    await screen.findByTestId('fieldcompanion-receiving-line-qty-1')
-    fireEvent.change(screen.getByTestId('fieldcompanion-receiving-line-qty-1'), {
-      target: { value: '4' },
-    })
-    fireEvent.click(screen.getByTestId('fieldcompanion-receiving-save-line-1'))
-
-    await waitFor(() => {
-      expect(updateFieldCompanionFieldReceivingLine).toHaveBeenCalledWith(
-        'test-token',
-        expect.objectContaining({
-          taskKey: receivingTask.taskKey,
-          lineId: receivingDetail.lines[0]!.lineId,
-          quantityReceived: 4,
-        }),
-      )
-    })
-
+    await screen.findByTestId('fieldcompanion-receiving-post')
     fireEvent.click(screen.getByTestId('fieldcompanion-receiving-post'))
 
     await waitFor(() => {
       expect(postFieldCompanionFieldReceiving).toHaveBeenCalledWith('test-token', {
-        taskKey: receivingTask.taskKey,
+        taskKey: loadArrReceivingTask.taskKey,
       })
     })
 
@@ -142,7 +126,7 @@ describe('FieldTaskReceivingPanel', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+        <FieldTaskReceivingPanel accessToken="test-token" task={loadArrReceivingTask} />
       </QueryClientProvider>,
     )
 
@@ -150,22 +134,22 @@ describe('FieldTaskReceivingPanel', () => {
     expect(screen.getByRole('button', { name: 'Retry receiving detail' })).toBeInTheDocument()
   })
 
-  it('renders mutation failure in shared callout', async () => {
-    vi.mocked(client.updateFieldCompanionFieldReceivingLine).mockRejectedValueOnce(
-      new Error('receiving line failed'),
+  it('renders completion failure in shared callout', async () => {
+    vi.mocked(client.postFieldCompanionFieldReceiving).mockRejectedValueOnce(
+      new Error('receiving completion failed'),
     )
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
       <QueryClientProvider client={queryClient}>
-        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+        <FieldTaskReceivingPanel accessToken="test-token" task={loadArrReceivingTask} />
       </QueryClientProvider>,
     )
 
-    await screen.findByTestId('fieldcompanion-receiving-line-qty-1')
-    fireEvent.click(screen.getByTestId('fieldcompanion-receiving-save-line-1'))
+    await screen.findByTestId('fieldcompanion-receiving-post')
+    fireEvent.click(screen.getByTestId('fieldcompanion-receiving-post'))
 
-    expect(await screen.findByText('receiving line failed')).toBeInTheDocument()
+    expect(await screen.findByText('receiving completion failed')).toBeInTheDocument()
     expect(screen.getByTestId('fieldcompanion-receiving-error')).toBeInTheDocument()
   })
 })

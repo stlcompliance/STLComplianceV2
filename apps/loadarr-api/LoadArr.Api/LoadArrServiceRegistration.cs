@@ -13,6 +13,7 @@ public static class LoadArrServiceRegistration
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
         builder.Services.AddScoped<LoadArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
+        builder.Services.AddScoped<FieldInboxService>();
 
         var frontendOrigin = builder.Configuration["Cors:LoadArrFrontendOrigin"] ?? "http://localhost:5182";
         builder.Services.AddCors(options =>

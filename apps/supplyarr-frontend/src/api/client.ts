@@ -1,6 +1,4 @@
 import type {
-  CreateInventoryBinRequest,
-  CreateInventoryLocationRequest,
   CreatePartCatalogRequest,
   CreatePartRequest,
   CreatePartVendorLinkRequest,
@@ -12,20 +10,11 @@ import type {
   UpdateExternalPartyRequest,
   UpdateExternalPartyStatusRequest,
   HandoffSessionResponse,
-  InventoryBinResponse,
-  InventoryLocationResponse,
   PartCatalogResponse,
   PartResponse,
   SubstitutionItemResponse,
-  PartStockLevelResponse,
-  TransferStockRequest,
-  WmsMovementResponse,
-  WmsStockLedgerEntryResponse,
   OutboundShipmentResponse,
   CreateOutboundShipmentRequest,
-  StockReservationResponse,
-  CreateStockReservationRequest,
-  ReleaseStockReservationRequest,
   PartVendorLinkResponse,
   VendorCatalogApiSyncRequest,
   VendorCatalogApiSyncResponse,
@@ -34,12 +23,10 @@ import type {
   SupplyContractResponse,
   SupplyArrMeResponse,
   SupplyArrSessionBootstrapResponse,
-  UpsertPartStockLevelRequest,
   CreatePurchaseOrderFromPurchaseRequestRequest,
   CreatePurchaseRequestRequest,
   BackorderResponse,
   CancelBackorderRequest,
-  CancelReceivingExceptionRequest,
   CancelPurchaseOrderRequest,
   CancelVendorReturnRequest,
   CreateBackorderFromPurchaseOrderLineRequest,
@@ -54,15 +41,9 @@ import type {
   CloseWarrantyClaimRequest,
   DenyWarrantyClaimRequest,
   CancelWarrantyClaimRequest,
-  CreateReceivingExceptionRequest,
-  CreateReceivingReceiptFromPurchaseOrderRequest,
   PurchaseOrderResponse,
   PurchaseRequestResponse,
-  ReceivingExceptionResponse,
-  ReceivingReceiptResponse,
-  ReopenReceivingExceptionRequest,
   RejectPurchaseRequestRequest,
-  UpdateReceivingReceiptLineRequest,
   PricingSnapshotResponse,
   CreatePricingSnapshotRequest,
   LeadTimeSnapshotResponse,
@@ -469,172 +450,6 @@ export async function createPartVendorLink(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PartVendorLinkResponse>(response, 'Failed to link vendor to part')
-}
-
-export async function getInventoryLocations(
-  accessToken: string,
-): Promise<InventoryLocationResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/locations`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<InventoryLocationResponse[]>(response, 'Failed to load inventory locations')
-}
-
-export async function getInventoryBins(
-  accessToken: string,
-  locationId?: string,
-): Promise<InventoryBinResponse[]> {
-  const query = locationId ? `?locationId=${encodeURIComponent(locationId)}` : ''
-  const response = await fetch(`${apiBase}/api/v1/inventory/bins${query}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<InventoryBinResponse[]>(response, 'Failed to load inventory bins')
-}
-
-export async function getPartStockLevels(
-  accessToken: string,
-  params?: { locationId?: string; partId?: string },
-): Promise<PartStockLevelResponse[]> {
-  const search = new URLSearchParams()
-  if (params?.locationId) {
-    search.set('locationId', params.locationId)
-  }
-  if (params?.partId) {
-    search.set('partId', params.partId)
-  }
-  const query = search.toString()
-  const url = query ? `${apiBase}/api/v1/inventory/stock?${query}` : `${apiBase}/api/v1/inventory/stock`
-  const response = await fetch(url, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<PartStockLevelResponse[]>(response, 'Failed to load stock levels')
-}
-
-export async function getStockReservations(
-  accessToken: string,
-  options?: { status?: string; partId?: string; binId?: string },
-): Promise<StockReservationResponse[]> {
-  const params = new URLSearchParams()
-  if (options?.status) {
-    params.set('status', options.status)
-  }
-  if (options?.partId) {
-    params.set('partId', options.partId)
-  }
-  if (options?.binId) {
-    params.set('binId', options.binId)
-  }
-  const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/v1/inventory/reservations${query}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<StockReservationResponse[]>(response, 'Failed to load stock reservations')
-}
-
-export async function createStockReservation(
-  accessToken: string,
-  request: CreateStockReservationRequest,
-): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/reservations`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<StockReservationResponse>(response, 'Failed to create stock reservation')
-}
-
-export async function releaseStockReservation(
-  accessToken: string,
-  reservationId: string,
-  request: ReleaseStockReservationRequest,
-): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/reservations/${reservationId}/release`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<StockReservationResponse>(response, 'Failed to release stock reservation')
-}
-
-export async function fulfillStockReservation(
-  accessToken: string,
-  reservationId: string,
-): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/reservations/${reservationId}/fulfill`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<StockReservationResponse>(response, 'Failed to fulfill stock reservation')
-}
-
-export async function createInventoryLocation(
-  accessToken: string,
-  request: CreateInventoryLocationRequest,
-): Promise<InventoryLocationResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/locations`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<InventoryLocationResponse>(response, 'Failed to create inventory location')
-}
-
-export async function createInventoryBin(
-  accessToken: string,
-  locationId: string,
-  request: CreateInventoryBinRequest,
-): Promise<InventoryBinResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/locations/${locationId}/bins`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<InventoryBinResponse>(response, 'Failed to create inventory bin')
-}
-
-export async function upsertPartStockLevel(
-  accessToken: string,
-  request: UpsertPartStockLevelRequest,
-): Promise<PartStockLevelResponse> {
-  const response = await fetch(`${apiBase}/api/v1/inventory/stock`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<PartStockLevelResponse>(response, 'Failed to save stock level')
-}
-
-export async function getStockLedger(
-  accessToken: string,
-  options?: { partId?: string; binId?: string; locationId?: string },
-): Promise<WmsStockLedgerEntryResponse[]> {
-  const params = new URLSearchParams()
-  if (options?.partId) {
-    params.set('partId', options.partId)
-  }
-  if (options?.binId) {
-    params.set('binId', options.binId)
-  }
-  if (options?.locationId) {
-    params.set('locationId', options.locationId)
-  }
-  const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/v1/wms/stock-ledger${query}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<WmsStockLedgerEntryResponse[]>(response, 'Failed to load stock ledger')
-}
-
-export async function transferStock(
-  accessToken: string,
-  request: TransferStockRequest,
-): Promise<WmsMovementResponse> {
-  const response = await fetch(`${apiBase}/api/v1/wms/transfer`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<WmsMovementResponse>(response, 'Failed to transfer stock')
 }
 
 export async function getOutboundShipments(accessToken: string): Promise<OutboundShipmentResponse[]> {
@@ -1046,159 +861,6 @@ export async function cancelPurchaseOrder(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to cancel purchase order')
-}
-
-export async function getReceivingReceipt(
-  accessToken: string,
-  receivingReceiptId: string,
-): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(`${apiBase}/api/v1/receiving/${receivingReceiptId}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ReceivingReceiptResponse>(response, 'Failed to load receiving receipt')
-}
-
-export async function getReceivingReceipts(
-  accessToken: string,
-  options?: { status?: string; purchaseOrderId?: string },
-): Promise<ReceivingReceiptResponse[]> {
-  const params = new URLSearchParams()
-  if (options?.status) {
-    params.set('status', options.status)
-  }
-  if (options?.purchaseOrderId) {
-    params.set('purchaseOrderId', options.purchaseOrderId)
-  }
-  const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/v1/receiving${query}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ReceivingReceiptResponse[]>(response, 'Failed to load receiving receipts')
-}
-
-export async function createReceivingReceiptFromPurchaseOrder(
-  accessToken: string,
-  purchaseOrderId: string,
-  request: CreateReceivingReceiptFromPurchaseOrderRequest,
-): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/from-purchase-order/${purchaseOrderId}`,
-    {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-      body: JSON.stringify(request),
-    },
-  )
-  return parseJsonResponse<ReceivingReceiptResponse>(
-    response,
-    'Failed to create receiving receipt',
-  )
-}
-
-export async function postReceivingReceipt(
-  accessToken: string,
-  receivingReceiptId: string,
-): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(`${apiBase}/api/v1/receiving/${receivingReceiptId}/post`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ReceivingReceiptResponse>(response, 'Failed to post receiving receipt')
-}
-
-export async function updateReceivingReceiptLine(
-  accessToken: string,
-  receivingReceiptId: string,
-  lineId: string,
-  request: UpdateReceivingReceiptLineRequest,
-): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/${receivingReceiptId}/lines/${lineId}`,
-    {
-      method: 'PUT',
-      headers: authHeaders(accessToken),
-      body: JSON.stringify(request),
-    },
-  )
-  return parseJsonResponse<ReceivingReceiptResponse>(
-    response,
-    'Failed to update receiving receipt line',
-  )
-}
-
-export async function createReceivingException(
-  accessToken: string,
-  receivingReceiptId: string,
-  lineId: string,
-  request: CreateReceivingExceptionRequest,
-): Promise<ReceivingExceptionResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/${receivingReceiptId}/lines/${lineId}/exceptions`,
-    {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-      body: JSON.stringify(request),
-    },
-  )
-  return parseJsonResponse<ReceivingExceptionResponse>(
-    response,
-    'Failed to record receiving exception',
-  )
-}
-
-export async function resolveReceivingException(
-  accessToken: string,
-  receivingExceptionId: string,
-): Promise<ReceivingExceptionResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/resolve`,
-    {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-    },
-  )
-  return parseJsonResponse<ReceivingExceptionResponse>(
-    response,
-    'Failed to resolve receiving exception',
-  )
-}
-
-export async function cancelReceivingException(
-  accessToken: string,
-  receivingExceptionId: string,
-  request: CancelReceivingExceptionRequest,
-): Promise<ReceivingExceptionResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/cancel`,
-    {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-      body: JSON.stringify(request),
-    },
-  )
-  return parseJsonResponse<ReceivingExceptionResponse>(
-    response,
-    'Failed to cancel receiving exception',
-  )
-}
-
-export async function reopenReceivingException(
-  accessToken: string,
-  receivingExceptionId: string,
-  request: ReopenReceivingExceptionRequest,
-): Promise<ReceivingExceptionResponse> {
-  const response = await fetch(
-    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/reopen`,
-    {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-      body: JSON.stringify(request),
-    },
-  )
-  return parseJsonResponse<ReceivingExceptionResponse>(
-    response,
-    'Failed to reopen receiving exception',
-  )
 }
 
 export async function getBackorders(

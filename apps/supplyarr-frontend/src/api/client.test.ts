@@ -40,7 +40,6 @@ import {
   getDemandProcessingDashboard,
   getDemandRefs,
   getRfqs,
-  getInventoryLocations,
   getReorderEvaluation,
   listWarrantyClaims,
   getParts,
@@ -50,7 +49,6 @@ import {
   getVendorReturns,
   getPricingSnapshots,
   getLeadTimeSnapshots,
-  getReceivingReceipts,
   getPurchaseRequests,
   getVendors,
   getSupplyReadinessDashboard,
@@ -150,31 +148,6 @@ describe('supplyarr api client', () => {
     )
   })
 
-  it('loads inventory locations on success', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [
-          {
-            locationId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-            locationKey: 'main-wh',
-            name: 'Main Warehouse',
-            locationType: 'warehouse',
-            addressLine: '',
-            status: 'active',
-            binCount: 0,
-            createdAt: '2026-05-27T00:00:00Z',
-            updatedAt: '2026-05-27T00:00:00Z',
-          },
-        ],
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const locations = await getInventoryLocations('token')
-    expect(locations).toHaveLength(1)
-    expect(locations[0].locationKey).toBe('main-wh')
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/inventory/locations', expect.any(Object))
-  })
-
   it('loads purchase requests on success', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -245,42 +218,6 @@ describe('supplyarr api client', () => {
     expect(orders).toHaveLength(1)
     expect(orders[0].orderKey).toBe('po-001')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/purchase-orders', expect.any(Object))
-  })
-
-  it('loads receiving receipts on success', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [
-          {
-            receivingReceiptId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-            receiptKey: 'rcpt-001',
-            status: 'posted',
-            purchaseOrderId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-            purchaseOrderKey: 'po-001',
-            inventoryBinId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
-            binKey: 'a-01',
-            binName: 'Aisle 01',
-            inventoryLocationId: '99999999-9999-9999-9999-999999999999',
-            locationKey: 'main-wh',
-            locationName: 'Main',
-            notes: '',
-            createdByUserId: '11111111-1111-1111-1111-111111111111',
-            postedAt: '2026-05-27T00:00:00Z',
-            postedByUserId: '11111111-1111-1111-1111-111111111111',
-            lines: [],
-            exceptions: [],
-            createdAt: '2026-05-27T00:00:00Z',
-            updatedAt: '2026-05-27T00:00:00Z',
-          },
-        ],
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const receipts = await getReceivingReceipts('token')
-    expect(receipts).toHaveLength(1)
-    expect(receipts[0].receiptKey).toBe('rcpt-001')
-    expect(receipts[0].exceptions).toEqual([])
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/receiving', expect.any(Object))
   })
 
   it('loads backorders on success', async () => {
@@ -595,19 +532,6 @@ describe('supplyarr api client', () => {
     const dashboard = await getSupplyReadinessDashboard('token')
     expect(dashboard.totals.activePartsCount).toBe(1)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/supply-readiness/dashboard', expect.any(Object))
-  })
-
-  it('loads stock reservations from v1 endpoint', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [],
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const { getStockReservations } = await import('./client')
-    const reservations = await getStockReservations('token')
-    expect(reservations).toEqual([])
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/inventory/reservations', expect.any(Object))
   })
 
   it('loads rfqs from v1 endpoint', async () => {

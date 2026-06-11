@@ -42,6 +42,26 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
+    public void BuildSurfaces_for_supplyarr_reflects_procurement_owned_surfaces()
+    {
+        var surfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "supplyarr",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.Contains(surfaces, s => s.SurfaceKey == "parties" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "catalog" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "purchasing" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "pricing" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "planning" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "readiness" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
+        Assert.DoesNotContain(surfaces, s => s.SurfaceKey == "inventory");
+        Assert.DoesNotContain(surfaces, s => s.SurfaceKey == "procurement");
+    }
+
+    [Fact]
     public void BuildSurfaces_for_fieldcompanion_includes_field_companion_navigation()
     {
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
@@ -67,6 +87,30 @@ public sealed class ProductSurfaceCatalogTests
 
         var withAdmin = ProductSurfaceCatalog.BuildSurfaces("nexarr", "available", true, isPlatformAdmin: true);
         Assert.True(withAdmin.First(s => s.SurfaceKey == "tenants").IsEnabled);
+    }
+
+    [Fact]
+    public void BuildSurfaces_platform_admin_gate_on_compliancecore()
+    {
+        var withoutAdmin = ProductSurfaceCatalog.BuildSurfaces(
+            "compliancecore",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.All(withoutAdmin, surface => Assert.False(surface.IsEnabled));
+        Assert.All(
+            withoutAdmin,
+            surface => Assert.Contains("platform administrator", surface.PermissionHint!, StringComparison.OrdinalIgnoreCase));
+
+        var withAdmin = ProductSurfaceCatalog.BuildSurfaces(
+            "compliancecore",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: true);
+
+        Assert.Contains(withAdmin, surface => surface.SurfaceKey == "launch" && surface.IsEnabled);
+        Assert.Contains(withAdmin, surface => surface.SurfaceKey == "rules" && surface.IsEnabled);
     }
 
     [Fact]

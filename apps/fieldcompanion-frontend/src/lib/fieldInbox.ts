@@ -8,6 +8,7 @@ const PRODUCT_LABELS: Record<string, string> = {
   trainarr: 'TrainArr',
   staffarr: 'StaffArr',
   supplyarr: 'SupplyArr',
+  loadarr: 'LoadArr',
 }
 
 const TASK_TYPE_LABELS: Record<string, string> = {

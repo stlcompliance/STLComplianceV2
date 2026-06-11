@@ -60,6 +60,7 @@ public static class FieldInboxRules
         "maintainarr",
         "routarr",
         "supplyarr",
+        "loadarr",
     ];
 
     public static IReadOnlyList<string> FieldProductKeys => FieldInboxProducts.ToList();

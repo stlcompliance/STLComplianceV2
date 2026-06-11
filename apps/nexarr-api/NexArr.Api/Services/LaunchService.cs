@@ -97,7 +97,9 @@ public sealed class LaunchService(
                 .Select(entitlement => entitlement.ProductKey)
                 .ToListAsync(cancellationToken);
 
-            productsQuery = productsQuery.Where(product => entitledProductKeys.Contains(product.ProductKey));
+            productsQuery = productsQuery.Where(product =>
+                entitledProductKeys.Contains(product.ProductKey)
+                && product.ProductKey != "compliancecore");
         }
 
         var products = await productsQuery
@@ -632,6 +634,12 @@ public sealed class LaunchService(
         if (tenant.Status != TenantStatuses.Active)
         {
             return "tenant_suspended";
+        }
+
+        if (string.Equals(productKey, "compliancecore", StringComparison.OrdinalIgnoreCase)
+            && !principal.IsPlatformAdmin())
+        {
+            return "platform_admin_required";
         }
 
         if (!principal.IsPlatformAdmin() && !principal.HasProductEntitlement(productKey))

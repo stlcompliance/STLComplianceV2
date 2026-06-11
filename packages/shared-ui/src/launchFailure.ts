@@ -45,6 +45,10 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
     return `Your account is not entitled to ${productName} for this tenant.`
   }
 
+  if (code === 'auth.platform_admin_required') {
+    return `${productName} requires platform administrator access in NexArr.`
+  }
+
   if (code === 'handoff.product_mismatch' || code === 'launch.callback_not_allowed') {
     return `Invalid callback for ${productName}. Relaunch from NexArr.`
   }

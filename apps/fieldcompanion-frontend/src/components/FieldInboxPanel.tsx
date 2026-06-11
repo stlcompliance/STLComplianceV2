@@ -2,7 +2,7 @@ import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/ty
 import { ApiErrorCallout } from '@stl/shared-ui'
 import { formatBlockedTaskReason } from '../lib/FieldCompanionDeniedReasonCatalog'
 import { formatWhen, inboxSourceLoadFailures, productLabel, taskTypeLabel } from '../lib/fieldInbox'
-import { isMaintainarrInspectionTask, isMaintainarrWorkOrderTask, isRoutarrTripTask, isSupplyarrReceivingTask, isTrainarrFieldTask } from '../lib/evidenceCapture'
+import { isMaintainarrInspectionTask, isMaintainarrWorkOrderTask, isReceivingTask, isRoutarrTripTask, isTrainarrFieldTask } from '../lib/evidenceCapture'
 import { FieldTaskReceivingPanel } from './FieldTaskReceivingPanel'
 import { productLaunchUrl } from '../api/client'
 import type { MergedSubmissionChip } from '../lib/submissionState'
@@ -263,7 +263,7 @@ function TaskCard({
         />
       )}
 
-      {isSupplyarrReceivingTask(task.taskKey) && (
+      {isReceivingTask(task.taskKey) && (
         <FieldTaskReceivingPanel
           accessToken={accessToken}
           task={task}

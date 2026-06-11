@@ -76,8 +76,8 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
     >
       <h2 className="text-lg font-semibold text-slate-50">Procurement notifications</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Configure HTTPS webhooks for purchase request, purchase order, and receiving lifecycle events.
-        Dispatch runs on a scheduled worker.
+        Configure HTTPS webhooks for purchase request, purchase order, and LoadArr receipt-posted
+        events mirrored into procurement coordination. Dispatch runs on a scheduled worker.
       </p>
 
       {settingsQuery.isError && (
@@ -154,7 +154,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
               checked={notifyReceivingReceiptPosted}
               onChange={(event) => setNotifyReceivingReceiptPosted(event.target.checked)}
             />
-            Receiving receipt posted
+            LoadArr receipt posted
           </label>
         </fieldset>
 

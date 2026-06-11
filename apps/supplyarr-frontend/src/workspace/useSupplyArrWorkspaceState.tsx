@@ -1,17 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 
 
 import {
 
   createPart,
-
-  createInventoryBin,
-
-  createInventoryLocation,
-
   createPartCatalog,
 
   createPartVendorLink,
@@ -20,18 +15,8 @@ import {
 
   createPurchaseOrderFromPurchaseRequest,
 
-  cancelBackorder,
-  cancelVendorReturn,
-  createBackorderFromPurchaseOrderLine,
-  createReceivingException,
-  createReceivingReceiptFromPurchaseOrder,
-  cancelReceivingException,
-  createVendorReturnFromPurchaseOrderLine,
-  createVendorReturnFromStock,
-  fulfillBackorder,
   getBackorders,
   getVendorReturns,
-  postVendorReturn,
   getPricingSnapshots,
   getLeadTimeSnapshots,
   getAvailabilitySnapshots,
@@ -42,11 +27,7 @@ import {
   upsertPartReorderPolicy,
   createPurchaseRequestFromReorder,
   createPurchaseRequestFromDemandRef,
-  createStockReservation,
-  fulfillStockReservation,
   getDemandRefs,
-  getStockReservations,
-  releaseStockReservation,
 
   createVendor,
   createSupplier,
@@ -65,17 +46,9 @@ import {
 
   getDealers,
 
-  getInventoryBins,
-  transferStock,
-  getStockLedger,
-
-  getInventoryLocations,
-
   getMe,
 
   getPartCatalogs,
-
-  getPartStockLevels,
 
   getParts,
   getSubstitutions,
@@ -84,39 +57,28 @@ import {
 
   getPurchaseOrders,
 
-  getReceivingReceipts,
-
   getSuppliers,
 
   issuePurchaseOrder,
-
-  postReceivingReceipt,
-  resolveReceivingException,
-  reopenReceivingException,
 
   getVendors,
 
   rejectPurchaseRequest,
 
   submitPurchaseRequest,
-  updateReceivingReceiptLine,
-
-  upsertPartStockLevel,
 
 } from '../api/client'
 
-import type { UpdateExternalPartyRequest, WmsMovementResponse } from '../api/types'
+import type { UpdateExternalPartyRequest } from '../api/types'
 
 import {
   canApprovePurchaseOrders,
   canApprovePurchaseRequests,
   canCreatePurchaseOrders,
   canCreatePurchaseRequests,
-  canPerformReceiving,
   canReadVendorReports as userCanReadVendorReports,
   canExportVendorReports as userCanExportVendorReports,
-  canReadPartsInventoryReports as userCanReadPartsInventoryReports,
-  canExportPartsInventoryReports as userCanExportPartsInventoryReports,
+  canReadPartSubstitutions as userCanReadPartSubstitutions,
   canReadPurchasingReports as userCanReadPurchasingReports,
   canExportPurchasingReports as userCanExportPurchasingReports,
   canReadComplianceReports as userCanReadComplianceReports,
@@ -134,8 +96,6 @@ import {
 } from '../auth/sessionStorage'
 
 export function useSupplyArrWorkspaceState() {
-  const enableSupplyArrInventoryExecution = false
-  const enableSupplyArrReceivingExecution = false
   const [searchParams] = useSearchParams()
   const handoff = searchParams.get('handoff')
   const handoffRedirect = handoff
@@ -202,50 +162,6 @@ export function useSupplyArrWorkspaceState() {
 
   const [vendorPartNumber, setVendorPartNumber] = useState('')
 
-  const [invLocationKey, setInvLocationKey] = useState('')
-
-  const [invLocationName, setInvLocationName] = useState('')
-
-  const [invLocationType, setInvLocationType] = useState('warehouse')
-
-  const [invAddressLine, setInvAddressLine] = useState('')
-
-  const [invBinKey, setInvBinKey] = useState('')
-
-  const [invBinName, setInvBinName] = useState('')
-
-  const [selectedInvLocationId, setSelectedInvLocationId] = useState('')
-
-  const [selectedStockPartId, setSelectedStockPartId] = useState('')
-
-  const [selectedStockBinId, setSelectedStockBinId] = useState('')
-
-  const [stockQuantity, setStockQuantity] = useState('')
-
-  const [transferKey, setTransferKey] = useState('')
-  const [transferPartId, setTransferPartId] = useState('')
-  const [transferFromBinId, setTransferFromBinId] = useState('')
-  const [transferToBinId, setTransferToBinId] = useState('')
-  const [transferQuantity, setTransferQuantity] = useState('')
-  const [transferNotes, setTransferNotes] = useState('')
-  const [lastTransferResult, setLastTransferResult] = useState<WmsMovementResponse | null>(null)
-
-  const [reservationKey, setReservationKey] = useState('')
-
-  const [selectedReservationId, setSelectedReservationId] = useState('')
-
-  const [selectedReservationPartId, setSelectedReservationPartId] = useState('')
-
-  const [selectedReservationBinId, setSelectedReservationBinId] = useState('')
-
-  const [reservationQuantity, setReservationQuantity] = useState('')
-
-  const [reservationNotes, setReservationNotes] = useState('')
-
-  const [reservationReleaseReason, setReservationReleaseReason] = useState('')
-
-  const [reservationStatusFilter, setReservationStatusFilter] = useState('active')
-
   const [prRequestKey, setPrRequestKey] = useState('')
 
   const [prTitle, setPrTitle] = useState('')
@@ -271,66 +187,6 @@ export function useSupplyArrWorkspaceState() {
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState('')
 
   const [poCancellationReason, setPoCancellationReason] = useState('')
-
-  const [receiptKey, setReceiptKey] = useState('')
-
-  const [receiveSourcePurchaseOrderId, setReceiveSourcePurchaseOrderId] = useState('')
-
-  const [selectedReceivingReceiptId, setSelectedReceivingReceiptId] = useState('')
-
-  const [receiveBinId, setReceiveBinId] = useState('')
-
-  const [selectedReceiveLineId, setSelectedReceiveLineId] = useState('')
-
-  const [lineQuantityReceived, setLineQuantityReceived] = useState('')
-
-  const [exceptionType, setExceptionType] = useState('short')
-
-  const [exceptionQuantity, setExceptionQuantity] = useState('')
-
-  const [exceptionNotes, setExceptionNotes] = useState('')
-
-  const [exceptionCancelReason, setExceptionCancelReason] = useState('')
-
-  const [exceptionReopenReason, setExceptionReopenReason] = useState('')
-
-  const [backorderKey, setBackorderKey] = useState('')
-
-  const [selectedBackorderId, setSelectedBackorderId] = useState('')
-
-  const [selectedBackorderPoLineId, setSelectedBackorderPoLineId] = useState('')
-
-  const [backorderQuantity, setBackorderQuantity] = useState('')
-
-  const [backorderNotes, setBackorderNotes] = useState('')
-
-  const [backorderCancelReason, setBackorderCancelReason] = useState('')
-
-  const [backorderStatusFilter, setBackorderStatusFilter] = useState('open')
-
-  const [returnKey, setReturnKey] = useState('')
-
-  const [selectedReturnId, setSelectedReturnId] = useState('')
-
-  const [selectedReturnVendorId, setSelectedReturnVendorId] = useState('')
-
-  const [selectedReturnBinId, setSelectedReturnBinId] = useState('')
-
-  const [selectedReturnPoLineId, setSelectedReturnPoLineId] = useState('')
-
-  const [selectedReturnPartId, setSelectedReturnPartId] = useState('')
-
-  const [returnQuantity, setReturnQuantity] = useState('')
-
-  const [rmaNumber, setRmaNumber] = useState('')
-
-  const [returnNotes, setReturnNotes] = useState('')
-
-  const [returnCancelReason, setReturnCancelReason] = useState('')
-
-  const [returnStatusFilter, setReturnStatusFilter] = useState('')
-
-  const [returnSource, setReturnSource] = useState<'stock' | 'purchase_order_line'>('stock')
 
   const [pricingSnapshotKey, setPricingSnapshotKey] = useState('')
 
@@ -455,44 +311,6 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const locationsQuery = useQuery({
-
-    queryKey: ['supplyarr-inventory-locations', session?.accessToken],
-
-    queryFn: () => getInventoryLocations(session!.accessToken),
-
-    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
-  const binsQuery = useQuery({
-
-    queryKey: ['supplyarr-inventory-bins', session?.accessToken, selectedInvLocationId],
-
-    queryFn: () => getInventoryBins(session!.accessToken, selectedInvLocationId),
-
-    enabled:
-      enableSupplyArrInventoryExecution &&
-      Boolean(session?.accessToken) &&
-      meQuery.isSuccess &&
-      Boolean(selectedInvLocationId),
-
-  })
-
-  const allBinsQuery = useQuery({
-
-    queryKey: ['supplyarr-inventory-bins-all', session?.accessToken],
-
-    queryFn: () => getInventoryBins(session!.accessToken),
-
-    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
   const purchaseRequestsQuery = useQuery({
 
     queryKey: ['supplyarr-purchase-requests', session?.accessToken],
@@ -517,27 +335,15 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const receivingReceiptsQuery = useQuery({
-
-    queryKey: ['supplyarr-receiving', session?.accessToken],
-
-    queryFn: () => getReceivingReceipts(session!.accessToken),
-
-    enabled: enableSupplyArrReceivingExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
   const backordersQuery = useQuery({
 
-    queryKey: ['supplyarr-backorders', session?.accessToken, backorderStatusFilter],
+    queryKey: ['supplyarr-backorders', session?.accessToken],
 
     queryFn: () =>
 
       getBackorders(session!.accessToken, {
 
-        status: backorderStatusFilter || undefined,
+        status: undefined,
 
       }),
 
@@ -549,13 +355,13 @@ export function useSupplyArrWorkspaceState() {
 
   const vendorReturnsQuery = useQuery({
 
-    queryKey: ['supplyarr-returns', session?.accessToken, returnStatusFilter],
+    queryKey: ['supplyarr-returns', session?.accessToken],
 
     queryFn: () =>
 
       getVendorReturns(session!.accessToken, {
 
-        status: returnStatusFilter || undefined,
+        status: undefined,
 
       }),
 
@@ -620,65 +426,6 @@ export function useSupplyArrWorkspaceState() {
     queryFn: () => getDemandRefs(session!.accessToken),
 
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
-  const stockQuery = useQuery({
-
-    queryKey: ['supplyarr-inventory-stock', session?.accessToken, selectedInvLocationId],
-
-    queryFn: () =>
-
-      getPartStockLevels(session!.accessToken, {
-
-        locationId: selectedInvLocationId || undefined,
-
-      }),
-
-    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-  const stockLedgerQuery = useQuery({
-
-    queryKey: [
-      'supplyarr-stock-ledger',
-      session?.accessToken,
-      selectedInvLocationId,
-      selectedStockBinId,
-      selectedStockPartId,
-    ],
-
-    queryFn: () =>
-      getStockLedger(session!.accessToken, {
-        locationId: selectedInvLocationId || undefined,
-        binId: selectedStockBinId || undefined,
-        partId: selectedStockPartId || undefined,
-      }),
-
-    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
-  const stockReservationsQuery = useQuery({
-
-    queryKey: [
-      'supplyarr-stock-reservations',
-      session?.accessToken,
-      reservationStatusFilter,
-      selectedInvLocationId,
-    ],
-
-    queryFn: () =>
-      getStockReservations(session!.accessToken, {
-        status: reservationStatusFilter || undefined,
-      }),
-
-    enabled: enableSupplyArrInventoryExecution && Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
 
@@ -931,68 +678,6 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const createLocationMutation = useMutation({
-
-    mutationFn: () =>
-
-      createInventoryLocation(session!.accessToken, {
-
-        locationKey: invLocationKey,
-
-        name: invLocationName,
-
-        locationType: invLocationType,
-
-        addressLine: invAddressLine,
-
-      }),
-
-    onSuccess: async (created) => {
-
-      setInvLocationKey('')
-
-      setInvLocationName('')
-
-      setInvAddressLine('')
-
-      setSelectedInvLocationId(created.locationId)
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-locations'] })
-
-    },
-
-  })
-
-
-
-  const createBinMutation = useMutation({
-
-    mutationFn: () =>
-
-      createInventoryBin(session!.accessToken, selectedInvLocationId, {
-
-        binKey: invBinKey,
-
-        name: invBinName,
-
-      }),
-
-    onSuccess: async () => {
-
-      setInvBinKey('')
-
-      setInvBinName('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-bins'] })
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-locations'] })
-
-    },
-
-  })
-
-
-
   const createPurchaseRequestMutation = useMutation({
 
     mutationFn: () =>
@@ -1170,362 +855,6 @@ export function useSupplyArrWorkspaceState() {
       setPoCancellationReason('')
 
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-purchase-orders'] })
-
-    },
-
-  })
-
-
-
-  const createReceivingReceiptMutation = useMutation({
-
-    mutationFn: () =>
-
-      createReceivingReceiptFromPurchaseOrder(
-
-        session!.accessToken,
-
-        receiveSourcePurchaseOrderId,
-
-        { receiptKey, inventoryBinId: receiveBinId },
-
-      ),
-
-    onSuccess: async (created) => {
-
-      setReceiptKey('')
-
-      setSelectedReceivingReceiptId(created.receivingReceiptId)
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-
-
-  const postReceivingReceiptMutation = useMutation({
-
-    mutationFn: () => postReceivingReceipt(session!.accessToken, selectedReceivingReceiptId),
-
-    onSuccess: async () => {
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-purchase-orders'] })
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-backorders'] })
-
-    },
-
-  })
-
-
-
-  const updateReceivingLineMutation = useMutation({
-
-    mutationFn: () =>
-
-      updateReceivingReceiptLine(
-
-        session!.accessToken,
-
-        selectedReceivingReceiptId,
-
-        selectedReceiveLineId,
-
-        { quantityReceived: Number(lineQuantityReceived) },
-
-      ),
-
-    onSuccess: async () => {
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-
-
-  const createReceivingExceptionMutation = useMutation({
-
-    mutationFn: () =>
-
-      createReceivingException(
-
-        session!.accessToken,
-
-        selectedReceivingReceiptId,
-
-        selectedReceiveLineId,
-
-        {
-
-          exceptionType,
-
-          quantity: Number(exceptionQuantity),
-
-          notes: exceptionNotes || null,
-
-        },
-
-      ),
-
-    onSuccess: async () => {
-
-      setExceptionQuantity('')
-
-      setExceptionNotes('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-
-
-  const resolveReceivingExceptionMutation = useMutation({
-
-    mutationFn: (receivingExceptionId: string) =>
-
-      resolveReceivingException(session!.accessToken, receivingExceptionId),
-
-    onSuccess: async () => {
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-  const cancelReceivingExceptionMutation = useMutation({
-
-    mutationFn: ({ receivingExceptionId, reason }: { receivingExceptionId: string; reason: string }) =>
-
-      cancelReceivingException(session!.accessToken, receivingExceptionId, { reason }),
-
-    onSuccess: async () => {
-
-      setExceptionCancelReason('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-  const reopenReceivingExceptionMutation = useMutation({
-
-    mutationFn: ({ receivingExceptionId, reason }: { receivingExceptionId: string; reason: string }) =>
-
-      reopenReceivingException(session!.accessToken, receivingExceptionId, { reason }),
-
-    onSuccess: async () => {
-
-      setExceptionReopenReason('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-receiving'] })
-
-    },
-
-  })
-
-
-
-  const createBackorderMutation = useMutation({
-
-    mutationFn: () =>
-
-      createBackorderFromPurchaseOrderLine(
-
-        session!.accessToken,
-
-        selectedBackorderPoLineId,
-
-        {
-
-          backorderKey,
-
-          quantityBackordered: backorderQuantity ? Number(backorderQuantity) : null,
-
-          notes: backorderNotes || null,
-
-        },
-
-      ),
-
-    onSuccess: async (created) => {
-
-      setBackorderKey('')
-
-      setBackorderQuantity('')
-
-      setBackorderNotes('')
-
-      setSelectedBackorderId(created.backorderId)
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-backorders'] })
-
-    },
-
-  })
-
-
-
-  const fulfillBackorderMutation = useMutation({
-
-    mutationFn: () => fulfillBackorder(session!.accessToken, selectedBackorderId),
-
-    onSuccess: async () => {
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-backorders'] })
-
-    },
-
-  })
-
-
-
-  const cancelBackorderMutation = useMutation({
-
-    mutationFn: () =>
-
-      cancelBackorder(session!.accessToken, selectedBackorderId, {
-
-        reason: backorderCancelReason,
-
-      }),
-
-    onSuccess: async () => {
-
-      setBackorderCancelReason('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-backorders'] })
-
-    },
-
-  })
-
-
-
-  const createReturnMutation = useMutation({
-
-    mutationFn: () => {
-
-      const quantity = Number(returnQuantity)
-
-      if (returnSource === 'stock') {
-
-        return createVendorReturnFromStock(session!.accessToken, {
-
-          returnKey,
-
-          vendorPartyId: selectedReturnVendorId,
-
-          inventoryBinId: selectedReturnBinId,
-
-          rmaNumber: rmaNumber || null,
-
-          notes: returnNotes || null,
-
-          lines: [
-
-            {
-
-              partId: selectedReturnPartId,
-
-              quantity,
-
-              notes: returnNotes || null,
-
-            },
-
-          ],
-
-        })
-
-      }
-
-      return createVendorReturnFromPurchaseOrderLine(
-
-        session!.accessToken,
-
-        selectedReturnPoLineId,
-
-        {
-
-          returnKey,
-
-          inventoryBinId: selectedReturnBinId,
-
-          quantity,
-
-          rmaNumber: rmaNumber || null,
-
-          notes: returnNotes || null,
-
-        },
-
-      )
-
-    },
-
-    onSuccess: async (created) => {
-
-      setReturnKey('')
-
-      setReturnQuantity('')
-
-      setReturnNotes('')
-
-      setRmaNumber('')
-
-      setSelectedReturnId(created.returnId)
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-returns'] })
-
-    },
-
-  })
-
-
-
-  const postReturnMutation = useMutation({
-
-    mutationFn: () => postVendorReturn(session!.accessToken, selectedReturnId),
-
-    onSuccess: async () => {
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-returns'] })
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-
-    },
-
-  })
-
-
-
-  const cancelReturnMutation = useMutation({
-
-    mutationFn: () =>
-
-      cancelVendorReturn(session!.accessToken, selectedReturnId, {
-
-        reason: returnCancelReason,
-
-      }),
-
-    onSuccess: async () => {
-
-      setReturnCancelReason('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-returns'] })
 
     },
 
@@ -1733,105 +1062,6 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const upsertStockMutation = useMutation({
-
-    mutationFn: () =>
-
-      upsertPartStockLevel(session!.accessToken, {
-
-        partId: selectedStockPartId,
-
-        binId: selectedStockBinId,
-
-        quantityOnHand: Number(stockQuantity),
-
-      }),
-
-    onSuccess: async () => {
-
-      setStockQuantity('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
-
-    },
-
-  })
-
-  const transferStockMutation = useMutation({
-
-    mutationFn: () =>
-      transferStock(session!.accessToken, {
-        idempotencyKey: transferKey,
-        partId: transferPartId,
-        fromBinId: transferFromBinId,
-        toBinId: transferToBinId,
-        quantity: Number(transferQuantity),
-        notes: transferNotes || null,
-      }),
-
-    onSuccess: async (result) => {
-
-      setTransferKey('')
-      setTransferPartId('')
-      setTransferFromBinId('')
-      setTransferToBinId('')
-      setTransferQuantity('')
-      setTransferNotes('')
-      setLastTransferResult(result)
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-bins'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-bins-all'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
-
-    },
-
-  })
-
-  const createStockReservationMutation = useMutation({
-    mutationFn: () =>
-      createStockReservation(session!.accessToken, {
-        reservationKey,
-        partId: selectedReservationPartId,
-        binId: selectedReservationBinId,
-        quantity: Number(reservationQuantity),
-        sourceType: 'manual',
-        notes: reservationNotes || null,
-      }),
-    onSuccess: async (created) => {
-      setReservationKey('')
-      setReservationQuantity('')
-      setReservationNotes('')
-      setSelectedReservationId(created.reservationId)
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
-    },
-  })
-
-  const releaseStockReservationMutation = useMutation({
-    mutationFn: () =>
-      releaseStockReservation(session!.accessToken, selectedReservationId, {
-        reason: reservationReleaseReason || null,
-      }),
-    onSuccess: async () => {
-      setReservationReleaseReason('')
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
-    },
-  })
-
-  const fulfillStockReservationMutation = useMutation({
-    mutationFn: () => fulfillStockReservation(session!.accessToken, selectedReservationId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-ledger'] })
-    },
-  })
-
   const me = meQuery.data
 
   const canManage = me ? canManageParties(me.tenantRoleKey, me.isPlatformAdmin) : false
@@ -1856,8 +1086,6 @@ export function useSupplyArrWorkspaceState() {
 
   const canApprovePo = me ? canApprovePurchaseOrders(me.tenantRoleKey, me.isPlatformAdmin) : false
 
-  const canReceive = me ? canPerformReceiving(me.tenantRoleKey, me.isPlatformAdmin) : false
-
   const canManageNotifications = me
     ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
     : false
@@ -1870,19 +1098,15 @@ export function useSupplyArrWorkspaceState() {
     ? userCanExportVendorReports(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
-  const canReadPartsInventoryReports = me
-    ? userCanReadPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
+  const canReadPartSubstitutions = me
+    ? userCanReadPartSubstitutions(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
   const substitutionsQuery = useQuery({
     queryKey: ['supplyarr-substitutions', session?.accessToken, substitutionPartId],
     queryFn: () => getSubstitutions(session!.accessToken, substitutionPartId || undefined),
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPartsInventoryReports,
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPartSubstitutions,
   })
-
-  const canExportPartsInventoryReports = me
-    ? userCanExportPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
 
   const canReadPurchasingReports = me
     ? userCanReadPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
@@ -1934,81 +1158,7 @@ export function useSupplyArrWorkspaceState() {
 
     ) ?? []
 
-  const issuedPurchaseOrdersWithReceived =
-
-    purchaseOrdersQuery.data?.filter(
-
-      (po) => po.status === 'issued' && po.lines.some((l) => l.quantityReceived > 0),
-
-    ) ?? []
-
-  const returnInventoryBins = (binsQuery.data ?? []).map((bin) => ({
-
-    binId: bin.binId,
-
-    binKey: bin.binKey,
-
-    name: bin.name,
-
-    label: `${bin.binKey} · ${bin.name}`,
-
-  }))
-
-  const selectedReceivingReceipt =
-
-    receivingReceiptsQuery.data?.find(
-
-      (receipt) => receipt.receivingReceiptId === selectedReceivingReceiptId,
-
-    ) ?? null
-
-  const selectedReceivingLine =
-
-    selectedReceivingReceipt?.lines.find((line) => line.lineId === selectedReceiveLineId) ?? null
-
-
-
-  useEffect(() => {
-
-    if (!selectedReceivingReceipt) {
-
-      setSelectedReceiveLineId('')
-
-      setLineQuantityReceived('')
-
-      return
-
-    }
-
-
-
-    const firstLine = selectedReceivingReceipt.lines[0]
-
-    if (!selectedReceiveLineId && firstLine) {
-
-      setSelectedReceiveLineId(firstLine.lineId)
-
-      setLineQuantityReceived(String(firstLine.quantityReceived))
-
-      return
-
-    }
-
-
-
-    if (selectedReceivingLine) {
-
-      setLineQuantityReceived(String(selectedReceivingLine.quantityReceived))
-
-    }
-
-  }, [selectedReceivingReceipt, selectedReceiveLineId, selectedReceivingLine])
-
-
-
   const vendors = vendorsQuery.data ?? []
-
-  const locations = locationsQuery.data ?? []
 
   return {
     handoffRedirect,
@@ -2047,31 +1197,6 @@ export function useSupplyArrWorkspaceState() {
     substitutionPartId,
     selectedVendorId,
     vendorPartNumber,
-    invLocationKey,
-    invLocationName,
-    invLocationType,
-    invAddressLine,
-    invBinKey,
-    invBinName,
-    selectedInvLocationId,
-    selectedStockPartId,
-    selectedStockBinId,
-    stockQuantity,
-    transferKey,
-    transferPartId,
-    transferFromBinId,
-    transferToBinId,
-    transferQuantity,
-    transferNotes,
-    lastTransferResult,
-    reservationKey,
-    selectedReservationId,
-    selectedReservationPartId,
-    selectedReservationBinId,
-    reservationQuantity,
-    reservationNotes,
-    reservationReleaseReason,
-    reservationStatusFilter,
     prRequestKey,
     prTitle,
     prNotes,
@@ -2085,36 +1210,6 @@ export function useSupplyArrWorkspaceState() {
     poSourcePurchaseRequestId,
     selectedPurchaseOrderId,
     poCancellationReason,
-    receiptKey,
-    receiveSourcePurchaseOrderId,
-    selectedReceivingReceiptId,
-    receiveBinId,
-    selectedReceiveLineId,
-    lineQuantityReceived,
-    exceptionType,
-    exceptionQuantity,
-    exceptionNotes,
-    exceptionCancelReason,
-    exceptionReopenReason,
-    backorderKey,
-    selectedBackorderId,
-    selectedBackorderPoLineId,
-    backorderQuantity,
-    backorderNotes,
-    backorderCancelReason,
-    backorderStatusFilter,
-    returnKey,
-    selectedReturnId,
-    selectedReturnVendorId,
-    selectedReturnBinId,
-    selectedReturnPoLineId,
-    selectedReturnPartId,
-    returnQuantity,
-    rmaNumber,
-    returnNotes,
-    returnCancelReason,
-    returnStatusFilter,
-    returnSource,
     pricingSnapshotKey,
     leadTimeSnapshotKey,
     selectedSnapshotVendorLinkId,
@@ -2148,12 +1243,8 @@ export function useSupplyArrWorkspaceState() {
     catalogsQuery,
     partsQuery,
     substitutionsQuery,
-    locationsQuery,
-    binsQuery,
-    allBinsQuery,
     purchaseRequestsQuery,
     purchaseOrdersQuery,
-    receivingReceiptsQuery,
     backordersQuery,
     vendorReturnsQuery,
     pricingSnapshotsQuery,
@@ -2162,9 +1253,6 @@ export function useSupplyArrWorkspaceState() {
     reorderEvaluationQuery,
     contractsQuery,
     demandRefsQuery,
-    stockQuery,
-    stockLedgerQuery,
-    stockReservationsQuery,
     createVendorMutation,
     createSupplierMutation,
     createDealerMutation,
@@ -2175,8 +1263,6 @@ export function useSupplyArrWorkspaceState() {
     createCatalogMutation,
     createPartMutation,
     linkVendorMutation,
-    createLocationMutation,
-    createBinMutation,
     createPurchaseRequestMutation,
     submitPurchaseRequestMutation,
     approvePurchaseRequestMutation,
@@ -2185,30 +1271,12 @@ export function useSupplyArrWorkspaceState() {
     approvePurchaseOrderMutation,
     issuePurchaseOrderMutation,
     cancelPurchaseOrderMutation,
-    createReceivingReceiptMutation,
-    postReceivingReceiptMutation,
-    updateReceivingLineMutation,
-    createReceivingExceptionMutation,
-    resolveReceivingExceptionMutation,
-    cancelReceivingExceptionMutation,
-    reopenReceivingExceptionMutation,
-    createBackorderMutation,
-    fulfillBackorderMutation,
-    cancelBackorderMutation,
-    createReturnMutation,
-    postReturnMutation,
-    cancelReturnMutation,
     createPricingSnapshotMutation,
     createLeadTimeSnapshotMutation,
     createAvailabilitySnapshotMutation,
     upsertReorderPolicyMutation,
     createPurchaseRequestFromReorderMutation,
     createPurchaseRequestFromDemandRefMutation,
-    upsertStockMutation,
-    transferStockMutation,
-    createStockReservationMutation,
-    releaseStockReservationMutation,
-    fulfillStockReservationMutation,
     canManage,
     canManageCatalog,
     canManageInv,
@@ -2218,12 +1286,10 @@ export function useSupplyArrWorkspaceState() {
     canManagerOverrideEmergencyPurchase: canManagerOverrideEmergencyPurchaseFlag,
     canCreatePo,
     canApprovePo,
-    canReceive,
     canManageNotifications,
     canReadVendorReports,
     canExportVendorReports,
-    canReadPartsInventoryReports,
-    canExportPartsInventoryReports,
+    canReadPartSubstitutions,
     canReadPurchasingReports,
     canExportPurchasingReports,
     canReadComplianceReports,
@@ -2233,13 +1299,7 @@ export function useSupplyArrWorkspaceState() {
     canReadSupplyReadiness,
     approvedPurchaseRequests,
     issuedPurchaseOrders,
-    issuedPurchaseOrdersWithReceived,
-    returnInventoryBins,
-    stockLedgerEntries: stockLedgerQuery.data ?? [],
-    selectedReceivingReceipt,
-    selectedReceivingLine,
     vendors,
-    locations,
     setVendorKey,
     setVendorName,
     setVendorLegalName,
@@ -2269,30 +1329,6 @@ export function useSupplyArrWorkspaceState() {
     setSubstitutionPartId,
     setSelectedVendorId,
     setVendorPartNumber,
-    setInvLocationKey,
-    setInvLocationName,
-    setInvLocationType,
-    setInvAddressLine,
-    setInvBinKey,
-    setInvBinName,
-    setSelectedInvLocationId,
-    setSelectedStockPartId,
-    setSelectedStockBinId,
-    setStockQuantity,
-    setTransferKey,
-    setTransferPartId,
-    setTransferFromBinId,
-    setTransferToBinId,
-    setTransferQuantity,
-    setTransferNotes,
-    setReservationKey,
-    setSelectedReservationId,
-    setSelectedReservationPartId,
-    setSelectedReservationBinId,
-    setReservationQuantity,
-    setReservationNotes,
-    setReservationReleaseReason,
-    setReservationStatusFilter,
     setPrRequestKey,
     setPrTitle,
     setPrNotes,
@@ -2306,36 +1342,6 @@ export function useSupplyArrWorkspaceState() {
     setPoSourcePurchaseRequestId,
     setSelectedPurchaseOrderId,
     setPoCancellationReason,
-    setReceiptKey,
-    setReceiveSourcePurchaseOrderId,
-    setSelectedReceivingReceiptId,
-    setReceiveBinId,
-    setSelectedReceiveLineId,
-    setLineQuantityReceived,
-    setExceptionType,
-    setExceptionQuantity,
-    setExceptionNotes,
-    setExceptionCancelReason,
-    setExceptionReopenReason,
-    setBackorderKey,
-    setSelectedBackorderId,
-    setSelectedBackorderPoLineId,
-    setBackorderQuantity,
-    setBackorderNotes,
-    setBackorderCancelReason,
-    setBackorderStatusFilter,
-    setReturnKey,
-    setSelectedReturnId,
-    setSelectedReturnVendorId,
-    setSelectedReturnBinId,
-    setSelectedReturnPoLineId,
-    setSelectedReturnPartId,
-    setReturnQuantity,
-    setRmaNumber,
-    setReturnNotes,
-    setReturnCancelReason,
-    setReturnStatusFilter,
-    setReturnSource,
     setPricingSnapshotKey,
     setLeadTimeSnapshotKey,
     setSelectedSnapshotVendorLinkId,

@@ -515,24 +515,24 @@ public sealed class FieldCompanionProductClient(
                 502);
     }
 
-    public async Task<SupplyArrReceivingReceiptUpstreamResponse> GetSupplyArrReceivingReceiptAsync(
+    public async Task<string> ResolveLoadArrReceivingSessionIdAsync(
         string accessToken,
-        Guid receivingReceiptId,
+        string taskKey,
         CancellationToken cancellationToken = default)
     {
-        var baseUrl = ResolveBaseUrl("supplyarr");
+        var baseUrl = ResolveBaseUrl("loadarr");
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
             throw new StlApiException(
                 "fieldcompanion.field_receiving.product_url_missing",
-                "SupplyArr API URL is not configured for fieldcompanion receiving capture.",
+                "LoadArr API URL is not configured for fieldcompanion receiving capture.",
                 503);
         }
 
         var client = httpClientFactory.CreateClient(nameof(FieldCompanionProductClient));
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}");
+            $"{baseUrl.TrimEnd('/')}/api/field-inbox");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         using var response = await client.SendAsync(request, cancellationToken);
@@ -541,39 +541,48 @@ public sealed class FieldCompanionProductClient(
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_failed",
-                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving load failed." : body,
+                string.IsNullOrWhiteSpace(body) ? "LoadArr field inbox lookup failed." : body,
                 (int)response.StatusCode);
         }
 
-        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+        var inbox = await response.Content.ReadFromJsonAsync<FieldInboxResponse>(cancellationToken)
             ?? throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_invalid",
-                "SupplyArr returned an empty receiving response.",
+                "LoadArr returned an empty field inbox response.",
                 502);
+
+        var match = inbox.Items.FirstOrDefault(item =>
+            string.Equals(item.TaskKey, taskKey, StringComparison.OrdinalIgnoreCase));
+        if (match is null)
+        {
+            throw new StlApiException(
+                FieldCompanionFieldValidationReasonCodes.NotInInbox,
+                FieldCompanionDeniedReasonCatalog.ToPlainMessage(FieldCompanionFieldValidationReasonCodes.NotInInbox),
+                404);
+        }
+
+        return ExtractLoadArrReceivingSessionId(match.DeepLinkPath);
     }
 
-    public async Task<SupplyArrReceivingReceiptUpstreamResponse> UpdateSupplyArrReceivingLineAsync(
+    public async Task<LoadArrReceivingSessionUpstreamResponse> GetLoadArrReceivingSessionAsync(
         string accessToken,
-        Guid receivingReceiptId,
-        Guid lineId,
-        decimal quantityReceived,
+        string receivingSessionId,
         CancellationToken cancellationToken = default)
     {
-        var baseUrl = ResolveBaseUrl("supplyarr");
+        var baseUrl = ResolveBaseUrl("loadarr");
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
             throw new StlApiException(
                 "fieldcompanion.field_receiving.product_url_missing",
-                "SupplyArr API URL is not configured for fieldcompanion receiving capture.",
+                "LoadArr API URL is not configured for fieldcompanion receiving capture.",
                 503);
         }
 
         var client = httpClientFactory.CreateClient(nameof(FieldCompanionProductClient));
         using var request = new HttpRequestMessage(
-            HttpMethod.Put,
-            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}/lines/{lineId:D}");
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/v1/receiving/{Uri.EscapeDataString(receivingSessionId)}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Content = JsonContent.Create(new SupplyArrUpdateReceivingReceiptLineUpstreamRequest(quantityReceived));
 
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -581,51 +590,53 @@ public sealed class FieldCompanionProductClient(
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_failed",
-                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving line update failed." : body,
+                string.IsNullOrWhiteSpace(body) ? "LoadArr receiving session load failed." : body,
                 (int)response.StatusCode);
         }
 
-        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+        return await response.Content.ReadFromJsonAsync<LoadArrReceivingSessionUpstreamResponse>(cancellationToken)
             ?? throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_invalid",
-                "SupplyArr returned an empty receiving response.",
+                "LoadArr returned an empty receiving session response.",
                 502);
     }
 
-    public async Task<SupplyArrReceivingReceiptUpstreamResponse> PostSupplyArrReceivingReceiptAsync(
+    public async Task<LoadArrReceivingCompletionUpstreamResponse> CompleteLoadArrReceivingSessionAsync(
         string accessToken,
-        Guid receivingReceiptId,
+        string receivingSessionId,
+        CompleteLoadArrReceivingSessionUpstreamRequest body,
         CancellationToken cancellationToken = default)
     {
-        var baseUrl = ResolveBaseUrl("supplyarr");
+        var baseUrl = ResolveBaseUrl("loadarr");
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
             throw new StlApiException(
                 "fieldcompanion.field_receiving.product_url_missing",
-                "SupplyArr API URL is not configured for fieldcompanion receiving capture.",
+                "LoadArr API URL is not configured for fieldcompanion receiving capture.",
                 503);
         }
 
         var client = httpClientFactory.CreateClient(nameof(FieldCompanionProductClient));
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}/post");
+            $"{baseUrl.TrimEnd('/')}/api/v1/receiving/{Uri.EscapeDataString(receivingSessionId)}/complete");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(body);
 
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var bodyText = await response.Content.ReadAsStringAsync(cancellationToken);
             throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_failed",
-                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving post failed." : body,
+                string.IsNullOrWhiteSpace(bodyText) ? "LoadArr receiving completion failed." : bodyText,
                 (int)response.StatusCode);
         }
 
-        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+        return await response.Content.ReadFromJsonAsync<LoadArrReceivingCompletionUpstreamResponse>(cancellationToken)
             ?? throw new StlApiException(
                 "fieldcompanion.field_receiving.upstream_invalid",
-                "SupplyArr returned an empty receiving response.",
+                "LoadArr returned an empty receiving completion response.",
                 502);
     }
 
@@ -639,8 +650,43 @@ public sealed class FieldCompanionProductClient(
             "maintainarr" => StlServiceUrl.NormalizeHttpBaseUrl(urls.MaintainArrBaseUrl),
             "routarr" => StlServiceUrl.NormalizeHttpBaseUrl(urls.RoutArrBaseUrl),
             "supplyarr" => StlServiceUrl.NormalizeHttpBaseUrl(urls.SupplyArrBaseUrl),
+            "loadarr" => StlServiceUrl.NormalizeHttpBaseUrl(urls.LoadArrBaseUrl),
             _ => string.Empty,
         };
+    }
+
+    private static string ExtractLoadArrReceivingSessionId(string deepLinkPath)
+    {
+        if (string.IsNullOrWhiteSpace(deepLinkPath))
+        {
+            throw new StlApiException(
+                "fieldcompanion.field_receiving.upstream_invalid",
+                "LoadArr field inbox did not include a receiving deep link.",
+                502);
+        }
+
+        var normalized = deepLinkPath.Trim();
+        var pathOnly = normalized.Split('?', 2)[0].TrimEnd('/');
+        foreach (var prefix in new[] { "/work/receiving/", "/receiving/" })
+        {
+            if (!pathOnly.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var remainder = pathOnly[prefix.Length..].Trim('/');
+            var sessionId = remainder.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                return sessionId;
+            }
+        }
+
+        throw new StlApiException(
+            "fieldcompanion.field_receiving.upstream_invalid",
+            "LoadArr field inbox deep link did not include a receiving session id.",
+            502);
     }
 
     private sealed record TrainArrCreateEvidenceUpstreamRequest(

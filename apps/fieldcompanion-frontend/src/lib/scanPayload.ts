@@ -7,11 +7,10 @@ const DEEP_LINK_PATTERNS: ReadonlyArray<{
   { productKey: 'maintainarr', resourceType: 'work-order', pathPrefix: '/work-orders/' },
   { productKey: 'maintainarr', resourceType: 'inspection', pathPrefix: '/inspections/' },
   { productKey: 'routarr', resourceType: 'trip', pathPrefix: '/trips/' },
-  { productKey: 'supplyarr', resourceType: 'receiving', pathPrefix: '/receiving/' },
   { productKey: 'staffarr', resourceType: 'incident', pathPrefix: '/incidents/' },
 ]
 
-const TASK_KEY_PATTERN = /^[a-z]+:[a-z_]+:[0-9a-f-]{36}$/i
+const TASK_KEY_PATTERN = /^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*:[0-9a-f-]{36}$/i
 
 export function normalizeScanPayload(scannedValue: string): string {
   const trimmed = scannedValue.trim()
@@ -47,6 +46,15 @@ export function normalizeScanPayload(scannedValue: string): string {
 }
 
 function pathToTaskKey(path: string): string | null {
+  const queryIndex = path.indexOf('?')
+  if (queryIndex >= 0) {
+    const query = new URLSearchParams(path.slice(queryIndex + 1))
+    const taskKey = query.get('taskKey')?.trim()
+    if (taskKey && TASK_KEY_PATTERN.test(taskKey)) {
+      return taskKey
+    }
+  }
+
   const normalized = path.split('?')[0] ?? path
   for (const pattern of DEEP_LINK_PATTERNS) {
     if (!normalized.toLowerCase().startsWith(pattern.pathPrefix)) {

@@ -1529,7 +1529,7 @@ public static partial class LoadArrWorkspaceEndpoints
             unexplainedInventory);
     }
 
-    private static IReadOnlyCollection<LoadArrReceivingSessionResponse> CreateReceivingSessions() =>
+    internal static IReadOnlyCollection<LoadArrReceivingSessionResponse> CreateReceivingSessions() =>
         new[]
         {
             new LoadArrReceivingSessionResponse(

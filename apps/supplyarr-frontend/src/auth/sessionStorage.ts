@@ -128,19 +128,12 @@ export function canExportVendorReports(tenantRoleKey: string, isPlatformAdmin: b
   return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
 }
 
-export function canReadPartsInventoryReports(
+export function canReadPartSubstitutions(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
   if (isPlatformAdmin) return true
   return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
-}
-
-export function canExportPartsInventoryReports(
-  tenantRoleKey: string,
-  isPlatformAdmin: boolean,
-): boolean {
-  return canReadPartsInventoryReports(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canReadPurchasingReports(

@@ -13,6 +13,12 @@ describe('launchFailure', () => {
     expect(copy.severity).toBe('warning')
   })
 
+  it('maps platform-admin-only launch denials to guidance copy', () => {
+    const copy = resolveLaunchFailureCopy('platform_admin_required')
+    expect(copy.title).toBe('Platform administrator required')
+    expect(copy.message).toContain('restricted to NexArr platform administrators')
+  })
+
   it('falls back for unknown codes', () => {
     const copy = resolveLaunchFailureCopy('launch.custom_block')
     expect(copy.message).toContain('launch.custom_block')

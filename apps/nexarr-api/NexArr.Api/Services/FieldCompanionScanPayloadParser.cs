@@ -11,7 +11,6 @@ public static class FieldCompanionScanPayloadParser
         ("maintainarr", "work-order", "/work-orders/"),
         ("maintainarr", "inspection", "/inspections/"),
         ("routarr", "trip", "/trips/"),
-        ("supplyarr", "receiving", "/receiving/"),
         ("staffarr", "incident", "/incidents/"),
     ];
 
@@ -115,6 +114,14 @@ public static class FieldCompanionScanPayloadParser
     private static bool TryParseRelativePath(string path, out string taskKey)
     {
         taskKey = string.Empty;
+        var queryIndex = path.IndexOf('?', StringComparison.Ordinal);
+        if (queryIndex >= 0
+            && Uri.TryCreate($"https://fieldcompanion.local{path}", UriKind.Absolute, out var relativeUri)
+            && TryParseUriTaskKey(relativeUri, out taskKey))
+        {
+            return true;
+        }
+
         var normalized = path.Split('?', 2)[0].Trim();
         if (!normalized.StartsWith("/", StringComparison.Ordinal))
         {

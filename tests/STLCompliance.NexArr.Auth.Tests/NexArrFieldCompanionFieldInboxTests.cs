@@ -80,8 +80,9 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
         inboxResponse.EnsureSuccessStatusCode();
         var inbox = (await inboxResponse.Content.ReadFromJsonAsync<AggregatedFieldInboxResponse>())!;
 
-        Assert.True(inbox.Sources.Count >= 5);
+        Assert.True(inbox.Sources.Count >= 6);
         Assert.Contains(inbox.Sources, source => source.ProductKey == "maintainarr" && source.Entitled);
+        Assert.Contains(inbox.Sources, source => source.ProductKey == "loadarr");
         Assert.Contains(
             inbox.Sources.Where(source => source.Entitled),
             source => !source.Fetched && source.ErrorCode is "upstream_unreachable" or "upstream_401");

@@ -35,6 +35,7 @@ import type {
   ReferenceImportResponse,
   ReferenceStagingRecordResponse,
   ReferenceCrosswalkResponse,
+  ReferenceEntityListItemResponse,
   ReferenceEntityResponse,
   ReferencePublishEventResponse,
   ReferencePublishBatchResponse,
@@ -531,13 +532,22 @@ export async function createReferenceDatasetInput(
 
 export async function listReferenceDatasetEntities(
   datasetId: string,
-): Promise<ReferenceEntityResponse[]> {
+): Promise<ReferenceEntityListItemResponse[]> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(`/api/platform-admin/reference-data/datasets/${datasetId}/entities`)
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ReferenceEntityResponse[]
+  return (await response.json()) as ReferenceEntityListItemResponse[]
+}
+
+export async function getReferenceEntity(entityId: string): Promise<ReferenceEntityResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/reference-data/entities/${entityId}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ReferenceEntityResponse
 }
 
 export async function listReferenceImports(): Promise<ReferenceImportResponse[]> {

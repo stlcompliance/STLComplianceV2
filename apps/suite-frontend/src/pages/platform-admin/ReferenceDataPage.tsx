@@ -3,7 +3,11 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
-import type { ReferenceDatasetResponse, ReferenceEntityResponse } from '../../api/types'
+import type {
+  ReferenceDatasetResponse,
+  ReferenceEntityListItemResponse,
+  ReferenceEntityResponse,
+} from '../../api/types'
 import { downloadBlob } from '../../components/platform-admin/audit-export/utils'
 import { useToast } from '../../feedback'
 
@@ -52,6 +56,21 @@ type EntityEditorState = {
   sourceEvidenceJson: string
   effectiveDate: string
 }
+
+type ReferenceDataView = 'catalog' | 'sources' | 'inputs' | 'review' | 'crosswalks' | 'history'
+
+const REFERENCE_DATA_VIEWS: ReadonlyArray<{
+  id: ReferenceDataView
+  label: string
+  helper: string
+}> = [
+  { id: 'catalog', label: 'Catalog', helper: 'Datasets and publish controls' },
+  { id: 'sources', label: 'Sources', helper: 'Sources and import intake' },
+  { id: 'inputs', label: 'Inputs', helper: 'Dataset values and entities' },
+  { id: 'review', label: 'Review', helper: 'Staged rows and approvals' },
+  { id: 'crosswalks', label: 'Crosswalks', helper: 'External identifier links' },
+  { id: 'history', label: 'History', helper: 'Publish activity' },
+] as const
 
 function createEmptyDatasetForm(): DatasetFormState {
   return {
@@ -185,11 +204,46 @@ function Detail({ label, value }: { label: string; value: string }) {
   )
 }
 
+function WorkspaceTab({
+  helper,
+  id,
+  isActive,
+  label,
+  onSelect,
+}: {
+  helper: string
+  id: ReferenceDataView
+  isActive: boolean
+  label: string
+  onSelect: (id: ReferenceDataView) => void
+}) {
+  return (
+    <button
+      id={`reference-data-tab-${id}`}
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      aria-controls={`reference-data-panel-${id}`}
+      onClick={() => onSelect(id)}
+      className={[
+        'rounded-xl border px-4 py-3 text-left transition',
+        isActive
+          ? 'border-sky-400/60 bg-slate-800 text-white shadow-sm'
+          : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:bg-slate-900',
+      ].join(' ')}
+    >
+      <span className="block text-sm font-semibold">{label}</span>
+      <span className="mt-1 block text-xs text-slate-400">{helper}</span>
+    </button>
+  )
+}
+
 export function ReferenceDataPage() {
   const queryClient = useQueryClient()
   const { pushToast } = useToast()
 
   const [datasetForm, setDatasetForm] = useState<DatasetFormState>(createEmptyDatasetForm)
+  const [activeView, setActiveView] = useState<ReferenceDataView>('catalog')
   const [selectedDatasetId, setSelectedDatasetId] = useState('')
   const [selectedDatasetIds, setSelectedDatasetIds] = useState<string[]>([])
   const [entityEditor, setEntityEditor] = useState<EntityEditorState | null>(null)
@@ -222,6 +276,13 @@ export function ReferenceDataPage() {
     )
   }
 
+  const sourcesViewActive = activeView === 'sources'
+  const inputsViewActive = activeView === 'inputs'
+  const reviewViewActive = activeView === 'review'
+  const crosswalksViewActive = activeView === 'crosswalks'
+  const historyViewActive = activeView === 'history'
+  const importsViewActive = inputsViewActive || reviewViewActive
+
   const dashboardQuery = useQuery({
     queryKey: ['platform-admin-reference-data-dashboard'],
     queryFn: () => nexarr.getReferenceDataDashboard(),
@@ -235,21 +296,25 @@ export function ReferenceDataPage() {
   const sourcesQuery = useQuery({
     queryKey: ['platform-admin-reference-data-sources'],
     queryFn: () => nexarr.listReferenceSources(),
+    enabled: sourcesViewActive,
   })
 
   const importsQuery = useQuery({
     queryKey: ['platform-admin-reference-data-imports'],
     queryFn: () => nexarr.listReferenceImports(),
+    enabled: importsViewActive,
   })
 
   const crosswalksQuery = useQuery({
     queryKey: ['platform-admin-reference-data-crosswalks'],
     queryFn: () => nexarr.listReferenceCrosswalks(),
+    enabled: crosswalksViewActive,
   })
 
   const publishHistoryQuery = useQuery({
     queryKey: ['platform-admin-reference-data-publish-history'],
     queryFn: () => nexarr.listReferencePublishHistory(),
+    enabled: historyViewActive,
   })
 
   const visibleDatasets = useMemo(
@@ -328,13 +393,13 @@ export function ReferenceDataPage() {
   const entitiesQuery = useQuery({
     queryKey: ['platform-admin-reference-data-dataset-entities', selectedDatasetId],
     queryFn: () => nexarr.listReferenceDatasetEntities(selectedDatasetId),
-    enabled: Boolean(selectedDatasetId),
+    enabled: inputsViewActive && Boolean(selectedDatasetId),
   })
 
   const stagingRecordsQuery = useQuery({
     queryKey: ['platform-admin-reference-data-staging-records', resolvedSelectedImportId],
     queryFn: () => nexarr.listReferenceStagingRecords(resolvedSelectedImportId),
-    enabled: Boolean(resolvedSelectedImportId),
+    enabled: reviewViewActive && Boolean(resolvedSelectedImportId),
   })
 
   const sourceOptions = useMemo(
@@ -450,6 +515,7 @@ export function ReferenceDataPage() {
       setImportFileName('')
       setImportObjectKey('')
       setSelectedImportId(created.id)
+      setActiveView('review')
       pushToast({ message: 'Reference import queued.', variant: 'success' })
       await refreshAll()
     },
@@ -473,6 +539,7 @@ export function ReferenceDataPage() {
       setMasterCsvFile(null)
       setMasterCsvObjectKey('')
       setSelectedImportId(created.id)
+      setActiveView('review')
       pushToast({ message: 'Master CSV uploaded for review.', variant: 'success' })
       await refreshAll()
     },
@@ -569,8 +636,19 @@ export function ReferenceDataPage() {
     onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
   })
 
+  const loadEntityMutation = useMutation({
+    mutationFn: (entityId: string) => nexarr.getReferenceEntity(entityId),
+    onMutate: () => {
+      setEntityEditor(null)
+    },
+    onSuccess: (entity) => {
+      setEntityEditor(buildEntityEditorState(entity))
+    },
+    onError: (error: Error) => pushToast({ message: error.message, variant: 'error' }),
+  })
+
   const deleteEntityMutation = useMutation({
-    mutationFn: (entity: ReferenceEntityResponse) => nexarr.deleteReferenceEntity(entity.id),
+    mutationFn: (entity: ReferenceEntityListItemResponse) => nexarr.deleteReferenceEntity(entity.id),
     onSuccess: async (_data, entity) => {
       pushToast({ message: 'Reference entity deleted.', variant: 'success' })
       if (entityEditor?.id === entity.id) {
@@ -632,11 +710,7 @@ export function ReferenceDataPage() {
 
   const isLoading =
     dashboardQuery.isLoading ||
-    datasetsQuery.isLoading ||
-    sourcesQuery.isLoading ||
-    importsQuery.isLoading ||
-    crosswalksQuery.isLoading ||
-    publishHistoryQuery.isLoading
+    datasetsQuery.isLoading
 
   if (isLoading) {
     return <p className="text-sm text-slate-500">Loading reference data...</p>
@@ -645,13 +719,13 @@ export function ReferenceDataPage() {
   const mainError =
     dashboardQuery.error ??
     datasetsQuery.error ??
-    sourcesQuery.error ??
-    importsQuery.error ??
-    crosswalksQuery.error ??
-    publishHistoryQuery.error ??
-    stagingRecordsQuery.error ??
-    entitiesQuery.error ??
     null
+
+  const sourcesError = sourcesQuery.error ?? null
+  const inputsError = importsQuery.error ?? entitiesQuery.error ?? null
+  const reviewError = importsQuery.error ?? stagingRecordsQuery.error ?? null
+  const crosswalksError = crosswalksQuery.error ?? null
+  const historyError = publishHistoryQuery.error ?? null
 
   if (mainError) {
     return (
@@ -689,11 +763,41 @@ export function ReferenceDataPage() {
         <StatCard label="Publish events" value={dashboardQuery.data!.publishEventCount} />
       </div>
 
-      <Section
-        title="Dataset Control Plane"
-        description="Create or edit datasets, publish selected or all datasets, and manage the live catalog inventory."
-      >
-        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+        <div
+          role="tablist"
+          aria-label="Reference data workspaces"
+          className="grid gap-2 md:grid-cols-2 xl:grid-cols-6"
+        >
+          {REFERENCE_DATA_VIEWS.map((view) => (
+            <WorkspaceTab
+              key={view.id}
+              id={view.id}
+              label={view.label}
+              helper={view.helper}
+              isActive={activeView === view.id}
+              onSelect={setActiveView}
+            />
+          ))}
+        </div>
+        <p className="mt-3 px-1 text-xs text-slate-500">
+          Heavy reference-data workspaces now load on demand so dataset control stays responsive while
+          deeper review tools stay available when you need them.
+        </p>
+      </div>
+
+      {activeView === 'catalog' ? (
+        <div
+          id="reference-data-panel-catalog"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-catalog"
+          className="space-y-6"
+        >
+          <Section
+            title="Dataset Control Plane"
+            description="Create or edit datasets, publish selected or all datasets, and manage the live catalog inventory."
+          >
+            <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold text-stl-navy">
@@ -891,7 +995,10 @@ export function ReferenceDataPage() {
                           <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
-                              onClick={() => setSelectedDatasetId(dataset.id)}
+                              onClick={() => {
+                                setSelectedDatasetId(dataset.id)
+                                setActiveView('inputs')
+                              }}
                               className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
                             >
                               Manage inputs
@@ -941,14 +1048,32 @@ export function ReferenceDataPage() {
               </table>
             </div>
           </div>
+            </div>
+          </Section>
         </div>
-      </Section>
+      ) : null}
 
-      <Section
-        title="Sources And Imports"
-        description="Register sources, queue review imports, and upload the master CSV routing template."
-      >
-        <div className="grid gap-4 2xl:grid-cols-4 xl:grid-cols-2">
+      {activeView === 'sources' ? (
+        <div
+          id="reference-data-panel-sources"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-sources"
+          className="space-y-6"
+        >
+          {sourcesError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(sourcesError, 'Failed to load reference sources.')}
+              onRetry={() => void refreshAll()}
+              retryLabel="Retry sources"
+            />
+          ) : sourcesQuery.isLoading ? (
+            <p className="text-sm text-slate-500">Loading sources...</p>
+          ) : (
+            <Section
+              title="Sources And Imports"
+              description="Register sources, queue review imports, and upload the master CSV routing template."
+            >
+              <div className="grid gap-4 2xl:grid-cols-4 xl:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h4 className="text-sm font-semibold text-stl-navy">New source</h4>
             <div className="mt-3 space-y-3">
@@ -1138,7 +1263,7 @@ export function ReferenceDataPage() {
           </div>
         </div>
 
-        <div className="mt-6 overflow-x-auto">
+              <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -1168,14 +1293,31 @@ export function ReferenceDataPage() {
               ))}
             </tbody>
           </table>
+              </div>
+            </Section>
+          )}
         </div>
-      </Section>
+      ) : null}
 
-      <Section
-        title="Dataset Inputs And Current Entities"
-        description="Pick a dataset, add one value or several values, then edit or delete the current canonical records from the same screen."
-      >
-        <div className="grid gap-6 2xl:grid-cols-[320px_320px_1fr]">
+      {activeView === 'inputs' ? (
+        <div
+          id="reference-data-panel-inputs"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-inputs"
+          className="space-y-6"
+        >
+          {inputsError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(inputsError, 'Failed to load dataset inputs.')}
+              onRetry={() => void refreshAll()}
+              retryLabel="Retry inputs"
+            />
+          ) : (
+            <Section
+              title="Dataset Inputs And Current Entities"
+              description="Pick a dataset, add one value or several values, then edit or delete the current canonical records from the same screen."
+            >
+              <div className="grid gap-6 2xl:grid-cols-[320px_320px_1fr]">
           <div className="space-y-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <Field label="Dataset">
@@ -1421,6 +1563,8 @@ export function ReferenceDataPage() {
                     </button>
                   </div>
                 </div>
+              ) : loadEntityMutation.isPending ? (
+                <p className="mt-3 text-sm text-slate-500">Loading entity...</p>
               ) : (
                 <p className="mt-3 text-sm text-slate-500">
                   Select an entity from the table below to edit or delete it.
@@ -1454,7 +1598,6 @@ export function ReferenceDataPage() {
                     </thead>
                     <tbody>
                       {datasetEntities.map((entity) => {
-                        const currentVersion = getCurrentVersion(entity)
                         return (
                           <tr key={entity.id} className="border-b border-slate-100 bg-white">
                             <td className="px-3 py-2">
@@ -1464,7 +1607,7 @@ export function ReferenceDataPage() {
                             <td className="px-3 py-2 font-mono text-xs text-slate-600">
                               {entity.canonicalKey}
                             </td>
-                            <td className="px-3 py-2">{currentVersion?.version ?? '-'}</td>
+                            <td className="px-3 py-2">{entity.currentVersion ?? '-'}</td>
                             <td className="px-3 py-2 text-slate-600">
                               {entity.publishedAt ? new Date(entity.publishedAt).toLocaleString() : 'Pending publish'}
                             </td>
@@ -1472,10 +1615,13 @@ export function ReferenceDataPage() {
                               <div className="flex flex-wrap gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => setEntityEditor(buildEntityEditorState(entity))}
+                                  disabled={loadEntityMutation.isPending || deleteEntityMutation.isPending}
+                                  onClick={() => loadEntityMutation.mutate(entity.id)}
                                   className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
                                 >
-                                  Edit
+                                  {loadEntityMutation.isPending && loadEntityMutation.variables === entity.id
+                                    ? 'Loading...'
+                                    : 'Edit'}
                                 </button>
                                 <button
                                   type="button"
@@ -1500,14 +1646,33 @@ export function ReferenceDataPage() {
               )}
             </div>
           </div>
+              </div>
+            </Section>
+          )}
         </div>
-      </Section>
+      ) : null}
 
-      <Section
-        title="Imports And Review Queue"
-        description="Latest import jobs and their staged records. Review actions stay on the platform control plane."
-      >
-        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+      {activeView === 'review' ? (
+        <div
+          id="reference-data-panel-review"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-review"
+          className="space-y-6"
+        >
+          {reviewError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(reviewError, 'Failed to load the review queue.')}
+              onRetry={() => void refreshAll()}
+              retryLabel="Retry review queue"
+            />
+          ) : importsQuery.isLoading ? (
+            <p className="text-sm text-slate-500">Loading review queue...</p>
+          ) : (
+            <Section
+              title="Imports And Review Queue"
+              description="Latest import jobs and their staged records. Review actions stay on the platform control plane."
+            >
+              <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold text-stl-navy">Imports</h4>
@@ -1682,15 +1847,33 @@ export function ReferenceDataPage() {
               </div>
             )}
           </div>
+              </div>
+            </Section>
+          )}
         </div>
-      </Section>
+      ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Section
-          title="Crosswalks"
-          description="External identifiers and the canonical reference entities they resolve to."
+      {activeView === 'crosswalks' ? (
+        <div
+          id="reference-data-panel-crosswalks"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-crosswalks"
+          className="space-y-6"
         >
-          <div className="overflow-x-auto">
+          {crosswalksError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(crosswalksError, 'Failed to load crosswalks.')}
+              onRetry={() => void refreshAll()}
+              retryLabel="Retry crosswalks"
+            />
+          ) : crosswalksQuery.isLoading ? (
+            <p className="text-sm text-slate-500">Loading crosswalks...</p>
+          ) : (
+            <Section
+              title="Crosswalks"
+              description="External identifiers and the canonical reference entities they resolve to."
+            >
+              <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
@@ -1721,14 +1904,33 @@ export function ReferenceDataPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </Section>
+              </div>
+            </Section>
+          )}
+        </div>
+      ) : null}
 
-        <Section
-          title="Publish History"
-          description="The recent publish events that advanced datasets into visible versions."
+      {activeView === 'history' ? (
+        <div
+          id="reference-data-panel-history"
+          role="tabpanel"
+          aria-labelledby="reference-data-tab-history"
+          className="space-y-6"
         >
-          <div className="overflow-x-auto">
+          {historyError ? (
+            <ApiErrorCallout
+              message={getErrorMessage(historyError, 'Failed to load publish history.')}
+              onRetry={() => void refreshAll()}
+              retryLabel="Retry history"
+            />
+          ) : publishHistoryQuery.isLoading ? (
+            <p className="text-sm text-slate-500">Loading publish history...</p>
+          ) : (
+            <Section
+              title="Publish History"
+              description="The recent publish events that advanced datasets into visible versions."
+            >
+              <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
@@ -1754,9 +1956,11 @@ export function ReferenceDataPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </Section>
-      </div>
+              </div>
+            </Section>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }

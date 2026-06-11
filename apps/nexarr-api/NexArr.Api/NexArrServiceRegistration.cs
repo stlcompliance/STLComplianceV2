@@ -98,6 +98,7 @@ public static class NexArrServiceRegistration
             options.MaintainArrBaseUrl = ResolveProductBaseUrl(configuration, "MaintainArr", options.MaintainArrBaseUrl);
             options.RoutArrBaseUrl = ResolveProductBaseUrl(configuration, "RoutArr", options.RoutArrBaseUrl);
             options.SupplyArrBaseUrl = ResolveProductBaseUrl(configuration, "SupplyArr", options.SupplyArrBaseUrl);
+            options.LoadArrBaseUrl = ResolveProductBaseUrl(configuration, "LoadArr", options.LoadArrBaseUrl);
         });
         builder.Services.Configure<PlatformProductUrlsOptions>(options =>
         {

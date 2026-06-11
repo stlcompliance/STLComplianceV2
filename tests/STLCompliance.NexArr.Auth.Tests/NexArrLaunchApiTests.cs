@@ -197,6 +197,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.Contains(catalog.Products, x => x.ProductKey == "reportarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "assurarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "fieldcompanion");
+        Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "compliancecore");
 
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "shared-worker");
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "nexarr-worker");
@@ -256,6 +257,37 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.True(staffarr.IsCurrentProduct);
         Assert.Equal("workforce", staffarr.ProductCategory);
         Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
+        Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "compliancecore");
+    }
+
+    [Fact]
+    public async Task Launch_context_marks_compliancecore_as_platform_admin_only_for_tenant_admin()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/context?productKey=compliancecore", token));
+
+        response.EnsureSuccessStatusCode();
+        var context = await response.Content.ReadFromJsonAsync<LaunchContextResponse>();
+        Assert.NotNull(context);
+        Assert.Equal("compliancecore", context.ProductKey);
+        Assert.False(context.CanLaunch);
+        Assert.Equal("platform_admin_required", context.DenialReasonCode);
+    }
+
+    [Fact]
+    public async Task Handoff_create_denies_compliancecore_for_tenant_admin()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("compliancecore", "http://localhost:5177/launch"));
+        var response = await _client.SendAsync(handoffRequest);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]

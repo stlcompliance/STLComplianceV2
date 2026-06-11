@@ -55,7 +55,7 @@ export function CatalogSection({ state: s }: Props) {
       <PartSubstitutionsPanel
         accessToken={s.accessToken}
         parts={s.partsQuery.data ?? []}
-        canRead={s.canReadPartsInventoryReports}
+        canRead={s.canReadPartSubstitutions}
         selectedPartId={s.substitutionPartId}
         onSelectedPartIdChange={s.setSubstitutionPartId}
       />

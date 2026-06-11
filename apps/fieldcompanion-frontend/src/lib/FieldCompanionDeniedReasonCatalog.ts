@@ -26,7 +26,7 @@ const PLAIN_MESSAGES: Record<string, string> = {
   [FieldCompanionFieldValidationReasonCodes.WorkOrderUnsupported]:
     'Work order updates are not available for this task. Open the work order in MaintainArr to continue.',
   [FieldCompanionFieldValidationReasonCodes.ReceivingUnsupported]:
-    'Receiving updates are not available for this task. Open the receipt in SupplyArr to continue.',
+    'Receiving updates are not available for this task. Open the receipt in the owning product to continue.',
   [FieldCompanionFieldValidationReasonCodes.InboxUnavailable]:
     'We could not load the product inbox to verify this task. Try again when connectivity improves.',
   [FieldCompanionScanReasonCodes.InvalidPayload]:

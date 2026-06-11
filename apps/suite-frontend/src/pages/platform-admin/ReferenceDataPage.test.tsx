@@ -12,6 +12,7 @@ vi.mock('../../api/nexarrClient', () => ({
   listReferenceSources: vi.fn(),
   listReferenceImports: vi.fn(),
   listReferenceDatasetEntities: vi.fn(),
+  getReferenceEntity: vi.fn(),
   listReferenceStagingRecords: vi.fn(),
   listReferenceCrosswalks: vi.fn(),
   listReferencePublishHistory: vi.fn(),
@@ -144,31 +145,10 @@ function mockReferenceDataQueries() {
       canonicalKey: 'fleet-truck-001',
       displayName: 'Fleet Truck 001',
       status: 'active',
-      normalizedFieldsJson: '{"displayName":"Fleet Truck 001"}',
-      firstSeenSourceId: 'source-1',
-      firstSeenSourceKey: 'platform-admin-input',
-      currentVersionId: 'version-1',
       currentVersion: 1,
       publishedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      versions: [
-        {
-          id: 'version-1',
-          referenceEntityId: 'entity-1',
-          version: 1,
-          fieldsJson: '{"displayName":"Fleet Truck 001"}',
-          sourceEvidenceJson: '{"value":"Fleet Truck 001"}',
-          effectiveDate: '2026-06-09',
-          publishedAt: new Date().toISOString(),
-          supersededByVersionId: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ],
-      crosswalks: [],
-      tenantOverlays: [],
-      productMappings: [],
     },
   ])
 
@@ -217,11 +197,14 @@ describe('ReferenceDataPage', () => {
 
     expect(await screen.findByText('Reference data')).toBeInTheDocument()
     expect(screen.getByText('Dataset Control Plane')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /Inputs/i }))
     expect(screen.getByText('Dataset Inputs And Current Entities')).toBeInTheDocument()
     expect(await screen.findByText('Fleet Truck 001')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Download template CSV' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Upload master CSV' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /Sources/i }))
+    expect(await screen.findByRole('button', { name: 'Download template CSV' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Upload master CSV' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /Review/i }))
+    expect(await screen.findByRole('button', { name: 'Approve' })).toBeInTheDocument()
   })
 
   it('supports batch publish from the combined dataset table', async () => {
@@ -273,6 +256,7 @@ describe('ReferenceDataPage', () => {
     })
 
     renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /Inputs/i }))
 
     fireEvent.change(await screen.findByLabelText('Value'), {
       target: { value: 'Fleet Truck 002' },
@@ -293,6 +277,7 @@ describe('ReferenceDataPage', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
     renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /Sources/i }))
     fireEvent.click(await screen.findByRole('button', { name: 'Download template CSV' }))
 
     expect(createObjectUrl).toHaveBeenCalledTimes(1)

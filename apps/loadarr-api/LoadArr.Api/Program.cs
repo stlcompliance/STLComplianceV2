@@ -12,6 +12,7 @@ await StlApiHost.RunAsync<LoadArrDbContext>(
     async app =>
     {
         app.MapLoadArrAuthEndpoints();
+        app.MapLoadArrFieldInboxEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapLoadArrWorkspaceEndpoints();
         app.MapLoadArrInventoryManagementEndpoints();

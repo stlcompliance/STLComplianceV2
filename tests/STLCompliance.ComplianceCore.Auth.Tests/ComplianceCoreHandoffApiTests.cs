@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
+using NexArr.Api.Entities;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
@@ -118,6 +119,28 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Handoff_redeem_forbids_entitled_non_platform_admin_users()
+    {
+        var handoffCode = await SeedHandoffCodeAsync(PlatformSeeder.DemoTenantAdminUserId);
+        var redeemResponse = await _complianceClient.PostAsJsonAsync(
+            "/api/auth/handoff/redeem",
+            new ComplianceCoreRedeemRequest(handoffCode));
+
+        Assert.Equal(HttpStatusCode.Forbidden, redeemResponse.StatusCode);
+
+        using var scope = _complianceFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var deniedEvents = await db.AuditEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == "compliancecore.admin_access.denied")
+            .ToListAsync();
+
+        Assert.Contains(
+            deniedEvents,
+            x => x.TargetType == "handoff" && x.ReasonCode == "auth.platform_admin_required");
+    }
+
+    [Fact]
     public async Task V1_handoff_session_and_me_aliases_work()
     {
         var handoffCode = await CreateHandoffAsync();
@@ -203,15 +226,38 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task<string> CreateHandoffAsync()
+    private async Task<string> CreateHandoffAsync(string email = PlatformSeeder.DemoAdminEmail)
     {
-        var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
+        var token = await LoginNexArrAsync(email);
         var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("compliancecore", "http://localhost:5177/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
         return handoff.HandoffCode;
+    }
+
+    private async Task<string> SeedHandoffCodeAsync(Guid userId)
+    {
+        var handoffCode = $"compliancecore-handoff-{Guid.NewGuid():N}";
+
+        using var scope = _nexarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        db.HandoffCodes.Add(new HandoffCodeRecord
+        {
+            Id = Guid.NewGuid(),
+            CodeHash = LaunchService.HashHandoffCode(handoffCode),
+            UserId = userId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            SessionId = Guid.NewGuid(),
+            TargetProductKey = "compliancecore",
+            CallbackUrl = "http://localhost:5177/launch",
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5),
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+        return handoffCode;
     }
 
     private async Task<string> IssueServiceTokenAsync(string adminToken, string productKey)

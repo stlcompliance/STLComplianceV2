@@ -94,6 +94,7 @@ public sealed class FieldCompanionScanResolveService(
             "maintainarr" => productUrls.Value.MaintainArrBaseUrl,
             "routarr" => productUrls.Value.RoutArrBaseUrl,
             "supplyarr" => productUrls.Value.SupplyArrBaseUrl,
+            "loadarr" => productUrls.Value.LoadArrBaseUrl,
             _ => null,
         };
 

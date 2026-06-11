@@ -16,6 +16,11 @@ public static class FieldCompanionFieldTaskKeyParser
             return false;
         }
 
+        if (!IsTaskKeySegment(parts[0]) || !IsTaskKeySegment(parts[1]))
+        {
+            return false;
+        }
+
         if (!Guid.TryParse(parts[2], out var resourceId))
         {
             return false;
@@ -26,6 +31,19 @@ public static class FieldCompanionFieldTaskKeyParser
             parts[1].ToLowerInvariant(),
             resourceId);
         return true;
+    }
+
+    private static bool IsTaskKeySegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || !char.IsLetter(value[0]))
+        {
+            return false;
+        }
+
+        return value.All(character =>
+            char.IsLetterOrDigit(character)
+            || character == '-'
+            || character == '_');
     }
 }
 

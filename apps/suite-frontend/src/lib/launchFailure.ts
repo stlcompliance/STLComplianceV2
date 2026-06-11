@@ -26,6 +26,12 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
     guidance: 'A tenant administrator can reactivate the entitlement from platform administration.',
     severity: 'warning',
   },
+  platform_admin_required: {
+    title: 'Platform administrator required',
+    message: 'This product is restricted to NexArr platform administrators.',
+    guidance: 'Launch it with a platform administrator account, or ask a platform administrator to access it for you.',
+    severity: 'warning',
+  },
   profile_missing: {
     title: 'Launch profile missing',
     message: 'NexArr does not have an active launch profile for this product.',

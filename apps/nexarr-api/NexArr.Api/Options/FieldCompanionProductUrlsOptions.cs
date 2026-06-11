@@ -13,4 +13,6 @@ public sealed class FieldCompanionProductUrlsOptions
     public string RoutArrBaseUrl { get; set; } = "http://localhost:5105";
 
     public string SupplyArrBaseUrl { get; set; } = "http://localhost:5106";
+
+    public string LoadArrBaseUrl { get; set; } = "http://localhost:5108";
 }

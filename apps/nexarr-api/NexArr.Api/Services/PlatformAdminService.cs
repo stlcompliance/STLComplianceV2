@@ -862,6 +862,7 @@ public sealed class PlatformAdminService(
         {
             "callback_not_allowed" => "Add or correct the product callback allowlist entry for this tenant and environment.",
             "not_entitled" or "entitlement_inactive" or "entitlement_revoked" => "Grant or reactivate the tenant entitlement for the requested product.",
+            "platform_admin_required" => "Use a NexArr platform administrator account for Compliance Core human access.",
             "tenant_suspended" => "Reactivate the tenant before retrying product launch.",
             "user_inactive" => "Reactivate the user account before retrying product launch.",
             "profile_missing" => "Configure an active launch profile with a base URL for the product.",

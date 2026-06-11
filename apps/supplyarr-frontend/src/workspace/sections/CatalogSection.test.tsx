@@ -18,7 +18,7 @@ vi.mock('../../components/VendorCatalogApiPanel', () => ({
 const state = {
   accessToken: 'token',
   canManageCatalog: true,
-  canReadPartsInventoryReports: true,
+  canReadPartSubstitutions: true,
   catalogsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   createCatalogMutation: { isPending: false, mutate: vi.fn() },
@@ -28,7 +28,6 @@ const state = {
   vendors: [],
   canReadVendorReports: false,
   canExportVendorReports: false,
-  canExportPartsInventoryReports: false,
   canReadPurchasingReports: false,
   canExportPurchasingReports: false,
   canReadComplianceReports: false,

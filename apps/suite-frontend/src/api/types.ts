@@ -310,6 +310,21 @@ export interface ReferenceEntityVersionResponse {
   updatedAt: string
 }
 
+export interface ReferenceEntityListItemResponse {
+  id: string
+  datasetId: string
+  datasetKey: string
+  datasetName: string
+  entityType: string
+  canonicalKey: string
+  displayName: string
+  status: string
+  currentVersion: number | null
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ReferenceEntityResponse {
   id: string
   datasetId: string

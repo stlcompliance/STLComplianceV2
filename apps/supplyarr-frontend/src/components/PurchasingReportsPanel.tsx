@@ -108,7 +108,8 @@ export function PurchasingReportsPanel({
           <div>
             <h2 className="text-lg font-semibold text-slate-50">Purchasing reports</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Purchase requests, orders, receiving, and backorder pipeline rollups.
+              Purchase requests, orders, LoadArr receiving snapshots, and backorder pipeline
+              rollups.
             </p>
           </div>
         </div>
@@ -174,7 +175,7 @@ export function PurchasingReportsPanel({
               {summaryQuery.data.totals.openPurchaseOrderCount} open
             </span>
             <span className="rounded-md bg-slate-800 px-2 py-1 text-slate-300">
-              Receiving: {summaryQuery.data.totals.postedReceivingReceiptCount} posted
+              LoadArr receipts: {summaryQuery.data.totals.postedReceivingReceiptCount} posted
             </span>
             <span className="rounded-md bg-amber-950 px-2 py-1 text-amber-200">
               Backorders: {summaryQuery.data.totals.openBackorderCount}
@@ -184,7 +185,8 @@ export function PurchasingReportsPanel({
           <div className="mt-5">
             <div className="text-sm font-semibold text-slate-100">Procurement analytics</div>
             <p className="mt-1 text-xs text-slate-400">
-              Derived from the current purchase, receiving, compliance, exception, and vendor-data pipeline.
+              Derived from the current purchase, LoadArr receiving, compliance, exception, and
+              vendor-data pipeline.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <MetricCard
@@ -203,7 +205,7 @@ export function PurchasingReportsPanel({
                 detail="Procurement exceptions still active in the queue."
               />
               <MetricCard
-                label="Open receiving exceptions"
+                label="Open LoadArr receiving exceptions"
                 value={String(summaryQuery.data.analytics.openReceivingExceptionCount)}
                 detail="Receiving exceptions waiting on a resolution."
               />
@@ -316,7 +318,7 @@ export function PurchasingReportsPanel({
           )}
           {poDetailQuery.data.receivingReceipts.length > 0 && (
             <p className="mt-2 text-xs text-slate-500">
-              {poDetailQuery.data.receivingReceipts.length} receiving receipt(s)
+              {poDetailQuery.data.receivingReceipts.length} LoadArr receipt(s)
             </p>
           )}
           {poDetailQuery.data.backorders.length > 0 && (

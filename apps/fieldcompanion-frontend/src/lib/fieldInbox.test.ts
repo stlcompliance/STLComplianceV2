@@ -18,6 +18,7 @@ const sampleTask: FieldInboxTaskItem = {
 describe('fieldInbox helpers', () => {
   it('maps product and task labels', () => {
     expect(productLabel('maintainarr')).toBe('MaintainArr')
+    expect(productLabel('loadarr')).toBe('LoadArr')
     expect(taskTypeLabel('training_assignment')).toBe('Training')
   })
 

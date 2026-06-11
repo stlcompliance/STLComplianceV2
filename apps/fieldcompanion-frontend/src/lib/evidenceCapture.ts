@@ -5,8 +5,8 @@ export function isMaintainarrInspectionTask(taskKey: string): boolean {
   return taskKey.startsWith('maintainarr:inspection:')
 }
 
-export function isSupplyarrReceivingTask(taskKey: string): boolean {
-  return taskKey.startsWith('supplyarr:receiving:')
+export function isReceivingTask(taskKey: string): boolean {
+  return taskKey.startsWith('loadarr:receiving:')
 }
 
 export function isMaintainarrWorkOrderTask(taskKey: string): boolean {

@@ -30,7 +30,8 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
     >
       <h2 className="text-lg font-semibold text-slate-50">Procurement coordination</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Materialized pipeline status across purchase requests, orders, and receiving progress.
+        Materialized pipeline status across purchase requests, orders, and LoadArr receiving
+        progress snapshots.
       </p>
 
       {dashboardQuery.isLoading && (

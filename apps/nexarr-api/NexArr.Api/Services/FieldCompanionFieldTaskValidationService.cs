@@ -183,7 +183,7 @@ public sealed class FieldCompanionFieldTaskValidationService(FieldCompanionField
 
         if (string.Equals(submissionKind, FieldCompanionFieldSubmissionKinds.Receiving, StringComparison.Ordinal))
         {
-            return string.Equals(taskRef.ProductKey, "supplyarr", StringComparison.Ordinal)
+            return string.Equals(taskRef.ProductKey, "loadarr", StringComparison.Ordinal)
                 && string.Equals(taskRef.ResourceType, "receiving", StringComparison.Ordinal);
         }
 

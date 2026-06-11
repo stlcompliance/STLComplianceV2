@@ -5,6 +5,12 @@ namespace STLCompliance.NexArr.Auth.Tests;
 public sealed class FieldInboxRulesTests
 {
     [Fact]
+    public void FieldProductKeys_include_loadarr_for_owner_aligned_field_task_discovery()
+    {
+        Assert.Contains("loadarr", FieldInboxRules.FieldProductKeys);
+    }
+
+    [Fact]
     public void BuildAggregatedResponse_orders_blocked_tasks_after_open_tasks()
     {
         var sources = new[]
