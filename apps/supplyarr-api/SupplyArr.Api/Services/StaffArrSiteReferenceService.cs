@@ -32,7 +32,7 @@ public sealed class StaffArrSiteReferenceService(
             tenantId,
             requestedSiteId,
             options.Value.ServiceToken,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         if (site is null)
         {

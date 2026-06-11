@@ -30,3 +30,9 @@ Key references:
 - Do not introduce UI patterns that violate the shared shell or page constitutions.
 - Do not duplicate canonical cross-product data unless the applicable constitution explicitly permits a labeled snapshot.
 - If the request appears to conflict with a constitution, pause and call out the conflict instead of silently implementing it.
+
+## Deployment Rule
+
+- This project is deployed on Render.
+- Local-only changes do not change remote or deployed status.
+- Render deploys are automatically triggered only after code is committed and pushed.

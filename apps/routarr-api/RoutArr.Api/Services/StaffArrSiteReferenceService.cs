@@ -21,7 +21,11 @@ public sealed class StaffArrSiteReferenceService(
             return null;
         }
 
-        var site = await client.GetAsync(tenantId, siteId, options.Value.ServiceToken, cancellationToken);
+        var site = await client.GetAsync(
+            tenantId,
+            siteId,
+            options.Value.ServiceToken,
+            cancellationToken: cancellationToken);
         if (site is null)
         {
             throw new StlApiException(

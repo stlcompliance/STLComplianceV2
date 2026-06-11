@@ -27,7 +27,10 @@ public sealed class StaffArrSiteReferenceService(
 
         try
         {
-            var sites = await client.ListAsync(tenantId, options.Value.ServiceToken, cancellationToken);
+            var sites = await client.ListAsync(
+                tenantId,
+                options.Value.ServiceToken,
+                cancellationToken: cancellationToken);
             return sites
                 .Select(site => new MaintainArrStaffArrSite(site.OrgUnitId, site.Name))
                 .ToList();
@@ -71,7 +74,11 @@ public sealed class StaffArrSiteReferenceService(
 
         try
         {
-            var site = await client.GetAsync(tenantId, siteId, options.Value.ServiceToken, cancellationToken);
+            var site = await client.GetAsync(
+                tenantId,
+                siteId,
+                options.Value.ServiceToken,
+                cancellationToken: cancellationToken);
             if (site is null)
             {
                 throw new StlApiException(
