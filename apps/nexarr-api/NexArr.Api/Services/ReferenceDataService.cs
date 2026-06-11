@@ -1319,23 +1319,33 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         await db.SaveChangesAsync(cancellationToken);
         await UpsertEntityVersionAsync(entity, request, staging, cancellationToken);
 
-        if (staging.Confidence >= 0.75m
-            && !await db.ReferenceCrosswalks.AnyAsync(
-                x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == staging.Job.Source.Key,
-                cancellationToken))
+        if (staging.Confidence >= 0.75m)
         {
-            db.ReferenceCrosswalks.Add(new ReferenceCrosswalk
+            var externalKey = ResolveCrosswalkExternalKey(normalized, canonicalKey);
+            var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                x => x.ExternalSystem == staging.Job.Source.Key && x.ExternalKey == externalKey,
+                cancellationToken)
+                ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                    x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == staging.Job.Source.Key,
+                    cancellationToken);
+
+            if (crosswalk is null)
             {
-                Id = Guid.NewGuid(),
-                ReferenceEntityId = entity.Id,
-                ExternalSystem = staging.Job.Source.Key,
-                ExternalKey = canonicalKey,
-                SourceId = staging.Job.SourceId,
-                Confidence = staging.Confidence,
-                Status = ReferenceCrosswalkStatuses.Active,
-                CreatedAt = now,
-                UpdatedAt = now,
-            });
+                crosswalk = new ReferenceCrosswalk
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedAt = now,
+                };
+                db.ReferenceCrosswalks.Add(crosswalk);
+            }
+
+            crosswalk.ReferenceEntityId = entity.Id;
+            crosswalk.ExternalSystem = staging.Job.Source.Key;
+            crosswalk.ExternalKey = externalKey;
+            crosswalk.SourceId = staging.Job.SourceId;
+            crosswalk.Confidence = staging.Confidence;
+            crosswalk.Status = ReferenceCrosswalkStatuses.Active;
+            crosswalk.UpdatedAt = now;
             await db.SaveChangesAsync(cancellationToken);
         }
 
@@ -1939,6 +1949,22 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         }
 
         return NormalizeKey(targetDataset.Name);
+    }
+
+    private static string ResolveCrosswalkExternalKey(JsonElement normalized, string fallbackCanonicalKey)
+    {
+        if (normalized.ValueKind == JsonValueKind.Object
+            && normalized.TryGetProperty("sourceKey", out var sourceKeyValue)
+            && sourceKeyValue.ValueKind == JsonValueKind.String)
+        {
+            var sourceKey = sourceKeyValue.GetString();
+            if (!string.IsNullOrWhiteSpace(sourceKey))
+            {
+                return NormalizeKey(sourceKey);
+            }
+        }
+
+        return fallbackCanonicalKey;
     }
 
     private static string NormalizeColumnKey(string value) =>

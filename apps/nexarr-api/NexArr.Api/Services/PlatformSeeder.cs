@@ -1813,23 +1813,33 @@ public static class PlatformSeeder
             now,
             cancellationToken);
 
-        if (staged.Confidence >= 0.75m
-            && !await db.ReferenceCrosswalks.AnyAsync(
-                x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == sourceKey,
-                cancellationToken))
+        if (staged.Confidence >= 0.75m)
         {
-            db.ReferenceCrosswalks.Add(new ReferenceCrosswalk
+            var externalKey = ResolveCrosswalkExternalKey(normalized, canonicalKey);
+            var crosswalk = await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                x => x.ExternalSystem == sourceKey && x.ExternalKey == externalKey,
+                cancellationToken)
+                ?? await db.ReferenceCrosswalks.FirstOrDefaultAsync(
+                    x => x.ReferenceEntityId == entity.Id && x.ExternalSystem == sourceKey,
+                    cancellationToken);
+
+            if (crosswalk is null)
             {
-                Id = Guid.NewGuid(),
-                ReferenceEntityId = entity.Id,
-                ExternalSystem = sourceKey,
-                ExternalKey = canonicalKey,
-                SourceId = sourceId,
-                Confidence = staged.Confidence,
-                Status = ReferenceCrosswalkStatuses.Active,
-                CreatedAt = now,
-                UpdatedAt = now,
-            });
+                crosswalk = new ReferenceCrosswalk
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedAt = now,
+                };
+                db.ReferenceCrosswalks.Add(crosswalk);
+            }
+
+            crosswalk.ReferenceEntityId = entity.Id;
+            crosswalk.ExternalSystem = sourceKey;
+            crosswalk.ExternalKey = externalKey;
+            crosswalk.SourceId = sourceId;
+            crosswalk.Confidence = staged.Confidence;
+            crosswalk.Status = ReferenceCrosswalkStatuses.Active;
+            crosswalk.UpdatedAt = now;
             await db.SaveChangesAsync(cancellationToken);
         }
 
@@ -1929,6 +1939,22 @@ public static class PlatformSeeder
         }
 
         return fallback;
+    }
+
+    private static string ResolveCrosswalkExternalKey(JsonElement normalized, string fallbackCanonicalKey)
+    {
+        if (normalized.ValueKind == JsonValueKind.Object
+            && normalized.TryGetProperty("sourceKey", out var sourceKeyValue)
+            && sourceKeyValue.ValueKind == JsonValueKind.String)
+        {
+            var sourceKey = sourceKeyValue.GetString();
+            if (!string.IsNullOrWhiteSpace(sourceKey))
+            {
+                return NormalizeKey(sourceKey);
+            }
+        }
+
+        return fallbackCanonicalKey;
     }
 
     private static decimal ReadConfidence(string? confidence, bool targetAssigned)
