@@ -102,8 +102,8 @@ public sealed class AuthService(
             user.ModifiedAt = now;
         }
 
-        var tenantId = await ResolveTenantIdAsync(user, request.TenantId, cancellationToken);
-        var tenant = await db.Tenants.AsNoTracking().FirstAsync(t => t.Id == tenantId, cancellationToken);
+        var tenant = await ResolveTenantAsync(user, request.TenantId, cancellationToken);
+        var tenantId = tenant.Id;
 
         if (tenant.Status != TenantStatuses.Active)
         {
@@ -629,12 +629,17 @@ public sealed class AuthService(
             cancellationToken: cancellationToken);
     }
 
-    private async Task<Guid> ResolveTenantIdAsync(
+    private async Task<Tenant> ResolveTenantAsync(
         PlatformUser user,
         Guid? requestedTenantId,
         CancellationToken cancellationToken)
     {
         var memberships = user.Memberships.Where(m => m.IsActive).ToList();
+        var membershipTenantIds = memberships
+            .Select(m => m.TenantId)
+            .Distinct()
+            .ToList();
+
         if (memberships.Count == 0 && !user.IsPlatformAdmin)
         {
             throw new StlApiException("auth.no_tenant_membership", "User has no active tenant memberships.", 403);
@@ -642,16 +647,41 @@ public sealed class AuthService(
 
         if (requestedTenantId is Guid tenantId)
         {
-            if (!user.IsPlatformAdmin && memberships.All(m => m.TenantId != tenantId))
+            if (!user.IsPlatformAdmin && !membershipTenantIds.Contains(tenantId))
             {
                 throw new StlApiException("auth.tenant_forbidden", "User is not a member of the requested tenant.", 403);
             }
 
-            return tenantId;
+            return await db.Tenants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken)
+                ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
         }
 
-        return memberships.FirstOrDefault()?.TenantId
-            ?? await db.Tenants.OrderBy(t => t.CreatedAt).Select(t => t.Id).FirstAsync(cancellationToken);
+        if (membershipTenantIds.Count > 0)
+        {
+            var membershipTenant = await db.Tenants
+                .AsNoTracking()
+                .Where(t => membershipTenantIds.Contains(t.Id))
+                .OrderBy(t => t.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (membershipTenant is not null)
+            {
+                return membershipTenant;
+            }
+
+            if (!user.IsPlatformAdmin)
+            {
+                throw new StlApiException("auth.no_tenant_membership", "User has no active tenant memberships.", 403);
+            }
+        }
+
+        return await db.Tenants
+            .AsNoTracking()
+            .OrderBy(t => t.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
     }
 
     private async Task<IReadOnlyList<string>> GetActiveEntitlementsAsync(
