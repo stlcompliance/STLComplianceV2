@@ -76,13 +76,9 @@ import {
   canApprovePurchaseRequests,
   canCreatePurchaseOrders,
   canCreatePurchaseRequests,
-  canReadVendorReports as userCanReadVendorReports,
-  canExportVendorReports as userCanExportVendorReports,
+  canReadParties as userCanReadParties,
   canReadPartSubstitutions as userCanReadPartSubstitutions,
-  canReadPurchasingReports as userCanReadPurchasingReports,
-  canExportPurchasingReports as userCanExportPurchasingReports,
-  canReadComplianceReports as userCanReadComplianceReports,
-  canExportComplianceReports as userCanExportComplianceReports,
+  canReadProcurementRecords as userCanReadProcurementRecords,
   canUseForgivingSearch as userCanUseForgivingSearch,
   canReadAuditHistory as userCanReadAuditHistory,
   canReadSupplyReadiness as userCanReadSupplyReadiness,
@@ -1090,12 +1086,8 @@ export function useSupplyArrWorkspaceState() {
     ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
-  const canReadVendorReports = me
-    ? userCanReadVendorReports(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
-
-  const canExportVendorReports = me
-    ? userCanExportVendorReports(me.tenantRoleKey, me.isPlatformAdmin)
+  const canReadParties = me
+    ? userCanReadParties(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
   const canReadPartSubstitutions = me
@@ -1108,8 +1100,8 @@ export function useSupplyArrWorkspaceState() {
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPartSubstitutions,
   })
 
-  const canReadPurchasingReports = me
-    ? userCanReadPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
+  const canReadProcurementRecords = me
+    ? userCanReadProcurementRecords(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
   const contractsQuery = useQuery({
@@ -1118,21 +1110,9 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () => getContractRecords(session!.accessToken, { limit: 100 }),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadPurchasingReports,
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && canReadProcurementRecords,
 
   })
-
-  const canExportPurchasingReports = me
-    ? userCanExportPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
-
-  const canReadComplianceReports = me
-    ? userCanReadComplianceReports(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
-
-  const canExportComplianceReports = me
-    ? userCanExportComplianceReports(me.tenantRoleKey, me.isPlatformAdmin)
-    : false
 
   const canUseForgivingSearch = me
     ? userCanUseForgivingSearch(me.tenantRoleKey, me.isPlatformAdmin)
@@ -1287,13 +1267,8 @@ export function useSupplyArrWorkspaceState() {
     canCreatePo,
     canApprovePo,
     canManageNotifications,
-    canReadVendorReports,
-    canExportVendorReports,
+    canReadParties,
     canReadPartSubstitutions,
-    canReadPurchasingReports,
-    canExportPurchasingReports,
-    canReadComplianceReports,
-    canExportComplianceReports,
     canUseForgivingSearch,
     canReadAuditHistory,
     canReadSupplyReadiness,

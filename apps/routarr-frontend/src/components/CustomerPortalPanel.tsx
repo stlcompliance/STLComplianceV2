@@ -3,9 +3,11 @@ import { useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
-  getDispatchReportTripDetail,
-  getProofDvirReportTripDetail,
+  getRoute,
+  getRoutes,
   getTripByNumber,
+  getTripExecutionSummary,
+  listDispatchExceptions,
 } from '../api/client'
 
 type Props = {
@@ -34,6 +36,10 @@ function humanize(value: string | null | undefined): string {
   return value.replace(/[_-]+/g, ' ')
 }
 
+function isPendingStopStatus(status: string): boolean {
+  return !['completed', 'skipped', 'cancelled'].includes(status.toLowerCase())
+}
+
 export function CustomerPortalPanel({ accessToken, canRead }: Props) {
   const [tripNumberInput, setTripNumberInput] = useState('')
   const [searchTripNumber, setSearchTripNumber] = useState('')
@@ -44,15 +50,24 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
     enabled: canRead && Boolean(searchTripNumber),
   })
 
-  const dispatchDetailQuery = useQuery({
-    queryKey: ['routarr-customer-portal-dispatch-detail', accessToken, tripQuery.data?.tripId],
-    queryFn: () => getDispatchReportTripDetail(accessToken, tripQuery.data!.tripId),
+  const routesQuery = useQuery({
+    queryKey: ['routarr-customer-portal-routes', accessToken, tripQuery.data?.tripId],
+    queryFn: async () => {
+      const routes = await getRoutes(accessToken, tripQuery.data!.tripId)
+      return Promise.all(routes.map((route) => getRoute(accessToken, route.routeId)))
+    },
     enabled: canRead && Boolean(tripQuery.data?.tripId),
   })
 
-  const proofDvirQuery = useQuery({
-    queryKey: ['routarr-customer-portal-proof-dvir-detail', accessToken, tripQuery.data?.tripId],
-    queryFn: () => getProofDvirReportTripDetail(accessToken, tripQuery.data!.tripId),
+  const executionQuery = useQuery({
+    queryKey: ['routarr-customer-portal-execution', accessToken, tripQuery.data?.tripId],
+    queryFn: () => getTripExecutionSummary(accessToken, tripQuery.data!.tripId),
+    enabled: canRead && Boolean(tripQuery.data?.tripId),
+  })
+
+  const exceptionsQuery = useQuery({
+    queryKey: ['routarr-customer-portal-exceptions', accessToken, tripQuery.data?.tripId],
+    queryFn: () => listDispatchExceptions(accessToken),
     enabled: canRead && Boolean(tripQuery.data?.tripId),
   })
 
@@ -60,8 +75,20 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
     return null
   }
 
-  const proofCount = proofDvirQuery.data?.proofs.length ?? 0
-  const dvirCount = proofDvirQuery.data?.dvirInspections.length ?? 0
+  const routes = routesQuery.data ?? []
+  const routeCount = routes.length
+  const pendingStopCount = routes.reduce(
+    (total, route) => total + route.stops.filter((stop) => isPendingStopStatus(stop.stopStatus)).length,
+    0,
+  )
+  const openExceptions = (exceptionsQuery.data?.items ?? []).filter(
+    (item) => item.tripId === tripQuery.data?.tripId,
+  )
+  const openExceptionCount = openExceptions.length
+  const proofCount = executionQuery.data?.proofs.length ?? 0
+  const dvirCount = executionQuery.data?.dvirInspections.length ?? 0
+  const stopProgressLabel =
+    openExceptionCount > 0 ? 'needs attention' : pendingStopCount > 0 ? 'in progress' : 'on track'
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-5" data-testid="customer-portal-panel">
@@ -121,7 +148,10 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
               value={`${formatTimestamp(tripQuery.data.scheduledStartAt)} → ${formatTimestamp(tripQuery.data.scheduledEndAt)}`}
             />
             <MetricCard label="Loads" value={String(tripQuery.data.loads.length)} />
-            <MetricCard label="Proofs / DVIRs" value={`${proofCount} / ${dvirCount}`} />
+            <MetricCard
+              label="Proofs / DVIRs"
+              value={executionQuery.isLoading ? 'Loading…' : `${proofCount} / ${dvirCount}`}
+            />
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -135,10 +165,10 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                 Driver {tripQuery.data.assignedDriverPersonId ?? 'unassigned'} · Vehicle{' '}
                 {tripQuery.data.vehicleRefKey ?? 'unassigned'}
               </p>
-              {dispatchDetailQuery.data ? (
+              {routesQuery.data && exceptionsQuery.data ? (
                 <p className="mt-2 text-xs text-slate-500">
-                  {dispatchDetailQuery.data.routeCount} route(s) · {dispatchDetailQuery.data.pendingStopCount}{' '}
-                  pending stop(s) · {dispatchDetailQuery.data.delayExceptionCount} delay exception(s)
+                  {routeCount} route(s) · {pendingStopCount} pending stop(s) · {openExceptionCount} open
+                  {' '}exception(s)
                 </p>
               ) : null}
             </div>
@@ -167,43 +197,47 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
               <h3 className="text-sm font-semibold text-slate-100">Stop progress</h3>
-              {dispatchDetailQuery.data ? (
+              {routesQuery.isLoading || exceptionsQuery.isLoading ? (
+                <p className="mt-2 text-xs text-slate-500">Loading stop progress…</p>
+              ) : routesQuery.data && exceptionsQuery.data ? (
                 <>
                   <p className="mt-2 text-xs text-slate-500">
-                    {dispatchDetailQuery.data.routeCount} route(s) · {dispatchDetailQuery.data.pendingStopCount}{' '}
-                    pending stop(s) · {dispatchDetailQuery.data.isLate ? 'late' : dispatchDetailQuery.data.isAtRisk ? 'at risk' : 'on track'}
+                    {routeCount} route(s) · {pendingStopCount} pending stop(s) · {openExceptionCount} open
+                    {' '}exception(s) · {stopProgressLabel}
                   </p>
                   <p className="mt-2 text-xs text-slate-500">
-                    Scheduled {formatTimestamp(dispatchDetailQuery.data.scheduledStartAt)} →{' '}
-                    {formatTimestamp(dispatchDetailQuery.data.scheduledEndAt)}
+                    Scheduled {formatTimestamp(tripQuery.data.scheduledStartAt)} →{' '}
+                    {formatTimestamp(tripQuery.data.scheduledEndAt)}
                   </p>
                   <p className="mt-2 text-xs text-slate-500">
-                    Dispatched {formatTimestamp(dispatchDetailQuery.data.dispatchedAt)} · Started{' '}
-                    {formatTimestamp(dispatchDetailQuery.data.startedAt)} · Completed{' '}
-                    {formatTimestamp(dispatchDetailQuery.data.completedAt)}
+                    Dispatched {formatTimestamp(tripQuery.data.dispatchedAt)} · Started{' '}
+                    {formatTimestamp(tripQuery.data.startedAt)} · Completed{' '}
+                    {formatTimestamp(tripQuery.data.completedAt)}
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">No dispatch summary loaded yet.</p>
+                <p className="mt-2 text-xs text-slate-500">Stop progress is unavailable right now.</p>
               )}
             </div>
 
             <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
               <h3 className="text-sm font-semibold text-slate-100">Proof archive</h3>
-              {proofDvirQuery.data ? (
+              {executionQuery.isLoading ? (
+                <p className="mt-2 text-xs text-slate-500">Loading proof archive…</p>
+              ) : executionQuery.data ? (
                 <>
                   <p className="mt-2 text-xs text-slate-500">
-                    {proofDvirQuery.data.hasPreTripDvir ? 'Pre-trip DVIR captured' : 'Pre-trip DVIR missing'} ·{' '}
-                    {proofDvirQuery.data.hasPostTripDvir ? 'Post-trip DVIR captured' : 'Post-trip DVIR missing'}
+                    {executionQuery.data.hasPreTripDvir ? 'Pre-trip DVIR captured' : 'Pre-trip DVIR missing'} ·{' '}
+                    {executionQuery.data.hasPostTripDvir ? 'Post-trip DVIR captured' : 'Post-trip DVIR missing'}
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500">Proofs</p>
-                      {proofDvirQuery.data.proofs.length === 0 ? (
+                      {executionQuery.data.proofs.length === 0 ? (
                         <p className="text-xs text-slate-500">No proofs captured yet.</p>
                       ) : (
                         <ul className="mt-2 space-y-1 text-xs text-slate-400">
-                          {proofDvirQuery.data.proofs.map((proof) => (
+                          {executionQuery.data.proofs.map((proof) => (
                             <li key={proof.proofId}>
                               {proof.proofType} · {proof.referenceKey || 'No reference'} · {humanize(proof.reviewStatus)}
                             </li>
@@ -213,11 +247,11 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500">DVIRs</p>
-                      {proofDvirQuery.data.dvirInspections.length === 0 ? (
+                      {executionQuery.data.dvirInspections.length === 0 ? (
                         <p className="text-xs text-slate-500">No DVIR inspections captured yet.</p>
                       ) : (
                         <ul className="mt-2 space-y-1 text-xs text-slate-400">
-                          {proofDvirQuery.data.dvirInspections.map((dvir) => (
+                          {executionQuery.data.dvirInspections.map((dvir) => (
                             <li key={dvir.dvirId}>
                               {dvir.phase} · {humanize(dvir.result)} · {formatTimestamp(dvir.submittedAt)}
                             </li>
@@ -228,7 +262,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                   </div>
                 </>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">No proof archive loaded yet.</p>
+                <p className="mt-2 text-xs text-slate-500">Proof archive is unavailable right now.</p>
               )}
             </div>
           </div>

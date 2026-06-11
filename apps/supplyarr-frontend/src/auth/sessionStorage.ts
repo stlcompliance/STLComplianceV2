@@ -118,25 +118,22 @@ const supplyarrProcurementReadRoles = [
   'supplyarr_buyer',
 ]
 
-export function canReadVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+export function canReadParties(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
   if (isPlatformAdmin) return true
   return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
-}
-
-export function canExportVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
-  if (isPlatformAdmin) return true
-  return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
 }
 
 export function canReadPartSubstitutions(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
-  if (isPlatformAdmin) return true
-  return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
+  return canReadParties(tenantRoleKey, isPlatformAdmin)
 }
 
-export function canReadPurchasingReports(
+export function canReadProcurementRecords(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
@@ -144,32 +141,11 @@ export function canReadPurchasingReports(
   return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
 }
 
-export function canExportPurchasingReports(
-  tenantRoleKey: string,
-  isPlatformAdmin: boolean,
-): boolean {
-  return canReadPurchasingReports(tenantRoleKey, isPlatformAdmin)
-}
-
-export function canReadComplianceReports(
-  tenantRoleKey: string,
-  isPlatformAdmin: boolean,
-): boolean {
-  return canReadVendorReports(tenantRoleKey, isPlatformAdmin)
-}
-
-export function canExportComplianceReports(
-  tenantRoleKey: string,
-  isPlatformAdmin: boolean,
-): boolean {
-  return canReadComplianceReports(tenantRoleKey, isPlatformAdmin)
-}
-
 export function canUseForgivingSearch(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
-  return canReadVendorReports(tenantRoleKey, isPlatformAdmin)
+  return canReadParties(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canReadAuditHistory(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {

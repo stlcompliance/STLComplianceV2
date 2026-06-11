@@ -30,10 +30,8 @@ import {
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import {
-  getCompliancePartyDetail,
   getPartyVendorRestrictionEnforcement,
   getSupplierOnboardingByParty,
-  getVendorReportDetail,
   getVendorSupplyReadiness,
   listAuditHistory,
   listPartyComplianceDocuments,
@@ -229,20 +227,10 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
     queryFn: () => getVendorSupplyReadiness(s.accessToken, selectedPartyId),
     enabled: detailQueriesEnabled && s.canReadSupplyReadiness,
   })
-  const vendorReportQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-vendor-report', s.accessToken, selectedPartyId],
-    queryFn: () => getVendorReportDetail(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canReadVendorReports,
-  })
-  const complianceDetailQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-compliance', s.accessToken, selectedPartyId],
-    queryFn: () => getCompliancePartyDetail(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canReadComplianceReports,
-  })
   const documentsQuery = useQuery({
     queryKey: ['supplyarr-party-profile-documents', s.accessToken, selectedPartyId],
     queryFn: () => listPartyComplianceDocuments(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && (s.canManage || s.canReadComplianceReports),
+    enabled: detailQueriesEnabled && s.canReadParties,
   })
   const onboardingQuery = useQuery({
     queryKey: ['supplyarr-party-profile-onboarding', s.accessToken, selectedPartyId],
@@ -334,31 +322,18 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       return lineTotal + line.quantityOrdered * (pricedLink?.link.catalogUnitPrice ?? 0)
     }, 0)
   }, 0)
-  const vendorSummary = vendorReportQuery.data?.summary
-  const reportOpenOrders = vendorSummary?.openPurchaseOrderCount ?? openOrders.length
-  const reportPartLinks = vendorSummary?.partVendorLinkCount ?? partyPartLinks.length
-  const reportPreferredLinks = vendorSummary?.preferredPartLinkCount ?? partyPartLinks.filter(({ link }) => link.isPreferred).length
-  const complianceDocuments = complianceDetailQuery.data?.documents
+  const linkedPartCount = partyPartLinks.length
+  const preferredPartLinkCount = partyPartLinks.filter(({ link }) => link.isPreferred).length
   const rawDocuments = documentsQuery.data ?? []
-  const documents = complianceDocuments
-    ? complianceDocuments.map((document) => ({
-        id: document.documentId,
-        title: document.title,
-        status: document.effectiveStatus === 'effective' ? humanize(document.reviewStatus) : humanize(document.effectiveStatus),
-        tone: document.isExpired ? 'bad' as Tone : document.isExpiringSoon ? 'warn' as Tone : statusTone(document.reviewStatus),
-        subtitle: document.expiresAt ? `Expires ${formatDate(document.expiresAt)}` : `Updated ${formatDate(document.updatedAt)}`,
-        expiresAt: document.expiresAt,
-        isAttention: document.isExpired || document.isExpiringSoon || document.reviewStatus !== 'approved',
-      }))
-    : rawDocuments.map((document) => ({
-        id: document.documentId,
-        title: document.title,
-        status: normalizeDocumentStatus(document),
-        tone: statusTone(normalizeDocumentStatus(document)),
-        subtitle: document.expiresAt ? `Expires ${formatDate(document.expiresAt)}` : `Uploaded ${formatDate(document.createdAt)}`,
-        expiresAt: document.expiresAt,
-        isAttention: normalizeDocumentStatus(document) !== 'Approved',
-      }))
+  const documents = rawDocuments.map((document) => ({
+    id: document.documentId,
+    title: document.title,
+    status: normalizeDocumentStatus(document),
+    tone: statusTone(normalizeDocumentStatus(document)),
+    subtitle: document.expiresAt ? `Expires ${formatDate(document.expiresAt)}` : `Uploaded ${formatDate(document.createdAt)}`,
+    expiresAt: document.expiresAt,
+    isAttention: normalizeDocumentStatus(document) !== 'Approved',
+  }))
   const activeRestrictions = (restrictionsQuery.data ?? []).filter((restriction) => restriction.status === 'active')
   const openIncidents = (incidentsQuery.data ?? []).filter(
     (incident) => !['resolved', 'closed', 'cancelled'].includes(incident.status),
@@ -404,7 +379,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
     activeRestrictions.length === 0,
     readiness?.readinessStatus !== 'not_ready',
     Boolean(primaryContact),
-    reportPartLinks > 0,
+    linkedPartCount > 0,
     documents.every((document) => document.tone !== 'bad'),
     openIncidents.length === 0,
   ].filter(Boolean).length
@@ -434,21 +409,18 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       tone: 'bad' as Tone,
     })),
   ].slice(0, 3)
-  const recentPurchaseOrders = vendorReportQuery.data?.recentPurchaseOrders.map((order) => ({
-    id: order.purchaseOrderId,
-    key: order.orderKey,
-    title: order.title,
-    status: order.status,
-    detail: `${order.lineCount} line${order.lineCount === 1 ? '' : 's'} - ${order.quantityReceived}/${order.quantityOrdered} received`,
-  })) ?? purchaseOrders.slice(0, 3).map((order) => ({
-    id: order.purchaseOrderId,
-    key: order.orderKey,
-    title: order.title,
-    status: order.status,
-    detail: order.lines[0]
-      ? `${order.lines[0].partDisplayName} - ${order.lines[0].quantityOrdered} ${order.lines[0].unitOfMeasure}`
-      : 'No lines',
-  }))
+  const recentPurchaseOrders = [...purchaseOrders]
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+    .slice(0, 3)
+    .map((order) => ({
+      id: order.purchaseOrderId,
+      key: order.orderKey,
+      title: order.title,
+      status: order.status,
+      detail: order.lines.length > 0
+        ? `${order.lines.length} line${order.lines.length === 1 ? '' : 's'} - ${order.lines.reduce((total, line) => total + line.quantityReceived, 0)}/${order.lines.reduce((total, line) => total + line.quantityOrdered, 0)} received`
+        : 'No lines',
+    }))
   const recentActivity = auditQuery.data?.items.map((item) => ({
     id: item.id,
     category: humanize(item.action.split('.').slice(-1)[0]),
@@ -532,7 +504,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         },
         {
           label: 'Open orders',
-          value: reportOpenOrders,
+          value: openOrders.length,
           hint: `${waitingShipmentCount} waiting shipment - ${purchaseRequests.length} request${purchaseRequests.length === 1 ? '' : 's'}`,
           icon: <Boxes className="h-5 w-5" />,
           tone: 'neutral',
@@ -540,7 +512,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         {
           label: 'YTD spend',
           value: formatCurrency(ytdSpend),
-          hint: reportPartLinks > 0 ? `${reportPartLinks} linked item${reportPartLinks === 1 ? '' : 's'}` : 'No linked catalog spend',
+          hint: linkedPartCount > 0 ? `${linkedPartCount} linked item${linkedPartCount === 1 ? '' : 's'}` : 'No linked catalog spend',
           icon: <DollarSign className="h-5 w-5" />,
           tone: 'good',
         },
@@ -741,7 +713,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
                   <DollarSign className="h-5 w-5 text-sky-300" />
                   <p className="mt-3 text-xs text-slate-400">Preferred items</p>
-                  <p className="font-bold text-white">{reportPreferredLinks}</p>
+                  <p className="font-bold text-white">{preferredPartLinkCount}</p>
                 </div>
               </div>
             </>

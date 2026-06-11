@@ -6,18 +6,24 @@ import { CustomerPortalPanel } from './CustomerPortalPanel'
 
 const {
   getTripByNumber,
-  getDispatchReportTripDetail,
-  getProofDvirReportTripDetail,
+  getRoute,
+  getRoutes,
+  getTripExecutionSummary,
+  listDispatchExceptions,
 } = vi.hoisted(() => ({
   getTripByNumber: vi.fn(),
-  getDispatchReportTripDetail: vi.fn(),
-  getProofDvirReportTripDetail: vi.fn(),
+  getRoute: vi.fn(),
+  getRoutes: vi.fn(),
+  getTripExecutionSummary: vi.fn(),
+  listDispatchExceptions: vi.fn(),
 }))
 
 vi.mock('../api/client', () => ({
   getTripByNumber,
-  getDispatchReportTripDetail,
-  getProofDvirReportTripDetail,
+  getRoute,
+  getRoutes,
+  getTripExecutionSummary,
+  listDispatchExceptions,
 }))
 
 describe('CustomerPortalPanel', () => {
@@ -32,6 +38,7 @@ describe('CustomerPortalPanel', () => {
       tripId: '11111111-1111-1111-1111-111111111111',
       tripNumber: 'TR-20260603-0001',
       title: 'Customer shipment',
+      description: 'Shipment to customer',
       dispatchStatus: 'dispatched',
       assignedDriverPersonId: 'driver-1',
       vehicleRefKey: 'TRUCK-17',
@@ -62,68 +69,126 @@ describe('CustomerPortalPanel', () => {
       closedAt: null,
       cancelledAt: null,
     })
-    getDispatchReportTripDetail.mockResolvedValue({
+    getRoutes.mockResolvedValue([
+      {
+        routeId: 'route-1',
+        routeNumber: 'RT-0001',
+        title: 'Customer route',
+        routeStatus: 'active',
+        tripId: '11111111-1111-1111-1111-111111111111',
+        stopCount: 1,
+        createdByUserId: 'creator-1',
+        createdAt: '2026-06-03T08:30:00Z',
+        updatedAt: '2026-06-03T09:30:00Z',
+        activatedAt: null,
+        completedAt: null,
+        cancelledAt: null,
+      },
+    ])
+    getRoute.mockResolvedValue({
+      routeId: 'route-1',
+      routeNumber: 'RT-0001',
+      title: 'Customer route',
+      description: 'Primary delivery route',
+      routeStatus: 'active',
       tripId: '11111111-1111-1111-1111-111111111111',
-      tripNumber: 'TR-20260603-0001',
-      title: 'Customer shipment',
-      description: 'Shipment to customer',
-      dispatchStatus: 'dispatched',
-      assignedDriverPersonId: 'driver-1',
-      vehicleRefKey: 'TRUCK-17',
-      scheduledStartAt: '2026-06-03T10:00:00Z',
-      scheduledEndAt: '2026-06-03T16:00:00Z',
-      dispatchedAt: '2026-06-03T10:15:00Z',
-      startedAt: '2026-06-03T10:20:00Z',
-      completedAt: null,
-      cancelledAt: null,
-      isLate: false,
-      isAtRisk: true,
-      routeCount: 1,
-      pendingStopCount: 1,
-      missingRequiredProofCount: 0,
-      linkedExceptionCount: 1,
-      delayExceptionCount: 1,
+      stops: [
+        {
+          stopId: 'stop-1',
+          stopKey: 'stop-1',
+          label: 'Customer site',
+          addressLabel: '123 Main',
+          stopType: 'delivery',
+          stopStatus: 'pending',
+          sequenceNumber: 1,
+          geofenceAnchorLatitude: null,
+          geofenceAnchorLongitude: null,
+          geofenceRadiusMeters: null,
+          lastGeofenceCheckAt: null,
+          lastGeofenceResult: null,
+          lastGeofenceDistanceMeters: null,
+          lastGeofenceReportedLatitude: null,
+          lastGeofenceReportedLongitude: null,
+          scheduledArrivalAt: null,
+          arrivedAt: null,
+          completedAt: null,
+          createdAt: '2026-06-03T08:30:00Z',
+          updatedAt: '2026-06-03T09:30:00Z',
+        },
+      ],
+      createdByUserId: 'creator-1',
       createdAt: '2026-06-03T08:30:00Z',
       updatedAt: '2026-06-03T09:30:00Z',
-      dispatchReleaseSnapshot: null,
+      activatedAt: null,
+      completedAt: null,
+      cancelledAt: null,
     })
-    getProofDvirReportTripDetail.mockResolvedValue({
+    listDispatchExceptions.mockResolvedValue({
+      totalCount: 1,
+      openCount: 1,
+      overdueCount: 0,
+      items: [
+        {
+          exceptionId: 'exception-1',
+          exceptionKey: 'EX-1',
+          title: 'Customer delay',
+          description: 'Waiting for dock',
+          category: 'delay',
+          status: 'open',
+          tripId: '11111111-1111-1111-1111-111111111111',
+          tripNumber: 'TR-20260603-0001',
+          tripTitle: 'Customer shipment',
+          assignedToUserId: null,
+          slaDueAt: null,
+          isSlaBreached: false,
+          resolutionTemplateKey: 'manual_follow_up',
+          resolutionNotes: '',
+          createdByUserId: 'creator-1',
+          createdAt: '2026-06-03T10:25:00Z',
+          updatedAt: '2026-06-03T10:25:00Z',
+          assignedAt: null,
+          resolvedAt: null,
+        },
+      ],
+    })
+    getTripExecutionSummary.mockResolvedValue({
       tripId: '11111111-1111-1111-1111-111111111111',
       tripNumber: 'TR-20260603-0001',
-      title: 'Customer shipment',
       dispatchStatus: 'dispatched',
       assignedDriverPersonId: 'driver-1',
-      vehicleRefKey: 'TRUCK-17',
-      scheduledStartAt: '2026-06-03T10:00:00Z',
-      scheduledEndAt: '2026-06-03T16:00:00Z',
-      proofCount: 1,
+      closedAt: null,
       hasPreTripDvir: true,
       hasPostTripDvir: false,
-      missingRequiredProofCount: 0,
-      failOrConditionalDvirCount: 0,
       proofs: [
         {
           proofId: 'proof-1',
           tripId: '11111111-1111-1111-1111-111111111111',
-          tripNumber: 'TR-20260603-0001',
           proofType: 'pickup_photo',
           capturedByPersonId: 'driver-1',
           vehicleRefKey: 'TRUCK-17',
           referenceKey: 'dock-1',
+          notes: null,
           reviewStatus: 'pending_review',
+          reviewedByPersonId: null,
+          reviewedAt: null,
+          reviewNotes: null,
           capturedAt: '2026-06-03T10:30:00Z',
+          createdAt: '2026-06-03T10:30:00Z',
+          attachments: [],
         },
       ],
       dvirInspections: [
         {
           dvirId: 'dvir-1',
           tripId: '11111111-1111-1111-1111-111111111111',
-          tripNumber: 'TR-20260603-0001',
           phase: 'pre_trip',
           result: 'pass',
           vehicleRefKey: 'TRUCK-17',
+          odometerReading: null,
+          defectNotes: null,
           submittedByPersonId: 'driver-1',
           submittedAt: '2026-06-03T09:50:00Z',
+          attachments: [],
         },
       ],
     })
@@ -142,11 +207,25 @@ describe('CustomerPortalPanel', () => {
     expect(await screen.findByText('Customer portal')).toBeTruthy()
     await waitFor(() => {
       expect(getTripByNumber).toHaveBeenCalledWith('token', 'TR-20260603-0001')
+      expect(getRoutes).toHaveBeenCalledWith('token', '11111111-1111-1111-1111-111111111111')
+      expect(getTripExecutionSummary).toHaveBeenCalledWith(
+        'token',
+        '11111111-1111-1111-1111-111111111111',
+      )
+      expect(listDispatchExceptions).toHaveBeenCalledWith('token')
     })
     expect(screen.getByText('TR-20260603-0001 — Customer shipment')).toBeTruthy()
     expect(screen.getByText('Dispatch status')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Loads' })).toBeTruthy()
     expect(screen.getByText('Proof archive')).toBeTruthy()
+    await waitFor(() => {
+      expect(
+        screen.getAllByText((_, element) =>
+          element?.textContent?.replace(/\s+/g, ' ').trim() ===
+          '1 route(s) · 1 pending stop(s) · 1 open exception(s)',
+        ).length,
+      ).toBeGreaterThan(0)
+    })
     await waitFor(() => {
       expect(
         screen.getAllByText((_, element) =>

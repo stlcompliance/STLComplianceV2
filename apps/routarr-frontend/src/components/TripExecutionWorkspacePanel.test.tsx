@@ -7,11 +7,11 @@ import { TripExecutionWorkspacePanel } from './TripExecutionWorkspacePanel'
 
 vi.mock('../api/client', () => ({
   getTrip: vi.fn(),
-  getDispatchReportTripDetail: vi.fn(),
   getRoutes: vi.fn(),
   getRoute: vi.fn(),
   getTripCaptureReadiness: vi.fn(),
   getTripExecutionSummary: vi.fn(),
+  listDispatchExceptions: vi.fn(),
   getTripAuditTrail: vi.fn(),
   updateTripStatus: vi.fn(),
   submitTripDvir: vi.fn(),
@@ -62,29 +62,6 @@ describe('TripExecutionWorkspacePanel', () => {
       completedAt: null,
       cancelledAt: null,
       closedAt: null,
-    })
-    vi.mocked(client.getDispatchReportTripDetail).mockResolvedValue({
-      tripId: 'trip-1',
-      tripNumber: 'TR-001',
-      title: 'Morning run',
-      description: 'Test trip',
-      dispatchStatus: 'dispatched',
-      assignedDriverPersonId: 'person-1',
-      vehicleRefKey: 'VEH-1',
-      scheduledStartAt: new Date().toISOString(),
-      scheduledEndAt: new Date().toISOString(),
-      dispatchedAt: null,
-      startedAt: null,
-      completedAt: null,
-      cancelledAt: null,
-      isLate: false,
-      isAtRisk: true,
-      routeCount: 1,
-      pendingStopCount: 2,
-      linkedExceptionCount: 0,
-      delayExceptionCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     })
     vi.mocked(client.getRoutes).mockResolvedValue([
       {
@@ -166,6 +143,34 @@ describe('TripExecutionWorkspacePanel', () => {
       hasPreTripDvir: false,
       hasPostTripDvir: false,
     })
+    vi.mocked(client.listDispatchExceptions).mockResolvedValue({
+      totalCount: 1,
+      openCount: 1,
+      overdueCount: 0,
+      items: [
+        {
+          exceptionId: 'exception-1',
+          exceptionKey: 'EX-1',
+          title: 'Delay at stop',
+          description: 'Carrier delay reported',
+          category: 'delay',
+          status: 'open',
+          tripId: 'trip-1',
+          tripNumber: 'TR-001',
+          tripTitle: 'Morning run',
+          assignedToUserId: null,
+          slaDueAt: null,
+          isSlaBreached: false,
+          resolutionTemplateKey: 'manual_follow_up',
+          resolutionNotes: '',
+          createdByUserId: 'user-1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          assignedAt: null,
+          resolvedAt: null,
+        },
+      ],
+    })
     vi.mocked(client.getTripAuditTrail).mockResolvedValue({
       tripId: 'trip-1',
       entries: [
@@ -221,29 +226,6 @@ describe('TripExecutionWorkspacePanel', () => {
       cancelledAt: null,
       closedAt: null,
     })
-    vi.mocked(client.getDispatchReportTripDetail).mockResolvedValue({
-      tripId: 'trip-1',
-      tripNumber: 'TR-001',
-      title: 'Morning run',
-      description: 'Test trip',
-      dispatchStatus: 'dispatched',
-      assignedDriverPersonId: 'person-1',
-      vehicleRefKey: 'VEH-1',
-      scheduledStartAt: new Date().toISOString(),
-      scheduledEndAt: new Date().toISOString(),
-      dispatchedAt: null,
-      startedAt: null,
-      completedAt: null,
-      cancelledAt: null,
-      isLate: false,
-      isAtRisk: false,
-      routeCount: 0,
-      pendingStopCount: 0,
-      linkedExceptionCount: 0,
-      delayExceptionCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    })
     vi.mocked(client.getRoutes).mockResolvedValue([])
     vi.mocked(client.getTripCaptureReadiness).mockResolvedValue({
       tripId: 'trip-1',
@@ -262,6 +244,12 @@ describe('TripExecutionWorkspacePanel', () => {
       dvirInspections: [],
       hasPreTripDvir: false,
       hasPostTripDvir: false,
+    })
+    vi.mocked(client.listDispatchExceptions).mockResolvedValue({
+      totalCount: 0,
+      openCount: 0,
+      overdueCount: 0,
+      items: [],
     })
     vi.mocked(client.getTripAuditTrail).mockResolvedValue({
       tripId: 'trip-1',

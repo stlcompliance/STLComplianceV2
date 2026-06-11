@@ -16,10 +16,6 @@ import {
   expeditedSubmitEmergencyPurchase,
   managerOverrideApproveEmergencyPurchase,
   issueEmergencyPurchaseOrder,
-  getVendorReportSummary,
-  getPartsInventoryReportSummary,
-  getPurchasingReportSummary,
-  getComplianceReportSummary,
   forgivingSearch,
   listAuditHistory,
   listSupplierIncidents,
@@ -1062,42 +1058,6 @@ describe('supplyarr api client', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       '/api/v1/emergency-purchases/dddddddd-dddd-dddd-dddd-dddddddddddd/issue-purchase-order',
-      expect.any(Object),
-    )
-  })
-
-  it('loads report summaries from v1 report endpoints', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ parts: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ totals: {} }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ generatedAt: '2026-05-29T00:00:00Z' }) })
-    vi.stubGlobal('fetch', fetchMock)
-
-    await getVendorReportSummary('token')
-    await getPartsInventoryReportSummary('token')
-    await getPurchasingReportSummary('token')
-    await getComplianceReportSummary('token')
-
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      '/api/v1/reports/vendors/summary',
-      expect.any(Object),
-    )
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/v1/reports/parts-inventory/summary',
-      expect.any(Object),
-    )
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
-      '/api/v1/reports/purchasing/summary',
-      expect.any(Object),
-    )
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
-      '/api/v1/reports/compliance/summary',
       expect.any(Object),
     )
   })

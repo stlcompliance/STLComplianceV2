@@ -26,14 +26,6 @@ const state = {
   linkVendorMutation: { isPending: false, mutate: vi.fn() },
   substitutionPartId: '',
   vendors: [],
-  canReadVendorReports: false,
-  canExportVendorReports: false,
-  canReadPurchasingReports: false,
-  canExportPurchasingReports: false,
-  canReadComplianceReports: false,
-  canExportComplianceReports: false,
-  canReadAuditHistory: false,
-  canReadSupplyReadiness: false,
 } as never
 
 describe('CatalogSection', () => {

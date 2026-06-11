@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getMe } from '../../api/client'
 import { CustomerPortalPanel } from '../../components/CustomerPortalPanel'
-import { canReadDispatchReports, loadSession } from '../../auth/sessionStorage'
+import { canReadTripVisibility, loadSession } from '../../auth/sessionStorage'
 
 export function CustomerPortalPage() {
   const session = loadSession()
@@ -19,7 +19,7 @@ export function CustomerPortalPage() {
   return (
     <CustomerPortalPanel
       accessToken={session.accessToken}
-      canRead={canReadDispatchReports(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)}
+      canRead={canReadTripVisibility(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)}
     />
   )
 }

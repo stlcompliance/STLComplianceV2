@@ -23,13 +23,13 @@ import {
 
 import {
   downloadTripCaptureAttachment,
-  getDispatchReportTripDetail,
   getRoute,
   getRoutes,
   getTrip,
   getTripAuditTrail,
   getTripCaptureReadiness,
   getTripExecutionSummary,
+  listDispatchExceptions,
   submitTripDvir,
   updateTripStatus,
 } from '../api/client'
@@ -56,6 +56,10 @@ function formatTimestamp(iso: string | null | undefined) {
 function humanize(value: string | null | undefined) {
   if (!value) return 'Not recorded'
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function isPendingStopStatus(status: string) {
+  return !['completed', 'skipped', 'cancelled'].includes(status.toLowerCase())
 }
 
 function statusTone(value: string | null | undefined): DetailTone {
@@ -336,11 +340,6 @@ export function TripExecutionWorkspacePanel({
     queryFn: () => getTrip(accessToken, tripId),
   })
 
-  const reportQuery = useQuery({
-    queryKey: ['routarr-trip-report', accessToken, tripId],
-    queryFn: () => getDispatchReportTripDetail(accessToken, tripId),
-  })
-
   const routesQuery = useQuery({
     queryKey: ['routarr-trip-routes', accessToken, tripId],
     queryFn: async () => {
@@ -360,6 +359,11 @@ export function TripExecutionWorkspacePanel({
     queryFn: () => getTripExecutionSummary(accessToken, tripId),
   })
 
+  const exceptionsQuery = useQuery({
+    queryKey: ['routarr-trip-exceptions', accessToken, tripId],
+    queryFn: () => listDispatchExceptions(accessToken),
+  })
+
   const auditQuery = useQuery({
     queryKey: ['routarr-trip-audit', accessToken, tripId],
     queryFn: () => getTripAuditTrail(accessToken, tripId, 20),
@@ -371,7 +375,6 @@ export function TripExecutionWorkspacePanel({
     onSuccess: async () => {
       setStatusMessage(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip', accessToken, tripId] })
-      await queryClient.invalidateQueries({ queryKey: ['routarr-trip-report', accessToken, tripId] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip-readiness', accessToken, tripId] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip-execution', accessToken, tripId] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip-audit', accessToken, tripId] })
@@ -425,29 +428,33 @@ export function TripExecutionWorkspacePanel({
   }
 
   const trip: TripDetailResponse = tripQuery.data
-  const report = reportQuery.data
   const active =
     trip.dispatchStatus !== 'completed' && trip.dispatchStatus !== 'cancelled'
   const routes = routesQuery.data ?? []
+  const pendingStopCount = routes.reduce(
+    (total, route) => total + route.stops.filter((stop) => isPendingStopStatus(stop.stopStatus)).length,
+    0,
+  )
   const execution = executionQuery.data ?? null
   const readiness = readinessQuery.data ?? null
-  const blocked = trip.dispatchStatus === 'cancelled' || !trip.assignedDriverPersonId || !trip.vehicleRefKey
-  const atRisk = Boolean(
-    report?.isAtRisk
-    || report?.isLate
-    || readiness?.items.some((item) => item.required && !item.satisfied),
+  const openExceptions = (exceptionsQuery.data?.items ?? []).filter((item) => item.tripId === trip.tripId)
+  const openExceptionCount = openExceptions.length
+  const hasReadinessGap = Boolean(
+    readiness?.items.some((item) => item.required && !item.satisfied),
   )
+  const blocked = trip.dispatchStatus === 'cancelled' || !trip.assignedDriverPersonId || !trip.vehicleRefKey
+  const atRisk = openExceptionCount > 0 || hasReadinessGap
   const decisionTone: DetailTone = blocked ? 'bad' : atRisk ? 'warn' : 'good'
   const decisionLabel = blocked ? 'Needs assignment' : atRisk ? 'Watch closely' : 'Dispatchable'
   const decisionSummary = blocked
     ? 'Trip needs dispatch attention'
     : atRisk
-      ? 'Trip is on watch for capture readiness or schedule risk'
+      ? 'Trip is on watch for capture readiness gaps or open exceptions'
       : 'Trip can proceed through dispatch'
   const decisionDetail = blocked
     ? 'Driver, vehicle, or lifecycle status must be resolved before normal dispatch execution.'
     : atRisk
-      ? 'Driver, vehicle, schedule, or capture readiness require close monitoring before closeout.'
+      ? 'Open exceptions or required capture steps need close monitoring before closeout.'
       : 'Driver, vehicle, capture readiness, and trip status support normal dispatch execution.'
   const railSections: DetailRailSectionConfig[] = [
     {
@@ -726,7 +733,7 @@ export function TripExecutionWorkspacePanel({
       badges={[
         { label: trip.tripNumber, tone: 'info' },
         { label: humanize(trip.dispatchStatus), tone: statusTone(trip.dispatchStatus) },
-        { label: report?.isAtRisk ? 'At risk' : 'On track', tone: report?.isAtRisk ? 'warn' : 'good' },
+        { label: atRisk ? 'At risk' : 'On track', tone: atRisk ? 'warn' : 'good' },
       ]}
       actions={
         <>
@@ -755,7 +762,7 @@ export function TripExecutionWorkspacePanel({
         {
           label: 'Routes',
           value: routes.length,
-          hint: `${report?.pendingStopCount ?? 0} pending stop(s)`,
+          hint: `${pendingStopCount} pending stop(s) · ${openExceptionCount} open exception(s)`,
           icon: <Route className="h-5 w-5" />,
           tone: routes.length > 0 ? 'info' : 'neutral',
         },
