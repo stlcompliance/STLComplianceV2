@@ -1522,7 +1522,8 @@ public sealed class RoleManagementService(
             .AsNoTracking()
             .Where(x =>
                 x.TenantId == tenantId
-                && string.Equals(x.Status, "active", StringComparison.OrdinalIgnoreCase)
+                // Keep this EF-translatable for Postgres-backed catalog reads.
+                && x.Status.ToLower() == "active"
                 && (normalizedFilter == null || x.ProductKey == normalizedFilter))
             .ToListAsync(cancellationToken);
 
