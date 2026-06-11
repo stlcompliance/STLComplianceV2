@@ -99,7 +99,6 @@ export function LocationsSection({ state }: Props) {
   const selectedLocationDetail = locationDetailQuery.data ?? selectedLocation
   const childLocations = childLocationsQuery.data ?? []
   const selectedSiteMapUrl = buildOpenStreetMapSearchUrl(buildSiteSearchQuery(selectedSite))
-  const selectedLocationMapUrl = buildOpenStreetMapSearchUrl(buildLocationSearchQuery(selectedLocationDetail))
   const selectedSiteMapQuery = buildSiteSearchQuery(selectedSite)
   const selectedLocationMapQuery = buildLocationSearchQuery(selectedLocationDetail)
   const assignedPeople = selectedLocationDetail
