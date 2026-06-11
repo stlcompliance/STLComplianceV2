@@ -384,7 +384,9 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Central Maintenance Site",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
             {

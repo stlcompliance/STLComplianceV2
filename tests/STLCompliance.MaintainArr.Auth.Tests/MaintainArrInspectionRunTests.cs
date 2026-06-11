@@ -490,6 +490,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "brakes-ok",
             "Brakes operate correctly",
+            null,
             "pass_fail",
             true,
             10,
@@ -546,6 +547,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "seat-belt-fastened",
             "Seat belt fastened",
+            null,
             "yes_no",
             true,
             10,
@@ -604,6 +606,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createSelectItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "cab-door-position",
             "Cab door position",
+            null,
             "select",
             true,
             10,
@@ -620,6 +623,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createMultiSelectItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "light-status",
             "Cab lights are functioning",
+            null,
             "multi_select",
             true,
             20,
@@ -679,6 +683,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createMeterItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "engine-hours",
             "Engine hour meter",
+            null,
             "meter_reading",
             true,
             10,
@@ -741,6 +746,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createPhotoItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "data-plate-photo",
             "Upload a photo of the data plate",
+            null,
             "photo",
             true,
             10,
@@ -756,6 +762,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         createSignatureItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "signed-approval",
             "Capture a signature for approval",
+            null,
             "signature",
             true,
             20,

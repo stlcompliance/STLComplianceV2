@@ -6659,7 +6659,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Central Parts Site",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
             {

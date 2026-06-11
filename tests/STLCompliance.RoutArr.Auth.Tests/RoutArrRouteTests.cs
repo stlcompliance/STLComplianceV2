@@ -659,7 +659,9 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Central Dispatch Depot",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
             {

@@ -271,7 +271,9 @@ public sealed class ComplianceCoreSdsHazComRuleVersionTests : IAsyncLifetime
                     siteOrgUnitId,
                     "Central Compliance Site",
                     null,
-                    "active"))
+                    null,
+                    "active",
+                    DateTimeOffset.UnixEpoch))
             });
         }
     }

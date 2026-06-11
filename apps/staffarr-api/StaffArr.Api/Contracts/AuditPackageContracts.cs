@@ -38,17 +38,6 @@ public sealed record AuditPackageCountsResponse(
     int ReadinessOverrides,
     int TrainingBlockers);
 
-public sealed record StaffArrAuditEventExportItem(
-    Guid AuditEventId,
-    Guid? ActorUserId,
-    string Action,
-    string TargetType,
-    string? TargetId,
-    string Result,
-    string? ReasonCode,
-    Guid CorrelationId,
-    DateTimeOffset OccurredAt);
-
 public sealed record AuditPackagePersonItem(
     Guid PersonId,
     Guid? ExternalUserId,

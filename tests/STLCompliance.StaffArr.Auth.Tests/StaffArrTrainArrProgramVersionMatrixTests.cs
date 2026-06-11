@@ -359,7 +359,9 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Central Training Site",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
             {

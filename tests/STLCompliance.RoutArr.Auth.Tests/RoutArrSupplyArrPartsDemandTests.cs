@@ -774,7 +774,9 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Bridge Yard",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith($"/{siteOrgUnitId:D}", StringComparison.OrdinalIgnoreCase))
             {

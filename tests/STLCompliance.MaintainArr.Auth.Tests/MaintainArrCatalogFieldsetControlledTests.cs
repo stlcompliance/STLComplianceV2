@@ -60,7 +60,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         ClearTenantSeedReady(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "edit", CancellationToken.None);
 
         Assert.NotEmpty(fieldset.Fields);
@@ -181,7 +181,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var governingBody = Assert.Single(fieldset.Fields, x => x.Key == "governingBodyKey");
 
@@ -228,7 +228,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await db.SaveChangesAsync();
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed, staffArrServiceToken: string.Empty);
+        var fieldsetService = BuildFieldsetService(db, catalogService, staffArrServiceToken: string.Empty);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var siteField = Assert.Single(fieldset.Fields, x => x.Key == "siteId");
         var cachedSiteOption = Assert.Single(siteField.Options!, x => x.Key == cachedSiteId.ToString("D"));
@@ -246,7 +246,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed, staffArrServiceToken: string.Empty);
+        var fieldsetService = BuildFieldsetService(db, catalogService, staffArrServiceToken: string.Empty);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var siteField = Assert.Single(fieldset.Fields, x => x.Key == "siteId");
 
@@ -297,7 +297,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -336,7 +336,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -371,7 +371,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -409,7 +409,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -444,7 +444,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -533,7 +533,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         await seed.EnsureSeededForTenantAsync(tenantId);
 
         var catalogService = BuildCatalogService(db, seed);
-        var fieldsetService = BuildFieldsetService(db, catalogService, seed);
+        var fieldsetService = BuildFieldsetService(db, catalogService);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", CancellationToken.None);
         var pending = new PendingCatalogValueService(db);
         var validator = BuildValidator(db, catalogService, pending);
@@ -671,7 +671,9 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
                 SiteOrgUnitId,
                 "Central Maintenance Site",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
             {

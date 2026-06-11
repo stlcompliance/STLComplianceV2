@@ -108,7 +108,8 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createCategoryRequest.Content = JsonContent.Create(new CreateInspectionTemplateCategoryRequest(
             "safety",
             "Safety",
-            10));
+            null,
+            SortOrder: 10));
         var createCategoryResponse = await _maintainarrClient.SendAsync(createCategoryRequest);
         createCategoryResponse.EnsureSuccessStatusCode();
         var category = (await createCategoryResponse.Content.ReadFromJsonAsync<InspectionTemplateCategoryResponse>())!;
@@ -120,6 +121,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "horn-works",
             "Horn operates correctly",
+            null,
             "pass_fail",
             true,
             10,
@@ -178,7 +180,8 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createCategoryRequest.Content = JsonContent.Create(new CreateInspectionTemplateCategoryRequest(
             "safety-v1",
             "Safety V1",
-            10));
+            null,
+            SortOrder: 10));
         var createCategoryResponse = await _maintainarrClient.SendAsync(createCategoryRequest);
         createCategoryResponse.EnsureSuccessStatusCode();
         var category = (await createCategoryResponse.Content.ReadFromJsonAsync<InspectionTemplateCategoryResponse>())!;
@@ -190,6 +193,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "lights-work-v1",
             "Lights operate correctly",
+            null,
             "pass_fail",
             true,
             10,
@@ -230,7 +234,8 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createCategoryRequest.Content = JsonContent.Create(new CreateInspectionTemplateCategoryRequest(
             "body",
             "Body",
-            10));
+            null,
+            SortOrder: 10));
         var createCategoryResponse = await _maintainarrClient.SendAsync(createCategoryRequest);
         createCategoryResponse.EnsureSuccessStatusCode();
         var category = (await createCategoryResponse.Content.ReadFromJsonAsync<InspectionTemplateCategoryResponse>())!;
@@ -242,6 +247,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "lights",
             "Lights operate correctly",
+            null,
             "pass_fail",
             true,
             10,

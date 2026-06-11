@@ -325,6 +325,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "brakes-ok",
             "Brakes operate correctly",
+            null,
             "pass_fail",
             true,
             10,

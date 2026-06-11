@@ -7,6 +7,8 @@ namespace STLCompliance.OpenApi.Tests;
 
 public sealed class RecordArrStoreTests
 {
+    private const string DefaultTenantId = "tenant-recordarr-tests";
+
     [Fact]
     public void CreateFile_attaches_file_to_record_and_updates_current_file_ref()
     {
@@ -40,6 +42,7 @@ public sealed class RecordArrStoreTests
         var storageKey = "recordarr/smart-import/tenant/batch/hash/source.pdf";
 
         var record = store.CreateRecord(
+            DefaultTenantId,
             "Smart Import source: source.pdf",
             "Source file retained for import review.",
             "document",
@@ -124,6 +127,7 @@ public sealed class RecordArrStoreTests
         var store = new RecordArrStore();
 
         var request = store.CreateCaptureRequest(
+            DefaultTenantId,
             "routarr",
             "routarr:trip:trip-9000",
             "photo",
@@ -296,6 +300,7 @@ public sealed class RecordArrStoreTests
 
         Assert.Throws<InvalidOperationException>(() =>
             store.CreateRecord(
+                DefaultTenantId,
                 "Bad record",
                 "Invalid record type.",
                 "not-a-record-type",
@@ -312,6 +317,7 @@ public sealed class RecordArrStoreTests
 
         Assert.Throws<InvalidOperationException>(() =>
             store.CreateRecord(
+                DefaultTenantId,
                 "Bad record",
                 "Invalid document type.",
                 "document",
@@ -334,6 +340,7 @@ public sealed class RecordArrStoreTests
 
         Assert.Throws<InvalidOperationException>(() =>
             store.CreateCaptureRequest(
+                DefaultTenantId,
                 "routarr",
                 "routarr:trip:trip-7781",
                 "not-a-capture-type",
@@ -350,6 +357,7 @@ public sealed class RecordArrStoreTests
         var store = new RecordArrStore();
 
         var record = store.CreateRecord(
+            DefaultTenantId,
             "Lifecycle record",
             "Testing archive and purge timestamps.",
             "document",
@@ -424,6 +432,7 @@ public sealed class RecordArrStoreTests
         var principal = CreatePrincipal(personId: "person-record-admin");
 
         var expiring = store.CreateRecord(
+            DefaultTenantId,
             "Expiring record",
             "Test record expiry reminder.",
             "document",
@@ -781,6 +790,7 @@ public sealed class RecordArrStoreTests
         var store = new RecordArrStore();
 
         var record = store.CreateRecord(
+            DefaultTenantId,
             "Status test",
             "Checks record status validation.",
             "document",

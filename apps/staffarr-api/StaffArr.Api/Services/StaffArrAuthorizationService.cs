@@ -511,6 +511,16 @@ public sealed class StaffArrAuthorizationService
         RequirePeopleRead(principal);
     }
 
+    public void RequireAuditPackageRead(ClaimsPrincipal principal)
+    {
+        RequireAuditTimelineRead(principal);
+    }
+
+    public void RequireAuditPackageExport(ClaimsPrincipal principal)
+    {
+        RequireEntityExport(principal);
+    }
+
     public void RequireEntityExport(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);

@@ -437,6 +437,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "brakes-ok",
             "Brakes operate correctly",
+            null,
             "pass_fail",
             true,
             10,
@@ -675,7 +676,9 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
                 siteOrgUnitId,
                 "Central Maintenance Site",
                 null,
-                "active");
+                null,
+                "active",
+                DateTimeOffset.UnixEpoch);
 
             if (path.EndsWith("/sites", StringComparison.OrdinalIgnoreCase))
             {

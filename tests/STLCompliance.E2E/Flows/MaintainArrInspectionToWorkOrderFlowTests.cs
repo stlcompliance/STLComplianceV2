@@ -160,6 +160,7 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "brakes-ok",
             "Brakes operate correctly",
+            null,
             "pass_fail",
             true,
             10,

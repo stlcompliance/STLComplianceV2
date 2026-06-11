@@ -668,6 +668,7 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
             "pm-check",
             "PM check",
+            null,
             "pass_fail",
             true,
             10,
