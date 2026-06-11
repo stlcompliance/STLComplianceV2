@@ -26,6 +26,10 @@ public static class PlatformSeeder
     private const string FirstAdminEmailConfigKey = "Seed:FirstAdminEmail";
     private const string FirstAdminPasswordConfigKey = "Seed:FirstAdminPassword";
     private const string FirstAdminDisplayNameConfigKey = "Seed:FirstAdminDisplayName";
+    private const string BootstrapTenantSlugConfigKey = "Seed:BootstrapTenantSlug";
+    private const string BootstrapTenantDisplayNameConfigKey = "Seed:BootstrapTenantDisplayName";
+    private const string DefaultBootstrapTenantSlug = "stl-root";
+    private const string DefaultBootstrapTenantDisplayName = "STL Root Tenant";
     private const string MasterCsvIntakeDatasetKey = "master-reference-intake";
     private const string MasterCsvSourceKey = "master-reference-csv";
 
@@ -481,6 +485,18 @@ public static class PlatformSeeder
             }
         }
 
+        if (!environment.IsDevelopment()
+            && environment.EnvironmentName != "Testing"
+            && !await db.Tenants.AnyAsync(cancellationToken))
+        {
+            await EnsureBootstrapTenantForFirstAdminAsync(
+                db,
+                configuration,
+                admin.Id,
+                now,
+                cancellationToken);
+        }
+
         if (!await db.PlatformRoleAssignments.AnyAsync(
                 x => x.UserId == admin.Id
                      && x.TenantId == null
@@ -500,6 +516,52 @@ public static class PlatformSeeder
 
         await db.SaveChangesAsync(cancellationToken);
         return admin.Id;
+    }
+
+    private static Task EnsureBootstrapTenantForFirstAdminAsync(
+        NexArrDbContext db,
+        IConfiguration configuration,
+        Guid adminUserId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var bootstrapTenantId = Guid.NewGuid();
+        var slug = configuration[BootstrapTenantSlugConfigKey]?.Trim();
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            slug = DefaultBootstrapTenantSlug;
+        }
+
+        var displayName = configuration[BootstrapTenantDisplayNameConfigKey]?.Trim();
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            displayName = DefaultBootstrapTenantDisplayName;
+        }
+
+        db.Tenants.Add(new Tenant
+        {
+            Id = bootstrapTenantId,
+            Slug = slug,
+            DisplayName = displayName,
+            Status = TenantStatuses.Active,
+            SubscriptionTier = TenantSubscriptionTiers.Standard,
+            IsTrial = false,
+            IsInternalTenant = true,
+            CreatedAt = now,
+            ModifiedAt = now
+        });
+
+        db.TenantMemberships.Add(new TenantMembership
+        {
+            Id = Guid.NewGuid(),
+            TenantId = bootstrapTenantId,
+            UserId = adminUserId,
+            RoleKey = "platform_admin",
+            IsActive = true,
+            CreatedAt = now
+        });
+
+        return Task.CompletedTask;
     }
 
     public static async Task SeedMasterReferenceDataAsync(

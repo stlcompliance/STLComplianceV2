@@ -284,6 +284,12 @@ services:
         sync: false
       - key: FieldCompanionWebPush__PrivateKey
         sync: false
+      - key: Seed__FirstAdminEmail
+        sync: false
+      - key: Seed__FirstAdminPassword
+        sync: false
+      - key: Seed__FirstAdminDisplayName
+        value: Platform Admin
 
   - type: web
     name: staffarr-api
