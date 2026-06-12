@@ -295,6 +295,9 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string StaffArrSettingsAdminWorkspaceSmokeSpec =
         "staffarr-settings-admin-workspace-smoke.spec.ts";
 
+    public const string StaffArrPermissionsRoleOnlySmokeSpec =
+        "staffarr-permissions-role-only-smoke.spec.ts";
+
     public const string RoutArrReportsAuditExportSmokeSpec =
         "routarr-reports-audit-export-smoke.spec.ts";
     public const string ComplianceCoreOperatorRuleEvaluateSmokeSpec =
@@ -480,6 +483,7 @@ public static class StlE2ePlaywrightSpecCatalog
         StaffArrWorkforceOnboardingJourneySmokeSpec,
         StaffArrReportsWorkspaceSmokeSpec,
         StaffArrSettingsAdminWorkspaceSmokeSpec,
+        StaffArrPermissionsRoleOnlySmokeSpec,
         TrainArrSettingsAuditExportSmokeSpec,
         TrainArrSettingsAdminWorkspaceSmokeSpec,
         TrainArrAuthorizationCheckOperationsSmokeSpec,

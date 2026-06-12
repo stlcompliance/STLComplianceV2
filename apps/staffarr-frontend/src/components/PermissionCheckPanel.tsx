@@ -49,6 +49,7 @@ export function PermissionCheckPanel({
           <h2 className="text-sm font-medium text-slate-300">Permission check</h2>
           <p className="mt-1 text-xs text-slate-500">
             Validate effective permissions for {personDisplayName} against the StaffArr projection service.
+            Results reflect role assignments only.
           </p>
         </div>
         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-mono uppercase tracking-wide text-slate-300">

@@ -261,6 +261,17 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             && x.ProductKey == "maintainarr"
             && x.Sensitivity == "critical"
             && x.LastSyncedAt is not null);
+
+        var staffCatalogResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/permissions/product-catalog?productKey=staffarr",
+            adminToken));
+        staffCatalogResponse.EnsureSuccessStatusCode();
+        var staffCatalog = (await staffCatalogResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
+        Assert.Contains(staffCatalog, x =>
+            x.PermissionKey == "staffarr.permissions.assign"
+            && x.Label == "Manage role permissions"
+            && x.Description == "Assign permission templates to roles and role scopes; people inherit access through role assignments only.");
     }
 
     [Fact]

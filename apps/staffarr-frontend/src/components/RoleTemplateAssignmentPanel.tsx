@@ -226,7 +226,7 @@ export function RoleTemplateAssignmentPanel({
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-slate-300">Role and permission templates</h2>
+        <h2 className="text-sm font-medium text-slate-300">Role templates and role-based permissions</h2>
         <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
@@ -254,9 +254,9 @@ export function RoleTemplateAssignmentPanel({
         <div>
           <h3 className="text-sm font-medium text-slate-300">Permission templates</h3>
           {isLoading ? (
-            <p className="mt-3 text-sm text-slate-400">Loading permission templates…</p>
-          ) : !isError && permissionTemplates.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No permission templates configured yet.</p>
+          <p className="mt-3 text-sm text-slate-400">Loading permission templates for role grants…</p>
+        ) : !isError && permissionTemplates.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-400">No permission templates configured yet for role grants.</p>
           ) : !isError ? (
             <ul className="mt-3 divide-y divide-slate-700 text-sm">
               {permissionTemplates.map((permission) => (
@@ -377,7 +377,7 @@ export function RoleTemplateAssignmentPanel({
       {canManage && !isLoading && !isError ? (
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <form className="space-y-3" onSubmit={handlePermissionSubmit}>
-            <h3 className="text-sm font-medium text-slate-300">Upsert permission template</h3>
+            <h3 className="text-sm font-medium text-slate-300">Define permission template</h3>
             <div className="space-y-1">
               <GeneratedKeyField
                 sourceLabel={permissionName}
@@ -589,7 +589,7 @@ export function RoleTemplateAssignmentPanel({
         </div>
       ) : !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">
-          Your role does not include role template or permission assignment write permission.
+          Your role does not include role template or role-based permission write permission.
         </p>
       ) : null}
     </section>

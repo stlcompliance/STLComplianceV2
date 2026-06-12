@@ -133,6 +133,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `staffarr-workforce-onboarding-journey-smoke.spec.ts` | StaffArr handoff → `/people`: CreatePersonPanel + docs/23 `workforce-onboarding-journey-panel` with step list (GET `/api/people/{id}/workforce-onboarding-journey`; Worker 6) |
 | `staffarr-reports-audit-export-smoke.spec.ts` | StaffArr handoff → `/reports` audit package export: manifest, summary, timeline, filters, background ZIP job (Worker 5) |
 | `staffarr-settings-admin-workspace-smoke.spec.ts` | StaffArr handoff → `/admin` `staffarr-settings-admin-workspace`: all six product-admin panels visible with save controls; export delivery pending/runs/notifications + worker pending/run sections loaded (W325; audit export panel outside wrapper W238; no save mutations) |
+| `staffarr-permissions-role-only-smoke.spec.ts` | StaffArr handoff → `/people/details?tab=permissions`: role assignment seeded through real role endpoints, permission check result shows grants via role only |
 | `routarr-reports-audit-export-smoke.spec.ts` | RoutArr handoff → Reports audit package panel: manifest, summary, filters, sync ZIP/JSON/CSV, background job (W227/W241) |
 | `FieldCompanion-field-inbox-operations-deep-links.spec.ts` | Field Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
 | `FieldCompanion-offline-queue-notification.spec.ts` | Field Companion offline acknowledge queue sync + notification/push readiness surfaces (W146) |

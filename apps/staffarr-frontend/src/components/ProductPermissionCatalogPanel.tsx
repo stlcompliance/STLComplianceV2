@@ -30,8 +30,8 @@ export function ProductPermissionCatalogPanel({
         <div>
           <h2 className="text-sm font-medium text-slate-300">Product permission catalog</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Visibility into permission keys published by other products. StaffArr can assign these keys,
-            but each owning product still enforces its own permission meaning server-side.
+            Visibility into permission keys published by other products. StaffArr can map these keys into
+            roles, but each owning product still enforces its own permission meaning server-side.
           </p>
         </div>
         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">

@@ -71,8 +71,8 @@ describe('RoleTemplateAssignmentPanel', () => {
     )
 
     expect(screen.getByText('Read only')).toBeTruthy()
-    expect(screen.getByText('Your role does not include role template or permission assignment write permission.')).toBeTruthy()
-    expect(screen.queryByText('Upsert permission template')).toBeNull()
+    expect(screen.getByText('Your role does not include role template or role-based permission write permission.')).toBeTruthy()
+    expect(screen.queryByText('Define permission template')).toBeNull()
   })
 
   it('submits permission template upsert', async () => {

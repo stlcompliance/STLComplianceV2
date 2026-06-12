@@ -277,6 +277,9 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.StaffArrSettingsAdminWorkspaceSmokeSpec,
             StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
         Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.StaffArrPermissionsRoleOnlySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreSettingsAdminWorkspaceSmokeSpec,
             StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
         Assert.Contains(
@@ -296,6 +299,9 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.StaffArrSettingsAdminWorkspaceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.StaffArrPermissionsRoleOnlySmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreSettingsAdminWorkspaceSmokeSpec,
