@@ -110,12 +110,7 @@ internal static class OrgStructureCatalog
 
     public static readonly string[] AllowedProductUsages =
     [
-        "maintainarr",
-        "loadarr",
-        "routarr",
-        "trainarr",
-        "staffarr",
-        "compliancecore",
+        .. StaffArrControlledFieldCatalog.ImplementedProductKeys,
         "all"
     ];
 

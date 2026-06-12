@@ -17,6 +17,8 @@ public sealed class VendorOrderService(
 {
     public static readonly Guid VendorPortalActorUserId = Guid.Parse("00000000-0000-0000-0000-0000000000f1");
 
+    public VendorOrderMetadataResponse GetMetadata() => BuildMetadata();
+
     public async Task<IReadOnlyList<VendorOrderListItemResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
@@ -1194,6 +1196,79 @@ public sealed class VendorOrderService(
             entity.BrokerDecisions.OrderByDescending(x => x.CreatedAt).Select(MapDecision).ToList(),
             entity.StatusUpdates.OrderBy(x => x.CreatedAt).Select(MapStatusUpdate).ToList());
 
+    private static VendorOrderMetadataResponse BuildMetadata() =>
+        new(
+            FilterStatusOptions: Options(
+                "supplyarr",
+                "supplyarr.vendor_order.workflow",
+                VendorOrderStatuses.Draft,
+                VendorOrderStatuses.SentToVendor,
+                VendorOrderStatuses.PendingVendorAcknowledgment,
+                VendorOrderStatuses.Acknowledged,
+                VendorOrderStatuses.InProgress,
+                VendorOrderStatuses.PartiallyReady,
+                VendorOrderStatuses.CompletedReadyForDispatch,
+                VendorOrderStatuses.UnableToFulfill,
+                VendorOrderStatuses.Cancelled,
+                VendorOrderStatuses.Closed,
+                VendorOrderStatuses.Split),
+            InternalStatusOptions: Options(
+                "supplyarr",
+                "supplyarr.vendor_order.workflow",
+                VendorOrderStatuses.Draft,
+                VendorOrderStatuses.SentToVendor,
+                VendorOrderStatuses.PendingVendorAcknowledgment,
+                VendorOrderStatuses.Acknowledged,
+                VendorOrderStatuses.InProgress,
+                VendorOrderStatuses.PartiallyReady,
+                VendorOrderStatuses.CompletedReadyForDispatch,
+                VendorOrderStatuses.UnableToFulfill,
+                VendorOrderStatuses.Cancelled,
+                VendorOrderStatuses.Closed),
+            VendorPortalStatusOptions: Options(
+                "supplyarr",
+                "supplyarr.vendor_order.workflow",
+                VendorOrderStatuses.Acknowledged,
+                VendorOrderStatuses.InProgress,
+                VendorOrderStatuses.PartiallyReady,
+                VendorOrderStatuses.CompletedReadyForDispatch,
+                VendorOrderStatuses.UnableToFulfill),
+            DocumentTypeOptions: Options(
+                "recordarr",
+                "recordarr.document_type_catalog.mapped_to_supplyarr",
+                VendorOrderDocumentTypes.Photo,
+                VendorOrderDocumentTypes.PackingSlip,
+                VendorOrderDocumentTypes.BillOfLading,
+                VendorOrderDocumentTypes.ScaleTicket,
+                VendorOrderDocumentTypes.ProofOfReadiness,
+                VendorOrderDocumentTypes.Other),
+            BrokerDecisionTypeOptions: Options(
+                "supplyarr",
+                "supplyarr.vendor_order.partial_decision",
+                VendorOrderBrokerDecisionTypes.WaitFull,
+                VendorOrderBrokerDecisionTypes.DispatchPartial,
+                VendorOrderBrokerDecisionTypes.SplitRemaining));
+
+    private static IReadOnlyList<VendorOrderCatalogOptionResponse> Options(
+        string owner,
+        string sourceOfTruth,
+        params string[] values) =>
+        values.Select(value => new VendorOrderCatalogOptionResponse(value, Humanize(value), owner, sourceOfTruth)).ToList();
+
+    private static string Humanize(string value)
+    {
+        var words = value.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (words.Length == 0)
+        {
+            return value;
+        }
+
+        return string.Join(' ', words.Select((word, index) =>
+            index == 0
+                ? char.ToUpperInvariant(word[0]) + word[1..]
+                : word));
+    }
+
     private static VendorOrderPortalResponse MapPortal(
         VendorOrder entity,
         DateTimeOffset expiresAt,
@@ -1222,7 +1297,8 @@ public sealed class VendorOrderService(
                 .OrderByDescending(x => x.UploadedAt)
                 .Select(MapDocument)
                 .ToList(),
-            entity.StatusUpdates.OrderBy(x => x.CreatedAt).Select(MapStatusUpdate).ToList());
+            entity.StatusUpdates.OrderBy(x => x.CreatedAt).Select(MapStatusUpdate).ToList(),
+            BuildMetadata());
 
     private static IntegrationVendorOrderResponse MapIntegration(VendorOrder entity) =>
         new(

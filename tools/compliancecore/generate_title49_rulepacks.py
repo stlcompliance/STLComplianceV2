@@ -31,7 +31,7 @@ FMCSA_URL = "https://www.fmcsa.dot.gov/regulations/49-cfr-parts-300-399"
 PHMSA_HMR_URL = "https://www.phmsa.dot.gov/regulations/title49/part/172"
 DOT_PART40_URL = "https://www.transportation.gov/odapc/part40"
 
-CSV_HEADERS: dict[str, list[str]] = {
+COMPLIANCE_CORE_BUNDLE_CSV_HEADERS: dict[str, list[str]] = {
     "controlled_vocabulary.csv": ["term_key", "vocabulary_type_key", "label", "description", "active"],
     "vocabulary_aliases.csv": ["term_key", "alias_text", "active"],
     "compliance_keys.csv": ["key", "label", "category", "description", "active"],
@@ -122,6 +122,31 @@ CSV_HEADERS: dict[str, list[str]] = {
         "active",
         "description",
     ],
+}
+
+COMPLIANCE_CORE_STAGED_ONLY_CSV_HEADERS: dict[str, list[str]] = {
+    "evidence_references.csv": [
+        "evidence_id",
+        "fact_key",
+        "source_product",
+        "source_entity",
+        "source_record_id",
+        "source_field",
+        "document_type",
+        "document_url",
+        "storage_key",
+        "file_hash",
+        "captured_at",
+        "effective_at",
+        "expires_at",
+        "review_status",
+        "notes",
+    ],
+}
+
+CSV_HEADERS: dict[str, list[str]] = {
+    **COMPLIANCE_CORE_BUNDLE_CSV_HEADERS,
+    **COMPLIANCE_CORE_STAGED_ONLY_CSV_HEADERS,
 }
 
 PROGRAMS = {
@@ -1557,6 +1582,28 @@ def write_csv(path: Path, headers: list[str], rows: list[list[str]]) -> None:
         writer.writerows(rows)
 
 
+def write_schema_manifest(out_root: Path) -> None:
+    manifest = {
+        "schemaVersion": 1,
+        "source": "Compliance Core import schemas",
+        "generatedFor": "title49",
+        "directBundleFiles": [
+            {"fileName": file_name, "headers": headers}
+            for file_name, headers in COMPLIANCE_CORE_BUNDLE_CSV_HEADERS.items()
+        ],
+        "stagedOnlyFiles": [
+            {"fileName": file_name, "headers": headers}
+            for file_name, headers in COMPLIANCE_CORE_STAGED_ONLY_CSV_HEADERS.items()
+        ],
+        "notes": [
+            "The direct /api/v1/rule-pack-imports endpoints consume directBundleFiles.",
+            "The staged import wizard also accepts stagedOnlyFiles.",
+            "Title 49 generation leaves evidence_references.csv empty because tenant evidence belongs to product and RecordArr workflows, not the rulepack seed.",
+        ],
+    }
+    (out_root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
 def generate_files(repo_root: Path, structure_path: str | None = None) -> dict[str, Any]:
     root = load_structure(structure_path)
     nodes = flatten_structure(root)
@@ -1577,6 +1624,7 @@ def generate_files(repo_root: Path, structure_path: str | None = None) -> dict[s
         all_rows_by_pack[spec.key] = rows
         for file_name, headers in CSV_HEADERS.items():
             write_csv(pack_dir / file_name, headers, rows[file_name])
+    write_schema_manifest(out_root)
     summary = build_summary(nodes, assigned, all_rows_by_pack)
     write_docs(repo_root, summary, assigned, all_rows_by_pack)
     return summary
@@ -1618,7 +1666,8 @@ def build_summary(
         [
             "Numeric thresholds, exception applicability, route-specific approvals, and document-retention windows need legal/product review before enforcement beyond boolean gate checks.",
             "HMR table row enumeration is modeled as lookup verification against 49 CFR 172.101, not as a row-per-material material-key catalog.",
-            "The 10-CSV bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv and legal relief records from exception_exemptions.csv.",
+            "The direct Compliance Core bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv and legal relief records from exception_exemptions.csv.",
+            "The staged import wizard accepts evidence_references.csv, but Title 49 leaves it empty because tenant evidence is supplied later by product and RecordArr workflows.",
         ]
     )
     return {
@@ -1713,8 +1762,8 @@ Sources:
         )
     (docs / "title49_rulepack_index.md").write_text(index, encoding="utf-8")
 
-    alignment = "# Title 49 10-CSV alignment\n\n"
-    alignment += "The Compliance Core CSV bundle includes first-class exception/exemption records alongside the core rule, citation, fact, mapping, vocabulary, material, and SDS files.\n\n"
+    alignment = "# Title 49 Compliance Core import schema alignment\n\n"
+    alignment += "The generated Title 49 output matches the current Compliance Core direct bundle schemas and also includes the staged-import-only evidence reference schema as an empty file.\n\n"
     alignment += "| CSV | Title 49 use |\n| --- | --- |\n"
     for file_name, headers in CSV_HEADERS.items():
         use = {
@@ -1728,9 +1777,10 @@ Sources:
             "regulatory_mappings.csv": "Maps packs, citations, compliance keys, and fact keys.",
             "sds_references.csv": "Reserved; products own SDS documents and publish facts.",
             "exception_exemptions.csv": "Defines legal exceptions, exemptions, waivers, variances, special permits, approvals, alternate compliance paths, and conditional exclusions as first-class records.",
+            "evidence_references.csv": "Staged-import-only schema file. Generated with headers only because tenant evidence is not Title 49 seed data.",
         }[file_name]
         alignment += f"| `{file_name}` | {use} Headers: `{','.join(headers)}` |\n"
-    alignment += "\nFact definitions are not represented by a separate CSV. The Compliance Core importer upserts fact definitions directly from `rule_fact_requirements.csv`, including `value_type`, before it persists pack-specific fact requirement metadata. `exception_exemptions.csv` is the legal-relief contract and must not be treated as an internal override list.\n"
+    alignment += "\nFact definitions are not represented by a separate CSV. The Compliance Core importer upserts fact definitions directly from `rule_fact_requirements.csv`, including `value_type`, before it persists pack-specific fact requirement metadata. `exception_exemptions.csv` is the legal-relief contract and must not be treated as an internal override list. `evidence_references.csv` is intentionally empty for this rulepack seed.\n"
     alignment += "\nCompliance Core owns rule packs, citations, fact requirements, audit contracts, rule evaluation, evidence references, audit traces, and report surfaces. Product apps own operational records and publish facts and evidence references. The CSVs contain deterministic keys only; no cross-product database foreign keys are introduced.\n"
     (docs / "title49_10_csv_alignment.md").write_text(alignment, encoding="utf-8")
 
@@ -1750,7 +1800,8 @@ Sources:
     (docs / "title49_product_workflow_map.md").write_text(workflows, encoding="utf-8")
 
     gaps = "# Title 49 remaining gaps\n\n"
-    gaps += "- The current Compliance Core 10-CSV bundle has no separate fact-definition CSV; Compliance Core derives canonical fact definitions from `rule_fact_requirements.csv` during import.\n"
+    gaps += "- The current Compliance Core direct bundle has no separate fact-definition CSV; Compliance Core derives canonical fact definitions from `rule_fact_requirements.csv` during import.\n"
+    gaps += "- `evidence_references.csv` is generated as an empty staged-import schema file; tenant evidence references must arrive through product/RecordArr-backed workflows.\n"
     gaps += "- Numeric thresholds, route approvals, hazmat quantity tables, insurance amount tables, and retention durations are represented as audit fact requirements with source/evidence/retention metadata; product-specific calculators should publish those facts deterministically.\n"
     gaps += "- 49 CFR 172.101 Hazardous Materials Table is mapped as citation and lookup-verification control, not material-key enumeration.\n"
     gaps += "- FMCSA Parts 384-386 and HMR Parts 174-176/179 are reference mapped unless a product workflow currently owns direct operational facts.\n"
@@ -1791,7 +1842,7 @@ def validate_generated(repo_root: Path) -> list[str]:
     for pack_dir in pack_dirs:
         actual_files = {path.name for path in pack_dir.glob("*.csv")}
         if actual_files != expected_files:
-            issues.append(f"{pack_dir.name}: expected 10 CSV files, found {sorted(actual_files)}")
+            issues.append(f"{pack_dir.name}: expected {len(expected_files)} CSV files, found {sorted(actual_files)}")
         rows_by_dir[pack_dir.name] = {}
         for file_name, headers in CSV_HEADERS.items():
             path = pack_dir / file_name
@@ -1932,6 +1983,17 @@ def validate_generated(repo_root: Path) -> list[str]:
     ]:
         if not (repo_root / "docs" / "compliance-core" / doc).exists():
             issues.append(f"Missing doc {doc}")
+    manifest_path = out_root / "manifest.json"
+    if not manifest_path.exists():
+        issues.append("Missing Title 49 import schema manifest")
+    else:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        direct_files = {item["fileName"] for item in manifest.get("directBundleFiles", [])}
+        staged_files = {item["fileName"] for item in manifest.get("stagedOnlyFiles", [])}
+        if direct_files != set(COMPLIANCE_CORE_BUNDLE_CSV_HEADERS):
+            issues.append("Title 49 import schema manifest directBundleFiles mismatch")
+        if staged_files != set(COMPLIANCE_CORE_STAGED_ONLY_CSV_HEADERS):
+            issues.append("Title 49 import schema manifest stagedOnlyFiles mismatch")
     return issues
 
 

@@ -25,6 +25,7 @@ import type {
   StaffArrPersonIntegrationSummaryResponse,
   PersonnelUpdateRequestResponse,
   PersonnelUpdateRequestReviewResponse,
+  StaffArrFieldsetResponse,
   StaffArrMeResponse,
   StaffArrSessionBootstrapResponse,
   SubmitPersonnelUpdateRequest,
@@ -303,6 +304,16 @@ export async function getSessionBootstrap(
     response,
     'Failed to load session bootstrap',
   )
+}
+
+export async function getStaffArrFieldset(
+  accessToken: string,
+  fieldsetPath: string,
+): Promise<StaffArrFieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/${fieldsetPath}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrFieldsetResponse>(response, 'Failed to load StaffArr fieldset')
 }
 
 export async function getMePortalSummary(accessToken: string): Promise<MePortalSummaryResponse> {

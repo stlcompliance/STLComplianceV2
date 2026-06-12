@@ -18,6 +18,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStlProductLaunchEndpoints();
         app.MapStlProductAiAssistanceEndpoints();
         app.MapStaffArrPeopleEndpoints();
+        app.MapStaffArrFieldsetEndpoints();
         app.MapStaffArrPersonLookupEndpoints();
         app.MapStaffArrPeopleExportEndpoints();
         app.MapStaffArrWorkerAdminEndpoints();

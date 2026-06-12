@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "source": "Compliance Core import schemas",
+  "generatedFor": "title49",
+  "directBundleFiles": [
+    {
+      "fileName": "controlled_vocabulary.csv",
+      "headers": [
+        "term_key",
+        "vocabulary_type_key",
+        "label",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "vocabulary_aliases.csv",
+      "headers": [
+        "term_key",
+        "alias_text",
+        "active"
+      ]
+    },
+    {
+      "fileName": "compliance_keys.csv",
+      "headers": [
+        "key",
+        "label",
+        "category",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "material_keys.csv",
+      "headers": [
+        "key",
+        "label",
+        "category",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "rule_packs.csv",
+      "headers": [
+        "pack_key",
+        "program_key",
+        "version_number",
+        "label",
+        "description",
+        "status",
+        "active",
+        "rule_content_json"
+      ]
+    },
+    {
+      "fileName": "rule_requirements.csv",
+      "headers": [
+        "citation_key",
+        "program_key",
+        "pack_key",
+        "pack_version",
+        "label",
+        "source_reference",
+        "description",
+        "active",
+        "supersedes_citation_key"
+      ]
+    },
+    {
+      "fileName": "rule_fact_requirements.csv",
+      "headers": [
+        "requirement_key",
+        "fact_key",
+        "pack_key",
+        "pack_version",
+        "citation_key",
+        "citation_version",
+        "applicability_key",
+        "source_product",
+        "source_entity",
+        "source_field_or_record_type",
+        "value_type",
+        "operator",
+        "expected_value",
+        "evidence_kind",
+        "required_document_type",
+        "retention_period",
+        "audit_question",
+        "failure_severity",
+        "automatic_failure_flag",
+        "override_allowed",
+        "override_permission",
+        "remediation_required",
+        "label",
+        "description",
+        "is_required",
+        "active"
+      ]
+    },
+    {
+      "fileName": "regulatory_mappings.csv",
+      "headers": [
+        "mapping_key",
+        "target_kind",
+        "program_key",
+        "pack_key",
+        "pack_version",
+        "citation_key",
+        "compliance_key",
+        "material_key",
+        "fact_key",
+        "label",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "sds_references.csv",
+      "headers": [
+        "sds_key",
+        "material_key",
+        "product_name",
+        "manufacturer",
+        "document_url",
+        "revision_date",
+        "active"
+      ]
+    },
+    {
+      "fileName": "exception_exemptions.csv",
+      "headers": [
+        "key",
+        "label",
+        "type",
+        "governing_body",
+        "program_key",
+        "pack_key",
+        "citation_key",
+        "applicability_key",
+        "applies_to_subject_kind",
+        "applies_to_source_product",
+        "applies_to_source_entity",
+        "effect_type",
+        "condition_logic_json",
+        "required_evidence_option_group_key",
+        "issuing_authority",
+        "authorization_number",
+        "effective_at",
+        "expires_at",
+        "active",
+        "description"
+      ]
+    }
+  ],
+  "stagedOnlyFiles": [
+    {
+      "fileName": "evidence_references.csv",
+      "headers": [
+        "evidence_id",
+        "fact_key",
+        "source_product",
+        "source_entity",
+        "source_record_id",
+        "source_field",
+        "document_type",
+        "document_url",
+        "storage_key",
+        "file_hash",
+        "captured_at",
+        "effective_at",
+        "expires_at",
+        "review_status",
+        "notes"
+      ]
+    }
+  ],
+  "notes": [
+    "The direct /api/v1/rule-pack-imports endpoints consume directBundleFiles.",
+    "The staged import wizard also accepts stagedOnlyFiles.",
+    "Title 49 generation leaves evidence_references.csv empty because tenant evidence belongs to product and RecordArr workflows, not the rulepack seed."
+  ]
+}

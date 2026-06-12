@@ -1,44 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { listLocations } from '../api/client'
+import { getStaffArrFieldset, listLocations } from '../api/client'
 import type {
   CreatePersonRoleAssignmentRequest,
   OrgUnitResponse,
   RoleTemplateResponse,
+  StaffArrFieldOptionResponse,
+  StaffArrFieldsetResponse,
 } from '../api/types'
-
-const EMPLOYMENT_STATUS_OPTIONS = [
-  { value: 'applicant', label: 'Applicant' },
-  { value: 'pending_start', label: 'Pending start' },
-  { value: 'onboarding', label: 'Onboarding' },
-  { value: 'active', label: 'Active' },
-  { value: 'leave', label: 'Leave' },
-  { value: 'suspended', label: 'Suspended' },
-  { value: 'terminated', label: 'Terminated' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'archived', label: 'Archived' },
-] as const
-
-const WORK_RELATIONSHIP_OPTIONS = [
-  { value: 'employee', label: 'Employee' },
-  { value: 'contractor', label: 'Contractor' },
-  { value: 'temp', label: 'Temp' },
-  { value: 'vendor_worker', label: 'Vendor worker' },
-  { value: 'customer_contact', label: 'Customer contact' },
-  { value: 'auditor', label: 'Auditor' },
-  { value: 'service_account_contact', label: 'Service account contact' },
-  { value: 'other', label: 'Other' },
-] as const
-
-const EMPLOYMENT_TYPE_OPTIONS = [
-  { value: 'full_time', label: 'Full time' },
-  { value: 'part_time', label: 'Part time' },
-  { value: 'seasonal', label: 'Seasonal' },
-  { value: 'temporary', label: 'Temporary' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'non_employee', label: 'Non-employee' },
-] as const
 
 const ROLE_SCOPE_OPTIONS: Array<{
   value: CreatePersonRoleAssignmentRequest['scopeType']
@@ -108,6 +78,13 @@ function byType(orgUnits: OrgUnitResponse[], unitType: string): OrgUnitResponse[
 
 function toPickerOptions(items: Array<{ value: string; label: string }>): PickerOption[] {
   return items
+}
+
+function fieldOptions(
+  fieldset: StaffArrFieldsetResponse | undefined,
+  fieldKey: string,
+): StaffArrFieldOptionResponse[] {
+  return fieldset?.fields.find((field) => field.key === fieldKey)?.options ?? []
 }
 
 function orgUnitOptions(orgUnits: OrgUnitResponse[], unitType: string): PickerOption[] {
@@ -239,6 +216,12 @@ export function CreatePersonPanel({
   const [canLogin, setCanLogin] = useState(false)
   const [initialRoleAssignments, setInitialRoleAssignments] = useState<InitialRoleAssignmentDraft[]>([])
 
+  const profileFieldsetQuery = useQuery({
+    queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
+    queryFn: () => getStaffArrFieldset(accessToken, 'people/profile'),
+    enabled: Boolean(accessToken),
+  })
+
   const locationQuery = useQuery({
     queryKey: ['staffarr-site-locations', accessToken, siteOrgUnitId],
     queryFn: () => listLocations(accessToken, { siteOrgUnitId }),
@@ -267,6 +250,9 @@ export function CreatePersonPanel({
     () => roleTemplates.filter((roleTemplate) => roleTemplate.status === 'active'),
     [roleTemplates],
   )
+  const employmentStatusOptions = fieldOptions(profileFieldsetQuery.data, 'employmentStatus')
+  const workRelationshipOptions = fieldOptions(profileFieldsetQuery.data, 'workRelationshipType')
+  const employmentTypeOptions = fieldOptions(profileFieldsetQuery.data, 'employmentType')
 
   const displayNamePreview = buildDisplayName(legalFirstName, legalLastName, preferredName)
   const selectedSiteOption = siteOptions.find((option) => option.value === siteOrgUnitId)
@@ -475,7 +461,7 @@ export function CreatePersonPanel({
                 onChange={(event) => setWorkRelationshipType(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
-                {WORK_RELATIONSHIP_OPTIONS.map((option) => (
+                {workRelationshipOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -490,7 +476,7 @@ export function CreatePersonPanel({
                 onChange={(event) => setEmploymentType(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
-                {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
+                {employmentTypeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -505,7 +491,7 @@ export function CreatePersonPanel({
                 onChange={(event) => setEmploymentStatus(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
-                {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
+                {employmentStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

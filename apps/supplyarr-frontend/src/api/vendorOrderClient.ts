@@ -10,6 +10,7 @@ import type {
   UpdateVendorOrderStatusRequest,
   UpsertVendorOrderSettingsRequest,
   VendorOrderListItemResponse,
+  VendorOrderMetadataResponse,
   VendorOrderPortalResponse,
   VendorOrderResponse,
   VendorOrderSettingsResponse,
@@ -104,6 +105,13 @@ export async function getVendorOrders(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorOrderListItemResponse[]>(response, 'Failed to load vendor orders')
+}
+
+export async function getVendorOrderMetadata(accessToken: string): Promise<VendorOrderMetadataResponse> {
+  const response = await fetch(`${apiBase}/api/v1/vendor-orders/metadata`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorOrderMetadataResponse>(response, 'Failed to load vendor-order metadata')
 }
 
 export async function getVendorOrder(

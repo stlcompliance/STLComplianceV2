@@ -40,6 +40,16 @@ public static class PartyRegistryEndpoints
         })
         .WithName($"ListParties{RouteSuffix(routePrefix)}");
 
+        group.MapGet("/metadata", (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ExternalPartyService service) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            return Results.Ok(service.GetMetadata());
+        })
+        .WithName($"GetPartyMetadata{RouteSuffix(routePrefix)}");
+
         group.MapGet("/{partyId:guid}", async (
             Guid partyId,
             HttpContext context,

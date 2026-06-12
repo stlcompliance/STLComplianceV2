@@ -33,6 +33,17 @@ public sealed class ExternalPartyService(
         "inactive"
     };
 
+    public PartyRegistryMetadataResponse GetMetadata() =>
+        new(
+            Options(
+                ("pending", "Pending"),
+                ("approved", "Approved"),
+                ("restricted", "Restricted"),
+                ("inactive", "Inactive (approval)")),
+            Options(
+                ("active", "Active"),
+                ("inactive", "Inactive")));
+
     public async Task<IReadOnlyList<ExternalPartyResponse>> ListAsync(
         Guid tenantId,
         string? partyType = null,
@@ -561,4 +572,10 @@ public sealed class ExternalPartyService(
 
     private static string NormalizeRoleLabel(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static IReadOnlyList<PartyRegistryCatalogOptionResponse> Options(
+        params (string Value, string Label)[] options) =>
+        options
+            .Select(option => new PartyRegistryCatalogOptionResponse(option.Value, option.Label))
+            .ToList();
 }

@@ -4,10 +4,53 @@ import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 const mocked = vi.hoisted(() => ({
+  getStaffArrFieldset: vi.fn(async () => ({
+    key: 'people.profile',
+    label: 'People profile',
+    entityType: 'staff_person',
+    purpose: 'profile',
+    fields: [
+      {
+        key: 'employmentStatus',
+        label: 'Employment status',
+        control: 'select',
+        required: true,
+        owner: 'staffarr',
+        sourceOfTruth: 'staffarr.fieldset',
+        options: [
+          { value: 'active', label: 'Active', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+          { value: 'inactive', label: 'Inactive', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+        ],
+      },
+      {
+        key: 'workRelationshipType',
+        label: 'Work relationship',
+        control: 'select',
+        required: true,
+        owner: 'staffarr',
+        sourceOfTruth: 'staffarr.fieldset',
+        options: [
+          { value: 'employee', label: 'Employee', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+        ],
+      },
+      {
+        key: 'employmentType',
+        label: 'Employment type',
+        control: 'select',
+        required: false,
+        owner: 'staffarr',
+        sourceOfTruth: 'staffarr.fieldset',
+        options: [
+          { value: 'full_time', label: 'Full time', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+        ],
+      },
+    ],
+  })),
   listLocations: vi.fn(async () => []),
 }))
 
 vi.mock('../api/client', () => ({
+  getStaffArrFieldset: mocked.getStaffArrFieldset,
   listLocations: mocked.listLocations,
   listSiteLocations: mocked.listLocations,
 }))

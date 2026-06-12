@@ -16,143 +16,21 @@ public sealed class IncidentService(
     private static readonly Guid ProductIncidentServiceActorId = Guid.Parse("00000000-0000-0000-0000-0000000005fa");
     private const long MaxIncidentAttachmentBytes = 10 * 1024 * 1024;
 
-    private static readonly HashSet<string> AllowedSourceProducts = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "compliancecore",
-        "maintainarr",
-        "routarr",
-        "supplyarr",
-        "trainarr"
-    };
-
-    private static readonly HashSet<string> AllowedReasonCategories = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "safety",
-        "conduct",
-        "behavior",
-        "injury",
-        "equipment",
-        "equipment_damage",
-        "training_compliance",
-        "training_issue",
-        "policy",
-        "policy_violation",
-        "attendance",
-        "near_miss",
-        "other"
-    };
-
-    private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "draft",
-        "submitted",
-        "open",
-        "in_review",
-        "closed"
-    };
-
-    private static readonly HashSet<string> AllowedSeverities = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "low",
-        "medium",
-        "high",
-        "critical"
-    };
-
-    private static readonly HashSet<string> AllowedIncidentSources = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "staffarr",
-        "self_report",
-        "manager_report",
-        "safety_observation",
-        "compliancecore",
-        "maintainarr",
-        "routarr",
-        "supplyarr",
-        "trainarr",
-        "other"
-    };
-
-    private static readonly HashSet<string> AllowedIncidentTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "injury",
-        "safety",
-        "behavior",
-        "equipment_damage",
-        "policy_violation",
-        "training_issue",
-        "attendance",
-        "near_miss",
-        "other"
-    };
-
-    private static readonly HashSet<string> AllowedReadinessDecisions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "allowed",
-        "watched",
-        "restricted"
-    };
-
-    private static readonly HashSet<string> AllowedWorkRestrictions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "none",
-        "modified_duty",
-        "restricted_duty",
-        "removed_from_duty"
-    };
-
-    private static readonly HashSet<string> AllowedYesNoPending = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "no",
-        "yes",
-        "pending"
-    };
-
-    private static readonly HashSet<string> AllowedMedicalAttention = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "none",
-        "first_aid",
-        "clinic",
-        "emergency",
-        "unknown"
-    };
-
-    private static readonly HashSet<string> AllowedPpeConcerns = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "none",
-        "damaged",
-        "missing",
-        "inadequate",
-        "unknown"
-    };
-
-    private static readonly HashSet<string> AllowedFollowUpStates = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "no",
-        "yes",
-        "conditional"
-    };
-
-    private static readonly HashSet<string> AllowedTrainingReviewReasons = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "certification_gap",
-        "procedure_gap",
-        "behavior_coaching",
-        "remedial_training",
-        "other"
-    };
-
-    private static readonly HashSet<string> AllowedIncidentNoteTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "note",
-        "corrective_action"
-    };
-
-    private static readonly HashSet<string> AllowedIncidentNoteStatuses = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "open",
-        "completed"
-    };
+    private static readonly IReadOnlySet<string> AllowedSourceProducts = StaffArrControlledFieldCatalog.SourceProductKeys;
+    private static readonly IReadOnlySet<string> AllowedReasonCategories = StaffArrControlledFieldCatalog.IncidentReasonCategoryKeys;
+    private static readonly IReadOnlySet<string> AllowedStatuses = StaffArrControlledFieldCatalog.IncidentStatusKeys;
+    private static readonly IReadOnlySet<string> AllowedSeverities = StaffArrControlledFieldCatalog.IncidentSeverityKeys;
+    private static readonly IReadOnlySet<string> AllowedIncidentSources = StaffArrControlledFieldCatalog.IncidentSourceKeys;
+    private static readonly IReadOnlySet<string> AllowedIncidentTypes = StaffArrControlledFieldCatalog.IncidentTypeKeys;
+    private static readonly IReadOnlySet<string> AllowedReadinessDecisions = StaffArrControlledFieldCatalog.ReadinessDecisionKeys;
+    private static readonly IReadOnlySet<string> AllowedWorkRestrictions = StaffArrControlledFieldCatalog.WorkRestrictionKeys;
+    private static readonly IReadOnlySet<string> AllowedYesNoPending = StaffArrControlledFieldCatalog.YesNoPendingKeys;
+    private static readonly IReadOnlySet<string> AllowedMedicalAttention = StaffArrControlledFieldCatalog.MedicalAttentionKeys;
+    private static readonly IReadOnlySet<string> AllowedPpeConcerns = StaffArrControlledFieldCatalog.PpeConcernKeys;
+    private static readonly IReadOnlySet<string> AllowedFollowUpStates = StaffArrControlledFieldCatalog.FollowUpKeys;
+    private static readonly IReadOnlySet<string> AllowedTrainingReviewReasons = StaffArrControlledFieldCatalog.TrainingReviewReasonKeys;
+    private static readonly IReadOnlySet<string> AllowedIncidentNoteTypes = StaffArrControlledFieldCatalog.IncidentNoteTypeKeys;
+    private static readonly IReadOnlySet<string> AllowedIncidentNoteStatuses = StaffArrControlledFieldCatalog.IncidentNoteStatusKeys;
 
     public async Task<PersonnelIncidentDetailResponse> CreateIncidentAsync(
         Guid tenantId,
@@ -1012,7 +890,7 @@ public sealed class IncidentService(
 
     private static string? NormalizeControlledOptional(
         string? value,
-        HashSet<string> allowedValues,
+        IReadOnlySet<string> allowedValues,
         string displayName)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -1043,7 +921,7 @@ public sealed class IncidentService(
 
     private static string? SerializeStringList(
         IReadOnlyList<string>? values,
-        HashSet<string> allowedValues,
+        IReadOnlySet<string> allowedValues,
         string displayName)
     {
         var normalized = values?

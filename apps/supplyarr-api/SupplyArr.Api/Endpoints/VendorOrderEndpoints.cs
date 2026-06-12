@@ -29,6 +29,16 @@ public static class VendorOrderEndpoints
             })
             .WithName($"ListVendorOrders{nameSuffix}");
 
+            group.MapGet("/metadata", (
+                HttpContext context,
+                SupplyArrAuthorizationService authorization,
+                VendorOrderService service) =>
+            {
+                authorization.RequireVendorOrderRead(context.User);
+                return Results.Ok(service.GetMetadata());
+            })
+            .WithName($"GetVendorOrderMetadata{nameSuffix}");
+
             group.MapGet("/{vendorOrderId:guid}", async (
                 Guid vendorOrderId,
                 HttpContext context,

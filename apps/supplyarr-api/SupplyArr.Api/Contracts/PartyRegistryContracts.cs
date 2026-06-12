@@ -1,5 +1,13 @@
 namespace SupplyArr.Api.Contracts;
 
+public sealed record PartyRegistryCatalogOptionResponse(
+    string Value,
+    string Label);
+
+public sealed record PartyRegistryMetadataResponse(
+    IReadOnlyList<PartyRegistryCatalogOptionResponse> ApprovalStatusOptions,
+    IReadOnlyList<PartyRegistryCatalogOptionResponse> StatusOptions);
+
 public sealed record PartyContactResponse(
     Guid ContactId,
     string ContactName,

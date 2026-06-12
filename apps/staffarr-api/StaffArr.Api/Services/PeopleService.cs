@@ -14,40 +14,9 @@ public sealed class PeopleService(
     OrgUnitAssignmentService orgUnitAssignmentService,
     RoleTemplateService roleTemplateService)
 {
-    private static readonly HashSet<string> AllowedEmploymentStatuses =
-    [
-        "applicant",
-        "pending_start",
-        "onboarding",
-        "active",
-        "leave",
-        "suspended",
-        "terminated",
-        "inactive",
-        "archived",
-    ];
-
-    private static readonly HashSet<string> AllowedWorkRelationshipTypes =
-    [
-        "employee",
-        "contractor",
-        "temp",
-        "vendor_worker",
-        "customer_contact",
-        "auditor",
-        "service_account_contact",
-        "other",
-    ];
-
-    private static readonly HashSet<string> AllowedEmploymentTypes =
-    [
-        "full_time",
-        "part_time",
-        "seasonal",
-        "temporary",
-        "contract",
-        "non_employee",
-    ];
+    private static readonly IReadOnlySet<string> AllowedEmploymentStatuses = StaffArrControlledFieldCatalog.EmploymentStatusKeys;
+    private static readonly IReadOnlySet<string> AllowedWorkRelationshipTypes = StaffArrControlledFieldCatalog.WorkRelationshipKeys;
+    private static readonly IReadOnlySet<string> AllowedEmploymentTypes = StaffArrControlledFieldCatalog.EmploymentTypeKeys;
 
     public async Task<IReadOnlyList<StaffPersonSummaryResponse>> ListAsync(
         Guid tenantId,

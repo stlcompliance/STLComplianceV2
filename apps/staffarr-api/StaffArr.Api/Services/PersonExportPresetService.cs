@@ -10,8 +10,7 @@ public sealed class PersonExportPresetService(
     StaffArrDbContext db,
     IStaffArrAuditService audit)
 {
-    private static readonly HashSet<string> AllowedEmploymentStatuses =
-        new(StringComparer.OrdinalIgnoreCase) { "active", "inactive", "terminated" };
+    private static readonly IReadOnlySet<string> AllowedEmploymentStatuses = StaffArrControlledFieldCatalog.EmploymentStatusKeys;
 
     private static readonly HashSet<string> AllowedPresetKeys =
         new(StringComparer.OrdinalIgnoreCase)

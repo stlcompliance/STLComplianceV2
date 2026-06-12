@@ -32,6 +32,7 @@ import {
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import {
   createPersonnelIncident,
+  getStaffArrFieldset,
   getMaintainArrAssetReferences,
   getMaintainArrWorkOrderReferences,
   getOrgUnits,
@@ -48,6 +49,7 @@ import type {
   PersonnelIncidentSource,
   PersonnelIncidentStatus,
   PersonnelIncidentType,
+  StaffArrFieldsetResponse,
   StaffPersonSummaryResponse,
 } from '../../api/types'
 import { loadSession } from '../../auth/sessionStorage'
@@ -60,110 +62,20 @@ type SelectOption<T extends string = string> = {
   hint?: string
 }
 
-const incidentSourceOptions: SelectOption<PersonnelIncidentSource>[] = [
-  { value: 'staffarr', label: 'StaffArr intake' },
-  { value: 'self_report', label: 'Employee self-report' },
-  { value: 'manager_report', label: 'Manager report' },
-  { value: 'safety_observation', label: 'Safety observation' },
-  { value: 'routarr', label: 'RoutArr handoff' },
-  { value: 'maintainarr', label: 'MaintainArr handoff' },
-  { value: 'supplyarr', label: 'SupplyArr handoff' },
-  { value: 'trainarr', label: 'TrainArr handoff' },
-  { value: 'compliancecore', label: 'ComplianceCore handoff' },
-  { value: 'other', label: 'Other controlled source' },
-]
-
-const incidentTypeOptions: SelectOption<PersonnelIncidentType>[] = [
-  { value: 'injury', label: 'Injury' },
-  { value: 'safety', label: 'Safety' },
-  { value: 'behavior', label: 'Behavior' },
-  { value: 'equipment_damage', label: 'Equipment damage' },
-  { value: 'policy_violation', label: 'Policy violation' },
-  { value: 'training_issue', label: 'Training issue' },
-  { value: 'attendance', label: 'Attendance' },
-  { value: 'near_miss', label: 'Near miss' },
-  { value: 'other', label: 'Other' },
-]
-
-const severityOptions: SelectOption<PersonnelIncidentSeverity>[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
-
-const readinessOptions: Array<
-  SelectOption<PersonnelIncidentReadinessDecision> & {
-    accent: string
-    selected: string
-  }
-> = [
-  {
-    value: 'allowed',
-    label: 'Allowed',
-    hint: 'May continue normal work',
+const readinessPresentation: Record<string, { accent: string; selected: string }> = {
+  allowed: {
     accent: 'text-emerald-200 bg-emerald-500/15 ring-emerald-400/30',
     selected: 'border-emerald-400/70 bg-emerald-500/15',
   },
-  {
-    value: 'watched',
-    label: 'Watched',
-    hint: 'Needs watch or monitoring',
+  watched: {
     accent: 'text-amber-200 bg-amber-500/15 ring-amber-400/30',
     selected: 'border-amber-400/70 bg-amber-500/15',
   },
-  {
-    value: 'restricted',
-    label: 'Restricted',
-    hint: 'Must be restricted or limited',
+  restricted: {
     accent: 'text-rose-200 bg-rose-500/15 ring-rose-400/30',
     selected: 'border-rose-400/70 bg-rose-500/15',
   },
-]
-
-const trainingReasonOptions: SelectOption[] = [
-  { value: '', label: 'Select reason' },
-  { value: 'certification_gap', label: 'Certification gap' },
-  { value: 'procedure_gap', label: 'Procedure gap' },
-  { value: 'behavior_coaching', label: 'Behavior coaching' },
-  { value: 'remedial_training', label: 'Remedial training' },
-  { value: 'other', label: 'Other training reason' },
-]
-
-const workRestrictionOptions: SelectOption[] = [
-  { value: 'none', label: 'None' },
-  { value: 'modified_duty', label: 'Modified duty' },
-  { value: 'restricted_duty', label: 'Restricted duty' },
-  { value: 'removed_from_duty', label: 'Removed from duty' },
-]
-
-const yesNoPendingOptions: SelectOption[] = [
-  { value: 'no', label: 'No' },
-  { value: 'yes', label: 'Yes' },
-  { value: 'pending', label: 'Pending' },
-]
-
-const ppeConcernOptions: SelectOption[] = [
-  { value: 'none', label: 'None' },
-  { value: 'damaged', label: 'Damaged' },
-  { value: 'missing', label: 'Missing' },
-  { value: 'inadequate', label: 'Inadequate' },
-  { value: 'unknown', label: 'Unknown' },
-]
-
-const medicalAttentionOptions: SelectOption[] = [
-  { value: 'none', label: 'None' },
-  { value: 'first_aid', label: 'First aid' },
-  { value: 'clinic', label: 'Clinic' },
-  { value: 'emergency', label: 'Emergency' },
-  { value: 'unknown', label: 'Unknown' },
-]
-
-const followUpOptions: SelectOption[] = [
-  { value: 'no', label: 'No' },
-  { value: 'yes', label: 'Yes' },
-  { value: 'conditional', label: 'Conditional' },
-]
+}
 
 const quickReferences: Array<[string, ComponentType<{ className?: string }>]> = [
   ['Incident classification guide', ClipboardList],
@@ -197,6 +109,55 @@ function classNames(...parts: Array<string | false | null | undefined>) {
 
 function labelFor<T extends string>(options: SelectOption<T>[], value: T | string | null | undefined) {
   return options.find((option) => option.value === value)?.label ?? value ?? 'None'
+}
+
+function humanizeKey(value: string): string {
+  return value.replaceAll('_', ' ')
+}
+
+function withCurrentOption<T extends string, TOption extends SelectOption<T>>(
+  options: TOption[],
+  value: T | string,
+  buildOption?: (value: T | string) => TOption,
+): TOption[] {
+  if (!value || options.some((option) => option.value === value)) {
+    return options
+  }
+
+  return [
+    buildOption?.(value) ?? ({ value: value as T, label: humanizeKey(value) } as TOption),
+    ...options,
+  ]
+}
+
+function fieldOptions<T extends string>(
+  fieldset: StaffArrFieldsetResponse | undefined,
+  fieldKey: string,
+  leadingOptions: SelectOption<T>[] = [],
+): SelectOption<T>[] {
+  const options =
+    fieldset?.fields.find((field) => field.key === fieldKey)?.options.map((option) => ({
+      value: option.value as T,
+      label: option.label,
+      hint: option.hint ?? undefined,
+    })) ?? []
+
+  return [...leadingOptions, ...options]
+}
+
+function readinessFieldOptions(fieldset: StaffArrFieldsetResponse | undefined): Array<
+  SelectOption<PersonnelIncidentReadinessDecision> & {
+    accent: string
+    selected: string
+  }
+> {
+  return fieldOptions<PersonnelIncidentReadinessDecision>(fieldset, 'readinessDecision').map((option) => ({
+    ...option,
+    accent:
+      readinessPresentation[option.value]?.accent ??
+      'text-slate-200 bg-slate-500/15 ring-slate-400/30',
+    selected: readinessPresentation[option.value]?.selected ?? 'border-slate-400/70 bg-slate-500/15',
+  }))
 }
 
 function sortOrgUnits(units: OrgUnitResponse[]) {
@@ -552,6 +513,12 @@ export function IncidentCreatePage() {
     enabled: Boolean(session?.accessToken),
   })
 
+  const incidentFieldsetQuery = useQuery({
+    queryKey: ['staffarr-fieldset', session?.accessToken, 'personnel-incidents.create'],
+    queryFn: () => getStaffArrFieldset(session!.accessToken, 'personnel-incidents/create'),
+    enabled: Boolean(session?.accessToken),
+  })
+
   const assetReferencesQuery = useQuery({
     queryKey: ['staffarr-incident-create-maintainarr-assets', session?.accessToken],
     queryFn: () => getMaintainArrAssetReferences(session!.accessToken),
@@ -582,6 +549,48 @@ export function IncidentCreatePage() {
     enabled: Boolean(session?.accessToken),
   })
 
+  const incidentSourceOptions = withCurrentOption(
+    fieldOptions<PersonnelIncidentSource>(incidentFieldsetQuery.data, 'incidentSource'),
+    incidentSource,
+  )
+  const incidentTypeOptions = withCurrentOption(
+    fieldOptions<PersonnelIncidentType>(incidentFieldsetQuery.data, 'incidentType'),
+    incidentType,
+  )
+  const severityOptions = withCurrentOption(
+    fieldOptions<PersonnelIncidentSeverity>(incidentFieldsetQuery.data, 'severity'),
+    severity,
+  )
+  const readinessOptions = withCurrentOption(
+    readinessFieldOptions(incidentFieldsetQuery.data),
+    readinessDecision,
+    (value) => ({
+      value: value as PersonnelIncidentReadinessDecision,
+      label: humanizeKey(value),
+      hint: undefined,
+      accent:
+        readinessPresentation[value]?.accent ??
+        'text-slate-200 bg-slate-500/15 ring-slate-400/30',
+      selected: readinessPresentation[value]?.selected ?? 'border-slate-400/70 bg-slate-500/15',
+    }),
+  )
+  const trainingReasonOptions = fieldOptions<string>(incidentFieldsetQuery.data, 'trainingReviewReason', [
+    { value: '', label: 'Select reason' },
+  ])
+  const workRestrictionOptions = withCurrentOption(
+    fieldOptions<string>(incidentFieldsetQuery.data, 'workRestriction'),
+    workRestriction,
+  )
+  const yesNoPendingOptions = fieldOptions<string>(incidentFieldsetQuery.data, 'yesNoPending')
+  const ppeConcernOptions = withCurrentOption(fieldOptions<string>(incidentFieldsetQuery.data, 'ppeConcern'), ppeConcern)
+  const medicalAttentionOptions = withCurrentOption(
+    fieldOptions<string>(incidentFieldsetQuery.data, 'medicalAttention'),
+    medicalAttention,
+  )
+  const followUpOptions = withCurrentOption(
+    fieldOptions<string>(incidentFieldsetQuery.data, 'followUpRequired'),
+    followUpRequired,
+  )
   const people = peopleQuery.data ?? []
   const orgUnits = orgUnitsQuery.data ?? []
   const assetReferences = assetReferencesQuery.data ?? []

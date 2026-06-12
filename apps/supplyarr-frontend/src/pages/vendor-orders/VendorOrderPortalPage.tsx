@@ -15,16 +15,6 @@ import {
   vendorOrderStatusTone,
 } from './vendorOrderUi'
 
-const VENDOR_STATUS_OPTIONS = [
-  'acknowledged',
-  'in_progress',
-  'partially_ready',
-  'completed_ready_for_dispatch',
-  'unable_to_fulfill',
-]
-
-const DOCUMENT_TYPES = ['photo', 'packing_slip', 'scale_ticket', 'proof_of_readiness', 'other']
-
 export function VendorOrderPortalPage() {
   const { token } = useParams<{ token: string }>()
   const [statusDraft, setStatusDraft] = useState<UpdateVendorOrderStatusRequest>({
@@ -58,6 +48,7 @@ export function VendorOrderPortalPage() {
   })
 
   const portal = portalQuery.data
+  const metadata = portal?.metadata
   const latestStatusUpdate = useMemo(
     () => portal?.statusHistory[portal.statusHistory.length - 1] ?? null,
     [portal],
@@ -196,9 +187,9 @@ export function VendorOrderPortalPage() {
                     value={statusDraft.newStatus}
                     onChange={(event) => setStatusDraft({ ...statusDraft, newStatus: event.target.value })}
                   >
-                    {VENDOR_STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>
-                        {humanizeVendorOrderValue(status)}
+                    {(metadata?.vendorPortalStatusOptions ?? []).map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
                       </option>
                     ))}
                   </select>
@@ -362,9 +353,9 @@ export function VendorOrderPortalPage() {
                     value={documentDraft.documentType}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, documentType: event.target.value })}
                   >
-                    {DOCUMENT_TYPES.map((documentType) => (
-                      <option key={documentType} value={documentType}>
-                        {humanizeVendorOrderValue(documentType)}
+                    {(metadata?.documentTypeOptions ?? []).map((documentType) => (
+                      <option key={documentType.value} value={documentType.value}>
+                        {documentType.label}
                       </option>
                     ))}
                   </select>

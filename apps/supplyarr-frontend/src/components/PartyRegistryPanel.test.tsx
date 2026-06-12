@@ -28,6 +28,19 @@ const lifecycleHandlers = {
   isAddingContact: false,
 }
 
+const partyRegistryMetadataOptions = {
+  approvalStatusOptions: [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'restricted', label: 'Restricted' },
+    { value: 'inactive', label: 'Inactive (approval)' },
+  ],
+  statusOptions: [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ],
+}
+
 describe('PartyRegistryPanel', () => {
   it('renders party registry list', () => {
     render(
@@ -36,6 +49,7 @@ describe('PartyRegistryPanel', () => {
         title="Vendors"
         partyType="vendors"
         parties={[sampleParty]}
+        {...partyRegistryMetadataOptions}
         canManage={false}
         isLoading={false}
         partyKey=""
@@ -65,6 +79,7 @@ describe('PartyRegistryPanel', () => {
         title="Vendors"
         partyType="vendors"
         parties={[sampleParty]}
+        {...partyRegistryMetadataOptions}
         canManage
         isLoading={false}
         partyKey=""

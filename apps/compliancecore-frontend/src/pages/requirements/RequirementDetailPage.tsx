@@ -22,6 +22,14 @@ function humanize(value: string | null | undefined): string {
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
+const REQUIREMENT_TABS = ['overview', 'requirements', 'citations', 'logic', 'history'] as const
+
+type RequirementTab = (typeof REQUIREMENT_TABS)[number]
+
+function normalizeRequirementTab(value: string | null): RequirementTab {
+  return value && REQUIREMENT_TABS.includes(value as RequirementTab) ? (value as RequirementTab) : 'overview'
+}
+
 export function RequirementDetailPage() {
   const state = useComplianceCoreWorkspaceState()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -35,6 +43,7 @@ export function RequirementDetailPage() {
     requirements.find(
       (item) => item.factRequirementId === selectedRequirementKey || item.requirementKey === selectedRequirementKey,
     ) ?? requirements[0] ?? null
+  const activeTab = normalizeRequirementTab(searchParams.get('tab'))
 
   if (!requirement) {
     return (
@@ -62,6 +71,119 @@ export function RequirementDetailPage() {
   )
 
   const blocked = !requirement.isActive || !rulePack || !citation
+  const setActiveTab = (tab: RequirementTab) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', tab)
+    setSearchParams(next, { replace: true })
+  }
+
+  const mainContent = (() => {
+    switch (activeTab) {
+      case 'requirements':
+        return (
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <h2 className="text-lg font-bold text-white">Requirement details</h2>
+            <p className="text-sm text-slate-400">Identity, scope, and active state for this requirement.</p>
+            <dl className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Requirement key</dt>
+                <dd className="mt-2 text-sm font-semibold text-white">{requirement.requirementKey}</dd>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Fact key</dt>
+                <dd className="mt-2 text-sm font-semibold text-white">{requirement.factKey}</dd>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Required</dt>
+                <dd className="mt-2 text-sm font-semibold text-white">{requirement.isRequired ? 'Yes' : 'No'}</dd>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</dt>
+                <dd className="mt-2 text-sm font-semibold text-white">{humanize(requirement.isActive ? 'active' : 'inactive')}</dd>
+              </div>
+            </dl>
+          </div>
+        )
+      case 'citations':
+        return (
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <h2 className="text-lg font-bold text-white">Citation details</h2>
+            <p className="text-sm text-slate-400">Linked source references for this requirement.</p>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Citation</h3>
+              <p className="mt-2 text-sm text-slate-200">{citation?.sourceReference ?? requirement.citationKey ?? 'No citation linked.'}</p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Related citation key</h3>
+              <p className="mt-2 text-sm text-slate-200">{citation?.citationKey ?? requirement.citationKey ?? 'Not recorded'}</p>
+            </div>
+          </div>
+        )
+      case 'logic':
+        return (
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <h2 className="text-lg font-bold text-white">Applicability and logic</h2>
+            <p className="text-sm text-slate-400">
+              The selected rule pack determines how this requirement is evaluated.
+            </p>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="text-sm text-slate-200">
+                {rulePack
+                  ? `This requirement is evaluated through ${rulePack.packKey} within ${rulePack.regulatoryProgramLabel}.`
+                  : 'No rule pack is linked yet, so applicability and compliance logic are not yet resolved.'}
+              </p>
+            </div>
+          </div>
+        )
+      case 'history':
+        return (
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <h2 className="text-lg font-bold text-white">History</h2>
+            <p className="text-sm text-slate-400">Lifecycle timestamps and recent status for this requirement.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Created</h3>
+                <p className="mt-2 text-sm text-slate-200">{new Date(requirement.createdAt).toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Updated</h3>
+                <p className="mt-2 text-sm text-slate-200">{new Date(requirement.updatedAt).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        )
+      case 'overview':
+      default:
+        return (
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Plain-language summary</h2>
+              <p className="mt-2 text-sm text-slate-200">
+                {requirement.description || 'No plain-language summary has been captured yet.'}
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Citations</h3>
+                <p className="mt-2 text-sm text-slate-200">
+                  {citation?.sourceReference ?? requirement.citationKey ?? 'No citation linked.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Applicability / logic</h3>
+                <p className="mt-2 text-sm text-slate-200">
+                  {rulePack
+                    ? `This requirement is evaluated through ${rulePack.packKey} within ${rulePack.regulatoryProgramLabel}.`
+                    : 'No rule pack is linked yet, so applicability and compliance logic are not yet resolved.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+    }
+  })()
+
   const railSections: DetailRailSectionConfig[] = [
     {
       title: 'Related requirements',
@@ -161,7 +283,9 @@ export function RequirementDetailPage() {
           tone: requirement.isActive ? 'good' : 'bad',
         },
       ]}
-      tabs={['Overview', 'Requirements', 'Citations', 'Logic', 'History']}
+      tabs={REQUIREMENT_TABS.map((tab) => ({ key: tab, label: tab === 'overview' ? 'Overview' : humanize(tab) }))}
+      activeTab={activeTab}
+      onTabChange={(tabKey) => setActiveTab(normalizeRequirementTab(tabKey))}
       snapshotTitle="Requirement snapshot"
       snapshotSubtitle="Fact requirement identity, linked citation and rule pack, fact definition, and lifecycle state."
       snapshotFields={[
@@ -176,12 +300,17 @@ export function RequirementDetailPage() {
         { label: 'Updated', value: new Date(requirement.updatedAt).toLocaleString(), source: 'Audit trail' },
       ]}
       mainContent={
-        <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+        <div className="space-y-4">
           <label className="block text-sm text-slate-300">
             Choose requirement
             <select
               value={requirement.factRequirementId}
-              onChange={(event) => setSearchParams({ requirementId: event.target.value })}
+              onChange={(event) => {
+                const next = new URLSearchParams(searchParams)
+                next.set('requirementId', event.target.value)
+                next.set('tab', activeTab)
+                setSearchParams(next, { replace: true })
+              }}
               className="mt-2 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
             >
               {requirements.map((item) => (
@@ -192,29 +321,7 @@ export function RequirementDetailPage() {
             </select>
           </label>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Plain-language summary</h2>
-            <p className="mt-2 text-sm text-slate-200">
-              {requirement.description || 'No plain-language summary has been captured yet.'}
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Citations</h3>
-              <p className="mt-2 text-sm text-slate-200">
-                {citation?.sourceReference ?? requirement.citationKey ?? 'No citation linked.'}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Applicability / logic</h3>
-              <p className="mt-2 text-sm text-slate-200">
-                {rulePack
-                  ? `This requirement is evaluated through ${rulePack.packKey} within ${rulePack.regulatoryProgramLabel}.`
-                  : 'No rule pack is linked yet, so applicability and compliance logic are not yet resolved.'}
-              </p>
-            </div>
-          </div>
+          {mainContent}
         </div>
       }
       decisionTitle="Requirement decision"

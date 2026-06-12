@@ -11,7 +11,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   DetailBadge,
   DetailEmptyState,
@@ -78,10 +78,20 @@ function listPanel<T>(items: T[], emptyText: string, render: (item: T) => ReactN
   return <div className="space-y-3">{items.map(render)}</div>
 }
 
+const REGISTRY_TABS = ['overview', 'rules', 'citations', 'facts', 'mappings', 'evaluations', 'history'] as const
+
+type RegistryTab = (typeof REGISTRY_TABS)[number]
+
+function normalizeRegistryTab(value: string | null): RegistryTab {
+  return value && REGISTRY_TABS.includes(value as RegistryTab) ? (value as RegistryTab) : 'overview'
+}
+
 export function RegistryDetailProfile({ state: s }: { state: ComplianceCoreWorkspaceState }) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const rulePacks = s.rulePacksQuery?.data ?? []
   const rulePack = rulePacks.find((pack) => pack.rulePackId === s.selectedRulePackId) ?? rulePacks[0] ?? null
   if (!rulePack) return noSelection()
+  const activeTab = normalizeRegistryTab(searchParams.get('tab'))
 
   const program = (s.programsQuery?.data ?? []).find(
     (item) => item.regulatoryProgramId === rulePack.regulatoryProgramId,
@@ -105,6 +115,191 @@ export function RegistryDetailProfile({ state: s }: { state: ComplianceCoreWorks
     factSources.some((source) => source.factKey === requirement.factKey && source.isActive),
   ).length
   const blocked = !rulePack.isActive || openFindings.length > 0 || factRequirements.length > requiredFactSourceCount
+  const setActiveTab = (tab: RegistryTab) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', tab)
+    setSearchParams(next, { replace: true })
+  }
+
+  const mainContent = (() => {
+    switch (activeTab) {
+      case 'rules':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Rule content</h3>
+            <p className="mt-1 text-sm text-slate-400">Rule definitions, conditions, and expected values from the selected pack.</p>
+            <div className="mt-4 space-y-3">
+              {listPanel(rules, 'No rule content loaded yet.', (rule) => (
+                <div key={rule.ruleKey} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{rule.label}</h4>
+                      <p className="mt-1 text-sm text-sky-100/75">
+                        {rule.factKey} equals {String(rule.expectedValue)}
+                      </p>
+                    </div>
+                    <DetailBadge label={rule.nonWaivable ? 'Non-waivable' : humanize(rule.type)} tone="info" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'citations':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Citation links</h3>
+            <p className="mt-1 text-sm text-slate-400">Regulatory source references that support this rule pack.</p>
+            <div className="mt-4 space-y-3">
+              {listPanel(citations, 'No citations linked yet.', (citation) => (
+                <div key={citation.citationId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                  <h4 className="font-semibold text-white">{citation.label}</h4>
+                  <p className="mt-1 text-sm text-sky-100/75">{citation.sourceReference}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'facts':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Fact requirements</h3>
+            <p className="mt-1 text-sm text-slate-400">Required facts, source coverage, and control expectations for the selected rule pack.</p>
+            <div className="mt-4 space-y-3">
+              {listPanel(factRequirements, 'No facts required by this rule pack yet.', (requirement) => {
+                const sourceCount = factSources.filter(
+                  (source) => source.factKey === requirement.factKey && source.isActive,
+                ).length
+                return (
+                  <div key={requirement.factRequirementId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold text-white">{requirement.label}</h4>
+                        <p className="mt-1 text-xs text-slate-400">{requirement.factKey}</p>
+                      </div>
+                      <DetailBadge
+                        label={requirement.isRequired ? 'Required' : 'Optional'}
+                        tone={requirement.isRequired ? 'warn' : 'neutral'}
+                      />
+                    </div>
+                    <p className="mt-3 text-sm text-sky-100/75">
+                      {sourceCount > 0 ? `${sourceCount} active fact source${sourceCount === 1 ? '' : 's'} linked.` : 'No active fact sources linked.'}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      case 'mappings':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Regulatory mappings</h3>
+            <p className="mt-1 text-sm text-slate-400">How this pack maps to source rules, compliance keys, and operational targets.</p>
+            <div className="mt-4 space-y-3">
+              {listPanel(mappings, 'No regulatory mappings linked yet.', (mapping) => (
+                <div key={mapping.regulatoryMappingId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <h4 className="font-semibold text-white">{mapping.label}</h4>
+                  <p className="mt-1 text-xs text-slate-400">{humanize(mapping.targetKind)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'evaluations':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Evaluations</h3>
+            <p className="mt-1 text-sm text-slate-400">Recent evaluation runs and their overall results for this pack.</p>
+            <div className="mt-4 space-y-3">
+              {listPanel(evaluations, 'No evaluations run for this pack yet.', (evaluation) => (
+                <div key={evaluation.evaluationRunId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-white">{formatDate(evaluation.createdAt)}</h4>
+                      <p className="mt-1 text-xs text-slate-400">{evaluation.ruleResults.length} rule results</p>
+                    </div>
+                    <DetailBadge label={humanize(evaluation.overallResult)} tone={statusTone(evaluation.overallResult)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'history':
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">History</h3>
+            <p className="mt-1 text-sm text-slate-400">Lifecycle timestamps and recent findings for this rule pack.</p>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <h4 className="font-semibold text-white">Lifecycle</h4>
+                <dl className="mt-3 space-y-2 text-sm text-slate-300">
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-slate-400">Created</dt>
+                    <dd>{formatDate(rulePack.createdAt)}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-slate-400">Updated</dt>
+                    <dd>{formatDate(rulePack.updatedAt)}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-slate-400">Version</dt>
+                    <dd>{rulePack.versionNumber}</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <h4 className="font-semibold text-white">Recent findings</h4>
+                <div className="mt-3 space-y-3">
+                  {listPanel(findings, 'No findings emitted for this rule pack.', (finding) => (
+                    <div key={finding.findingId} className="rounded-lg border border-slate-800 bg-slate-900 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-white">{finding.title}</p>
+                          <p className="mt-1 text-xs text-slate-400">{finding.reasonCode}</p>
+                        </div>
+                        <DetailBadge label={humanize(finding.severity)} tone={statusTone(finding.severity)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )
+      case 'overview':
+      default:
+        return (
+          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+            <h3 className="text-lg font-bold text-white">Rules and citations</h3>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div>
+                <h4 className="mb-3 text-sm font-semibold text-sky-200">Rules</h4>
+                {listPanel(rules.slice(0, 5), 'No rule content loaded yet.', (rule) => (
+                  <div key={rule.ruleKey} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                    <h5 className="font-semibold text-white">{rule.label}</h5>
+                    <p className="mt-1 text-sm text-sky-100/75">
+                      {rule.factKey} equals {String(rule.expectedValue)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h4 className="mb-3 text-sm font-semibold text-sky-200">Citations</h4>
+                {listPanel(citations.slice(0, 5), 'No citations linked yet.', (citation) => (
+                  <div key={citation.citationId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                    <h5 className="font-semibold text-white">{citation.label}</h5>
+                    <p className="mt-1 text-sm text-sky-100/75">{citation.sourceReference}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+    }
+  })()
+
   const rails: DetailRailSectionConfig[] = [
     {
       title: 'Required facts',
@@ -159,7 +354,9 @@ export function RegistryDetailProfile({ state: s }: { state: ComplianceCoreWorks
         { label: 'Required facts', value: factRequirements.length, hint: `${requiredFactSourceCount} sourced`, icon: <FileCheck2 className="h-5 w-5" />, tone: factRequirements.length === requiredFactSourceCount ? 'good' : 'warn' },
         { label: 'Open findings', value: openFindings.length, hint: 'Unresolved findings', icon: <AlertTriangle className="h-5 w-5" />, tone: openFindings.length > 0 ? 'bad' : 'good' },
       ]}
-      tabs={['Overview', 'Rules', 'Citations', 'Facts', 'Mappings', 'Evaluations', 'History']}
+      tabs={REGISTRY_TABS.map((tab) => ({ key: tab, label: tab === 'overview' ? 'Overview' : humanize(tab) }))}
+      activeTab={activeTab}
+      onTabChange={(tabKey) => setActiveTab(normalizeRegistryTab(tabKey))}
       snapshotTitle="Registry snapshot"
       snapshotSubtitle="Rule-pack identity, regulatory lineage, content version, fact requirements, mappings, and evaluation posture."
       snapshotFields={[
@@ -173,31 +370,7 @@ export function RegistryDetailProfile({ state: s }: { state: ComplianceCoreWorks
         { label: 'Created', value: formatDate(rulePack.createdAt), source: 'Audit trail' },
         { label: 'Updated', value: formatDate(rulePack.updatedAt), source: 'Audit trail' },
       ]}
-      mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Rules and citations</h3>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <div>
-              <h4 className="mb-3 text-sm font-semibold text-sky-200">Rules</h4>
-              {listPanel(rules.slice(0, 5), 'No rule content loaded yet.', (rule) => (
-                <div key={rule.ruleKey} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <h5 className="font-semibold text-white">{rule.label}</h5>
-                  <p className="mt-1 text-sm text-sky-100/75">{rule.factKey} equals {String(rule.expectedValue)}</p>
-                </div>
-              ))}
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-semibold text-sky-200">Citations</h4>
-              {listPanel(citations.slice(0, 5), 'No citations linked yet.', (citation) => (
-                <div key={citation.citationId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <h5 className="font-semibold text-white">{citation.label}</h5>
-                  <p className="mt-1 text-sm text-sky-100/75">{citation.sourceReference}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      mainContent={mainContent}
       decisionTitle="Registry decision"
       decisionBadge={{ label: blocked ? 'Review' : 'Ready', tone: blocked ? 'warn' : 'good' }}
       decisionIcon={blocked ? <XCircle className="h-5 w-5 text-amber-300" /> : <CheckCircle2 className="h-5 w-5 text-emerald-300" />}

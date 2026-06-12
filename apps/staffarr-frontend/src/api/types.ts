@@ -30,6 +30,32 @@ export interface StaffArrMeResponse {
   entitlements: string[]
 }
 
+export interface StaffArrFieldOptionResponse {
+  value: string
+  label: string
+  hint: string | null
+  owner: string
+  sourceOfTruth: string
+}
+
+export interface StaffArrFieldDefinitionResponse {
+  key: string
+  label: string
+  control: string
+  required: boolean
+  owner: string
+  sourceOfTruth: string
+  options: StaffArrFieldOptionResponse[]
+}
+
+export interface StaffArrFieldsetResponse {
+  key: string
+  label: string
+  entityType: string
+  purpose: string
+  fields: StaffArrFieldDefinitionResponse[]
+}
+
 export interface LaunchHandoffResponse {
   handoffCode: string
   handoffId: string

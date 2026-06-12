@@ -1,11 +1,34 @@
+import { useQuery } from '@tanstack/react-query'
 import { getErrorMessage } from '@stl/shared-ui'
+import { getStaffArrFieldset } from '../../api/client'
+import type {
+  PersonnelIncidentReasonCategory,
+  PersonnelIncidentSeverity,
+  StaffArrFieldsetResponse,
+} from '../../api/types'
 import { IncidentsPanel } from '../../components/IncidentsPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
 
+function fieldOptions<T extends string>(
+  fieldset: StaffArrFieldsetResponse | undefined,
+  fieldKey: string,
+): Array<{ value: T; label: string }> {
+  return fieldset?.fields.find((field) => field.key === fieldKey)?.options.map((option) => ({
+    value: option.value as T,
+    label: option.label,
+  })) ?? []
+}
+
 export function IncidentsSection({ state }: Props) {
   const s = state
+  const fieldsetQuery = useQuery({
+    queryKey: ['staffarr-fieldset', s.accessToken, 'personnel-incidents/create'],
+    queryFn: () => getStaffArrFieldset(s.accessToken, 'personnel-incidents/create'),
+    enabled: Boolean(s.accessToken && s.canManagePersonIncidents),
+  })
+
   if (!s.selectedPerson) {
     return <p className="text-sm text-slate-400">Select a person on the People page to manage incidents.</p>
   }
@@ -15,6 +38,11 @@ export function IncidentsSection({ state }: Props) {
       personId={s.selectedPerson.personId}
       personDisplayName={s.selectedPerson.displayName}
       incidents={s.personIncidents}
+      reasonCategoryOptions={fieldOptions<PersonnelIncidentReasonCategory>(
+        fieldsetQuery.data,
+        'reasonCategoryKey',
+      )}
+      severityOptions={fieldOptions<PersonnelIncidentSeverity>(fieldsetQuery.data, 'severity')}
       selectedIncidentId={s.selectedIncidentId}
       selectedIncident={s.incidentDetailQuery.data ?? null}
       isLoading={s.personIncidentsQuery.isLoading}

@@ -26,11 +26,15 @@ function buildFriendlyReference(source: string, existingRefs: string[]): string 
 type PartyColumnKey = 'name' | 'legalName' | 'approval' | 'status' | 'primaryContact' | 'created'
 const PARTY_COLUMN_STORAGE_PREFIX = 'supplyarr.parties.drawer.columns.v1.'
 
+type PartyRegistryOption = { value: string; label: string }
+
 interface PartyRegistryPanelProps {
   mode: 'drawer' | 'details' | 'create'
   title: string
   partyType: PartyRegistryRoute
   parties: ExternalPartyResponse[]
+  approvalStatusOptions: PartyRegistryOption[]
+  statusOptions: PartyRegistryOption[]
   canManage: boolean
   isLoading: boolean
   partyKey: string
@@ -55,18 +59,6 @@ interface PartyRegistryPanelProps {
   isAddingContact: boolean
 }
 
-const APPROVAL_OPTIONS = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'restricted', label: 'Restricted' },
-  { value: 'inactive', label: 'Inactive (approval)' },
-]
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-]
-
 function formatTimestamp(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)
@@ -74,11 +66,22 @@ function formatTimestamp(value: string | null | undefined): string | null {
   return date.toLocaleString()
 }
 
+function humanizeKey(value: string): string {
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function withCurrentOption(options: PartyRegistryOption[], value: string): PartyRegistryOption[] {
+  if (!value || options.some((option) => option.value === value)) return options
+  return [{ value, label: humanizeKey(value) }, ...options]
+}
+
 export function PartyRegistryPanel({
   mode,
   title,
   partyType,
   parties,
+  approvalStatusOptions,
+  statusOptions,
   canManage,
   isLoading,
   partyKey: _partyKey,
@@ -197,6 +200,8 @@ export function PartyRegistryPanel({
 
   const createdAtLabel = formatTimestamp(selected?.createdAt)
   const updatedAtLabel = formatTimestamp(selected?.updatedAt)
+  const approvalOptions = withCurrentOption(approvalStatusOptions, editApprovalStatus)
+  const lifecycleStatusOptions = withCurrentOption(statusOptions, editStatus)
 
   return (
     <section
@@ -350,7 +355,7 @@ export function PartyRegistryPanel({
                   id="party-registry-approval-select"
                   value={editApprovalStatus}
                   onChange={setEditApprovalStatus}
-                  options={APPROVAL_OPTIONS}
+                  options={approvalOptions}
                   testId="party-registry-approval-select"
                 />
                 <button
@@ -369,7 +374,7 @@ export function PartyRegistryPanel({
                   id="party-registry-status-select"
                   value={editStatus}
                   onChange={setEditStatus}
-                  options={STATUS_OPTIONS}
+                  options={lifecycleStatusOptions}
                   testId="party-registry-status-select"
                 />
                 <button

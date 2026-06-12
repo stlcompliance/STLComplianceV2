@@ -36,6 +36,19 @@ public sealed record VendorOrderBrokerDecisionResponse(
     string? DecidedByPersonId,
     DateTimeOffset CreatedAt);
 
+public sealed record VendorOrderCatalogOptionResponse(
+    string Value,
+    string Label,
+    string Owner,
+    string SourceOfTruth);
+
+public sealed record VendorOrderMetadataResponse(
+    IReadOnlyList<VendorOrderCatalogOptionResponse> FilterStatusOptions,
+    IReadOnlyList<VendorOrderCatalogOptionResponse> InternalStatusOptions,
+    IReadOnlyList<VendorOrderCatalogOptionResponse> VendorPortalStatusOptions,
+    IReadOnlyList<VendorOrderCatalogOptionResponse> DocumentTypeOptions,
+    IReadOnlyList<VendorOrderCatalogOptionResponse> BrokerDecisionTypeOptions);
+
 public sealed record VendorOrderResponse(
     Guid VendorOrderId,
     Guid? BrokerOrderId,
@@ -173,7 +186,8 @@ public sealed record VendorOrderPortalResponse(
     string? PickupInstructions,
     DateTimeOffset LinkExpiresAt,
     IReadOnlyList<VendorOrderDocumentResponse> Documents,
-    IReadOnlyList<VendorOrderStatusUpdateResponse> StatusHistory);
+    IReadOnlyList<VendorOrderStatusUpdateResponse> StatusHistory,
+    VendorOrderMetadataResponse Metadata);
 
 public sealed record CreateVendorOrderBrokerDecisionRequest(
     string DecisionType,

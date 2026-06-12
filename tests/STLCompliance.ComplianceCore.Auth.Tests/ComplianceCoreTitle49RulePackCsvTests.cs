@@ -1,109 +1,16 @@
 using System.Text.Json;
 using ComplianceCore.Api.Csv;
+using ComplianceCore.Api.Services;
 
 namespace STLCompliance.ComplianceCore.Auth.Tests;
 
 public class ComplianceCoreTitle49RulePackCsvTests
 {
     private static readonly IReadOnlyDictionary<string, string[]> ExpectedHeaders =
-        new Dictionary<string, string[]>
-        {
-            ["controlled_vocabulary.csv"] = ["term_key", "vocabulary_type_key", "label", "description", "active"],
-            ["vocabulary_aliases.csv"] = ["term_key", "alias_text", "active"],
-            ["compliance_keys.csv"] = ["key", "label", "category", "description", "active"],
-            ["material_keys.csv"] = ["key", "label", "category", "description", "active"],
-            ["rule_packs.csv"] =
-            [
-                "pack_key",
-                "program_key",
-                "version_number",
-                "label",
-                "description",
-                "status",
-                "active",
-                "rule_content_json"
-            ],
-            ["rule_requirements.csv"] =
-            [
-                "citation_key",
-                "program_key",
-                "pack_key",
-                "pack_version",
-                "label",
-                "source_reference",
-                "description",
-                "active",
-                "supersedes_citation_key"
-            ],
-            ["rule_fact_requirements.csv"] =
-            [
-                "requirement_key",
-                "fact_key",
-                "pack_key",
-                "pack_version",
-                "citation_key",
-                "citation_version",
-                "applicability_key",
-                "source_product",
-                "source_entity",
-                "source_field_or_record_type",
-                "value_type",
-                "operator",
-                "expected_value",
-                "evidence_kind",
-                "required_document_type",
-                "retention_period",
-                "audit_question",
-                "failure_severity",
-                "automatic_failure_flag",
-                "override_allowed",
-                "override_permission",
-                "remediation_required",
-                "label",
-                "description",
-                "is_required",
-                "active"
-            ],
-            ["regulatory_mappings.csv"] =
-            [
-                "mapping_key",
-                "target_kind",
-                "program_key",
-                "pack_key",
-                "pack_version",
-                "citation_key",
-                "compliance_key",
-                "material_key",
-                "fact_key",
-                "label",
-                "description",
-                "active"
-            ],
-            ["sds_references.csv"] = ["sds_key", "material_key", "product_name", "manufacturer", "document_url", "revision_date", "active"],
-            ["exception_exemptions.csv"] =
-            [
-                "key",
-                "label",
-                "type",
-                "governing_body",
-                "program_key",
-                "pack_key",
-                "citation_key",
-                "applicability_key",
-                "applies_to_subject_kind",
-                "applies_to_source_product",
-                "applies_to_source_entity",
-                "effect_type",
-                "condition_logic_json",
-                "required_evidence_option_group_key",
-                "issuing_authority",
-                "authorization_number",
-                "effective_at",
-                "expires_at",
-                "active",
-                "description"
-            ]
-        };
+        StagedImportService.SupportedHeaders.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value.ToArray(),
+            StringComparer.OrdinalIgnoreCase);
 
     private static readonly HashSet<string> AllowedProducts =
         new(StringComparer.Ordinal)
@@ -181,6 +88,7 @@ public class ComplianceCoreTitle49RulePackCsvTests
         var packDirectories = GetPackDirectories();
 
         Assert.Equal(44, packDirectories.Count);
+        AssertSchemaManifest();
         foreach (var packDirectory in packDirectories)
         {
             var csvFiles = Directory.GetFiles(packDirectory, "*.csv").Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
@@ -193,6 +101,8 @@ public class ComplianceCoreTitle49RulePackCsvTests
                 var firstLine = File.ReadLines(Path.Combine(packDirectory, fileName)).First();
                 Assert.Equal(expectedHeader, CsvText.ParseRow(firstLine));
             }
+
+            Assert.Empty(ReadRows(Path.Combine(packDirectory, StagedImportService.EvidenceReferencesFile)));
         }
     }
 
@@ -496,6 +406,25 @@ public class ComplianceCoreTitle49RulePackCsvTests
         var root = Path.Combine(RepoRoot(), "root", "rulepack", "title49");
         Assert.True(Directory.Exists(root), $"Missing generated Title 49 rulepack root: {root}");
         return Directory.GetDirectories(root).OrderBy(value => value, StringComparer.Ordinal).ToList();
+    }
+
+    private static void AssertSchemaManifest()
+    {
+        var manifestPath = Path.Combine(RepoRoot(), "root", "rulepack", "title49", "manifest.json");
+        Assert.True(File.Exists(manifestPath), $"Missing generated schema manifest: {manifestPath}");
+
+        using var manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        var directBundleFiles = manifest.RootElement.GetProperty("directBundleFiles")
+            .EnumerateArray()
+            .Select(file => file.GetProperty("fileName").GetString()!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var stagedOnlyFiles = manifest.RootElement.GetProperty("stagedOnlyFiles")
+            .EnumerateArray()
+            .Select(file => file.GetProperty("fileName").GetString()!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.True(directBundleFiles.IsSubsetOf(ExpectedHeaders.Keys), "Manifest direct bundle files must be generated CSV files.");
+        Assert.Contains(StagedImportService.EvidenceReferencesFile, stagedOnlyFiles);
     }
 
     private static List<Dictionary<string, string>> ReadRows(string path)

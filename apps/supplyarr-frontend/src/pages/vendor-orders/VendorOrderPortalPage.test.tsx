@@ -38,6 +38,25 @@ vi.mock('../../api/vendorOrderClient', () => ({
       },
     ],
     documents: [],
+    metadata: {
+      filterStatusOptions: [],
+      internalStatusOptions: [],
+      vendorPortalStatusOptions: [
+        { value: 'acknowledged', label: 'Acknowledged', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'in_progress', label: 'In progress', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'partially_ready', label: 'Partially ready', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'completed_ready_for_dispatch', label: 'Completed ready for dispatch', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'unable_to_fulfill', label: 'Unable to fulfill', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+      ],
+      documentTypeOptions: [
+        { value: 'photo', label: 'Photo', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'packing_slip', label: 'Packing slip', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'scale_ticket', label: 'Scale ticket', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'proof_of_readiness', label: 'Proof of readiness', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'other', label: 'Other', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+      ],
+      brokerDecisionTypeOptions: [],
+    },
   }),
   submitVendorAccessOrderStatus: vi.fn().mockResolvedValue({
     vendorOrderId: 'vendor-order-1',
@@ -71,6 +90,25 @@ vi.mock('../../api/vendorOrderClient', () => ({
       },
     ],
     documents: [],
+    metadata: {
+      filterStatusOptions: [],
+      internalStatusOptions: [],
+      vendorPortalStatusOptions: [
+        { value: 'acknowledged', label: 'Acknowledged', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'in_progress', label: 'In progress', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'partially_ready', label: 'Partially ready', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'completed_ready_for_dispatch', label: 'Completed ready for dispatch', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'unable_to_fulfill', label: 'Unable to fulfill', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+      ],
+      documentTypeOptions: [
+        { value: 'photo', label: 'Photo', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'packing_slip', label: 'Packing slip', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'scale_ticket', label: 'Scale ticket', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'proof_of_readiness', label: 'Proof of readiness', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'other', label: 'Other', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+      ],
+      brokerDecisionTypeOptions: [],
+    },
   }),
   registerVendorAccessOrderDocument: vi.fn().mockResolvedValue({
     vendorOrderId: 'vendor-order-1',
@@ -93,6 +131,25 @@ vi.mock('../../api/vendorOrderClient', () => ({
     pickupInstructions: 'Call dock on arrival',
     statusHistory: [],
     documents: [],
+    metadata: {
+      filterStatusOptions: [],
+      internalStatusOptions: [],
+      vendorPortalStatusOptions: [
+        { value: 'acknowledged', label: 'Acknowledged', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'in_progress', label: 'In progress', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'partially_ready', label: 'Partially ready', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'completed_ready_for_dispatch', label: 'Completed ready for dispatch', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+        { value: 'unable_to_fulfill', label: 'Unable to fulfill', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+      ],
+      documentTypeOptions: [
+        { value: 'photo', label: 'Photo', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'packing_slip', label: 'Packing slip', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'scale_ticket', label: 'Scale ticket', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'proof_of_readiness', label: 'Proof of readiness', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+        { value: 'other', label: 'Other', owner: 'recordarr', sourceOfTruth: 'recordarr.document_type_catalog.mapped_to_supplyarr' },
+      ],
+      brokerDecisionTypeOptions: [],
+    },
   }),
 }))
 

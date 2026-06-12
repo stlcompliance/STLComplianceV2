@@ -31,6 +31,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import {
   getPartyVendorRestrictionEnforcement,
+  getPartyRegistryMetadata,
   getSupplierOnboardingByParty,
   getVendorSupplyReadiness,
   listAuditHistory,
@@ -131,6 +132,12 @@ function PartiesRegistryWorkspace({ state: s, mode }: { state: SupplyArrWorkspac
   const vendorHandlers = partyRegistryHandlers(s, 'vendors')
   const supplierHandlers = partyRegistryHandlers(s, 'suppliers')
   const dealerHandlers = partyRegistryHandlers(s, 'dealers')
+  const metadataQuery = useQuery({
+    queryKey: ['supplyarr-party-registry-metadata', s.accessToken],
+    queryFn: () => getPartyRegistryMetadata(s.accessToken),
+    enabled: Boolean(s.accessToken && s.canReadParties),
+  })
+  const metadata = metadataQuery.data
 
   return (
     <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-party-registry-workspace">
@@ -139,6 +146,8 @@ function PartiesRegistryWorkspace({ state: s, mode }: { state: SupplyArrWorkspac
         title="Vendors"
         partyType="vendors"
         parties={s.vendors}
+        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
+        statusOptions={metadata?.statusOptions ?? []}
         canManage={s.canManage}
         isLoading={s.vendorsQuery.isLoading}
         partyKey={s.vendorKey}
@@ -160,6 +169,8 @@ function PartiesRegistryWorkspace({ state: s, mode }: { state: SupplyArrWorkspac
         title="Suppliers"
         partyType="suppliers"
         parties={s.suppliersQuery.data ?? []}
+        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
+        statusOptions={metadata?.statusOptions ?? []}
         canManage={s.canManage}
         isLoading={s.suppliersQuery.isLoading}
         partyKey={s.supplierKey}
@@ -181,6 +192,8 @@ function PartiesRegistryWorkspace({ state: s, mode }: { state: SupplyArrWorkspac
         title="Dealers"
         partyType="dealers"
         parties={s.dealersQuery.data ?? []}
+        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
+        statusOptions={metadata?.statusOptions ?? []}
         canManage={s.canManage}
         isLoading={s.dealersQuery.isLoading}
         partyKey={s.dealerKey}

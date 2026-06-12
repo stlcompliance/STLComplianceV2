@@ -5,6 +5,7 @@ import type {
   CreatePartyContactRequest,
   CreateTypedExternalPartyRequest,
   ExternalPartyResponse,
+  PartyRegistryMetadataResponse,
   PartyRegistryRoute,
   UpdateExternalPartyApprovalStatusRequest,
   UpdateExternalPartyRequest,
@@ -291,6 +292,16 @@ export async function getDealers(accessToken: string): Promise<ExternalPartyResp
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ExternalPartyResponse[]>(response, 'Failed to load dealers')
+}
+
+export async function getPartyRegistryMetadata(accessToken: string): Promise<PartyRegistryMetadataResponse> {
+  const response = await fetch(`${apiBase}/api/v1/parties/metadata`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PartyRegistryMetadataResponse>(
+    response,
+    'Failed to load party registry metadata',
+  )
 }
 
 export async function createVendor(

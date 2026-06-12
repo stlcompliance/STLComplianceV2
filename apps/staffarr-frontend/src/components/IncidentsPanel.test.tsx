@@ -19,6 +19,16 @@ const sampleIncidents: PersonnelIncidentSummaryResponse[] = [
   },
 ]
 
+const incidentReasonCategoryOptions = [
+  { value: 'safety' as const, label: 'Safety' },
+  { value: 'training_compliance' as const, label: 'Training compliance' },
+]
+
+const incidentSeverityOptions = [
+  { value: 'medium' as const, label: 'Medium' },
+  { value: 'high' as const, label: 'High' },
+]
+
 describe('IncidentsPanel', () => {
   afterEach(() => {
     cleanup()
@@ -30,6 +40,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={sampleIncidents}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
@@ -61,6 +73,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
@@ -81,6 +95,12 @@ describe('IncidentsPanel', () => {
 
     fireEvent.change(screen.getByLabelText(/Title/i), {
       target: { value: 'Slip on loading dock' },
+    })
+    fireEvent.change(screen.getByLabelText(/Reason category/i), {
+      target: { value: 'safety' },
+    })
+    fireEvent.change(screen.getByLabelText(/Severity/i), {
+      target: { value: 'medium' },
     })
     fireEvent.change(screen.getByLabelText(/Description/i), {
       target: {
@@ -118,6 +138,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={trainingIncident.incidentId}
         selectedIncident={trainingIncident}
         isLoading={false}
@@ -168,6 +190,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={openIncident.incidentId}
         selectedIncident={openIncident}
         isLoading={false}
@@ -198,6 +222,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={openIncident.incidentId}
         selectedIncident={{ ...openIncident, status: 'closed' }}
         isLoading={false}
@@ -260,6 +286,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={routedIncident.incidentId}
         selectedIncident={routedIncident}
         isLoading={false}
@@ -340,6 +368,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={incident.incidentId}
         selectedIncident={incident}
         isLoading={false}
@@ -394,6 +424,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={sampleIncidents}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
@@ -424,6 +456,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
@@ -455,6 +489,8 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={sampleIncidents}
+        reasonCategoryOptions={incidentReasonCategoryOptions}
+        severityOptions={incidentSeverityOptions}
         selectedIncidentId={sampleIncidents[0].incidentId}
         selectedIncident={null}
         isLoading={false}

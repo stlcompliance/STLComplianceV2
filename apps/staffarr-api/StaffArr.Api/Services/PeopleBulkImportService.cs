@@ -14,19 +14,7 @@ public sealed class PeopleBulkImportService(
 {
     public const int MaxBatchSize = 100;
 
-    private static readonly HashSet<string> AllowedEmploymentStatuses =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            "applicant",
-            "pending_start",
-            "onboarding",
-            "active",
-            "leave",
-            "suspended",
-            "terminated",
-            "inactive",
-            "archived",
-        };
+    private static readonly IReadOnlySet<string> AllowedEmploymentStatuses = StaffArrControlledFieldCatalog.EmploymentStatusKeys;
 
     public async Task<BulkPersonImportResponse> ImportAsync(
         Guid tenantId,

@@ -33,7 +33,9 @@ $CsvNames = @(
     "rule_requirements.csv",
     "rule_fact_requirements.csv",
     "regulatory_mappings.csv",
-    "sds_references.csv"
+    "sds_references.csv",
+    "exception_exemptions.csv",
+    "evidence_references.csv"
 )
 
 $Programs = @(

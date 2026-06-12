@@ -16,6 +16,7 @@ import {
   createVendorOrderBrokerDecision,
   createVendorOrderMagicLink,
   getVendorOrder,
+  getVendorOrderMetadata,
   getVendorOrders,
   getVendorOrderHistory,
   registerVendorOrderDocument,
@@ -31,28 +32,6 @@ import {
   quantitySummary,
   vendorOrderStatusTone,
 } from './vendorOrderUi'
-
-const INTERNAL_STATUS_OPTIONS = [
-  'draft',
-  'sent_to_vendor',
-  'pending_vendor_acknowledgment',
-  'acknowledged',
-  'in_progress',
-  'partially_ready',
-  'completed_ready_for_dispatch',
-  'unable_to_fulfill',
-  'cancelled',
-  'closed',
-]
-
-const DOCUMENT_TYPES = [
-  'photo',
-  'packing_slip',
-  'bill_of_lading',
-  'scale_ticket',
-  'proof_of_readiness',
-  'other',
-]
 
 export function VendorOrderDetailPage() {
   const { vendorOrderId } = useParams<{ vendorOrderId: string }>()
@@ -117,6 +96,11 @@ export function VendorOrderDetailPage() {
   const vendorOrderQuery = useQuery({
     queryKey: ['supplyarr-vendor-order', session.accessToken, vendorOrderId],
     queryFn: () => getVendorOrder(session.accessToken, vendorOrderId),
+  })
+
+  const metadataQuery = useQuery({
+    queryKey: ['supplyarr-vendor-order-metadata', session.accessToken],
+    queryFn: () => getVendorOrderMetadata(session.accessToken),
   })
 
   const historyQuery = useQuery({
@@ -254,6 +238,7 @@ export function VendorOrderDetailPage() {
   }
 
   const order = vendorOrderQuery.data
+  const metadata = metadataQuery.data
   const splitChildren =
     (lineageQuery.data ?? []).filter((item) => item.parentVendorOrderId === order.vendorOrderId) ?? []
   const activeVendorBlockTrips =
@@ -402,9 +387,9 @@ export function VendorOrderDetailPage() {
                       value={documentDraft.documentType}
                       onChange={(event) => setDocumentDraft({ ...documentDraft, documentType: event.target.value })}
                     >
-                      {DOCUMENT_TYPES.map((documentType) => (
-                        <option key={documentType} value={documentType}>
-                          {humanizeVendorOrderValue(documentType)}
+                      {(metadata?.documentTypeOptions ?? []).map((documentType) => (
+                        <option key={documentType.value} value={documentType.value}>
+                          {documentType.label}
                         </option>
                       ))}
                     </select>
@@ -637,9 +622,9 @@ export function VendorOrderDetailPage() {
                         value={statusDraft.newStatus}
                         onChange={(event) => setStatusDraft({ ...statusDraft, newStatus: event.target.value })}
                       >
-                        {INTERNAL_STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {humanizeVendorOrderValue(status)}
+                        {(metadata?.internalStatusOptions ?? []).map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
                           </option>
                         ))}
                       </select>
@@ -754,8 +739,11 @@ export function VendorOrderDetailPage() {
                           value={decisionType}
                           onChange={(event) => setDecisionType(event.target.value)}
                         >
-                          <option value="wait_full">Wait full quantity</option>
-                          <option value="dispatch_partial">Dispatch partial quantity</option>
+                          {(metadata?.brokerDecisionTypeOptions ?? []).map((decisionTypeOption) => (
+                            <option key={decisionTypeOption.value} value={decisionTypeOption.value}>
+                              {decisionTypeOption.label}
+                            </option>
+                          ))}
                         </select>
                       </label>
                       <div className="grid gap-3 md:grid-cols-2">

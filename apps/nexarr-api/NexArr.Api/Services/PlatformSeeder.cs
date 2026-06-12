@@ -518,7 +518,7 @@ public static class PlatformSeeder
         return admin.Id;
     }
 
-    private static Task EnsureBootstrapTenantForFirstAdminAsync(
+    private static async Task EnsureBootstrapTenantForFirstAdminAsync(
         NexArrDbContext db,
         IConfiguration configuration,
         Guid adminUserId,
@@ -561,7 +561,7 @@ public static class PlatformSeeder
             CreatedAt = now
         });
 
-        return Task.CompletedTask;
+        await EnsureAllProductAccessAsync(db, bootstrapTenantId, now, cancellationToken);
     }
 
     public static async Task SeedMasterReferenceDataAsync(
@@ -824,49 +824,87 @@ public static class PlatformSeeder
             });
         }
 
-        foreach (var product in Products)
-        {
-            if (await db.Entitlements.AnyAsync(
-                    e => e.TenantId == DemoTenantId && e.ProductKey == product.Key,
-                    cancellationToken))
-            {
-                continue;
-            }
-
-            db.Entitlements.Add(new TenantProductEntitlement
-            {
-                Id = Guid.NewGuid(),
-                TenantId = DemoTenantId,
-                ProductKey = product.Key,
-                Status = EntitlementStatuses.Active,
-                GrantedAt = now
-            });
-        }
-
-        foreach (var product in Products)
-        {
-            if (await db.TenantProductLicenses.AnyAsync(
-                    l => l.TenantId == DemoTenantId && l.ProductKey == product.Key,
-                    cancellationToken))
-            {
-                continue;
-            }
-
-            db.TenantProductLicenses.Add(new TenantProductLicense
-            {
-                Id = Guid.NewGuid(),
-                TenantId = DemoTenantId,
-                ProductKey = product.Key,
-                Status = LicenseStatuses.Active,
-                ValidFrom = now.AddYears(-1),
-                ValidTo = now.AddYears(1),
-                CreatedAt = now,
-                ModifiedAt = now,
-            });
-        }
+        await EnsureAllProductAccessAsync(db, DemoTenantId, now, cancellationToken);
 
         SeedDemoTenantCallbackAllowlist(db, now);
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureAllProductAccessAsync(
+        NexArrDbContext db,
+        Guid tenantId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        foreach (var product in Products)
+        {
+            var entitlement = await db.Entitlements.FirstOrDefaultAsync(
+                e => e.TenantId == tenantId && e.ProductKey == product.Key,
+                cancellationToken);
+            if (entitlement is null)
+            {
+                db.Entitlements.Add(new TenantProductEntitlement
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    ProductKey = product.Key,
+                    Status = EntitlementStatuses.Active,
+                    GrantedAt = now
+                });
+            }
+            else
+            {
+                entitlement.Status = EntitlementStatuses.Active;
+                entitlement.RevokedAt = null;
+                if (entitlement.GrantedAt == default)
+                {
+                    entitlement.GrantedAt = now;
+                }
+            }
+
+            var license = await db.TenantProductLicenses.FirstOrDefaultAsync(
+                l => l.TenantId == tenantId && l.ProductKey == product.Key,
+                cancellationToken);
+            if (license is null)
+            {
+                db.TenantProductLicenses.Add(new TenantProductLicense
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    ProductKey = product.Key,
+                    Status = LicenseStatuses.Active,
+                    ValidFrom = now.AddYears(-1),
+                    ValidTo = now.AddYears(1),
+                    CreatedAt = now,
+                    ModifiedAt = now,
+                });
+                continue;
+            }
+
+            var licenseChanged = false;
+            if (!license.Status.Equals(LicenseStatuses.Active, StringComparison.OrdinalIgnoreCase))
+            {
+                license.Status = LicenseStatuses.Active;
+                licenseChanged = true;
+            }
+
+            if (license.ValidFrom == default || license.ValidFrom > now)
+            {
+                license.ValidFrom = now.AddYears(-1);
+                licenseChanged = true;
+            }
+
+            if (license.ValidTo is not null && license.ValidTo <= now)
+            {
+                license.ValidTo = now.AddYears(1);
+                licenseChanged = true;
+            }
+
+            if (licenseChanged)
+            {
+                license.ModifiedAt = now;
+            }
+        }
     }
 
     private static async Task EnsureDemoOwnerRoleAsync(

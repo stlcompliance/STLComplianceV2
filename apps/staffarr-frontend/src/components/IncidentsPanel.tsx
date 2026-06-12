@@ -11,10 +11,14 @@ import type {
   UpdateIncidentNoteStatusRequest,
 } from '../api/types'
 
+type ControlledOption<T extends string = string> = { value: T; label: string }
+
 interface IncidentsPanelProps {
   personId: string
   personDisplayName: string
   incidents: PersonnelIncidentSummaryResponse[]
+  reasonCategoryOptions: Array<ControlledOption<PersonnelIncidentReasonCategory>>
+  severityOptions: Array<ControlledOption<PersonnelIncidentSeverity>>
   selectedIncidentId?: string | null
   selectedIncident: PersonnelIncidentDetailResponse | null
   isLoading: boolean
@@ -54,23 +58,6 @@ export function isIncidentRoutableToTrainarr(reasonCategoryKey: string): boolean
   return reasonCategoryKey === 'training_compliance'
 }
 
-const reasonCategoryOptions: { value: PersonnelIncidentReasonCategory; label: string }[] = [
-  { value: 'safety', label: 'Safety' },
-  { value: 'conduct', label: 'Conduct' },
-  { value: 'injury', label: 'Injury' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'training_compliance', label: 'Training compliance' },
-  { value: 'policy', label: 'Policy' },
-  { value: 'other', label: 'Other' },
-]
-
-const severityOptions: { value: PersonnelIncidentSeverity; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
-
 export function canManageIncidents(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) {
     return true
@@ -79,9 +66,13 @@ export function canManageIncidents(tenantRoleKey: string, isPlatformAdmin: boole
   return ['tenant_admin', 'staffarr_admin', 'hr_admin'].includes(tenantRoleKey)
 }
 
-function formatCategoryLabel(key: string): string {
-  const match = reasonCategoryOptions.find((option) => option.value === key)
-  return match?.label ?? key
+function humanizeKey(value: string): string {
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function formatCategoryLabel(key: string, options: Array<ControlledOption>): string {
+  const match = options.find((option) => option.value === key)
+  return match?.label ?? humanizeKey(key)
 }
 
 function severityBadgeClass(severity: string): string {
@@ -116,6 +107,8 @@ export function IncidentsPanel({
   personId,
   personDisplayName,
   incidents,
+  reasonCategoryOptions,
+  severityOptions,
   selectedIncidentId = null,
   selectedIncident,
   isLoading,
@@ -143,8 +136,8 @@ export function IncidentsPanel({
   isUpdatingIncidentNoteStatus = false,
   isCreatingIncidentAttachment = false,
 }: IncidentsPanelProps) {
-  const [reasonCategoryKey, setReasonCategoryKey] = useState<PersonnelIncidentReasonCategory>('safety')
-  const [severity, setSeverity] = useState<PersonnelIncidentSeverity>('medium')
+  const [reasonCategoryKey, setReasonCategoryKey] = useState<PersonnelIncidentReasonCategory | ''>('')
+  const [severity, setSeverity] = useState<PersonnelIncidentSeverity | ''>('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16))
@@ -160,6 +153,10 @@ export function IncidentsPanel({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    if (!reasonCategoryKey || !severity) {
+      return
+    }
+
     await onCreateIncident({
       personId,
       reasonCategoryKey,
@@ -290,7 +287,7 @@ export function IncidentsPanel({
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
-                  {formatCategoryLabel(incident.reasonCategoryKey)} · {incident.status} · reported{' '}
+                  {formatCategoryLabel(incident.reasonCategoryKey, reasonCategoryOptions)} · {incident.status} · reported{' '}
                   {new Date(incident.reportedAt).toLocaleString()}
                   {incident.trainarrRouting ? (
                     <span className="ml-1 text-violet-300">· routed to TrainArr</span>
@@ -689,10 +686,11 @@ export function IncidentsPanel({
                 id="incident-intake-reason-category"
                 value={reasonCategoryKey}
                 onChange={(event) =>
-                  setReasonCategoryKey(event.target.value as PersonnelIncidentReasonCategory)
+                  setReasonCategoryKey(event.target.value as PersonnelIncidentReasonCategory | '')
                 }
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
+                <option value="">Select reason category</option>
                 {reasonCategoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -705,9 +703,10 @@ export function IncidentsPanel({
               <select
                 id="incident-intake-severity"
                 value={severity}
-                onChange={(event) => setSeverity(event.target.value as PersonnelIncidentSeverity)}
+                onChange={(event) => setSeverity(event.target.value as PersonnelIncidentSeverity | '')}
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
+                <option value="">Select severity</option>
                 {severityOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

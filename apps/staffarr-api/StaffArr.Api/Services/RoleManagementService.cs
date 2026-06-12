@@ -71,6 +71,12 @@ public sealed class RoleManagementService(
         "Customer Portal User"
     ];
 
+    private static readonly HashSet<string> FullAccessSystemTemplateNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Owner",
+        "Platform Admin"
+    };
+
     private static readonly Dictionary<string, string> ProductNames = new(StringComparer.OrdinalIgnoreCase)
     {
         ["staffarr"] = "StaffArr",
@@ -1374,10 +1380,6 @@ public sealed class RoleManagementService(
         var missing = SystemTemplateNames
             .Where(name => existingNames.All(existing => !existing.Equals(name, StringComparison.OrdinalIgnoreCase)))
             .ToList();
-        if (missing.Count == 0)
-        {
-            return;
-        }
 
         var now = DateTimeOffset.UtcNow;
         foreach (var name in missing)
@@ -1396,8 +1398,142 @@ public sealed class RoleManagementService(
             });
         }
 
+        if (missing.Count > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await EnsureFullAccessSystemTemplatesAsync(tenantId, now, cancellationToken);
+    }
+
+    private async Task EnsureFullAccessSystemTemplatesAsync(
+        Guid tenantId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var fullAccessRoles = (await db.StaffRoles
+                .Where(x => x.TenantId == tenantId && x.IsSystem && !x.IsArchived)
+                .ToListAsync(cancellationToken))
+            .Where(role => FullAccessSystemTemplateNames.Contains(role.Name))
+            .ToList();
+        if (fullAccessRoles.Count == 0)
+        {
+            return;
+        }
+
+        var roleIds = fullAccessRoles.Select(x => x.Id).ToArray();
+        var catalogs = await BuildCatalogsAsync(tenantId, productKey: null, cancellationToken);
+        var catalogPermissions = catalogs
+            .SelectMany(catalog => catalog.Modules
+                .SelectMany(module => module.PermissionGroups)
+                .SelectMany(group => group.Permissions)
+                .Select(permission => (catalog.ProductKey, PermissionKey: permission.Key)))
+            .GroupBy(permission => $"{permission.ProductKey}|{permission.PermissionKey}", StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
+        if (catalogPermissions.Count == 0)
+        {
+            return;
+        }
+
+        var changedRoleIds = new HashSet<Guid>();
+        var existingPermissions = await db.StaffRolePermissions
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+
+        var denyPermissions = existingPermissions
+            .Where(x => x.Effect.Equals("deny", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (denyPermissions.Count > 0)
+        {
+            foreach (var permission in denyPermissions)
+            {
+                changedRoleIds.Add(permission.RoleId);
+            }
+
+            db.StaffRolePermissions.RemoveRange(denyPermissions);
+        }
+
+        var existingAllowKeys = existingPermissions
+            .Where(x => x.Effect.Equals("allow", StringComparison.OrdinalIgnoreCase))
+            .Select(x => BuildRolePermissionKey(x.RoleId, x.ProductKey, x.PermissionKey, "allow"))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var role in fullAccessRoles)
+        {
+            foreach (var permission in catalogPermissions)
+            {
+                var permissionKey = BuildRolePermissionKey(
+                    role.Id,
+                    permission.ProductKey,
+                    permission.PermissionKey,
+                    "allow");
+                if (!existingAllowKeys.Add(permissionKey))
+                {
+                    continue;
+                }
+
+                db.StaffRolePermissions.Add(new StaffRolePermission
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    RoleId = role.Id,
+                    ProductKey = permission.ProductKey,
+                    PermissionKey = permission.PermissionKey,
+                    Effect = "allow",
+                    CreatedAt = now
+                });
+                changedRoleIds.Add(role.Id);
+            }
+        }
+
+        var existingScopes = await db.StaffRoleScopes
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+        var scopedRoleIds = existingScopes
+            .Where(x => x.ScopeType.Equals("tenant", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(x.ScopeRefId))
+            .Select(x => x.RoleId)
+            .ToHashSet();
+
+        foreach (var role in fullAccessRoles)
+        {
+            if (scopedRoleIds.Contains(role.Id))
+            {
+                continue;
+            }
+
+            db.StaffRoleScopes.Add(new StaffRoleScope
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                RoleId = role.Id,
+                ScopeType = "tenant",
+                ScopeRefSnapshot = "Entire tenant",
+                CreatedAt = now
+            });
+            changedRoleIds.Add(role.Id);
+        }
+
+        if (changedRoleIds.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var role in fullAccessRoles.Where(role => changedRoleIds.Contains(role.Id)))
+        {
+            role.UpdatedAt = now;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    private static string BuildRolePermissionKey(
+        Guid roleId,
+        string productKey,
+        string permissionKey,
+        string effect) =>
+        $"{roleId:N}|{productKey.Trim().ToLowerInvariant()}|{permissionKey.Trim().ToLowerInvariant()}|{effect.Trim().ToLowerInvariant()}";
 
     private async Task<IReadOnlyList<PermissionCatalogResponse>> GetActiveCatalogsAsync(
         Guid tenantId,

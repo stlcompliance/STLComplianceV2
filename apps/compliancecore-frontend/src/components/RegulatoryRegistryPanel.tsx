@@ -38,110 +38,102 @@ export function RegulatoryRegistryPanel({
   isAdvancingRulePack,
 }: RegulatoryRegistryPanelProps) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-400">
-          Governing body → jurisdiction → regulatory program → rule pack hierarchy for compliance rule authority.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Governing bodies</h2>
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <h2 className="text-lg font-medium text-white">Governing bodies</h2>
+        <ul className="mt-4 space-y-2 text-sm">
           {governingBodies.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No governing bodies registered yet.</p>
+            <li className="text-slate-400">No governing bodies registered yet.</li>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {governingBodies.map((body) => (
-                <li key={body.governingBodyId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="font-medium text-slate-100">{body.label}</p>
-                  <p className="font-mono text-xs text-violet-300">{body.bodyKey}</p>
-                </li>
-              ))}
-            </ul>
+            governingBodies.map((body) => (
+              <li key={body.governingBodyId} className="rounded-lg border border-slate-800 p-3">
+                <div className="font-medium text-slate-100">{body.label}</div>
+                <div className="mt-1 font-mono text-xs text-violet-300">{body.bodyKey}</div>
+              </li>
+            ))
           )}
-        </section>
+        </ul>
+      </section>
 
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Jurisdictions</h2>
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <h2 className="text-lg font-medium text-white">Jurisdictions</h2>
+        <ul className="mt-4 space-y-2 text-sm">
           {jurisdictions.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No jurisdictions registered yet.</p>
+            <li className="text-slate-400">No jurisdictions registered yet.</li>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {jurisdictions.map((jurisdiction) => (
-                <li key={jurisdiction.jurisdictionId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="font-medium text-slate-100">{jurisdiction.label}</p>
-                  <p className="font-mono text-xs text-sky-300">{jurisdiction.jurisdictionKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">{jurisdiction.governingBodyLabel}</p>
-                </li>
-              ))}
-            </ul>
+            jurisdictions.map((jurisdiction) => (
+              <li key={jurisdiction.jurisdictionId} className="rounded-lg border border-slate-800 p-3">
+                <div className="font-medium text-slate-100">{jurisdiction.label}</div>
+                <div className="mt-1 font-mono text-xs text-sky-300">{jurisdiction.jurisdictionKey}</div>
+                <div className="mt-1 text-xs text-slate-400">{jurisdiction.governingBodyLabel}</div>
+              </li>
+            ))
           )}
-        </section>
+        </ul>
+      </section>
 
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Regulatory programs</h2>
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <h2 className="text-lg font-medium text-white">Regulatory programs</h2>
+        <ul className="mt-4 space-y-2 text-sm">
           {programs.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No regulatory programs registered yet.</p>
+            <li className="text-slate-400">No regulatory programs registered yet.</li>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {programs.map((program) => (
-                <li key={program.regulatoryProgramId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="font-medium text-slate-100">{program.label}</p>
-                  <p className="font-mono text-xs text-emerald-300">{program.programKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">{program.jurisdictionLabel}</p>
-                </li>
-              ))}
-            </ul>
+            programs.map((program) => (
+              <li key={program.regulatoryProgramId} className="rounded-lg border border-slate-800 p-3">
+                <div className="font-medium text-slate-100">{program.label}</div>
+                <div className="mt-1 font-mono text-xs text-emerald-300">{program.programKey}</div>
+                <div className="mt-1 text-xs text-slate-400">{program.jurisdictionLabel}</div>
+              </li>
+            ))
           )}
-        </section>
+        </ul>
+      </section>
 
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Rule packs</h2>
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <h2 className="text-lg font-medium text-white">Rule packs</h2>
+        <ul className="mt-4 space-y-2 text-sm">
           {rulePacks.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No rule packs defined yet.</p>
+            <li className="text-slate-400">No rule packs defined yet.</li>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {rulePacks.map((pack) => (
-                <li key={pack.rulePackId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-slate-100">{pack.label}</p>
-                      <p className="font-mono text-xs text-amber-300">{pack.packKey}</p>
-                    </div>
-                    <span className={`rounded px-2 py-0.5 text-xs uppercase ${statusBadgeClass(pack.status)}`}>
-                      {pack.status}
-                    </span>
+            rulePacks.map((pack) => (
+              <li key={pack.rulePackId} className="rounded-lg border border-slate-800 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-slate-100">{pack.label}</div>
+                    <div className="mt-1 font-mono text-xs text-amber-300">{pack.packKey}</div>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    v{pack.versionNumber} · {pack.regulatoryProgramLabel}
-                  </p>
-                  {canManage && pack.status === 'draft' && (
-                    <button
-                      type="button"
-                      onClick={() => onAdvanceRulePack(pack.rulePackId, 'review')}
-                      disabled={isAdvancingRulePack}
-                      className="mt-2 rounded bg-slate-800 px-2 py-1 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-                    >
-                      Submit for review
-                    </button>
-                  )}
-                  {canManage && pack.status === 'review' && (
-                    <button
-                      type="button"
-                      onClick={() => onAdvanceRulePack(pack.rulePackId, 'published')}
-                      disabled={isAdvancingRulePack}
-                      className="mt-2 rounded bg-emerald-800 px-2 py-1 text-xs text-emerald-100 hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      Publish
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
+                  <span className={`rounded px-2 py-0.5 text-xs uppercase ${statusBadgeClass(pack.status)}`}>
+                    {pack.status}
+                  </span>
+                </div>
+                <div className="mt-2 text-xs text-slate-400">
+                  v{pack.versionNumber} · {pack.regulatoryProgramLabel}
+                </div>
+                {canManage && pack.status === 'draft' && (
+                  <button
+                    type="button"
+                    onClick={() => onAdvanceRulePack(pack.rulePackId, 'review')}
+                    disabled={isAdvancingRulePack}
+                    className="mt-3 inline-flex items-center rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:border-slate-600 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Submit for review
+                  </button>
+                )}
+                {canManage && pack.status === 'review' && (
+                  <button
+                    type="button"
+                    onClick={() => onAdvanceRulePack(pack.rulePackId, 'published')}
+                    disabled={isAdvancingRulePack}
+                    className="mt-3 inline-flex items-center rounded-md border border-emerald-700 bg-emerald-800 px-3 py-1.5 text-xs text-emerald-100 hover:border-emerald-600 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Publish
+                  </button>
+                )}
+              </li>
+            ))
           )}
-        </section>
-      </div>
+        </ul>
+      </section>
     </div>
   )
 }

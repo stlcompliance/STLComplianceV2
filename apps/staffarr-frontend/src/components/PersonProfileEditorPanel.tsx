@@ -1,42 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { listLocations } from '../api/client'
-import type { OrgUnitResponse, StaffPersonDetailResponse } from '../api/types'
+import { getStaffArrFieldset, listLocations } from '../api/client'
+import type {
+  OrgUnitResponse,
+  StaffArrFieldOptionResponse,
+  StaffArrFieldsetResponse,
+  StaffPersonDetailResponse,
+} from '../api/types'
 
 const WRITER_ROLES = new Set(['tenant_admin', 'staffarr_admin', 'hr_admin'])
-
-const EMPLOYMENT_STATUS_OPTIONS = [
-  { value: 'applicant', label: 'Applicant' },
-  { value: 'pending_start', label: 'Pending start' },
-  { value: 'onboarding', label: 'Onboarding' },
-  { value: 'active', label: 'Active' },
-  { value: 'leave', label: 'Leave' },
-  { value: 'suspended', label: 'Suspended' },
-  { value: 'terminated', label: 'Terminated' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'archived', label: 'Archived' },
-] as const
-
-const WORK_RELATIONSHIP_OPTIONS = [
-  { value: 'employee', label: 'Employee' },
-  { value: 'contractor', label: 'Contractor' },
-  { value: 'temp', label: 'Temp' },
-  { value: 'vendor_worker', label: 'Vendor worker' },
-  { value: 'customer_contact', label: 'Customer contact' },
-  { value: 'auditor', label: 'Auditor' },
-  { value: 'service_account_contact', label: 'Service account contact' },
-  { value: 'other', label: 'Other' },
-] as const
-
-const EMPLOYMENT_TYPE_OPTIONS = [
-  { value: 'full_time', label: 'Full time' },
-  { value: 'part_time', label: 'Part time' },
-  { value: 'seasonal', label: 'Seasonal' },
-  { value: 'temporary', label: 'Temporary' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'non_employee', label: 'Non-employee' },
-] as const
 
 interface PersonProfileEditorPanelProps {
   accessToken: string
@@ -85,6 +58,13 @@ function toOrgUnitOptions(orgUnits: OrgUnitResponse[]): PickerOption[] {
   }))
 }
 
+function fieldOptions(
+  fieldset: StaffArrFieldsetResponse | undefined,
+  fieldKey: string,
+): StaffArrFieldOptionResponse[] {
+  return fieldset?.fields.find((field) => field.key === fieldKey)?.options ?? []
+}
+
 export function PersonProfileEditorPanel({
   accessToken,
   profile,
@@ -121,6 +101,12 @@ export function PersonProfileEditorPanel({
   const [statusReason, setStatusReason] = useState('')
   const [statusDraft, setStatusDraft] = useState(profile.employmentStatus)
 
+  const profileFieldsetQuery = useQuery({
+    queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
+    queryFn: () => getStaffArrFieldset(accessToken, 'people/profile'),
+    enabled: Boolean(accessToken),
+  })
+
   useEffect(() => {
     setLegalFirstName(profile.legalFirstName)
     setLegalMiddleName(profile.legalMiddleName ?? '')
@@ -153,6 +139,9 @@ export function PersonProfileEditorPanel({
     label: person.displayName,
   }))
   const selectedManagerOption = managerOptions.find((option) => option.value === managerPersonId)
+  const employmentStatusOptions = fieldOptions(profileFieldsetQuery.data, 'employmentStatus')
+  const workRelationshipOptions = fieldOptions(profileFieldsetQuery.data, 'workRelationshipType')
+  const employmentTypeOptions = fieldOptions(profileFieldsetQuery.data, 'employmentType')
 
   const locationQuery = useQuery({
     queryKey: ['staffarr-site-locations', accessToken, siteContextOrgUnitId],
@@ -326,7 +315,7 @@ export function PersonProfileEditorPanel({
               onChange={(event) => setWorkRelationshipType(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             >
-              {WORK_RELATIONSHIP_OPTIONS.map((option) => (
+              {workRelationshipOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -341,7 +330,7 @@ export function PersonProfileEditorPanel({
               onChange={(event) => setEmploymentType(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             >
-              {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
+              {employmentTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -447,7 +436,7 @@ export function PersonProfileEditorPanel({
                 onChange={(event) => setStatusDraft(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               >
-                {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
+                {employmentStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

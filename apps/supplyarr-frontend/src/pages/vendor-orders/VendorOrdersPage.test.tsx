@@ -15,6 +15,17 @@ vi.mock('../../api/client', () => ({
 }))
 
 vi.mock('../../api/vendorOrderClient', () => ({
+  getVendorOrderMetadata: vi.fn().mockResolvedValue({
+    filterStatusOptions: [
+      { value: 'draft', label: 'Draft', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+      { value: 'partially_ready', label: 'Partially ready', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+      { value: 'completed_ready_for_dispatch', label: 'Completed ready for dispatch', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
+    ],
+    internalStatusOptions: [],
+    vendorPortalStatusOptions: [],
+    documentTypeOptions: [],
+    brokerDecisionTypeOptions: [],
+  }),
   getVendorOrders: vi.fn().mockResolvedValue([
     {
       vendorOrderId: 'vendor-order-1',

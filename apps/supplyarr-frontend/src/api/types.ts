@@ -50,6 +50,16 @@ export interface PartyContactResponse {
   createdAt: string
 }
 
+export interface PartyRegistryCatalogOptionResponse {
+  value: string
+  label: string
+}
+
+export interface PartyRegistryMetadataResponse {
+  approvalStatusOptions: PartyRegistryCatalogOptionResponse[]
+  statusOptions: PartyRegistryCatalogOptionResponse[]
+}
+
 export interface ExternalPartyResponse {
   partyId: string
   partyKey: string
@@ -1439,6 +1449,21 @@ export interface VendorOrderBrokerDecisionResponse {
   createdAt: string
 }
 
+export interface VendorOrderCatalogOptionResponse {
+  value: string
+  label: string
+  owner: string
+  sourceOfTruth: string
+}
+
+export interface VendorOrderMetadataResponse {
+  filterStatusOptions: VendorOrderCatalogOptionResponse[]
+  internalStatusOptions: VendorOrderCatalogOptionResponse[]
+  vendorPortalStatusOptions: VendorOrderCatalogOptionResponse[]
+  documentTypeOptions: VendorOrderCatalogOptionResponse[]
+  brokerDecisionTypeOptions: VendorOrderCatalogOptionResponse[]
+}
+
 export interface VendorOrderListItemResponse {
   vendorOrderId: string
   status: string
@@ -1585,6 +1610,7 @@ export interface VendorOrderPortalResponse {
   linkExpiresAt: string
   documents: VendorOrderDocumentResponse[]
   statusHistory: VendorOrderStatusUpdateResponse[]
+  metadata: VendorOrderMetadataResponse
 }
 
 export interface CreateVendorOrderBrokerDecisionRequest {

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using NexArr.Api.Services;
@@ -57,7 +59,7 @@ public sealed class PlatformSeederTests
     }
 
     [Fact]
-    public async Task SeedAsync_backfills_missing_demo_product_access_for_existing_installs()
+    public async Task SeedAsync_backfills_and_reactivates_demo_product_access_for_existing_installs()
     {
         var options = new DbContextOptionsBuilder<NexArrDbContext>()
             .UseInMemoryDatabase($"platform-seeder-tests-{Guid.NewGuid():N}")
@@ -79,18 +81,104 @@ public sealed class PlatformSeederTests
 
         db.Entitlements.Remove(assurarrEntitlement);
         db.TenantProductLicenses.Remove(assurarrLicense);
+
+        var reportarrEntitlement = await db.Entitlements.SingleAsync(
+            entitlement =>
+                entitlement.TenantId == PlatformSeeder.DemoTenantId
+                && entitlement.ProductKey == "reportarr");
+        reportarrEntitlement.Status = EntitlementStatuses.Revoked;
+        reportarrEntitlement.RevokedAt = DateTimeOffset.UtcNow.AddDays(-1);
+
+        var reportarrLicense = await db.TenantProductLicenses.SingleAsync(
+            license =>
+                license.TenantId == PlatformSeeder.DemoTenantId
+                && license.ProductKey == "reportarr");
+        reportarrLicense.Status = LicenseStatuses.Revoked;
+        reportarrLicense.ValidTo = DateTimeOffset.UtcNow.AddDays(-1);
         await db.SaveChangesAsync();
 
         await PlatformSeeder.SeedAsync(db, hasher);
 
-        Assert.True(await db.Entitlements.AnyAsync(
-            entitlement =>
-                entitlement.TenantId == PlatformSeeder.DemoTenantId
-                && entitlement.ProductKey == "assurarr"));
-        Assert.True(await db.TenantProductLicenses.AnyAsync(
-            license =>
-                license.TenantId == PlatformSeeder.DemoTenantId
-                && license.ProductKey == "assurarr"));
+        var productKeys = await db.ProductCatalog
+            .Select(product => product.ProductKey)
+            .ToListAsync();
+        var entitlements = await db.Entitlements
+            .Where(entitlement => entitlement.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync();
+        var licenses = await db.TenantProductLicenses
+            .Where(license => license.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync();
+
+        Assert.Equal(productKeys.Count, entitlements.Count);
+        Assert.Equal(productKeys.Count, licenses.Count);
+        foreach (var productKey in productKeys)
+        {
+            Assert.Contains(entitlements, entitlement =>
+                entitlement.ProductKey == productKey
+                && entitlement.Status == EntitlementStatuses.Active
+                && entitlement.RevokedAt is null);
+            Assert.Contains(licenses, license =>
+                license.ProductKey == productKey
+                && license.Status == LicenseStatuses.Active
+                && license.ValidFrom <= DateTimeOffset.UtcNow
+                && (license.ValidTo is null || license.ValidTo > DateTimeOffset.UtcNow));
+        }
+    }
+
+    [Fact]
+    public async Task SeedFirstAdminAsync_grants_bootstrap_tenant_all_product_access()
+    {
+        var options = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseInMemoryDatabase($"platform-seeder-bootstrap-tests-{Guid.NewGuid():N}")
+            .Options;
+
+        await using var db = new NexArrDbContext(options);
+        var hasher = new BcryptPasswordHasher();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Seed:FirstAdminEmail"] = "root@demo.stl",
+                ["Seed:FirstAdminPassword"] = "ChangeMe!Bootstrap2026"
+            })
+            .Build();
+
+        await PlatformSeeder.SeedInfrastructureAsync(db);
+
+        var adminId = await PlatformSeeder.SeedFirstAdminAsync(
+            db,
+            hasher,
+            configuration,
+            new TestWebHostEnvironment("Production"));
+
+        Assert.NotNull(adminId);
+
+        var tenant = Assert.Single(await db.Tenants.ToListAsync());
+        var membership = Assert.Single(await db.TenantMemberships.ToListAsync());
+        Assert.Equal(tenant.Id, membership.TenantId);
+        Assert.Equal(adminId, membership.UserId);
+        Assert.Equal("platform_admin", membership.RoleKey);
+
+        var productKeys = await db.ProductCatalog
+            .Select(product => product.ProductKey)
+            .ToListAsync();
+        var entitlements = await db.Entitlements
+            .Where(entitlement => entitlement.TenantId == tenant.Id)
+            .ToListAsync();
+        var licenses = await db.TenantProductLicenses
+            .Where(license => license.TenantId == tenant.Id)
+            .ToListAsync();
+
+        Assert.Equal(productKeys.Count, entitlements.Count);
+        Assert.Equal(productKeys.Count, licenses.Count);
+        foreach (var productKey in productKeys)
+        {
+            Assert.Contains(entitlements, entitlement =>
+                entitlement.ProductKey == productKey
+                && entitlement.Status == EntitlementStatuses.Active);
+            Assert.Contains(licenses, license =>
+                license.ProductKey == productKey
+                && license.Status == LicenseStatuses.Active);
+        }
     }
 
     [Fact]
@@ -180,5 +268,20 @@ public sealed class PlatformSeederTests
         Assert.Single(crosswalks);
         Assert.Equal("assurarr-audit-type:internal_process_audit", crosswalks[0].ExternalKey);
         Assert.Equal(entity.Id, crosswalks[0].ReferenceEntityId);
+    }
+
+    private sealed class TestWebHostEnvironment(string environmentName) : Microsoft.AspNetCore.Hosting.IWebHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = environmentName;
+
+        public string ApplicationName { get; set; } = "STLCompliance.NexArr.Auth.Tests";
+
+        public string WebRootPath { get; set; } = Directory.GetCurrentDirectory();
+
+        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
+
+        public string ContentRootPath { get; set; } = Directory.GetCurrentDirectory();
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

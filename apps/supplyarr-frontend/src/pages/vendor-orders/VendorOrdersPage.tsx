@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { DetailBadge } from '@stl/shared-ui'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getVendors } from '../../api/client'
-import { getVendorOrders } from '../../api/vendorOrderClient'
+import { getVendorOrderMetadata, getVendorOrders } from '../../api/vendorOrderClient'
 import { useSupplyArrPageAccess } from './useSupplyArrPageAccess'
 import {
   formatVendorOrderDateTime,
@@ -10,20 +10,6 @@ import {
   quantitySummary,
   vendorOrderStatusTone,
 } from './vendorOrderUi'
-
-const STATUS_OPTIONS = [
-  '',
-  'draft',
-  'pending_vendor_acknowledgment',
-  'acknowledged',
-  'in_progress',
-  'partially_ready',
-  'completed_ready_for_dispatch',
-  'unable_to_fulfill',
-  'cancelled',
-  'closed',
-  'split',
-]
 
 export function VendorOrdersPage() {
   const { session, meQuery, canReadVendorOrders, canCreateVendorOrders } = useSupplyArrPageAccess()
@@ -55,6 +41,11 @@ export function VendorOrdersPage() {
     queryFn: () => getVendors(session.accessToken),
   })
 
+  const metadataQuery = useQuery({
+    queryKey: ['supplyarr-vendor-order-metadata', session.accessToken],
+    queryFn: () => getVendorOrderMetadata(session.accessToken),
+  })
+
   const vendorOrdersQuery = useQuery({
     queryKey: ['supplyarr-vendor-orders', session.accessToken, selectedStatus, selectedVendorId],
     queryFn: () =>
@@ -65,6 +56,7 @@ export function VendorOrdersPage() {
   })
 
   const orderCount = vendorOrdersQuery.data?.length ?? 0
+  const statusFilterOptions = [{ value: '', label: 'All statuses' }, ...(metadataQuery.data?.filterStatusOptions ?? [])]
   const readyCount =
     vendorOrdersQuery.data?.filter((item) => item.status === 'completed_ready_for_dispatch').length ?? 0
   const partialCount =
@@ -123,9 +115,9 @@ export function VendorOrdersPage() {
                 setSearchParams(next)
               }}
             >
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status || 'all'} value={status}>
-                  {status ? humanizeVendorOrderValue(status) : 'All statuses'}
+              {statusFilterOptions.map((status) => (
+                <option key={status.value || 'all'} value={status.value}>
+                  {status.label}
                 </option>
               ))}
             </select>
