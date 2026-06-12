@@ -1,5 +1,5 @@
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
 import { RegistryDetailProfile } from './RegistryDetailProfile'
