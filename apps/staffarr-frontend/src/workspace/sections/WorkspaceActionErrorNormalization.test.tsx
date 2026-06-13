@@ -1,9 +1,20 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CertificationsSection } from './CertificationsSection'
 import { IncidentsSection } from './IncidentsSection'
 import { ReadinessSection } from './ReadinessSection'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
+
+vi.mock('../../api/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../api/client')>()
+  return {
+    ...actual,
+    getStaffArrFieldset: vi.fn().mockResolvedValue({
+      fields: [],
+    }),
+  }
+})
 
 vi.mock('../../components/IncidentsPanel', () => ({
   IncidentsPanel: ({ actionErrorMessage }: { actionErrorMessage: string | null }) => (
@@ -44,7 +55,13 @@ describe('Workspace section action error normalization', () => {
       setSelectedIncidentId: vi.fn(),
     } as unknown as StaffArrWorkspaceState
 
-    render(<IncidentsSection state={state} />)
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <IncidentsSection state={state} />
+      </QueryClientProvider>,
+    )
+
     expect(screen.getByTestId('incidents-action-error').textContent).toContain('Incident service unreachable')
   })
 

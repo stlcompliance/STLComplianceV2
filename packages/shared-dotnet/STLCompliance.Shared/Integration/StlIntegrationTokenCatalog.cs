@@ -83,6 +83,7 @@ public static class StlIntegrationTokenCatalog
             "maintainarr.technician_refs.sync"),
 
         Profile("handoff-supplyarr", "supplyarr-api", "Handoff__ServiceToken", "supplyarr", ["supplyarr"], "launch.redeem"),
+        Profile("handoff-customarr", "customarr-api", "Handoff__ServiceToken", "customarr", ["customarr"], "launch.redeem"),
         Profile("supplyarr-maintainarr", "supplyarr-api", "MaintainArr__ServiceToken", "supplyarr", ["maintainarr"], "maintainarr.demand_status.write"),
         Profile("supplyarr-routarr", "supplyarr-api", "RoutArr__ServiceToken", "supplyarr", ["routarr"], "routarr.demand_status.write,routarr.shipments.create"),
         Profile("supplyarr-trainarr", "supplyarr-api", "TrainArr__ServiceToken", "supplyarr", ["trainarr"], "trainarr.demand_status.write"),
@@ -139,7 +140,7 @@ public static class StlIntegrationTokenCatalog
             "nexarr-api",
             "SmartImport__DestinationServiceToken",
             "nexarr",
-            ["staffarr", "trainarr", "maintainarr", "routarr", "supplyarr", "compliancecore", "loadarr", "recordarr", "reportarr", "assurarr"],
+            ["staffarr", "trainarr", "maintainarr", "routarr", "supplyarr", "customarr", "compliancecore", "loadarr", "recordarr", "reportarr", "assurarr"],
             "platform.smart_import.validate,platform.smart_import.commit"),
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),

@@ -2,6 +2,9 @@
   <Folder Name="/apps/">
     <Project Path="apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj" />
   </Folder>
+  <Folder Name="/apps/customarr-api/">
+    <Project Path="apps/customarr-api/CustomArr.Api/CustomArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/compliancecore-api/">
     <Project Path="apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj" />
   </Folder>

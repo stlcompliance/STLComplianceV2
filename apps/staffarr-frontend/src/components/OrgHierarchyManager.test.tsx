@@ -163,7 +163,7 @@ describe('OrgHierarchyManager', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Field Team' }))
-    fireEvent.change(screen.getAllByLabelText(/Org unit name/i)[1], {
+    fireEvent.change(screen.getByLabelText(/Org unit name/i), {
       target: { value: 'Field Ops' },
     })
     fireEvent.change(screen.getByTestId('edit-org-unit-parent'), {

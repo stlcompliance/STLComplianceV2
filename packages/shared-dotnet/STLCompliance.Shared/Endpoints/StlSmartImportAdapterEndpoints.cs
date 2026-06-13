@@ -13,7 +13,6 @@ public static class StlSmartImportAdapterEndpoints
     private static readonly HashSet<string> CommitBlockedProducts = new(StringComparer.OrdinalIgnoreCase)
     {
         "fieldcompanion",
-        "customarr",
         "ordarr"
     };
 

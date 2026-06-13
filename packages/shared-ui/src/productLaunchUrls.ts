@@ -12,6 +12,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   compliancecore: 'http://localhost:5177',
   maintainarr: 'http://localhost:5178',
   supplyarr: 'http://localhost:5179',
+  customarr: 'http://localhost:5186',
   routarr: 'http://localhost:5180',
   fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',

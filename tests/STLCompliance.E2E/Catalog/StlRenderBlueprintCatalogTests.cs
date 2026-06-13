@@ -16,10 +16,10 @@ public sealed class StlRenderBlueprintCatalogTests
     [Fact]
     public void Blueprint_catalog_lists_product_apis_workers_static_sites_and_databases()
     {
-        Assert.Equal(11, StlRenderBlueprintCatalog.ApiServices.Count);
+        Assert.Equal(12, StlRenderBlueprintCatalog.ApiServices.Count);
         Assert.Equal(8, StlRenderBlueprintCatalog.WorkerServices.Count);
         Assert.Equal(1, StlRenderBlueprintCatalog.StaticSites.Count);
-        Assert.Equal(9, StlRenderBlueprintCatalog.Databases.Count);
+        Assert.Equal(10, StlRenderBlueprintCatalog.Databases.Count);
         Assert.Equal(6, StlRenderBlueprintCatalog.EnvGroupNames.Count);
         Assert.Equal(2, StlRenderBlueprintCatalog.EvidenceDisks.Count);
     }
@@ -27,7 +27,7 @@ public sealed class StlRenderBlueprintCatalogTests
     [Fact]
     public void Api_url_env_keys_map_to_deployed_render_base_urls()
     {
-        Assert.Equal(11, StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys.Count);
+        Assert.Equal(12, StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys.Count);
 
         foreach (var (envKey, apiServiceName, baseUrl) in StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys)
         {

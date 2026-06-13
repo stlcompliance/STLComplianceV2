@@ -31,6 +31,7 @@ describe('productLaunchUrls', () => {
 
     expect(map.staffarr).toBe('https://app.stlcompliance.com/staffarr/launch')
     expect(map.recordarr).toBe('https://app.stlcompliance.com/recordarr/launch')
+    expect(map.customarr).toBe('https://app.stlcompliance.com/customarr/launch')
     expect(map.fieldcompanion).toBe('https://app.stlcompliance.com/field-companion/launch')
     expect(map.nexarr).toBeUndefined()
   })

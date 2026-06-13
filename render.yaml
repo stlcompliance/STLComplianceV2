@@ -77,6 +77,8 @@ envVarGroups:
         value: https://assurarr-api.onrender.com
       - key: RecordArr__BaseUrl
         value: https://recordarr-api.onrender.com
+      - key: CustomArr__BaseUrl
+        value: https://customarr-api.onrender.com
       - key: ReportArr__BaseUrl
         value: https://reportarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
@@ -105,6 +107,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/assurarr
       - key: RECORDARR_FRONTEND_URL
         value: https://app.stlcompliance.com/recordarr
+      - key: CUSTOMARR_FRONTEND_URL
+        value: https://app.stlcompliance.com/customarr
       - key: REPORTARR_FRONTEND_URL
         value: https://app.stlcompliance.com/reportarr
       - key: FIELDCOMPANION_FRONTEND_URL
@@ -136,6 +140,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/assurarr
       - key: VITE_RECORDARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/recordarr
+      - key: VITE_CUSTOMARR_FRONTEND_BASE
+        value: https://app.stlcompliance.com/customarr
       - key: VITE_REPORTARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/reportarr
       - key: VITE_FIELDCOMPANION_FRONTEND_BASE
@@ -163,6 +169,8 @@ envVarGroups:
         value: https://assurarr-api.onrender.com
       - key: RECORDARR_PUBLIC_API_URL
         value: https://recordarr-api.onrender.com
+      - key: CUSTOMARR_PUBLIC_API_URL
+        value: https://customarr-api.onrender.com
       - key: REPORTARR_PUBLIC_API_URL
         value: https://reportarr-api.onrender.com
 databases:
@@ -202,6 +210,10 @@ databases:
     plan: basic-256mb
     databaseName: assurarr
     user: assurarr
+  - name: customarr-db
+    plan: basic-256mb
+    databaseName: customarr
+    user: customarr
 
 services:
   - type: keyvalue
@@ -256,8 +268,14 @@ services:
         value: https://app.stlcompliance.com/assurarr
       - key: Launch__Products__recordarr__BaseUrl
         value: https://app.stlcompliance.com/recordarr
+      - key: Launch__Products__customarr__BaseUrl
+        value: https://app.stlcompliance.com/customarr
       - key: Launch__Products__reportarr__BaseUrl
         value: https://app.stlcompliance.com/reportarr
+      - key: RecordArr__ServiceToken
+        sync: false
+      - key: SmartImport__DestinationServiceToken
+        sync: false
       - key: Launch__Products__staffarr__LaunchPath
         value: /launch
       - key: Launch__Products__trainarr__LaunchPath
@@ -275,6 +293,8 @@ services:
       - key: Launch__Products__assurarr__LaunchPath
         value: /launch
       - key: Launch__Products__recordarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__customarr__LaunchPath
         value: /launch
       - key: Launch__Products__reportarr__LaunchPath
         value: /launch
@@ -590,6 +610,30 @@ services:
       - key: STL_SERVICE_NAME
         value: recordarr-api
       - key: Cors__RecordArrFrontendOrigin
+        value: https://app.stlcompliance.com
+      - key: Handoff__ServiceToken
+        sync: false
+
+  - type: web
+    name: customarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/customarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: customarr-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: customarr-db
+          property: connectionString
+      - key: Cors__CustomArrFrontendOrigin
         value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false

@@ -26,6 +26,7 @@ describe('productCatalog', () => {
       'maintainarr',
       'routarr',
       'supplyarr',
+      'customarr',
       'compliancecore',
       'loadarr',
       'recordarr',
@@ -33,7 +34,6 @@ describe('productCatalog', () => {
       'assurarr',
       'fieldcompanion',
     ])
-    expect(keys).not.toContain('customarr')
     expect(keys).not.toContain('ordarr')
   })
 

@@ -76,6 +76,17 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
       'Inventory balances, stock ledger, warehouse movement, receiving execution, payment execution, accounts payable, tax, banking, or the general ledger.',
   },
   {
+    productKey: 'customarr',
+    displayName: 'CustomArr',
+    routeSlug: 'customarr',
+    sortOrder: 55,
+    catalogDescription: 'Customer master, hierarchy, contacts, and requirements',
+    owns:
+      'Customer accounts, customer hierarchy, customer contacts, customer locations, customer communication history, customer notes, customer preferences, customer requirements, customer onboarding, account ownership, customer status, customer risk or hold status, customer portal relationship, customer-specific operational restrictions, customer service expectations, and external customer mappings.',
+    doesNotOwn:
+      'Sales accounting, invoices, payments, tax, inventory, dispatch execution, maintenance execution, contract lifecycle, regulatory interpretation, or order and request lifecycle.',
+  },
+  {
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
     routeSlug: 'compliancecore',

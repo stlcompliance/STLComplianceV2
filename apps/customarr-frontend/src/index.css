@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+
+@source "../../../packages/shared-ui/src";
+
+:root {
+  color-scheme: dark;
+  --customarr-accent: #2dd4bf;
+  --customarr-accent-strong: #14b8a6;
+  --customarr-warm: #f59e0b;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family:
+    Inter,
+    Segoe UI,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.2), transparent 34%),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.14), transparent 28%),
+    linear-gradient(180deg, #020617 0%, #0f172a 52%, #111827 100%);
+  color: #e2e8f0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.customarr-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.76);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.24);
+  border-radius: 1.25rem;
+}
+
+.customarr-card-inner {
+  padding: 1.25rem;
+}
+
+.customarr-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(103, 232, 249, 0.92);
+}
+
+.customarr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.72rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.customarr-input,
+.customarr-select,
+.customarr-textarea {
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.88);
+  color: #f8fafc;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.customarr-input:focus,
+.customarr-select:focus,
+.customarr-textarea:focus {
+  border-color: rgba(45, 212, 191, 0.9);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.16);
+}
+
+.customarr-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--customarr-accent) 0%, var(--customarr-accent-strong) 100%);
+  color: #042f2e;
+  border: 0;
+  padding: 0.8rem 1.15rem;
+  font-weight: 700;
+}
+
+.customarr-button.secondary {
+  background: rgba(15, 23, 42, 0.86);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.customarr-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.customarr-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .customarr-grid.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .customarr-grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

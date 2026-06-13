@@ -32,6 +32,7 @@ public sealed class SmartImportService(
         "maintainarr",
         "routarr",
         "supplyarr",
+        "customarr",
         "compliancecore",
         "loadarr",
         "recordarr",
@@ -752,7 +753,7 @@ public sealed class SmartImportService(
         string contentType)
     {
         var reasons = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (!ImplementedProducts.Contains(destinationProduct) || destinationProduct is "customarr" or "ordarr")
+        if (!ImplementedProducts.Contains(destinationProduct) || destinationProduct is "ordarr")
         {
             reasons.Add(SmartImportReviewReasons.UnsupportedProductApi);
         }

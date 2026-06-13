@@ -10,6 +10,7 @@ public sealed class StlProductLaunchEndpointMappingCatalogTests
     [InlineData("apps/maintainarr-api/MaintainArr.Api/Program.cs")]
     [InlineData("apps/routarr-api/RoutArr.Api/Program.cs")]
     [InlineData("apps/supplyarr-api/SupplyArr.Api/Program.cs")]
+    [InlineData("apps/customarr-api/CustomArr.Api/Program.cs")]
     [InlineData("apps/compliancecore-api/ComplianceCore.Api/Program.cs")]
     [InlineData("apps/loadarr-api/LoadArr.Api/Program.cs")]
     [InlineData("apps/assurarr-api/AssurArr.Api/Program.cs")]

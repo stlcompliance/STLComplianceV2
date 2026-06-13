@@ -43,6 +43,7 @@ export const navIcons = {
   maintainarr: Wrench,
   routarr: Route,
   supplyarr: PackageSearch,
+  customarr: Users,
   loadarr: Warehouse,
   recordarr: Archive,
   reportarr: BarChart3,
