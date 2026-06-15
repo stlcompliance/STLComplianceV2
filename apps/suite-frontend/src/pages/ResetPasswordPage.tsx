@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import * as nexarr from '../api/nexarrClient'
 import { NexarrApiError } from '../api/types'
+import { ApiErrorCallout } from '@stl/shared-ui/ApiErrorCallout'
 
 const resetSchema = z
   .object({

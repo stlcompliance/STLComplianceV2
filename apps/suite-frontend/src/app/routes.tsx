@@ -1,70 +1,170 @@
+import { lazy, type ComponentType, type ReactNode, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RequireAuth } from '../components/RequireAuth'
 import { RequirePlatformAdmin } from '../components/RequirePlatformAdmin'
+import { RouteLoadingState } from '../components/RouteLoadingState'
 import { AppShellLayout } from '../layouts/AppShellLayout'
-import { PlatformAdminLayout } from '../layouts/PlatformAdminLayout'
-import { HomePage } from '../pages/HomePage'
-import { SmartImportPage } from '../pages/SmartImportPage'
-import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
-import { LoginPage } from '../pages/LoginPage'
-import { ResetPasswordPage } from '../pages/ResetPasswordPage'
-import { ProductShellLayout } from '../layouts/ProductShellLayout'
-import { ProductSurfacePage } from '../pages/ProductSurfacePage'
-import { LaunchDiagnosticsPage } from '../pages/platform-admin/LaunchDiagnosticsPage'
-import { PlatformAdminDashboardPage } from '../pages/platform-admin/PlatformAdminDashboardPage'
-import { ProductOverviewPage } from '../pages/platform-admin/ProductOverviewPage'
-import { PlatformAuditExportPage } from '../pages/platform-admin/PlatformAuditExportPage'
-import { PlatformStatusPage } from '../pages/platform-admin/PlatformStatusPage'
-import { CallbackAllowlistPage } from '../pages/platform-admin/CallbackAllowlistPage'
-import { ServiceTokenCleanupPage } from '../pages/platform-admin/ServiceTokenCleanupPage'
-import { EntitlementReconciliationPage } from '../pages/platform-admin/EntitlementReconciliationPage'
-import { TenantLifecyclePage } from '../pages/platform-admin/TenantLifecyclePage'
-import { PlatformLifecyclePage } from '../pages/platform-admin/PlatformLifecyclePage'
-import { PlatformOutboxPage } from '../pages/platform-admin/PlatformOutboxPage'
-import { PlatformSessionSettingsPage } from '../pages/platform-admin/PlatformSessionSettingsPage'
-import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorkerHealthPage'
-import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
-import { HybridDataPlanePage } from '../pages/platform-admin/HybridDataPlanePage'
-import { PlatformUsersPage } from '../pages/platform-admin/PlatformUsersPage'
-import { ReferenceDataPage } from '../pages/platform-admin/ReferenceDataPage'
+
+function createLazyPage<TProps extends object = Record<string, never>>(
+  loader: () => Promise<Record<string, ComponentType<TProps>>>,
+  exportName: string,
+) {
+  return lazy(async () => {
+    const module = await loader()
+    const Component = module[exportName]
+
+    if (!Component) {
+      throw new Error(`Lazy page export "${exportName}" was not found.`)
+    }
+
+    return { default: Component }
+  })
+}
+
+function routePage(element: ReactNode, options: { fullScreen?: boolean } = {}) {
+  return (
+    <Suspense fallback={<RouteLoadingState fullScreen={options.fullScreen} />}>{element}</Suspense>
+  )
+}
+
+const HomePage = createLazyPage(() => import('../pages/HomePage'), 'HomePage')
+const LoginPage = createLazyPage(() => import('../pages/LoginPage'), 'LoginPage')
+const ForgotPasswordPage = createLazyPage(
+  () => import('../pages/ForgotPasswordPage'),
+  'ForgotPasswordPage',
+)
+const ResetPasswordPage = createLazyPage(
+  () => import('../pages/ResetPasswordPage'),
+  'ResetPasswordPage',
+)
+const SmartImportPage = createLazyPage(() => import('../pages/SmartImportPage'), 'SmartImportPage')
+const ProductShellLayout = createLazyPage(
+  () => import('../layouts/ProductShellLayout'),
+  'ProductShellLayout',
+)
+const ProductSurfacePage = createLazyPage(
+  () => import('../pages/ProductSurfacePage'),
+  'ProductSurfacePage',
+)
+const PlatformAdminLayout = createLazyPage(
+  () => import('../layouts/PlatformAdminLayout'),
+  'PlatformAdminLayout',
+)
+const LaunchDiagnosticsPage = createLazyPage(
+  () => import('../pages/platform-admin/LaunchDiagnosticsPage'),
+  'LaunchDiagnosticsPage',
+)
+const PlatformAdminDashboardPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformAdminDashboardPage'),
+  'PlatformAdminDashboardPage',
+)
+const ProductOverviewPage = createLazyPage(
+  () => import('../pages/platform-admin/ProductOverviewPage'),
+  'ProductOverviewPage',
+)
+const PlatformAuditExportPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformAuditExportPage'),
+  'PlatformAuditExportPage',
+)
+const PlatformStatusPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformStatusPage'),
+  'PlatformStatusPage',
+)
+const CallbackAllowlistPage = createLazyPage(
+  () => import('../pages/platform-admin/CallbackAllowlistPage'),
+  'CallbackAllowlistPage',
+)
+const ServiceTokenCleanupPage = createLazyPage(
+  () => import('../pages/platform-admin/ServiceTokenCleanupPage'),
+  'ServiceTokenCleanupPage',
+)
+const EntitlementReconciliationPage = createLazyPage(
+  () => import('../pages/platform-admin/EntitlementReconciliationPage'),
+  'EntitlementReconciliationPage',
+)
+const TenantLifecyclePage = createLazyPage(
+  () => import('../pages/platform-admin/TenantLifecyclePage'),
+  'TenantLifecyclePage',
+)
+const PlatformLifecyclePage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformLifecyclePage'),
+  'PlatformLifecyclePage',
+)
+const PlatformOutboxPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformOutboxPage'),
+  'PlatformOutboxPage',
+)
+const PlatformSessionSettingsPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformSessionSettingsPage'),
+  'PlatformSessionSettingsPage',
+)
+const PlatformWorkerHealthPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformWorkerHealthPage'),
+  'PlatformWorkerHealthPage',
+)
+const TenantOverviewPage = createLazyPage(
+  () => import('../pages/platform-admin/TenantOverviewPage'),
+  'TenantOverviewPage',
+)
+const HybridDataPlanePage = createLazyPage(
+  () => import('../pages/platform-admin/HybridDataPlanePage'),
+  'HybridDataPlanePage',
+)
+const PlatformUsersPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformUsersPage'),
+  'PlatformUsersPage',
+)
+const ReferenceDataPage = createLazyPage(
+  () => import('../pages/platform-admin/ReferenceDataPage'),
+  'ReferenceDataPage',
+)
 
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/login" element={routePage(<LoginPage />, { fullScreen: true })} />
+        <Route
+          path="/forgot-password"
+          element={routePage(<ForgotPasswordPage />, { fullScreen: true })}
+        />
+        <Route
+          path="/reset-password"
+          element={routePage(<ResetPasswordPage />, { fullScreen: true })}
+        />
         <Route element={<RequireAuth />}>
           <Route element={<AppShellLayout />}>
             <Route path="/" element={<Navigate to="/app" replace />} />
-            <Route path="/app" element={<HomePage />} />
-            <Route path="/app/imports" element={<SmartImportPage />} />
+            <Route path="/app" element={routePage(<HomePage />)} />
+            <Route path="/app/imports" element={routePage(<SmartImportPage />)} />
             <Route element={<RequirePlatformAdmin />}>
-              <Route path="/app/platform-admin" element={<PlatformAdminLayout />}>
-                <Route index element={<PlatformAdminDashboardPage />} />
-                <Route path="launch" element={<LaunchDiagnosticsPage />} />
-                <Route path="tenants" element={<TenantOverviewPage />} />
-                <Route path="users" element={<PlatformUsersPage />} />
-                <Route path="products" element={<ProductOverviewPage />} />
-                <Route path="reference-data" element={<ReferenceDataPage />} />
-                <Route path="dataset-inputs" element={<Navigate to="/app/platform-admin/reference-data" replace />} />
-                <Route path="callback-allowlist" element={<CallbackAllowlistPage />} />
-                <Route path="status" element={<PlatformStatusPage />} />
-                <Route path="data-plane" element={<HybridDataPlanePage />} />
-                <Route path="audit-export" element={<PlatformAuditExportPage />} />
-                <Route path="sessions" element={<PlatformSessionSettingsPage />} />
-                <Route path="lifecycle" element={<PlatformLifecyclePage />} />
-                <Route path="platform-outbox" element={<PlatformOutboxPage />} />
-                <Route path="orchestration" element={<PlatformWorkerHealthPage />} />
-                <Route path="service-tokens" element={<ServiceTokenCleanupPage />} />
-                <Route path="entitlements" element={<EntitlementReconciliationPage />} />
-                <Route path="tenant-lifecycle" element={<TenantLifecyclePage />} />
+              <Route path="/app/platform-admin" element={routePage(<PlatformAdminLayout />)}>
+                <Route index element={routePage(<PlatformAdminDashboardPage />)} />
+                <Route path="launch" element={routePage(<LaunchDiagnosticsPage />)} />
+                <Route path="tenants" element={routePage(<TenantOverviewPage />)} />
+                <Route path="users" element={routePage(<PlatformUsersPage />)} />
+                <Route path="products" element={routePage(<ProductOverviewPage />)} />
+                <Route path="reference-data" element={routePage(<ReferenceDataPage />)} />
+                <Route
+                  path="dataset-inputs"
+                  element={<Navigate to="/app/platform-admin/reference-data" replace />}
+                />
+                <Route path="callback-allowlist" element={routePage(<CallbackAllowlistPage />)} />
+                <Route path="status" element={routePage(<PlatformStatusPage />)} />
+                <Route path="data-plane" element={routePage(<HybridDataPlanePage />)} />
+                <Route path="audit-export" element={routePage(<PlatformAuditExportPage />)} />
+                <Route path="sessions" element={routePage(<PlatformSessionSettingsPage />)} />
+                <Route path="lifecycle" element={routePage(<PlatformLifecyclePage />)} />
+                <Route path="platform-outbox" element={routePage(<PlatformOutboxPage />)} />
+                <Route path="orchestration" element={routePage(<PlatformWorkerHealthPage />)} />
+                <Route path="service-tokens" element={routePage(<ServiceTokenCleanupPage />)} />
+                <Route path="entitlements" element={routePage(<EntitlementReconciliationPage />)} />
+                <Route path="tenant-lifecycle" element={routePage(<TenantLifecyclePage />)} />
               </Route>
             </Route>
-            <Route path="/app/:productKey" element={<ProductShellLayout />}>
-              <Route index element={<ProductSurfacePage />} />
-              <Route path=":surfaceKey" element={<ProductSurfacePage />} />
+            <Route path="/app/:productKey" element={routePage(<ProductShellLayout />)}>
+              <Route index element={routePage(<ProductSurfacePage />)} />
+              <Route path=":surfaceKey" element={routePage(<ProductSurfacePage />)} />
             </Route>
           </Route>
         </Route>

@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ApiErrorCallout, buildProductLaunchUrlMap } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation } from 'react-router-dom'
@@ -10,6 +9,8 @@ import { NexarrApiError } from '../api/types'
 import * as nexarr from '../api/nexarrClient'
 import { formatLaunchFailureError } from '../lib/launchFailure'
 import { resolveLoginRedirectTarget } from '../lib/loginRedirect'
+import { ApiErrorCallout } from '@stl/shared-ui/ApiErrorCallout'
+import { buildProductLaunchUrlMap } from '@stl/shared-ui/productLaunchUrls'
 
 const loginSchema = z.object({
   email: z.email('Enter a valid email'),

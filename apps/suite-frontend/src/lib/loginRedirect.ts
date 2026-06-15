@@ -1,4 +1,4 @@
-import { normalizeProductKey } from '@stl/shared-ui'
+import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 export type LoginRedirectTarget =
   | {

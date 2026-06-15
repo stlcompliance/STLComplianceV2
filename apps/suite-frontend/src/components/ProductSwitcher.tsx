@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  getErrorMessage,
-  getSuiteProductCatalogEntry,
-  ProductSwitcher as SharedProductSwitcher,
-  type ProductSwitcherProps as SharedProductSwitcherProps,
-} from '@stl/shared-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import { isInSuiteProduct } from '../lib/permissions'
-import { normalizeProductKey } from '../navigation/suiteNavigation'
+import { getErrorMessage } from '@stl/shared-ui/ApiErrorCallout'
+import {
+  ProductSwitcher as SharedProductSwitcher,
+  type ProductSwitcherProps as SharedProductSwitcherProps,
+} from '@stl/shared-ui/ProductSwitcher'
+import { getSuiteProductCatalogEntry } from '@stl/shared-ui/productCatalog'
+import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 function resolveCurrentProductKey(pathname: string): string {
   if (pathname.startsWith('/app/platform-admin')) {

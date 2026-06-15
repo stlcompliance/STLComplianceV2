@@ -3,12 +3,27 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const nexarrTarget = process.env.VITE_NEXARR_PROXY_TARGET ?? 'http://localhost:5101'
+const analyzeBundle = process.env.ANALYZE_BUNDLE === 'true'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    analyzeBundle
+      ? visualizer({
+          filename: 'bundle-report.html',
+          template: 'treemap',
+          gzipSize: true,
+          brotliSize: true,
+          emitFile: true,
+          open: false,
+        })
+      : undefined,
+  ],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],
     alias: {

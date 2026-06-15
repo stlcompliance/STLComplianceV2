@@ -1,19 +1,14 @@
 import { LayoutDashboard } from 'lucide-react'
-import {
-  AiHelpButton,
-  AiHelpDrawer,
-  buildAiNavigationLinks,
-  buildProductLaunchUrlMap,
-  getSuiteProductCatalogEntry,
-  getSuiteProductIcon,
-  type AiHelpMessage,
-} from '@stl/shared-ui'
 import { createElement, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { sendAiAssistantMessage } from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
-import { normalizeProductKey } from '../navigation/suiteNavigation'
+import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from '@stl/shared-ui/AiHelpDrawer'
+import { buildAiNavigationLinks } from '@stl/shared-ui/aiNavigationLinks'
+import { buildProductLaunchUrlMap } from '@stl/shared-ui/productLaunchUrls'
+import { getSuiteProductCatalogEntry, getSuiteProductIcon } from '@stl/shared-ui/productCatalog'
+import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)

@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import * as nexarr from '../api/nexarrClient'
 import { NexarrApiError } from '../api/types'
+import { ApiErrorCallout } from '@stl/shared-ui/ApiErrorCallout'
 
 const forgotSchema = z.object({
   email: z.email('Enter a valid email'),

@@ -46,7 +46,7 @@ describe('PlatformLifecycleOverviewPanel', () => {
 
     renderPanel()
     expect(await screen.findByText('Service token cleanup')).toBeTruthy()
-    expect(screen.getByText(/Pending \(sample\)/i)).toBeTruthy()
+    expect(screen.getByText('Pending')).toBeTruthy()
     expect(screen.getByRole('link', { name: /Open settings/i })).toBeTruthy()
   })
 

@@ -3,7 +3,7 @@ import {
   getProductRouteSlug,
   hasProductEntitlement as sharedHasProductEntitlement,
   normalizeProductKey,
-} from '@stl/shared-ui'
+} from '@stl/shared-ui/productCatalog'
 
 export function hasProductEntitlement(
   entitlements: readonly string[],

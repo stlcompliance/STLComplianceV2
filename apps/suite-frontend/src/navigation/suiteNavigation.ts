@@ -3,9 +3,9 @@ import {
   getProductRouteSlug,
   getSuiteProductCatalogEntry,
   normalizeProductKey,
-} from '@stl/shared-ui'
+} from '@stl/shared-ui/productCatalog'
 
-export { normalizeProductKey } from '@stl/shared-ui'
+export { normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 export function getProductDisplayName(productKey: string, fallback?: string): string {
   const entry = getSuiteProductCatalogEntry(productKey)

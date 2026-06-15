@@ -390,12 +390,12 @@ describe('PlatformUsersPage', () => {
 
     expect(await screen.findByText('Test User')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Enable MFA' })).toBeInTheDocument()
-    expect(screen.getByText('Active sessions')).toBeInTheDocument()
-    expect(screen.getByText('Login history')).toBeInTheDocument()
-    expect(screen.getByText('Launch history')).toBeInTheDocument()
-    expect(screen.getByText('Identity audit history')).toBeInTheDocument()
-    expect(screen.getByText('Tenant memberships')).toBeInTheDocument()
-    expect(screen.getByText('Platform roles')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Active sessions' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Login history' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Launch history' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Identity audit history' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tenant memberships' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Platform roles' })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Assign membership' })).not.toBeDisabled()
     })
@@ -455,7 +455,7 @@ describe('PlatformUsersPage', () => {
       )
     })
 
-    const membershipSection = screen.getByText('Tenant memberships').closest('section')
+    const membershipSection = screen.getByRole('heading', { name: 'Tenant memberships' }).closest('section')
     expect(membershipSection).toBeTruthy()
     expect(within(membershipSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
     expect(within(membershipSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()
@@ -482,7 +482,7 @@ describe('PlatformUsersPage', () => {
       )
     })
 
-    const roleSection = screen.getByText('Platform roles').closest('section')
+    const roleSection = screen.getByRole('heading', { name: 'Platform roles' }).closest('section')
     expect(roleSection).toBeTruthy()
     expect(within(roleSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
     expect(within(roleSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()

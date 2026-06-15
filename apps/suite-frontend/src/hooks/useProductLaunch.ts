@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { normalizeProductKey } from '@stl/shared-ui'
+import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
 import * as nexarr from '../api/nexarrClient'
 import { formatLaunchFailureError } from '../lib/launchFailure'
 import { buildProductCallbackUrl, isInSuiteProduct } from '../lib/permissions'
