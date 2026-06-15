@@ -8,6 +8,7 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const customarrApiTarget = process.env.VITE_CUSTOMARR_PROXY_TARGET ?? 'http://localhost:5111'
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
@@ -20,6 +21,16 @@ export default defineConfig({
     fs: {
       allow: [path.resolve(appRoot, '../..')],
     },
+    proxy: {
+      '/api': {
+        target: customarrApiTarget,
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 5186,
+    host: true,
     proxy: {
       '/api': {
         target: customarrApiTarget,

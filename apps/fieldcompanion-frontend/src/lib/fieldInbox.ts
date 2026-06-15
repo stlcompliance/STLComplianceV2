@@ -3,12 +3,18 @@ import type { FieldInboxProductSlice, FieldInboxTaskItem } from '../api/types'
 import { formatInboxSourceError } from './FieldCompanionDeniedReasonCatalog'
 
 const PRODUCT_LABELS: Record<string, string> = {
+  fieldcompanion: 'Field Companion',
   maintainarr: 'MaintainArr',
   routarr: 'RoutArr',
   trainarr: 'TrainArr',
   staffarr: 'StaffArr',
   supplyarr: 'SupplyArr',
   loadarr: 'LoadArr',
+  recordarr: 'RecordArr',
+  assurarr: 'AssurArr',
+  ordarr: 'OrdArr',
+  customarr: 'CustomArr',
+  compliancecore: 'Compliance Core',
 }
 
 const TASK_TYPE_LABELS: Record<string, string> = {
@@ -22,6 +28,11 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 export function productLabel(productKey: string): string {
   return PRODUCT_LABELS[productKey.toLowerCase()] ?? productKey
+}
+
+export function productTitle(productKey: string): string {
+  const label = productLabel(productKey)
+  return label.includes(' ') ? label : `${label}`
 }
 
 export function taskTypeLabel(taskType: string): string {

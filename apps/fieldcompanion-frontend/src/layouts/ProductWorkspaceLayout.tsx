@@ -2,6 +2,17 @@ import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
+  AppWindow,
+  Camera,
+  Bell,
+  CloudOff,
+  Inbox,
+  LayoutDashboard,
+  ScanLine,
+  UserRound,
+  BellRing,
+} from 'lucide-react'
+import {
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   resolveProductWorkspaceBootstrapError,
@@ -17,7 +28,17 @@ const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
 
-const navItems: ProductNavItem[] = [{ label: 'Field inbox', to: '/' }]
+const navItems: ProductNavItem[] = [
+  { label: 'My work', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
+  { label: 'Inbox', to: '/inbox', icon: Inbox as ProductNavItem['icon'] },
+  { label: 'Scan', to: '/scan', icon: ScanLine as ProductNavItem['icon'] },
+  { label: 'Capture', to: '/capture', icon: Camera as ProductNavItem['icon'] },
+  { label: 'Report', to: '/report', icon: Bell as ProductNavItem['icon'] },
+  { label: 'Product surfaces', to: '/surfaces', icon: AppWindow as ProductNavItem['icon'] },
+  { label: 'Offline queue', to: '/offline-queue', icon: CloudOff as ProductNavItem['icon'] },
+  { label: 'Profile', to: '/profile', icon: UserRound as ProductNavItem['icon'] },
+  { label: 'Notifications', to: '/notifications', icon: BellRing as ProductNavItem['icon'] },
+]
 
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
@@ -79,6 +100,10 @@ export function ProductWorkspaceLayout() {
       productLaunchError={
         productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
       }
+      onSignOut={() => {
+        clearSession()
+        window.location.assign(suiteHomeUrl)
+      }}
       aiAssistance={
         session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
       }
