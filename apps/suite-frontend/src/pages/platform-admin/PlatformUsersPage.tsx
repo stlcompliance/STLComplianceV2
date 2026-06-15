@@ -2,6 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import * as nexarr from '../../api/nexarrClient'
+import {
+  PlatformAdminKpiCard,
+  PlatformAdminPageHeader,
+  PlatformAdminScopeNote,
+  PlatformAdminSection,
+} from '../../components/platform-admin/PlatformAdminPageChrome'
 import type {
   CreatePlatformUserRequest,
   AssignPlatformUserRoleRequest,
@@ -571,6 +577,42 @@ export function PlatformUsersPage() {
         }}
       />
 
+      <PlatformAdminPageHeader
+        title="User administration"
+        summary="NexArr platform account record, tenant membership, MFA, session control, and identity audit history."
+        badge={selectedUser?.status ?? 'Platform user'}
+        updatedAt={selectedUser ? formatDateTime(selectedUser.modifiedAt ?? selectedUser.createdAt) : undefined}
+      />
+
+      {selectedUser ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <PlatformAdminKpiCard
+            label="Account state"
+            value={formatStatus(selectedUser)}
+            hint="Login capability and MFA state for this platform identity."
+            tone={selectedUser.canLogin ? 'good' : 'bad'}
+          />
+          <PlatformAdminKpiCard
+            label="Tenant memberships"
+            value={memberships.length}
+            hint="Tenant-scoped access granted after NexArr validation."
+            tone={memberships.length > 0 ? 'good' : 'warn'}
+          />
+          <PlatformAdminKpiCard
+            label="Roles"
+            value={roles.length}
+            hint="Platform roles and scoped authority assignments."
+            tone={roles.length > 0 ? 'info' : 'neutral'}
+          />
+          <PlatformAdminKpiCard
+            label="Active sessions"
+            value={sessions.filter((session) => session.isActive).length}
+            hint="Sessions currently holding platform access."
+            tone={sessions.some((session) => session.isActive) ? 'warn' : 'good'}
+          />
+        </div>
+      ) : null}
+
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">User administration</h2>
@@ -593,6 +635,32 @@ export function PlatformUsersPage() {
           </button>
         </form>
       </header>
+
+      {selectedUser ? (
+        <PlatformAdminSection
+          title="Decision summary"
+          description="NexArr identity and access posture for the selected platform user."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current state</p>
+              <p className="mt-2 text-lg font-semibold text-stl-navy">{formatStatus(selectedUser)}</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {selectedUser.canLogin
+                  ? 'This record can log in and access entitled product surfaces.'
+                  : 'This record is blocked from login until NexArr access is restored.'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source of truth</p>
+              <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr user and session records</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Platform identity, tenant membership, and session history remain canonical in NexArr. Product-local permissions are projected downstream.
+              </p>
+            </div>
+          </div>
+        </PlatformAdminSection>
+      ) : null}
 
       <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1320,6 +1388,10 @@ export function PlatformUsersPage() {
           ) : null}
         </section>
       </div>
+
+      <PlatformAdminScopeNote>
+        Detail scope: NexArr owns platform login, MFA, sessions, tenant membership, platform roles, and identity audit history. Product permissions remain owned by the target product after identity is validated.
+      </PlatformAdminScopeNote>
     </div>
   )
 }

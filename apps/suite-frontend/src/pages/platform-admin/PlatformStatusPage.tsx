@@ -4,6 +4,11 @@ import { Link } from 'react-router-dom'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import type { ProductDetailResponse, ProductHealthProbeResult } from '../../api/types'
+import {
+  PlatformAdminKpiCard,
+  PlatformAdminPageHeader,
+  PlatformAdminScopeNote,
+} from '../../components/platform-admin/PlatformAdminPageChrome'
 import { healthBadgeClass } from '../../components/platform-admin/worker-health/utils'
 
 export function PlatformStatusPage() {
@@ -38,15 +43,62 @@ export function PlatformStatusPage() {
   const deploymentEvidence = buildDeploymentEvidence(products)
   const registryProducts = registryQuery.data?.items ?? []
   const registrySummary = buildRegistrySummary(registryProducts)
+  const unhealthyProducts = products.filter((product) => product.status !== 'Healthy').length
+  const driftTone = deploymentEvidence.hasDrift ? 'warn' : 'good'
 
   return (
     <div className="space-y-6">
-      <header>
-        <h4 className="text-lg font-semibold text-stl-navy">System status</h4>
-        <p className="mt-1 text-sm text-slate-600">
-          Live platform health from NexArr&apos;s anonymous control-plane health endpoint.
-        </p>
-      </header>
+      <PlatformAdminPageHeader
+        title="System status"
+        summary="Live platform health from NexArr's control-plane probes. Use this view to spot deployment skew, missing configuration, and service readiness issues."
+        updatedAt={new Date(status.timestampUtc).toLocaleString()}
+        badge={status.status}
+        actions={
+          <>
+            <Link
+              to="/app/platform-admin/launch"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+            >
+              <Activity className="h-4 w-4" aria-hidden />
+              Launch diagnostics
+            </Link>
+            <Link
+              to="/app/platform-admin/orchestration"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+            >
+              <ServerCog className="h-4 w-4" aria-hidden />
+              Worker health
+            </Link>
+          </>
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <PlatformAdminKpiCard
+          label="Overall health"
+          value={status.status}
+          hint={`Generated ${new Date(status.timestampUtc).toLocaleString()}.`}
+          tone={status.status === 'Healthy' ? 'good' : status.status === 'Degraded' ? 'warn' : 'bad'}
+        />
+        <PlatformAdminKpiCard
+          label="Products probed"
+          value={products.length}
+          hint={`${unhealthyProducts} product probe${unhealthyProducts === 1 ? '' : 's'} are not healthy.`}
+          tone={unhealthyProducts === 0 ? 'good' : 'warn'}
+        />
+        <PlatformAdminKpiCard
+          label="Deployment versions"
+          value={deploymentEvidence.distinctVersionCount}
+          hint={`${deploymentEvidence.productsWithEvidence} product${deploymentEvidence.productsWithEvidence === 1 ? '' : 's'} reported version evidence.`}
+          tone={driftTone}
+        />
+        <PlatformAdminKpiCard
+          label="Registry gaps"
+          value={registrySummary.missingConfiguration.length}
+          hint={`${registrySummary.totalProducts} products are listed in the NexArr registry.`}
+          tone={registrySummary.missingConfiguration.length === 0 ? 'good' : 'warn'}
+        />
+      </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5" data-testid="platform-status-registry-summary">
         <div className="flex flex-wrap items-center gap-3">
@@ -291,6 +343,10 @@ export function PlatformStatusPage() {
           </div>
         )}
       </section>
+
+      <PlatformAdminScopeNote>
+        Dashboard scope: NexArr owns platform health probes, product registry metadata, launch configuration, and deployment drift evidence. Product repair happens in the owning product or deployment target.
+      </PlatformAdminScopeNote>
     </div>
   )
 }

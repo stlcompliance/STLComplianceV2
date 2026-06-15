@@ -137,11 +137,11 @@ describe('PlatformStatusPage', () => {
     expect(screen.getByText('Potential deployment skew')).toBeInTheDocument()
     expect(screen.getByText('2026.06.03+sha-abc123: staffarr')).toBeInTheDocument()
     expect(screen.getByText('2026.06.03+sha-xyz789: routarr')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Launch diagnostics' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Launch diagnostics' })[0]).toHaveAttribute(
       'href',
       '/app/platform-admin/launch',
     )
-    expect(screen.getByRole('link', { name: 'Worker health' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Worker health' })[0]).toHaveAttribute(
       'href',
       '/app/platform-admin/orchestration',
     )

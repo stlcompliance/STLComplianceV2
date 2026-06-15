@@ -305,7 +305,7 @@ describe('TenantOverviewPage', () => {
     expect(nexarr.grantTenantEntitlement).toHaveBeenCalledWith('tenant-1', 'maintainarr')
     await user.click(screen.getByTestId('tenant-entitlement-revoke-staffarr'))
     expect(nexarr.revokeTenantEntitlement).toHaveBeenCalledWith('tenant-1', 'staffarr')
-    expect(await screen.findByText('Service clients')).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Service clients' })).toBeTruthy()
     expect(await screen.findByText('MaintainArr API Client')).toBeTruthy()
     expect(screen.getByText('maintainarr-api')).toBeTruthy()
     expect(await screen.findByText('Launch history')).toBeTruthy()

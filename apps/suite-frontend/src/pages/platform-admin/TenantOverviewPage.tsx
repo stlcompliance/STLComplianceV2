@@ -3,6 +3,12 @@ import { useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { TenantCatalogAdminPanel } from '../../components/platform-admin/TenantCatalogAdminPanel'
+import {
+  PlatformAdminKpiCard,
+  PlatformAdminPageHeader,
+  PlatformAdminScopeNote,
+  PlatformAdminSection,
+} from '../../components/platform-admin/PlatformAdminPageChrome'
 import type { PlatformAuditEventTimelineItem } from '../../api/types'
 
 export function TenantOverviewPage() {
@@ -119,6 +125,42 @@ export function TenantOverviewPage() {
 
   return (
     <div className="space-y-6">
+      <PlatformAdminPageHeader
+        title="Tenant overview"
+        summary="Selected tenant record, membership state, entitlement posture, launch attempts, and audit history for NexArr platform administration."
+        badge={selectedTenant ? `${selectedTenant.status} tenant` : 'Tenant records'}
+        updatedAt={selectedTenant ? new Date(selectedTenant.createdAt).toLocaleString() : undefined}
+      />
+
+      {selectedTenant ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <PlatformAdminKpiCard
+            label="Members"
+            value={selectedTenant.membershipCount}
+            hint="Tenant membership records are owned by NexArr."
+            tone="info"
+          />
+          <PlatformAdminKpiCard
+            label="Entitlements"
+            value={selectedTenant.activeEntitlementCount}
+            hint="Product access granted through NexArr."
+            tone="good"
+          />
+          <PlatformAdminKpiCard
+            label="Launch attempts"
+            value={launchHistoryQuery.data?.items.length ?? '—'}
+            hint="Recent launch handoff results for this tenant."
+            tone="warn"
+          />
+          <PlatformAdminKpiCard
+            label="Service clients"
+            value={tenantServiceClients.length || '—'}
+            hint="Tenant-scoped service clients that can call NexArr."
+            tone={tenantServiceClients.length > 0 ? 'good' : 'neutral'}
+          />
+        </div>
+      ) : null}
+
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
@@ -202,6 +244,32 @@ export function TenantOverviewPage() {
           </dl>
         ) : null}
       </section>
+
+      {selectedTenant ? (
+        <PlatformAdminSection
+          title="Decision summary"
+          description="Readiness and entitlement posture for the selected tenant record."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current state</p>
+              <p className="mt-2 text-lg font-semibold text-stl-navy">{selectedTenant.status}</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {selectedTenant.activeEntitlementCount > 0
+                  ? 'Tenant is entitled to products and can launch permitted surfaces.'
+                  : 'Tenant has no active entitlements and should be reviewed before launch.'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source of truth</p>
+              <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr tenant record</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Tenant identity, membership, entitlement, and launch snapshots are owned here and surfaced to other products as references.
+              </p>
+            </div>
+          </div>
+        </PlatformAdminSection>
+      ) : null}
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -417,6 +485,10 @@ export function TenantOverviewPage() {
           <p className="mt-3 text-sm text-slate-500">No tenant audit events found.</p>
         )}
       </section>
+
+      <PlatformAdminScopeNote>
+        Detail scope: NexArr owns the tenant record, membership, entitlement, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
+      </PlatformAdminScopeNote>
 
       <TenantCatalogAdminPanel />
     </div>

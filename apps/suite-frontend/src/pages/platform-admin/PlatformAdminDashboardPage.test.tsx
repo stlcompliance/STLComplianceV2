@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as nexarr from '../../api/nexarrClient'
@@ -13,7 +14,9 @@ function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <PlatformAdminDashboardPage />
+      <MemoryRouter>
+        <PlatformAdminDashboardPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }

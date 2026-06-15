@@ -3,6 +3,12 @@ import { useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { ProductCatalogAdminPanel } from '../../components/platform-admin/ProductCatalogAdminPanel'
+import {
+  PlatformAdminKpiCard,
+  PlatformAdminPageHeader,
+  PlatformAdminScopeNote,
+  PlatformAdminSection,
+} from '../../components/platform-admin/PlatformAdminPageChrome'
 
 export function ProductOverviewPage() {
   const [manifestProductKey, setManifestProductKey] = useState('')
@@ -57,9 +63,53 @@ export function ProductOverviewPage() {
   const products = overviewQuery.data!
 
   const manifests = manifestsQuery.data?.items ?? []
+  const activeProducts = products.filter((product) => product.isActive).length
+  const launchProfileActive = products.filter((product) => product.launchProfileActive).length
 
   return (
     <div className="space-y-6">
+      <PlatformAdminPageHeader
+        title="Product overview"
+        summary="NexArr product registry, launch profile metadata, callback allowlists, and service client reachability."
+        badge="Registry record"
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <PlatformAdminKpiCard
+          label="Registered products"
+          value={products.length}
+          hint={`${activeProducts} products are active in the current registry snapshot.`}
+          tone="good"
+        />
+        <PlatformAdminKpiCard
+          label="Launch profiles"
+          value={launchProfileActive}
+          hint="Products with an active launch profile are ready to hand off from NexArr."
+          tone={launchProfileActive === products.length ? 'good' : 'warn'}
+        />
+        <PlatformAdminKpiCard
+          label="Manifest rows"
+          value={manifests.length}
+          hint="Filtered product manifests currently in scope for review."
+          tone="info"
+        />
+        <PlatformAdminKpiCard
+          label="Service client scope"
+          value={serviceClientsQuery.data?.items.length ?? '—'}
+          hint="Service clients that can act on behalf of products or tenants."
+          tone="neutral"
+        />
+      </div>
+
+      <PlatformAdminSection
+        title="Registry posture"
+        description="What NexArr knows about each product launch surface and entitlement state."
+      >
+        <p className="text-sm text-slate-700">
+          This page is a registry and launch-control view, not a product execution surface. Product data shown here is a snapshot owned by NexArr.
+        </p>
+      </PlatformAdminSection>
+
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
@@ -251,6 +301,10 @@ export function ProductOverviewPage() {
           <p className="mt-4 text-sm text-slate-500">No product manifests found for the current filters.</p>
         )}
       </section>
+
+      <PlatformAdminScopeNote>
+        Detail scope: NexArr owns product launch profiles, callback allowlists, service client reachability, and registry snapshots. Individual product workflows remain in their own product shells.
+      </PlatformAdminScopeNote>
 
       <ProductCatalogAdminPanel />
     </div>
